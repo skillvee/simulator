@@ -147,7 +147,7 @@ export function DefenseClient({
   };
 
   const handleViewResults = () => {
-    router.push(`/assessment/${assessmentId}/results`);
+    router.push(`/assessment/${assessmentId}/processing`);
   };
 
   // Browser not supported
@@ -347,10 +347,10 @@ export function DefenseClient({
                   onClick={handleViewResults}
                   className="bg-foreground text-background px-6 py-3 font-bold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
                 >
-                  View Assessment Results
+                  View Summary
                 </button>
                 <p className="mt-3 text-sm text-muted-foreground max-w-xs">
-                  Your assessment is being finalized. View your results to see how you did.
+                  Your assessment is complete. See your session summary while we generate your report.
                 </p>
               </div>
             )}

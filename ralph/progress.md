@@ -1753,3 +1753,69 @@ AssessmentReport {
 - Tests pass (401/401)
 - Typecheck passes (exit 0)
 - Build succeeds (5.09 kB bundle)
+
+---
+
+## Issue #28: US-028: Summary Page While Processing
+
+**What was implemented:**
+- Processing page at `/assessment/[id]/processing` shown after defense call ends
+- Server component (`page.tsx`) with:
+  - Authentication and ownership verification
+  - Assessment data fetching including conversations and HR assessment
+  - Stats calculation (duration, coworkers contacted, message count)
+  - Redirect to results if report already exists
+- Client component (`client.tsx`) with neo-brutalist design:
+  - Success message with checkmark icon in gold square
+  - Session summary stats grid (time spent, coworkers contacted, total messages)
+  - Completed stages checklist (HR Interview, Manager Kickoff, Team Collaboration, Coding Task, PR Defense)
+  - Processing indicator with animated spinner and loading dots
+  - Email notification message ("We'll send your full report to your email when it's ready")
+  - Decorative geometric triangles (tangram motif)
+  - Auto-polling (3-second interval) to redirect when report is ready
+- Updated defense client to redirect to `/processing` instead of `/results`
+- Updated "View Assessment Results" button text to "View Summary"
+
+**Files created:**
+- `src/app/assessment/[id]/processing/page.tsx` - Server component with stats calculation
+- `src/app/assessment/[id]/processing/client.tsx` - Client component with neo-brutalist UI
+
+**Files changed:**
+- `src/app/assessment/[id]/defense/client.tsx` - Changed redirect target and button text
+
+**Learnings:**
+1. Stats can be calculated from existing database tables (conversations, hrAssessment)
+2. Unique coworkers counted by filtering out kickoff/defense conversations (which are manager)
+3. Message count extracted from transcript JSON arrays
+4. Polling pattern reused from results page (3-second interval)
+5. Animated loading dots via simple state toggle (0-3 dots cycle)
+6. Neo-brutalist completion badges: checkmark in gold square for completed items
+
+**Architecture patterns:**
+- Processing page is the intermediate step between defense call and results
+- Auto-redirects to results when report is ready (via polling)
+- Stats displayed immediately while report generates in background
+- Email notification message sets expectation (even though email isn't implemented yet)
+
+**UI components created:**
+- `StatCard` - Bordered card with icon, label, and large value
+- `CompletionBadge` - Checkbox with completed/uncompleted states
+
+**Navigation flow updated:**
+1. Defense call ends → `/api/assessment/finalize` is called
+2. Defense page redirects to `/assessment/[id]/processing` (new)
+3. Processing page shows summary stats while polling for report
+4. When report ready → auto-redirect to `/assessment/[id]/results`
+
+**Gotchas:**
+- None - followed established patterns from existing pages
+
+**Verification completed:**
+- Shows after final defense call ends ✓
+- Displays quick stats: time spent, coworkers contacted, etc. ✓
+- Indicates full report coming via email ✓
+- Neo-brutalist design ✓
+- Tests pass (401/401)
+- Typecheck passes (exit 0)
+- Build succeeds (2.76 kB bundle)
+- UI verified in browser (homepage, sign-in, processing redirect)
