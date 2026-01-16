@@ -497,3 +497,62 @@ HRInterviewAssessment {
 - Tests pass (89/89)
 - Typecheck passes (exit 0)
 - Build succeeds (2.59 kB bundle)
+
+---
+
+## Issue #12: US-011: Voice Call with Coworkers
+
+**What was implemented:**
+- Voice call API endpoint (`/api/call/token`) for generating Gemini Live ephemeral tokens with coworker persona
+- Voice call transcript endpoint (`/api/call/transcript`) for saving/retrieving voice conversation transcripts
+- Coworker voice hook (`use-coworker-voice.ts`) for managing Gemini Live connections with coworkers
+- Voice call UI component (`coworker-voice-call.tsx`) with neo-brutalist design:
+  - Coworker avatar with initials
+  - Connection state indicator (idle, connecting, connected, ended, error)
+  - Real-time transcript display
+  - Audio indicators (listening/speaking)
+  - Start/End call buttons with proper states
+  - Tips panel for new users
+- Call page (`/assessment/[id]/call`) integrating sidebar and voice call component
+- Prior conversation memory (last 20 messages from text/voice) injected into system prompt
+- Voice-specific system prompt guidelines (filler words, natural pauses, concise responses)
+- 21 unit tests covering both API endpoints
+
+**Files created:**
+- `src/app/api/call/token/route.ts` - POST endpoint for ephemeral token with coworker context
+- `src/app/api/call/token/route.test.ts` - 8 unit tests for token endpoint
+- `src/app/api/call/transcript/route.ts` - POST/GET endpoints for voice transcripts
+- `src/app/api/call/transcript/route.test.ts` - 13 unit tests for transcript endpoint
+- `src/hooks/use-coworker-voice.ts` - React hook for coworker voice calls
+- `src/components/coworker-voice-call.tsx` - Voice call UI component
+- `src/app/assessment/[id]/call/page.tsx` - Server component for call page
+- `src/app/assessment/[id]/call/client.tsx` - Client component integrating sidebar and voice call
+
+**Learnings:**
+1. Reused existing voice infrastructure from HR interview (audio utils, worklet, Gemini Live connection)
+2. Token endpoint fetches prior conversations (both text and voice) to build memory context
+3. Voice calls use `type: "voice"` with `coworkerId` in Conversation table
+4. System prompt includes voice-specific guidelines for natural conversation flow
+5. Test mocking pattern: define mock functions before vi.mock() for type safety
+6. Transcript appending: existing conversation messages merged with new transcript
+
+**Architecture patterns:**
+- Separate endpoints for HR interview vs coworker calls (different system prompts)
+- Prior conversation context limited to last 20 messages to avoid token limits
+- Voice call redirects to chat page on end for continuity
+- Same sidebar component used for both chat and call pages
+
+**Gotchas:**
+- Vitest mock typing requires wrapping functions in arrow functions for proper typing
+- Need to merge transcripts when appending to existing voice conversation
+
+**Verification completed:**
+- "Call" button initiates Gemini Live session ✓
+- Coworker persona and knowledge injected into system prompt ✓
+- Conversation flows naturally with voice ✓
+- Call can be ended by user ✓
+- Transcript saved for assessment ✓
+- Memory of prior chats/calls available to coworker ✓
+- Tests pass (110/110)
+- Typecheck passes (exit 0)
+- Build succeeds (6.68 kB bundle)
