@@ -36,6 +36,8 @@ export interface UseVoiceConversationReturn {
   isAudioSupported: boolean;
   isSpeaking: boolean;
   isListening: boolean;
+  interviewStartedAt: Date | null;
+  interviewEndedAt: Date | null;
   connect: () => Promise<void>;
   disconnect: () => void;
   endInterview: () => Promise<void>;
@@ -54,6 +56,8 @@ export function useVoiceConversation({
   const [isAudioSupported] = useState(() => checkAudioSupport());
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [interviewStartedAt, setInterviewStartedAt] = useState<Date | null>(null);
+  const [interviewEndedAt, setInterviewEndedAt] = useState<Date | null>(null);
 
   const sessionRef = useRef<Session | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -256,6 +260,7 @@ export function useVoiceConversation({
         callbacks: {
           onopen: () => {
             sessionConnected = true;
+            setInterviewStartedAt(new Date());
             updateConnectionState("connected");
           },
           onmessage: handleServerMessage,
@@ -338,6 +343,8 @@ export function useVoiceConversation({
 
   // End interview and save transcript
   const endInterview = useCallback(async () => {
+    const endTime = new Date();
+    setInterviewEndedAt(endTime);
     disconnect();
     updateConnectionState("ended");
 
@@ -352,11 +359,22 @@ export function useVoiceConversation({
             transcript: transcriptRef.current,
           }),
         });
+
+        // Trigger HR assessment analysis with timestamps
+        await fetch("/api/interview/assessment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            assessmentId,
+            interviewStartedAt: interviewStartedAt?.toISOString(),
+            interviewEndedAt: endTime.toISOString(),
+          }),
+        });
       } catch (err) {
-        console.error("Error saving transcript:", err);
+        console.error("Error saving transcript or generating assessment:", err);
       }
     }
-  }, [assessmentId, disconnect, updateConnectionState]);
+  }, [assessmentId, disconnect, updateConnectionState, interviewStartedAt]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -380,6 +398,8 @@ export function useVoiceConversation({
     isAudioSupported,
     isSpeaking,
     isListening,
+    interviewStartedAt,
+    interviewEndedAt,
     connect,
     disconnect,
     endInterview,

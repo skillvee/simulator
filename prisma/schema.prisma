@@ -148,6 +148,7 @@ model Assessment {
   scenario      Scenario         @relation(fields: [scenarioId], references: [id])
   conversations Conversation[]
   recordings    Recording[]
+  hrAssessment  HRInterviewAssessment?
 }
 
 model Conversation {
@@ -174,6 +175,42 @@ model Recording {
   analysis      Json?    // AI analysis results
 
   createdAt     DateTime @default(now())
+
+  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// HR INTERVIEW ASSESSMENT
+// ============================================================================
+
+model HRInterviewAssessment {
+  id              String   @id @default(cuid())
+  assessmentId    String   @unique // One HR assessment per assessment
+
+  // Communication Clarity Scoring (1-5 scale)
+  communicationScore       Int?      // Overall communication clarity score
+  communicationNotes       String?   @db.Text // Detailed notes on communication
+
+  // CV Verification
+  cvVerificationNotes      String?   @db.Text // Notes on CV claim verification
+  cvConsistencyScore       Int?      // How consistent CV claims were (1-5)
+  verifiedClaims           Json?     // Array of verified/flagged CV claims
+
+  // Interview Analytics Timestamps
+  interviewStartedAt       DateTime?
+  interviewEndedAt         DateTime?
+  interviewDurationSeconds Int?      // Total duration in seconds
+
+  // Additional Assessment Signals
+  professionalismScore     Int?      // Professional demeanor (1-5)
+  technicalDepthScore      Int?      // Technical knowledge depth (1-5)
+  cultureFitNotes          String?   @db.Text
+
+  // AI Analysis
+  aiAnalysis               Json?     // Full AI analysis of the interview
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 }
