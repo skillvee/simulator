@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { UserRole, AssessmentStatus } from "@prisma/client";
+import { ProfileCVSection } from "@/components/profile-cv-section";
 
 interface ExtendedUser {
   id: string;
@@ -126,6 +127,9 @@ export default async function ProfilePage() {
             </div>
           </div>
         </section>
+
+        {/* CV Upload Section */}
+        <ProfileCVSection />
 
         {/* Assessments Section */}
         <section>
