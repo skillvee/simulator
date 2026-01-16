@@ -40,7 +40,7 @@ Acceptance Criteria:
 4. WebSocket integration for real-time delivery
 5. In-app notification bell with unread count
 6. Unit tests for all API endpoints`,
-      repoUrl: "https://github.com/techflow/flowboard",
+      repoUrl: "https://github.com/skillvee/flowboard-task",
       techStack: ["TypeScript", "React", "Node.js", "PostgreSQL", "Redis", "WebSocket"],
       isPublished: true,
     },
@@ -69,7 +69,7 @@ Acceptance Criteria:
 4. WebSocket integration for real-time delivery
 5. In-app notification bell with unread count
 6. Unit tests for all API endpoints`,
-      repoUrl: "https://github.com/techflow/flowboard",
+      repoUrl: "https://github.com/skillvee/flowboard-task",
       techStack: ["TypeScript", "React", "Node.js", "PostgreSQL", "Redis", "WebSocket"],
       isPublished: true,
     },
