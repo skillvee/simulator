@@ -308,3 +308,50 @@ HRInterviewAssessment {
 - Typecheck passes (exit 0)
 - Tests pass (50/50)
 - Build succeeds (1.22 kB bundle)
+
+---
+
+## Issue #8: US-008: Welcome Message from Manager
+
+**What was implemented:**
+- Slack-like DM interface at `/assessment/[id]/welcome` showing manager's welcome messages
+- Manager persona (Alex Chen, Engineering Manager) with 6 sequential welcome messages
+- Typewriter effect with typing indicator (square dots, neo-brutalist style)
+- Chat header with manager avatar (initials in gold square), name, role, and online status
+- Date divider and timestamp formatting like Slack
+- Repo URL rendered as clickable link with gold highlight
+- Task description preview in the welcome messages
+- "Join Kickoff Call" CTA button that appears after all messages
+- Updated congratulations screen to redirect to welcome page
+
+**Files created/changed:**
+- `src/app/assessment/[id]/welcome/page.tsx` - Server component with auth, assessment lookup, manager coworker query
+- `src/app/assessment/[id]/welcome/client.tsx` - Client component with Slack-like DM UI and typewriter effect
+- `src/app/assessment/[id]/congratulations/client.tsx` - Updated redirect from `/onboarding` to `/welcome`
+
+**Learnings:**
+1. Use `coworkers` table with role filter to get manager persona, with fallback default (Alex Chen)
+2. Typewriter effect: typing indicator → delay based on message length → replace with actual message
+3. Slack-like UI elements: header with avatar + status, date divider, message bubbles with timestamps
+4. `formatMessageContent()` helper to render repo URLs as clickable links
+5. Manager initials extracted from name for avatar display
+6. Sequential message appearance creates natural conversation feel
+
+**Design patterns:**
+- Square avatars with gold background and black border (no circles)
+- Typing indicator uses square dots with `animate-pulse`
+- Date divider with border box, not rounded pill
+- Links styled with `bg-foreground text-secondary` (gold on black)
+
+**Gotchas:**
+- None - followed established patterns from congratulations and HR interview pages
+
+**Verification completed:**
+- Slack-like DM interface appears ✓
+- Message from manager persona with welcome text ✓
+- Manager suggests scheduling a kickoff call ✓
+- Links/mentions the repo for the task ✓
+- Neo-brutalist chat UI styling ✓
+- Typecheck passes (exit 0)
+- Tests pass (50/50)
+- Build succeeds (1.84 kB bundle)
