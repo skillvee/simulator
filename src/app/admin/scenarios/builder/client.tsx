@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { ScenarioBuilderData } from "@/lib/scenario-builder";
+import { Markdown } from "@/components/markdown";
 
 interface ChatMessage {
   role: "user" | "model";
@@ -290,8 +291,8 @@ export function ScenarioBuilderClient() {
                         {formatTimestamp(message.timestamp)}
                       </span>
                     </div>
-                    <div className="text-foreground whitespace-pre-wrap">
-                      {message.text}
+                    <div className="text-foreground">
+                      <Markdown>{message.text}</Markdown>
                     </div>
                   </div>
                 </div>
@@ -450,8 +451,14 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
             label="Description"
             value={data.companyDescription}
             truncate
+            markdown
           />
-          <PreviewField label="Task" value={data.taskDescription} truncate />
+          <PreviewField
+            label="Task"
+            value={data.taskDescription}
+            truncate
+            markdown
+          />
           <PreviewField label="Repo" value={data.repoUrl} />
           {data.techStack && data.techStack.length > 0 && (
             <div>
@@ -528,10 +535,12 @@ function PreviewField({
   label,
   value,
   truncate,
+  markdown,
 }: {
   label: string;
   value?: string;
   truncate?: boolean;
+  markdown?: boolean;
 }) {
   if (!value) {
     return (
@@ -551,7 +560,13 @@ function PreviewField({
   return (
     <div>
       <span className="text-sm font-mono text-muted-foreground">{label}:</span>
-      <span className="text-sm ml-1">{displayValue}</span>
+      {markdown ? (
+        <div className="text-sm mt-1">
+          <Markdown>{displayValue}</Markdown>
+        </div>
+      ) : (
+        <span className="text-sm ml-1">{displayValue}</span>
+      )}
     </div>
   );
 }

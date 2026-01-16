@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Markdown } from "@/components/markdown";
 
 interface Coworker {
   id: string;
@@ -278,7 +279,9 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
             <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider mb-2">
               Company Description
             </h3>
-            <p className="whitespace-pre-wrap">{scenario.companyDescription}</p>
+            <div className="border border-foreground/20 p-4 bg-muted/10">
+              <Markdown>{scenario.companyDescription}</Markdown>
+            </div>
           </div>
 
           {/* Task Description */}
@@ -286,7 +289,9 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
             <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider mb-2">
               Task Description
             </h3>
-            <p className="whitespace-pre-wrap">{scenario.taskDescription}</p>
+            <div className="border border-foreground/20 p-4 bg-muted/10">
+              <Markdown>{scenario.taskDescription}</Markdown>
+            </div>
           </div>
 
           {/* Repository */}

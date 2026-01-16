@@ -361,3 +361,69 @@ ParsedProfile {
 - Gemini SDK response uses `result.text` not `result.response?.text?.()`
 - Need to clean JSON markdown formatting from Gemini response before parsing
 - Tests need mocks for cv-parser, db, and supabase modules
+
+---
+
+## Issue #42: US-041: Style Markdown Rendering in Simulator Creator
+
+**What was implemented:**
+- Neo-brutalist styled Markdown component using `react-markdown`
+- GitHub Flavored Markdown support via `remark-gfm` (tables, strikethrough, etc.)
+- Syntax highlighting for code blocks via `rehype-highlight`
+- Custom syntax theme matching the black/white/gold design system
+- Integration in scenario builder chat messages and preview panel
+- Integration in scenario detail view for company/task descriptions
+- 29 unit tests for the Markdown component
+
+**Files created:**
+- `src/components/markdown.tsx` - Neo-brutalist styled Markdown renderer
+- `src/components/markdown.test.tsx` - 29 unit tests
+
+**Files changed:**
+- `src/app/globals.css` - Added syntax highlighting theme (neo-brutalist colors)
+- `src/app/admin/scenarios/builder/client.tsx` - Use Markdown for chat messages and preview
+- `src/app/admin/scenarios/[id]/client.tsx` - Use Markdown for scenario details display
+- `package.json` - Added react-markdown, remark-gfm, rehype-highlight dependencies
+
+**Markdown Component Features:**
+- Headings (h1-h6) with appropriate sizing and h1 border-bottom
+- Paragraphs with proper spacing
+- Lists (ul/ol) with gold square (■) bullets
+- Links with gold underline decoration
+- Bold, italic, strikethrough text
+- Inline code with gold tint background
+- Code blocks with black background, white text, syntax highlighting
+- Blockquotes with gold left border
+- Tables with inverted header
+- Images with borders
+- Horizontal rules
+
+**Syntax Highlighting Theme:**
+```css
+/* Light mode: black background, white text */
+- Keywords: gold (#f7da50)
+- Strings: white
+- Comments: gray (#888888)
+- Functions: bold white
+
+/* Dark mode: inverted (white background, black text) */
+- Keywords: dark gold (#8c6d00)
+- Strings: black
+- Comments: dark gray (#666666)
+```
+
+**Neo-Brutalist Design Compliance:**
+- No rounded corners (0px radius)
+- No shadows
+- Sharp borders (1px or 2px black)
+- High contrast (black on white, white on black)
+- Gold (#f7da50) for accent/emphasis
+- DM Sans for prose, Space Mono for code
+
+**Learnings:**
+1. `react-markdown` requires `remark-gfm` plugin for GitHub Flavored Markdown (tables, strikethrough)
+2. `rehype-highlight` provides syntax highlighting, works with highlight.js CSS classes
+3. Custom component overrides via `components` prop allow full styling control
+4. CSS pseudo-elements (`before:content-['■']`) work well for custom list bullets
+5. `transition: none` important for neo-brutalist hover states (instant color flip)
+6. Dark mode code blocks can use inverted colors (white bg, black text) for contrast

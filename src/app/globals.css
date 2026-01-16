@@ -69,3 +69,193 @@ button:hover, a:hover {
 code, pre, .font-mono {
   font-family: var(--font-space-mono);
 }
+
+/* ==========================================================================
+   Syntax Highlighting (Neo-Brutalist Theme)
+   Based on highlight.js with custom colors for our design system
+   ========================================================================== */
+
+/* Base code block styling */
+.markdown-content pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0;
+}
+
+.markdown-content code.hljs {
+  padding: 0;
+}
+
+/* Neo-brutalist syntax colors - high contrast, minimal palette */
+.hljs {
+  color: #ffffff;
+  background: #000000;
+}
+
+/* Comments - muted but readable */
+.hljs-comment,
+.hljs-quote {
+  color: #888888;
+  font-style: italic;
+}
+
+/* Keywords, tags - gold accent */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-tag {
+  color: #f7da50;
+  font-weight: bold;
+}
+
+/* Strings - white with slight emphasis */
+.hljs-string,
+.hljs-attr,
+.hljs-template-variable,
+.hljs-variable,
+.hljs-template-tag {
+  color: #ffffff;
+}
+
+/* Numbers, literals - gold */
+.hljs-number,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-link {
+  color: #f7da50;
+}
+
+/* Functions, methods - bold white */
+.hljs-title,
+.hljs-section,
+.hljs-name {
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* Attributes - gold */
+.hljs-attribute {
+  color: #f7da50;
+}
+
+/* Built-ins, symbols */
+.hljs-symbol,
+.hljs-bullet,
+.hljs-built_in,
+.hljs-builtin-name {
+  color: #cccccc;
+}
+
+/* Additions - gold background */
+.hljs-addition {
+  color: #000000;
+  background-color: #f7da50;
+}
+
+/* Deletions - muted with strikethrough feel */
+.hljs-deletion {
+  color: #ffffff;
+  background-color: #333333;
+  text-decoration: line-through;
+}
+
+/* Selection */
+.hljs::selection,
+.hljs ::selection {
+  background-color: #f7da50;
+  color: #000000;
+}
+
+/* Meta, doctags */
+.hljs-meta,
+.hljs-doctag {
+  color: #888888;
+}
+
+/* Emphasis */
+.hljs-emphasis {
+  font-style: italic;
+}
+
+/* Strong */
+.hljs-strong {
+  font-weight: bold;
+}
+
+/* Regexp */
+.hljs-regexp {
+  color: #f7da50;
+}
+
+/* Subst */
+.hljs-subst {
+  color: #ffffff;
+}
+
+/* Dark mode - invert for light background code blocks */
+.dark .markdown-content pre {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+.dark .hljs {
+  color: #000000;
+  background: #ffffff;
+}
+
+.dark .hljs-comment,
+.dark .hljs-quote {
+  color: #666666;
+}
+
+.dark .hljs-keyword,
+.dark .hljs-selector-tag,
+.dark .hljs-tag,
+.dark .hljs-number,
+.dark .hljs-literal,
+.dark .hljs-type,
+.dark .hljs-params,
+.dark .hljs-link,
+.dark .hljs-attribute,
+.dark .hljs-regexp {
+  color: #8c6d00;
+}
+
+.dark .hljs-string,
+.dark .hljs-attr,
+.dark .hljs-template-variable,
+.dark .hljs-variable,
+.dark .hljs-template-tag,
+.dark .hljs-subst {
+  color: #000000;
+}
+
+.dark .hljs-title,
+.dark .hljs-section,
+.dark .hljs-name {
+  color: #000000;
+  font-weight: bold;
+}
+
+.dark .hljs-symbol,
+.dark .hljs-bullet,
+.dark .hljs-built_in,
+.dark .hljs-builtin-name {
+  color: #333333;
+}
+
+.dark .hljs-addition {
+  color: #ffffff;
+  background-color: #000000;
+}
+
+.dark .hljs-deletion {
+  color: #000000;
+  background-color: #cccccc;
+}
+
+.dark .hljs-meta,
+.dark .hljs-doctag {
+  color: #666666;
+}
