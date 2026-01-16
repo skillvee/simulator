@@ -23,9 +23,12 @@ export function HRInterviewClient({
   const handleInterviewEnd = (finalTranscript: TranscriptMessage[]) => {
     setTranscript(finalTranscript);
     setIsCompleted(true);
+    // Redirect to congratulations screen
+    router.push(`/assessment/${assessmentId}/congratulations`);
   };
 
   if (isCompleted) {
+    // Show brief loading state while redirecting
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md p-8">
@@ -33,26 +36,9 @@ export function HRInterviewClient({
             <span className="text-3xl">&#10003;</span>
           </div>
           <h2 className="text-2xl font-bold mb-4">Interview Completed!</h2>
-          <p className="text-muted-foreground mb-2">
-            Great job completing the HR interview with {companyName}.
+          <p className="text-muted-foreground">
+            Redirecting...
           </p>
-          <p className="text-sm text-muted-foreground mb-6">
-            {transcript.length} messages recorded in your transcript.
-          </p>
-          <div className="space-y-4">
-            <button
-              onClick={() => router.push(`/assessment/${assessmentId}/onboarding`)}
-              className="w-full bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
-            >
-              Continue to Onboarding
-            </button>
-            <button
-              onClick={() => router.push("/profile")}
-              className="w-full bg-background text-foreground px-6 py-3 font-semibold border-2 border-border hover:border-foreground"
-            >
-              Back to Profile
-            </button>
-          </div>
         </div>
       </div>
     );
