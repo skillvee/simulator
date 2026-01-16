@@ -497,3 +497,73 @@ const assessmentWithProfile = await db.assessment.findFirst({
 - `import type { Prisma }` won't work for `Prisma.JsonNull` - need value import
 - Run seed with `export $(grep -v '^#' .env.local | xargs) && npx tsx prisma/seed.ts`
 - Test user needs assessment with `parsedProfile` to see the visual component
+
+---
+
+## Issue #44: US-042: Assessment Start Flow for Regular Users
+
+**What was implemented:**
+- `/start` page with smart redirect logic for assessment start flow
+- New users auto-start assessment after sign-up (redirect to `/start` instead of `/`)
+- Returning users resume in-progress assessments based on status
+- Handle edge case when no published scenarios exist (display message)
+- 13 unit tests for the `/start` page
+
+**Files created:**
+- `src/app/start/page.tsx` - Smart redirect page with assessment creation logic
+- `src/app/start/page.test.tsx` - 13 unit tests
+
+**Files changed:**
+- `src/app/sign-up/page.tsx` - Redirect to `/start` after sign-up (both credentials and Google OAuth)
+- `src/app/page.tsx` - "Start Practicing" button links to `/start` instead of `/sign-in`
+
+**User Flows:**
+
+1. **New User Flow:**
+   - Sign up → Auto redirect to `/start`
+   - `/start` finds first published scenario → Creates assessment
+   - Redirects to `/assessment/[id]/consent`
+
+2. **Returning User Flow (no in-progress):**
+   - Click "Start Practicing" → `/start`
+   - If not authenticated → `/sign-in?callbackUrl=/start`
+   - If authenticated → Creates new assessment → `/assessment/[id]/consent`
+
+3. **Returning User Flow (resume):**
+   - Click "Start Practicing" → `/start`
+   - Finds most recent in-progress assessment
+   - Redirects based on status:
+     - HR_INTERVIEW → `/assessment/[id]/hr-interview`
+     - ONBOARDING → `/assessment/[id]/congratulations`
+     - WORKING → `/assessment/[id]/welcome`
+     - FINAL_DEFENSE → `/assessment/[id]/defense`
+     - PROCESSING → `/assessment/[id]/processing`
+
+**Status-to-Page Mapping:**
+```typescript
+switch (status) {
+  case HR_INTERVIEW: return '/assessment/[id]/hr-interview';
+  case ONBOARDING: return '/assessment/[id]/congratulations';
+  case WORKING: return '/assessment/[id]/welcome';
+  case FINAL_DEFENSE: return '/assessment/[id]/defense';
+  case PROCESSING: return '/assessment/[id]/processing';
+}
+```
+
+**Key decisions:**
+- Consent check comes first - even if status says HR_INTERVIEW, redirect to consent if not given
+- Multiple in-progress assessments → resume most recent (orderBy: createdAt desc)
+- Default scenario selected by createdAt asc (oldest published = first available)
+- Home page stays static - no auth check, just link destination changed
+
+**Learnings:**
+1. Server components use `redirect()` from "next/navigation" which throws to trigger redirect
+2. Testing server component redirects: mock redirect to throw, use `expect().rejects.toThrow()` pattern
+3. Prisma `status: { not: COMPLETED }` filter works for excluding single enum value
+4. No need for separate API endpoint - server component can create assessment directly
+5. Keep home page simple - all logic in `/start` page keeps concerns separated
+
+**Gotchas:**
+- `redirect()` throws an error (NEXT_REDIRECT) - don't try to catch it
+- Test mocks need to throw to simulate redirect: `throw new Error(\`REDIRECT:\${url}\`)`
+- Session may exist but have no user.id - check both
