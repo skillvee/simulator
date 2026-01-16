@@ -2,6 +2,8 @@ import { supabase, supabaseAdmin } from "./supabase";
 
 export const STORAGE_BUCKETS = {
   RESUMES: "resumes",
+  RECORDINGS: "recordings",
+  SCREENSHOTS: "screenshots",
 } as const;
 
 interface UploadResult {
