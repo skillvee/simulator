@@ -10,6 +10,7 @@ vi.mock("@/auth", () => ({
 const mockAssessmentFindFirst = vi.fn();
 const mockCoworkerFindFirst = vi.fn();
 const mockConversationFindFirst = vi.fn();
+const mockConversationFindMany = vi.fn();
 const mockConversationCreate = vi.fn();
 const mockConversationUpdate = vi.fn();
 vi.mock("@/server/db", () => ({
@@ -22,10 +23,23 @@ vi.mock("@/server/db", () => ({
     },
     conversation: {
       findFirst: (...args: unknown[]) => mockConversationFindFirst(...args),
+      findMany: (...args: unknown[]) => mockConversationFindMany(...args),
       create: (...args: unknown[]) => mockConversationCreate(...args),
       update: (...args: unknown[]) => mockConversationUpdate(...args),
     },
   },
+}));
+
+// Mock conversation-memory (to avoid calling Gemini for summarization in tests)
+vi.mock("@/lib/conversation-memory", () => ({
+  buildCoworkerMemory: vi.fn().mockResolvedValue({
+    hasPriorConversations: false,
+    summary: null,
+    recentMessages: [],
+    totalMessageCount: 0,
+  }),
+  formatMemoryForPrompt: vi.fn().mockReturnValue(""),
+  buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
 }));
 
 // Mock Gemini
@@ -145,7 +159,8 @@ describe("POST /api/chat", () => {
       personaStyle: "Technical and helpful",
       knowledge: [],
     });
-    mockConversationFindFirst.mockResolvedValue(null);
+    // Mock findMany to return empty array (no prior conversations)
+    mockConversationFindMany.mockResolvedValue([]);
     mockConversationCreate.mockResolvedValue({ id: "conv-1" });
     mockGenerateContent.mockResolvedValue({
       text: "Hi there! How can I help you?",
@@ -192,10 +207,16 @@ describe("POST /api/chat", () => {
       { role: "user", text: "Previous message", timestamp: "2025-01-01T00:00:00Z" },
       { role: "model", text: "Previous response", timestamp: "2025-01-01T00:00:01Z" },
     ];
-    mockConversationFindFirst.mockResolvedValue({
+    // Mock findMany to return existing text conversation
+    mockConversationFindMany.mockResolvedValue([{
       id: "conv-1",
+      coworkerId: "coworker-1",
+      type: "text",
       transcript: existingHistory,
-    });
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      coworker: { id: "coworker-1", name: "Jordan Rivera" },
+    }]);
     mockConversationUpdate.mockResolvedValue({});
     mockGenerateContent.mockResolvedValue({
       text: "Follow-up response",
@@ -270,7 +291,8 @@ describe("POST /api/chat", () => {
       personaStyle: "Technical and helpful",
       knowledge: [],
     });
-    mockConversationFindFirst.mockResolvedValue(null);
+    // Mock findMany to return empty (no prior conversations)
+    mockConversationFindMany.mockResolvedValue([]);
     mockConversationCreate.mockResolvedValue({ id: "conv-1" });
     mockGenerateContent.mockResolvedValue({
       text: "Response text",

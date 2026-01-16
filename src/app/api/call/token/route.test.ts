@@ -30,6 +30,19 @@ vi.mock("@/lib/gemini", () => ({
   generateEphemeralToken: (...args: unknown[]) => mockGenerateEphemeralToken(...args),
 }));
 
+// Mock conversation-memory (to avoid calling Gemini for summarization in tests)
+const mockFormatMemoryForPrompt = vi.fn();
+vi.mock("@/lib/conversation-memory", () => ({
+  buildCoworkerMemory: vi.fn().mockResolvedValue({
+    hasPriorConversations: false,
+    summary: null,
+    recentMessages: [],
+    totalMessageCount: 0,
+  }),
+  formatMemoryForPrompt: (...args: unknown[]) => mockFormatMemoryForPrompt(...args),
+  buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
+}));
+
 import { POST } from "./route";
 
 describe("POST /api/call/token", () => {
@@ -160,6 +173,7 @@ describe("POST /api/call/token", () => {
       knowledge: [],
     });
     mockConversationFindMany.mockResolvedValue([]);
+    mockFormatMemoryForPrompt.mockReturnValue("");
     mockGenerateEphemeralToken.mockResolvedValue("ephemeral-token-123");
 
     const request = new Request("http://localhost/api/call/token", {
@@ -203,13 +217,19 @@ describe("POST /api/call/token", () => {
     mockConversationFindMany.mockResolvedValue([
       {
         id: "conv-1",
+        coworkerId: "coworker-id",
         type: "text",
         transcript: [
           { role: "user", text: "How does auth work?", timestamp: "2024-01-01" },
           { role: "model", text: "We use JWT tokens.", timestamp: "2024-01-01" },
         ],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        coworker: { id: "coworker-id", name: "Jordan Rivera" },
       },
     ]);
+    // Mock formatMemoryForPrompt to return prior conversation context
+    mockFormatMemoryForPrompt.mockReturnValue("\n## Prior Conversation History\nWe discussed auth.");
     mockGenerateEphemeralToken.mockResolvedValue("ephemeral-token-123");
 
     const request = new Request("http://localhost/api/call/token", {
@@ -220,7 +240,7 @@ describe("POST /api/call/token", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
 
-    // Verify that generateEphemeralToken was called with system instruction
+    // Verify that generateEphemeralToken was called with system instruction containing prior history
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
         systemInstruction: expect.stringContaining("Prior Conversation History"),

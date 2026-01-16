@@ -7,14 +7,14 @@ import {
   parseCoworkerKnowledge,
   type CoworkerPersona,
 } from "@/lib/coworker-persona";
+import {
+  buildCoworkerMemory,
+  formatMemoryForPrompt,
+  buildCrossCoworkerContext,
+  type ChatMessage,
+  type ConversationWithMeta,
+} from "@/lib/conversation-memory";
 import type { Prisma } from "@prisma/client";
-
-// Chat message type
-interface ChatMessage {
-  role: "user" | "model";
-  text: string;
-  timestamp: string;
-}
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-2.0-flash";
@@ -69,18 +69,66 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Coworker not found" }, { status: 404 });
   }
 
-  // Get existing conversation history
-  const existingConversation = await db.conversation.findFirst({
+  // Get ALL conversations for this assessment (for cross-coworker context)
+  const allConversations = await db.conversation.findMany({
     where: {
       assessmentId,
-      coworkerId,
-      type: "text",
+    },
+    include: {
+      coworker: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
     },
   });
+
+  // Get existing text conversation with this specific coworker
+  const existingConversation = allConversations.find(
+    (c) => c.coworkerId === coworkerId && c.type === "text"
+  );
 
   const existingMessages = existingConversation
     ? (existingConversation.transcript as unknown as ChatMessage[])
     : [];
+
+  // Get all conversations with this coworker (text + voice) for memory
+  const coworkerConversations: ConversationWithMeta[] = allConversations
+    .filter((c) => c.coworkerId === coworkerId)
+    .map((c) => ({
+      type: c.type as "text" | "voice",
+      coworkerId: c.coworkerId,
+      messages: (c.transcript as unknown as ChatMessage[]) || [],
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    }));
+
+  // Build memory context for this coworker
+  const memory = await buildCoworkerMemory(coworkerConversations, coworker.name);
+  const memoryContext = formatMemoryForPrompt(memory, coworker.name);
+
+  // Build cross-coworker context (awareness of other conversations)
+  const coworkerMap = new Map<string, string>();
+  for (const c of allConversations) {
+    if (c.coworker) {
+      coworkerMap.set(c.coworker.id, c.coworker.name);
+    }
+  }
+  const crossCoworkerContext = buildCrossCoworkerContext(
+    allConversations.map((c) => ({
+      type: c.type as "text" | "voice",
+      coworkerId: c.coworkerId,
+      messages: (c.transcript as unknown as ChatMessage[]) || [],
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    })),
+    coworkerId,
+    coworkerMap
+  );
 
   // Build coworker persona for system prompt
   const persona: CoworkerPersona = {
@@ -91,12 +139,15 @@ export async function POST(request: Request) {
     avatarUrl: coworker.avatarUrl,
   };
 
-  const systemPrompt = buildCoworkerSystemPrompt(persona, {
+  const baseSystemPrompt = buildCoworkerSystemPrompt(persona, {
     companyName: assessment.scenario.companyName,
     candidateName: session.user.name || undefined,
     taskDescription: assessment.scenario.taskDescription,
     techStack: assessment.scenario.techStack,
   });
+
+  // Combine base prompt with memory context
+  const systemPrompt = `${baseSystemPrompt}${memoryContext}${crossCoworkerContext}`;
 
   // Build history for Gemini - include system prompt as first message
   const history = existingMessages.map((msg) => ({

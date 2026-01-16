@@ -7,14 +7,13 @@ import {
   parseCoworkerKnowledge,
   type CoworkerPersona,
 } from "@/lib/coworker-persona";
-import type { Prisma } from "@prisma/client";
-
-// Chat message type (same as text chat)
-interface ChatMessage {
-  role: "user" | "model";
-  text: string;
-  timestamp: string;
-}
+import {
+  buildCoworkerMemory,
+  formatMemoryForPrompt,
+  buildCrossCoworkerContext,
+  type ChatMessage,
+  type ConversationWithMeta,
+} from "@/lib/conversation-memory";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -70,41 +69,57 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Coworker not found" }, { status: 404 });
     }
 
-    // Get prior conversation history (both text and voice) for context
-    const priorConversations = await db.conversation.findMany({
+    // Get ALL conversations for this assessment (for cross-coworker context)
+    const allConversations = await db.conversation.findMany({
       where: {
         assessmentId,
-        coworkerId,
+      },
+      include: {
+        coworker: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "asc",
       },
     });
 
-    // Build conversation history summary
-    let conversationHistorySummary = "";
-    if (priorConversations.length > 0) {
-      const allMessages: ChatMessage[] = [];
-      for (const conv of priorConversations) {
-        const transcript = conv.transcript as unknown as ChatMessage[];
-        if (Array.isArray(transcript)) {
-          allMessages.push(...transcript);
-        }
-      }
+    // Get all conversations with this coworker (text + voice) for memory
+    const coworkerConversations: ConversationWithMeta[] = allConversations
+      .filter((c) => c.coworkerId === coworkerId)
+      .map((c) => ({
+        type: c.type as "text" | "voice",
+        coworkerId: c.coworkerId,
+        messages: (c.transcript as unknown as ChatMessage[]) || [],
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }));
 
-      if (allMessages.length > 0) {
-        // Include recent messages for context (last 20 messages)
-        const recentMessages = allMessages.slice(-20);
-        conversationHistorySummary = `
+    // Build memory context for this coworker (with summarization)
+    const memory = await buildCoworkerMemory(coworkerConversations, coworker.name);
+    const memoryContext = formatMemoryForPrompt(memory, coworker.name);
 
-## Prior Conversation History
-You have had previous conversations with this candidate. Here's a summary of recent messages:
-
-${recentMessages.map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`).join("\n")}
-
-Continue the conversation naturally, referencing prior discussions when relevant.`;
+    // Build cross-coworker context (awareness of other conversations)
+    const coworkerMap = new Map<string, string>();
+    for (const c of allConversations) {
+      if (c.coworker) {
+        coworkerMap.set(c.coworker.id, c.coworker.name);
       }
     }
+    const crossCoworkerContext = buildCrossCoworkerContext(
+      allConversations.map((c) => ({
+        type: c.type as "text" | "voice",
+        coworkerId: c.coworkerId,
+        messages: (c.transcript as unknown as ChatMessage[]) || [],
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      })),
+      coworkerId,
+      coworkerMap
+    );
 
     // Build coworker persona for system prompt
     const persona: CoworkerPersona = {
@@ -122,9 +137,8 @@ Continue the conversation naturally, referencing prior discussions when relevant
       techStack: assessment.scenario.techStack,
     });
 
-    // Add voice-specific instructions
-    const systemInstruction = `${baseSystemPrompt}
-${conversationHistorySummary}
+    // Combine base prompt with memory context and voice-specific instructions
+    const systemInstruction = `${baseSystemPrompt}${memoryContext}${crossCoworkerContext}
 
 ## Voice Conversation Guidelines
 - You're now on a voice call with the candidate
