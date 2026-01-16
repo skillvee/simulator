@@ -177,6 +177,29 @@ model Recording {
   createdAt     DateTime @default(now())
 
   assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  segments      RecordingSegment[]
+}
+
+// ============================================================================
+// RECORDING SEGMENTS (for robustness and stitching)
+// ============================================================================
+
+model RecordingSegment {
+  id            String   @id @default(cuid())
+  recordingId   String
+  segmentIndex  Int      // Order of segment within the recording
+  startTime     DateTime
+  endTime       DateTime?
+  status        String   @default("recording") // "recording" | "completed" | "interrupted"
+
+  // Storage paths for all chunks in this segment
+  chunkPaths    String[] // Array of storage paths for each chunk
+  screenshotPaths String[] // Array of storage paths for screenshots
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  recording     Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
 }
 
 // ============================================================================

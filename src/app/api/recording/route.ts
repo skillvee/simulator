@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     const type = formData.get("type") as "video" | "screenshot" | null;
     const chunkIndex = formData.get("chunkIndex") as string | null;
     const timestamp = formData.get("timestamp") as string | null;
+    const segmentId = formData.get("segmentId") as string | null;
 
     if (!file || !assessmentId || !type) {
       return NextResponse.json(
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     const storageUrl = signedUrlData?.signedUrl || path;
 
-    // For video chunks, update or create Recording record
+    // For video chunks, update or create Recording record and add to segment
     if (type === "video") {
       await db.recording.upsert({
         where: {
@@ -119,6 +120,36 @@ export async function POST(request: NextRequest) {
           endTime: new Date(),
         },
       });
+
+      // Add chunk path to segment if segmentId provided
+      if (segmentId) {
+        const segment = await db.recordingSegment.findUnique({
+          where: { id: segmentId },
+        });
+        if (segment) {
+          await db.recordingSegment.update({
+            where: { id: segmentId },
+            data: {
+              chunkPaths: [...segment.chunkPaths, path],
+            },
+          });
+        }
+      }
+    }
+
+    // Add screenshot path to segment if segmentId provided
+    if (type === "screenshot" && segmentId) {
+      const segment = await db.recordingSegment.findUnique({
+        where: { id: segmentId },
+      });
+      if (segment) {
+        await db.recordingSegment.update({
+          where: { id: segmentId },
+          data: {
+            screenshotPaths: [...segment.screenshotPaths, path],
+          },
+        });
+      }
     }
 
     return NextResponse.json({
@@ -127,6 +158,7 @@ export async function POST(request: NextRequest) {
       url: storageUrl,
       type,
       chunkIndex: chunkIndex ? parseInt(chunkIndex) : undefined,
+      segmentId,
     });
   } catch (error) {
     console.error("Recording upload error:", error);
@@ -162,7 +194,13 @@ export async function GET(request: NextRequest) {
         userId: session.user.id,
       },
       include: {
-        recordings: true,
+        recordings: {
+          include: {
+            segments: {
+              orderBy: { segmentIndex: "asc" },
+            },
+          },
+        },
       },
     });
 

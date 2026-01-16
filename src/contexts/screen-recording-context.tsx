@@ -57,7 +57,8 @@ async function uploadRecordingData(
   file: Blob,
   type: "video" | "screenshot",
   chunkIndex?: number,
-  timestamp?: number
+  timestamp?: number,
+  segmentId?: string
 ): Promise<boolean> {
   try {
     const formData = new FormData();
@@ -69,6 +70,9 @@ async function uploadRecordingData(
     }
     if (timestamp !== undefined) {
       formData.append("timestamp", timestamp.toString());
+    }
+    if (segmentId) {
+      formData.append("segmentId", segmentId);
     }
 
     const response = await fetch("/api/recording", {
@@ -89,6 +93,77 @@ async function uploadRecordingData(
   }
 }
 
+// Helper to manage recording sessions
+async function startRecordingSession(
+  assessmentId: string
+): Promise<{ segmentId: string; segmentIndex: number } | null> {
+  try {
+    const response = await fetch("/api/recording/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assessmentId, action: "start" }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return { segmentId: data.segmentId, segmentIndex: data.segmentIndex };
+  } catch {
+    return null;
+  }
+}
+
+async function interruptRecordingSession(
+  assessmentId: string,
+  segmentId: string
+): Promise<void> {
+  try {
+    await fetch("/api/recording/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assessmentId, action: "interrupt", segmentId }),
+    });
+  } catch {
+    // Ignore errors during interrupt
+  }
+}
+
+async function completeRecordingSession(
+  assessmentId: string,
+  segmentId: string
+): Promise<void> {
+  try {
+    await fetch("/api/recording/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assessmentId, action: "complete", segmentId }),
+    });
+  } catch {
+    // Ignore errors during complete
+  }
+}
+
+interface SessionStatus {
+  hasRecording: boolean;
+  activeSegment: {
+    id: string;
+    segmentIndex: number;
+    chunkCount: number;
+  } | null;
+  totalChunks: number;
+  totalScreenshots: number;
+}
+
+async function getSessionStatus(assessmentId: string): Promise<SessionStatus | null> {
+  try {
+    const response = await fetch(
+      `/api/recording/session?assessmentId=${assessmentId}`
+    );
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
 export function ScreenRecordingProvider({
   children,
   assessmentId,
@@ -99,12 +174,14 @@ export function ScreenRecordingProvider({
   const [error, setError] = useState<string | null>(null);
   const [chunkCount, setChunkCount] = useState(0);
   const [screenshotCount, setScreenshotCount] = useState(0);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
 
   const streamRef = useRef<MediaStream | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const videoRecorderRef = useRef<VideoRecorder | null>(null);
   const chunkIndexRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
+  const segmentIdRef = useRef<string | null>(null);
 
   const isSupported = checkScreenCaptureSupport() && checkMediaRecorderSupport();
 
@@ -118,10 +195,17 @@ export function ScreenRecordingProvider({
           finalBlob,
           "video",
           chunkIndexRef.current,
-          startTimeRef.current || Date.now()
+          startTimeRef.current || Date.now(),
+          segmentIdRef.current || undefined
         );
       }
       videoRecorderRef.current = null;
+    }
+
+    // Mark segment as interrupted in database
+    if (segmentIdRef.current) {
+      interruptRecordingSession(assessmentId, segmentIdRef.current);
+      segmentIdRef.current = null;
     }
 
     setState("stopped");
@@ -163,8 +247,6 @@ export function ScreenRecordingProvider({
     cleanup();
     setState("requesting");
     setError(null);
-    setChunkCount(0);
-    setScreenshotCount(0);
 
     try {
       const stream = await requestScreenCapture();
@@ -173,6 +255,16 @@ export function ScreenRecordingProvider({
 
       // Initialize start time
       startTimeRef.current = Date.now();
+
+      // Start a new recording segment in the database
+      const sessionResult = await startRecordingSession(assessmentId);
+      if (sessionResult) {
+        segmentIdRef.current = sessionResult.segmentId;
+        // Reset chunk index for the new segment
+        chunkIndexRef.current = 0;
+        setChunkCount(0);
+        setScreenshotCount(0);
+      }
 
       // Create and start video recorder
       videoRecorderRef.current = new VideoRecorder(
@@ -193,7 +285,8 @@ export function ScreenRecordingProvider({
               chunk,
               "video",
               currentIndex,
-              startTimeRef.current || Date.now()
+              startTimeRef.current || Date.now(),
+              segmentIdRef.current || undefined
             );
           },
           onScreenshot: (screenshot) => {
@@ -204,7 +297,8 @@ export function ScreenRecordingProvider({
               screenshot,
               "screenshot",
               undefined,
-              Date.now()
+              Date.now(),
+              segmentIdRef.current || undefined
             );
           },
           onError: (err) => {
@@ -254,10 +348,17 @@ export function ScreenRecordingProvider({
           finalBlob,
           "video",
           chunkIndexRef.current,
-          startTimeRef.current || Date.now()
+          startTimeRef.current || Date.now(),
+          segmentIdRef.current || undefined
         );
       }
       videoRecorderRef.current = null;
+    }
+
+    // Mark segment as completed in database
+    if (segmentIdRef.current) {
+      completeRecordingSession(assessmentId, segmentIdRef.current);
+      segmentIdRef.current = null;
     }
 
     cleanup();
@@ -285,6 +386,46 @@ export function ScreenRecordingProvider({
     return () => clearInterval(interval);
   }, [state, handleStreamStopped]);
 
+  // Load session status on mount (for persistence across page reloads/laptop close)
+  useEffect(() => {
+    async function loadSession() {
+      const status = await getSessionStatus(assessmentId);
+      if (status?.hasRecording) {
+        // Update counts from database
+        setChunkCount(status.totalChunks);
+        setScreenshotCount(status.totalScreenshots);
+
+        // Check if there was an active segment (meaning recording was interrupted)
+        // The activeSegment will only exist if status is "recording" in DB
+        // Since we're loading after a page refresh, the MediaRecorder is gone
+        // so we need to show the re-prompt modal
+        if (status.activeSegment) {
+          // There was an active recording session, but browser doesn't have stream
+          // Mark as stopped to trigger re-prompt
+          setState("stopped");
+          setPermissionState("stopped");
+          // Mark the stale segment as interrupted
+          await interruptRecordingSession(assessmentId, status.activeSegment.id);
+        }
+      }
+
+      // Also check sessionStorage for same-session interruptions
+      const wasRecording = sessionStorage.getItem(
+        `screen-recording-${assessmentId}`
+      );
+      if (wasRecording === "active" && state === "idle") {
+        // Session storage says we were recording but state is idle
+        // This means the stream was lost
+        setState("stopped");
+        setPermissionState("stopped");
+      }
+
+      setSessionLoaded(true);
+    }
+
+    loadSession();
+  }, [assessmentId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -304,6 +445,11 @@ export function ScreenRecordingProvider({
     stopRecording,
     retryRecording,
   };
+
+  // Don't render children until session is loaded to avoid flash of content
+  if (!sessionLoaded && isSupported) {
+    return null;
+  }
 
   return (
     <ScreenRecordingContext.Provider value={value}>
