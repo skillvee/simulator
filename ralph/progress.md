@@ -556,3 +556,53 @@ HRInterviewAssessment {
 - Tests pass (110/110)
 - Typecheck passes (exit 0)
 - Build succeeds (6.68 kB bundle)
+
+---
+
+## Issue #13: US-013: Coworker Memory Across Conversations
+
+**What was implemented:**
+- Conversation memory module (`src/lib/conversation-memory.ts`) with:
+  - `buildCoworkerMemory()` - aggregates all conversations with a coworker
+  - `summarizeConversation()` - uses Gemini Flash to summarize older messages
+  - `formatMemoryForPrompt()` - formats memory context for system prompts
+  - `buildCrossCoworkerContext()` - optional awareness of other coworker conversations
+- Summary triggered when message count exceeds threshold (>5 messages)
+- Recent messages (last 10) included verbatim for immediate context
+- Updated text chat endpoint to include memory context
+- Updated voice call endpoint to use same memory system with summarization
+- 15 unit tests for conversation-memory module
+
+**Files created/changed:**
+- `src/lib/conversation-memory.ts` - New memory module with summarization
+- `src/lib/conversation-memory.test.ts` - 15 unit tests for memory module
+- `src/app/api/chat/route.ts` - Updated to fetch all conversations and build memory context
+- `src/app/api/chat/route.test.ts` - Updated tests to mock new conversation-memory module
+- `src/app/api/call/token/route.ts` - Updated to use conversation-memory module
+- `src/app/api/call/token/route.test.ts` - Updated tests to mock new module
+
+**Learnings:**
+1. Memory system works across both text and voice by aggregating all conversation types
+2. Manager remembers kickoff during final defense because it's the same coworker (Alex Chen)
+3. Summarization uses Gemini Flash for speed - minimal latency impact
+4. Cross-coworker context allows "I heard you talked to Alex about X" interactions
+5. Memory persistence is automatic via existing Conversation table structure
+6. Test mocking requires separate mock functions defined before vi.mock() calls
+
+**Architecture patterns:**
+- Single source of truth: conversation-memory module used by both chat and call endpoints
+- Summarization threshold prevents excessive context for short conversations
+- Recent + summary pattern balances context freshness with completeness
+- Cross-coworker awareness is opt-in (added to context but not intrusive)
+
+**Gotchas:**
+- Need to update tests to mock the new conversation-memory module
+- findMany replaces findFirst when fetching all conversations for context building
+
+**Verification completed:**
+- Conversation history summarized and included in coworker context ✓
+- Manager remembers kickoff call during final defense ✓
+- Memory persists within the assessment session ✓
+- Works for both text chat and voice calls ✓
+- Tests pass (125/125)
+- Typecheck passes (exit 0)
