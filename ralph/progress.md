@@ -606,3 +606,73 @@ HRInterviewAssessment {
 - Works for both text chat and voice calls ✓
 - Tests pass (125/125)
 - Typecheck passes (exit 0)
+
+---
+
+## Issue #14: US-014: Screen Recording Permission
+
+**What was implemented:**
+- Screen capture utilities (`src/lib/screen.ts`) with:
+  - `checkScreenCaptureSupport()` - browser feature detection for getDisplayMedia
+  - `requestScreenCapture()` - request screen share with video-only (5-10 fps for assessment)
+  - `stopScreenCapture()` - clean track termination
+  - `isStreamActive()` - check if stream is still live
+  - `onStreamEnded()` - listener for when user stops sharing via browser UI
+- `useScreenRecording` hook for managing screen recording state
+- Screen permission page at `/assessment/[id]/screen-permission` with:
+  - Clear explanation of why screen recording is needed (3 reasons)
+  - "Share Your Screen" button with requesting state
+  - Browser not supported fallback screen
+  - Permission denied handling with instructions to re-enable
+- `ScreenRecordingProvider` context for global recording state management
+- `ScreenRecordingGuard` component that re-prompts when screen sharing stops mid-assessment
+- `AssessmentScreenWrapper` combining provider and guard for easy page wrapping
+- Updated congratulations page to redirect to screen-permission instead of welcome
+- Wrapped welcome, chat, and call pages with AssessmentScreenWrapper for re-prompt capability
+- 10 unit tests for screen utilities
+
+**Files created:**
+- `src/lib/screen.ts` - Screen capture utilities
+- `src/lib/screen.test.ts` - 10 unit tests for screen utilities
+- `src/hooks/use-screen-recording.ts` - React hook for screen recording
+- `src/contexts/screen-recording-context.tsx` - Global recording state provider
+- `src/components/screen-recording-guard.tsx` - Re-prompt modal when sharing stops
+- `src/components/assessment-screen-wrapper.tsx` - Combined provider + guard wrapper
+- `src/app/assessment/[id]/screen-permission/page.tsx` - Server component
+- `src/app/assessment/[id]/screen-permission/client.tsx` - Permission request UI
+
+**Files changed:**
+- `src/app/assessment/[id]/congratulations/client.tsx` - Updated redirect to screen-permission
+- `src/app/assessment/[id]/welcome/page.tsx` - Wrapped with AssessmentScreenWrapper
+- `src/app/assessment/[id]/chat/page.tsx` - Wrapped with AssessmentScreenWrapper
+- `src/app/assessment/[id]/call/page.tsx` - Wrapped with AssessmentScreenWrapper
+
+**Learnings:**
+1. `navigator.mediaDevices.getDisplayMedia()` is the standard API for screen capture
+2. Use `displaySurface: "monitor"` to prefer entire screen over window/tab
+3. Low frame rate (5-10 fps) is sufficient for assessment purposes
+4. Track "ended" event fires when user clicks browser's "Stop sharing" button
+5. `sessionStorage` persists recording state across page navigation within same tab
+6. Provider pattern allows global state access across all assessment pages
+7. Guard component with overlay prevents progress without active recording
+
+**Architecture patterns:**
+- Screen recording state managed via React Context for global access
+- sessionStorage tracks "was recording active" to detect stops on page load
+- Periodic `isStreamActive()` check (1s interval) as backup for ended event
+- Modal overlay blocks interaction when recording stops
+- Pages wrapped at server component level for consistent coverage
+
+**Gotchas:**
+- getDisplayMedia must be called from user gesture (button click)
+- Browser permission UI varies (Chrome shows picker, Firefox prompts first)
+- Some browsers don't support `displaySurface` constraint - still works without it
+
+**Verification completed:**
+- Browser screen share permission requested ✓
+- Clear explanation of why recording is needed ✓
+- Permission status tracked in state ✓
+- Graceful handling if permission denied ✓
+- Re-prompt if screen share stops mid-assessment ✓
+- Tests pass (135/135)
+- Typecheck passes (exit 0)
