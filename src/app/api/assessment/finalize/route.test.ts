@@ -19,6 +19,13 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
+// Mock github cleanup
+const mockCleanupPrAfterAssessment = vi.fn();
+vi.mock("@/lib/github", () => ({
+  cleanupPrAfterAssessment: (...args: unknown[]) =>
+    mockCleanupPrAfterAssessment(...args),
+}));
+
 import { POST } from "./route";
 
 describe("POST /api/assessment/finalize", () => {
@@ -122,7 +129,7 @@ describe("POST /api/assessment/finalize", () => {
     expect(data.error).toContain("Must be in FINAL_DEFENSE status");
   });
 
-  it("should finalize assessment and return timing info", async () => {
+  it("should finalize assessment without PR and return timing info", async () => {
     const startedAt = new Date("2024-01-01T10:00:00Z");
 
     mockAuth.mockResolvedValue({
@@ -133,12 +140,14 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.FINAL_DEFENSE,
       startedAt,
+      prUrl: null,
     });
     mockAssessmentUpdate.mockResolvedValue({
       id: "test-id",
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
+      prUrl: null,
     });
 
     const request = new Request("http://localhost/api/assessment/finalize", {
@@ -155,20 +164,165 @@ describe("POST /api/assessment/finalize", () => {
     expect(data.timing.startedAt).toBe(startedAt.toISOString());
     expect(data.timing.completedAt).toBeDefined();
     expect(data.timing.totalDurationSeconds).toBeGreaterThan(0);
+    expect(data.prCleanup).toBeNull(); // No PR to clean up
 
-    expect(mockAssessmentUpdate).toHaveBeenCalledWith({
-      where: { id: "test-id" },
-      data: {
-        status: AssessmentStatus.COMPLETED,
-        completedAt: expect.any(Date),
-      },
-      select: {
-        id: true,
-        status: true,
-        startedAt: true,
-        completedAt: true,
+    // Should not call cleanup when no PR URL
+    expect(mockCleanupPrAfterAssessment).not.toHaveBeenCalled();
+  });
+
+  it("should finalize assessment and cleanup PR", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+    const prUrl = "https://github.com/owner/repo/pull/123";
+
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123" },
+    });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-123",
+      status: AssessmentStatus.FINAL_DEFENSE,
+      startedAt,
+      prUrl,
+    });
+    mockCleanupPrAfterAssessment.mockResolvedValue({
+      success: true,
+      action: "closed",
+      message: "Successfully closed PR #123",
+      prSnapshot: {
+        url: prUrl,
+        provider: "github",
+        fetchedAt: "2024-01-01T12:00:00Z",
+        title: "Test PR",
+        body: "PR body",
+        state: "open",
       },
     });
+    mockAssessmentUpdate.mockResolvedValue({
+      id: "test-id",
+      status: AssessmentStatus.COMPLETED,
+      startedAt,
+      completedAt: new Date(),
+      prUrl,
+    });
+
+    const request = new Request("http://localhost/api/assessment/finalize", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId: "test-id" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.prCleanup).toEqual({
+      success: true,
+      action: "closed",
+      message: "Successfully closed PR #123",
+    });
+
+    // Verify cleanup was called with PR URL
+    expect(mockCleanupPrAfterAssessment).toHaveBeenCalledWith(prUrl);
+
+    // Verify prSnapshot was included in update
+    expect(mockAssessmentUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          prSnapshot: expect.objectContaining({
+            url: prUrl,
+            provider: "github",
+          }),
+        }),
+      })
+    );
+  });
+
+  it("should finalize even if PR cleanup fails", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+    const prUrl = "https://github.com/owner/repo/pull/123";
+
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123" },
+    });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-123",
+      status: AssessmentStatus.FINAL_DEFENSE,
+      startedAt,
+      prUrl,
+    });
+    mockCleanupPrAfterAssessment.mockResolvedValue({
+      success: false,
+      action: "error",
+      message: "GitHub API error: 403 Forbidden",
+      prSnapshot: {
+        url: prUrl,
+        provider: "github",
+        fetchedAt: "2024-01-01T12:00:00Z",
+        fetchError: "Failed to close",
+      },
+    });
+    mockAssessmentUpdate.mockResolvedValue({
+      id: "test-id",
+      status: AssessmentStatus.COMPLETED,
+      startedAt,
+      completedAt: new Date(),
+      prUrl,
+    });
+
+    const request = new Request("http://localhost/api/assessment/finalize", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId: "test-id" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    // Finalization should succeed even if cleanup failed
+    expect(data.success).toBe(true);
+    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.prCleanup.success).toBe(false);
+    expect(data.prCleanup.action).toBe("error");
+  });
+
+  it("should finalize even if PR cleanup throws", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+    const prUrl = "https://github.com/owner/repo/pull/123";
+
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123" },
+    });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-123",
+      status: AssessmentStatus.FINAL_DEFENSE,
+      startedAt,
+      prUrl,
+    });
+    mockCleanupPrAfterAssessment.mockRejectedValue(new Error("Network error"));
+    mockAssessmentUpdate.mockResolvedValue({
+      id: "test-id",
+      status: AssessmentStatus.COMPLETED,
+      startedAt,
+      completedAt: new Date(),
+      prUrl,
+    });
+
+    const request = new Request("http://localhost/api/assessment/finalize", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId: "test-id" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    // Finalization should succeed even if cleanup threw
+    expect(data.success).toBe(true);
+    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    // prCleanup will be null since the exception was caught
+    expect(data.prCleanup).toBeNull();
   });
 
   it("should return 500 on internal error", async () => {

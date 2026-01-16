@@ -1254,3 +1254,91 @@ This issue's acceptance criteria were already fully satisfied by Issue #19 (US-0
 - Tests pass (258/258)
 - Typecheck passes (exit 0)
 - UI verified in browser (homepage, sign-in render correctly)
+
+---
+
+## Issue #23: US-023: PR Cleanup
+
+**What was implemented:**
+- GitHub API integration module (`src/lib/github.ts`) with:
+  - `parseGitHubPrUrl()` - extracts owner, repo, and pull number from GitHub PR URLs
+  - `fetchGitHubPrContent()` - fetches PR metadata and diff for historical preservation
+  - `closeGitHubPr()` - closes a PR via GitHub API (GitHub doesn't allow PR deletion via API)
+  - `cleanupPrAfterAssessment()` - main function that handles PR cleanup with graceful fallbacks
+- PR snapshot preservation:
+  - `PrSnapshot` interface storing: title, body, state, branches, commits, additions/deletions, author, diff
+  - Snapshot captured BEFORE closing to preserve content even if close fails
+  - Diff truncated to 500KB to prevent database bloat
+- Updated `/api/assessment/finalize` endpoint to:
+  - Trigger PR cleanup after assessment is marked COMPLETED
+  - Store PR snapshot in new `prSnapshot` field on Assessment table
+  - Graceful error handling - cleanup failure doesn't block finalization
+  - Returns cleanup status in API response
+- Prisma schema updated with `prSnapshot Json?` field on Assessment model
+- 16 unit tests for GitHub module + 4 new tests for finalize endpoint PR cleanup
+
+**Files created:**
+- `src/lib/github.ts` - GitHub API integration for PR cleanup
+- `src/lib/github.test.ts` - 16 unit tests for GitHub module
+
+**Files changed:**
+- `prisma/schema.prisma` - Added `prSnapshot Json?` field to Assessment model
+- `src/app/api/assessment/finalize/route.ts` - Integrated PR cleanup with graceful error handling
+- `src/app/api/assessment/finalize/route.test.ts` - Added 4 tests for PR cleanup scenarios
+
+**Data model:**
+```
+PrSnapshot {
+  url: string
+  provider: "github" | "gitlab" | "bitbucket" | "unknown"
+  fetchedAt: string
+  title?: string
+  body?: string
+  state?: string
+  headRef?: string
+  baseRef?: string
+  createdAt?: string
+  updatedAt?: string
+  commits?: number
+  additions?: number
+  deletions?: number
+  changedFiles?: number
+  author?: string
+  diff?: string (truncated to 500KB)
+  fetchError?: string
+}
+```
+
+**Learnings:**
+1. GitHub API doesn't allow PR deletion - only closing via PATCH with `state: "closed"`
+2. Use `application/vnd.github.v3.diff` Accept header to fetch PR diff content
+3. Environment variable `GITHUB_TOKEN` was already configured but unused - now used for API calls
+4. Graceful error handling pattern: try/catch around cleanup, log warnings, but don't fail finalization
+5. Store snapshot BEFORE close attempt to preserve content even if close fails
+6. Use `as unknown as Prisma.InputJsonValue` for typed objects in JSON fields
+7. Non-GitHub PRs (GitLab, Bitbucket) return success with "none" action - cleanup not yet supported
+
+**Architecture patterns:**
+- Cleanup triggered AFTER status update to COMPLETED (ensures finalization succeeds)
+- Snapshot preserved regardless of close success (historical reference)
+- API response includes cleanup status for debugging/logging
+- Module designed for future GitLab/Bitbucket support (provider detection)
+
+**Why close instead of delete:**
+- GitHub API doesn't support PR deletion
+- Closing the PR prevents it from being merged
+- Branch deletion could be added but requires separate API call and permissions
+- Closed PRs can still be reopened by repo owners if needed
+
+**Gotchas:**
+- TypeScript requires `as unknown as Type` double cast for Prisma Json fields with typed interfaces
+- GITHUB_TOKEN must have `repo` scope to close PRs on public repos (or appropriate scopes for private)
+
+**Verification completed:**
+- GitHub API integration to close/delete PR ✓ (close only - GitHub doesn't support delete)
+- Triggered after assessment report sent (in finalize endpoint) ✓
+- Graceful handling if deletion fails (logs warning, doesn't block finalization) ✓
+- PR content preserved in our system for historical reference (prSnapshot field) ✓
+- Tests pass (277/277)
+- Typecheck passes (exit 0)
+- Build succeeds

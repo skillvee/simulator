@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { AssessmentStatus } from "@prisma/client";
+import { AssessmentStatus, Prisma } from "@prisma/client";
+import { cleanupPrAfterAssessment, type PrCleanupResult } from "@/lib/github";
 
 /**
  * POST /api/assessment/finalize
  * Marks assessment as fully completed after the final defense call
  * - Transitions status from FINAL_DEFENSE to COMPLETED
  * - Records final completion timestamp
+ * - Cleans up (closes) the submitted PR to prevent scenario leakage
+ * - Preserves PR content in prSnapshot for historical reference
  */
 export async function POST(request: Request) {
   try {
@@ -34,6 +37,7 @@ export async function POST(request: Request) {
         userId: true,
         status: true,
         startedAt: true,
+        prUrl: true,
       },
     });
 
@@ -66,18 +70,42 @@ export async function POST(request: Request) {
     const totalDurationMs = now.getTime() - assessment.startedAt.getTime();
     const totalDurationSeconds = Math.floor(totalDurationMs / 1000);
 
-    // Update assessment status to COMPLETED
+    // Clean up PR after assessment (close it to prevent scenario leakage)
+    // This is done gracefully - failure doesn't block finalization
+    let prCleanupResult: PrCleanupResult | null = null;
+    if (assessment.prUrl) {
+      try {
+        prCleanupResult = await cleanupPrAfterAssessment(assessment.prUrl);
+        if (!prCleanupResult.success) {
+          console.warn(
+            `PR cleanup warning for assessment ${assessmentId}:`,
+            prCleanupResult.message
+          );
+        }
+      } catch (error) {
+        console.error(`PR cleanup error for assessment ${assessmentId}:`, error);
+        // Don't fail the finalization if PR cleanup fails
+      }
+    }
+
+    // Update assessment status to COMPLETED and store PR snapshot
     const updatedAssessment = await db.assessment.update({
       where: { id: assessmentId },
       data: {
         status: AssessmentStatus.COMPLETED,
         completedAt: now,
+        // Store PR snapshot for historical reference
+        ...(prCleanupResult?.prSnapshot && {
+          prSnapshot:
+            prCleanupResult.prSnapshot as unknown as Prisma.InputJsonValue,
+        }),
       },
       select: {
         id: true,
         status: true,
         startedAt: true,
         completedAt: true,
+        prUrl: true,
       },
     });
 
@@ -89,6 +117,13 @@ export async function POST(request: Request) {
         completedAt: now.toISOString(),
         totalDurationSeconds,
       },
+      prCleanup: prCleanupResult
+        ? {
+            success: prCleanupResult.success,
+            action: prCleanupResult.action,
+            message: prCleanupResult.message,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Error finalizing assessment:", error);

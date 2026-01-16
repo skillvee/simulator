@@ -1,0 +1,342 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  parseGitHubPrUrl,
+  fetchGitHubPrContent,
+  closeGitHubPr,
+  cleanupPrAfterAssessment,
+} from "./github";
+
+// Mock env module
+vi.mock("@/lib/env", () => ({
+  env: {
+    GITHUB_TOKEN: "mock-token",
+  },
+}));
+
+describe("parseGitHubPrUrl", () => {
+  it("should parse a valid GitHub PR URL", () => {
+    const result = parseGitHubPrUrl("https://github.com/owner/repo/pull/123");
+    expect(result).toEqual({
+      owner: "owner",
+      repo: "repo",
+      pullNumber: 123,
+    });
+  });
+
+  it("should parse a GitHub PR URL with hyphens in owner/repo", () => {
+    const result = parseGitHubPrUrl(
+      "https://github.com/my-org/my-repo-name/pull/456"
+    );
+    expect(result).toEqual({
+      owner: "my-org",
+      repo: "my-repo-name",
+      pullNumber: 456,
+    });
+  });
+
+  it("should return null for non-GitHub URLs", () => {
+    expect(
+      parseGitHubPrUrl("https://gitlab.com/owner/repo/-/merge_requests/123")
+    ).toBeNull();
+    expect(
+      parseGitHubPrUrl("https://bitbucket.org/owner/repo/pull-requests/123")
+    ).toBeNull();
+  });
+
+  it("should return null for invalid GitHub URLs", () => {
+    expect(parseGitHubPrUrl("https://github.com/owner/repo")).toBeNull();
+    expect(parseGitHubPrUrl("https://github.com/owner/repo/issues/123")).toBeNull();
+    expect(parseGitHubPrUrl("https://github.com/owner/repo/pull/")).toBeNull();
+    expect(parseGitHubPrUrl("not-a-url")).toBeNull();
+  });
+
+  it("should return null for empty string", () => {
+    expect(parseGitHubPrUrl("")).toBeNull();
+  });
+});
+
+describe("fetchGitHubPrContent", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  it("should return error for non-GitHub URL", async () => {
+    const result = await fetchGitHubPrContent(
+      "https://gitlab.com/owner/repo/-/merge_requests/123"
+    );
+    expect(result.provider).toBe("unknown");
+    expect(result.fetchError).toBe("Not a valid GitHub PR URL");
+  });
+
+  it("should fetch PR content successfully", async () => {
+    const mockPrData = {
+      title: "Test PR",
+      body: "Test body",
+      state: "open",
+      head: { ref: "feature-branch" },
+      base: { ref: "main" },
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-02T00:00:00Z",
+      commits: 5,
+      additions: 100,
+      deletions: 50,
+      changed_files: 3,
+      user: { login: "test-user" },
+    };
+
+    (global.fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockPrData),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve("diff content here"),
+      });
+
+    const result = await fetchGitHubPrContent(
+      "https://github.com/owner/repo/pull/123"
+    );
+
+    expect(result.provider).toBe("github");
+    expect(result.title).toBe("Test PR");
+    expect(result.body).toBe("Test body");
+    expect(result.state).toBe("open");
+    expect(result.headRef).toBe("feature-branch");
+    expect(result.baseRef).toBe("main");
+    expect(result.commits).toBe(5);
+    expect(result.additions).toBe(100);
+    expect(result.deletions).toBe(50);
+    expect(result.changedFiles).toBe(3);
+    expect(result.author).toBe("test-user");
+    expect(result.diff).toBe("diff content here");
+    expect(result.fetchError).toBeUndefined();
+  });
+
+  it("should handle GitHub API error", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      statusText: "Not Found",
+    });
+
+    const result = await fetchGitHubPrContent(
+      "https://github.com/owner/repo/pull/999"
+    );
+
+    expect(result.fetchError).toBe("GitHub API error: 404 Not Found");
+  });
+
+  it("should handle network errors", async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error("Network error")
+    );
+
+    const result = await fetchGitHubPrContent(
+      "https://github.com/owner/repo/pull/123"
+    );
+
+    expect(result.fetchError).toBe("Network error");
+  });
+});
+
+describe("closeGitHubPr", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  it("should return error for non-GitHub URL", async () => {
+    const result = await closeGitHubPr(
+      "https://gitlab.com/owner/repo/-/merge_requests/123"
+    );
+    expect(result.success).toBe(false);
+    expect(result.action).toBe("none");
+    expect(result.message).toContain("Not a GitHub PR URL");
+  });
+
+  it("should close PR successfully", async () => {
+    const mockPrData = {
+      title: "Test PR",
+      body: "Test body",
+      state: "open",
+      head: { ref: "feature" },
+      base: { ref: "main" },
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+      commits: 1,
+      additions: 10,
+      deletions: 5,
+      changed_files: 1,
+      user: { login: "test" },
+    };
+
+    (global.fetch as ReturnType<typeof vi.fn>)
+      // First call: fetch PR content
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockPrData),
+      })
+      // Second call: fetch diff
+      .mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve("diff"),
+      })
+      // Third call: close PR
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ state: "closed" }),
+      });
+
+    const result = await closeGitHubPr(
+      "https://github.com/owner/repo/pull/123"
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.action).toBe("closed");
+    expect(result.message).toContain("Successfully closed PR #123");
+    expect(result.prSnapshot).toBeDefined();
+    expect(result.prSnapshot?.title).toBe("Test PR");
+
+    // Verify PATCH call was made with correct body
+    expect(global.fetch).toHaveBeenCalledWith(
+      "https://api.github.com/repos/owner/repo/pulls/123",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ state: "closed" }),
+      })
+    );
+  });
+
+  it("should handle close failure with preserved snapshot", async () => {
+    const mockPrData = {
+      title: "Test PR",
+      body: "Body",
+      state: "open",
+      head: { ref: "feature" },
+      base: { ref: "main" },
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+      commits: 1,
+      additions: 10,
+      deletions: 5,
+      changed_files: 1,
+      user: { login: "test" },
+    };
+
+    (global.fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockPrData),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve("diff"),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        statusText: "Forbidden",
+        json: () => Promise.resolve({ message: "No permission" }),
+      });
+
+    const result = await closeGitHubPr(
+      "https://github.com/owner/repo/pull/123"
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.action).toBe("error");
+    expect(result.message).toContain("403");
+    // Snapshot should still be preserved even if close fails
+    expect(result.prSnapshot).toBeDefined();
+    expect(result.prSnapshot?.title).toBe("Test PR");
+  });
+});
+
+describe("cleanupPrAfterAssessment", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  it("should cleanup GitHub PR", async () => {
+    const mockPrData = {
+      title: "Test PR",
+      body: "Body",
+      state: "open",
+      head: { ref: "feature" },
+      base: { ref: "main" },
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-01T00:00:00Z",
+      commits: 1,
+      additions: 10,
+      deletions: 5,
+      changed_files: 1,
+      user: { login: "test" },
+    };
+
+    (global.fetch as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockPrData),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: () => Promise.resolve("diff"),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ state: "closed" }),
+      });
+
+    const result = await cleanupPrAfterAssessment(
+      "https://github.com/owner/repo/pull/123"
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.action).toBe("closed");
+  });
+
+  it("should handle GitLab PR (not supported for cleanup)", async () => {
+    const result = await cleanupPrAfterAssessment(
+      "https://gitlab.com/owner/repo/-/merge_requests/123"
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.action).toBe("none");
+    expect(result.message).toContain("Non-GitHub PR");
+    expect(result.prSnapshot?.provider).toBe("gitlab");
+  });
+
+  it("should handle Bitbucket PR (not supported for cleanup)", async () => {
+    const result = await cleanupPrAfterAssessment(
+      "https://bitbucket.org/owner/repo/pull-requests/123"
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.action).toBe("none");
+    expect(result.prSnapshot?.provider).toBe("bitbucket");
+  });
+});
+
+describe("fetchGitHubPrContent without token", () => {
+  it("should return error when GITHUB_TOKEN is not set", async () => {
+    // Reset module to test without token
+    vi.resetModules();
+    vi.doMock("@/lib/env", () => ({
+      env: {
+        GITHUB_TOKEN: undefined,
+      },
+    }));
+
+    const { fetchGitHubPrContent: fetchWithoutToken } = await import(
+      "./github"
+    );
+    const result = await fetchWithoutToken(
+      "https://github.com/owner/repo/pull/123"
+    );
+
+    expect(result.fetchError).toContain("GITHUB_TOKEN not configured");
+  });
+});

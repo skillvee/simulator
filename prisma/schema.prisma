@@ -137,6 +137,7 @@ model Assessment {
   // Deliverables
   cvUrl         String?
   prUrl         String?
+  prSnapshot    Json?            // PR content snapshot for historical reference
 
   // Results
   report        Json?            // Final assessment report
