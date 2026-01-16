@@ -18,9 +18,11 @@ interface Coworker {
 interface ChatProps {
   assessmentId: string;
   coworker: Coworker;
+  onDoneClick?: () => void;
+  showDoneButton?: boolean;
 }
 
-export function Chat({ assessmentId, coworker }: ChatProps) {
+export function Chat({ assessmentId, coworker, onDoneClick, showDoneButton }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -257,6 +259,15 @@ export function Chat({ assessmentId, coworker }: ChatProps) {
           >
             Send
           </button>
+          {showDoneButton && onDoneClick && (
+            <button
+              onClick={onDoneClick}
+              disabled={isSending}
+              className="px-6 py-3 bg-secondary text-secondary-foreground font-bold border-2 border-foreground hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              I'm Done
+            </button>
+          )}
         </div>
       </footer>
     </div>
