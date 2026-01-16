@@ -212,3 +212,62 @@ Learnings and insights from each iteration.
 - Tests pass (38/38)
 - Typecheck passes (exit 0)
 - Build succeeds
+
+---
+
+## Issue #6: US-006: HR Interview Assessment Data
+
+**What was implemented:**
+- HRInterviewAssessment Prisma model for storing interview signals
+- `/api/interview/assessment` endpoint with Gemini-powered transcript analysis
+- Communication clarity scoring (1-5 scale with detailed notes)
+- CV verification notes and consistency scoring (1-5 scale)
+- Verified claims tracking (array of claims with verified/unverified/inconsistent/flagged status)
+- Interview timestamps (start, end, duration in seconds) for analytics
+- Auto-triggers assessment generation when interview ends
+
+**Files created/changed:**
+- `prisma/schema.prisma` - Added HRInterviewAssessment model with all assessment fields
+- `src/app/api/interview/assessment/route.ts` - POST for AI analysis, GET for retrieval
+- `src/app/api/interview/assessment/route.test.ts` - 12 unit tests for assessment endpoint
+- `src/hooks/use-voice-conversation.ts` - Added timestamp tracking and assessment trigger
+
+**Learnings:**
+1. Gemini Flash (`gemini-2.0-flash`) is fast enough for real-time transcript analysis
+2. Prisma env vars need to be exported before `prisma db push` in CLI
+3. The `@unique` constraint on `assessmentId` enforces one HR assessment per assessment
+4. Use `upsert` pattern to handle both initial creation and re-analysis scenarios
+5. Interview duration calculation: `(endTime - startTime) / 1000` in seconds
+6. AI analysis schema validation with zod ensures consistent structured output
+
+**Data model:**
+```
+HRInterviewAssessment {
+  communicationScore: Int (1-5)
+  communicationNotes: String
+  cvVerificationNotes: String
+  cvConsistencyScore: Int (1-5)
+  verifiedClaims: Json (array of {claim, status, notes})
+  interviewStartedAt: DateTime
+  interviewEndedAt: DateTime
+  interviewDurationSeconds: Int
+  professionalismScore: Int (1-5)
+  technicalDepthScore: Int (1-5)
+  cultureFitNotes: String
+  aiAnalysis: Json (full analysis + metadata)
+}
+```
+
+**Gotchas:**
+- Need to clean JSON markdown formatting from Gemini response before parsing
+- `interviewStartedAt` captured on WebSocket open, not on button click
+- Assessment analysis runs async after transcript save
+
+**Verification completed:**
+- Communication clarity scored (1-5 + notes) ✓
+- CV verification notes captured ✓
+- Conversation transcript stored (from Issue #5) ✓
+- Timestamps for analytics (start, end, duration) ✓
+- Tests pass (50/50)
+- Typecheck passes (exit 0)
+- Build succeeds
