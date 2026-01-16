@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { supabaseAdmin } from "@/lib/supabase";
-
-export const STORAGE_BUCKETS = {
-  RECORDINGS: "recordings",
-  SCREENSHOTS: "screenshots",
-} as const;
+import { STORAGE_BUCKETS } from "@/lib/storage";
 
 // Maximum file sizes
 const MAX_VIDEO_CHUNK_SIZE = 50 * 1024 * 1024; // 50MB per chunk
