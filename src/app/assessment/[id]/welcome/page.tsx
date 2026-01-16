@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { WelcomeClient } from "./client";
+import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
 
 interface WelcomePageProps {
   params: Promise<{ id: string }>;
@@ -51,15 +52,17 @@ export default async function WelcomePage({ params }: WelcomePageProps) {
   };
 
   return (
-    <WelcomeClient
-      assessmentId={id}
-      userName={userName}
-      managerName={manager.name}
-      managerRole={manager.role}
-      managerAvatar={manager.avatarUrl}
-      companyName={assessment.scenario.companyName}
-      repoUrl={assessment.scenario.repoUrl}
-      taskDescription={assessment.scenario.taskDescription}
-    />
+    <AssessmentScreenWrapper assessmentId={id}>
+      <WelcomeClient
+        assessmentId={id}
+        userName={userName}
+        managerName={manager.name}
+        managerRole={manager.role}
+        managerAvatar={manager.avatarUrl}
+        companyName={assessment.scenario.companyName}
+        repoUrl={assessment.scenario.repoUrl}
+        taskDescription={assessment.scenario.taskDescription}
+      />
+    </AssessmentScreenWrapper>
   );
 }

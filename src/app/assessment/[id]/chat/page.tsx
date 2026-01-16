@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { ChatPageClient } from "./client";
+import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
 
 interface ChatPageProps {
   params: Promise<{ id: string }>;
@@ -43,10 +44,12 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
   const defaultCoworkerId = coworkers[0]?.id || null;
 
   return (
-    <ChatPageClient
-      assessmentId={id}
-      coworkers={coworkers}
-      selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
-    />
+    <AssessmentScreenWrapper assessmentId={id}>
+      <ChatPageClient
+        assessmentId={id}
+        coworkers={coworkers}
+        selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
+      />
+    </AssessmentScreenWrapper>
   );
 }

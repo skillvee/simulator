@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { CallPageClient } from "./client";
+import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
 
 interface CallPageProps {
   params: Promise<{ id: string }>;
@@ -46,10 +47,12 @@ export default async function CallPage({ params, searchParams }: CallPageProps) 
   });
 
   return (
-    <CallPageClient
-      assessmentId={assessmentId}
-      coworkers={coworkers}
-      selectedCoworkerId={coworkerId || null}
-    />
+    <AssessmentScreenWrapper assessmentId={assessmentId}>
+      <CallPageClient
+        assessmentId={assessmentId}
+        coworkers={coworkers}
+        selectedCoworkerId={coworkerId || null}
+      />
+    </AssessmentScreenWrapper>
   );
 }

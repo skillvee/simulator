@@ -45,7 +45,7 @@ export function CongratulationsClient({
     const interval = setInterval(() => {
       setAutoAdvanceTimer((prev) => {
         if (prev <= 1) {
-          router.push(`/assessment/${assessmentId}/welcome`);
+          router.push(`/assessment/${assessmentId}/screen-permission`);
           return 0;
         }
         return prev - 1;
@@ -56,7 +56,7 @@ export function CongratulationsClient({
   }, [showButton, assessmentId, router]);
 
   const handleContinue = () => {
-    router.push(`/assessment/${assessmentId}/welcome`);
+    router.push(`/assessment/${assessmentId}/screen-permission`);
   };
 
   return (
