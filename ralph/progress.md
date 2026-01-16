@@ -1203,3 +1203,54 @@ flowboard-task/
 - README with setup instructions ✓
 - Tests pass (258/258)
 - Typecheck passes (exit 0)
+
+---
+
+## Issue #22: US-022: PR Submission
+
+**What was implemented:**
+This issue's acceptance criteria were already fully satisfied by Issue #19 (US-019: Ping Manager When Done). Verified all requirements are met:
+
+- Text input for PR URL: `PrLinkModal` component with input field at `src/components/pr-link-modal.tsx`
+- Basic validation (is it a GitHub PR URL?): `isValidPrUrl()` function at `src/lib/pr-validation.ts` validates GitHub, GitLab, and Bitbucket PR URLs
+- PR URL stored with assessment: `/api/assessment/complete` endpoint saves `prUrl` to Assessment table
+- Link accessible for AI code review: `/api/defense/token` endpoint injects `prUrl` into the manager's system prompt
+
+**Files involved (no changes needed):**
+- `src/components/pr-link-modal.tsx` - Modal UI for PR URL input with neo-brutalist design
+- `src/lib/pr-validation.ts` - PR URL validation utility supporting GitHub, GitLab, Bitbucket
+- `src/app/api/assessment/complete/route.ts` - POST endpoint to store PR URL and transition status
+- `src/app/api/defense/token/route.ts` - Injects PR URL into manager context for final defense
+- `src/app/assessment/[id]/chat/client.tsx` - Integrates PR modal and completion flow
+
+**PR URL validation patterns supported:**
+- GitHub: `github.com/owner/repo/pull/123`
+- GitLab: `gitlab.com/owner/repo/-/merge_requests/123`
+- GitLab (self-hosted): `gitlab.company.com/owner/repo/-/merge_requests/123`
+- Bitbucket: `bitbucket.org/owner/repo/pull-requests/123`
+
+**Architecture:**
+1. User clicks "I'm Done" button in manager chat
+2. `PrLinkModal` appears with text input for PR URL
+3. Client-side validates URL format and requires HTTPS
+4. Server-side validates via `isValidPrUrl()` before storing
+5. Assessment status transitions from WORKING → FINAL_DEFENSE
+6. Defense token endpoint includes PR URL in manager context for AI review
+
+**Learnings:**
+1. Issue #22 was effectively a subset of Issue #19 - all acceptance criteria were already met
+2. When implementing related features, it's good to verify dependencies fully satisfy requirements
+3. PR validation accepts all major Git hosting platforms (GitHub, GitLab, Bitbucket)
+4. The PR URL is used in two places: stored in Assessment table AND passed to AI for code review context
+
+**Gotchas:**
+- None - existing implementation was complete
+
+**Verification completed:**
+- Text input for PR URL (PrLinkModal component) ✓
+- Basic validation (is it a GitHub PR URL?) via `isValidPrUrl()` ✓
+- PR URL stored with assessment (prUrl field in Assessment table) ✓
+- Link accessible for AI code review (injected into defense system prompt) ✓
+- Tests pass (258/258)
+- Typecheck passes (exit 0)
+- UI verified in browser (homepage, sign-in render correctly)
