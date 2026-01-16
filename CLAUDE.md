@@ -28,8 +28,13 @@ B2C MVP: developers practice realistic scenarios and get actionable feedback.
 - `.claude/skills/frontend-design/SKILL.md` - Design system rules
 - `.claude/skills/prd/SKILL.md` - PRD creation process
 
+## CLIs
+
+`vercel` and `supabase` CLIs are installed and linked to this project.
+
 ## Skills
 
 - `frontend-design` - Neo-brutalist UI (auto-activates for frontend work)
 - `prd` - Generate PRDs for features
 - `ralph` - Autonomous GitHub Issues runner (see `ralph/CLAUDE.md`)
+- `react-best-practices` - React/Next.js performance optimization (45 rules from Vercel)
