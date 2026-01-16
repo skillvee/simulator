@@ -154,3 +154,61 @@ Learnings and insights from each iteration.
 - Tests pass (23/23)
 - Typecheck passes (exit 0)
 - Build succeeds
+
+---
+
+## Issue #5: US-005: HR Interview Voice Conversation
+
+**What was implemented:**
+- Gemini Live API integration for real-time voice conversations
+- HR interviewer persona (Sarah Mitchell) with detailed system prompt for CV verification
+- Ephemeral token generation for secure client-side Gemini connections
+- Voice conversation hook with WebSocket management and audio streaming
+- Audio utilities for microphone capture (16kHz PCM) and playback (24kHz)
+- HR interview page at `/assessment/[id]/hr-interview` with neo-brutalist UI
+- Transcript saving to database with automatic assessment status update
+- Graceful microphone permission handling with clear user guidance
+
+**Files created/changed:**
+- `src/lib/gemini.ts` - Gemini client, ephemeral token generation, HR persona prompt
+- `src/lib/audio.ts` - Browser audio utilities for capture and playback
+- `src/hooks/use-voice-conversation.ts` - React hook for Gemini Live connection management
+- `src/components/voice-conversation.tsx` - Voice conversation UI component
+- `src/app/assessment/[id]/hr-interview/page.tsx` - Server component for HR interview page
+- `src/app/assessment/[id]/hr-interview/client.tsx` - Client component for interview flow
+- `src/app/api/interview/token/route.ts` - API endpoint for ephemeral token generation
+- `src/app/api/interview/token/route.test.ts` - 6 unit tests for token endpoint
+- `src/app/api/interview/transcript/route.ts` - API endpoint for transcript save/retrieve
+- `src/app/api/interview/transcript/route.test.ts` - 9 unit tests for transcript endpoint
+
+**Learnings:**
+1. Gemini Live API requires v1alpha for ephemeral token creation via `authTokens.create()`
+2. Ephemeral tokens are used as the apiKey for client-side GoogleGenAI instances
+3. Audio input must be 16kHz PCM, output is 24kHz PCM - use AudioWorklet for processing
+4. Enable `inputAudioTranscription` and `outputAudioTranscription` in config for live transcript
+5. Modality.AUDIO must be imported from `@google/genai` - string "AUDIO" fails type check
+6. Session callbacks use `sessionConnected` flag since `connectionState` ref can be stale in closures
+7. Prisma Json fields require explicit cast to `Prisma.InputJsonValue` for TypeScript
+8. HR interview uses `coworkerId: null` to distinguish from coworker conversations
+
+**Architecture decisions:**
+- Server-side token generation protects the Gemini API key
+- Client-side Gemini connection for low-latency voice streaming
+- Transcript stored incrementally via WebSocket callbacks
+- Assessment status auto-updates to ONBOARDING when interview completes
+
+**Gotchas:**
+- AudioContext requires user interaction to resume from suspended state
+- Browser support varies - check for `getUserMedia` and `AudioContext` availability
+- Permissions API doesn't support "microphone" query in all browsers - fallback to "prompt"
+
+**Verification completed:**
+- Gemini Live integration for voice conversation ✓
+- HR persona with specific system prompt (verify CV claims) ✓
+- 20-minute expected duration (no hard cutoff) ✓
+- Microphone permission requested and handled gracefully ✓
+- Conversation transcript saved for assessment ✓
+- Browser support: Chrome, Firefox, Safari (via feature detection) ✓
+- Tests pass (38/38)
+- Typecheck passes (exit 0)
+- Build succeeds
