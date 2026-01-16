@@ -443,3 +443,57 @@ HRInterviewAssessment {
 - Click to open chat or start call ✓
 - Typecheck passes (exit 0)
 - Tests pass (78/78)
+
+---
+
+## Issue #11: US-010: Text Chat with Coworkers
+
+**What was implemented:**
+- Chat API endpoint (`/api/chat`) with POST for sending messages and GET for retrieving history
+- Gemini Flash (`gemini-2.0-flash`) integration with coworker persona system prompts
+- Chat UI component (`src/components/chat.tsx`) with:
+  - Message display with avatars and timestamps
+  - Text input with send button and Enter key support
+  - Typing indicator while waiting for AI response
+  - Optimistic UI updates for sent messages
+  - Auto-scroll to bottom on new messages
+  - Empty state with coworker info
+- Chat page (`/assessment/[id]/chat`) with coworker sidebar integration
+- Chat history persists in Conversation table with `type: "text"`
+- 11 unit tests covering API endpoints
+
+**Files created:**
+- `src/app/api/chat/route.ts` - POST/GET endpoints for chat messages
+- `src/app/api/chat/route.test.ts` - 11 unit tests for chat API
+- `src/components/chat.tsx` - Chat UI component with Slack-like design
+- `src/app/assessment/[id]/chat/page.tsx` - Server component with auth and coworker loading
+- `src/app/assessment/[id]/chat/client.tsx` - Client component integrating sidebar and chat
+
+**Learnings:**
+1. Gemini SDK doesn't support `systemInstruction` param directly - include as first message pair
+2. Use `as unknown as Type` for Prisma Json field type assertions
+3. Chat component loads history on mount via GET endpoint
+4. Optimistic updates: add user message immediately, remove on error
+5. Typing indicator appears while `isSending` is true
+6. URL query param `?coworkerId=xxx` for coworker selection
+
+**Architecture patterns:**
+- System prompt injected as first user/model message pair in conversation
+- History rebuilt on each request (includes system prompt + all previous messages)
+- Conversation table stores transcript as JSON array
+- Separate conversation per coworker (keyed by assessmentId + coworkerId + type)
+
+**Gotchas:**
+- Prisma Json type requires double cast `as unknown as ChatMessage[]`
+- Need to rebuild full conversation history including system prompt for each Gemini request
+
+**Verification completed:**
+- Chat interface per coworker ✓
+- Messages sent to Gemini Flash with coworker persona + knowledge ✓
+- Responses appear in chat thread ✓
+- Chat history persists across page reloads ✓
+- Timestamps on messages ✓
+- Chat history saved for assessment ✓
+- Tests pass (89/89)
+- Typecheck passes (exit 0)
+- Build succeeds (2.59 kB bundle)
