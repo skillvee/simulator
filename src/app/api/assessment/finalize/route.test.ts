@@ -21,9 +21,22 @@ vi.mock("@/server/db", () => ({
 
 // Mock github cleanup
 const mockCleanupPrAfterAssessment = vi.fn();
+const mockFetchPrCiStatus = vi.fn();
 vi.mock("@/lib/github", () => ({
   cleanupPrAfterAssessment: (...args: unknown[]) =>
     mockCleanupPrAfterAssessment(...args),
+  fetchPrCiStatus: (...args: unknown[]) =>
+    mockFetchPrCiStatus(...args),
+}));
+
+// Mock code review module
+const mockAnalyzeCodeReview = vi.fn();
+const mockBuildCodeReviewData = vi.fn();
+const mockCodeReviewToPrismaJson = vi.fn();
+vi.mock("@/lib/code-review", () => ({
+  analyzeCodeReview: (...args: unknown[]) => mockAnalyzeCodeReview(...args),
+  buildCodeReviewData: (...args: unknown[]) => mockBuildCodeReviewData(...args),
+  codeReviewToPrismaJson: (...args: unknown[]) => mockCodeReviewToPrismaJson(...args),
 }));
 
 import { POST } from "./route";

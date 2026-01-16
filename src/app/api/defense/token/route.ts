@@ -13,6 +13,13 @@ import {
   formatCiStatusForPrompt,
   type PrCiStatus,
 } from "@/lib/github";
+import {
+  analyzeCodeReview,
+  buildCodeReviewData,
+  codeReviewToPrismaJson,
+  formatCodeReviewForPrompt,
+  type CodeReviewData,
+} from "@/lib/code-review";
 import { Prisma } from "@prisma/client";
 
 /**
@@ -35,6 +42,7 @@ interface DefenseContext {
   screenAnalysisSummary: string;
   hrInterviewNotes: string;
   ciStatusSummary: string;
+  codeReviewSummary: string;
 }
 
 function buildDefenseSystemPrompt(context: DefenseContext): string {
@@ -56,6 +64,9 @@ PR Link: ${context.prUrl}
 
 ### CI/Test Status
 ${context.ciStatusSummary}
+
+### AI Code Review Analysis
+${context.codeReviewSummary || "Code review not yet completed."}
 
 ## Your Knowledge About This Candidate
 
@@ -323,6 +334,42 @@ ${hr.communicationNotes ? `- Notes: ${hr.communicationNotes}` : ""}`;
       }
     }
 
+    // Fetch or run code review for the PR
+    let codeReviewSummary = "";
+    if (assessment.prUrl) {
+      try {
+        // Check if code review already exists
+        const existingAssessment = await db.assessment.findUnique({
+          where: { id: assessmentId },
+          select: { codeReview: true },
+        });
+
+        if (existingAssessment?.codeReview) {
+          // Use existing code review
+          codeReviewSummary = formatCodeReviewForPrompt(
+            existingAssessment.codeReview as unknown as CodeReviewData
+          );
+        } else {
+          // Run code review analysis
+          const analysis = await analyzeCodeReview(assessment.prUrl);
+          const codeReviewData = buildCodeReviewData(assessment.prUrl, analysis);
+
+          // Cache the code review in the assessment
+          await db.assessment.update({
+            where: { id: assessmentId },
+            data: {
+              codeReview: codeReviewToPrismaJson(codeReviewData),
+            },
+          });
+
+          codeReviewSummary = formatCodeReviewForPrompt(codeReviewData);
+        }
+      } catch (error) {
+        console.warn("Failed to run code review:", error);
+        codeReviewSummary = "Code review not available due to an error.";
+      }
+    }
+
     // Build the defense system prompt
     const systemInstruction = buildDefenseSystemPrompt({
       managerName: manager.name,
@@ -337,6 +384,7 @@ ${hr.communicationNotes ? `- Notes: ${hr.communicationNotes}` : ""}`;
       screenAnalysisSummary,
       hrInterviewNotes,
       ciStatusSummary,
+      codeReviewSummary,
     });
 
     // Generate ephemeral token for client-side connection

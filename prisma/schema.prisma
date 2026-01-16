@@ -140,6 +140,9 @@ model Assessment {
   prSnapshot    Json?            // PR content snapshot for historical reference
   ciStatus      Json?            // CI test pass/fail status from GitHub Actions
 
+  // AI Analysis
+  codeReview    Json?            // AI code review analysis (quality, patterns, security, maintainability)
+
   // Results
   report        Json?            // Final assessment report
 
