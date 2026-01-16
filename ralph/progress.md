@@ -427,3 +427,73 @@ ParsedProfile {
 4. CSS pseudo-elements (`before:content-['■']`) work well for custom list bullets
 5. `transition: none` important for neo-brutalist hover states (instant color flip)
 6. Dark mode code blocks can use inverted colors (white bg, black text) for contrast
+
+---
+
+## Issue #43: US-041: Visual LinkedIn-Style Profile Display
+
+**What was implemented:**
+- `ParsedProfileDisplay` component that renders `ParsedProfile` data visually
+- Displays on `/profile` page after CV is parsed (when `parsedProfile` exists)
+- Shows all sections: Summary, Work Experience, Education, Skills, Certifications, Languages
+- Work experience with company, title, dates, duration, highlights, technologies used
+- Skills grouped by category (programming languages, frameworks, databases, cloud, tools, soft skills, methodologies)
+- Seniority level badge (junior/mid/senior/lead/principal) with gold background
+- Parse quality indicator shown for non-high quality parses
+- Graceful handling when `parsedProfile` is null (component renders nothing)
+- 57 unit tests for the component
+- Test seed data with comprehensive parsed profile for visual testing
+
+**Files created:**
+- `src/components/parsed-profile-display.tsx` - LinkedIn-style profile renderer
+- `src/components/parsed-profile-display.test.tsx` - 57 unit tests
+
+**Files changed:**
+- `src/app/profile/page.tsx` - Import and integrate ParsedProfileDisplay component
+- `prisma/seed.ts` - Add test assessment with parsed profile for test user
+
+**Component sections:**
+1. **Header** - Name, email, phone, location + contact links (LinkedIn, GitHub, Website)
+2. **Seniority Badge** - Gold background badge showing level
+3. **Parse Quality Warning** - Shown for medium/low quality parses
+4. **Summary** - Professional summary text
+5. **Work Experience** - Timeline with gold left border accent, duration badges, highlights with gold squares, technology tags
+6. **Education** - Institution, degree, field, GPA, honors badges
+7. **Skills** - Grouped by category with proficiency levels
+8. **Certifications** - Name, issuer, date with gold left border
+9. **Languages** - Language and proficiency in bordered boxes
+
+**Neo-Brutalist Design Compliance:**
+- No rounded corners (0px radius)
+- No shadows
+- 2px black borders for sections
+- Gold (#f7da50) for accents: seniority badge, left borders, skill tags
+- Monospace font (Space Mono) for dates and metadata
+- DM Sans for prose text
+- Sharp 90° corners everywhere
+
+**Learnings:**
+1. Prisma JSON `not null` filter requires `{ not: Prisma.JsonNull }` syntax (not `{ not: null }`)
+2. Import `Prisma` as value (not type) when using `Prisma.JsonNull` in queries
+3. `profileFromPrismaJson()` utility handles null and validates against Zod schema
+4. TDD approach: wrote 57 tests first, then implemented component to pass them
+5. Component returns `null` when profile is null/undefined for graceful handling
+6. Group skills by category before rendering for organized display
+7. Use gold left border accent (border-l-4 border-secondary) for visual hierarchy
+8. Seed script useful for visual testing with comprehensive mock data
+
+**Prisma JSON Filter Pattern:**
+```typescript
+// Correct - filter for non-null JSON field
+const assessmentWithProfile = await db.assessment.findFirst({
+  where: {
+    userId: user.id,
+    parsedProfile: { not: Prisma.JsonNull },
+  },
+});
+```
+
+**Gotchas:**
+- `import type { Prisma }` won't work for `Prisma.JsonNull` - need value import
+- Run seed with `export $(grep -v '^#' .env.local | xargs) && npx tsx prisma/seed.ts`
+- Test user needs assessment with `parsedProfile` to see the visual component
