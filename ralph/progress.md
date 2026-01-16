@@ -2236,3 +2236,84 @@ model Coworker {
 - Tests pass (539/539) ✓
 - Typecheck passes (exit 0) ✓
 - UI verified in browser using agent-browser ✓
+
+---
+
+## Issue #35: US-035: Error Handling & Recovery
+
+**What was implemented:**
+- Error recovery utilities module (`src/lib/error-recovery.ts`) with:
+  - Error categorization (network, permission, api, session, browser, resource, unknown)
+  - Exponential backoff delay calculation with jitter
+  - `withRetry()` function for automatic retry with configurable attempts
+  - Connection health monitor for tracking connection state
+  - Session progress storage (save/load/clear) using localStorage for recovery
+- Error display components (`src/components/error-display.tsx`) with:
+  - `ErrorDisplay` - Full error display with retry button and fallback option
+  - `InlineError` - Compact inline error for smaller spaces
+  - `SessionRecoveryPrompt` - Prompt to resume or start fresh when session found
+- Enhanced `use-voice-conversation.ts` hook with:
+  - Categorized error handling with user-friendly messages
+  - Retry functionality with exponential backoff (up to 3 attempts)
+  - Session progress saving to localStorage for recovery
+  - `hasRecoverableSession` and `recoverSession()` for session recovery
+  - New "retrying" connection state
+- Enhanced `use-coworker-voice.ts` hook with same error handling patterns
+- Updated `voice-conversation.tsx` component with:
+  - ErrorDisplay integration for structured error presentation
+  - Voice-to-text fallback option via `onFallbackToText` prop
+  - Session recovery prompt when saved session detected
+- Updated `coworker-voice-call.tsx` component with same patterns
+- 36 unit tests for error-recovery module
+
+**Files created:**
+- `src/lib/error-recovery.ts` - Error categorization, retry logic, progress storage
+- `src/lib/error-recovery.test.ts` - 36 unit tests for error recovery utilities
+- `src/components/error-display.tsx` - Error UI components with recovery options
+
+**Files changed:**
+- `src/hooks/use-voice-conversation.ts` - Added retry, progress saving, session recovery
+- `src/hooks/use-coworker-voice.ts` - Added retry, progress saving, categorized errors
+- `src/components/voice-conversation.tsx` - Integrated ErrorDisplay, fallback option
+- `src/components/coworker-voice-call.tsx` - Integrated ErrorDisplay, fallback option
+
+**Learnings:**
+1. Error categorization helps determine retry strategy (permission errors shouldn't retry)
+2. Exponential backoff with jitter prevents thundering herd on retries
+3. localStorage provides simple persistence for session recovery across browser restarts
+4. Separate progress storage per conversation type (hr-interview, coworker-call-{id})
+5. Voice hooks share common patterns - consider extracting base hook in future
+6. User-friendly error messages should explain what happened AND what to do
+7. Fallback to text provides graceful degradation when voice fails
+8. Test mocking for localStorage requires Object.defineProperty on global
+
+**Architecture patterns:**
+- Error categorization at the point of catch, not at display
+- Retry logic encapsulated in hooks, not components
+- Progress saved incrementally on each transcript update
+- Session recovery check on mount with user choice to resume or start fresh
+- Components receive callbacks for fallback actions (text mode)
+
+**Error categories:**
+- `network` - Transient network issues, retryable
+- `permission` - Permission denied, not retryable (show instructions)
+- `api` - Gemini API errors, retryable with backoff
+- `session` - Session expired, not retryable (redirect to sign-in)
+- `browser` - Browser compatibility, not retryable (use different browser)
+- `resource` - Resource not found, not retryable
+- `unknown` - Default, retryable
+
+**Gotchas:**
+- localStorage mocking in vitest requires Object.defineProperty, not vi.spyOn
+- Connection state needs "retrying" state for UI feedback during retry delay
+- Progress storage key must include conversation-specific identifier
+
+**Verification completed:**
+- Gemini API failures show retry option ✓
+- Voice fails gracefully to text-only (onFallbackToText prop) ✓
+- Progress saved for session recovery (localStorage + recoverSession) ✓
+- Clear error messages with recovery options (ErrorDisplay component) ✓
+- Session persists across browser restarts (localStorage persistence) ✓
+- Tests pass (575/575)
+- Typecheck passes (exit 0)
+- UI verified in browser (homepage, sign-in render correctly)

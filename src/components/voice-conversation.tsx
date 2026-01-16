@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX } from "lucide-react";
+import { Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX, RefreshCw, MessageSquare } from "lucide-react";
 import {
   useVoiceConversation,
   type ConnectionState,
 } from "@/hooks/use-voice-conversation";
 import type { TranscriptMessage } from "@/lib/gemini";
+import { ErrorDisplay, SessionRecoveryPrompt } from "@/components/error-display";
 
 interface VoiceConversationProps {
   assessmentId: string;
   onEnd?: (transcript: TranscriptMessage[]) => void;
+  onFallbackToText?: () => void;
 }
 
 function ConnectionStateIndicator({ state }: { state: ConnectionState }) {
@@ -21,6 +23,7 @@ function ConnectionStateIndicator({ state }: { state: ConnectionState }) {
     connected: { label: "Connected", color: "bg-green-500" },
     error: { label: "Connection error", color: "bg-red-500" },
     ended: { label: "Interview ended", color: "bg-muted" },
+    retrying: { label: "Retrying...", color: "bg-secondary" },
   };
 
   const config = stateConfig[state];
@@ -94,20 +97,26 @@ function AudioVisualizerBar({ active }: { active: boolean }) {
   );
 }
 
-export function VoiceConversation({ assessmentId, onEnd }: VoiceConversationProps) {
+export function VoiceConversation({ assessmentId, onEnd, onFallbackToText }: VoiceConversationProps) {
   const {
     connectionState,
     permissionState,
     transcript,
     error,
+    categorizedError,
     isAudioSupported,
     isSpeaking,
     isListening,
+    retryCount,
+    maxRetries,
     connect,
     endInterview,
+    retry,
+    hasRecoverableSession,
+    recoverSession,
   } = useVoiceConversation({
     assessmentId,
-    onTranscriptUpdate: (t) => {
+    onTranscriptUpdate: () => {
       // Transcript updated
     },
   });
@@ -116,6 +125,8 @@ export function VoiceConversation({ assessmentId, onEnd }: VoiceConversationProp
     await endInterview();
     onEnd?.(transcript);
   };
+
+  const isRetrying = connectionState === "retrying";
 
   // Browser not supported
   if (!isAudioSupported) {
@@ -151,12 +162,40 @@ export function VoiceConversation({ assessmentId, onEnd }: VoiceConversationProp
           <li>3. Change the setting to &quot;Allow&quot;</li>
           <li>4. Refresh this page</li>
         </ol>
-        <button
-          onClick={() => window.location.reload()}
-          className="bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
-        >
-          Refresh Page
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
+          >
+            Refresh Page
+          </button>
+          {onFallbackToText && (
+            <button
+              onClick={onFallbackToText}
+              className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground px-6 py-3 font-semibold border-2 border-secondary hover:bg-foreground hover:text-background hover:border-foreground"
+            >
+              <MessageSquare className="w-4 h-4" />
+              Continue with Text
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Session recovery prompt
+  if (hasRecoverableSession && connectionState === "idle") {
+    return (
+      <div className="h-full flex items-center justify-center p-8">
+        <SessionRecoveryPrompt
+          onRecover={() => {
+            recoverSession();
+            connect();
+          }}
+          onStartFresh={connect}
+          lastSaved={new Date().toISOString()}
+          progressSummary={`${transcript.length} messages saved`}
+        />
       </div>
     );
   }
@@ -263,15 +302,40 @@ export function VoiceConversation({ assessmentId, onEnd }: VoiceConversationProp
               </button>
             )}
 
-            {connectionState === "error" && error && (
+            {(connectionState === "error" || connectionState === "retrying") && categorizedError && (
+              <ErrorDisplay
+                error={categorizedError}
+                onRetry={retry}
+                onFallback={onFallbackToText}
+                fallbackLabel="Continue with Text"
+                isRetrying={isRetrying}
+                retryCount={retryCount}
+                maxRetries={maxRetries}
+                showFallbackOption={!!onFallbackToText}
+              />
+            )}
+
+            {connectionState === "error" && !categorizedError && error && (
               <div className="text-center">
                 <p className="text-red-500 font-mono text-sm mb-4">{error}</p>
-                <button
-                  onClick={connect}
-                  className="flex items-center gap-2 bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
-                >
-                  Try Again
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={connect}
+                    className="flex items-center gap-2 bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Try Again
+                  </button>
+                  {onFallbackToText && (
+                    <button
+                      onClick={onFallbackToText}
+                      className="flex items-center gap-2 bg-secondary text-secondary-foreground px-6 py-3 font-semibold border-2 border-secondary hover:bg-foreground hover:text-background hover:border-foreground"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Continue with Text
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX } from "lucide-react";
+import { Mic, MicOff, Phone, PhoneOff, Volume2, VolumeX, RefreshCw, MessageSquare } from "lucide-react";
 import {
   useCoworkerVoice,
   type ConnectionState,
 } from "@/hooks/use-coworker-voice";
 import type { TranscriptMessage } from "@/lib/gemini";
+import { ErrorDisplay } from "@/components/error-display";
 
 interface Coworker {
   id: string;
@@ -19,6 +20,7 @@ interface CoworkerVoiceCallProps {
   assessmentId: string;
   coworker: Coworker;
   onEnd?: () => void;
+  onFallbackToText?: () => void;
 }
 
 function ConnectionStateIndicator({ state }: { state: ConnectionState }) {
@@ -29,6 +31,7 @@ function ConnectionStateIndicator({ state }: { state: ConnectionState }) {
     connected: { label: "Connected", color: "bg-green-500" },
     error: { label: "Connection error", color: "bg-red-500" },
     ended: { label: "Call ended", color: "bg-muted" },
+    retrying: { label: "Retrying...", color: "bg-secondary" },
   };
 
   const config = stateConfig[state];
@@ -102,17 +105,22 @@ export function CoworkerVoiceCall({
   assessmentId,
   coworker,
   onEnd,
+  onFallbackToText,
 }: CoworkerVoiceCallProps) {
   const {
     connectionState,
     permissionState,
     transcript,
     error,
+    categorizedError,
     isAudioSupported,
     isSpeaking,
     isListening,
+    retryCount,
+    maxRetries,
     connect,
     endCall,
+    retry,
   } = useCoworkerVoice({
     assessmentId,
     coworkerId: coworker.id,
@@ -125,6 +133,8 @@ export function CoworkerVoiceCall({
     await endCall();
     onEnd?.();
   };
+
+  const isRetrying = connectionState === "retrying";
 
   // Browser not supported
   if (!isAudioSupported) {
@@ -163,12 +173,23 @@ export function CoworkerVoiceCall({
             <li>3. Change the setting to &quot;Allow&quot;</li>
             <li>4. Refresh this page</li>
           </ol>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
-          >
-            Refresh Page
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
+            >
+              Refresh Page
+            </button>
+            {onFallbackToText && (
+              <button
+                onClick={onFallbackToText}
+                className="flex items-center justify-center gap-2 bg-secondary text-secondary-foreground px-6 py-3 font-semibold border-2 border-secondary hover:bg-foreground hover:text-background hover:border-foreground"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Chat Instead
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -276,15 +297,40 @@ export function CoworkerVoiceCall({
               </button>
             )}
 
-            {connectionState === "error" && error && (
+            {(connectionState === "error" || connectionState === "retrying") && categorizedError && (
+              <ErrorDisplay
+                error={categorizedError}
+                onRetry={retry}
+                onFallback={onFallbackToText}
+                fallbackLabel="Chat Instead"
+                isRetrying={isRetrying}
+                retryCount={retryCount}
+                maxRetries={maxRetries}
+                showFallbackOption={!!onFallbackToText}
+              />
+            )}
+
+            {connectionState === "error" && !categorizedError && error && (
               <div className="text-center">
                 <p className="text-red-500 font-mono text-sm mb-4">{error}</p>
-                <button
-                  onClick={connect}
-                  className="flex items-center gap-2 bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
-                >
-                  Try Again
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={connect}
+                    className="flex items-center gap-2 bg-foreground text-background px-6 py-3 font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Try Again
+                  </button>
+                  {onFallbackToText && (
+                    <button
+                      onClick={onFallbackToText}
+                      className="flex items-center gap-2 bg-secondary text-secondary-foreground px-6 py-3 font-semibold border-2 border-secondary hover:bg-foreground hover:text-background hover:border-foreground"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Chat Instead
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 

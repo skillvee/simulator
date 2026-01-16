@@ -6,12 +6,19 @@ import {
   checkAudioSupport,
   checkMicrophonePermission,
   requestMicrophoneAccess,
-  getAudioContext,
   playAudioChunk,
   createAudioWorkletBlobUrl,
   type AudioPermissionState,
 } from "@/lib/audio";
 import type { TranscriptMessage } from "@/lib/gemini";
+import {
+  categorizeError,
+  calculateBackoffDelay,
+  saveProgress,
+  loadProgress,
+  clearProgress,
+  type CategorizedError,
+} from "@/lib/error-recovery";
 
 export type ConnectionState =
   | "idle"
@@ -19,13 +26,15 @@ export type ConnectionState =
   | "connecting"
   | "connected"
   | "error"
-  | "ended";
+  | "ended"
+  | "retrying";
 
 export interface UseVoiceConversationOptions {
   assessmentId: string;
   onTranscriptUpdate?: (transcript: TranscriptMessage[]) => void;
   onConnectionStateChange?: (state: ConnectionState) => void;
   onError?: (error: string) => void;
+  maxRetries?: number;
 }
 
 export interface UseVoiceConversationReturn {
@@ -33,37 +42,51 @@ export interface UseVoiceConversationReturn {
   permissionState: AudioPermissionState;
   transcript: TranscriptMessage[];
   error: string | null;
+  categorizedError: CategorizedError | null;
   isAudioSupported: boolean;
   isSpeaking: boolean;
   isListening: boolean;
   interviewStartedAt: Date | null;
   interviewEndedAt: Date | null;
+  retryCount: number;
+  maxRetries: number;
   connect: () => Promise<void>;
   disconnect: () => void;
   endInterview: () => Promise<void>;
+  retry: () => Promise<void>;
+  hasRecoverableSession: boolean;
+  recoverSession: () => void;
 }
+
+const PROGRESS_TYPE = "hr-interview";
+const DEFAULT_MAX_RETRIES = 3;
 
 export function useVoiceConversation({
   assessmentId,
   onTranscriptUpdate,
   onConnectionStateChange,
   onError,
+  maxRetries = DEFAULT_MAX_RETRIES,
 }: UseVoiceConversationOptions): UseVoiceConversationReturn {
   const [connectionState, setConnectionState] = useState<ConnectionState>("idle");
   const [permissionState, setPermissionState] = useState<AudioPermissionState>("prompt");
   const [transcript, setTranscript] = useState<TranscriptMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [categorizedError, setCategorizedError] = useState<CategorizedError | null>(null);
   const [isAudioSupported] = useState(() => checkAudioSupport());
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [interviewStartedAt, setInterviewStartedAt] = useState<Date | null>(null);
   const [interviewEndedAt, setInterviewEndedAt] = useState<Date | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [hasRecoverableSession, setHasRecoverableSession] = useState(false);
 
   const sessionRef = useRef<Session | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const transcriptRef = useRef<TranscriptMessage[]>([]);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Audio playback queue
   const audioQueueRef = useRef<string[]>([]);
@@ -78,14 +101,20 @@ export function useVoiceConversation({
     [onConnectionStateChange]
   );
 
-  // Update transcript with callback
+  // Update transcript with callback and save progress
   const updateTranscript = useCallback(
     (newTranscript: TranscriptMessage[]) => {
       setTranscript(newTranscript);
       transcriptRef.current = newTranscript;
       onTranscriptUpdate?.(newTranscript);
+
+      // Save progress for session recovery
+      saveProgress(assessmentId, PROGRESS_TYPE, {
+        transcript: newTranscript,
+        interviewStartedAt: interviewStartedAt?.toISOString(),
+      });
     },
-    [onTranscriptUpdate]
+    [onTranscriptUpdate, assessmentId, interviewStartedAt]
   );
 
   // Add message to transcript
@@ -290,18 +319,17 @@ export function useVoiceConversation({
       });
     } catch (err) {
       console.error("Connection error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to connect";
+      const catError = categorizeError(err);
+      setCategorizedError(catError);
+      setError(catError.userMessage);
 
       // Handle permission denied specifically
-      if (errorMessage.includes("Permission denied") || errorMessage.includes("NotAllowedError")) {
+      if (catError.category === "permission") {
         setPermissionState("denied");
-        setError("Microphone access was denied. Please enable microphone access to continue.");
-      } else {
-        setError(errorMessage);
       }
 
       updateConnectionState("error");
-      onError?.(errorMessage);
+      onError?.(catError.userMessage);
     }
   }, [
     connectionState,
@@ -311,6 +339,59 @@ export function useVoiceConversation({
     initializeAudioCapture,
     onError,
   ]);
+
+  // Retry connection with exponential backoff
+  const retry = useCallback(async () => {
+    if (!categorizedError?.isRetryable) {
+      return;
+    }
+
+    if (retryCount >= maxRetries) {
+      setError("Maximum retry attempts reached. Please try again later.");
+      return;
+    }
+
+    // Clear any existing retry timeout
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+
+    const attempt = retryCount + 1;
+    setRetryCount(attempt);
+    updateConnectionState("retrying");
+
+    // Calculate backoff delay
+    const delay = calculateBackoffDelay(retryCount);
+
+    // Wait for backoff delay then retry
+    await new Promise<void>((resolve) => {
+      retryTimeoutRef.current = setTimeout(resolve, delay);
+    });
+
+    // Reset error state for retry
+    setError(null);
+    setCategorizedError(null);
+    updateConnectionState("idle");
+
+    // Attempt reconnection
+    await connect();
+  }, [categorizedError, retryCount, maxRetries, updateConnectionState, connect]);
+
+  // Recover session from saved progress
+  const recoverSession = useCallback(() => {
+    const progress = loadProgress(assessmentId, PROGRESS_TYPE);
+    if (progress && progress.data.transcript) {
+      const savedTranscript = progress.data.transcript as TranscriptMessage[];
+      setTranscript(savedTranscript);
+      transcriptRef.current = savedTranscript;
+
+      if (progress.data.interviewStartedAt) {
+        setInterviewStartedAt(new Date(progress.data.interviewStartedAt as string));
+      }
+
+      setHasRecoverableSession(false);
+    }
+  }, [assessmentId]);
 
   // Disconnect from Gemini Live
   const disconnect = useCallback(() => {
@@ -370,6 +451,9 @@ export function useVoiceConversation({
             interviewEndedAt: endTime.toISOString(),
           }),
         });
+
+        // Clear saved progress after successful completion
+        clearProgress(assessmentId, PROGRESS_TYPE);
       } catch (err) {
         console.error("Error saving transcript or generating assessment:", err);
       }
@@ -380,6 +464,10 @@ export function useVoiceConversation({
   useEffect(() => {
     return () => {
       disconnect();
+      // Clear any pending retry timeout
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
     };
   }, [disconnect]);
 
@@ -390,18 +478,35 @@ export function useVoiceConversation({
     }
   }, [isAudioSupported]);
 
+  // Check for recoverable session on mount
+  useEffect(() => {
+    const progress = loadProgress(assessmentId, PROGRESS_TYPE);
+    if (progress && progress.data.transcript) {
+      const transcriptData = progress.data.transcript as TranscriptMessage[];
+      if (transcriptData.length > 0) {
+        setHasRecoverableSession(true);
+      }
+    }
+  }, [assessmentId]);
+
   return {
     connectionState,
     permissionState,
     transcript,
     error,
+    categorizedError,
     isAudioSupported,
     isSpeaking,
     isListening,
     interviewStartedAt,
     interviewEndedAt,
+    retryCount,
+    maxRetries,
     connect,
     disconnect,
     endInterview,
+    retry,
+    hasRecoverableSession,
+    recoverSession,
   };
 }

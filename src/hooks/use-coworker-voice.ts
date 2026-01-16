@@ -11,6 +11,14 @@ import {
   type AudioPermissionState,
 } from "@/lib/audio";
 import type { TranscriptMessage } from "@/lib/gemini";
+import {
+  categorizeError,
+  calculateBackoffDelay,
+  saveProgress,
+  loadProgress,
+  clearProgress,
+  type CategorizedError,
+} from "@/lib/error-recovery";
 
 export type ConnectionState =
   | "idle"
@@ -18,7 +26,8 @@ export type ConnectionState =
   | "connecting"
   | "connected"
   | "error"
-  | "ended";
+  | "ended"
+  | "retrying";
 
 export interface UseCoworkerVoiceOptions {
   assessmentId: string;
@@ -26,6 +35,7 @@ export interface UseCoworkerVoiceOptions {
   onTranscriptUpdate?: (transcript: TranscriptMessage[]) => void;
   onConnectionStateChange?: (state: ConnectionState) => void;
   onError?: (error: string) => void;
+  maxRetries?: number;
 }
 
 export interface UseCoworkerVoiceReturn {
@@ -33,15 +43,21 @@ export interface UseCoworkerVoiceReturn {
   permissionState: AudioPermissionState;
   transcript: TranscriptMessage[];
   error: string | null;
+  categorizedError: CategorizedError | null;
   isAudioSupported: boolean;
   isSpeaking: boolean;
   isListening: boolean;
   callStartedAt: Date | null;
   callEndedAt: Date | null;
+  retryCount: number;
+  maxRetries: number;
   connect: () => Promise<void>;
   disconnect: () => void;
   endCall: () => Promise<void>;
+  retry: () => Promise<void>;
 }
+
+const DEFAULT_MAX_RETRIES = 3;
 
 export function useCoworkerVoice({
   assessmentId,
@@ -49,22 +65,29 @@ export function useCoworkerVoice({
   onTranscriptUpdate,
   onConnectionStateChange,
   onError,
+  maxRetries = DEFAULT_MAX_RETRIES,
 }: UseCoworkerVoiceOptions): UseCoworkerVoiceReturn {
   const [connectionState, setConnectionState] = useState<ConnectionState>("idle");
   const [permissionState, setPermissionState] = useState<AudioPermissionState>("prompt");
   const [transcript, setTranscript] = useState<TranscriptMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [categorizedError, setCategorizedError] = useState<CategorizedError | null>(null);
   const [isAudioSupported] = useState(() => checkAudioSupport());
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [callStartedAt, setCallStartedAt] = useState<Date | null>(null);
   const [callEndedAt, setCallEndedAt] = useState<Date | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const sessionRef = useRef<Session | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const transcriptRef = useRef<TranscriptMessage[]>([]);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Progress storage key for this specific coworker call
+  const progressKey = `coworker-call-${coworkerId}`;
 
   // Audio playback queue
   const audioQueueRef = useRef<string[]>([]);
@@ -79,14 +102,21 @@ export function useCoworkerVoice({
     [onConnectionStateChange]
   );
 
-  // Update transcript with callback
+  // Update transcript with callback and save progress
   const updateTranscript = useCallback(
     (newTranscript: TranscriptMessage[]) => {
       setTranscript(newTranscript);
       transcriptRef.current = newTranscript;
       onTranscriptUpdate?.(newTranscript);
+
+      // Save progress for session recovery
+      saveProgress(assessmentId, progressKey, {
+        transcript: newTranscript,
+        callStartedAt: callStartedAt?.toISOString(),
+        coworkerId,
+      });
     },
-    [onTranscriptUpdate]
+    [onTranscriptUpdate, assessmentId, progressKey, callStartedAt, coworkerId]
   );
 
   // Add message to transcript
@@ -290,18 +320,17 @@ export function useCoworkerVoice({
       });
     } catch (err) {
       console.error("Connection error:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to connect";
+      const catError = categorizeError(err);
+      setCategorizedError(catError);
+      setError(catError.userMessage);
 
       // Handle permission denied specifically
-      if (errorMessage.includes("Permission denied") || errorMessage.includes("NotAllowedError")) {
+      if (catError.category === "permission") {
         setPermissionState("denied");
-        setError("Microphone access was denied. Please enable microphone access to continue.");
-      } else {
-        setError(errorMessage);
       }
 
       updateConnectionState("error");
-      onError?.(errorMessage);
+      onError?.(catError.userMessage);
     }
   }, [
     connectionState,
@@ -312,6 +341,43 @@ export function useCoworkerVoice({
     initializeAudioCapture,
     onError,
   ]);
+
+  // Retry connection with exponential backoff
+  const retry = useCallback(async () => {
+    if (!categorizedError?.isRetryable) {
+      return;
+    }
+
+    if (retryCount >= maxRetries) {
+      setError("Maximum retry attempts reached. Please try again later.");
+      return;
+    }
+
+    // Clear any existing retry timeout
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+
+    const attempt = retryCount + 1;
+    setRetryCount(attempt);
+    updateConnectionState("retrying");
+
+    // Calculate backoff delay
+    const delay = calculateBackoffDelay(retryCount);
+
+    // Wait for backoff delay then retry
+    await new Promise<void>((resolve) => {
+      retryTimeoutRef.current = setTimeout(resolve, delay);
+    });
+
+    // Reset error state for retry
+    setError(null);
+    setCategorizedError(null);
+    updateConnectionState("idle");
+
+    // Attempt reconnection
+    await connect();
+  }, [categorizedError, retryCount, maxRetries, updateConnectionState, connect]);
 
   // Disconnect from Gemini Live
   const disconnect = useCallback(() => {
@@ -361,16 +427,23 @@ export function useCoworkerVoice({
             transcript: transcriptRef.current,
           }),
         });
+
+        // Clear saved progress after successful completion
+        clearProgress(assessmentId, progressKey);
       } catch (err) {
         console.error("Error saving transcript:", err);
       }
     }
-  }, [assessmentId, coworkerId, disconnect, updateConnectionState]);
+  }, [assessmentId, coworkerId, disconnect, updateConnectionState, progressKey]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       disconnect();
+      // Clear any pending retry timeout
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
     };
   }, [disconnect]);
 
@@ -386,13 +459,17 @@ export function useCoworkerVoice({
     permissionState,
     transcript,
     error,
+    categorizedError,
     isAudioSupported,
     isSpeaking,
     isListening,
     callStartedAt,
     callEndedAt,
+    retryCount,
+    maxRetries,
     connect,
     disconnect,
     endCall,
+    retry,
   };
 }
