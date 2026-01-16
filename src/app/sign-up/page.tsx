@@ -73,7 +73,7 @@ export default function SignUpPage() {
       });
 
       if (signInResult?.ok) {
-        router.push("/");
+        router.push("/start");
       } else {
         // Registration succeeded but sign-in failed, redirect to sign-in page
         router.push("/sign-in");
@@ -86,7 +86,7 @@ export default function SignUpPage() {
   };
 
   const handleGoogleSignUp = () => {
-    signIn("google", { callbackUrl: "/" });
+    signIn("google", { callbackUrl: "/start" });
   };
 
   return (

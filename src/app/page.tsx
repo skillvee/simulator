@@ -71,7 +71,7 @@ export default function Home() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <Link
-              href="/sign-in"
+              href="/start"
               className="inline-block bg-foreground text-background px-8 py-4 text-lg font-semibold border-2 border-foreground hover:bg-secondary hover:text-secondary-foreground hover:border-secondary text-center"
             >
               Start Practicing
@@ -139,7 +139,7 @@ export default function Home() {
             leverage tools, and collaborate under realistic conditions.
           </p>
           <Link
-            href="/sign-in"
+            href="/start"
             className="inline-block bg-secondary text-secondary-foreground px-8 py-4 text-lg font-semibold border-2 border-secondary hover:bg-background hover:text-foreground hover:border-background"
           >
             Start Your Assessment
