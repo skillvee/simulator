@@ -2182,3 +2182,57 @@ model Coworker {
 - Tests pass (526/526)
 - Typecheck passes (exit 0)
 - Build succeeds
+---
+
+## Issue #34: US-034: Scenario Preview & Testing
+
+**What was implemented:**
+- Preview API endpoint (`/api/admin/scenarios/[id]/preview`) for creating test assessments
+- Repo verification API (`/api/admin/scenarios/[id]/verify-repo`) to check GitHub repo accessibility
+- Scenario detail page (`/admin/scenarios/[id]`) with:
+  - "Preview Full Flow" button - runs through scenario as candidate would
+  - "Test Coworkers" button - skips directly to coworker chat for persona testing
+  - "Verify Repository" button - checks if GitHub repo is accessible with README
+  - Publish/Unpublish toggle with confirmation UI
+  - Scenario details display (company description, task, repo URL, tech stack)
+  - Coworker cards showing name, role, style, and knowledge count
+- Updated scenarios list page to link to detail pages
+
+**Files created:**
+- `src/app/api/admin/scenarios/[id]/preview/route.ts` - Preview assessment creation API
+- `src/app/api/admin/scenarios/[id]/preview/route.test.ts` - 6 unit tests
+- `src/app/api/admin/scenarios/[id]/verify-repo/route.ts` - Repository verification API
+- `src/app/api/admin/scenarios/[id]/verify-repo/route.test.ts` - 7 unit tests
+- `src/app/admin/scenarios/[id]/page.tsx` - Scenario detail server component
+- `src/app/admin/scenarios/[id]/client.tsx` - Interactive client component
+
+**Files changed:**
+- `src/app/admin/scenarios/page.tsx` - Added links to scenario detail pages
+
+**Learnings:**
+1. Preview API creates real assessments with configurable starting status (HR_INTERVIEW, ONBOARDING, WORKING)
+2. `skipTo` parameter allows jumping to specific phases for focused testing
+3. Repo verification uses GitHub API with optional token for private repos
+4. Existing `isPublished` field (default: false) already supports draft/published status
+5. TDD workflow: write tests first, verify they fail, implement minimal code, verify they pass
+6. Admin routes are protected at layout level via `requireAdmin()`
+7. Test patterns: mock auth, db, and env modules before importing route handlers
+
+**Architecture patterns:**
+- Preview creates actual Assessment records (reuses existing assessment flow)
+- Repo verification separates GitHub API logic for testability
+- Client component handles all interactive state (preview loading, repo status, publish toggle)
+- Server component fetches data and handles auth checks
+
+**Gotchas:**
+- Need to mock `@/lib/env` module in tests to avoid environment variable validation errors
+- Global fetch mock needed for GitHub API tests with beforeEach/afterEach cleanup
+
+**Verification completed:**
+- "Preview" mode runs through scenario as candidate would ✓
+- Can test coworker conversations (via skipTo: "coworkers") ✓
+- Can verify repo access (GitHub API with README check) ✓
+- Scenario marked as draft until published (isPublished toggle) ✓
+- Tests pass (539/539) ✓
+- Typecheck passes (exit 0) ✓
+- UI verified in browser using agent-browser ✓

@@ -52,9 +52,10 @@ export default async function ScenariosPage() {
       ) : (
         <div className="space-y-4">
           {scenarios.map((scenario) => (
-            <div
+            <Link
               key={scenario.id}
-              className="border-2 border-foreground p-6 bg-background"
+              href={`/admin/scenarios/${scenario.id}`}
+              className="block border-2 border-foreground p-6 bg-background hover:bg-muted transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -107,7 +108,7 @@ export default async function ScenariosPage() {
                   )}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
