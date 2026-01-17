@@ -935,3 +935,37 @@ src/prompts/
 - Test expectations need to match actual prompt wording after refactoring
 - The `buildX` pattern works well for dynamic prompts with context injection
 - Import statements at module scope run before function bodies - can import mid-file in TypeScript
+
+---
+
+## Issue #52: US-001: Add decorative offline team members
+
+**What was implemented:**
+- Added 8 decorative offline team members to `src/lib/coworker-persona.ts`
+- Created `DecorativeTeamMember` interface with name, role, and optional initials
+- Added `getInitials()` utility function for avatar display
+- Updated `CoworkerSidebar` component to display offline members below interactive ones
+- Offline members have muted styling (gray avatar, muted text, "offline" status)
+- No action buttons for offline members (not interactive)
+- Updated footer to show "X online · Y total" format
+
+**Team members added:**
+1. Maya Torres - Product Designer
+2. Derek Washington - Data Scientist
+3. Priya Sharma - DevOps Engineer
+4. Marcus Lee - Frontend Engineer
+5. Sofia Andersson - UX Researcher
+6. James O'Brien - Backend Engineer
+7. Nina Volkov - Engineering Manager
+8. Carlos Mendez - Machine Learning Engineer
+
+**Files changed:**
+- `src/lib/coworker-persona.ts` - Added DecorativeTeamMember interface, DECORATIVE_TEAM_MEMBERS array, getInitials function
+- `src/components/coworker-sidebar.tsx` - Added OfflineTeamMember component and integrated decorative members
+
+**Learnings:**
+1. Decorative elements don't need full persona data - just display info (name, role)
+2. Visual distinction for offline status: muted colors, reduced opacity, different status indicator
+3. The existing `EXAMPLE_COWORKERS` pattern made it easy to add a parallel `DECORATIVE_TEAM_MEMBERS` array
+4. Utility functions like `getInitials()` can be reused across components when extracted to lib
+5. Neo-brutalist styling applies to offline elements too - just with muted variants of the color palette
