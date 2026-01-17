@@ -5,8 +5,9 @@
  * @see Issue #74: US-012
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { AssessmentDimension } from "@prisma/client";
 import {
   CandidateSearchResultCard,
@@ -358,6 +359,47 @@ describe("CandidateSearchResultCard", () => {
       expect(screen.getByTestId("candidate-card")).toHaveClass("custom-class");
     });
   });
+
+  describe("reject button", () => {
+    it('renders a "Not a fit" reject button when onReject is provided', () => {
+      const candidate = createMockCandidate();
+      render(<CandidateSearchResultCard candidate={candidate} onReject={() => {}} />);
+
+      expect(screen.getByTestId("reject-button")).toBeInTheDocument();
+    });
+
+    it("displays the correct button text", () => {
+      const candidate = createMockCandidate();
+      render(<CandidateSearchResultCard candidate={candidate} onReject={() => {}} />);
+
+      expect(screen.getByText(/Not a fit/)).toBeInTheDocument();
+    });
+
+    it("calls onReject callback with candidate id when clicked", async () => {
+      const user = userEvent.setup();
+      const mockOnReject = vi.fn();
+      const candidate = createMockCandidate({ id: "va-456" });
+      render(<CandidateSearchResultCard candidate={candidate} onReject={mockOnReject} />);
+
+      await user.click(screen.getByTestId("reject-button"));
+      expect(mockOnReject).toHaveBeenCalledWith("va-456");
+    });
+
+    it("does not render reject button when onReject is not provided", () => {
+      const candidate = createMockCandidate();
+      render(<CandidateSearchResultCard candidate={candidate} />);
+
+      // Reject button should only appear when onReject is provided
+      expect(screen.queryByTestId("reject-button")).not.toBeInTheDocument();
+    });
+
+    it("renders reject button when onReject is provided", () => {
+      const candidate = createMockCandidate();
+      render(<CandidateSearchResultCard candidate={candidate} onReject={() => {}} />);
+
+      expect(screen.getByTestId("reject-button")).toBeInTheDocument();
+    });
+  });
 });
 
 // ============================================================================
@@ -497,5 +539,20 @@ describe("Acceptance Criteria", () => {
     // lg:grid-cols-3 for 3 per row, xl:grid-cols-4 for 4 per row
     expect(grid).toHaveClass("lg:grid-cols-3");
     expect(grid).toHaveClass("xl:grid-cols-4");
+  });
+});
+
+// ============================================================================
+// Issue #75 Acceptance Criteria Tests
+// ============================================================================
+
+describe("Issue #75 Acceptance Criteria", () => {
+  it('AC1: Each candidate card has a "Not a fit" or "Reject" button', () => {
+    const candidate = createMockCandidate();
+    render(<CandidateSearchResultCard candidate={candidate} onReject={() => {}} />);
+
+    const rejectButton = screen.getByTestId("reject-button");
+    expect(rejectButton).toBeInTheDocument();
+    expect(screen.getByText(/Not a fit/)).toBeInTheDocument();
   });
 });

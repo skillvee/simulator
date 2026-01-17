@@ -7,16 +7,23 @@
  * - Natural language input
  * - Real-time entity extraction with visual feedback
  * - Context tags showing detected entities
+ * - Search results with reject functionality
+ * - Feedback-driven search refinement
  *
  * @since 2026-01-17
  * @see Issue #72: US-007
+ * @see Issue #75: US-012b
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowUp, Briefcase, MapPin, Clock, Cpu, Building2, Factory, Loader2 } from "lucide-react";
+import { ArrowUp, Briefcase, MapPin, Clock, Cpu, Building2, Factory, Loader2, CheckCircle, ArrowLeft } from "lucide-react";
 import type { ExtractedIntent } from "@/lib/entity-extraction";
 import type { RoleArchetype } from "@/lib/archetype-weights";
 import type { SeniorityLevel } from "@/lib/seniority-thresholds";
+import { CandidateSearchResultGrid, type CandidateSearchResult } from "@/components/candidate-search-result-card";
+import { RejectionFeedbackModal } from "@/components/rejection-feedback-modal";
+import type { ConstraintUpdate } from "@/lib/feedback-parsing";
+import { AssessmentDimension } from "@prisma/client";
 
 // ============================================================================
 // Types
@@ -34,6 +41,12 @@ interface ContextTag {
   value: string | null;
   icon: React.ReactNode;
   isActive: boolean;
+}
+
+interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error" | "info";
 }
 
 // ============================================================================
@@ -55,6 +68,62 @@ const LOADING_MESSAGES = [
 ] as const;
 
 const LOADING_MESSAGE_DURATION_MS = 2000; // 2 seconds per message
+const TOAST_DURATION_MS = 4000; // 4 seconds
+
+// Mock data for demonstration
+const MOCK_CANDIDATES: CandidateSearchResult[] = [
+  {
+    id: "va-1",
+    candidate: { id: "c1", name: "Alex Chen", email: "alex@example.com" },
+    fitScore: 92,
+    archetype: "SENIOR_FRONTEND_ENGINEER",
+    seniorityLevel: "SENIOR",
+    dimensionScores: [
+      { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 5, weightLevel: "VERY_HIGH" },
+      { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 4, weightLevel: "HIGH" },
+      { dimension: AssessmentDimension.COMMUNICATION, score: 5, weightLevel: "VERY_HIGH" },
+      { dimension: AssessmentDimension.COLLABORATION, score: 4, weightLevel: "HIGH" },
+      { dimension: AssessmentDimension.ADAPTABILITY, score: 4, weightLevel: "MEDIUM" },
+      { dimension: AssessmentDimension.LEADERSHIP, score: 3, weightLevel: "MEDIUM" },
+    ],
+    summaryExcerpt: "Exceptional frontend developer with 8 years of React experience and strong communication skills.",
+    completedAt: new Date("2026-01-10"),
+  },
+  {
+    id: "va-2",
+    candidate: { id: "c2", name: "Jordan Smith", email: "jordan@example.com" },
+    fitScore: 78,
+    archetype: "SENIOR_FRONTEND_ENGINEER",
+    seniorityLevel: "MID",
+    dimensionScores: [
+      { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 4, weightLevel: "VERY_HIGH" },
+      { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 4, weightLevel: "HIGH" },
+      { dimension: AssessmentDimension.COMMUNICATION, score: 4, weightLevel: "VERY_HIGH" },
+      { dimension: AssessmentDimension.COLLABORATION, score: 4, weightLevel: "HIGH" },
+      { dimension: AssessmentDimension.ADAPTABILITY, score: 3, weightLevel: "MEDIUM" },
+      { dimension: AssessmentDimension.LEADERSHIP, score: 3, weightLevel: "MEDIUM" },
+    ],
+    summaryExcerpt: "Solid frontend developer with 5 years of experience, strong in React and TypeScript.",
+    completedAt: new Date("2026-01-12"),
+  },
+  {
+    id: "va-3",
+    candidate: { id: "c3", name: "Sam Rodriguez", email: "sam@example.com" },
+    fitScore: 85,
+    archetype: "FULLSTACK_ENGINEER",
+    seniorityLevel: "SENIOR",
+    dimensionScores: [
+      { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 5, weightLevel: "VERY_HIGH" },
+      { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 5, weightLevel: "VERY_HIGH" },
+      { dimension: AssessmentDimension.COMMUNICATION, score: 4, weightLevel: "HIGH" },
+      { dimension: AssessmentDimension.COLLABORATION, score: 4, weightLevel: "HIGH" },
+      { dimension: AssessmentDimension.ADAPTABILITY, score: 5, weightLevel: "VERY_HIGH" },
+      { dimension: AssessmentDimension.LEADERSHIP, score: 4, weightLevel: "MEDIUM" },
+    ],
+    summaryExcerpt: "Versatile fullstack engineer with 7 years of experience, excellent problem-solving skills.",
+    completedAt: new Date("2026-01-14"),
+  },
+];
 
 // ============================================================================
 // Helper Functions
@@ -96,11 +165,28 @@ function formatArchetype(archetype: RoleArchetype | null): string | null {
 // ============================================================================
 
 export function CandidateSearchClient() {
+  // Search state
   const [query, setQuery] = useState("");
   const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  // Results state
+  const [searchResults, setSearchResults] = useState<CandidateSearchResult[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [rejectedCandidateIds, setRejectedCandidateIds] = useState<Set<string>>(new Set());
+
+  // Rejection modal state
+  const [rejectionModal, setRejectionModal] = useState<{
+    isOpen: boolean;
+    candidateId: string | null;
+    candidateName: string;
+  }>({ isOpen: false, candidateId: null, candidateName: "" });
+
+  // Toast state
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -142,6 +228,23 @@ export function CandidateSearchClient() {
       }
     };
   }, [isSearching]);
+
+  // Auto-remove toasts after duration
+  useEffect(() => {
+    if (toasts.length === 0) return;
+
+    const timer = setTimeout(() => {
+      setToasts((prev) => prev.slice(1));
+    }, TOAST_DURATION_MS);
+
+    return () => clearTimeout(timer);
+  }, [toasts]);
+
+  // Add a toast notification
+  const addToast = useCallback((message: string, type: Toast["type"] = "info") => {
+    const id = `toast-${Date.now()}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+  }, []);
 
   // Debounced entity extraction
   const extractEntities = useCallback(async (text: string) => {
@@ -190,15 +293,15 @@ export function CandidateSearchClient() {
     if (!query.trim() || isSearching) return;
 
     setIsSearching(true);
-    // TODO: Implement actual search functionality when candidate search service is integrated
-    // For now, we'll just simulate a search with a longer timeout to demonstrate loading states
-    // The loading state will persist and cycle through messages until this completes
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    setIsSearching(false);
+    setRejectedCandidateIds(new Set()); // Reset rejected candidates on new search
 
-    // In a real implementation, this would navigate to search results or display them
-    console.log("Search query:", query);
-    console.log("Extracted entities:", extraction);
+    // Simulate search delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Use mock data for now (filtered by rejected IDs)
+    setSearchResults(MOCK_CANDIDATES);
+    setHasSearched(true);
+    setIsSearching(false);
   };
 
   // Handle Enter key to search
@@ -208,6 +311,73 @@ export function CandidateSearchClient() {
       handleSearch();
     }
   };
+
+  // Handle candidate rejection - open modal
+  const handleRejectCandidate = useCallback((candidateId: string) => {
+    const candidate = searchResults.find((c) => c.id === candidateId);
+    if (!candidate) return;
+
+    setRejectionModal({
+      isOpen: true,
+      candidateId,
+      candidateName: candidate.candidate.name || candidate.candidate.email || "Anonymous",
+    });
+  }, [searchResults]);
+
+  // Handle feedback submission from modal
+  const handleFeedbackSubmit = async (feedback: string) => {
+    if (!rejectionModal.candidateId) return;
+
+    try {
+      // Parse feedback to extract constraints
+      const response = await fetch("/api/search/parse-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedback }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+
+        // Update the query with new constraints (for display purposes)
+        if (result.constraints && result.constraints.length > 0) {
+          const constraintDescriptions = result.constraints
+            .map((c: ConstraintUpdate) => {
+              const value = Array.isArray(c.value) ? c.value.join(", ") : c.value;
+              return `${c.type}: ${value}`;
+            })
+            .join("; ");
+
+          // Append to current query
+          const updatedQuery = `${query} [Refined: ${constraintDescriptions}]`;
+          setQuery(updatedQuery);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse feedback:", error);
+    }
+
+    // Remove the rejected candidate from results
+    setRejectedCandidateIds((prev) => new Set([...prev, rejectionModal.candidateId!]));
+
+    // Close modal
+    setRejectionModal({ isOpen: false, candidateId: null, candidateName: "" });
+
+    // Show toast notification
+    addToast("Search updated based on your feedback", "success");
+  };
+
+  // Handle back to search
+  const handleBackToSearch = () => {
+    setHasSearched(false);
+    setSearchResults([]);
+    setRejectedCandidateIds(new Set());
+  };
+
+  // Filter out rejected candidates
+  const visibleResults = searchResults.filter(
+    (candidate) => !rejectedCandidateIds.has(candidate.id)
+  );
 
   // Build context tags from extraction
   const contextTags: ContextTag[] = [
@@ -270,137 +440,212 @@ export function CandidateSearchClient() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b-2 border-foreground px-6 py-4">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold">Candidate Search</h1>
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {hasSearched && (
+              <button
+                onClick={handleBackToSearch}
+                className="p-2 border-2 border-foreground hover:bg-accent"
+                aria-label="Back to search"
+                data-testid="back-button"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
+            <h1 className="text-xl font-bold">Candidate Search</h1>
+          </div>
           <span className="text-sm text-muted-foreground font-mono">BETA</span>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+      <main className="flex-1 flex flex-col px-6 py-8">
         {isSearching ? (
           /* Loading State */
-          <div className="w-full max-w-3xl" data-testid="loading-state">
-            <div className="flex flex-col items-center justify-center py-16">
-              {/* Animated loading indicator */}
-              <div
-                className="relative w-16 h-16 mb-8"
-                data-testid="loading-indicator"
-              >
-                {/* Outer spinning ring */}
-                <div className="absolute inset-0 border-4 border-muted animate-spin border-t-secondary" />
-                {/* Inner pulsing circle */}
-                <div className="absolute inset-3 bg-secondary animate-pulse" />
-              </div>
-
-              {/* Sequential loading messages */}
-              <div className="text-center" data-testid="loading-messages">
-                <p
-                  className="text-xl font-medium text-foreground mb-2 transition-opacity duration-300"
-                  data-testid="current-loading-message"
+          <div className="flex-1 flex items-center justify-center" data-testid="loading-state">
+            <div className="w-full max-w-3xl">
+              <div className="flex flex-col items-center justify-center py-16">
+                {/* Animated loading indicator */}
+                <div
+                  className="relative w-16 h-16 mb-8"
+                  data-testid="loading-indicator"
                 >
-                  {LOADING_MESSAGES[loadingMessageIndex]}
-                </p>
-                <p className="text-sm text-muted-foreground font-mono">
-                  Please wait while we search our database
-                </p>
-              </div>
+                  {/* Outer spinning ring */}
+                  <div className="absolute inset-0 border-4 border-muted animate-spin border-t-secondary" />
+                  {/* Inner pulsing circle */}
+                  <div className="absolute inset-3 bg-secondary animate-pulse" />
+                </div>
 
-              {/* Progress dots showing message sequence */}
-              <div
-                className="flex gap-2 mt-8"
-                data-testid="loading-progress-dots"
-              >
-                {LOADING_MESSAGES.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 transition-colors ${
-                      index <= loadingMessageIndex
-                        ? "bg-secondary"
-                        : "bg-muted"
-                    }`}
-                    data-testid={`progress-dot-${index}`}
-                  />
-                ))}
+                {/* Sequential loading messages */}
+                <div className="text-center" data-testid="loading-messages">
+                  <p
+                    className="text-xl font-medium text-foreground mb-2 transition-opacity duration-300"
+                    data-testid="current-loading-message"
+                  >
+                    {LOADING_MESSAGES[loadingMessageIndex]}
+                  </p>
+                  <p className="text-sm text-muted-foreground font-mono">
+                    Please wait while we search our database
+                  </p>
+                </div>
+
+                {/* Progress dots showing message sequence */}
+                <div
+                  className="flex gap-2 mt-8"
+                  data-testid="loading-progress-dots"
+                >
+                  {LOADING_MESSAGES.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 transition-colors ${
+                        index <= loadingMessageIndex
+                          ? "bg-secondary"
+                          : "bg-muted"
+                      }`}
+                      data-testid={`progress-dot-${index}`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        ) : (
-          /* Search Form */
-          <div className="w-full max-w-3xl">
-            {/* Greeting */}
-            <div className="mb-8 text-center">
-              <h2 className="text-3xl font-bold mb-3">
-                Hi there, please describe the profile you&apos;re looking for.
-              </h2>
+        ) : hasSearched ? (
+          /* Search Results */
+          <div className="w-full max-w-6xl mx-auto" data-testid="search-results">
+            {/* Current query display */}
+            <div className="mb-6 p-4 border-2 border-foreground bg-muted/10">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                  Current Search
+                </span>
+              </div>
+              <p className="text-foreground">{query}</p>
+            </div>
+
+            {/* Results count */}
+            <div className="mb-6 flex items-center justify-between">
               <p className="text-muted-foreground">
-                Type a natural language description of your ideal candidate
+                {visibleResults.length} candidate{visibleResults.length !== 1 ? "s" : ""} found
+                {rejectedCandidateIds.size > 0 && (
+                  <span className="ml-2 text-sm">
+                    ({rejectedCandidateIds.size} rejected)
+                  </span>
+                )}
               </p>
             </div>
 
-            {/* Search input */}
-            <div className="relative mb-6">
-              <textarea
-                ref={inputRef}
-                value={query}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                placeholder={EXAMPLE_QUERY}
-                rows={4}
-                className="w-full px-4 py-4 pr-16 border-2 border-foreground bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary resize-none font-sans"
-                disabled={isSearching}
-              />
-              {/* Send button - positioned inside the textarea */}
-              <button
-                onClick={handleSearch}
-                disabled={!query.trim() || isSearching}
-                className="absolute bottom-4 right-4 w-10 h-10 flex items-center justify-center bg-purple-600 text-white border-2 border-foreground hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Search"
-                data-testid="search-button"
-              >
-                {isSearching ? (
-                  <Loader2 size={20} className="animate-spin" />
-                ) : (
-                  <ArrowUp size={20} />
-                )}
-              </button>
-            </div>
+            {/* Results grid */}
+            <CandidateSearchResultGrid
+              candidates={visibleResults}
+              onReject={handleRejectCandidate}
+            />
+          </div>
+        ) : (
+          /* Search Form */
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-full max-w-3xl">
+              {/* Greeting */}
+              <div className="mb-8 text-center">
+                <h2 className="text-3xl font-bold mb-3">
+                  Hi there, please describe the profile you&apos;re looking for.
+                </h2>
+                <p className="text-muted-foreground">
+                  Type a natural language description of your ideal candidate
+                </p>
+              </div>
 
-            {/* Context tags */}
-            <div className="border-2 border-foreground bg-background p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
-                  Detected Entities
-                </span>
-                {isExtracting && (
-                  <span className="w-2 h-2 bg-secondary animate-pulse" />
-                )}
+              {/* Search input */}
+              <div className="relative mb-6">
+                <textarea
+                  ref={inputRef}
+                  value={query}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder={EXAMPLE_QUERY}
+                  rows={4}
+                  className="w-full px-4 py-4 pr-16 border-2 border-foreground bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary resize-none font-sans"
+                  disabled={isSearching}
+                  data-testid="search-input"
+                />
+                {/* Send button - positioned inside the textarea */}
+                <button
+                  onClick={handleSearch}
+                  disabled={!query.trim() || isSearching}
+                  className="absolute bottom-4 right-4 w-10 h-10 flex items-center justify-center bg-purple-600 text-white border-2 border-foreground hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  aria-label="Search"
+                  data-testid="search-button"
+                >
+                  {isSearching ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <ArrowUp size={20} />
+                  )}
+                </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {contextTags.map((tag) => (
-                  <ContextTagBadge key={tag.label} tag={tag} />
-                ))}
-              </div>
-            </div>
 
-            {/* Processing time indicator */}
-            {extraction && (
-              <div className="mt-4 text-center">
-                <span className="text-xs font-mono text-muted-foreground">
-                  Extracted in {extraction.processingTimeMs}ms
-                </span>
+              {/* Context tags */}
+              <div className="border-2 border-foreground bg-background p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                    Detected Entities
+                  </span>
+                  {isExtracting && (
+                    <span className="w-2 h-2 bg-secondary animate-pulse" />
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {contextTags.map((tag) => (
+                    <ContextTagBadge key={tag.label} tag={tag} />
+                  ))}
+                </div>
               </div>
-            )}
+
+              {/* Processing time indicator */}
+              {extraction && (
+                <div className="mt-4 text-center">
+                  <span className="text-xs font-mono text-muted-foreground">
+                    Extracted in {extraction.processingTimeMs}ms
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
 
       {/* Footer */}
       <footer className="border-t-2 border-foreground px-6 py-4">
-        <div className="max-w-4xl mx-auto text-center text-sm text-muted-foreground">
+        <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground">
           <span className="font-mono">Powered by AI entity extraction</span>
         </div>
       </footer>
+
+      {/* Rejection Feedback Modal */}
+      <RejectionFeedbackModal
+        isOpen={rejectionModal.isOpen}
+        candidateName={rejectionModal.candidateName}
+        onClose={() => setRejectionModal({ isOpen: false, candidateId: null, candidateName: "" })}
+        onSubmit={handleFeedbackSubmit}
+      />
+
+      {/* Toast Notifications */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50" data-testid="toast-container">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`
+              flex items-center gap-3 px-4 py-3 border-2 border-foreground
+              ${toast.type === "success" ? "bg-green-100 dark:bg-green-900" : ""}
+              ${toast.type === "error" ? "bg-red-100 dark:bg-red-900" : ""}
+              ${toast.type === "info" ? "bg-background" : ""}
+            `}
+            data-testid="toast"
+          >
+            {toast.type === "success" && <CheckCircle size={20} className="text-green-600" />}
+            <span className="font-medium">{toast.message}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

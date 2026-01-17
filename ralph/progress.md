@@ -2701,3 +2701,123 @@ function createMockCandidate(overrides: Partial<CandidateSearchResult> = {}): Ca
 - Only 6 primary dimensions shown for compact display (excludes CREATIVITY and TIME_MANAGEMENT)
 - Missing dimension scores gracefully handled (component skips them)
 - Fit score is rounded to nearest integer for display
+
+---
+
+## Issue #75: US-012b - Implement Candidate Rejection with Feedback
+
+**What was implemented:**
+- Rejection feedback modal component asking "Why isn't this candidate a fit?"
+- Free-form text input with example placeholder
+- Feedback parsing service using Gemini to extract constraint updates
+- API route `/api/search/parse-feedback` for feedback processing
+- Integration with search client: removes rejected candidate, refines search query
+- Toast notification "Search updated based on your feedback"
+- "Not a fit" button added to candidate cards
+
+**Files created:**
+- `src/components/rejection-feedback-modal.tsx` - Modal component with neo-brutalist styling
+- `src/components/rejection-feedback-modal.test.tsx` - 23 unit tests
+- `src/lib/feedback-parsing.ts` - Gemini-powered feedback parsing service
+- `src/lib/feedback-parsing.test.ts` - 18 unit tests
+- `src/app/api/search/parse-feedback/route.ts` - API route
+
+**Files modified:**
+- `src/components/candidate-search-result-card.tsx` - Added `onReject` prop and reject button
+- `src/components/candidate-search-result-card.test.tsx` - Added 6 tests for reject button
+- `src/app/candidate_search/client.tsx` - Full rejection flow integration
+
+**Feedback Parsing Types:**
+```typescript
+export type ConstraintType =
+  | "years_experience"
+  | "skills"
+  | "job_title"
+  | "location"
+  | "industry"
+  | "company_type";
+
+export interface ConstraintUpdate {
+  type: ConstraintType;
+  value: string | string[];
+  reason?: string;
+}
+```
+
+**Gemini Prompt Pattern:**
+```
+Extract constraint updates from the following rejection feedback.
+Return a JSON object with:
+- constraints: array of {type, value, reason}
+
+Feedback: "${feedback}"
+```
+
+**Modal Accessibility:**
+- Escape key closes modal
+- Overlay click closes modal
+- Modal content click does NOT close (stop propagation)
+- Submit button disabled until feedback entered
+- Loading state during submission
+
+**Toast Notification System:**
+```typescript
+interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error" | "info";
+}
+// Auto-dismisses after 3 seconds
+```
+
+**State Management in Client:**
+```typescript
+const [rejectedCandidateIds, setRejectedCandidateIds] = useState<Set<string>>(new Set());
+const [rejectionModal, setRejectionModal] = useState<{
+  isOpen: boolean;
+  candidateId: string | null;
+  candidateName: string;
+}>();
+
+// Filter out rejected candidates
+const visibleResults = searchResults.filter(c => !rejectedCandidateIds.has(c.id));
+```
+
+**Learnings:**
+1. Use `Set<string>` for tracking rejected IDs - O(1) lookup and filter
+2. Gemini prompt should explicitly request JSON format for reliable parsing
+3. Modal overlay requires `stopPropagation` on content click to prevent closing
+4. Toast auto-dismiss with `setTimeout` and cleanup in effect return
+5. Conditional button rendering with `onReject &&` for optional functionality
+6. Mock hoisting in Vitest: define mock inside `vi.mock()` factory, import module after, cast to `vi.fn()`
+
+**Test Pattern for Gemini Mocks:**
+```typescript
+vi.mock("@/lib/gemini", () => ({
+  geminiClient: {
+    models: {
+      generateContent: vi.fn().mockResolvedValue({
+        text: JSON.stringify({ constraints: [...] }),
+      }),
+    },
+  },
+}));
+
+// Then in tests:
+const mockGenerateContent = geminiClient.models.generateContent as ReturnType<typeof vi.fn>;
+```
+
+**Browser Validation Evidence:**
+1. Clicked "Not a fit" on Alex Chen candidate card
+2. Modal opened with "Not a fit: Alex Chen" heading
+3. Entered feedback: "Need 8+ years of experience, not 5"
+4. Submit enabled after text entry
+5. After submit: Alex Chen removed from results
+6. Search query refined: "Senior frontend engineer... [Refined: years_experience: 8+]"
+7. Count updated: "2 candidates found (1 rejected)"
+
+**Gotchas:**
+- Toast notification auto-dismisses in 3 seconds - may not capture in snapshot
+- Multiple reject buttons on page require unique selectors in tests
+- Candidate name needed for modal title - passed separately from ID
+- API parsing can fail silently - wrap in try/catch with fallback

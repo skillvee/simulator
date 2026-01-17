@@ -15,7 +15,7 @@
 
 import Link from "next/link";
 import { AssessmentDimension } from "@prisma/client";
-import { ArrowRight, User, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowRight, User, TrendingUp, TrendingDown, X } from "lucide-react";
 import type { RoleArchetype, WeightLevel } from "@/lib/archetype-weights";
 import type { SeniorityLevel } from "@/lib/seniority-thresholds";
 import { SENIORITY_THRESHOLDS } from "@/lib/seniority-thresholds";
@@ -226,11 +226,14 @@ export interface CandidateSearchResultCardProps {
   candidate: CandidateSearchResult;
   /** Optional className for grid layout */
   className?: string;
+  /** Optional callback when reject button is clicked */
+  onReject?: (candidateId: string) => void;
 }
 
 export function CandidateSearchResultCard({
   candidate,
   className = "",
+  onReject,
 }: CandidateSearchResultCardProps) {
   const {
     id,
@@ -334,16 +337,29 @@ export function CandidateSearchResultCard({
         </section>
       )}
 
-      {/* Footer: View Profile Button */}
+      {/* Footer: View Profile Button + Reject Button */}
       <footer className="p-4 border-t-2 border-foreground mt-auto">
-        <Link
-          href={`/candidate/${id}`}
-          className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-foreground bg-foreground text-background hover:bg-secondary hover:text-secondary-foreground font-bold"
-          data-testid="view-profile-button"
-        >
-          View Profile
-          <ArrowRight size={16} />
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href={`/candidate/${id}`}
+            className="flex items-center justify-center gap-2 flex-1 px-4 py-3 border-2 border-foreground bg-foreground text-background hover:bg-secondary hover:text-secondary-foreground font-bold"
+            data-testid="view-profile-button"
+          >
+            View Profile
+            <ArrowRight size={16} />
+          </Link>
+          {onReject && (
+            <button
+              onClick={() => onReject(id)}
+              className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-foreground bg-background text-foreground hover:bg-red-100 hover:border-red-500 hover:text-red-700 font-medium"
+              data-testid="reject-button"
+              aria-label="Not a fit"
+            >
+              <X size={16} />
+              Not a fit
+            </button>
+          )}
+        </div>
       </footer>
     </article>
   );
@@ -357,6 +373,8 @@ export interface CandidateSearchResultGridProps {
   candidates: CandidateSearchResult[];
   /** Optional className for the grid container */
   className?: string;
+  /** Optional callback when reject button is clicked on a card */
+  onReject?: (candidateId: string) => void;
 }
 
 /**
@@ -366,6 +384,7 @@ export interface CandidateSearchResultGridProps {
 export function CandidateSearchResultGrid({
   candidates,
   className = "",
+  onReject,
 }: CandidateSearchResultGridProps) {
   if (candidates.length === 0) {
     return (
@@ -387,7 +406,11 @@ export function CandidateSearchResultGrid({
       data-testid="candidate-grid"
     >
       {candidates.map((candidate) => (
-        <CandidateSearchResultCard key={candidate.id} candidate={candidate} />
+        <CandidateSearchResultCard
+          key={candidate.id}
+          candidate={candidate}
+          onReject={onReject}
+        />
       ))}
     </div>
   );
