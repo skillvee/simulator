@@ -5,21 +5,20 @@ set -e
 unset ANTHROPIC_API_KEY
 
 # Configuration
-LABEL="${RALPH_LABEL:-task}"
 POLL_INTERVAL="${RALPH_POLL_INTERVAL:-60}"  # seconds between checks when idle
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$REPO_ROOT"
 
-echo "🚀 Ralph starting (continuous mode, label: $LABEL, poll interval: ${POLL_INTERVAL}s)"
+echo "🚀 Ralph starting (continuous mode, poll interval: ${POLL_INTERVAL}s)"
 echo "   Press Ctrl+C to stop"
 
 ITERATION=0
 
 while true; do
-  # Fetch oldest open issue with label
-  ISSUE=$(gh issue list --label "$LABEL" --state open --json number,title,body --limit 100 | jq 'sort_by(.number) | .[0] // empty')
+  # Fetch oldest open issue
+  ISSUE=$(gh issue list --state open --json number,title,body --limit 100 | jq 'sort_by(.number) | .[0] // empty')
 
   # If no issues, wait and poll again
   if [ -z "$ISSUE" ]; then

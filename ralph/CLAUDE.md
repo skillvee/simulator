@@ -11,21 +11,18 @@ Autonomous AI agent loop that processes GitHub Issues one by one.
 # Custom poll interval (30 seconds)
 RALPH_POLL_INTERVAL=30 ./ralph/ralph.sh
 
-# Use different label
-RALPH_LABEL=autonomous ./ralph/ralph.sh
-
 # Stop with Ctrl+C
 ```
 
 ## Setup
 
-1. Create issues with the `task` label
+1. Create issues in the repo
 2. Each issue = one bite-sized task
 3. Run ralph - it processes issues continuously
 
 ## How It Works
 
-1. Fetches oldest open issue with `task` label
+1. Fetches oldest open issue (any label)
 2. Spawns fresh Claude instance with issue context
 3. Claude implements, tests, and commits
 4. Commit message `Closes #N` auto-closes issue
