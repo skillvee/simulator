@@ -10,7 +10,7 @@ Condensed learnings from 39 issues (US-001 through US-039). For detailed per-iss
 
 ### Assessment Flow
 ```
-Consent → HR Interview → Congratulations → Screen Permission → Welcome (Slack DM)
+CV Upload → HR Interview → Congratulations → Welcome (Slack DM with screen share modal)
 → Manager Kickoff → Coworker Chat/Call → PR Submission → Final Defense → Processing → Results
 ```
 
@@ -47,7 +47,7 @@ tests/e2e/         # E2E tests using agent-browser
 - **User** - id, email, name, role (USER/ADMIN), password, dataDeleteRequestedAt
 - **Scenario** - id, name, companyName, companyDescription, taskDescription, repoUrl, techStack[], isPublished
 - **Coworker** - id, scenarioId, name, role, personaStyle, knowledge (JSON)
-- **Assessment** - id, userId, scenarioId, status, cvUrl, prUrl, prSnapshot, ciStatus, codeReview, report, consentGivenAt, startedAt, completedAt
+- **Assessment** - id, userId, scenarioId, status, cvUrl, prUrl, prSnapshot, ciStatus, codeReview, report, startedAt, completedAt
 - **Conversation** - id, assessmentId, coworkerId, type (text/voice/kickoff/defense), transcript (JSON)
 - **HRInterviewAssessment** - communicationScore, cvConsistencyScore, professionalismScore, verifiedClaims, etc.
 - **Recording** - id, assessmentId, with RecordingSegment children for chunks
@@ -551,10 +551,10 @@ switch (status) {
 ```
 
 **Key decisions:**
-- Consent check comes first - even if status says HR_INTERVIEW, redirect to consent if not given
 - Multiple in-progress assessments → resume most recent (orderBy: createdAt desc)
 - Default scenario selected by createdAt asc (oldest published = first available)
 - Home page stays static - no auth check, just link destination changed
+- New assessments start at CV Upload (consent removed in Issue #46)
 
 **Learnings:**
 1. Server components use `redirect()` from "next/navigation" which throws to trigger redirect
@@ -610,3 +610,74 @@ User uploads CV on /profile → File stored in Supabase → CV parsed → parsed
 **Gotchas:**
 - Remember to include user fields in the Prisma query when using fallback pattern
 - The `import type { Prisma }` import is sufficient for type usage but won't work for runtime value `Prisma.JsonNull`
+
+---
+
+## Issue #46: US-046: Replace Consent Page with Screen Share Modal
+
+**What was implemented:**
+- Deleted `/assessment/[id]/consent/` page directory and `/api/assessment/consent/` API
+- Removed `consentGivenAt` field from Assessment model in Prisma schema
+- Updated all redirects to go to CV Upload instead of Consent page
+- Removed "Consent" step from progress indicators on assessment pages
+- Enhanced `ScreenRecordingGuard` component to show an initial consent modal before recording starts
+- Deleted `/assessment/[id]/screen-permission/` page (replaced by modal)
+- Updated `congratulations` page to redirect directly to `/welcome` instead of `/screen-permission`
+
+**New Assessment Flow:**
+```
+Start → CV Upload → HR Interview → Manager Kickoff → Coding Task (modal here) → PR Defense
+```
+
+**Screen Share Modal:**
+- Appears immediately when user lands on coding task page (welcome page)
+- Shows Monitor + Mic icons with gold backgrounds (neo-brutalist style)
+- Explains screen recording + voice recording will happen
+- Single "Accept & Continue" button (no close button or X)
+- After clicking: dismisses modal → triggers browser's screen share request
+- No database tracking needed - purely client-side
+
+**Files deleted:**
+- `src/app/assessment/[id]/consent/page.tsx`
+- `src/app/assessment/[id]/consent/client.tsx`
+- `src/app/api/assessment/consent/route.ts`
+- `src/app/api/assessment/consent/route.test.ts`
+- `src/app/assessment/[id]/screen-permission/page.tsx`
+- `src/app/assessment/[id]/screen-permission/client.tsx`
+
+**Files changed:**
+- `prisma/schema.prisma` - Remove `consentGivenAt DateTime?` field
+- `src/app/start/page.tsx` - Remove consent redirect logic
+- `src/app/assessment/[id]/cv-upload/page.tsx` - Remove consent check and step from progress
+- `src/app/assessment/[id]/hr-interview/page.tsx` - Remove consent check
+- `src/app/assessment/[id]/congratulations/client.tsx` - Redirect to welcome instead of screen-permission
+- `src/app/assessment/[id]/welcome/page.tsx` - Pass companyName to wrapper
+- `src/components/assessment-screen-wrapper.tsx` - Accept companyName prop
+- `src/components/screen-recording-guard.tsx` - Add initial consent modal alongside stopped modal
+- `src/app/api/admin/scenarios/[id]/preview/route.ts` - Remove consentGivenAt
+
+**ScreenRecordingGuard modal logic:**
+```typescript
+// Fresh start (never recorded) → show initial consent modal
+if (state === "idle" && !wasRecording) {
+  setShowInitialModal(true);
+}
+
+// Recording stopped (was active) → show re-prompt modal
+if (wasRecording === "active" && state === "stopped") {
+  setShowStoppedModal(true);
+}
+```
+
+**Learnings:**
+1. SessionStorage tracks whether recording was ever started (`screen-recording-{assessmentId}`)
+2. Can reuse existing `ScreenRecordingGuard` component to show both initial and re-prompt modals
+3. Initial modal uses `startRecording()`, re-prompt uses `retryRecording()` - same underlying logic
+4. Passing `companyName` prop through wrapper allows personalized modal text
+5. When removing database fields, clear `.next` cache before typecheck to avoid stale type errors
+6. Simple modal notification is sufficient for recording consent - no database tracking needed
+
+**Gotchas:**
+- Must clear `.next/` cache after removing Prisma fields (stale generated types)
+- Update all test files that reference removed field/routes
+- The "coding task" page refers to `/welcome` in the codebase (first page of WORKING phase)
