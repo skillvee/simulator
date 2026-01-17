@@ -1816,3 +1816,81 @@ console.log(result.breakdown); // Per-dimension weighted contributions
 - Ensure all 8 dimensions are scored for accurate fit calculation
 - Missing scores contribute 0 to weighted sum but full weight to max_possible
 - Duplicate dimension scores in input array: last value wins (Map behavior)
+
+---
+
+## Issue #66: US-010: Apply Seniority Thresholds at Search Time
+
+**What was implemented:**
+- Created `src/lib/seniority-thresholds.ts` with seniority-based candidate filtering
+- 3 seniority levels: JUNIOR (no minimum), MID (key dimensions >= 3), SENIOR (key dimensions >= 4)
+- Key dimensions defined per archetype (aligns with VERY_HIGH weighted dimensions from archetype-weights)
+- `meetsThreshold()` function: checks if a candidate meets seniority requirements
+- `filterCandidatesBySeniority()` function: filters candidates (hard filter, not just ranking)
+- Helper functions: `getSeniorityDisplayName()`, `getAllSeniorityLevels()`, `getKeyDimensionsForArchetype()`
+- 45 unit tests covering all functionality and acceptance criteria
+
+**Files created:**
+- `src/lib/seniority-thresholds.ts` - Seniority threshold definitions and filtering functions
+- `src/lib/seniority-thresholds.test.ts` - 45 unit tests
+
+**Seniority Thresholds:**
+| Level | Threshold | Description |
+|-------|-----------|-------------|
+| JUNIOR | 0 | No minimum - all candidates pass |
+| MID | 3 | Key dimensions must score >= 3 |
+| SENIOR | 4 | Key dimensions must score >= 4 |
+
+**Key Dimensions per Archetype:**
+| Archetype | Key Dimensions (VERY_HIGH weight) |
+|-----------|-----------------------------------|
+| Sr. Frontend | Communication, Creativity, Technical Knowledge |
+| Sr. Backend | Technical Knowledge, Problem Solving, Time Management |
+| Fullstack | Technical Knowledge, Problem Solving, Adaptability |
+| Eng Manager | Communication, Leadership, Collaboration |
+| Tech Lead | Technical Knowledge, Leadership, Communication |
+| DevOps | Technical Knowledge, Problem Solving, Adaptability |
+| Data Eng | Technical Knowledge, Problem Solving, Time Management |
+| General SE | Technical Knowledge, Problem Solving |
+
+**Usage Example:**
+```typescript
+import { meetsThreshold, filterCandidatesBySeniority } from "@/lib/seniority-thresholds";
+
+// Check single candidate
+const result = meetsThreshold(scores, "SENIOR_BACKEND_ENGINEER", "SENIOR");
+if (!result.meetsThreshold) {
+  console.log("Failing dimensions:", result.failingDimensions);
+}
+
+// Filter multiple candidates
+const { passing, filtered } = filterCandidatesBySeniority(
+  candidates,
+  (c) => c.scores,
+  "SENIOR_BACKEND_ENGINEER",
+  "SENIOR"
+);
+```
+
+**Learnings:**
+1. Key dimensions should align with VERY_HIGH weighted dimensions from archetype-weights for consistency
+2. Hard filtering (candidates excluded, not just ranked lower) is appropriate for seniority requirements
+3. Missing scores should be treated as failing the threshold (can't assume competency without evidence)
+4. Duplicate scores in input array: use Map with last value wins for predictable behavior
+5. ThresholdCheckResult should include detailed breakdown for UI transparency
+6. Generic `filterCandidatesBySeniority<T>()` with score extractor function enables flexible usage
+
+**Architecture decisions:**
+- Thresholds applied dynamically at search time (never stored with assessment)
+- Key dimensions match VERY_HIGH weighted dimensions from archetype-weights.ts
+- Missing dimension scores treated as failing (score 0 which is below any threshold)
+- Filter returns both `passing` and `filtered` arrays with threshold results for each
+
+**Test Coverage:**
+- 45 tests covering threshold constants, key dimensions, meetsThreshold function, filter function, helper functions, and edge cases
+
+**Gotchas:**
+- JUNIOR level always passes (threshold 0 means no minimum)
+- Missing scores fail the threshold check (not treated as passing)
+- Key dimensions vary by archetype - don't assume same dimensions for all roles
+- This feature works alongside archetype weights (Issue #65) - weights for ranking, thresholds for filtering
