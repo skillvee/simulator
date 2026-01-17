@@ -1664,3 +1664,74 @@ model Assessment {
 - Need both `success: boolean` and `error?: string` in result type for proper error reporting
 - Processing page Prisma query needs `include: { videoAssessment: { select: {...} } }` for nested relation
 - Lucide icons: Video, Loader2, CheckCircle2, AlertCircle for status display
+
+---
+
+## Issue #64: US-015: Handle Assessment Failures Gracefully
+
+**What was implemented:**
+- Added `retryCount` and `lastFailureReason` fields to VideoAssessment model for tracking failures
+- Updated `evaluateVideo()` to increment retry count and store failure reason on each failure
+- Assessment marked as permanently FAILED after 3 total retry attempts
+- Console alerts logged when assessment fails (for MVP notification)
+- Added "Assessment unavailable" message display on candidate profile page for failed video assessments
+- Created `forceRetryVideoAssessment()` function for admin manual reassessment (resets retry count)
+- Updated admin retry endpoint to support `force` parameter for bypassing the 3-retry limit
+- Added 8 new tests (3 for forceRetryVideoAssessment, 1 for force retry endpoint, 4 for updated retry behavior)
+
+**Files changed:**
+- `prisma/schema.prisma` - Added `retryCount Int @default(0)` and `lastFailureReason String? @db.Text` to VideoAssessment model
+- `src/lib/video-evaluation.ts` - Updated error handling in `evaluateVideo()`, added `forceRetryVideoAssessment()`, updated `retryVideoAssessment()` to check retry limit
+- `src/lib/video-evaluation.test.ts` - Added tests for retry tracking and forceRetryVideoAssessment
+- `src/app/profile/page.tsx` - Added "Assessment unavailable" message display for failed video assessments
+- `src/app/api/admin/video-assessment/retry/route.ts` - Added `force` parameter support and imported `forceRetryVideoAssessment`
+- `src/app/api/admin/video-assessment/retry/route.test.ts` - Added test for force retry
+
+**Failure Tracking Flow:**
+```
+evaluateVideo() fails
+  ↓
+Get current retryCount from database
+  ↓
+Increment retryCount (newRetryCount = currentRetryCount + 1)
+  ↓
+Update: status=FAILED, retryCount=newRetryCount, lastFailureReason=errorMessage
+  ↓
+Console alert: "[ASSESSMENT FAILURE ALERT] Video assessment {id} failed (attempt {n}/3)"
+  ↓
+If retryCount >= 3: "[ASSESSMENT FAILURE ALERT] ... has failed 3 times and will not be automatically retried"
+```
+
+**Admin Retry Options:**
+1. **Normal retry** (`POST /api/admin/video-assessment/retry` with `videoAssessmentId`): Only works if retryCount < 3
+2. **Force retry** (`POST /api/admin/video-assessment/retry` with `videoAssessmentId` and `force: true`): Resets retryCount to 0 and restarts evaluation
+
+**Profile Page Display:**
+```tsx
+{assessment.videoAssessment?.status === "FAILED" && (
+  <div className="bg-red-50 border-2 border-red-200 dark:bg-red-950 dark:border-red-800">
+    <AlertTriangle className="text-red-600" />
+    <p>Assessment unavailable</p>
+    <p>Video assessment could not be processed after {retryCount} attempts.</p>
+    <p>Reason: {lastFailureReason}</p>
+  </div>
+)}
+```
+
+**Learnings:**
+1. Track failures at the assessment level (retryCount) not the individual API call level - each `evaluateVideo()` call includes internal retries via `withRetry()`
+2. Use `forceRetryVideoAssessment()` pattern for admin override that resets state completely
+3. Console alerts serve as MVP notification - can be replaced with proper alerting system (PagerDuty, Slack) later
+4. Neo-brutalist error display: red background tint, red border, AlertTriangle icon, monospace for technical details
+5. VideoAssessment query needs to include `retryCount` and `lastFailureReason` for display
+6. TypeScript Prisma client regeneration required after schema changes (`npx prisma generate`)
+
+**Test Coverage:**
+- 59 total tests in video-evaluation.test.ts and admin retry route tests
+- All acceptance criteria verified with browser validation screenshot
+
+**Gotchas:**
+- Must run `npx prisma generate` after adding fields to schema before TypeScript will recognize them
+- The `retryCount` starts at 0 and gets incremented to 1 on first failure (so "after 3 attempts" means retryCount === 3)
+- Profile page needs to import VideoAssessmentStatus type from Prisma for proper typing
+- AlertTriangle icon from lucide-react provides the warning indicator

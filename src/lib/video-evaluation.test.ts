@@ -59,6 +59,7 @@ import {
   triggerVideoAssessment,
   getVideoAssessmentStatusByAssessment,
   retryVideoAssessment,
+  forceRetryVideoAssessment,
   VIDEO_EVALUATION_MODEL,
 } from "./video-evaluation";
 import { gemini } from "@/lib/gemini";
@@ -233,8 +234,12 @@ describe("evaluateVideo", () => {
     });
   });
 
-  it("should update status to FAILED on error", async () => {
+  it("should update status to FAILED on error with retry tracking", async () => {
     mockGenerateContent.mockRejectedValue(new Error("API Error"));
+    mockVideoAssessmentFindUnique.mockResolvedValue({
+      id: "test-assessment-id",
+      retryCount: 0,
+    });
 
     const result = await evaluateVideo({
       assessmentId: "test-assessment-id",
@@ -245,7 +250,11 @@ describe("evaluateVideo", () => {
     expect(result.error).toBe("API Error");
     expect(mockVideoAssessmentUpdate).toHaveBeenLastCalledWith({
       where: { id: "test-assessment-id" },
-      data: { status: "FAILED" },
+      data: {
+        status: "FAILED",
+        retryCount: 1,
+        lastFailureReason: "API Error",
+      },
     });
   });
 
@@ -1078,12 +1087,13 @@ describe("retryVideoAssessment", () => {
     });
   });
 
-  it("should retry failed video assessment", async () => {
+  it("should retry failed video assessment with retryCount < 3", async () => {
     mockVideoAssessmentFindUnique.mockResolvedValue({
       id: "video-assessment-123",
       status: "FAILED",
       videoUrl: "https://storage.example.com/recording.webm",
       assessmentId: "simulation-123",
+      retryCount: 1,
       assessment: {
         scenario: {
           taskDescription: "Build a todo list feature",
@@ -1103,12 +1113,34 @@ describe("retryVideoAssessment", () => {
     });
   });
 
+  it("should return error when retryCount >= 3", async () => {
+    mockVideoAssessmentFindUnique.mockResolvedValue({
+      id: "video-assessment-123",
+      status: "FAILED",
+      videoUrl: "https://storage.example.com/recording.webm",
+      assessmentId: "simulation-123",
+      retryCount: 3,
+      assessment: {
+        scenario: {
+          taskDescription: "Build a todo list feature",
+        },
+      },
+    });
+
+    const result = await retryVideoAssessment("video-assessment-123");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("already failed 3 times");
+    expect(result.error).toContain("admin manual reassessment");
+  });
+
   it("should return error for non-failed assessment", async () => {
     mockVideoAssessmentFindUnique.mockResolvedValue({
       id: "video-assessment-123",
       status: "COMPLETED",
       videoUrl: "https://storage.example.com/recording.webm",
       assessmentId: "simulation-123",
+      retryCount: 0,
       assessment: null,
     });
 
@@ -1132,6 +1164,72 @@ describe("retryVideoAssessment", () => {
     mockVideoAssessmentFindUnique.mockRejectedValue(new Error("DB error"));
 
     const result = await retryVideoAssessment("video-assessment-123");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("DB error");
+  });
+});
+
+// ============================================================================
+// forceRetryVideoAssessment Tests (US-015)
+// ============================================================================
+
+describe("forceRetryVideoAssessment", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockVideoAssessmentUpdate.mockResolvedValue({ id: "video-assessment-123" });
+    mockDimensionScoreUpsert.mockResolvedValue({ id: "test-score-id" });
+    mockVideoAssessmentSummaryUpsert.mockResolvedValue({ id: "test-summary-id" });
+    mockVideoAssessmentLogCreate.mockResolvedValue({ id: "test-log-id" });
+    mockVideoAssessmentApiCallCreate.mockResolvedValue({ id: "test-api-call-id" });
+    mockVideoAssessmentApiCallUpdate.mockResolvedValue({ id: "test-api-call-id" });
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify(mockEvaluationResponse),
+    });
+  });
+
+  it("should force retry even when retryCount >= 3", async () => {
+    mockVideoAssessmentFindUnique.mockResolvedValue({
+      id: "video-assessment-123",
+      status: "FAILED",
+      videoUrl: "https://storage.example.com/recording.webm",
+      assessmentId: "simulation-123",
+      assessment: {
+        scenario: {
+          taskDescription: "Build a todo list feature",
+        },
+      },
+    });
+
+    const result = await forceRetryVideoAssessment("video-assessment-123");
+
+    expect(result.success).toBe(true);
+    expect(result.videoAssessmentId).toBe("video-assessment-123");
+
+    // Should reset status to PENDING and reset retryCount
+    expect(mockVideoAssessmentUpdate).toHaveBeenCalledWith({
+      where: { id: "video-assessment-123" },
+      data: {
+        status: "PENDING",
+        retryCount: 0,
+        lastFailureReason: null,
+      },
+    });
+  });
+
+  it("should return error for non-existent assessment", async () => {
+    mockVideoAssessmentFindUnique.mockResolvedValue(null);
+
+    const result = await forceRetryVideoAssessment("non-existent-id");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Video assessment not found");
+  });
+
+  it("should handle database errors gracefully", async () => {
+    mockVideoAssessmentFindUnique.mockRejectedValue(new Error("DB error"));
+
+    const result = await forceRetryVideoAssessment("video-assessment-123");
 
     expect(result.success).toBe(false);
     expect(result.error).toBe("DB error");

@@ -2,13 +2,14 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import type { Prisma, UserRole, AssessmentStatus } from "@prisma/client";
+import type { Prisma, UserRole, AssessmentStatus, VideoAssessmentStatus } from "@prisma/client";
 import { ProfileCVSection } from "@/components/profile-cv-section";
 import { ParsedProfileDisplay } from "@/components/parsed-profile-display";
 import type { AssessmentReport } from "@/lib/assessment-aggregation";
 import { profileFromPrismaJson } from "@/lib/cv-parser";
 import { AdminNav } from "@/components/admin-nav";
 import { DataDeletionSection } from "@/components/data-deletion-section";
+import { AlertTriangle } from "lucide-react";
 
 interface ExtendedUser {
   id: string;
@@ -85,6 +86,11 @@ interface AssessmentWithReport {
     name: string;
     companyName: string;
   };
+  videoAssessment: {
+    status: VideoAssessmentStatus;
+    retryCount: number;
+    lastFailureReason: string | null;
+  } | null;
 }
 
 function getReportData(report: Prisma.JsonValue): AssessmentReport | null {
@@ -287,6 +293,13 @@ export default async function ProfilePage() {
           companyName: true,
         },
       },
+      videoAssessment: {
+        select: {
+          status: true,
+          retryCount: true,
+          lastFailureReason: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -456,6 +469,28 @@ export default async function ProfilePage() {
                           {report.narrative?.overallSummary?.substring(0, 200)}
                           {(report.narrative?.overallSummary?.length || 0) > 200 && "..."}
                         </p>
+                      </div>
+                    )}
+
+                    {/* Assessment unavailable message - for failed video assessments */}
+                    {assessment.videoAssessment?.status === "FAILED" && (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <div className="flex items-center gap-3 p-3 bg-red-50 border-2 border-red-200 dark:bg-red-950 dark:border-red-800">
+                          <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-semibold text-red-800 dark:text-red-200">
+                              Assessment unavailable
+                            </p>
+                            <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                              Video assessment could not be processed after {assessment.videoAssessment.retryCount} attempt{assessment.videoAssessment.retryCount !== 1 ? "s" : ""}.
+                              {assessment.videoAssessment.lastFailureReason && (
+                                <span className="block mt-1 font-mono">
+                                  Reason: {assessment.videoAssessment.lastFailureReason}
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
 

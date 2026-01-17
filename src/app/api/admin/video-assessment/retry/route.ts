@@ -1,13 +1,17 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin";
 import { db } from "@/server/db";
-import { retryVideoAssessment } from "@/lib/video-evaluation";
+import { retryVideoAssessment, forceRetryVideoAssessment } from "@/lib/video-evaluation";
 import { VideoAssessmentStatus } from "@prisma/client";
 
 /**
  * POST /api/admin/video-assessment/retry
  * Retries a failed video assessment.
  * Admin only - for manually retrying failed assessments.
+ *
+ * Request body:
+ * - videoAssessmentId: string (required) - The ID of the video assessment to retry
+ * - force: boolean (optional) - If true, resets retry count and forces retry even after 3 failures
  */
 export async function POST(request: Request) {
   try {
@@ -15,7 +19,7 @@ export async function POST(request: Request) {
     await requireAdmin();
 
     const body = await request.json();
-    const { videoAssessmentId } = body;
+    const { videoAssessmentId, force } = body;
 
     if (!videoAssessmentId) {
       return NextResponse.json(
@@ -24,7 +28,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await retryVideoAssessment(videoAssessmentId);
+    // Use force retry if requested (resets retry count, allows retry after 3 failures)
+    const result = force
+      ? await forceRetryVideoAssessment(videoAssessmentId)
+      : await retryVideoAssessment(videoAssessmentId);
 
     if (!result.success) {
       return NextResponse.json(
@@ -36,7 +43,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       videoAssessmentId: result.videoAssessmentId,
-      message: "Video assessment retry initiated",
+      message: force
+        ? "Video assessment force-retry initiated (retry count reset)"
+        : "Video assessment retry initiated",
     });
   } catch (error) {
     console.error("Error retrying video assessment:", error);
@@ -51,6 +60,11 @@ export async function POST(request: Request) {
  * GET /api/admin/video-assessment/retry
  * Lists all failed video assessments that can be retried.
  * Admin only.
+ *
+ * Response includes:
+ * - retryCount: number of retry attempts so far
+ * - lastFailureReason: reason from the last failure
+ * - canAutoRetry: whether the assessment can be retried automatically (retryCount < 3)
  */
 export async function GET() {
   try {
@@ -67,6 +81,8 @@ export async function GET() {
         assessmentId: true,
         videoUrl: true,
         createdAt: true,
+        retryCount: true,
+        lastFailureReason: true,
         candidate: {
           select: {
             name: true,
@@ -111,6 +127,9 @@ export async function GET() {
         scenarioName: assessment.assessment?.scenario?.name,
         videoUrl: assessment.videoUrl,
         createdAt: assessment.createdAt.toISOString(),
+        retryCount: assessment.retryCount,
+        lastFailureReason: assessment.lastFailureReason,
+        canAutoRetry: assessment.retryCount < 3,
         lastError: assessment.logs[0]?.metadata,
         lastErrorAt: assessment.logs[0]?.timestamp?.toISOString(),
       })),

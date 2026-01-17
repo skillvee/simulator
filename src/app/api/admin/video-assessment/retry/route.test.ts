@@ -19,8 +19,10 @@ vi.mock("@/server/db", () => ({
 
 // Mock video-evaluation
 const mockRetryVideoAssessment = vi.fn();
+const mockForceRetryVideoAssessment = vi.fn();
 vi.mock("@/lib/video-evaluation", () => ({
   retryVideoAssessment: (...args: unknown[]) => mockRetryVideoAssessment(...args),
+  forceRetryVideoAssessment: (...args: unknown[]) => mockForceRetryVideoAssessment(...args),
 }));
 
 import { POST, GET } from "./route";
@@ -52,6 +54,33 @@ describe("POST /api/admin/video-assessment/retry", () => {
     expect(data.success).toBe(true);
     expect(data.videoAssessmentId).toBe("video-123");
     expect(data.message).toBe("Video assessment retry initiated");
+  });
+
+  it("should force retry when force=true", async () => {
+    mockForceRetryVideoAssessment.mockResolvedValue({
+      success: true,
+      videoAssessmentId: "video-123",
+    });
+
+    const request = new Request(
+      "http://localhost/api/admin/video-assessment/retry",
+      {
+        method: "POST",
+        body: JSON.stringify({ videoAssessmentId: "video-123", force: true }),
+      }
+    );
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.videoAssessmentId).toBe("video-123");
+    expect(data.message).toBe("Video assessment force-retry initiated (retry count reset)");
+
+    // Should call forceRetryVideoAssessment instead of retryVideoAssessment
+    expect(mockForceRetryVideoAssessment).toHaveBeenCalledWith("video-123");
+    expect(mockRetryVideoAssessment).not.toHaveBeenCalled();
   });
 
   it("should return 400 when videoAssessmentId is missing", async () => {
@@ -125,6 +154,8 @@ describe("GET /api/admin/video-assessment/retry", () => {
         assessmentId: "assessment-1",
         videoUrl: "https://storage.example.com/video1.webm",
         createdAt: new Date("2024-01-10T10:00:00Z"),
+        retryCount: 3,
+        lastFailureReason: "Gemini API timeout",
         candidate: { name: "John Doe", email: "john@example.com" },
         assessment: {
           scenario: { name: "Frontend Challenge" },
@@ -142,6 +173,8 @@ describe("GET /api/admin/video-assessment/retry", () => {
         assessmentId: "assessment-2",
         videoUrl: "https://storage.example.com/video2.webm",
         createdAt: new Date("2024-01-11T10:00:00Z"),
+        retryCount: 1,
+        lastFailureReason: null,
         candidate: { name: "Jane Smith", email: "jane@example.com" },
         assessment: null,
         logs: [],
@@ -166,13 +199,18 @@ describe("GET /api/admin/video-assessment/retry", () => {
       scenarioName: "Frontend Challenge",
       videoUrl: "https://storage.example.com/video1.webm",
       createdAt: "2024-01-10T10:00:00.000Z",
+      retryCount: 3,
+      lastFailureReason: "Gemini API timeout",
+      canAutoRetry: false, // retryCount >= 3
       lastError: { error_message: "API timeout" },
       lastErrorAt: "2024-01-10T10:05:00.000Z",
     });
 
-    // Second assessment has no logs and no scenario
+    // Second assessment has no logs and no scenario, but can auto-retry
     expect(data.failedAssessments[1].lastError).toBeUndefined();
     expect(data.failedAssessments[1].scenarioName).toBeUndefined();
+    expect(data.failedAssessments[1].canAutoRetry).toBe(true); // retryCount < 3
+    expect(data.failedAssessments[1].retryCount).toBe(1);
   });
 
   it("should return empty list when no failed assessments", async () => {

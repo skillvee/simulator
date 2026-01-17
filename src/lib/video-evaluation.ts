@@ -332,6 +332,7 @@ export async function evaluateVideo(
       summary: evaluation.overall_summary,
     };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("[VideoEvaluation] Evaluation failed:", error);
 
     // Log: Error event with full error message and stack trace (event_type: error)
@@ -342,11 +343,38 @@ export async function evaluateVideo(
       stack_trace: errorObj.stack,
     });
 
-    // Update assessment status to FAILED
+    // Get current retry count
+    const currentAssessment = await db.videoAssessment.findUnique({
+      where: { id: assessmentId },
+      select: { retryCount: true },
+    });
+
+    const currentRetryCount = currentAssessment?.retryCount ?? 0;
+    const newRetryCount = currentRetryCount + 1;
+
+    // Update assessment with failure details
+    // Mark as FAILED after 3 total attempts (acceptance criteria)
     await db.videoAssessment.update({
       where: { id: assessmentId },
-      data: { status: VideoAssessmentStatus.FAILED },
+      data: {
+        status: VideoAssessmentStatus.FAILED,
+        retryCount: newRetryCount,
+        lastFailureReason: errorMessage,
+      },
     });
+
+    // Send console alert for failures (acceptance criteria: alert/notification for MVP)
+    console.error(
+      `[ASSESSMENT FAILURE ALERT] Video assessment ${assessmentId} failed ` +
+        `(attempt ${newRetryCount}/3). Reason: ${errorMessage}`
+    );
+
+    if (newRetryCount >= 3) {
+      console.error(
+        `[ASSESSMENT FAILURE ALERT] Video assessment ${assessmentId} has failed 3 times ` +
+          `and will not be automatically retried. Admin intervention required.`
+      );
+    }
 
     return {
       success: false,
@@ -354,7 +382,7 @@ export async function evaluateVideo(
       overallScore: null,
       dimensionScores: new Map(),
       summary: null,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: errorMessage,
     };
   }
 }
@@ -591,7 +619,8 @@ export async function getVideoAssessmentStatusByAssessment(
 
 /**
  * Retries a failed video assessment.
- * Only works for assessments with FAILED status.
+ * Only works for assessments with FAILED status and fewer than 3 retry attempts.
+ * If an assessment has failed 3 times, use `forceRetryVideoAssessment` for admin override.
  *
  * @param videoAssessmentId - The VideoAssessment ID to retry
  * @returns Result indicating success or failure
@@ -607,6 +636,7 @@ export async function retryVideoAssessment(
         status: true,
         videoUrl: true,
         assessmentId: true,
+        retryCount: true,
         assessment: {
           select: {
             scenario: {
@@ -632,6 +662,15 @@ export async function retryVideoAssessment(
         success: false,
         videoAssessmentId: videoAssessmentId,
         error: `Cannot retry assessment with status ${videoAssessment.status}. Only FAILED assessments can be retried.`,
+      };
+    }
+
+    // Check if max retries reached (3 attempts total)
+    if (videoAssessment.retryCount >= 3) {
+      return {
+        success: false,
+        videoAssessmentId: videoAssessmentId,
+        error: `Assessment has already failed 3 times. Use admin manual reassessment via Supabase dashboard.`,
       };
     }
 
@@ -662,6 +701,88 @@ export async function retryVideoAssessment(
     };
   } catch (error) {
     console.error("[VideoEvaluation] Failed to retry video assessment:", error);
+    return {
+      success: false,
+      videoAssessmentId,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Force retries a video assessment regardless of retry count.
+ * This is intended for admin use via Supabase dashboard to manually trigger reassessment.
+ * Resets the retryCount to 0 and starts fresh.
+ *
+ * @param videoAssessmentId - The VideoAssessment ID to retry
+ * @returns Result indicating success or failure
+ */
+export async function forceRetryVideoAssessment(
+  videoAssessmentId: string
+): Promise<TriggerVideoAssessmentResult> {
+  try {
+    const videoAssessment = await db.videoAssessment.findUnique({
+      where: { id: videoAssessmentId },
+      select: {
+        id: true,
+        status: true,
+        videoUrl: true,
+        assessmentId: true,
+        assessment: {
+          select: {
+            scenario: {
+              select: {
+                taskDescription: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!videoAssessment) {
+      return {
+        success: false,
+        videoAssessmentId: null,
+        error: "Video assessment not found",
+      };
+    }
+
+    // Reset status to PENDING and clear retry count for fresh start
+    await db.videoAssessment.update({
+      where: { id: videoAssessmentId },
+      data: {
+        status: VideoAssessmentStatus.PENDING,
+        retryCount: 0,
+        lastFailureReason: null,
+      },
+    });
+
+    console.log(
+      `[VideoEvaluation] Admin force-retry initiated for assessment ${videoAssessmentId}`
+    );
+
+    // Get task description from linked assessment if available
+    const taskDescription = videoAssessment.assessment?.scenario?.taskDescription;
+
+    // Start evaluation asynchronously
+    evaluateVideo({
+      assessmentId: videoAssessmentId,
+      videoUrl: videoAssessment.videoUrl,
+      taskDescription,
+    }).catch((error) => {
+      console.error(
+        `[VideoEvaluation] Force retry evaluation failed for ${videoAssessmentId}:`,
+        error
+      );
+    });
+
+    return {
+      success: true,
+      videoAssessmentId,
+    };
+  } catch (error) {
+    console.error("[VideoEvaluation] Failed to force retry video assessment:", error);
     return {
       success: false,
       videoAssessmentId,

@@ -321,6 +321,10 @@ model VideoAssessment {
   // Optional link to work simulation assessment (for auto-triggered evaluations)
   assessmentId  String?               @unique // One video assessment per simulation
 
+  // Failure tracking (US-015)
+  retryCount        Int               @default(0) // Number of retry attempts
+  lastFailureReason String?           @db.Text    // Reason for last failure
+
   createdAt     DateTime              @default(now())
   completedAt   DateTime?
 
