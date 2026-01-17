@@ -13,7 +13,7 @@ echo ""
 
 # Test-specific config
 TEST_EMAIL="e2e-hr-$(date +%s)@example.com"
-TEST_CV_PATH="$SCRIPT_DIR/../../docs/test-resume.pdf"
+TEST_CV_PATH="$SCRIPT_DIR/../fixtures/test-resume.pdf"
 
 log_info "Test email: $TEST_EMAIL"
 log_info "Test CV path: $TEST_CV_PATH"
