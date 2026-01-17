@@ -24,6 +24,12 @@ import { CandidateSearchResultGrid, type CandidateSearchResult } from "@/compone
 import { RejectionFeedbackModal } from "@/components/rejection-feedback-modal";
 import type { ConstraintUpdate } from "@/lib/feedback-parsing";
 import { AssessmentDimension } from "@prisma/client";
+import {
+  ActiveFiltersBar,
+  createFiltersFromIntent,
+  removeFilterFromIntent,
+  type ActiveFilter,
+} from "@/components/active-filters-bar";
 
 // ============================================================================
 // Types
@@ -187,6 +193,9 @@ export function CandidateSearchClient() {
   // Toast state
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  // Track which fields have been refined by feedback
+  const [refinedFields, setRefinedFields] = useState<Set<string>>(new Set());
+
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -294,6 +303,7 @@ export function CandidateSearchClient() {
 
     setIsSearching(true);
     setRejectedCandidateIds(new Set()); // Reset rejected candidates on new search
+    setRefinedFields(new Set()); // Reset refined fields on new search
 
     // Simulate search delay
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -341,6 +351,13 @@ export function CandidateSearchClient() {
 
         // Update the query with new constraints (for display purposes)
         if (result.constraints && result.constraints.length > 0) {
+          // Track which fields were refined
+          const newRefinedFields = new Set(refinedFields);
+          result.constraints.forEach((c: ConstraintUpdate) => {
+            newRefinedFields.add(c.type);
+          });
+          setRefinedFields(newRefinedFields);
+
           const constraintDescriptions = result.constraints
             .map((c: ConstraintUpdate) => {
               const value = Array.isArray(c.value) ? c.value.join(", ") : c.value;
@@ -351,6 +368,57 @@ export function CandidateSearchClient() {
           // Append to current query
           const updatedQuery = `${query} [Refined: ${constraintDescriptions}]`;
           setQuery(updatedQuery);
+
+          // Update the extraction with new constraints
+          if (extraction) {
+            const updatedIntent = { ...extraction.intent };
+            for (const constraint of result.constraints) {
+              switch (constraint.type) {
+                case "years_experience":
+                  const yearsMatch =
+                    typeof constraint.value === "string"
+                      ? constraint.value.match(/(\d+)/)
+                      : null;
+                  if (yearsMatch) {
+                    updatedIntent.years_experience = parseInt(yearsMatch[1], 10);
+                  }
+                  break;
+                case "skills":
+                  const newSkills = Array.isArray(constraint.value)
+                    ? constraint.value
+                    : [constraint.value];
+                  updatedIntent.skills = [...(updatedIntent.skills || []), ...newSkills];
+                  break;
+                case "job_title":
+                  updatedIntent.job_title =
+                    typeof constraint.value === "string" ? constraint.value : null;
+                  break;
+                case "location":
+                  updatedIntent.location =
+                    typeof constraint.value === "string" ? constraint.value : null;
+                  break;
+                case "industry":
+                  const newIndustry = Array.isArray(constraint.value)
+                    ? constraint.value
+                    : [constraint.value];
+                  updatedIntent.industry = [...(updatedIntent.industry || []), ...newIndustry];
+                  break;
+                case "company_type":
+                  const newCompanyType = Array.isArray(constraint.value)
+                    ? constraint.value
+                    : [constraint.value];
+                  updatedIntent.company_type = [
+                    ...(updatedIntent.company_type || []),
+                    ...newCompanyType,
+                  ];
+                  break;
+              }
+            }
+            setExtraction({
+              ...extraction,
+              intent: updatedIntent,
+            });
+          }
         }
       }
     } catch (error) {
@@ -372,7 +440,70 @@ export function CandidateSearchClient() {
     setHasSearched(false);
     setSearchResults([]);
     setRejectedCandidateIds(new Set());
+    setRefinedFields(new Set());
   };
+
+  // Handle removing a single filter
+  const handleRemoveFilter = useCallback((filter: ActiveFilter) => {
+    if (!extraction) return;
+
+    // Update the extraction intent
+    const updatedIntent = removeFilterFromIntent(extraction.intent, filter);
+
+    // Clear archetype/seniority if the corresponding filter was removed
+    let updatedArchetype = extraction.archetype;
+    let updatedSeniority = extraction.seniority;
+
+    if (filter.type === "job_title" || filter.type === "archetype") {
+      updatedArchetype = null;
+    }
+    if (filter.type === "years_experience" || filter.type === "seniority") {
+      updatedSeniority = null;
+    }
+
+    setExtraction({
+      ...extraction,
+      intent: updatedIntent,
+      archetype: updatedArchetype,
+      seniority: updatedSeniority,
+    });
+
+    // Remove from refined fields if it was marked as refined
+    if (refinedFields.has(filter.type)) {
+      const newRefinedFields = new Set(refinedFields);
+      newRefinedFields.delete(filter.type);
+      setRefinedFields(newRefinedFields);
+    }
+
+    // Show toast
+    addToast(`Removed ${filter.label} filter`, "info");
+  }, [extraction, refinedFields, addToast]);
+
+  // Handle clearing all filters
+  const handleClearAllFilters = useCallback(() => {
+    if (!extraction) return;
+
+    // Reset all intent values
+    setExtraction({
+      ...extraction,
+      intent: {
+        job_title: null,
+        location: null,
+        years_experience: null,
+        skills: [],
+        industry: [],
+        company_type: [],
+      },
+      archetype: null,
+      seniority: null,
+    });
+
+    // Clear all refined fields
+    setRefinedFields(new Set());
+
+    // Show toast
+    addToast("All filters cleared", "info");
+  }, [extraction, addToast]);
 
   // Filter out rejected candidates
   const visibleResults = searchResults.filter(
@@ -435,6 +566,16 @@ export function CandidateSearchClient() {
       ),
     },
   ];
+
+  // Build active filters for the filter bar
+  const activeFilters: ActiveFilter[] = extraction
+    ? createFiltersFromIntent(
+        extraction.intent,
+        extraction.archetype,
+        extraction.seniority,
+        refinedFields
+      )
+    : [];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -512,15 +653,13 @@ export function CandidateSearchClient() {
         ) : hasSearched ? (
           /* Search Results */
           <div className="w-full max-w-6xl mx-auto" data-testid="search-results">
-            {/* Current query display */}
-            <div className="mb-6 p-4 border-2 border-foreground bg-muted/10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
-                  Current Search
-                </span>
-              </div>
-              <p className="text-foreground">{query}</p>
-            </div>
+            {/* Active filters bar - above results */}
+            <ActiveFiltersBar
+              filters={activeFilters}
+              onRemoveFilter={handleRemoveFilter}
+              onClearAll={handleClearAllFilters}
+              className="mb-6"
+            />
 
             {/* Results count */}
             <div className="mb-6 flex items-center justify-between">
