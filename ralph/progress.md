@@ -2518,3 +2518,86 @@ vi.mock("next/navigation", () => ({
 - Location patterns must check specific cities before generic patterns
 - Job title patterns need singular and plural forms (engineer/engineers)
 - TypeScript requires `?? null` for optional chains that could be undefined
+
+---
+
+## Issue #73: US-008b - Display Search Loading States
+
+**What was implemented:**
+- Loading state transition when send button is clicked
+- Sequential status messages displayed during search:
+  - "Processing your search criteria..."
+  - "Looking for profiles that match your criteria..."
+- Animated loading indicator with spinning ring and pulsing center (neo-brutalist style)
+- Progress dots showing current position in message sequence
+- Loading state persists until results are ready
+
+**Files changed:**
+- `src/app/candidate_search/client.tsx` - Added loading state UI, sequential messages, animated indicator
+
+**Key components:**
+
+1. **Loading State UI:**
+   - Replaces the search form when `isSearching` is true
+   - Shows animated indicator + current message + progress dots
+   - Smooth transition between search form and loading state
+
+2. **Sequential Messages:**
+   - `LOADING_MESSAGES` constant array with status strings
+   - `loadingMessageIndex` state tracks current message
+   - `useEffect` with `setInterval` advances through messages every 2 seconds
+   - Stops at last message (doesn't cycle back)
+
+3. **Animated Loading Indicator:**
+   - Outer ring: `border-4 border-muted animate-spin border-t-secondary`
+   - Inner circle: `bg-secondary animate-pulse`
+   - Creates spinning effect with gold accent
+
+4. **Progress Dots:**
+   - Visual indicator of message sequence position
+   - Gold when at or past that message, muted otherwise
+
+**Implementation pattern:**
+```typescript
+const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+useEffect(() => {
+  if (isSearching) {
+    setLoadingMessageIndex(0);
+    loadingTimerRef.current = setInterval(() => {
+      setLoadingMessageIndex((prev) => {
+        if (prev >= LOADING_MESSAGES.length - 1) return prev;
+        return prev + 1;
+      });
+    }, LOADING_MESSAGE_DURATION_MS);
+  } else {
+    if (loadingTimerRef.current) {
+      clearInterval(loadingTimerRef.current);
+    }
+    setLoadingMessageIndex(0);
+  }
+  return () => { /* cleanup */ };
+}, [isSearching]);
+```
+
+**Learnings:**
+1. Use `setInterval` (not `setTimeout`) for continuous message cycling
+2. Use `useRef` for timer references to persist across renders
+3. Always clean up intervals in useEffect cleanup function
+4. Progress dots provide visual context for multi-step loading
+5. Combine `animate-spin` and `animate-pulse` for visually interesting loading indicators
+6. Neo-brutalist loading: square shapes (not circles), sharp corners, gold accent color
+
+**Browser Validation:**
+- UI transitions to loading state on send click
+- First message "Processing your search criteria..." appears
+- Second message "Looking for profiles that match your criteria..." appears after delay
+- Progress dots update to show current position
+- Loading persists until mock timeout completes
+- Form returns after loading completes
+
+**Gotchas:**
+- Clean up `setInterval` in useEffect cleanup to prevent memory leaks
+- Message index should stop at last message (not wrap around)
+- Use `data-testid` attributes for reliable browser automation testing
