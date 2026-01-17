@@ -1469,3 +1469,118 @@ const VIDEO_EVALUATION_MODEL = "gemini-3-pro-preview";
 - Timestamp regex allows both MM:SS and HH:MM:SS formats
 - mimeType is hardcoded to "video/mp4" - may need to be configurable for other formats
 - The `rawAiResponse` field stores the full evaluation (never exposed to users)
+
+---
+
+## Issue #62: US-020: Log All Assessment Events in Real-Time
+
+**What was implemented:**
+- Created `src/lib/assessment-logging.ts` service for comprehensive event logging
+- Added `VideoAssessmentLog` and `VideoAssessmentApiCall` tables to Prisma schema
+- Integrated logging into `evaluateVideo()` function with all 7 event types
+- Created `createVideoAssessmentLogger()` factory for tracking events with automatic duration calculation
+- API call tracking with prompt, response, timing, and error details
+- All timestamps stored in UTC with millisecond precision
+- 27 unit tests for the logging service
+- 10 additional tests for video-evaluation logging integration
+- RLS migration for admin-only access to log tables
+
+**Files created:**
+- `src/lib/assessment-logging.ts` - Logging service with logger factory and convenience functions
+- `src/lib/assessment-logging.test.ts` - 27 unit tests for logging functionality
+- `supabase/migrations/20260116_video_assessment_logs_rls.sql` - RLS policies for log tables
+
+**Files changed:**
+- `prisma/schema.prisma` - Added VideoAssessmentLog, VideoAssessmentApiCall models with relations to VideoAssessment
+- `src/lib/video-evaluation.ts` - Integrated logging throughout evaluateVideo() function
+- `src/lib/video-evaluation.test.ts` - Added 10 tests for logging behavior
+
+**Event Types Logged:**
+1. `STARTED` - Job begins, includes job_id in metadata
+2. `PROMPT_SENT` - Prompt constructed, includes prompt_length in metadata
+3. `RESPONSE_RECEIVED` - AI response received, includes response_length and status_code
+4. `PARSING_STARTED` - JSON parsing begins
+5. `PARSING_COMPLETED` - Parsing succeeds, includes parsed_dimension_count
+6. `ERROR` - Any error with full message and stack trace
+7. `COMPLETED` - Assessment finishes successfully
+
+**Logger Factory Pattern:**
+```typescript
+const logger = createVideoAssessmentLogger(assessmentId);
+
+// Logs event and auto-calculates duration from previous event
+await logger.logEvent(AssessmentLogEventType.STARTED, { job_id });
+
+// Track API calls with timing
+const tracker = logger.startApiCall(prompt, modelVersion);
+try {
+  const response = await gemini.generateContent(...);
+  await tracker.complete({ responseText, statusCode: 200 });
+} catch (error) {
+  await tracker.fail(error);
+}
+```
+
+**Schema additions:**
+```prisma
+model VideoAssessmentLog {
+  id                  String                  @id @default(cuid())
+  videoAssessmentId   String
+  eventType           AssessmentLogEventType
+  timestamp           DateTime                @default(now())
+  durationMs          Int?                    // Duration since previous event
+  metadata            Json?                   // Additional context
+  videoAssessment     VideoAssessment         @relation(...)
+}
+
+model VideoAssessmentApiCall {
+  id                  String          @id @default(cuid())
+  videoAssessmentId   String
+  requestTimestamp    DateTime
+  responseTimestamp   DateTime?
+  durationMs          Int?
+  promptText          String          @db.Text
+  promptTokens        Int?
+  responseText        String?         @db.Text
+  responseTokens      Int?
+  modelVersion        String
+  statusCode          Int?
+  errorMessage        String?         @db.Text
+  stackTrace          String?         @db.Text
+  videoAssessment     VideoAssessment @relation(...)
+}
+```
+
+**Learnings:**
+1. Use logger factory pattern to track state (lastEventTimestamp) across multiple log calls
+2. Duration calculation: `durationMs = now.getTime() - previousTimestamp.getTime()` gives millisecond precision
+3. API call tracking requires two-phase approach: create record on start, update on completion
+4. Separate log tables for VideoAssessment vs Assessment keeps concerns isolated
+5. Node.js crypto module is difficult to mock in vitest - use simple string concat for job IDs instead of randomUUID
+6. ApiCallTracker pattern with `complete()` and `fail()` methods provides clean error handling
+7. Always await logger calls to ensure ordering - don't fire-and-forget
+
+**RLS Policy Pattern:**
+```sql
+-- Only admins can view logs
+CREATE POLICY "admins_view_logs" ON "VideoAssessmentLog"
+  FOR SELECT
+  USING (EXISTS (SELECT 1 FROM "User" WHERE id = auth.uid()::text AND role = 'ADMIN'));
+
+-- Service role has full access for API operations
+CREATE POLICY "service_role_full_access" ON "VideoAssessmentLog"
+  FOR ALL
+  USING (auth.jwt() ->> 'role' = 'service_role');
+```
+
+**Test Coverage:**
+- 27 tests for assessment-logging.ts (logger factory, convenience functions, duration calculation, timestamp precision)
+- 10 tests for video-evaluation logging (event order, metadata contents, error logging, API call tracking)
+- Total: 35 tests for video-evaluation.ts including original tests
+
+**Gotchas:**
+- Existing AssessmentLog/AssessmentApiCall tables are for work simulation (Assessment model), not video evaluation (VideoAssessment model)
+- Need separate VideoAssessmentLog/VideoAssessmentApiCall tables with their own relations
+- Vitest has trouble mocking Node.js built-in modules like crypto - use alternatives
+- RLS policies must be run manually on Supabase after schema push
+- First event in a sequence has null durationMs since there's no previous event

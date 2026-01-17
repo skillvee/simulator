@@ -324,6 +324,8 @@ model VideoAssessment {
   candidate     User                  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   scores        DimensionScore[]
   summary       VideoAssessmentSummary?
+  logs          VideoAssessmentLog[]
+  apiCalls      VideoAssessmentApiCall[]
 
   // Indexes for efficient querying
   @@index([candidateId])
@@ -417,4 +419,50 @@ model AssessmentApiCall {
   @@index([assessmentId])
   @@index([requestTimestamp])
   @@index([assessmentId, requestTimestamp])
+}
+
+// ============================================================================
+// VIDEO ASSESSMENT LOGS MODELS (US-020)
+// For video assessment diagnostics and system auditing
+// ============================================================================
+
+model VideoAssessmentLog {
+  id                  String                  @id @default(cuid())
+  videoAssessmentId   String
+  eventType           AssessmentLogEventType
+  timestamp           DateTime                @default(now())
+  durationMs          Int?                    // Duration in milliseconds (nullable)
+  metadata            Json?                   // Additional context (jsonb)
+
+  // Relations
+  videoAssessment     VideoAssessment         @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
+
+  // Indexes for efficient querying
+  @@index([videoAssessmentId])
+  @@index([timestamp])
+  @@index([videoAssessmentId, timestamp])
+}
+
+model VideoAssessmentApiCall {
+  id                  String          @id @default(cuid())
+  videoAssessmentId   String
+  requestTimestamp    DateTime        @default(now())
+  responseTimestamp   DateTime?
+  durationMs          Int?            // Duration in milliseconds
+  promptText          String          @db.Text
+  promptTokens        Int?            // Token count (nullable)
+  responseText        String?         @db.Text
+  responseTokens      Int?            // Token count (nullable)
+  modelVersion        String
+  statusCode          Int?
+  errorMessage        String?         @db.Text
+  stackTrace          String?         @db.Text
+
+  // Relations
+  videoAssessment     VideoAssessment @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
+
+  // Indexes for efficient querying
+  @@index([videoAssessmentId])
+  @@index([requestTimestamp])
+  @@index([videoAssessmentId, requestTimestamp])
 }
