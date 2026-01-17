@@ -18,7 +18,12 @@ import {
   Video,
   Copy,
   Check,
+  RefreshCw,
+  AlertTriangle,
+  X,
+  Loader2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { AssessmentStatus, AssessmentLogEventType } from "@prisma/client";
 
 // Serialized types from server (dates as strings)
@@ -62,6 +67,7 @@ interface SerializedAssessment {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  supersededBy: string | null;
   user: {
     id: string;
     name: string | null;
@@ -423,15 +429,155 @@ function ApiCallDetails({
   );
 }
 
+// Confirmation Dialog Component
+interface ConfirmationDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+}
+
+function ConfirmationDialog({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+}: ConfirmationDialogProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+      data-testid="confirmation-dialog-overlay"
+    >
+      <div
+        className="w-full max-w-md mx-4 border-2 border-border bg-background p-6"
+        onClick={(e) => e.stopPropagation()}
+        data-testid="confirmation-dialog"
+      >
+        <div className="flex items-start gap-4 mb-6">
+          <div className="w-12 h-12 border-2 border-amber-500 bg-amber-100 dark:bg-amber-900 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2">Retry Assessment</h2>
+            <p className="text-muted-foreground">
+              This will create a <strong>new assessment</strong> and mark this one as superseded.
+              The original assessment data will be preserved for historical reference.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950 mb-6">
+          <p className="font-mono text-sm text-amber-800 dark:text-amber-200">
+            <strong>Warning:</strong> A new assessment record will be created with fresh logs.
+            This operation cannot be undone.
+          </p>
+        </div>
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 border-2 border-border font-mono text-sm hover:bg-muted disabled:opacity-50"
+            data-testid="cancel-retry-button"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 border-2 border-foreground bg-foreground text-background font-mono text-sm hover:bg-background hover:text-foreground disabled:opacity-50"
+            data-testid="confirm-retry-button"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                Confirm Retry
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Toast Notification Component
+interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error" | "info";
+}
+
+function ToastNotification({
+  toast,
+  onDismiss,
+}: {
+  toast: Toast;
+  onDismiss: (id: string) => void;
+}) {
+  const bgClass =
+    toast.type === "success"
+      ? "border-green-500 bg-green-50 dark:bg-green-950"
+      : toast.type === "error"
+        ? "border-red-500 bg-red-50 dark:bg-red-950"
+        : "border-blue-500 bg-blue-50 dark:bg-blue-950";
+
+  const textClass =
+    toast.type === "success"
+      ? "text-green-800 dark:text-green-200"
+      : toast.type === "error"
+        ? "text-red-800 dark:text-red-200"
+        : "text-blue-800 dark:text-blue-200";
+
+  return (
+    <div
+      className={`flex items-center justify-between gap-4 p-4 border-2 ${bgClass} ${textClass}`}
+      data-testid={`toast-${toast.type}`}
+    >
+      <div className="flex items-center gap-2">
+        {toast.type === "success" ? (
+          <CheckCircle2 className="w-5 h-5" />
+        ) : toast.type === "error" ? (
+          <AlertCircle className="w-5 h-5" />
+        ) : (
+          <AlertCircle className="w-5 h-5" />
+        )}
+        <span className="font-mono text-sm">{toast.message}</span>
+      </div>
+      <button
+        onClick={() => onDismiss(toast.id)}
+        className="p-1 hover:opacity-70"
+        aria-label="Dismiss"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 export function AssessmentTimelineClient({
   assessment,
 }: AssessmentTimelineClientProps) {
+  const router = useRouter();
   // Track expanded API call events (for showing details)
   const [expandedApiCalls, setExpandedApiCalls] = useState<Set<string>>(new Set());
   // Track expanded code sections within API call details (prompt/response)
   const [expandedCodeSections, setExpandedCodeSections] = useState<Set<string>>(new Set());
   // Track expanded error details (existing functionality)
   const [expandedErrors, setExpandedErrors] = useState<Set<string>>(new Set());
+
+  // Retry assessment state
+  const [showRetryDialog, setShowRetryDialog] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Build unified timeline from logs and API calls
   const timelineEvents: TimelineEvent[] = [
@@ -513,6 +659,61 @@ export function AssessmentTimelineClient({
       return newSet;
     });
   };
+
+  // Add toast helper
+  const addToast = (message: string, type: Toast["type"]) => {
+    const id = `toast-${Date.now()}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  };
+
+  // Dismiss toast helper
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // Handle retry assessment
+  const handleRetryAssessment = async () => {
+    setIsRetrying(true);
+    try {
+      const response = await fetch("/api/admin/assessment/retry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId: assessment.id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to retry assessment");
+      }
+
+      addToast("Reassessment queued successfully", "success");
+      setShowRetryDialog(false);
+
+      // Navigate to the new assessment after a short delay
+      setTimeout(() => {
+        router.push(`/admin/assessments/${data.newAssessmentId}`);
+      }, 1500);
+    } catch (error) {
+      addToast(
+        error instanceof Error ? error.message : "Failed to retry assessment",
+        "error"
+      );
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  // Check if assessment can be retried
+  const canRetry =
+    (assessment.status === "COMPLETED" ||
+      assessment.status === "PROCESSING" ||
+      hasErrors) &&
+    !assessment.supersededBy;
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
@@ -651,6 +852,76 @@ export function AssessmentTimelineClient({
             <Play className="w-4 h-4" />
             View Recording
           </a>
+        </div>
+      )}
+
+      {/* Retry Assessment Card */}
+      {canRetry && (
+        <div
+          className="border-2 border-amber-500 bg-amber-50 dark:bg-amber-950 p-4 mb-8 flex items-center justify-between"
+          data-testid="retry-assessment-card"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 border-2 border-amber-500 bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+              <RefreshCw className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <p className="font-mono text-xs text-amber-700 dark:text-amber-300">
+                ADMIN ACTION
+              </p>
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                {hasErrors
+                  ? "This assessment has errors. You can retry it."
+                  : "Retry this assessment to re-evaluate."}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowRetryDialog(true)}
+            disabled={isRetrying}
+            className="inline-flex items-center gap-2 px-4 py-2 border-2 border-amber-600 bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 font-mono text-sm"
+            data-testid="retry-assessment-button"
+          >
+            {isRetrying ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4" />
+                Retry Assessment
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Superseded Notice */}
+      {assessment.supersededBy && (
+        <div
+          className="border-2 border-muted-foreground/30 bg-muted/30 p-4 mb-8"
+          data-testid="superseded-notice"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 border-2 border-muted-foreground/30 bg-muted flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-mono text-xs text-muted-foreground">
+                SUPERSEDED
+              </p>
+              <p className="text-sm text-muted-foreground">
+                This assessment was replaced by a newer one.{" "}
+                <Link
+                  href={`/admin/assessments/${assessment.supersededBy}`}
+                  className="underline hover:text-foreground"
+                >
+                  View new assessment
+                </Link>
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -891,6 +1162,30 @@ export function AssessmentTimelineClient({
           </div>
         )}
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showRetryDialog}
+        onClose={() => setShowRetryDialog(false)}
+        onConfirm={handleRetryAssessment}
+        isLoading={isRetrying}
+      />
+
+      {/* Toast Notifications */}
+      {toasts.length > 0 && (
+        <div
+          className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-md"
+          data-testid="toast-container"
+        >
+          {toasts.map((toast) => (
+            <ToastNotification
+              key={toast.id}
+              toast={toast}
+              onDismiss={dismissToast}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

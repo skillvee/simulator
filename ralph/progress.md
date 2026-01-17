@@ -3297,3 +3297,117 @@ expect(screen.getByText(/Response/)).toBeInTheDocument();
 2. Test must use correct testId pattern (`api-call-details-{id}` vs `error-details-{id}`)
 3. When testing toggle behavior, use log events for error toggling, API events for API details
 4. `stopPropagation()` needed on collapsible header clicks to prevent parent collapse
+
+---
+
+## Issue #81: US-021: Admin Manual Reassessment
+
+**What was implemented:**
+- Admin "Retry Assessment" button on the assessment timeline page (`/admin/assessments/[id]`)
+- Confirmation dialog warning that a new assessment will be created
+- API route `/api/admin/assessment/retry` for triggering reassessment
+- New assessment creation with PROCESSING status and copied data from original
+- Old assessment marked with `superseded_by` field pointing to new assessment
+- New assessment logs include `triggered_by: admin_retry` metadata
+- Toast notification on successful reassessment
+- Button disabled with spinner while processing
+- Auto-navigation to the new assessment page after success
+- Superseded notice displayed on old assessments with link to view new assessment
+
+**Files created:**
+- `src/app/api/admin/assessment/retry/route.ts` - Admin retry API endpoint
+- `src/app/api/admin/assessment/retry/route.test.ts` - 14 unit tests
+
+**Files changed:**
+- `prisma/schema.prisma` - Added `supersededBy String?` field to Assessment model
+- `src/app/admin/assessments/[id]/page.tsx` - Passes `supersededBy` to client
+- `src/app/admin/assessments/[id]/client.tsx` - Added retry UI components (button, dialog, toast, superseded notice)
+- `src/app/admin/assessments/[id]/page.test.tsx` - Added 17 tests for retry functionality
+
+**Retry Assessment Flow:**
+```
+Admin clicks "Retry Assessment" button (visible for COMPLETED or failed assessments)
+    ↓
+Confirmation dialog appears with warning
+    ↓
+Admin clicks "Confirm Retry"
+    ↓
+Button shows spinner + "Processing..." while disabled
+    ↓
+API creates new assessment with status=PROCESSING
+    ↓
+Original assessment updated with supersededBy=newAssessmentId
+    ↓
+AssessmentLog created with triggered_by: "admin_retry" metadata
+    ↓
+VideoAssessment triggered if recording exists
+    ↓
+Toast notification: "Reassessment queued successfully"
+    ↓
+Auto-navigate to new assessment page after 1.5s delay
+```
+
+**Retry Eligibility Logic:**
+```typescript
+const canRetry =
+  (assessment.status === "COMPLETED" ||
+   assessment.status === "PROCESSING" ||
+   hasErrors) &&
+  !assessment.supersededBy;
+```
+
+**Key Components:**
+- `ConfirmationDialog` - Modal with warning about creating new assessment
+- `ToastNotification` - Success/error feedback with auto-dismiss
+- Superseded notice - Shows when assessment has been replaced
+
+**Learnings:**
+1. Use `router.push()` after API success with a delay to allow toast to be visible
+2. The `supersededBy` field creates a linked chain of assessments (old → new)
+3. Conditional button visibility: check both status eligibility AND not already superseded
+4. Toast auto-dismiss with `setTimeout` (5 seconds) and cleanup in effect
+5. Copy all relevant data (cvUrl, parsedProfile, prUrl, prSnapshot, ciStatus, codeReview) to preserve context
+6. Log metadata with `triggered_by: "admin_retry"` and `original_assessment_id` for audit trail
+7. Fire-and-forget pattern for video assessment trigger (don't fail if it errors)
+8. Confirmation dialog overlay uses `onClick` on backdrop, `stopPropagation` on content
+
+**Test Patterns:**
+```typescript
+// Test retry button visibility for completed assessment
+it("shows retry assessment button for completed assessment", () => {
+  render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+  expect(screen.getByTestId("retry-assessment-card")).toBeInTheDocument();
+});
+
+// Test confirmation dialog
+it("opens confirmation dialog when retry button is clicked", async () => {
+  render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+  fireEvent.click(screen.getByTestId("retry-assessment-button"));
+  expect(screen.getByTestId("confirmation-dialog")).toBeInTheDocument();
+});
+
+// Test successful retry with navigation
+it("navigates to new assessment after successful retry", async () => {
+  vi.useFakeTimers();
+  // ... fetch mock ...
+  fireEvent.click(confirmButton);
+  await vi.waitFor(() => expect(screen.getByTestId("toast-success")).toBeInTheDocument());
+  await vi.advanceTimersByTimeAsync(1500);
+  expect(mockRouterPush).toHaveBeenCalledWith("/admin/assessments/assess-2");
+  vi.useRealTimers();
+});
+```
+
+**Neo-Brutalist Design Compliance:**
+- Retry button: amber-600 border and background, white text
+- Confirmation dialog: 2px black borders, amber warning box
+- Superseded notice: muted-foreground styling, link to new assessment
+- No rounded corners (0px radius)
+- No shadows
+
+**Gotchas:**
+- Assessment can only be retried once (check `supersededBy` is null)
+- Original assessment data preserved - never delete or overwrite
+- VideoAssessment trigger can fail silently without breaking the retry flow
+- Navigation delay allows toast to be visible before redirect
+- Need to pass `supersededBy` from server component to client for visibility check

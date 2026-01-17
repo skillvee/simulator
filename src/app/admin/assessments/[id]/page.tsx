@@ -69,6 +69,7 @@ export default async function AssessmentTimelinePage({
     completedAt: assessment.completedAt?.toISOString() ?? null,
     createdAt: assessment.createdAt.toISOString(),
     updatedAt: assessment.updatedAt.toISOString(),
+    supersededBy: assessment.supersededBy, // For showing if this was replaced
     logs: assessment.logs.map((log) => ({
       ...log,
       timestamp: log.timestamp.toISOString(),

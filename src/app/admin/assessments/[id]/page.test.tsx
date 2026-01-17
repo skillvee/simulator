@@ -5,11 +5,15 @@ import { AssessmentTimelineClient, formatDuration } from "./client";
 
 // Mock next/navigation
 const mockNotFound = vi.fn();
+const mockRouterPush = vi.fn();
 vi.mock("next/navigation", () => ({
   notFound: () => {
     mockNotFound();
     throw new Error("NOT_FOUND");
   },
+  useRouter: () => ({
+    push: mockRouterPush,
+  }),
 }));
 
 // Mock admin check
@@ -54,6 +58,7 @@ const mockAssessment = {
   completedAt: new Date("2024-01-15T11:30:00Z"),
   createdAt: new Date("2024-01-15T10:00:00Z"),
   updatedAt: new Date("2024-01-15T11:30:00Z"),
+  supersededBy: null,
   user: { id: "user-1", name: "John Doe", email: "john@example.com" },
   scenario: { id: "scenario-1", name: "Frontend Developer" },
   logs: [
@@ -790,5 +795,218 @@ describe("API Call Details", () => {
     // Should have language-json class for syntax highlighting
     const content = screen.getByTestId("response-api-1-content");
     expect(content.querySelector("code.language-json")).toBeInTheDocument();
+  });
+});
+
+describe("AssessmentTimelineClient - Retry Assessment", () => {
+  const serializedAssessment = {
+    ...mockAssessment,
+    startedAt: mockAssessment.startedAt.toISOString(),
+    completedAt: mockAssessment.completedAt?.toISOString() ?? null,
+    createdAt: mockAssessment.createdAt.toISOString(),
+    updatedAt: mockAssessment.updatedAt.toISOString(),
+    logs: mockAssessment.logs.map((log) => ({
+      ...log,
+      timestamp: log.timestamp.toISOString(),
+    })),
+    apiCalls: mockAssessment.apiCalls.map((call) => ({
+      ...call,
+      requestTimestamp: call.requestTimestamp.toISOString(),
+      responseTimestamp: call.responseTimestamp?.toISOString() ?? null,
+    })),
+    recordings: mockAssessment.recordings.map((rec) => ({
+      ...rec,
+      startTime: rec.startTime.toISOString(),
+      endTime: rec.endTime?.toISOString() ?? null,
+    })),
+  };
+
+  const serializedAssessmentWithError = {
+    ...mockAssessmentWithError,
+    startedAt: mockAssessmentWithError.startedAt.toISOString(),
+    completedAt: null,
+    createdAt: mockAssessmentWithError.createdAt.toISOString(),
+    updatedAt: mockAssessmentWithError.updatedAt.toISOString(),
+    logs: mockAssessmentWithError.logs.map((log) => ({
+      ...log,
+      timestamp: log.timestamp.toISOString(),
+    })),
+    apiCalls: mockAssessmentWithError.apiCalls.map((call) => ({
+      ...call,
+      requestTimestamp: call.requestTimestamp.toISOString(),
+      responseTimestamp: null, // mockAssessmentWithError has null responseTimestamp
+    })),
+    recordings: [],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    global.fetch = vi.fn();
+  });
+
+  it("shows retry assessment button for completed assessment", () => {
+    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    expect(screen.getByTestId("retry-assessment-card")).toBeInTheDocument();
+    expect(screen.getByTestId("retry-assessment-button")).toBeInTheDocument();
+  });
+
+  it("shows retry assessment button for assessment with errors", () => {
+    render(<AssessmentTimelineClient assessment={serializedAssessmentWithError} />);
+    expect(screen.getByTestId("retry-assessment-card")).toBeInTheDocument();
+  });
+
+  it("does not show retry button when assessment is superseded", () => {
+    const supersededAssessment = {
+      ...serializedAssessment,
+      supersededBy: "assess-3",
+    };
+    render(<AssessmentTimelineClient assessment={supersededAssessment} />);
+    expect(screen.queryByTestId("retry-assessment-card")).not.toBeInTheDocument();
+  });
+
+  it("shows superseded notice when assessment is superseded", () => {
+    const supersededAssessment = {
+      ...serializedAssessment,
+      supersededBy: "assess-3",
+    };
+    render(<AssessmentTimelineClient assessment={supersededAssessment} />);
+    expect(screen.getByTestId("superseded-notice")).toBeInTheDocument();
+    expect(screen.getByText("View new assessment")).toBeInTheDocument();
+  });
+
+  it("opens confirmation dialog when retry button is clicked", async () => {
+    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+
+    const retryButton = screen.getByTestId("retry-assessment-button");
+    fireEvent.click(retryButton);
+
+    const dialog = screen.getByTestId("confirmation-dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByText("Retry Assessment")).toBeInTheDocument();
+    expect(within(dialog).getByText(/This will create a/)).toBeInTheDocument();
+  });
+
+  it("closes confirmation dialog when cancel is clicked", async () => {
+    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+
+    const retryButton = screen.getByTestId("retry-assessment-button");
+    fireEvent.click(retryButton);
+
+    expect(screen.getByTestId("confirmation-dialog")).toBeInTheDocument();
+
+    const cancelButton = screen.getByTestId("cancel-retry-button");
+    fireEvent.click(cancelButton);
+
+    expect(screen.queryByTestId("confirmation-dialog")).not.toBeInTheDocument();
+  });
+
+  it("closes confirmation dialog when overlay is clicked", async () => {
+    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+
+    const retryButton = screen.getByTestId("retry-assessment-button");
+    fireEvent.click(retryButton);
+
+    const overlay = screen.getByTestId("confirmation-dialog-overlay");
+    fireEvent.click(overlay);
+
+    expect(screen.queryByTestId("confirmation-dialog")).not.toBeInTheDocument();
+  });
+
+  it("shows loading state when retrying", async () => {
+    (global.fetch as Mock).mockImplementation(() => new Promise(() => {})); // Never resolves
+
+    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+
+    const retryButton = screen.getByTestId("retry-assessment-button");
+    fireEvent.click(retryButton);
+
+    const confirmButton = screen.getByTestId("confirm-retry-button");
+    fireEvent.click(confirmButton);
+
+    // Look for "Processing..." within the confirmation dialog
+    const dialog = screen.getByTestId("confirmation-dialog");
+    expect(within(dialog).getByText("Processing...")).toBeInTheDocument();
+    expect(confirmButton).toBeDisabled();
+  });
+
+  it("shows success toast on successful retry", async () => {
+    (global.fetch as Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        success: true,
+        newAssessmentId: "assess-2",
+        oldAssessmentId: "assess-1",
+        message: "Reassessment queued successfully",
+      }),
+    });
+
+    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+
+    const retryButton = screen.getByTestId("retry-assessment-button");
+    fireEvent.click(retryButton);
+
+    const confirmButton = screen.getByTestId("confirm-retry-button");
+    fireEvent.click(confirmButton);
+
+    // Wait for the toast to appear
+    await vi.waitFor(() => {
+      expect(screen.getByTestId("toast-success")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Reassessment queued successfully")).toBeInTheDocument();
+  });
+
+  it("shows error toast on failed retry", async () => {
+    (global.fetch as Mock).mockResolvedValue({
+      ok: false,
+      json: () => Promise.resolve({
+        success: false,
+        message: "Assessment not found",
+      }),
+    });
+
+    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+
+    const retryButton = screen.getByTestId("retry-assessment-button");
+    fireEvent.click(retryButton);
+
+    const confirmButton = screen.getByTestId("confirm-retry-button");
+    fireEvent.click(confirmButton);
+
+    await vi.waitFor(() => {
+      expect(screen.getByTestId("toast-error")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Assessment not found")).toBeInTheDocument();
+  });
+
+  it("navigates to new assessment after successful retry", async () => {
+    (global.fetch as Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        success: true,
+        newAssessmentId: "assess-2",
+        oldAssessmentId: "assess-1",
+        message: "Reassessment queued successfully",
+      }),
+    });
+
+    vi.useFakeTimers();
+    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+
+    const retryButton = screen.getByTestId("retry-assessment-button");
+    fireEvent.click(retryButton);
+
+    const confirmButton = screen.getByTestId("confirm-retry-button");
+    await fireEvent.click(confirmButton);
+
+    // Wait for the fetch to complete
+    await vi.waitFor(() => {
+      expect(screen.getByTestId("toast-success")).toBeInTheDocument();
+    });
+
+    // Advance timers to trigger navigation
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(mockRouterPush).toHaveBeenCalledWith("/admin/assessments/assess-2");
+    vi.useRealTimers();
   });
 });

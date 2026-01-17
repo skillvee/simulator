@@ -160,6 +160,9 @@ model Assessment {
   // Results
   report        Json?            // Final assessment report
 
+  // Reassessment tracking (US-021)
+  supersededBy  String?          // ID of the new assessment that replaced this one
+
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
