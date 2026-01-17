@@ -2821,3 +2821,86 @@ const mockGenerateContent = geminiClient.models.generateContent as ReturnType<ty
 - Multiple reject buttons on page require unique selectors in tests
 - Candidate name needed for modal title - passed separately from ID
 - API parsing can fail silently - wrap in try/catch with fallback
+
+---
+
+## Issue #76: US-012c - Display Current Search Filters
+
+**What was implemented:**
+- `ActiveFiltersBar` component showing current search filters as removable chips/tags above results
+- Each filter chip displays: type icon, label, value, and "x" remove button
+- "Clear all filters" link appears when multiple filters are active
+- "Refined by feedback" indicator with sparkle icon for feedback-updated filters
+- Purple styling distinguishes feedback-refined filters from original filters
+- Utility functions: `createFiltersFromIntent`, `removeFilterFromIntent`
+- 39 unit tests for the component and utilities
+
+**Files created:**
+- `src/components/active-filters-bar.tsx` - ActiveFiltersBar component with FilterChip subcomponent
+- `src/components/active-filters-bar.test.tsx` - 39 unit tests
+
+**Files changed:**
+- `src/app/candidate_search/client.tsx` - Integrated ActiveFiltersBar, added filter state management
+
+**Component structure:**
+```typescript
+interface ActiveFilter {
+  type: keyof ExtractedIntent | "archetype" | "seniority";
+  label: string;
+  value: string;
+  isRefinedByFeedback?: boolean;
+}
+
+interface ActiveFiltersBarProps {
+  filters: ActiveFilter[];
+  onRemoveFilter: (filter: ActiveFilter) => void;
+  onClearAll: () => void;
+  className?: string;
+}
+```
+
+**State management in client:**
+```typescript
+// Track which fields have been refined by feedback
+const [refinedFields, setRefinedFields] = useState<Set<string>>(new Set());
+
+// Build active filters from extraction
+const activeFilters = extraction
+  ? createFiltersFromIntent(
+      extraction.intent,
+      extraction.archetype,
+      extraction.seniority,
+      refinedFields
+    )
+  : [];
+```
+
+**Visual feedback patterns:**
+- Gold background (`bg-secondary`) for standard filter chips
+- Purple border and background for feedback-refined chips (`border-purple-500 bg-purple-50`)
+- Sparkle icon (`<Sparkles>`) for refined indicator
+- Icons match filter types (Briefcase for role, MapPin for location, etc.)
+
+**Learnings:**
+1. Use `Set<string>` to track refined fields - easy lookup and iteration
+2. Derive `activeFilters` from extraction state - single source of truth
+3. Separate "archetype" and "seniority" types in filters even though they map to job_title/years_experience
+4. Purple styling provides clear visual distinction for feedback-refined filters
+5. `removeFilterFromIntent` utility handles the type mapping (archetype→job_title, seniority→years_experience)
+6. ActiveFiltersBar returns null when no filters - component self-hides
+7. Filter persistence achieved by keeping extraction state across search session
+8. `createFiltersFromIntent` handles both archetype/seniority (if provided) or raw job_title/years_experience
+
+**Neo-Brutalist Design Compliance:**
+- No rounded corners (0px radius)
+- No shadows
+- 2px black borders on filter chips
+- Gold (#f7da50) for standard chips, purple for refined chips
+- Sparkle icon from lucide-react for refined indicator
+- DM Sans for labels
+
+**Gotchas:**
+- Filter type can be "archetype" or "job_title" - both map to job_title in intent
+- Filter type can be "seniority" or "years_experience" - both map to years_experience in intent
+- Clear all also clears archetype and seniority from extraction state
+- Need to reset refinedFields when starting a new search
