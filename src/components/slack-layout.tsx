@@ -1,18 +1,39 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, createContext, useContext } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import {
   DECORATIVE_TEAM_MEMBERS,
   getInitials,
 } from "@/lib/coworker-persona";
+import { FloatingCallBar, type CallState } from "@/components/floating-call-bar";
 
 interface Coworker {
   id: string;
   name: string;
   role: string;
   avatarUrl: string | null;
+}
+
+// Context for managing call state across the layout
+interface CallContextValue {
+  activeCall: {
+    coworkerId: string;
+    callType: "coworker" | "kickoff" | "defense";
+  } | null;
+  startCall: (coworkerId: string, callType: "coworker" | "kickoff" | "defense") => void;
+  endCall: () => void;
+}
+
+const CallContext = createContext<CallContextValue | null>(null);
+
+export function useCallContext() {
+  const context = useContext(CallContext);
+  if (!context) {
+    throw new Error("useCallContext must be used within a SlackLayout");
+  }
+  return context;
 }
 
 interface SlackLayoutProps {
@@ -75,10 +96,22 @@ function SlackLayoutInner({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeCall, setActiveCall] = useState<{
+    coworkerId: string;
+    callType: "coworker" | "kickoff" | "defense";
+  } | null>(null);
 
   // Determine selected coworker from prop override or URL
   const selectedCoworkerId = overrideSelectedId ?? searchParams.get("coworkerId") ?? null;
   const totalTeamSize = coworkers.length + DECORATIVE_TEAM_MEMBERS.length;
+
+  const startCall = (coworkerId: string, callType: "coworker" | "kickoff" | "defense") => {
+    setActiveCall({ coworkerId, callType });
+  };
+
+  const endCall = () => {
+    setActiveCall(null);
+  };
 
   const handleSelectCoworker = (coworkerId: string, action: "chat" | "call") => {
     // Close sidebar on mobile after selection
@@ -87,83 +120,109 @@ function SlackLayoutInner({
     if (action === "chat") {
       router.push(`/assessment/${assessmentId}/chat?coworkerId=${coworkerId}`);
     } else {
-      router.push(`/assessment/${assessmentId}/call?coworkerId=${coworkerId}`);
+      // Start call in-place instead of navigating to a separate page
+      startCall(coworkerId, "coworker");
     }
   };
 
+  // Find the coworker being called
+  const callingCoworker = activeCall
+    ? coworkers.find((c) => c.id === activeCall.coworkerId)
+    : null;
+
+  const callContextValue: CallContextValue = {
+    activeCall,
+    startCall,
+    endCall,
+  };
+
   return (
-    <div className="min-h-screen bg-background flex relative">
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 border-2 border-foreground bg-background hover:bg-accent"
-        aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
-      >
-        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+    <CallContext.Provider value={callContextValue}>
+      <div className="min-h-screen bg-background flex relative">
+        {/* Mobile menu button */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="fixed top-4 left-4 z-50 md:hidden p-2 border-2 border-foreground bg-background hover:bg-accent"
+          aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+        >
+          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
 
-      {/* Sidebar overlay for mobile */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+        {/* Sidebar overlay for mobile */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
 
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed md:static inset-y-0 left-0 z-40
-          w-64 border-r-2 border-foreground bg-background flex flex-col h-screen md:h-auto
-          transform transition-transform duration-200 ease-in-out
-          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        `}
-      >
-        {/* Header */}
-        <div className="border-b-2 border-foreground p-4">
-          <h2 className="font-bold text-sm font-mono uppercase tracking-wider">
-            Team
-          </h2>
-        </div>
+        {/* Sidebar */}
+        <aside
+          className={`
+            fixed md:static inset-y-0 left-0 z-40
+            w-64 border-r-2 border-foreground bg-background flex flex-col h-screen md:h-auto
+            transform transition-transform duration-200 ease-in-out
+            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          `}
+        >
+          {/* Header */}
+          <div className="border-b-2 border-foreground p-4">
+            <h2 className="font-bold text-sm font-mono uppercase tracking-wider">
+              Team
+            </h2>
+          </div>
 
-        {/* Coworker List */}
-        <div className="flex-1 overflow-auto">
-          {/* Online/Interactive coworkers */}
-          {coworkers.map((coworker) => (
-            <CoworkerItem
-              key={coworker.id}
-              coworker={coworker}
-              isSelected={selectedCoworkerId === coworker.id}
-              onChat={() => handleSelectCoworker(coworker.id, "chat")}
-              onCall={() => handleSelectCoworker(coworker.id, "call")}
+          {/* Coworker List */}
+          <div className="flex-1 overflow-auto">
+            {/* Online/Interactive coworkers */}
+            {coworkers.map((coworker) => (
+              <CoworkerItem
+                key={coworker.id}
+                coworker={coworker}
+                isSelected={selectedCoworkerId === coworker.id}
+                isInCall={activeCall?.coworkerId === coworker.id}
+                onChat={() => handleSelectCoworker(coworker.id, "chat")}
+                onCall={() => handleSelectCoworker(coworker.id, "call")}
+              />
+            ))}
+
+            {/* Offline/Decorative team members */}
+            {DECORATIVE_TEAM_MEMBERS.map((member) => (
+              <OfflineTeamMember key={member.name} name={member.name} role={member.role} />
+            ))}
+          </div>
+
+          {/* Floating Call Bar - appears above footer when call is active */}
+          {activeCall && callingCoworker && (
+            <FloatingCallBar
+              assessmentId={assessmentId}
+              coworker={callingCoworker}
+              callType={activeCall.callType}
+              onCallEnd={endCall}
             />
-          ))}
+          )}
 
-          {/* Offline/Decorative team members */}
-          {DECORATIVE_TEAM_MEMBERS.map((member) => (
-            <OfflineTeamMember key={member.name} name={member.name} role={member.role} />
-          ))}
-        </div>
+          {/* Footer */}
+          <div className="border-t-2 border-foreground p-3">
+            <p className="text-xs text-muted-foreground font-mono">
+              {coworkers.length} online · {totalTeamSize} total
+            </p>
+          </div>
+        </aside>
 
-        {/* Footer */}
-        <div className="border-t-2 border-foreground p-3">
-          <p className="text-xs text-muted-foreground font-mono">
-            {coworkers.length} online · {totalTeamSize} total
-          </p>
-        </div>
-      </aside>
-
-      {/* Main content area */}
-      <main className="flex-1 flex flex-col min-h-screen md:min-h-0">
-        {children}
-      </main>
-    </div>
+        {/* Main content area */}
+        <main className="flex-1 flex flex-col min-h-screen md:min-h-0">
+          {children}
+        </main>
+      </div>
+    </CallContext.Provider>
   );
 }
 
 interface CoworkerItemProps {
   coworker: Coworker;
   isSelected: boolean;
+  isInCall?: boolean;
   onChat: () => void;
   onCall: () => void;
 }
@@ -171,6 +230,7 @@ interface CoworkerItemProps {
 function CoworkerItem({
   coworker,
   isSelected,
+  isInCall,
   onChat,
   onCall,
 }: CoworkerItemProps) {
@@ -183,15 +243,23 @@ function CoworkerItem({
       }`}
     >
       <div className="flex items-start gap-3">
-        {/* Avatar with online indicator */}
+        {/* Avatar with online/in-call indicator */}
         <div className="relative flex-shrink-0">
-          <div className="w-10 h-10 bg-secondary border-2 border-foreground flex items-center justify-center">
+          <div
+            className={`w-10 h-10 bg-secondary border-2 border-foreground flex items-center justify-center ${
+              isInCall ? "ring-2 ring-green-500 ring-offset-1" : ""
+            }`}
+          >
             <span className="font-bold text-secondary-foreground text-sm font-mono">
               {initials}
             </span>
           </div>
-          {/* Online status indicator - green dot */}
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border border-foreground" />
+          {/* Status indicator - green dot (in call = pulsing) */}
+          <div
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border border-foreground ${
+              isInCall ? "animate-pulse" : ""
+            }`}
+          />
         </div>
 
         {/* Info */}
@@ -201,7 +269,11 @@ function CoworkerItem({
             {coworker.role}
           </p>
           <p className="text-xs text-muted-foreground font-mono mt-0.5">
-            online
+            {isInCall ? (
+              <span className="text-green-600 dark:text-green-400">in call</span>
+            ) : (
+              "online"
+            )}
           </p>
         </div>
       </div>
@@ -216,9 +288,14 @@ function CoworkerItem({
         </button>
         <button
           onClick={onCall}
-          className="flex-1 px-3 py-1.5 text-xs font-bold border-2 border-foreground bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background"
+          disabled={isInCall}
+          className={`flex-1 px-3 py-1.5 text-xs font-bold border-2 border-foreground ${
+            isInCall
+              ? "bg-muted text-muted-foreground cursor-not-allowed"
+              : "bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background"
+          }`}
         >
-          Call
+          {isInCall ? "In Call" : "Call"}
         </button>
       </div>
     </div>

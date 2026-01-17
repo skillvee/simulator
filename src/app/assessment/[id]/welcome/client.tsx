@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Phone } from "lucide-react";
-import { SlackLayout } from "@/components/slack-layout";
+import { SlackLayout, useCallContext } from "@/components/slack-layout";
 
 interface Coworker {
   id: string;
@@ -43,7 +42,41 @@ export function WelcomeClient({
   taskDescription,
   coworkers,
 }: WelcomeClientProps) {
-  const router = useRouter();
+  return (
+    <SlackLayout assessmentId={assessmentId} coworkers={coworkers} selectedCoworkerId={managerId}>
+      <WelcomeContent
+        userName={userName}
+        managerId={managerId}
+        managerName={managerName}
+        managerRole={managerRole}
+        companyName={companyName}
+        repoUrl={repoUrl}
+        taskDescription={taskDescription}
+      />
+    </SlackLayout>
+  );
+}
+
+interface WelcomeContentProps {
+  userName: string;
+  managerId: string;
+  managerName: string;
+  managerRole: string;
+  companyName: string;
+  repoUrl: string;
+  taskDescription: string;
+}
+
+function WelcomeContent({
+  userName,
+  managerId,
+  managerName,
+  managerRole,
+  companyName,
+  repoUrl,
+  taskDescription,
+}: WelcomeContentProps) {
+  const { startCall, activeCall } = useCallContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [allMessagesShown, setAllMessagesShown] = useState(false);
@@ -116,7 +149,8 @@ export function WelcomeClient({
   }, [currentMessageIndex, welcomeMessages.length]);
 
   const handleScheduleCall = () => {
-    router.push(`/assessment/${assessmentId}/kickoff`);
+    // Start kickoff call using the floating call bar
+    startCall(managerId, "kickoff");
   };
 
   // Get manager initials for avatar
@@ -132,84 +166,90 @@ export function WelcomeClient({
     ? messages.filter((m) => !m.isTyping)
     : messages;
 
+  // Check if currently in a call with the manager
+  const isInCall = activeCall?.coworkerId === managerId;
+
   return (
-    <SlackLayout assessmentId={assessmentId} coworkers={coworkers} selectedCoworkerId={managerId}>
-      <div className="flex-1 flex flex-col">
-        {/* Header - Slack-like channel header */}
-        <header className="border-b-2 border-foreground bg-background">
-          <div className="px-4 md:px-6 py-3 flex items-center gap-3">
-            {/* Spacer for mobile menu button */}
-            <div className="w-10 md:hidden" />
-            {/* Manager avatar */}
-            <div className="w-10 h-10 bg-secondary border-2 border-foreground flex items-center justify-center">
-              <span className="font-bold text-secondary-foreground text-sm font-mono">
-                {managerInitials}
-              </span>
-            </div>
-            <div className="flex-1">
-              <h1 className="font-bold text-lg">{managerName}</h1>
-              <p className="text-sm text-muted-foreground">{managerRole}</p>
-            </div>
-            {/* Call button - same as other coworkers */}
-            <button
-              onClick={handleScheduleCall}
-              className="p-2 border-2 border-foreground bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background"
-              aria-label={`Call ${managerName}`}
-            >
-              <Phone size={20} />
-            </button>
+    <div className="flex-1 flex flex-col">
+      {/* Header - Slack-like channel header */}
+      <header className="border-b-2 border-foreground bg-background">
+        <div className="px-4 md:px-6 py-3 flex items-center gap-3">
+          {/* Spacer for mobile menu button */}
+          <div className="w-10 md:hidden" />
+          {/* Manager avatar */}
+          <div className="w-10 h-10 bg-secondary border-2 border-foreground flex items-center justify-center">
+            <span className="font-bold text-secondary-foreground text-sm font-mono">
+              {managerInitials}
+            </span>
           </div>
-        </header>
+          <div className="flex-1">
+            <h1 className="font-bold text-lg">{managerName}</h1>
+            <p className="text-sm text-muted-foreground">{managerRole}</p>
+          </div>
+          {/* Call button */}
+          <button
+            onClick={handleScheduleCall}
+            disabled={isInCall}
+            className={`p-2 border-2 border-foreground ${
+              isInCall
+                ? "bg-muted text-muted-foreground cursor-not-allowed"
+                : "bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background"
+            }`}
+            aria-label={isInCall ? "In call" : `Call ${managerName}`}
+          >
+            <Phone size={20} />
+          </button>
+        </div>
+      </header>
 
-        {/* Chat area */}
-        <main className="flex-1 overflow-auto">
-          <div className="px-4 md:px-6 py-6">
-            {/* Date divider */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-sm font-mono text-muted-foreground px-2 border border-foreground bg-background">
-                Today
-              </span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
+      {/* Chat area */}
+      <main className="flex-1 overflow-auto">
+        <div className="px-4 md:px-6 py-6">
+          {/* Date divider */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-sm font-mono text-muted-foreground px-2 border border-foreground bg-background">
+              Today
+            </span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
 
-            {/* Messages */}
-            <div className="space-y-4">
-              {displayMessages.map((message) => (
-                <div key={message.id} className="flex gap-3">
-                  {/* Avatar */}
-                  <div className="w-10 h-10 bg-secondary border-2 border-foreground flex items-center justify-center flex-shrink-0">
-                    <span className="font-bold text-secondary-foreground text-sm font-mono">
-                      {managerInitials}
-                    </span>
-                  </div>
+          {/* Messages */}
+          <div className="space-y-4">
+            {displayMessages.map((message) => (
+              <div key={message.id} className="flex gap-3">
+                {/* Avatar */}
+                <div className="w-10 h-10 bg-secondary border-2 border-foreground flex items-center justify-center flex-shrink-0">
+                  <span className="font-bold text-secondary-foreground text-sm font-mono">
+                    {managerInitials}
+                  </span>
+                </div>
 
-                  {/* Message content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="font-bold">{managerName}</span>
-                      {!message.isTyping && (
-                        <span className="text-sm text-muted-foreground font-mono">
-                          {message.timestamp}
-                        </span>
-                      )}
-                    </div>
-
-                    {message.isTyping ? (
-                      <TypingIndicator />
-                    ) : (
-                      <div className="text-foreground whitespace-pre-wrap">
-                        {formatMessageContent(message.content, repoUrl)}
-                      </div>
+                {/* Message content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-bold">{managerName}</span>
+                    {!message.isTyping && (
+                      <span className="text-sm text-muted-foreground font-mono">
+                        {message.timestamp}
+                      </span>
                     )}
                   </div>
+
+                  {message.isTyping ? (
+                    <TypingIndicator />
+                  ) : (
+                    <div className="text-foreground whitespace-pre-wrap">
+                      {formatMessageContent(message.content, repoUrl)}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        </main>
-      </div>
-    </SlackLayout>
+        </div>
+      </main>
+    </div>
   );
 }
 

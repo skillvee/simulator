@@ -1,14 +1,16 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { CallPageClient } from "./client";
-import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
 
 interface CallPageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ coworkerId?: string }>;
 }
 
+/**
+ * Redirects to chat page - calls now happen via the floating call bar in sidebar.
+ * This maintains backwards compatibility for any direct links to /call.
+ */
 export default async function CallPage({ params, searchParams }: CallPageProps) {
   const session = await auth();
   const { id: assessmentId } = await params;
@@ -18,14 +20,11 @@ export default async function CallPage({ params, searchParams }: CallPageProps) 
     redirect("/sign-in");
   }
 
-  // Get the assessment
+  // Verify the assessment exists
   const assessment = await db.assessment.findFirst({
     where: {
       id: assessmentId,
       userId: session.user.id,
-    },
-    include: {
-      scenario: true,
     },
   });
 
@@ -33,26 +32,10 @@ export default async function CallPage({ params, searchParams }: CallPageProps) 
     redirect("/");
   }
 
-  // Get coworkers for this scenario
-  const coworkers = await db.coworker.findMany({
-    where: {
-      scenarioId: assessment.scenarioId,
-    },
-    select: {
-      id: true,
-      name: true,
-      role: true,
-      avatarUrl: true,
-    },
-  });
+  // Redirect to chat page - user can start call from sidebar
+  const chatUrl = coworkerId
+    ? `/assessment/${assessmentId}/chat?coworkerId=${coworkerId}`
+    : `/assessment/${assessmentId}/chat`;
 
-  return (
-    <AssessmentScreenWrapper assessmentId={assessmentId}>
-      <CallPageClient
-        assessmentId={assessmentId}
-        coworkers={coworkers}
-        selectedCoworkerId={coworkerId || null}
-      />
-    </AssessmentScreenWrapper>
-  );
+  redirect(chatUrl);
 }

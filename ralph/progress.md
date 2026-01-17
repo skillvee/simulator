@@ -1102,3 +1102,84 @@ src/prompts/
 **Gotchas:**
 - The `isTyping` messages get added and removed during the typewriter effect, but there can be a brief moment where a typing message remains in state. Using `allMessagesShown` flag + filtering is a reliable way to ensure no typing indicators show after completion.
 - Manager fallback defaults (`"default-manager"`, `"Alex Chen"`) are used when no coworker with "manager" in their role exists
+
+---
+
+## Issue #56: US-005: Implement floating call bar in sidebar (Slack huddles style)
+
+**What was implemented:**
+- Created `FloatingCallBar` component (`src/components/floating-call-bar.tsx`) for Slack huddles-style voice calls
+- Component appears at bottom of sidebar when a call is active, keeping chat visible
+- Audio-only experience (no transcript displayed) for realistic simulation
+- Visual indicators: gold ring around avatar when AI is speaking, mic icon when listening
+- Neo-brutalist styling: sharp corners, black/white/gold palette, no shadows
+- Integrated with `SlackLayout` via `CallContext` for managing call state across the layout
+- Removed old split-view call layouts (call/client.tsx, kickoff/client.tsx)
+- Call and kickoff pages now redirect to chat/welcome where floating bar works
+
+**Files created:**
+- `src/components/floating-call-bar.tsx` - Slack huddles-style floating call bar with full voice functionality
+
+**Files deleted:**
+- `src/app/assessment/[id]/call/client.tsx` - Old split-view call layout
+- `src/app/assessment/[id]/kickoff/client.tsx` - Old split-view kickoff layout
+
+**Files changed:**
+- `src/components/slack-layout.tsx` - Added `CallContext` for managing call state, integrated `FloatingCallBar`
+- `src/app/assessment/[id]/call/page.tsx` - Now redirects to chat page
+- `src/app/assessment/[id]/kickoff/page.tsx` - Now redirects to welcome page
+- `src/app/assessment/[id]/welcome/client.tsx` - Uses `useCallContext()` to trigger kickoff calls
+
+**FloatingCallBar features:**
+1. **States**: idle, requesting-permission, connecting, connected, error, ended
+2. **Connected UI**: Avatar with initials, name, status text, mute button, end call button
+3. **Visual indicators**:
+   - Speaking: gold ring around avatar + Volume2 icon badge + "Speaking..." text
+   - Listening: Mic icon badge + "In call" text
+   - Muted: No badge + "Muted" text
+4. **Error handling**: Red background with error message and dismiss button
+5. **Connecting**: Spinner animation with status text
+
+**CallContext API:**
+```typescript
+interface CallContextValue {
+  activeCall: {
+    coworkerId: string;
+    callType: "coworker" | "kickoff" | "defense";
+  } | null;
+  startCall: (coworkerId: string, callType: "coworker" | "kickoff" | "defense") => void;
+  endCall: () => void;
+}
+
+// Usage in child components:
+const { startCall, activeCall } = useCallContext();
+startCall(managerId, "kickoff");
+```
+
+**Neo-Brutalist Design Compliance:**
+- No rounded corners (0px radius)
+- No shadows
+- 2px black borders
+- Gold (#f7da50) for speaking indicator ring and accent
+- High contrast status text
+- Instant state changes (no transitions on speaking indicator)
+
+**Architecture decisions:**
+- Call state managed in `SlackLayout` to keep it accessible from any child component
+- `FloatingCallBar` auto-connects on mount for seamless UX
+- Transcript saved to server on call end but not displayed during call
+- Call buttons in sidebar start calls in-place instead of navigating to separate pages
+
+**Learnings:**
+1. React Context (`CallContext`) allows call state to be shared between sidebar and main content
+2. `useCallContext()` hook provides type-safe access to call state
+3. Keeping transcript refs separate from display allows saving without showing
+4. Auto-connect pattern: check `callState === "idle"` in useEffect to start connection on mount
+5. Redirect pattern for backwards compatibility: old routes redirect to new pages where functionality lives
+6. Neo-brutalist "listening" indicator works best with inverted colors (bg-foreground with light text)
+
+**Gotchas:**
+- Context must be created outside the component that provides it
+- `useCallContext()` throws if used outside `SlackLayout` - ensure all consumers are children
+- Call type must be specified when starting call ("coworker", "kickoff", or "defense")
+- The coworker being called must exist in the `coworkers` array passed to `SlackLayout`
