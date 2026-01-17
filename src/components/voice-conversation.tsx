@@ -122,8 +122,11 @@ export function VoiceConversation({ assessmentId, onEnd, onFallbackToText }: Voi
   });
 
   const handleEndInterview = async () => {
-    await endInterview();
-    onEnd?.(transcript);
+    const success = await endInterview();
+    if (success) {
+      onEnd?.(transcript);
+    }
+    // If save failed, don't redirect - user stays on page to retry
   };
 
   const isRetrying = connectionState === "retrying";

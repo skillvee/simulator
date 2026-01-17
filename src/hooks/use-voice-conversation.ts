@@ -53,7 +53,7 @@ export interface UseVoiceConversationReturn {
   maxRetries: number;
   connect: () => Promise<void>;
   disconnect: () => void;
-  endInterview: () => Promise<void>;
+  endInterview: () => Promise<boolean>;
   retry: () => Promise<void>;
   hasRecoverableSession: boolean;
   recoverSession: () => void;
@@ -430,26 +430,32 @@ export function useVoiceConversation({
   }, []);
 
   // End interview and save transcript
-  const endInterview = useCallback(async () => {
+  const endInterview = useCallback(async (): Promise<boolean> => {
     const endTime = new Date();
     setInterviewEndedAt(endTime);
     disconnect();
     updateConnectionState("ended");
 
-    // Save transcript to server
-    if (transcriptRef.current.length > 0) {
-      try {
-        await fetch("/api/interview/transcript", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            assessmentId,
-            transcript: transcriptRef.current,
-          }),
-        });
+    // Always save transcript to server (even if empty, to create conversation record)
+    try {
+      const transcriptResponse = await fetch("/api/interview/transcript", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assessmentId,
+          transcript: transcriptRef.current,
+        }),
+      });
 
-        // Trigger HR assessment analysis with timestamps
-        await fetch("/api/interview/assessment", {
+      if (!transcriptResponse.ok) {
+        const errorData = await transcriptResponse.json().catch(() => ({}));
+        console.error("[HR Interview] Failed to save transcript:", transcriptResponse.status, errorData);
+        return false;
+      }
+
+      // Trigger HR assessment analysis with timestamps (only if we have transcript content)
+      if (transcriptRef.current.length > 0) {
+        const assessmentResponse = await fetch("/api/interview/assessment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -459,11 +465,18 @@ export function useVoiceConversation({
           }),
         });
 
-        // Clear saved progress after successful completion
-        clearProgress(assessmentId, PROGRESS_TYPE);
-      } catch (err) {
-        console.error("Error saving transcript or generating assessment:", err);
+        if (!assessmentResponse.ok) {
+          console.error("[HR Interview] Failed to generate HR assessment:", assessmentResponse.status);
+          // Continue anyway - transcript was saved, assessment can be generated later
+        }
       }
+
+      // Clear saved progress after successful completion
+      clearProgress(assessmentId, PROGRESS_TYPE);
+      return true;
+    } catch (err) {
+      console.error("[HR Interview] Error saving transcript or generating assessment:", err);
+      return false;
     }
   }, [assessmentId, disconnect, updateConnectionState, interviewStartedAt]);
 
