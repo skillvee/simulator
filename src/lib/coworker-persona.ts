@@ -195,6 +195,70 @@ export function parseCoworkerKnowledge(knowledge: unknown): CoworkerKnowledge[] 
 }
 
 /**
+ * Decorative team member for sidebar display.
+ * These members appear offline and are not interactive.
+ */
+export interface DecorativeTeamMember {
+  /** Display name */
+  name: string;
+  /** Job title/role */
+  role: string;
+  /** Avatar initials (derived from name if not provided) */
+  initials?: string;
+}
+
+/**
+ * Decorative offline team members to make the sidebar feel like a real company.
+ * These are display-only and do not have full persona data or knowledge.
+ */
+export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
+  {
+    name: "Maya Torres",
+    role: "Product Designer",
+  },
+  {
+    name: "Derek Washington",
+    role: "Data Scientist",
+  },
+  {
+    name: "Priya Sharma",
+    role: "DevOps Engineer",
+  },
+  {
+    name: "Marcus Lee",
+    role: "Frontend Engineer",
+  },
+  {
+    name: "Sofia Andersson",
+    role: "UX Researcher",
+  },
+  {
+    name: "James O'Brien",
+    role: "Backend Engineer",
+  },
+  {
+    name: "Nina Volkov",
+    role: "Engineering Manager",
+  },
+  {
+    name: "Carlos Mendez",
+    role: "Machine Learning Engineer",
+  },
+];
+
+/**
+ * Get initials from a name for avatar display
+ */
+export function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+/**
  * Example coworker personas for seeding/testing
  */
 export const EXAMPLE_COWORKERS: CoworkerPersona[] = [

@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  DECORATIVE_TEAM_MEMBERS,
+  getInitials,
+} from "@/lib/coworker-persona";
+
 interface Coworker {
   id: string;
   name: string;
@@ -18,6 +23,8 @@ export function CoworkerSidebar({
   onSelectCoworker,
   selectedCoworkerId,
 }: CoworkerSidebarProps) {
+  const totalTeamSize = coworkers.length + DECORATIVE_TEAM_MEMBERS.length;
+
   return (
     <aside className="w-64 border-r-2 border-foreground bg-background flex flex-col h-full">
       {/* Header */}
@@ -29,6 +36,7 @@ export function CoworkerSidebar({
 
       {/* Coworker List */}
       <div className="flex-1 overflow-auto">
+        {/* Online/Interactive coworkers */}
         {coworkers.map((coworker) => (
           <CoworkerItem
             key={coworker.id}
@@ -38,12 +46,17 @@ export function CoworkerSidebar({
             onCall={() => onSelectCoworker(coworker.id, "call")}
           />
         ))}
+
+        {/* Offline/Decorative team members */}
+        {DECORATIVE_TEAM_MEMBERS.map((member) => (
+          <OfflineTeamMember key={member.name} name={member.name} role={member.role} />
+        ))}
       </div>
 
       {/* Footer */}
       <div className="border-t-2 border-foreground p-3">
         <p className="text-xs text-muted-foreground font-mono">
-          {coworkers.length} coworkers available
+          {coworkers.length} online · {totalTeamSize} total
         </p>
       </div>
     </aside>
@@ -115,6 +128,39 @@ function CoworkerItem({
         >
           Call
         </button>
+      </div>
+    </div>
+  );
+}
+
+interface OfflineTeamMemberProps {
+  name: string;
+  role: string;
+}
+
+function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
+  const initials = getInitials(name);
+
+  return (
+    <div className="border-b border-border p-3 opacity-60">
+      <div className="flex items-start gap-3">
+        {/* Avatar with offline indicator */}
+        <div className="relative flex-shrink-0">
+          <div className="w-10 h-10 bg-muted border-2 border-muted-foreground flex items-center justify-center">
+            <span className="font-bold text-muted-foreground text-sm font-mono">
+              {initials}
+            </span>
+          </div>
+          {/* Offline status indicator - gray/muted */}
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-muted-foreground/30 border border-muted-foreground" />
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm truncate text-muted-foreground">{name}</p>
+          <p className="text-xs text-muted-foreground truncate">{role}</p>
+          <p className="text-xs text-muted-foreground font-mono mt-0.5">offline</p>
+        </div>
       </div>
     </div>
   );
