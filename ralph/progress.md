@@ -2227,3 +2227,90 @@ expect(scoreDisplays.length).toBe(8);
 - Acceptance criteria mentioned 6 dimensions but schema has 8 - implemented all 8
 - Need to push schema changes (`prisma db push`) before running seed with new fields
 - agent-browser viewport setting affects full page screenshot capture
+
+---
+
+## Issue #70: US-006 - Display Dimension Details with Video Timestamps
+
+**What was implemented:**
+- Expandable dimension score cards with click-to-expand/collapse functionality
+- Details section showing: score (1-5), observable behaviors text, trainable gap indicator
+- Video timestamps parsed from JSON and rendered as clickable links (MM:SS and HH:MM:SS formats)
+- Video player modal that opens at the clicked timestamp, with close button and overlay click to dismiss
+- Split page into server component (data fetching) and client component (interactivity)
+- 42 unit tests covering all functionality
+
+**Files created:**
+- `src/app/candidate/[id]/client.tsx` - Client component with expandable cards, timestamp links, video modal
+
+**Files changed:**
+- `src/app/candidate/[id]/page.tsx` - Refactored to server-only data fetching
+- `src/app/candidate/[id]/page.test.tsx` - Updated tests for client/server split
+- `prisma/seed.ts` - Updated with varied timestamps for testing
+
+**Key components:**
+- `DimensionScoreCard` - Expandable card with header button and collapsible details
+- `TimestampLink` - Clickable timestamp button with clock icon
+- `VideoPlayerModal` - Full-screen modal with HTML5 video player
+- `parseTimestampToSeconds()` - Utility to convert "MM:SS" or "HH:MM:SS" to seconds
+- `normalizeTimestamp()` - Validate and normalize timestamp strings from JSON
+
+**Timestamp parsing:**
+```typescript
+// Parse "2:34" to 154 seconds, "1:23:45" to 5025 seconds
+export function parseTimestampToSeconds(timestamp: string): number | null {
+  const parts = timestamp.split(":").map((p) => parseInt(p, 10));
+  if (parts.some((p) => isNaN(p))) return null;
+
+  if (parts.length === 2) {
+    const [minutes, seconds] = parts;
+    return minutes * 60 + seconds;
+  } else if (parts.length === 3) {
+    const [hours, minutes, seconds] = parts;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+  return null;
+}
+```
+
+**Video modal pattern:**
+```typescript
+const [videoModal, setVideoModal] = useState<{
+  isOpen: boolean;
+  initialTime: number;
+}>({ isOpen: false, initialTime: 0 });
+
+// Open modal at specific time
+const handleTimestampClick = (seconds: number) => {
+  setVideoModal({ isOpen: true, initialTime: seconds });
+};
+
+// Seek to time when video loads
+const handleLoadedMetadata = () => {
+  if (videoRef.current) {
+    videoRef.current.currentTime = initialTime;
+    videoRef.current.play().catch(() => {});
+  }
+};
+```
+
+**Learnings:**
+1. Split interactive pages into server (data) + client (UI) components for optimal performance
+2. Prisma's `candidate.email` field can be null - update TypeScript interfaces to match
+3. JSON timestamps field requires runtime validation before display
+4. Use `data-testid` attributes for reliable DOM queries in tests
+5. HTML5 video `currentTime` setter works after `loadedmetadata` event
+6. Modal with overlay uses `onClick` propagation - stop event on modal content div
+7. Neo-brutalist timestamp buttons: border, gold background on hover, clock icon
+8. Use `fireEvent.click` from testing-library for simulating user interactions
+
+**Test coverage:**
+- Server component: 404 handling, database query verification
+- Client component: display, expand/collapse, timestamps, modal open/close
+- Utility functions: timestamp parsing and normalization
+
+**Gotchas:**
+- Prisma JSON fields need type assertion: `timestamps as unknown[]`
+- Empty timestamp arrays should hide the "VIDEO TIMESTAMPS" section entirely
+- Modal close button needs explicit `data-testid` for reliable testing
+- Server component Date objects need `new Date()` wrapper when passing to client
