@@ -1735,3 +1735,84 @@ If retryCount >= 3: "[ASSESSMENT FAILURE ALERT] ... has failed 3 times and will 
 - The `retryCount` starts at 0 and gets incremented to 1 on first failure (so "after 3 attempts" means retryCount === 3)
 - Profile page needs to import VideoAssessmentStatus type from Prisma for proper typing
 - AlertTriangle icon from lucide-react provides the warning indicator
+
+---
+
+## Issue #65: US-009: Apply Archetype Weights at Search Time
+
+**What was implemented:**
+- Created `src/lib/archetype-weights.ts` with role-specific dimension weight configurations
+- 8 role archetypes: Senior Frontend/Backend Engineer, Fullstack Engineer, Engineering Manager, Tech Lead, DevOps Engineer, Data Engineer, General Software Engineer
+- Weight levels: Very High (1.5x), High (1.25x), Medium (1.0x) as per acceptance criteria
+- `calculateFitScore()` function: computes weighted fit score normalized to 0-100 scale
+- `calculateFitScoresForMultipleArchetypes()`: batch calculation sorted by fit score descending
+- Helper functions: `getWeightForDimension()`, `getWeightLevelForDimension()`, `getArchetypeDisplayName()`, `getAllArchetypes()`
+- 33 unit tests covering all functionality and acceptance criteria
+- Weights applied dynamically at query time, never stored with assessment data
+
+**Files created:**
+- `src/lib/archetype-weights.ts` - Weight configurations and fit score calculation
+- `src/lib/archetype-weights.test.ts` - 33 unit tests
+
+**Archetype Weight Design:**
+
+Each archetype has weights for all 8 assessment dimensions:
+| Archetype | Very High (1.5x) | High (1.25x) | Medium (1.0x) |
+|-----------|------------------|--------------|---------------|
+| Sr. Frontend | Communication, Creativity, Technical | Problem Solving, Collaboration, Time Mgmt | Adaptability, Leadership |
+| Sr. Backend | Technical, Problem Solving, Time Mgmt | Collaboration, Adaptability, Communication | Leadership, Creativity |
+| Fullstack | Technical, Problem Solving, Adaptability | Communication, Collaboration, Time Mgmt, Creativity | Leadership |
+| Eng Manager | Communication, Leadership, Collaboration | Problem Solving, Time Mgmt, Adaptability | Technical, Creativity |
+| Tech Lead | Technical, Leadership, Communication | Problem Solving, Collaboration, Time Mgmt | Adaptability, Creativity |
+| DevOps | Technical, Problem Solving, Adaptability | Time Mgmt, Collaboration, Communication | Leadership, Creativity |
+| Data Eng | Technical, Problem Solving, Time Mgmt | Adaptability, Communication, Collaboration | Leadership, Creativity |
+| General SE | Technical, Problem Solving | Communication, Collaboration, Time Mgmt, Adaptability | Leadership, Creativity |
+
+**Fit Score Formula:**
+```
+fitScore = (Σ dimension_score × weight) / max_possible × 100
+
+Where:
+- dimension_score: candidate's score (1-5) for each dimension
+- weight: multiplier from archetype (1.0, 1.25, or 1.5)
+- max_possible: Σ (5 × weight) for all dimensions
+```
+
+**Usage Example:**
+```typescript
+import { calculateFitScore, type DimensionScoreInput } from "@/lib/archetype-weights";
+
+const scores: DimensionScoreInput[] = [
+  { dimension: AssessmentDimension.COMMUNICATION, score: 4 },
+  { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 5 },
+  // ... other dimensions
+];
+
+const result = calculateFitScore(scores, "SENIOR_FRONTEND_ENGINEER");
+console.log(result.fitScore); // 0-100 normalized score
+console.log(result.breakdown); // Per-dimension weighted contributions
+```
+
+**Learnings:**
+1. PRD Appendix C referenced in issue was about the bug candidates must discover, not archetype weights - had to design reasonable archetypes based on role expectations
+2. Use TypeScript `Record<EnumType, ValueType>` for ensuring all enum values are covered
+3. Weight multipliers should be defined as const object for type safety and reuse
+4. The Map data structure works well for dimension lookups when scores may be sparse
+5. Pure functions (calculateFitScore) enable dynamic application at query time without storing weights
+6. Breakdown array provides transparency into how scores are calculated
+7. Sorting fit scores descending helps surface best-matched roles first
+
+**Architecture decisions:**
+- Weights are never stored with assessment data - applied dynamically at query time
+- Each archetype must define weights for all 8 dimensions (enforced by TypeScript)
+- Missing dimension scores treated as 0 to ensure fair max_possible calculation
+- FitScoreResult includes breakdown for UI transparency
+- Functions are pure and stateless for easy testing and predictable behavior
+
+**Test Coverage:**
+- 33 tests covering weight multipliers, archetype configs, fit score calculation, edge cases, and acceptance criteria verification
+
+**Gotchas:**
+- Ensure all 8 dimensions are scored for accurate fit calculation
+- Missing scores contribute 0 to weighted sum but full weight to max_possible
+- Duplicate dimension scores in input array: last value wins (Map behavior)
