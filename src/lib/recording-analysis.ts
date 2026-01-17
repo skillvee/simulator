@@ -198,9 +198,9 @@ Analyze the following ${images.length} screenshots:`;
     },
   ];
 
-  // Call Gemini Pro for vision analysis
+  // Call Gemini Flash for vision analysis
   const result = await gemini.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3-flash-preview",
     contents,
   });
 

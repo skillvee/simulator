@@ -237,7 +237,7 @@ describe("POST /api/chat", () => {
     // Verify Gemini was called with contents including history
     expect(mockGenerateContent).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: expect.arrayContaining([
           // System prompt
           expect.objectContaining({

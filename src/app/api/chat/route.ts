@@ -17,7 +17,7 @@ import {
 import type { Prisma } from "@prisma/client";
 
 // Gemini Flash model for text chat
-const CHAT_MODEL = "gemini-2.0-flash";
+const CHAT_MODEL = "gemini-3-flash-preview";
 
 /**
  * POST /api/chat

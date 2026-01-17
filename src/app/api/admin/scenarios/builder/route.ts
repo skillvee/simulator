@@ -23,7 +23,7 @@ interface ChatMessage {
 }
 
 // Gemini Flash model for text chat
-const CHAT_MODEL = "gemini-2.0-flash";
+const CHAT_MODEL = "gemini-3-flash-preview";
 
 /**
  * POST /api/admin/scenarios/builder

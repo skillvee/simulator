@@ -36,7 +36,7 @@ export interface CoworkerMemory {
 }
 
 // Summarization model - use Flash for speed
-const SUMMARY_MODEL = "gemini-2.0-flash";
+const SUMMARY_MODEL = "gemini-3-flash-preview";
 
 // Maximum messages to include verbatim (recent context)
 const MAX_RECENT_MESSAGES = 10;

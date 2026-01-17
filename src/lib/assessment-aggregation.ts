@@ -719,7 +719,7 @@ export async function generateNarrativeFeedback(
 
   try {
     const result = await gemini.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
@@ -813,7 +813,7 @@ export async function generateRecommendations(
 
   try {
     const result = await gemini.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 

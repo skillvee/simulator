@@ -343,7 +343,7 @@ ${pr.diff}
 
   // Call Gemini for analysis
   const result = await gemini.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3-flash-preview",
     contents: [
       {
         role: "user" as const,

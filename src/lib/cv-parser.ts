@@ -377,7 +377,7 @@ export async function parseCv(cvUrl: string): Promise<ParsedProfile> {
 
   // Call Gemini for parsing
   const result = await gemini.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-3-flash-preview",
     contents,
   });
 

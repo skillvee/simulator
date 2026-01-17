@@ -743,3 +743,48 @@ if (wasRecording === "active" && state === "stopped") {
 - Company logo files have different naming conventions (some have `-small` suffix)
 - Spotify.png has capital S - filename case matters
 - Use `&apos;` for apostrophes in JSX to avoid build warnings
+
+---
+
+## Issue #48: US-047: Upgrade Gemini Flash model from 2.0 to 3.0
+
+**What was implemented:**
+- Updated all text-based AI operations from `gemini-2.0-flash` to `gemini-3-flash-preview`
+- Added centralized `TEXT_MODEL` constant in `src/lib/gemini.ts` for easier future updates
+- Updated 10 files across the codebase (lib utilities, API routes, test files, scripts)
+
+**Files changed:**
+- `src/lib/gemini.ts` - Added `TEXT_MODEL = "gemini-3-flash-preview"` constant
+- `src/lib/cv-parser.ts` - CV parsing
+- `src/lib/assessment-aggregation.ts` - Narrative feedback and recommendations (2 occurrences)
+- `src/lib/code-review.ts` - Code review analysis
+- `src/lib/conversation-memory.ts` - Conversation summarization
+- `src/lib/recording-analysis.ts` - Screenshot/recording analysis
+- `src/app/api/interview/assessment/route.ts` - HR interview assessment API
+- `src/app/api/chat/route.ts` - Coworker chat API
+- `src/app/api/admin/scenarios/builder/route.ts` - Scenario builder chat
+- `src/app/api/chat/route.test.ts` - Updated test expectation
+- `scripts/test-cv-parser.ts` - CV parser test script
+
+**Model update:**
+- Previous: `gemini-2.0-flash`
+- New: `gemini-3-flash-preview`
+- Voice model unchanged: `gemini-2.5-flash-native-audio-latest` (already up-to-date)
+
+**Why upgrade:**
+- Gemini 3 Flash is Google's most balanced model built for speed, scale, and frontier intelligence
+- Gemini 2.0 Flash is being deprecated March 3, 2026
+- Latest capabilities and improved accuracy
+
+**Learnings:**
+1. Simple find-and-replace task - model ID is a string constant in each file
+2. The `TEXT_MODEL` constant provides centralized management but isn't used by all files (some define their own `CHAT_MODEL` or `SUMMARY_MODEL` constants)
+3. Voice model (`LIVE_MODEL`) was already on the latest version (`gemini-2.5-flash-native-audio-latest`)
+4. Test file expectations need to be updated to match the new model ID
+
+**Architecture note:**
+The codebase has two model constants in `src/lib/gemini.ts`:
+- `LIVE_MODEL` - For voice/audio conversations (Gemini Live API)
+- `TEXT_MODEL` - For text-based AI operations (new constant added in this issue)
+
+Individual API routes often define their own `CHAT_MODEL` or `SUMMARY_MODEL` constants locally. A future refactoring could import `TEXT_MODEL` from the central location.
