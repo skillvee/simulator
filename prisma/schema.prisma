@@ -1,11 +1,16 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
+// Enable pgvector extension for semantic search
+// The extension must be enabled in Supabase: Extensions > vector
+
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
 }
 
 // ============================================================================
@@ -335,6 +340,7 @@ model VideoAssessment {
   summary       VideoAssessmentSummary?
   logs          VideoAssessmentLog[]
   apiCalls      VideoAssessmentApiCall[]
+  embeddings    CandidateEmbedding?   // Semantic search embeddings
 
   // Indexes for efficient querying
   @@index([candidateId])
@@ -475,4 +481,37 @@ model VideoAssessmentApiCall {
   @@index([videoAssessmentId])
   @@index([requestTimestamp])
   @@index([videoAssessmentId, requestTimestamp])
+}
+
+// ============================================================================
+// CANDIDATE EMBEDDINGS MODEL (US-011)
+// For semantic search on candidate data using pgvector
+// ============================================================================
+
+model CandidateEmbedding {
+  id                  String          @id @default(cuid())
+  videoAssessmentId   String          @unique // One embedding set per assessment
+
+  // Concatenated observable behaviors from all dimensions
+  // This is the primary text used for generating the embedding
+  observableBehaviorsText String      @db.Text
+
+  // Overall summary from VideoAssessmentSummary
+  overallSummaryText  String          @db.Text
+
+  // Combined embedding (768 dimensions for text-embedding-004)
+  // Embedding generated from concatenated observable behaviors + overall summary
+  embedding           Unsupported("vector(768)")
+
+  // Metadata for the embedding
+  embeddingModel      String          @default("text-embedding-004")
+
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  // Relations
+  videoAssessment     VideoAssessment @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
+
+  // Index for efficient vector similarity search
+  @@index([videoAssessmentId])
 }

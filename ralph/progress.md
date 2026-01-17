@@ -1894,3 +1894,143 @@ const { passing, filtered } = filterCandidatesBySeniority(
 - Missing scores fail the threshold check (not treated as passing)
 - Key dimensions vary by archetype - don't assume same dimensions for all roles
 - This feature works alongside archetype weights (Issue #65) - weights for ranking, thresholds for filtering
+
+---
+
+## Issue #67: US-011: Implement Semantic Search on Candidate Data
+
+**What was implemented:**
+- Created `CandidateEmbedding` model in Prisma schema for storing text embeddings via pgvector
+- Enabled pgvector extension in Prisma configuration for PostgreSQL vector operations
+- Created `src/lib/embeddings.ts` service for generating and storing text embeddings with Gemini
+- Created `src/lib/candidate-search.ts` service combining semantic similarity with archetype fit scores
+- Integrated automatic embedding generation into the video evaluation flow
+- Created SQL migration for pgvector extension and CandidateEmbedding table with RLS policies
+- 30 unit tests for embeddings service + 21 unit tests for candidate search service
+
+**Files created:**
+- `src/lib/embeddings.ts` - Embedding generation and storage service using Gemini text-embedding-004
+- `src/lib/embeddings.test.ts` - 30 unit tests for embeddings functionality
+- `src/lib/candidate-search.ts` - Semantic search with archetype fit scoring
+- `src/lib/candidate-search.test.ts` - 21 unit tests for search functionality
+- `supabase/migrations/20260116_semantic_search_pgvector.sql` - pgvector extension + RLS policies
+
+**Files changed:**
+- `prisma/schema.prisma` - Added CandidateEmbedding model, enabled postgresqlExtensions preview feature, added vector extension
+- `src/lib/video-evaluation.ts` - Added embedding generation after successful video evaluation
+
+**Schema design:**
+```prisma
+model CandidateEmbedding {
+  id                  String          @id @default(cuid())
+  videoAssessmentId   String          @unique
+  observableBehaviorsText String      @db.Text
+  overallSummaryText  String          @db.Text
+  embedding           Unsupported("vector(768)")
+  embeddingModel      String          @default("text-embedding-004")
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  videoAssessment     VideoAssessment @relation(...)
+}
+```
+
+**Embedding Generation Flow:**
+```
+Video Evaluation Completes (PROCESSING → COMPLETED)
+  ↓
+evaluateVideo() stores dimension scores + summary
+  ↓
+generateAndStoreEmbeddings() called asynchronously
+  ↓
+Concatenate observable behaviors + overall summary → text
+  ↓
+Generate 768-dim embedding via Gemini text-embedding-004
+  ↓
+Store in CandidateEmbedding table via raw SQL (pgvector)
+```
+
+**Semantic Search Flow:**
+```
+searchCandidates(skills, domains, archetype, seniority?)
+  ↓
+Generate query embedding from skills/domains
+  ↓
+Cosine similarity search via pgvector (<=> operator)
+  ↓
+Filter by seniority threshold (if specified)
+  ↓
+Calculate archetype fit scores
+  ↓
+Combine: 40% semantic + 60% fit score
+  ↓
+Return ranked candidates
+```
+
+**Combined Score Formula:**
+```
+combinedScore = (semanticSimilarity × 100 × 0.4) + (fitScore × 0.6)
+
+Where:
+- semanticSimilarity: cosine similarity (0-1) from pgvector
+- fitScore: archetype fit score (0-100) from archetype-weights
+- Result: 0-100 normalized combined score
+```
+
+**Key Functions:**
+
+*Embeddings Service:*
+- `generateEmbedding(text)` - Generate 768-dim embedding via Gemini
+- `generateAndStoreEmbeddings(videoAssessmentId)` - Generate + store for assessment
+- `generateQueryEmbedding(skills, domains)` - Generate embedding for search query
+- `formatDimensionScoresForEmbedding(scores)` - Format scores as searchable text
+- `createEmbeddingText(scores, summary)` - Combine for full candidate profile
+
+*Candidate Search Service:*
+- `searchCandidates(criteria)` - Main search function with all filters
+- `calculateCombinedScore(similarity, fitScore)` - Weighted score combination
+- `getCandidatesWithEmbeddings(status)` - List candidates with embeddings
+- `getEmbeddingStats()` - Monitoring stats
+
+**Learnings:**
+1. Prisma doesn't natively support pgvector - use `Unsupported("vector(768)")` for column type and raw SQL for operations
+2. Gemini text-embedding-004 produces 768-dimensional embeddings
+3. Use `db.$executeRaw` for vector INSERT/UPDATE and `db.$queryRaw` for similarity search
+4. Cosine distance in pgvector: `embedding <=> query_vector` (lower = more similar)
+5. Convert to similarity: `1 - (distance)` gives 0-1 similarity score
+6. Fire-and-forget embedding generation prevents blocking the evaluation response
+7. Combining semantic similarity (40%) with archetype fit (60%) gives balanced ranking
+8. Vitest mock hoisting: define mocks in `vi.mock()` factory, import after, then cast
+
+**Architecture decisions:**
+- Embeddings generated asynchronously after video evaluation completes
+- Single combined embedding per assessment (not per dimension) for simpler queries
+- Raw SQL for vector operations since Prisma ORM doesn't support pgvector directly
+- Seniority filtering is applied as hard filter before ranking
+- Query embedding built from skills + domains, optionally with additional context
+- CUID generation done in application code (not database) for consistency
+
+**RLS Policy:**
+```sql
+-- Only admins can view embeddings directly
+CREATE POLICY "admins_view_embeddings" ON "CandidateEmbedding"
+  FOR SELECT
+  USING (EXISTS (SELECT 1 FROM "User" WHERE id = auth.uid()::text AND role = 'ADMIN'));
+
+-- Service role has full access for API operations
+CREATE POLICY "service_role_full_access" ON "CandidateEmbedding"
+  FOR ALL
+  USING (auth.jwt() ->> 'role' = 'service_role');
+```
+
+**Test Coverage:**
+- 30 tests for embeddings.ts (generation, formatting, storage, query building)
+- 21 tests for candidate-search.ts (search, ranking, filtering, utilities)
+- All acceptance criteria verified
+
+**Gotchas:**
+- Enable pgvector extension in Supabase dashboard (Extensions > vector) before running migrations
+- Prisma `Unsupported` type requires raw SQL for all operations on that column
+- pgvector uses `<=>` for cosine distance (not similarity - remember to convert)
+- Embedding model dimension (768) must match vector column size exactly
+- Run `npx prisma generate` after schema changes to update client types
+- Vitest mock hoisting means you can't reference variables defined before `vi.mock()`

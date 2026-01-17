@@ -15,6 +15,7 @@ import {
   createVideoAssessmentLogger,
   type VideoAssessmentLogger,
 } from "@/lib/assessment-logging";
+import { generateAndStoreEmbeddings } from "@/lib/embeddings";
 import {
   VIDEO_EVALUATION_PROMPT,
   EVALUATION_PROMPT_VERSION,
@@ -323,6 +324,27 @@ export async function evaluateVideo(
 
     // Log: Assessment completed successfully (event_type: completed)
     await logger.logEvent(AssessmentLogEventType.COMPLETED);
+
+    // Generate and store embeddings for semantic search (US-011)
+    // This runs asynchronously to not block the completion response
+    generateAndStoreEmbeddings(assessmentId)
+      .then((embeddingResult) => {
+        if (embeddingResult.success) {
+          console.log(
+            `[VideoEvaluation] Successfully generated embeddings for ${assessmentId}`
+          );
+        } else {
+          console.warn(
+            `[VideoEvaluation] Failed to generate embeddings for ${assessmentId}: ${embeddingResult.error}`
+          );
+        }
+      })
+      .catch((error) => {
+        console.error(
+          `[VideoEvaluation] Embedding generation error for ${assessmentId}:`,
+          error
+        );
+      });
 
     return {
       success: true,
