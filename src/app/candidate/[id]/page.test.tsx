@@ -5,6 +5,9 @@ import { AssessmentDimension, VideoAssessmentStatus } from "@prisma/client";
 // Define mock functions before vi.mock calls
 const mockVideoAssessmentFindUnique = vi.fn();
 const mockNotFound = vi.fn();
+const mockGet = vi.fn();
+const mockReplace = vi.fn();
+const mockPathname = "/candidate/va-123";
 
 vi.mock("@/server/db", () => ({
   db: {
@@ -19,6 +22,14 @@ vi.mock("next/navigation", () => ({
     mockNotFound();
     throw new Error("NOT_FOUND");
   },
+  useSearchParams: () => ({
+    get: mockGet,
+    toString: () => "",
+  }),
+  useRouter: () => ({
+    replace: mockReplace,
+  }),
+  usePathname: () => mockPathname,
 }));
 
 // Import after mocks are set up
@@ -27,6 +38,7 @@ import {
   CandidateProfileClient,
   parseTimestampToSeconds,
   normalizeTimestamp,
+  formatTime,
   type CandidateProfileData,
 } from "./client";
 
@@ -426,14 +438,16 @@ describe("CandidateProfileClient", () => {
       expect(screen.getByTestId("video-player")).toBeInTheDocument();
     });
 
-    it("video modal shows starting time", () => {
+    it("video modal shows current time display", () => {
       const data = createClientData();
       render(<CandidateProfileClient data={data} />);
       const headers = screen.getAllByTestId("dimension-header");
       fireEvent.click(headers[0]);
       const timestampLinks = screen.getAllByTestId("timestamp-link");
       fireEvent.click(timestampLinks[0]); // "2:34" = 154 seconds
-      expect(screen.getByText(/Starting at 2:34/)).toBeInTheDocument();
+      // The time display shows current time / total duration
+      expect(screen.getByTestId("time-display")).toBeInTheDocument();
+      expect(screen.getByTestId("current-time")).toBeInTheDocument();
     });
 
     it("clicking close button closes modal", () => {
@@ -574,6 +588,174 @@ describe("timestamp utility functions", () => {
       expect(normalizeTimestamp("invalid")).toBeNull();
       expect(normalizeTimestamp("12:345")).toBeNull();
       expect(normalizeTimestamp("1:2:3:4")).toBeNull();
+    });
+  });
+
+  describe("formatTime", () => {
+    it("formats seconds to MM:SS", () => {
+      expect(formatTime(0)).toBe("0:00");
+      expect(formatTime(30)).toBe("0:30");
+      expect(formatTime(154)).toBe("2:34");
+      expect(formatTime(907)).toBe("15:07");
+    });
+
+    it("formats seconds to HH:MM:SS when over an hour", () => {
+      expect(formatTime(3600)).toBe("1:00:00");
+      expect(formatTime(5025)).toBe("1:23:45");
+      expect(formatTime(7200)).toBe("2:00:00");
+    });
+
+    it("handles edge cases", () => {
+      expect(formatTime(59)).toBe("0:59");
+      expect(formatTime(60)).toBe("1:00");
+      expect(formatTime(3599)).toBe("59:59");
+    });
+  });
+});
+
+describe("video player controls", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGet.mockReturnValue(null);
+  });
+
+  describe("timestamp and duration display", () => {
+    it("displays current time and total duration", () => {
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+      const headers = screen.getAllByTestId("dimension-header");
+      fireEvent.click(headers[0]);
+      const timestampLinks = screen.getAllByTestId("timestamp-link");
+      fireEvent.click(timestampLinks[0]);
+
+      expect(screen.getByTestId("time-display")).toBeInTheDocument();
+      expect(screen.getByTestId("current-time")).toBeInTheDocument();
+      expect(screen.getByTestId("total-duration")).toBeInTheDocument();
+    });
+  });
+
+  describe("playback speed controls", () => {
+    it("displays playback speed controls", () => {
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+      const headers = screen.getAllByTestId("dimension-header");
+      fireEvent.click(headers[0]);
+      const timestampLinks = screen.getAllByTestId("timestamp-link");
+      fireEvent.click(timestampLinks[0]);
+
+      expect(screen.getByTestId("speed-controls")).toBeInTheDocument();
+    });
+
+    it("displays all speed options (0.5x, 0.75x, 1x, 1.25x, 1.5x, 2x)", () => {
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+      const headers = screen.getAllByTestId("dimension-header");
+      fireEvent.click(headers[0]);
+      const timestampLinks = screen.getAllByTestId("timestamp-link");
+      fireEvent.click(timestampLinks[0]);
+
+      expect(screen.getByTestId("speed-0.5")).toBeInTheDocument();
+      expect(screen.getByTestId("speed-0.75")).toBeInTheDocument();
+      expect(screen.getByTestId("speed-1")).toBeInTheDocument();
+      expect(screen.getByTestId("speed-1.25")).toBeInTheDocument();
+      expect(screen.getByTestId("speed-1.5")).toBeInTheDocument();
+      expect(screen.getByTestId("speed-2")).toBeInTheDocument();
+    });
+
+    it("1x speed is selected by default", () => {
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+      const headers = screen.getAllByTestId("dimension-header");
+      fireEvent.click(headers[0]);
+      const timestampLinks = screen.getAllByTestId("timestamp-link");
+      fireEvent.click(timestampLinks[0]);
+
+      const speed1Button = screen.getByTestId("speed-1");
+      expect(speed1Button).toHaveClass("bg-secondary");
+    });
+
+    it("clicking speed button updates selected state", () => {
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+      const headers = screen.getAllByTestId("dimension-header");
+      fireEvent.click(headers[0]);
+      const timestampLinks = screen.getAllByTestId("timestamp-link");
+      fireEvent.click(timestampLinks[0]);
+
+      const speed2Button = screen.getByTestId("speed-2");
+      fireEvent.click(speed2Button);
+      expect(speed2Button).toHaveClass("bg-secondary");
+    });
+  });
+});
+
+describe("URL parameter handling", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("reading timestamp from URL", () => {
+    it("opens video modal when t parameter is present", () => {
+      mockGet.mockReturnValue("134");
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+
+      expect(screen.getByTestId("video-modal")).toBeInTheDocument();
+    });
+
+    it("does not open modal when t parameter is not present", () => {
+      mockGet.mockReturnValue(null);
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+
+      expect(screen.queryByTestId("video-modal")).not.toBeInTheDocument();
+    });
+
+    it("ignores invalid t parameter values", () => {
+      mockGet.mockReturnValue("invalid");
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+
+      expect(screen.queryByTestId("video-modal")).not.toBeInTheDocument();
+    });
+
+    it("ignores negative t parameter values", () => {
+      mockGet.mockReturnValue("-10");
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+
+      expect(screen.queryByTestId("video-modal")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("updating URL on timestamp click", () => {
+    it("updates URL when clicking timestamp link", () => {
+      mockGet.mockReturnValue(null);
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+
+      const headers = screen.getAllByTestId("dimension-header");
+      fireEvent.click(headers[0]); // Communication
+      const timestampLinks = screen.getAllByTestId("timestamp-link");
+      fireEvent.click(timestampLinks[0]); // "2:34" = 154 seconds
+
+      expect(mockReplace).toHaveBeenCalledWith(
+        expect.stringContaining("t=154"),
+        expect.objectContaining({ scroll: false })
+      );
+    });
+
+    it("clears URL parameter when closing modal", () => {
+      mockGet.mockReturnValue("134");
+      const data = createClientData();
+      render(<CandidateProfileClient data={data} />);
+
+      fireEvent.click(screen.getByTestId("close-modal"));
+
+      expect(mockReplace).toHaveBeenCalledWith(
+        mockPathname,
+        expect.objectContaining({ scroll: false })
+      );
     });
   });
 });

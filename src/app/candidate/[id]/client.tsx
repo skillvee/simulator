@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { AssessmentDimension } from "@prisma/client";
 import {
@@ -206,6 +207,21 @@ function DimensionScoreCard({
   );
 }
 
+// Format seconds to MM:SS or HH:MM:SS format
+export function formatTime(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
+}
+
+// Available playback speeds
+const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
 function VideoPlayerModal({
   videoUrl,
   initialTime,
@@ -216,14 +232,33 @@ function VideoPlayerModal({
   onClose: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentTime, setCurrentTime] = useState(initialTime);
+  const [duration, setDuration] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   // Set initial time when video loads
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       videoRef.current.currentTime = initialTime;
+      setDuration(videoRef.current.duration);
       videoRef.current.play().catch(() => {
         // Autoplay might be blocked, that's okay
       });
+    }
+  };
+
+  // Update current time as video plays
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
+
+  // Change playback speed
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
     }
   };
 
@@ -254,6 +289,7 @@ function VideoPlayerModal({
             src={videoUrl}
             controls
             onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={handleTimeUpdate}
             className="w-full"
             data-testid="video-player"
           >
@@ -261,10 +297,34 @@ function VideoPlayerModal({
           </video>
         </div>
 
-        {/* Current timestamp display */}
-        <div className="mt-2 text-center text-white font-mono text-sm">
-          Starting at {Math.floor(initialTime / 60)}:
-          {String(Math.floor(initialTime % 60)).padStart(2, "0")}
+        {/* Timestamp and controls bar */}
+        <div className="mt-2 flex items-center justify-between text-white font-mono text-sm">
+          {/* Current time / Duration */}
+          <div data-testid="time-display">
+            <span data-testid="current-time">{formatTime(currentTime)}</span>
+            <span className="text-muted-foreground"> / </span>
+            <span data-testid="total-duration">{formatTime(duration)}</span>
+          </div>
+
+          {/* Playback speed controls */}
+          <div className="flex items-center gap-1" data-testid="speed-controls">
+            <span className="text-muted-foreground text-xs mr-2">Speed:</span>
+            {PLAYBACK_SPEEDS.map((speed) => (
+              <button
+                key={speed}
+                type="button"
+                onClick={() => handleSpeedChange(speed)}
+                className={`px-2 py-1 text-xs border ${
+                  playbackSpeed === speed
+                    ? "border-secondary bg-secondary text-secondary-foreground"
+                    : "border-white/30 hover:border-white"
+                }`}
+                data-testid={`speed-${speed}`}
+              >
+                {speed}x
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -298,11 +358,16 @@ export interface CandidateProfileData {
   } | null;
 }
 
-export function CandidateProfileClient({
+// Inner component that uses useSearchParams
+function CandidateProfileInner({
   data,
 }: {
   data: CandidateProfileData;
 }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [videoModal, setVideoModal] = useState<{
     isOpen: boolean;
     initialTime: number;
@@ -310,6 +375,37 @@ export function CandidateProfileClient({
 
   const { candidate, scores, summary, assessment, completedAt, isSearchable, videoUrl } =
     data;
+
+  // Check for timestamp URL parameter on mount
+  useEffect(() => {
+    const timeParam = searchParams.get("t");
+    if (timeParam) {
+      const seconds = parseInt(timeParam, 10);
+      if (!isNaN(seconds) && seconds >= 0) {
+        setVideoModal({ isOpen: true, initialTime: seconds });
+      }
+    }
+  }, [searchParams]);
+
+  // Update URL when timestamp changes
+  const handleTimestampClick = useCallback((seconds: number) => {
+    // Update URL with timestamp parameter
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("t", String(seconds));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+
+    setVideoModal({ isOpen: true, initialTime: seconds });
+  }, [searchParams, router, pathname]);
+
+  // Clear URL parameter when closing modal
+  const handleCloseModal = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("t");
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(newUrl, { scroll: false });
+
+    setVideoModal({ isOpen: false, initialTime: 0 });
+  }, [searchParams, router, pathname]);
 
   // Create a map of dimension to score for easy lookup
   const scoreMap = new Map(scores.map((s) => [s.dimension, s]));
@@ -331,11 +427,6 @@ export function CandidateProfileClient({
     .join("")
     .toUpperCase()
     .slice(0, 2);
-
-  // Handle timestamp click - open video modal at that time
-  const handleTimestampClick = (seconds: number) => {
-    setVideoModal({ isOpen: true, initialTime: seconds });
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -474,9 +565,46 @@ export function CandidateProfileClient({
         <VideoPlayerModal
           videoUrl={videoUrl}
           initialTime={videoModal.initialTime}
-          onClose={() => setVideoModal({ isOpen: false, initialTime: 0 })}
+          onClose={handleCloseModal}
         />
       )}
     </div>
+  );
+}
+
+// Loading skeleton for Suspense boundary
+function CandidateProfileSkeleton() {
+  return (
+    <div className="min-h-screen bg-background animate-pulse">
+      <header className="border-b-2 border-foreground">
+        <div className="max-w-4xl mx-auto px-6 py-4">
+          <div className="h-4 w-32 bg-muted" />
+        </div>
+      </header>
+      <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+        <div className="border-2 border-foreground p-6">
+          <div className="flex items-start gap-6">
+            <div className="w-16 h-16 bg-muted border-2 border-foreground" />
+            <div className="flex-1 space-y-2">
+              <div className="h-6 w-48 bg-muted" />
+              <div className="h-4 w-32 bg-muted" />
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Main exported component with Suspense boundary
+export function CandidateProfileClient({
+  data,
+}: {
+  data: CandidateProfileData;
+}) {
+  return (
+    <Suspense fallback={<CandidateProfileSkeleton />}>
+      <CandidateProfileInner data={data} />
+    </Suspense>
   );
 }
