@@ -1313,3 +1313,83 @@ Assessment
 - Prisma env vars need `export $(grep -v '^#' .env.local | xargs)` before `prisma db push`
 - The `metadata Json?` field is nullable to keep logs lightweight when no extra context is needed
 
+---
+
+## Issue #60: US-004: Define Evaluation Prompt for Gemini
+
+**What was implemented:**
+- Created `src/prompts/analysis/video-evaluation.ts` with structured evaluation prompt
+- 8-dimension rubric aligned with database schema (`AssessmentDimension` enum)
+- Each dimension has 5-level definitions (1-5 scale) with observable criteria
+- JSON output schema requiring timestamps for every scored behavior
+- Anti-hallucination rules explicitly prohibiting inferred behaviors
+- Scoring independence rules preventing cross-dimension influence
+- No seniority/role assumption rules for unbiased evaluation
+- Versioned constant (`EVALUATION_PROMPT_VERSION = "1.0.0"`) for audit trail
+- TypeScript interface for type-safe evaluation output
+
+**Files created:**
+- `src/prompts/analysis/video-evaluation.ts` - Complete evaluation prompt with rubric, schema, and types
+
+**Files changed:**
+- `src/prompts/index.ts` - Export new prompt, version, types, and builder function
+
+**8 Assessment Dimensions:**
+1. COMMUNICATION - Verbal and written clarity
+2. PROBLEM_SOLVING - Analytical approach to challenges
+3. TECHNICAL_KNOWLEDGE - Domain expertise demonstrated
+4. COLLABORATION - Working with others, seeking help
+5. ADAPTABILITY - Response to changes and obstacles
+6. LEADERSHIP - Taking initiative, guiding direction
+7. CREATIVITY - Novel approaches and solutions
+8. TIME_MANAGEMENT - Prioritization and efficiency
+
+**JSON Output Schema:**
+```typescript
+{
+  evaluation_version: string;
+  overall_score: number; // 1.0-5.0
+  dimension_scores: {
+    [dimension]: {
+      score: number | null;
+      observable_behaviors: string;
+      timestamps: string[]; // MM:SS format
+      trainable_gap: boolean;
+    }
+  };
+  key_highlights: Array<{
+    timestamp: string;
+    type: "positive" | "negative";
+    dimension: string;
+    description: string;
+    quote: string | null;
+  }>;
+  overall_summary: string;
+  evaluation_confidence: "high" | "medium" | "low";
+  insufficient_evidence_notes: string | null;
+}
+```
+
+**Key Prompt Design Principles:**
+1. **Evidence-based**: Every score must cite specific timestamps from the video
+2. **No hallucination**: Only observable behaviors can be evaluated
+3. **No assumptions**: Cannot infer seniority, background, or role from appearance
+4. **Independent scoring**: Each dimension evaluated separately without cross-influence
+5. **Trainable gaps**: Flag skills that can be improved through training
+6. **Null scores**: Dimensions with insufficient evidence get null, not guessed scores
+
+**Learnings:**
+1. Issue mentioned "6-dimension rubric" but database schema has 8 dimensions - always align with authoritative source (database)
+2. Versioned prompts (semantic versioning) enable audit trail and A/B testing
+3. TypeScript interfaces alongside prompts enable type-safe result handling
+4. Builder function pattern allows optional context injection (video duration, task description)
+5. Template literal with embedded version constant keeps prompt and version in sync
+6. Explicit validation checklist in prompt helps AI self-verify output quality
+7. `trainable_gap` field distinguishes between fixed traits and developable skills
+
+**Gotchas:**
+- PRD Appendix B shows 5 dimensions, database schema has 8 - schema is authoritative
+- JSON in template literals needs escaped backticks or code block formatting
+- Prompt should return ONLY JSON without markdown code blocks for easier parsing
+- `evaluation_confidence` field helps downstream consumers gauge reliability
+
