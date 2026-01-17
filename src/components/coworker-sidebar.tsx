@@ -98,8 +98,8 @@ function CoworkerItem({
               {initials}
             </span>
           </div>
-          {/* Online status indicator - always online */}
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-secondary border border-foreground" />
+          {/* Online status indicator - green dot */}
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border border-foreground" />
         </div>
 
         {/* Info */}
@@ -142,7 +142,7 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
   const initials = getInitials(name);
 
   return (
-    <div className="border-b border-border p-3 opacity-60">
+    <div className="border-b border-border p-3 opacity-60 cursor-default" title="Unavailable">
       <div className="flex items-start gap-3">
         {/* Avatar with offline indicator */}
         <div className="relative flex-shrink-0">
@@ -151,8 +151,8 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
               {initials}
             </span>
           </div>
-          {/* Offline status indicator - gray/muted */}
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-muted-foreground/30 border border-muted-foreground" />
+          {/* Offline status indicator - red dot */}
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-red-500 border border-muted-foreground" />
         </div>
 
         {/* Info */}
