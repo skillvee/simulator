@@ -2126,3 +2126,104 @@ interface EntityExtractionResult {
 - Job title patterns must be ordered carefully (more specific patterns first)
 - Zod's `.default([])` makes the output type include the field, not optional
 - Vitest mock hoisting: can't reference variables defined before `vi.mock()` - use factory pattern
+
+---
+
+## Issue #69: US-005: Create Candidate Profile Page
+
+**What was implemented:**
+- Created `/candidate/[id]` route for public candidate profile pages
+- Displays candidate name, email, and simulation completion date
+- Shows all 8 dimension scores (COMMUNICATION, PROBLEM_SOLVING, TECHNICAL_KNOWLEDGE, COLLABORATION, ADAPTABILITY, LEADERSHIP, CREATIVITY, TIME_MANAGEMENT) with visual score bars (1-5 scale)
+- Displays overall summary text from VideoAssessmentSummary
+- Shows "Searchable by hiring managers" status badge (default: public)
+- Includes link to view simulation recording when assessment is linked
+- Added `isSearchable` boolean field to VideoAssessment model (default: true)
+- Updated seed script to create test VideoAssessment with dimension scores
+- 21 unit tests for the page component
+
+**Files created:**
+- `src/app/candidate/[id]/page.tsx` - Candidate profile page with neo-brutalist styling
+- `src/app/candidate/[id]/page.test.tsx` - 21 unit tests
+
+**Files changed:**
+- `prisma/schema.prisma` - Added `isSearchable Boolean @default(true)` to VideoAssessment model
+- `prisma/seed.ts` - Added VideoAssessment creation with dimension scores for test user
+
+**Page Sections:**
+1. **Header** - Back to Home link
+2. **Candidate Info** - Avatar with initials, name, email, completion date, searchable status badge
+3. **Overall Summary** - AI-generated summary text
+4. **Assessment Scores** - 8 dimension cards in 2-column grid, each with:
+   - Dimension name
+   - Numeric score (N/5)
+   - Visual score bar (5 segments, gold for filled)
+   - Observable behaviors text
+   - "Trainable Gap" badge when applicable
+5. **Recording Link** - Link to assessment results page
+6. **Footer** - Attribution text
+
+**Neo-Brutalist Design Compliance:**
+- No rounded corners (0px radius)
+- No shadows
+- 2px black borders for sections
+- Gold (#f7da50) for score bars, initials avatar, accent badges
+- DM Sans for text, Space Mono for labels
+- High contrast (black on white)
+
+**Score Bar Component:**
+```tsx
+function ScoreBar({ score, maxScore = 5 }) {
+  const segments = Array.from({ length: maxScore }, (_, i) => i + 1);
+  return (
+    <div className="flex gap-1" data-testid="score-bar">
+      {segments.map((segment) => (
+        <div
+          key={segment}
+          data-testid="score-segment"
+          className={`h-3 flex-1 ${
+            segment <= score ? "bg-secondary" : "bg-muted"
+          } border border-foreground`}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+**Learnings:**
+1. Server components can directly fetch from database with Prisma - no API route needed
+2. Use `notFound()` from next/navigation for 404 handling in server components
+3. Next.js 15 params are now async - must `await params` before using
+4. The issue mentioned "6 dimensions" but the database has 8 - always align with authoritative source (schema)
+5. Dimension enum values (COMMUNICATION) need mapping to display labels ("Communication")
+6. `Intl.DateTimeFormat` provides locale-aware date formatting in server components
+7. Data test IDs (`data-testid`) are useful for testing visual elements like score bars
+8. Testing-library's `getAllByText` is needed when same text appears multiple times
+9. For seed data, use upsert pattern with deleteMany+create for reliable recreations
+
+**Test Patterns:**
+```typescript
+// Server component testing with mocked db and navigation
+const mockNotFound = vi.fn();
+vi.mock("next/navigation", () => ({
+  notFound: () => {
+    mockNotFound();
+    throw new Error("NOT_FOUND");
+  },
+}));
+
+// Testing redirects/404s
+await expect(Page({ params: Promise.resolve({ id: "x" }) }))
+  .rejects.toThrow("NOT_FOUND");
+
+// Testing multiple elements with same text
+const scoreDisplays = container.querySelectorAll('[data-testid="score-bar"]');
+expect(scoreDisplays.length).toBe(8);
+```
+
+**Gotchas:**
+- Next.js dev server caching can cause stale module errors - clear `.next/` and restart
+- Acceptance criteria mentioned 6 dimensions but schema has 8 - implemented all 8
+- Need to push schema changes (`prisma db push`) before running seed with new fields
+- agent-browser viewport setting affects full page screenshot capture

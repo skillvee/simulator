@@ -5,7 +5,7 @@
  * Run with: npx tsx prisma/seed.ts
  */
 
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient, Prisma, AssessmentDimension, VideoAssessmentStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { EXAMPLE_COWORKERS } from "../src/lib/coworker-persona";
 
@@ -282,6 +282,105 @@ Acceptance Criteria:
         },
       });
       console.log(`\n📋 Created assessment with parsed profile for ${testUser.email}`);
+    }
+
+    // Create VideoAssessment with dimension scores for candidate profile testing
+    const existingVideoAssessment = await prisma.videoAssessment.findFirst({
+      where: { candidateId: testUser.id },
+    });
+
+    const videoAssessmentId = existingVideoAssessment?.id || "test-video-assessment";
+
+    const dimensionScores = [
+      { dimension: AssessmentDimension.COMMUNICATION, score: 4, observableBehaviors: "Clear and professional communication throughout. Asked clarifying questions when needed.", trainableGap: false },
+      { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 5, observableBehaviors: "Excellent problem decomposition. Broke down complex tasks into manageable steps.", trainableGap: false },
+      { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 4, observableBehaviors: "Strong technical foundation demonstrated in code implementation.", trainableGap: false },
+      { dimension: AssessmentDimension.COLLABORATION, score: 3, observableBehaviors: "Good teamwork, sought help when stuck. Could improve on proactive communication.", trainableGap: true },
+      { dimension: AssessmentDimension.ADAPTABILITY, score: 4, observableBehaviors: "Adapted well to changing requirements and new information.", trainableGap: false },
+      { dimension: AssessmentDimension.LEADERSHIP, score: 3, observableBehaviors: "Showed initiative but could take more ownership of decisions.", trainableGap: true },
+      { dimension: AssessmentDimension.CREATIVITY, score: 4, observableBehaviors: "Proposed creative solutions to technical challenges.", trainableGap: false },
+      { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 5, observableBehaviors: "Excellent prioritization and efficient use of time.", trainableGap: false },
+    ];
+
+    if (existingVideoAssessment) {
+      // Update existing video assessment
+      await prisma.videoAssessment.update({
+        where: { id: existingVideoAssessment.id },
+        data: {
+          status: VideoAssessmentStatus.COMPLETED,
+          completedAt: new Date(),
+          isSearchable: true,
+        },
+      });
+
+      // Delete existing scores and recreate
+      await prisma.dimensionScore.deleteMany({
+        where: { assessmentId: existingVideoAssessment.id },
+      });
+
+      for (const score of dimensionScores) {
+        await prisma.dimensionScore.create({
+          data: {
+            assessmentId: existingVideoAssessment.id,
+            dimension: score.dimension,
+            score: score.score,
+            observableBehaviors: score.observableBehaviors,
+            timestamps: ["01:23", "05:45", "12:30"],
+            trainableGap: score.trainableGap,
+          },
+        });
+      }
+
+      // Delete existing summary and recreate
+      await prisma.videoAssessmentSummary.deleteMany({
+        where: { assessmentId: existingVideoAssessment.id },
+      });
+
+      await prisma.videoAssessmentSummary.create({
+        data: {
+          assessmentId: existingVideoAssessment.id,
+          overallSummary: "Test User demonstrated strong technical skills and excellent problem-solving abilities throughout the simulation. They showed great time management and adaptability while maintaining professional communication. Areas for growth include proactive collaboration and taking more ownership in leadership situations.",
+          rawAiResponse: {} as unknown as Prisma.InputJsonValue,
+        },
+      });
+
+      console.log(`\n🎬 Updated video assessment with dimension scores for ${testUser.email}`);
+    } else {
+      // Create new video assessment
+      const videoAssessment = await prisma.videoAssessment.create({
+        data: {
+          id: videoAssessmentId,
+          candidateId: testUser.id,
+          videoUrl: "https://example.com/test-video.mp4",
+          status: VideoAssessmentStatus.COMPLETED,
+          completedAt: new Date(),
+          isSearchable: true,
+        },
+      });
+
+      for (const score of dimensionScores) {
+        await prisma.dimensionScore.create({
+          data: {
+            assessmentId: videoAssessment.id,
+            dimension: score.dimension,
+            score: score.score,
+            observableBehaviors: score.observableBehaviors,
+            timestamps: ["01:23", "05:45", "12:30"],
+            trainableGap: score.trainableGap,
+          },
+        });
+      }
+
+      await prisma.videoAssessmentSummary.create({
+        data: {
+          assessmentId: videoAssessment.id,
+          overallSummary: "Test User demonstrated strong technical skills and excellent problem-solving abilities throughout the simulation. They showed great time management and adaptability while maintaining professional communication. Areas for growth include proactive collaboration and taking more ownership in leadership situations.",
+          rawAiResponse: {} as unknown as Prisma.InputJsonValue,
+        },
+      });
+
+      console.log(`\n🎬 Created video assessment with dimension scores for ${testUser.email}`);
+      console.log(`   Video Assessment ID: ${videoAssessment.id}`);
     }
   }
 

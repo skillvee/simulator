@@ -330,6 +330,9 @@ model VideoAssessment {
   retryCount        Int               @default(0) // Number of retry attempts
   lastFailureReason String?           @db.Text    // Reason for last failure
 
+  // Visibility for hiring manager search (US-005)
+  isSearchable      Boolean           @default(true) // Whether profile is visible to hiring managers
+
   createdAt     DateTime              @default(now())
   completedAt   DateTime?
 
