@@ -2904,3 +2904,77 @@ const activeFilters = extraction
 - Filter type can be "seniority" or "years_experience" - both map to years_experience in intent
 - Clear all also clears archetype and seniority from extraction state
 - Need to reset refinedFields when starting a new search
+
+---
+
+## Issue #77: US-013: Show Role-Specific Highlights on Profile
+
+**What was implemented:**
+- "Viewing as [Archetype] role" banner when profile accessed from search with archetype context
+- Fit score display with calculation breakdown (top 3 contributing dimensions)
+- Dimension emphasis based on archetype weights (VERY_HIGH = "Critical", HIGH = "Important", MEDIUM = "Standard")
+- De-emphasized styling for MEDIUM weight dimensions (muted borders, reduced opacity)
+- Dimensions sorted by importance when viewing with archetype context
+- "View raw assessment" toggle to show unweighted scores
+- Link from search result card includes archetype parameter in URL
+
+**Files changed:**
+- `src/app/candidate/[id]/client.tsx` - Added role-specific view components and logic
+- `src/components/candidate-search-result-card.tsx` - Link now includes archetype query param
+- `src/components/candidate-search-result-card.test.tsx` - Updated tests for new link format
+
+**New Components:**
+- `RoleBanner` - Shows "Viewing as [Role] role" with briefcase icon
+- `FitScoreBreakdown` - Shows fit score (0-100), top 3 contributors with weights, formula
+- `WeightLevelBadge` - Shows "Critical", "Important", or "Standard" based on weight level
+- `ViewModeToggle` - Toggle between role-weighted and raw assessment views
+
+**Weight Level Styling:**
+| Level | Badge | Border | Background |
+|-------|-------|--------|------------|
+| VERY_HIGH | "Critical" + star icon | border-secondary | bg-secondary (gold) |
+| HIGH | "Important" | border-secondary | bg-secondary/20 |
+| MEDIUM | "Standard" | border-muted-foreground/30 | bg-muted |
+
+**Fit Score Calculation:**
+```typescript
+const result = calculateFitScore(dimensionScoreInputs, archetype);
+// result.fitScore = 80.5 (normalized 0-100)
+// result.weightedSum = 41.3
+// result.maxPossible = 51.3
+// result.breakdown = [{ dimension, rawScore, weight, weightLevel, weightedScore }]
+```
+
+**URL Parameter Pattern:**
+```
+/candidate/{id}?archetype=SENIOR_FRONTEND_ENGINEER
+```
+- When archetype present: show role-specific view with banner, fit score, dimension emphasis
+- When archetype absent: show raw assessment without weighting
+
+**Learnings:**
+1. Use `isValidArchetype()` type guard to safely parse URL params to RoleArchetype
+2. `showRoleSpecificView = archetype !== null && !showRawAssessment` handles both cases
+3. Sort dimensions by weight level using numeric mapping: `{ VERY_HIGH: 0, HIGH: 1, MEDIUM: 2 }`
+4. `getWeightLevelForDimension(archetype, dimension)` returns weight level for styling decisions
+5. Conditional rendering: role banner, fit score, view toggle only show when archetype is present
+6. Back link changes based on context: "Back to Search" (with archetype) vs "Back to Home" (without)
+7. De-emphasized styling: `opacity-70`, `border-muted-foreground/30`, `bg-muted/30`
+
+**Neo-Brutalist Design Compliance:**
+- No rounded corners (0px radius)
+- No shadows
+- 2px black/gold borders for emphasis
+- Gold (#f7da50) for emphasized dimensions and fit score box
+- Star icon with `fill-current` for VERY_HIGH weight badge
+- DM Sans for text, Space Mono for labels and numbers
+
+**Test Updates:**
+- Search result card tests now expect archetype in href
+- Example: `href="/candidate/va-456?archetype=SENIOR_FRONTEND_ENGINEER"`
+
+**Gotchas:**
+- URL params persist when navigating within the page (timestamp for video)
+- Need to preserve archetype param when updating URL for timestamps
+- Fit score formula display uses `toFixed(1)` for consistent decimal places
+- `calculateFitScore` from archetype-weights returns breakdown for transparency
