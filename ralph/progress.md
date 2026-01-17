@@ -3067,3 +3067,125 @@ page.tsx → AssessmentsClient (client component)
 - Test assertions with duplicate text (e.g., duration in both stats and row) need `within()` or `getAllByText()`
 - Format duration helper handles ms, seconds, and minutes formats
 - Error detection: check if any log has `eventType === "ERROR"`
+
+---
+
+## Issue #79: US-018: Display Assessment Timeline and Logs
+
+**What was implemented:**
+- Created `/admin/assessments/[id]` route for detailed assessment timeline view
+- Visual timeline combining logs and API calls sorted chronologically
+- Duration between steps displayed in human-readable format (ms, s, m)
+- Error events highlighted in red with expandable details (error message, stack trace, metadata)
+- Total assessment duration prominently displayed at top
+- Candidate info card showing name, email, simulation completion date
+- Video recording link when screen recording is available
+- "View Full Timeline" link added to assessments list expanded row
+- 37 unit tests for the timeline component
+
+**Files created:**
+- `src/app/admin/assessments/[id]/page.tsx` - Server component that fetches assessment with logs, API calls, and recordings
+- `src/app/admin/assessments/[id]/client.tsx` - Client component with visual timeline UI
+- `src/app/admin/assessments/[id]/page.test.tsx` - 37 unit tests
+
+**Files changed:**
+- `src/app/admin/assessments/client.tsx` - Added "View Full Timeline" link in expanded details
+
+**Key Components:**
+
+1. **Candidate Info Card:**
+   - Avatar with user icon
+   - Name (or "Anonymous" if null)
+   - Email with mail icon
+   - Simulation completion date
+
+2. **Total Duration Card:**
+   - Timer icon with gold background
+   - Large duration display (e.g., "60m", "2m 30s")
+   - Status badge (COMPLETED, WORKING, etc.)
+   - "HAS ERRORS" indicator when errors present
+   - Red border when assessment has errors
+
+3. **Video Recording Link:**
+   - Video icon with gold background
+   - "View Recording" button linking to storage URL
+   - Only shown when screen recording exists
+
+4. **Assessment Info:**
+   - ID, Scenario name, Started time, Events count
+
+5. **Visual Timeline:**
+   - Vertical timeline line connecting events
+   - Timeline dots with icons (Play, Clock, AlertCircle, CheckCircle)
+   - Duration markers between events ("+2.3s", "+45ms")
+   - Long durations (>30s) highlighted in amber
+   - API call details: model version, token count, status
+   - Expandable error details with click
+
+**Timeline Event Structure:**
+```typescript
+interface TimelineEvent {
+  id: string;
+  type: "log" | "apiCall";
+  timestamp: string;
+  eventType?: AssessmentLogEventType;
+  modelVersion?: string;
+  durationMs: number | null;
+  isError: boolean;
+  metadata?: unknown;
+  errorMessage?: string | null;
+  stackTrace?: string | null;
+  statusCode?: number | null;
+  promptTokens?: number | null;
+  responseTokens?: number | null;
+}
+```
+
+**Learnings:**
+1. Combine logs and API calls into unified timeline by sorting on timestamp
+2. Use `Boolean()` wrapper when expression includes `unknown` type to get proper boolean
+3. For expandable content, track expanded IDs in `Set<string>` for efficient lookup
+4. Duration formatting should handle all ranges: ms (<1000), seconds (<60000), minutes (>=60000)
+5. Prisma includes can fetch recordings with storageUrl for direct linking
+6. Next.js 15 async params: must `await params` before using `params.id`
+7. TypeScript `!= null` (double equals) checks both null and undefined
+8. `notFound()` from next/navigation throws to trigger 404 page in server components
+9. Use `cursor-pointer` class conditionally when element is clickable
+10. Red styling variants for errors: border-red-500, bg-red-50/950, text-red-600/400
+
+**Neo-Brutalist Design Compliance:**
+- No rounded corners (0px radius)
+- No shadows
+- 2px black borders on all cards and sections
+- Gold (#f7da50) for timer icon, completion badge, video icon
+- Red variants for error states
+- Vertical timeline line with 0.5 width
+- Square timeline dots with icons
+- DM Sans for text, Space Mono for timestamps and data
+- Instant state changes (no transitions)
+
+**Test Patterns:**
+```typescript
+// Mock notFound() to throw for testing 404
+vi.mock("next/navigation", () => ({
+  notFound: () => {
+    mockNotFound();
+    throw new Error("NOT_FOUND");
+  },
+}));
+
+// Test for 404
+await expect(Page({ params: Promise.resolve({ id: "x" }) }))
+  .rejects.toThrow("NOT_FOUND");
+
+// Find elements by class selector in tests
+const redDiv = errorEvent.querySelector('[class*="bg-red-50"]');
+const clickableDiv = element.querySelector('[class*="cursor-pointer"]');
+```
+
+**Gotchas:**
+- `hasExpandableContent` expression with `unknown` type needs `Boolean()` wrapper
+- Event metadata is `unknown` type - use `!= null` check before rendering
+- Recordings relation needs explicit select in Prisma include
+- Stack trace should use `<pre>` with `whitespace-pre-wrap` for proper formatting
+- Timeline events include both logs and API calls - must handle both types
