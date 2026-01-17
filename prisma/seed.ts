@@ -292,14 +292,14 @@ Acceptance Criteria:
     const videoAssessmentId = existingVideoAssessment?.id || "test-video-assessment";
 
     const dimensionScores = [
-      { dimension: AssessmentDimension.COMMUNICATION, score: 4, observableBehaviors: "Clear and professional communication throughout. Asked clarifying questions when needed.", trainableGap: false },
-      { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 5, observableBehaviors: "Excellent problem decomposition. Broke down complex tasks into manageable steps.", trainableGap: false },
-      { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 4, observableBehaviors: "Strong technical foundation demonstrated in code implementation.", trainableGap: false },
-      { dimension: AssessmentDimension.COLLABORATION, score: 3, observableBehaviors: "Good teamwork, sought help when stuck. Could improve on proactive communication.", trainableGap: true },
-      { dimension: AssessmentDimension.ADAPTABILITY, score: 4, observableBehaviors: "Adapted well to changing requirements and new information.", trainableGap: false },
-      { dimension: AssessmentDimension.LEADERSHIP, score: 3, observableBehaviors: "Showed initiative but could take more ownership of decisions.", trainableGap: true },
-      { dimension: AssessmentDimension.CREATIVITY, score: 4, observableBehaviors: "Proposed creative solutions to technical challenges.", trainableGap: false },
-      { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 5, observableBehaviors: "Excellent prioritization and efficient use of time.", trainableGap: false },
+      { dimension: AssessmentDimension.COMMUNICATION, score: 4, observableBehaviors: "Clear and professional communication throughout. Asked clarifying questions when needed.", trainableGap: false, timestamps: ["2:34", "5:12", "15:07"] },
+      { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 5, observableBehaviors: "Excellent problem decomposition. Broke down complex tasks into manageable steps.", trainableGap: false, timestamps: ["10:45", "22:30"] },
+      { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 4, observableBehaviors: "Strong technical foundation demonstrated in code implementation.", trainableGap: false, timestamps: ["8:15", "18:00", "25:40", "35:20"] },
+      { dimension: AssessmentDimension.COLLABORATION, score: 3, observableBehaviors: "Good teamwork, sought help when stuck. Could improve on proactive communication.", trainableGap: true, timestamps: ["12:00", "28:15"] },
+      { dimension: AssessmentDimension.ADAPTABILITY, score: 4, observableBehaviors: "Adapted well to changing requirements and new information.", trainableGap: false, timestamps: ["30:45"] },
+      { dimension: AssessmentDimension.LEADERSHIP, score: 3, observableBehaviors: "Showed initiative but could take more ownership of decisions.", trainableGap: true, timestamps: [] },
+      { dimension: AssessmentDimension.CREATIVITY, score: 4, observableBehaviors: "Proposed creative solutions to technical challenges.", trainableGap: false, timestamps: ["1:05:30", "1:15:00"] },
+      { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 5, observableBehaviors: "Excellent prioritization and efficient use of time.", trainableGap: false, timestamps: ["5:00", "20:00", "45:00"] },
     ];
 
     if (existingVideoAssessment) {
@@ -325,7 +325,7 @@ Acceptance Criteria:
             dimension: score.dimension,
             score: score.score,
             observableBehaviors: score.observableBehaviors,
-            timestamps: ["01:23", "05:45", "12:30"],
+            timestamps: score.timestamps,
             trainableGap: score.trainableGap,
           },
         });
@@ -365,7 +365,7 @@ Acceptance Criteria:
             dimension: score.dimension,
             score: score.score,
             observableBehaviors: score.observableBehaviors,
-            timestamps: ["01:23", "05:45", "12:30"],
+            timestamps: score.timestamps,
             trainableGap: score.trainableGap,
           },
         });
