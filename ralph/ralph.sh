@@ -6,31 +6,36 @@ unset ANTHROPIC_API_KEY
 
 # Configuration
 LABEL="${RALPH_LABEL:-task}"
-MAX_ITERATIONS="${1:-10}"
+POLL_INTERVAL="${RALPH_POLL_INTERVAL:-60}"  # seconds between checks when idle
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$REPO_ROOT"
 
-echo "🚀 Ralph starting (max $MAX_ITERATIONS iterations, label: $LABEL)"
+echo "🚀 Ralph starting (continuous mode, label: $LABEL, poll interval: ${POLL_INTERVAL}s)"
+echo "   Press Ctrl+C to stop"
 
-for i in $(seq 1 $MAX_ITERATIONS); do
+ITERATION=0
+
+while true; do
   # Fetch oldest open issue with label
   ISSUE=$(gh issue list --label "$LABEL" --state open --json number,title,body --limit 100 | jq 'sort_by(.number) | .[0] // empty')
 
-  # If no issues, we're done
+  # If no issues, wait and poll again
   if [ -z "$ISSUE" ]; then
-    echo "✅ All tasks complete!"
-    exit 0
+    echo "💤 No tasks found. Waiting ${POLL_INTERVAL}s before next check... ($(date '+%H:%M:%S'))"
+    sleep "$POLL_INTERVAL"
+    continue
   fi
 
+  ITERATION=$((ITERATION + 1))
   ISSUE_NUM=$(echo "$ISSUE" | jq -r '.number')
   ISSUE_TITLE=$(echo "$ISSUE" | jq -r '.title')
   ISSUE_BODY=$(echo "$ISSUE" | jq -r '.body')
 
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "🔄 Iteration $i: Issue #$ISSUE_NUM - $ISSUE_TITLE"
+  echo "🔄 Iteration $ITERATION: Issue #$ISSUE_NUM - $ISSUE_TITLE"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   # Build the prompt with context
@@ -48,11 +53,6 @@ $(cat "$SCRIPT_DIR/progress.md" 2>/dev/null || echo 'No previous learnings yet.'
   claude --dangerously-skip-permissions -p "$PROMPT"
 
   echo ""
-  echo "✅ Iteration $i complete"
+  echo "✅ Iteration $ITERATION complete"
   sleep 2
 done
-
-echo ""
-echo "⚠️ Max iterations ($MAX_ITERATIONS) reached."
-echo "Check ralph/progress.md for status."
-exit 1
