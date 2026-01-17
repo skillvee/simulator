@@ -68,6 +68,10 @@ export async function generateEphemeralToken(config?: {
         config: {
           systemInstruction: config?.systemInstruction,
           responseModalities: [Modality.AUDIO],
+          // Enable transcription for both input (user speech) and output (model speech)
+          // This is REQUIRED for transcript capture - must be set here, not just client-side
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: {

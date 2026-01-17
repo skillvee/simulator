@@ -788,3 +788,62 @@ The codebase has two model constants in `src/lib/gemini.ts`:
 - `TEXT_MODEL` - For text-based AI operations (new constant added in this issue)
 
 Individual API routes often define their own `CHAT_MODEL` or `SUMMARY_MODEL` constants locally. A future refactoring could import `TEXT_MODEL` from the central location.
+
+---
+
+## Issue #49: BUG-049: HR Interview Transcript Not Being Captured
+
+**What was implemented:**
+- Fixed the root cause of transcript capture failure in Gemini Live voice conversations
+- Added `inputAudioTranscription` and `outputAudioTranscription` config to ephemeral token generation
+- Updated E2E test to wait longer for AI to speak before ending interview
+
+**Root Cause:**
+The `generateEphemeralToken` function in `src/lib/gemini.ts` was creating ephemeral tokens with `liveConnectConstraints` that did NOT include transcription configuration. When using ephemeral tokens with constrained connections, the server-side token constraints take precedence over client-side config.
+
+The client-side code in `use-voice-conversation.ts` was correctly setting `inputAudioTranscription: {}` and `outputAudioTranscription: {}`, but these settings were being ignored because the ephemeral token's constraints didn't include them.
+
+**The Fix:**
+Added transcription config to the server-side token generation:
+```typescript
+// In generateEphemeralToken() - src/lib/gemini.ts
+liveConnectConstraints: {
+  model: LIVE_MODEL,
+  config: {
+    systemInstruction: config?.systemInstruction,
+    responseModalities: [Modality.AUDIO],
+    // Enable transcription for both input (user speech) and output (model speech)
+    // This is REQUIRED for transcript capture - must be set here, not just client-side
+    inputAudioTranscription: {},
+    outputAudioTranscription: {},
+    speechConfig: { ... }
+  }
+}
+```
+
+**Files changed:**
+- `src/lib/gemini.ts` - Added transcription config to ephemeral token generation
+- `tests/e2e/hr-interview-flow.sh` - Updated to wait for AI to speak before ending
+
+**Impact:**
+This fix affects ALL voice conversations in the app since they all use `generateEphemeralToken`:
+- HR Interview (`/api/interview/token`)
+- Manager Kickoff (`/api/kickoff/token`)
+- Coworker Calls (`/api/call/token`)
+- PR Defense (`/api/defense/token`)
+
+**Learnings:**
+1. **Ephemeral token constraints override client-side config** - When using `liveConnectConstraints` in `authTokens.create()`, those constraints lock in the configuration. Client-side `ai.live.connect()` config may be ignored or partially overridden.
+2. **Transcription must be enabled server-side** - `inputAudioTranscription` and `outputAudioTranscription` must be included in the ephemeral token's `liveConnectConstraints.config`, not just in the client's `live.connect()` config.
+3. **Empty object `{}` enables default transcription** - Both `inputAudioTranscription: {}` and `outputAudioTranscription: {}` use empty objects to enable transcription with default settings.
+4. **Debug logging was helpful** - The existing console logs (`[Gemini] Message types:`, `[Transcript] Added...`) helped trace where the issue was occurring.
+
+**Gotchas:**
+- Client-side transcription config alone is NOT sufficient when using ephemeral tokens
+- The client code may appear correct but the server-side token constraints take precedence
+- All voice endpoints use the same `generateEphemeralToken` function, so the fix applies universally
+
+**Testing Notes:**
+- E2E tests need to wait for AI to speak (5-10+ seconds) before ending the interview
+- Ending the interview immediately after starting will result in empty transcript
+- Use the fake-transcript.ts script to test the flow without waiting for actual audio
