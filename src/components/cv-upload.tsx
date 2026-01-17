@@ -154,7 +154,9 @@ export function CVUpload({
       >
         {isUploading ? (
           <div className="space-y-4">
-            <div className="font-mono text-sm">Uploading...</div>
+            <div className="font-mono text-sm">
+              {progress < 90 ? "Uploading..." : "Analyzing CV..."}
+            </div>
             <div className="w-full h-2 bg-muted border border-border">
               <div
                 className="h-full bg-secondary transition-all duration-200"
@@ -162,7 +164,7 @@ export function CVUpload({
               />
             </div>
             <div className="font-mono text-xs text-muted-foreground">
-              {progress}%
+              {progress < 90 ? `${progress}%` : "Extracting your experience and skills"}
             </div>
           </div>
         ) : fileName ? (

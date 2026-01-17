@@ -98,49 +98,27 @@ export async function POST(request: Request) {
       );
     }
 
-    // Always update the User with CV URL and trigger parsing
-    // This ensures CV is available for all future assessments
+    // Parse CV before storing - ensures parsed profile is available when user proceeds
+    let parsedProfile = null;
+    try {
+      console.log(`Parsing CV for user ${userId}...`);
+      parsedProfile = await parseCv(path);
+      console.log(`CV parsed successfully for user ${userId}`);
+    } catch (parseError) {
+      console.error(`CV parsing failed for user ${userId}:`, parseError);
+      // Continue with upload even if parsing fails - user can still proceed
+    }
+
+    // Update User with CV URL and parsed profile
     await db.user.update({
       where: { id: userId },
-      data: { cvUrl: signedUrlData.signedUrl },
+      data: {
+        cvUrl: signedUrlData.signedUrl,
+        ...(parsedProfile && { parsedProfile: profileToPrismaJson(parsedProfile) }),
+      },
     });
 
-    // Trigger CV parsing asynchronously (don't block the response)
-    parseCv(path)
-      .then(async (parsedProfile) => {
-        // Save parsed profile to User
-        await db.user.update({
-          where: { id: userId },
-          data: { parsedProfile: profileToPrismaJson(parsedProfile) },
-        });
-        console.log(`CV parsed successfully for user ${userId}`);
-
-        // If assessmentId is provided, also update the assessment for backwards compatibility
-        if (assessmentId) {
-          const assessment = await db.assessment.findFirst({
-            where: {
-              id: assessmentId,
-              userId: userId,
-            },
-          });
-          if (assessment) {
-            await db.assessment.update({
-              where: { id: assessmentId },
-              data: {
-                cvUrl: signedUrlData.signedUrl,
-                parsedProfile: profileToPrismaJson(parsedProfile),
-              },
-            });
-            console.log(`CV also saved to assessment ${assessmentId}`);
-          }
-        }
-      })
-      .catch((parseError) => {
-        console.error(`CV parsing failed for user ${userId}:`, parseError);
-      });
-
-    // If assessmentId is provided, update the assessment with CV URL immediately
-    // (parsed profile will be added asynchronously above)
+    // If assessmentId is provided, also update the assessment
     if (assessmentId) {
       const assessment = await db.assessment.findFirst({
         where: {
@@ -152,8 +130,12 @@ export async function POST(request: Request) {
       if (assessment) {
         await db.assessment.update({
           where: { id: assessmentId },
-          data: { cvUrl: signedUrlData.signedUrl },
+          data: {
+            cvUrl: signedUrlData.signedUrl,
+            ...(parsedProfile && { parsedProfile: profileToPrismaJson(parsedProfile) }),
+          },
         });
+        console.log(`CV also saved to assessment ${assessmentId}`);
       }
     }
 
