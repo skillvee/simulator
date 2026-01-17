@@ -85,15 +85,63 @@ agent-browser is checked "#remember-me"
 
 3. **Compare visually** or use image diff tools
 
+## Test User Credentials
+
+Two test users are seeded in the database for E2E testing. Use these to access protected routes:
+
+| Role  | Email            | Password          |
+|-------|------------------|-------------------|
+| Admin | admin@test.com   | testpassword123   |
+| User  | user@test.com    | testpassword123   |
+
+**Note:** Run `npx tsx prisma/seed.ts` to create these users if they don't exist.
+
+## Authentication Flow
+
+Most pages require authentication. Login before accessing protected routes:
+
+```bash
+# Login as regular user
+agent-browser open "http://localhost:3000/sign-in"
+agent-browser fill "#email" "user@test.com"
+agent-browser fill "#password" "testpassword123"
+agent-browser click "button[type='submit']"
+agent-browser wait 3000
+
+# Now access protected pages (session cookie persists)
+agent-browser open "http://localhost:3000/profile"
+agent-browser screenshot ./screenshots/profile.png
+```
+
+```bash
+# Login as admin (for /admin/* routes)
+agent-browser open "http://localhost:3000/sign-in"
+agent-browser fill "#email" "admin@test.com"
+agent-browser fill "#password" "testpassword123"
+agent-browser click "button[type='submit']"
+agent-browser wait 3000
+
+# Access admin pages
+agent-browser open "http://localhost:3000/admin"
+agent-browser screenshot ./screenshots/admin-dashboard.png
+```
+
+**Important:** Use the same `--session` flag across all commands to maintain the login session:
+```bash
+agent-browser open "http://localhost:3000/sign-in" --session "my-test"
+agent-browser fill "#email" "user@test.com" --session "my-test"
+# ... continue with same session
+```
+
 ## E2E Test Example
 
 ```bash
 # Login flow test
-agent-browser open "http://localhost:3000/login"
-agent-browser fill "#email" "test@example.com"
-agent-browser fill "#password" "password123"
-agent-browser click "button[type=submit]"
-agent-browser wait ".dashboard"
+agent-browser open "http://localhost:3000/sign-in"
+agent-browser fill "#email" "user@test.com"
+agent-browser fill "#password" "testpassword123"
+agent-browser click "button[type='submit']"
+agent-browser wait 3000
 agent-browser screenshot ./tests/login-success.png
 ```
 
