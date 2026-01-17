@@ -195,12 +195,12 @@ describe("POST /api/kickoff/token", () => {
     // Verify the system prompt includes vague briefing instructions
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemInstruction: expect.stringContaining("REALISTIC, VAGUE task briefing"),
+        systemInstruction: expect.stringContaining("Be Intentionally Vague"),
       })
     );
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemInstruction: expect.stringContaining("Only reveal details WHEN ASKED"),
+        systemInstruction: expect.stringContaining("Only give details IF they ask"),
       })
     );
   });

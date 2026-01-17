@@ -211,7 +211,7 @@ describe("POST /api/interview/token", () => {
     // Verify generateEphemeralToken was called with fallback text
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemInstruction: expect.stringContaining("CV content could not be parsed"),
+        systemInstruction: expect.stringContaining("don't have their full CV parsed"),
       })
     );
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(

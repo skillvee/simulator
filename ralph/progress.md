@@ -847,3 +847,91 @@ This fix affects ALL voice conversations in the app since they all use `generate
 - E2E tests need to wait for AI to speak (5-10+ seconds) before ending the interview
 - Ending the interview immediately after starting will result in empty transcript
 - Use the fake-transcript.ts script to test the flow without waiting for actual audio
+
+---
+
+## Issue #51: US-050: Organize prompts and make AI conversations more natural
+
+**What was implemented:**
+- Created `src/prompts/` directory with domain-based structure (hr/, manager/, coworker/, analysis/)
+- Centralized all AI prompts from scattered locations into dedicated prompt files
+- Made voice conversations feel like natural phone calls with filler words and casual speech
+- Made chat conversations feel like Slack messages - short, conversational, not essay-length
+- All prompts now instruct AI to build context through back-and-forth, not dump info upfront
+
+**Files created:**
+- `src/prompts/index.ts` - Central export for all prompts
+- `src/prompts/hr/interview.ts` - HR phone screen prompt (natural, curious, conversational)
+- `src/prompts/manager/kickoff.ts` - Manager briefing prompt (intentionally vague, busy manager)
+- `src/prompts/manager/defense.ts` - PR defense prompt (tech lead review, curious but evaluative)
+- `src/prompts/coworker/persona.ts` - Coworker chat/voice prompts with Slack/phone guidelines
+- `src/prompts/analysis/code-review.ts` - Code review analysis prompt
+- `src/prompts/analysis/cv-parser.ts` - CV parsing prompt
+- `src/prompts/analysis/recording.ts` - Screenshot analysis prompt
+- `src/prompts/analysis/assessment.ts` - Narrative and recommendations prompts
+
+**Files changed:**
+- `src/lib/gemini.ts` - Re-exports HR prompt from centralized location
+- `src/lib/cv-parser.ts` - Imports prompt from centralized location
+- `src/lib/recording-analysis.ts` - Uses centralized screenshot analysis prompt
+- `src/lib/assessment-aggregation.ts` - Imports narrative/recommendations prompts
+- `src/lib/conversation-memory.ts` - Uses centralized conversation summary prompt
+- `src/lib/code-review.ts` - Uses centralized code review context builder
+- `src/app/api/interview/token/route.ts` - Uses buildHRInterviewPrompt
+- `src/app/api/kickoff/token/route.ts` - Uses buildManagerKickoffPrompt
+- `src/app/api/defense/token/route.ts` - Uses buildDefensePrompt
+- `src/app/api/call/token/route.ts` - Uses buildVoicePrompt for coworker calls
+- `src/app/api/chat/route.ts` - Uses buildChatPrompt for coworker chat
+- Updated test files to match new prompt wording
+
+**Key prompt design principles:**
+
+1. **Voice (phone calls):**
+   - Use filler words: "um", "so", "you know", "basically"
+   - React naturally: "mm-hmm", "right", "gotcha", "interesting"
+   - Keep responses concise for voice medium
+   - Sound like a real person on a call, not a script
+
+2. **Chat (Slack-like):**
+   - Keep messages short (1-3 sentences usually)
+   - Don't write paragraphs - break things up
+   - React naturally: "oh yeah", "hmm", "gotcha"
+   - Ask clarifying questions before long answers
+
+3. **Gradual context:**
+   - Don't front-load all information
+   - Build understanding through back-and-forth
+   - Ask follow-ups, reference prior exchanges
+   - Let conversation unfold naturally
+
+**Directory structure:**
+```
+src/prompts/
+├── index.ts          # Central exports
+├── hr/
+│   └── interview.ts  # HR phone screen
+├── manager/
+│   ├── kickoff.ts    # Task briefing (vague)
+│   └── defense.ts    # PR defense
+├── coworker/
+│   └── persona.ts    # Chat + voice guidelines
+└── analysis/
+    ├── code-review.ts
+    ├── cv-parser.ts
+    ├── recording.ts
+    └── assessment.ts
+```
+
+**Learnings:**
+1. Prompt files should separate concerns: persona, context, guidelines
+2. Voice and chat need different conversation styles (medium matters)
+3. Builder functions allow dynamic context injection while keeping base prompts clean
+4. Tests need to match exact wording in prompts - use grep to verify strings exist
+5. Comments in code are not part of the prompt string - only template literals matter
+6. Centralized prompts make it easier to maintain consistent AI behavior across endpoints
+7. Re-exporting prompts (e.g., `export { X as Y }`) maintains backwards compatibility
+
+**Gotchas:**
+- Test expectations need to match actual prompt wording after refactoring
+- The `buildX` pattern works well for dynamic prompts with context injection
+- Import statements at module scope run before function bodies - can import mid-file in TypeScript

@@ -268,12 +268,12 @@ describe("POST /api/defense/token", () => {
     // Verify the system prompt includes defense-specific instructions
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemInstruction: expect.stringContaining("final defense call"),
+        systemInstruction: expect.stringContaining("reviewing"),
       })
     );
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemInstruction: expect.stringContaining("probing questions"),
+        systemInstruction: expect.stringContaining("probe deeper"),
       })
     );
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(

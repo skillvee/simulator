@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { generateEphemeralToken } from "@/lib/gemini";
 import {
-  generateEphemeralToken,
-  HR_PERSONA_SYSTEM_PROMPT,
-} from "@/lib/gemini";
-import { getSignedResumeUrl } from "@/lib/storage";
+  buildHRInterviewPrompt,
+  formatCVContextForHR,
+  formatBasicCandidateContext,
+} from "@/prompts";
 import {
   formatProfileForPrompt,
   profileFromPrismaJson,
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get CV content if available
+    // Build CV context for the HR interviewer
     let cvContext = "";
 
     // First, try to use the parsed profile from Assessment (if CV was uploaded during assessment)
@@ -66,14 +67,7 @@ export async function POST(request: Request) {
       try {
         const profile = profileFromPrismaJson(parsedProfileJson);
         if (profile) {
-          cvContext = `
-
-## Candidate's CV/Resume
-The following is the parsed content from the candidate's CV. Use this information to ask specific questions about their experience, verify claims, and assess their background.
-
-${formatProfileForPrompt(profile)}
-
-Please reference specific details from their CV during the interview. Ask follow-up questions about their work experience, projects, and skills.`;
+          cvContext = formatCVContextForHR(formatProfileForPrompt(profile));
         }
       } catch (error) {
         console.error("Error parsing stored profile:", error);
@@ -81,29 +75,20 @@ Please reference specific details from their CV during the interview. Ask follow
     }
 
     // Fallback to basic info if no parsed profile
-    // Check both assessment.cvUrl and user.cvUrl
     const cvUrl = assessment.cvUrl || assessment.user.cvUrl;
     if (!cvContext && cvUrl) {
-      cvContext = `
-
-## Candidate's CV
-The candidate has uploaded their CV/resume. Basic details from their application:
-- Candidate Name: ${assessment.user.name || "Not provided"}
-- Email: ${assessment.user.email || "Not provided"}
-
-Note: The CV content could not be parsed. Please ask the candidate to describe their background and experience verbally.`;
+      cvContext = formatBasicCandidateContext(
+        assessment.user.name || undefined,
+        assessment.user.email || undefined
+      );
     }
 
-    // Build the full system instruction with scenario context
-    const systemInstruction = `${HR_PERSONA_SYSTEM_PROMPT}
-
-## Interview Context
-- Company: ${assessment.scenario.companyName}
-- Role: Software Engineer position
-- Company Description: ${assessment.scenario.companyDescription}
-${cvContext}
-
-Start the interview now by introducing yourself and the company.`;
+    // Build the full system instruction using centralized prompt
+    const systemInstruction = buildHRInterviewPrompt({
+      companyName: assessment.scenario.companyName,
+      companyDescription: assessment.scenario.companyDescription,
+      cvContext: cvContext || undefined,
+    });
 
     // Generate ephemeral token for client-side connection
     const token = await generateEphemeralToken({

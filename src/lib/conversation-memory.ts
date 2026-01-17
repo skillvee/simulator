@@ -100,6 +100,9 @@ export async function buildCoworkerMemory(
   };
 }
 
+// Conversation summary prompt is now centralized in src/prompts/analysis/assessment.ts
+import { buildConversationSummaryPrompt } from "@/prompts/analysis/assessment";
+
 /**
  * Generate a summary of conversation messages using Gemini
  *
@@ -115,19 +118,8 @@ async function summarizeConversation(
     .map((m) => `${m.role === "user" ? "Candidate" : coworkerName}: ${m.text}`)
     .join("\n");
 
-  const prompt = `Summarize the following conversation between a job candidate and ${coworkerName} (a coworker).
-Focus on:
-- Key topics discussed
-- Important information shared
-- Any questions the candidate asked
-- Commitments or follow-ups mentioned
-
-Keep the summary concise (2-4 sentences). Write from ${coworkerName}'s perspective (e.g., "We discussed...", "They asked about...").
-
-Conversation:
-${conversationText}
-
-Summary:`;
+  // Use centralized prompt builder
+  const prompt = buildConversationSummaryPrompt(coworkerName, conversationText);
 
   try {
     const response = await gemini.models.generateContent({

@@ -3,7 +3,6 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { generateEphemeralToken } from "@/lib/gemini";
 import {
-  buildCoworkerSystemPrompt,
   parseCoworkerKnowledge,
   type CoworkerPersona,
 } from "@/lib/coworker-persona";
@@ -14,6 +13,7 @@ import {
   type ChatMessage,
   type ConversationWithMeta,
 } from "@/lib/conversation-memory";
+import { buildVoicePrompt } from "@/prompts";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -130,25 +130,18 @@ export async function POST(request: Request) {
       avatarUrl: coworker.avatarUrl,
     };
 
-    const baseSystemPrompt = buildCoworkerSystemPrompt(persona, {
-      companyName: assessment.scenario.companyName,
-      candidateName: session.user.name || undefined,
-      taskDescription: assessment.scenario.taskDescription,
-      techStack: assessment.scenario.techStack,
-    });
-
-    // Combine base prompt with memory context and voice-specific instructions
-    const systemInstruction = `${baseSystemPrompt}${memoryContext}${crossCoworkerContext}
-
-## Voice Conversation Guidelines
-- You're now on a voice call with the candidate
-- Keep responses conversational and natural for voice
-- Use occasional filler words like "um", "you know", "let me think"
-- Pause naturally between thoughts
-- Keep responses concise - voice conversations work better with shorter exchanges
-- If the candidate asks you to repeat something, do so patiently
-
-Start the call by greeting them naturally.`;
+    // Use centralized voice prompt with natural phone call guidelines
+    const systemInstruction = buildVoicePrompt(
+      persona,
+      {
+        companyName: assessment.scenario.companyName,
+        candidateName: session.user.name || undefined,
+        taskDescription: assessment.scenario.taskDescription,
+        techStack: assessment.scenario.techStack,
+      },
+      memoryContext,
+      crossCoworkerContext
+    );
 
     // Generate ephemeral token for client-side connection
     const token = await generateEphemeralToken({

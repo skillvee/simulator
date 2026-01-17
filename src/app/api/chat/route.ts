@@ -3,7 +3,6 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { gemini } from "@/lib/gemini";
 import {
-  buildCoworkerSystemPrompt,
   parseCoworkerKnowledge,
   type CoworkerPersona,
 } from "@/lib/coworker-persona";
@@ -15,6 +14,7 @@ import {
   type ConversationWithMeta,
 } from "@/lib/conversation-memory";
 import type { Prisma } from "@prisma/client";
+import { buildChatPrompt } from "@/prompts";
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
@@ -139,15 +139,18 @@ export async function POST(request: Request) {
     avatarUrl: coworker.avatarUrl,
   };
 
-  const baseSystemPrompt = buildCoworkerSystemPrompt(persona, {
-    companyName: assessment.scenario.companyName,
-    candidateName: session.user.name || undefined,
-    taskDescription: assessment.scenario.taskDescription,
-    techStack: assessment.scenario.techStack,
-  });
-
-  // Combine base prompt with memory context
-  const systemPrompt = `${baseSystemPrompt}${memoryContext}${crossCoworkerContext}`;
+  // Use centralized chat prompt with Slack-like conversation guidelines
+  const systemPrompt = buildChatPrompt(
+    persona,
+    {
+      companyName: assessment.scenario.companyName,
+      candidateName: session.user.name || undefined,
+      taskDescription: assessment.scenario.taskDescription,
+      techStack: assessment.scenario.techStack,
+    },
+    memoryContext,
+    crossCoworkerContext
+  );
 
   // Build history for Gemini - include system prompt as first message
   const history = existingMessages.map((msg) => ({
