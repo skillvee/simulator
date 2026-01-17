@@ -2034,3 +2034,95 @@ CREATE POLICY "service_role_full_access" ON "CandidateEmbedding"
 - Embedding model dimension (768) must match vector column size exactly
 - Run `npx prisma generate` after schema changes to update client types
 - Vitest mock hoisting means you can't reference variables defined before `vi.mock()`
+
+---
+
+## Issue #68: US-008: Implement Real-Time Entity Extraction
+
+**What was implemented:**
+- Created `src/lib/entity-extraction.ts` service for parsing natural language search queries
+- Gemini-powered entity extraction with optimized prompts for sub-500ms response times
+- Extracts 6 entity types: job_title, location, years_experience, skills[], industry[], company_type[]
+- Maps extracted job titles to RoleArchetype enum when they match known roles
+- Infers seniority level from years of experience (Junior: 0-2, Mid: 3-5, Senior: 6+)
+- Returns structured filter object for downstream candidate matching
+- 110 unit tests covering all functionality and acceptance criteria
+
+**Files created:**
+- `src/lib/entity-extraction.ts` - Entity extraction service with Gemini integration
+- `src/lib/entity-extraction.test.ts` - 110 unit tests
+
+**Entity Types Extracted:**
+| Entity | Examples |
+|--------|----------|
+| Job Title | "Software Engineer", "ML Engineer", "Tech Lead" |
+| Location | "SF", "San Francisco", "NYC", "remote" |
+| Years Experience | "5+", "3+ years", "senior" → parsed to number |
+| Skills | ["Python", "LLMs", "React", "Node"] |
+| Industry | ["fintech", "healthcare", "retail"] |
+| Company Type | ["startup", "VC backed", "enterprise"] |
+
+**Archetype Mapping:**
+| Job Title Keywords | Archetype |
+|-------------------|-----------|
+| frontend, front-end, ui | SENIOR_FRONTEND_ENGINEER |
+| backend, back-end, server, api | SENIOR_BACKEND_ENGINEER |
+| fullstack, full-stack | FULLSTACK_ENGINEER |
+| engineering manager, eng manager | ENGINEERING_MANAGER |
+| tech lead, lead engineer, staff, principal, architect | TECH_LEAD |
+| devops, sre, infrastructure, platform | DEVOPS_ENGINEER |
+| data engineer, data platform, analytics, etl | DATA_ENGINEER |
+| ml, machine learning, ai, software engineer, swe | GENERAL_SOFTWARE_ENGINEER |
+
+**Seniority Inference:**
+| Years | Seniority |
+|-------|-----------|
+| 0-2 | JUNIOR |
+| 3-5 | MID |
+| 6+ | SENIOR |
+
+**Result Type:**
+```typescript
+interface EntityExtractionResult {
+  intent: ExtractedIntent;      // Parsed entities
+  archetype: RoleArchetype | null;  // Mapped role
+  seniority: SeniorityLevel | null; // Inferred level
+  success: boolean;
+  processingTimeMs: number;
+  error?: string;
+}
+```
+
+**Learnings:**
+1. Use `config` not `generationConfig` for Gemini SDK model parameters (changed in newer SDK versions)
+2. Set `temperature: 0` for deterministic parsing results
+3. Set `maxOutputTokens: 256` to minimize response latency
+4. Use Zod schema with `.default([])` for optional array fields - then infer type with `z.infer`
+5. Order job title keyword patterns from specific to general (e.g., "data platform" before "platform")
+6. Vitest mock pattern: define `vi.fn()` inside `vi.mock()` factory, then cast imported function after
+7. Test both positive and negative cases for seniority thresholds (0 is junior, negative is null)
+8. Clean JSON responses from Gemini (may have ```json wrappers)
+
+**Performance Optimization:**
+- Optimized prompt design for minimal tokens
+- `temperature: 0` for faster, deterministic responses
+- `maxOutputTokens: 256` to reduce response latency
+- `isWithinTargetTime()` utility to verify 500ms target
+
+**Architecture decisions:**
+- Service is pure function - no database dependencies
+- Re-uses existing RoleArchetype and SeniorityLevel types from archetype-weights and seniority-thresholds
+- Designed for real-time UI feedback during typing
+- Error results include empty intent + error message for graceful degradation
+- Keyword matching is case-insensitive and trims whitespace
+
+**Test Coverage:**
+- 110 tests covering entity extraction, archetype mapping, seniority inference, and utilities
+- Acceptance criteria tests verify all required entity types are extracted
+- Tests for edge cases: empty queries, invalid JSON, Gemini errors
+
+**Gotchas:**
+- `generationConfig` was renamed to `config` in newer Gemini SDK versions
+- Job title patterns must be ordered carefully (more specific patterns first)
+- Zod's `.default([])` makes the output type include the field, not optional
+- Vitest mock hoisting: can't reference variables defined before `vi.mock()` - use factory pattern
