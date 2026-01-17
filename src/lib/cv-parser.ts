@@ -9,18 +9,25 @@ import type { Prisma } from "@prisma/client";
 // ============================================================================
 
 /**
+ * Helper to handle null values from Gemini (converts null to undefined)
+ */
+const nullableString = z.string().nullable().transform(v => v ?? undefined).optional();
+const nullableNumber = z.number().nullable().transform(v => v ?? undefined).optional();
+const nullableStringArray = z.array(z.string()).nullable().transform(v => v ?? undefined).optional();
+
+/**
  * Schema for work experience entries
  */
 export const workExperienceSchema = z.object({
   company: z.string(),
   title: z.string(),
   startDate: z.string(), // e.g., "Jan 2020" or "2020"
-  endDate: z.string().optional(), // null means "Present"
-  duration: z.string().optional(), // e.g., "2 years 3 months"
-  location: z.string().optional(),
-  description: z.string().optional(),
-  highlights: z.array(z.string()).optional(), // Key achievements
-  technologies: z.array(z.string()).optional(), // Technologies used
+  endDate: nullableString, // null means "Present"
+  duration: nullableString, // e.g., "2 years 3 months"
+  location: nullableString,
+  description: nullableString,
+  highlights: nullableStringArray, // Key achievements
+  technologies: nullableStringArray, // Technologies used
 });
 
 /**
@@ -29,11 +36,11 @@ export const workExperienceSchema = z.object({
 export const educationSchema = z.object({
   institution: z.string(),
   degree: z.string(), // e.g., "Bachelor of Science", "Master's"
-  field: z.string().optional(), // e.g., "Computer Science"
-  startDate: z.string().optional(),
-  endDate: z.string().optional(), // Graduation year
-  gpa: z.string().optional(),
-  honors: z.array(z.string()).optional(), // Awards, honors, activities
+  field: nullableString, // e.g., "Computer Science"
+  startDate: nullableString,
+  endDate: nullableString, // Graduation year
+  gpa: nullableString,
+  honors: nullableStringArray, // Awards, honors, activities
 });
 
 /**
@@ -53,8 +60,10 @@ export const skillSchema = z.object({
   ]),
   proficiencyLevel: z
     .enum(["beginner", "intermediate", "advanced", "expert"])
+    .nullable()
+    .transform(v => v ?? undefined)
     .optional(),
-  yearsOfExperience: z.number().optional(),
+  yearsOfExperience: nullableNumber,
 });
 
 /**
@@ -63,17 +72,41 @@ export const skillSchema = z.object({
 export const certificationSchema = z.object({
   name: z.string(),
   issuer: z.string(),
-  dateObtained: z.string().optional(),
-  expirationDate: z.string().optional(),
-  credentialId: z.string().optional(),
+  dateObtained: nullableString,
+  expirationDate: nullableString,
+  credentialId: nullableString,
 });
+
+/**
+ * Normalize language proficiency values that Gemini might return
+ */
+const normalizeLanguageProficiency = (value: string): "basic" | "conversational" | "professional" | "native" => {
+  const normalized = value.toLowerCase();
+  // Map common variations to our expected values
+  const mapping: Record<string, "basic" | "conversational" | "professional" | "native"> = {
+    "basic": "basic",
+    "beginner": "basic",
+    "elementary": "basic",
+    "conversational": "conversational",
+    "intermediate": "conversational",
+    "limited_working": "conversational",
+    "professional": "professional",
+    "advanced": "professional",
+    "fluent": "professional",
+    "full_professional": "professional",
+    "native": "native",
+    "native_or_bilingual": "native",
+    "bilingual": "native",
+  };
+  return mapping[normalized] || "conversational"; // Default to conversational if unknown
+};
 
 /**
  * Schema for language proficiency
  */
 export const languageSchema = z.object({
   language: z.string(),
-  proficiency: z.enum(["basic", "conversational", "professional", "native"]),
+  proficiency: z.string().transform(normalizeLanguageProficiency),
 });
 
 /**
@@ -81,13 +114,13 @@ export const languageSchema = z.object({
  */
 export const parsedProfileSchema = z.object({
   // Basic Information
-  name: z.string().optional(),
-  email: z.string().optional(),
-  phone: z.string().optional(),
-  location: z.string().optional(),
-  linkedIn: z.string().optional(),
-  github: z.string().optional(),
-  website: z.string().optional(),
+  name: nullableString,
+  email: nullableString,
+  phone: nullableString,
+  location: nullableString,
+  linkedIn: nullableString,
+  github: nullableString,
+  website: nullableString,
 
   // Professional Summary
   summary: z.string(),
@@ -108,15 +141,17 @@ export const parsedProfileSchema = z.object({
   languages: z.array(languageSchema),
 
   // Additional Information
-  totalYearsOfExperience: z.number().optional(),
+  totalYearsOfExperience: nullableNumber,
   seniorityLevel: z
     .enum(["junior", "mid", "senior", "lead", "principal", "unknown"])
+    .nullable()
+    .transform(v => v ?? undefined)
     .optional(),
 
   // Metadata
   parsedAt: z.string(),
   parseQuality: z.enum(["high", "medium", "low"]), // How confident is the parsing
-  parseNotes: z.array(z.string()).optional(), // Any issues or notes during parsing
+  parseNotes: nullableStringArray, // Any issues or notes during parsing
 });
 
 export type WorkExperience = z.infer<typeof workExperienceSchema>;

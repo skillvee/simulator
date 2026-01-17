@@ -190,12 +190,31 @@ describe("CV Parser Schemas", () => {
       });
     });
 
-    it("should reject invalid proficiency", () => {
+    it("should normalize 'fluent' to 'professional'", () => {
       const lang = {
         language: "German",
         proficiency: "fluent",
       };
-      expect(() => languageSchema.parse(lang)).toThrow();
+      const parsed = languageSchema.parse(lang);
+      expect(parsed.proficiency).toBe("professional");
+    });
+
+    it("should normalize 'advanced' to 'professional'", () => {
+      const lang = {
+        language: "German",
+        proficiency: "advanced",
+      };
+      const parsed = languageSchema.parse(lang);
+      expect(parsed.proficiency).toBe("professional");
+    });
+
+    it("should normalize 'beginner' to 'basic'", () => {
+      const lang = {
+        language: "German",
+        proficiency: "beginner",
+      };
+      const parsed = languageSchema.parse(lang);
+      expect(parsed.proficiency).toBe("basic");
     });
   });
 
