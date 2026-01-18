@@ -404,13 +404,13 @@ export function FloatingCallBar({
 
   const initials = getInitials(coworker.name);
 
-  // Error state
+  // Error state (matches chat footer height)
   if (callState === "error") {
     return (
-      <div className="border-t-2 border-foreground bg-red-50 dark:bg-red-950 p-3">
+      <div className="border-t-2 border-foreground bg-red-50 dark:bg-red-950 px-4 py-3 h-[78px] flex items-center">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-500 border-2 border-foreground flex items-center justify-center">
+            <div className="w-10 h-10 bg-red-500 border-2 border-foreground flex items-center justify-center">
               <PhoneOff size={16} className="text-white" />
             </div>
             <div>
@@ -431,12 +431,12 @@ export function FloatingCallBar({
     );
   }
 
-  // Connecting state
+  // Connecting state (matches chat footer height)
   if (callState === "requesting-permission" || callState === "connecting") {
     return (
-      <div className="border-t-2 border-foreground bg-secondary/20 p-3">
+      <div className="border-t-2 border-foreground bg-secondary/20 px-4 py-3 h-[78px] flex items-center">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-secondary border-2 border-foreground flex items-center justify-center">
+          <div className="w-10 h-10 bg-secondary border-2 border-foreground flex items-center justify-center">
             <div className="w-4 h-4 border-2 border-secondary-foreground border-t-transparent animate-spin" />
           </div>
           <div>
@@ -450,20 +450,20 @@ export function FloatingCallBar({
     );
   }
 
-  // Connected state - the main call bar UI
+  // Connected state - the main call bar UI (matches chat footer height)
   if (callState === "connected") {
     return (
-      <div className="border-t-2 border-foreground bg-secondary/10 p-3">
+      <div className="border-t-2 border-foreground bg-secondary/10 px-4 py-3 h-[78px] flex items-center">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Avatar with speaking indicator */}
             <div className="relative">
               <div
-                className={`w-8 h-8 bg-secondary border-2 border-foreground flex items-center justify-center ${
+                className={`w-10 h-10 bg-secondary border-2 border-foreground flex items-center justify-center ${
                   isSpeaking ? "ring-2 ring-secondary ring-offset-1" : ""
                 }`}
               >
-                <span className="font-bold text-secondary-foreground text-xs font-mono">
+                <span className="font-bold text-secondary-foreground text-sm font-mono">
                   {initials}
                 </span>
               </div>
@@ -509,7 +509,7 @@ export function FloatingCallBar({
             {/* Mute button */}
             <button
               onClick={toggleMute}
-              className={`p-2 border-2 border-foreground ${
+              className={`px-3 py-3 border-2 border-foreground ${
                 isMuted
                   ? "bg-foreground text-background"
                   : "bg-background hover:bg-foreground hover:text-background"
@@ -522,7 +522,7 @@ export function FloatingCallBar({
             {/* End call button */}
             <button
               onClick={endCall}
-              className="p-2 border-2 border-foreground bg-foreground text-background hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
+              className="px-3 py-3 border-2 border-foreground bg-foreground text-background hover:bg-secondary hover:text-secondary-foreground hover:border-secondary"
               aria-label="End call"
             >
               <PhoneOff size={16} />

@@ -60,12 +60,12 @@ function SlackLayoutSkeleton({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex">
       <aside className="hidden md:flex w-64 border-r-2 border-foreground bg-background flex-col h-screen">
-        <div className="border-b-2 border-foreground p-4">
+        <div className="flex-shrink-0 border-b-2 border-foreground bg-background px-4 py-3 flex items-center h-[74px]">
           <h2 className="font-bold text-sm font-mono uppercase tracking-wider">
             Team
           </h2>
         </div>
-        <div className="flex-1 overflow-auto animate-pulse">
+        <div className="flex-1 overflow-auto min-h-0 animate-pulse">
           {/* Loading placeholders */}
           {[...Array(5)].map((_, i) => (
             <div key={i} className="border-b border-border p-3">
@@ -103,7 +103,6 @@ function SlackLayoutInner({
 
   // Determine selected coworker from prop override or URL
   const selectedCoworkerId = overrideSelectedId ?? searchParams.get("coworkerId") ?? null;
-  const totalTeamSize = coworkers.length + DECORATIVE_TEAM_MEMBERS.length;
 
   const startCall = (coworkerId: string, callType: "coworker" | "kickoff" | "defense") => {
     setActiveCall({ coworkerId, callType });
@@ -160,20 +159,20 @@ function SlackLayoutInner({
         <aside
           className={`
             fixed md:static inset-y-0 left-0 z-40
-            w-64 border-r-2 border-foreground bg-background flex flex-col h-screen md:h-auto
+            w-64 border-r-2 border-foreground bg-background flex flex-col h-screen
             transform transition-transform duration-200 ease-in-out
             ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           `}
         >
-          {/* Header */}
-          <div className="border-b-2 border-foreground p-4">
+          {/* Header - matches chat header height (74px) */}
+          <div className="flex-shrink-0 border-b-2 border-foreground bg-background px-4 py-3 flex items-center h-[74px]">
             <h2 className="font-bold text-sm font-mono uppercase tracking-wider">
               Team
             </h2>
           </div>
 
-          {/* Coworker List */}
-          <div className="flex-1 overflow-auto">
+          {/* Coworker List - scrollable, shrinks when call widget appears */}
+          <div className="flex-1 overflow-auto min-h-0">
             {/* Online/Interactive coworkers */}
             {coworkers.map((coworker) => (
               <CoworkerItem
@@ -192,21 +191,20 @@ function SlackLayoutInner({
             ))}
           </div>
 
-          {/* Floating Call Bar - appears above footer when call is active */}
-          {activeCall && callingCoworker && (
-            <FloatingCallBar
-              assessmentId={assessmentId}
-              coworker={callingCoworker}
-              callType={activeCall.callType}
-              onCallEnd={endCall}
-            />
-          )}
-
-          {/* Footer */}
-          <div className="border-t-2 border-foreground p-3">
-            <p className="text-xs text-muted-foreground font-mono">
-              {coworkers.length} online · {totalTeamSize} total
-            </p>
+          {/* Floating Call Bar - fixed at bottom when call is active */}
+          <div
+            className={`flex-shrink-0 transition-all duration-200 ease-in-out ${
+              activeCall && callingCoworker ? "opacity-100" : "opacity-0 h-0 overflow-hidden"
+            }`}
+          >
+            {activeCall && callingCoworker && (
+              <FloatingCallBar
+                assessmentId={assessmentId}
+                coworker={callingCoworker}
+                callType={activeCall.callType}
+                onCallEnd={endCall}
+              />
+            )}
           </div>
         </aside>
 
