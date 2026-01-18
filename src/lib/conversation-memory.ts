@@ -6,34 +6,14 @@
  */
 
 import { gemini } from "@/lib/gemini";
+import type {
+  ChatMessage,
+  ConversationWithMeta,
+  CoworkerMemory,
+} from "@/types";
 
-// Chat message type (shared with chat and call endpoints)
-export interface ChatMessage {
-  role: "user" | "model";
-  text: string;
-  timestamp: string;
-}
-
-// Conversation with metadata
-export interface ConversationWithMeta {
-  type: "text" | "voice";
-  coworkerId: string | null;
-  messages: ChatMessage[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Memory context for a coworker
-export interface CoworkerMemory {
-  /** Summary of all prior conversations with this coworker */
-  summary: string | null;
-  /** Recent messages for immediate context (last N messages) */
-  recentMessages: ChatMessage[];
-  /** Total message count across all conversations */
-  totalMessageCount: number;
-  /** Whether this coworker has had prior conversations */
-  hasPriorConversations: boolean;
-}
+// Re-export types for backwards compatibility
+export type { ChatMessage, ConversationWithMeta, CoworkerMemory } from "@/types";
 
 // Summarization model - use Flash for speed
 const SUMMARY_MODEL = "gemini-3-flash-preview";

@@ -395,3 +395,26 @@ const mockDb = (await import("@/lib/db")).db as {
   - Use FlatCompat to extend legacy configs (`next/core-web-vitals`, `next/typescript`)
   - Prettier plugin order matters - tailwind plugin should be last
   - Prefix unused variables with `_` to satisfy `@typescript-eslint/no-unused-vars` rule
+
+## Issue #93: REF-003 Create Centralized Type Definitions
+
+- Created `src/types/` directory with centralized domain type definitions
+- **Files created:**
+  - `src/types/index.ts` - Re-exports all types for `@/types` imports
+  - `src/types/assessment.ts` - CodeReviewData, HRAssessmentData, VideoAssessmentData
+  - `src/types/conversation.ts` - ChatMessage, TranscriptMessage, ConversationWithMeta, CoworkerMemory
+  - `src/types/coworker.ts` - CoworkerPersona, CoworkerKnowledge, PersonalityStyle, DecorativeTeamMember
+  - `src/types/cv.ts` - ParsedProfile, WorkExperience, Education, Skill, etc.
+  - `src/types/api.ts` - ApiResponse<T>, ApiSuccess<T>, ApiError with helper functions
+  - `src/types/CLAUDE.md` - Documentation for type organization
+- **Files modified for backwards compatibility:**
+  - `src/lib/conversation-memory.ts` - Re-exports types from @/types
+  - `src/lib/gemini.ts` - Re-exports TranscriptMessage from @/types
+  - `src/lib/coworker-persona.ts` - Re-exports persona types from @/types
+  - `src/lib/code-review.ts` - Re-exports CodeReviewData from @/types
+  - `src/lib/cv-parser.ts` - Added re-exports for cv types
+- **Key learnings:**
+  - Maintain backwards compatibility with re-exports so existing imports continue to work
+  - Zod schemas in lib files define runtime validation, type files define compile-time interfaces
+  - Keep both in sync but Zod schemas are source of truth for validation
+  - Use `export type {}` syntax for type-only re-exports

@@ -171,12 +171,24 @@ export const parsedProfileSchema = z.object({
   parseNotes: nullableStringArray, // Any issues or notes during parsing
 });
 
+// Types inferred from Zod schemas
+// These are also available from @/types for consumers who don't need the schemas
 export type WorkExperience = z.infer<typeof workExperienceSchema>;
 export type Education = z.infer<typeof educationSchema>;
 export type Skill = z.infer<typeof skillSchema>;
 export type Certification = z.infer<typeof certificationSchema>;
 export type Language = z.infer<typeof languageSchema>;
 export type ParsedProfile = z.infer<typeof parsedProfileSchema>;
+
+// Re-export cv types from centralized location for backwards compatibility
+// Note: The above Zod-inferred types and @/types are equivalent interfaces
+export type {
+  SkillCategory,
+  ProficiencyLevel,
+  LanguageProficiency,
+  SeniorityLevel,
+  ParseQuality,
+} from "@/types";
 
 // CV parsing prompt is now centralized in src/prompts/analysis/cv-parser.ts
 import { CV_PARSING_PROMPT } from "@/prompts/analysis/cv-parser";

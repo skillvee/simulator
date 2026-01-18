@@ -53,9 +53,5 @@ export async function generateEphemeralToken(config?: {
   return response.name;
 }
 
-// Transcript message type
-export interface TranscriptMessage {
-  role: "user" | "model";
-  text: string;
-  timestamp: string;
-}
+// Re-export TranscriptMessage from centralized types for backwards compatibility
+export type { TranscriptMessage } from "@/types";

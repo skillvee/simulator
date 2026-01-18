@@ -124,34 +124,9 @@ export type CodeReviewResponse = z.infer<typeof codeReviewResponseSchema>;
 // Code Review Data Interface (for storage)
 // ============================================================================
 
-export interface CodeReviewData {
-  prUrl: string;
-  analyzedAt: string;
-
-  // Overall scores
-  overallScore: number;
-  codeQualityScore: number;
-  patternScore: number;
-  securityScore: number;
-  maintainabilityScore: number;
-
-  // Detailed findings
-  codeQualityFindings: CodeQualityFinding[];
-  patternFindings: PatternFinding[];
-  securityFindings: SecurityFinding[];
-  maintainability: MaintainabilityAssessment;
-
-  // Summary
-  summary: CodeReviewResponse["summary"];
-
-  // Metrics
-  filesAnalyzed: number;
-  linesAdded: number;
-  linesDeleted: number;
-
-  // Full AI analysis (for debugging/future reference)
-  aiAnalysis: object;
-}
+// Re-export CodeReviewData from centralized types for backwards compatibility
+export type { CodeReviewData } from "@/types";
+import type { CodeReviewData } from "@/types";
 
 // Code review prompt is now centralized in src/prompts/analysis/code-review.ts
 import { buildCodeReviewContext } from "@/prompts/analysis/code-review";
