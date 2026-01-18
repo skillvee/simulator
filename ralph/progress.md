@@ -382,3 +382,60 @@ The HR interview transcript save correctly updated status to ONBOARDING in `/api
 4. **E2E testing limitations**: Browser-based testing for assessment pages is blocked by `ScreenRecordingGuard` which requires screen sharing permissions unavailable in headless browsers. For full E2E validation, use direct database/API testing scripts or manual testing.
 
 5. **Conditional status updates**: Only update status when there's actual content (transcript length > 0), following the same pattern as the interview transcript route.
+
+## Issue #88: BUG - All Coworker Calls Use Same Female Voice
+
+### What was implemented
+- Added `voiceName` field to Coworker model in Prisma schema to store per-coworker voice configuration
+- Modified `generateEphemeralToken()` in `src/lib/gemini.ts` to accept optional `voiceName` parameter
+- Added `GEMINI_VOICES` constant with male and female voice options for UI selection
+- Updated all token generation routes to pass coworker's voice:
+  - `/api/call/token` - Uses coworker's voiceName from database
+  - `/api/kickoff/token` - Uses manager's voiceName
+  - `/api/defense/token` - Uses manager's voiceName
+  - `/api/interview/token` - Uses default female voice (Aoede) for HR
+- Added voice selector dropdown to admin scenario detail page
+- Updated EXAMPLE_COWORKERS with gender-appropriate voice assignments
+- Updated seed.ts to persist voiceName when seeding coworkers
+- Updated coworker API routes (POST/PUT) to handle voiceName field
+- Updated CoworkerPersona type to include optional voiceName field
+
+### Files changed
+- `prisma/schema.prisma` - Added `voiceName String?` field to Coworker model
+- `src/lib/gemini.ts` - Added voiceName parameter, GEMINI_VOICES constant, VoiceName type
+- `src/types/coworker.ts` - Added voiceName to CoworkerPersona interface
+- `src/lib/coworker-persona.ts` - Added voices to EXAMPLE_COWORKERS
+- `prisma/seed.ts` - Seeds voiceName for coworkers
+- `src/app/api/call/token/route.ts` - Passes coworker.voiceName to token generation
+- `src/app/api/kickoff/token/route.ts` - Passes manager.voiceName to token generation
+- `src/app/api/defense/token/route.ts` - Passes manager.voiceName to token generation
+- `src/app/api/interview/token/route.ts` - Documented default voice usage
+- `src/app/api/admin/scenarios/[id]/coworkers/route.ts` - Handles voiceName in POST
+- `src/app/api/admin/scenarios/[id]/coworkers/[coworkerId]/route.ts` - Handles voiceName in PUT
+- `src/app/admin/scenarios/[id]/client.tsx` - Added voice selector UI with grouped options
+
+### Voice assignments
+The following voice assignments were implemented in seed data:
+- Alex Chen (Engineering Manager) - Charon (Male - Informative)
+- Jordan Rivera (Senior Software Engineer) - Leda (Female - Youthful)
+- Sam Patel (Product Manager) - Puck (Male - Upbeat)
+- Riley Kim (QA Lead) - Callirrhoe (Female - Easy-going)
+
+### Learnings for future iterations
+
+1. **Gemini Live voice configuration**: Voice is set at token generation time via `speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName`. The voice must be one of Gemini's 30 prebuilt voices.
+
+2. **Optional field with fallback pattern**: When adding optional configuration like voice, always provide a sensible default. The pattern `voiceName || DEFAULT_VOICE` ensures backward compatibility with existing coworkers that don't have voices set.
+
+3. **Type extension for fallback objects**: When creating fallback objects (e.g., default manager), include all expected fields with appropriate types:
+   ```typescript
+   const manager = coworkers[0] || {
+     id: "default-manager",
+     name: "Alex Chen",
+     voiceName: null as string | null,
+   };
+   ```
+
+4. **UI for voice selection**: Grouping voices by gender in an optgroup makes the dropdown more intuitive. Each voice includes its "personality" descriptor for informed selection.
+
+5. **Schema changes with db push**: For simple additive schema changes like adding an optional field, `prisma db push` is faster than full migrations, especially when there's drift between migration history and actual database schema.

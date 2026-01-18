@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Markdown } from "@/components/markdown";
+import { GEMINI_VOICES } from "@/lib/gemini";
 
 interface Coworker {
   id: string;
@@ -10,6 +11,7 @@ interface Coworker {
   role: string;
   personaStyle: string;
   knowledge: unknown;
+  voiceName?: string | null;
 }
 
 interface Scenario {
@@ -49,6 +51,8 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
   const [repoStatus, setRepoStatus] = useState<RepoVerification | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coworkers, setCoworkers] = useState(scenario.coworkers);
+  const [updatingVoice, setUpdatingVoice] = useState<string | null>(null);
 
   // Verify repository access
   const verifyRepo = async () => {
@@ -142,6 +146,34 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
       );
     } finally {
       setIsPublishing(false);
+    }
+  };
+
+  // Update coworker voice
+  const updateCoworkerVoice = async (coworkerId: string, voiceName: string | null) => {
+    setUpdatingVoice(coworkerId);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/admin/scenarios/${scenario.id}/coworkers/${coworkerId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ voiceName }),
+        }
+      );
+      if (response.ok) {
+        setCoworkers((prev) =>
+          prev.map((c) => (c.id === coworkerId ? { ...c, voiceName } : c))
+        );
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to update voice");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update voice");
+    } finally {
+      setUpdatingVoice(null);
     }
   };
 
@@ -360,17 +392,17 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
       {/* Coworkers Section */}
       <section className="border-2 border-foreground bg-background p-6">
         <h2 className="mb-4 text-xl font-bold">
-          Coworkers ({scenario.coworkers.length})
+          Coworkers ({coworkers.length})
         </h2>
 
-        {scenario.coworkers.length === 0 ? (
+        {coworkers.length === 0 ? (
           <p className="text-muted-foreground">
             No coworkers configured. Add coworkers to enable team collaboration
             testing.
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {scenario.coworkers.map((coworker) => (
+            {coworkers.map((coworker) => (
               <div key={coworker.id} className="border border-foreground p-4">
                 <div className="mb-2 flex items-center gap-3">
                   {/* Avatar */}
@@ -392,6 +424,39 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
                   Style: {coworker.personaStyle.slice(0, 100)}
                   {coworker.personaStyle.length > 100 && "..."}
                 </p>
+                {/* Voice selector */}
+                <div className="mb-2">
+                  <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Voice
+                  </label>
+                  <select
+                    value={coworker.voiceName || ""}
+                    onChange={(e) =>
+                      updateCoworkerVoice(
+                        coworker.id,
+                        e.target.value || null
+                      )
+                    }
+                    disabled={updatingVoice === coworker.id}
+                    className="w-full border-2 border-foreground bg-background px-2 py-1 font-mono text-sm disabled:opacity-50"
+                  >
+                    <option value="">Default (Aoede - Female)</option>
+                    <optgroup label="Male Voices">
+                      {GEMINI_VOICES.male.map((v) => (
+                        <option key={v.name} value={v.name}>
+                          {v.name} - {v.description}
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Female Voices">
+                      {GEMINI_VOICES.female.map((v) => (
+                        <option key={v.name} value={v.name}>
+                          {v.name} - {v.description}
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
                 <p className="font-mono text-xs text-muted-foreground">
                   {getKnowledgeCount(coworker.knowledge)} knowledge items
                 </p>

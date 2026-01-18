@@ -140,8 +140,10 @@ export async function POST(request: Request) {
     );
 
     // Generate ephemeral token for client-side connection
+    // Use coworker's configured voice, or fall back to default
     const token = await generateEphemeralToken({
       systemInstruction,
+      voiceName: coworker.voiceName || undefined,
     });
 
     return success({

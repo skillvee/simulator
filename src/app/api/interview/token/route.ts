@@ -83,6 +83,7 @@ export async function POST(request: Request) {
     });
 
     // Generate ephemeral token for client-side connection
+    // Uses default voice (Aoede - female) for HR interviewer
     const token = await generateEphemeralToken({
       systemInstruction,
     });

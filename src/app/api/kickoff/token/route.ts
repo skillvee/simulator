@@ -64,6 +64,7 @@ export async function POST(request: Request) {
       id: "default-manager",
       name: "Alex Chen",
       role: "Engineering Manager",
+      voiceName: null as string | null,
     };
 
     // Build the manager kickoff system prompt using centralized prompt
@@ -78,8 +79,10 @@ export async function POST(request: Request) {
     });
 
     // Generate ephemeral token for client-side connection
+    // Use manager's configured voice, or fall back to default
     const token = await generateEphemeralToken({
       systemInstruction,
+      voiceName: manager.voiceName || undefined,
     });
 
     return success({

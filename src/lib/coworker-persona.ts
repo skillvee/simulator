@@ -227,6 +227,10 @@ export function getInitials(name: string): string {
 
 /**
  * Example coworker personas for seeding/testing
+ *
+ * Voice assignments:
+ * - Male: Orus (Firm), Puck (Upbeat), Fenrir (Excitable), Charon (Informative), Iapetus (Clear)
+ * - Female: Aoede (Breezy), Leda (Youthful), Callirrhoe (Easy-going), Vindemiatrix (Gentle), Despina (Smooth)
  */
 export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
   {
@@ -234,6 +238,7 @@ export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
     role: "Engineering Manager",
     personaStyle:
       "Professional and supportive. Alex is direct but encouraging, balancing being helpful with letting the team grow independently. Uses structured communication but keeps it warm.",
+    voiceName: "Charon", // Male - Informative voice matches manager role
     knowledge: [
       {
         topic: "team_structure",
@@ -269,6 +274,7 @@ export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
     role: "Senior Software Engineer",
     personaStyle:
       "Technical and detail-oriented. Jordan loves diving deep into code details and architectural decisions. Can be a bit terse but always helpful when asked the right questions.",
+    voiceName: "Leda", // Female - Youthful voice for technical expert
     knowledge: [
       {
         topic: "authentication",
@@ -325,6 +331,7 @@ export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
     role: "Product Manager",
     personaStyle:
       "Friendly and user-focused. Sam always brings the conversation back to user needs and business impact. Casual communication style, often uses emojis and informal language.",
+    voiceName: "Puck", // Male - Upbeat voice matches friendly PM style
     knowledge: [
       {
         topic: "requirements",
@@ -360,6 +367,7 @@ export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
     role: "QA Lead",
     personaStyle:
       "Thorough and methodical. Riley is detail-oriented and thinks about edge cases others miss. Direct communication, asks clarifying questions, always thinking about what could go wrong.",
+    voiceName: "Callirrhoe", // Female - Easy-going voice for QA lead
     knowledge: [
       {
         topic: "testing_requirements",

@@ -93,6 +93,7 @@ export async function POST(request: Request) {
       id: "default-manager",
       name: "Alex Chen",
       role: "Engineering Manager",
+      voiceName: null as string | null,
     };
 
     // Build conversation summary from all conversations
@@ -239,8 +240,10 @@ ${hr.communicationNotes ? `- Notes: ${hr.communicationNotes}` : ""}`;
     });
 
     // Generate ephemeral token for client-side connection
+    // Use manager's configured voice, or fall back to default
     const token = await generateEphemeralToken({
       systemInstruction,
+      voiceName: manager.voiceName || undefined,
     });
 
     return success({

@@ -155,9 +155,10 @@ Acceptance Criteria:
         personaStyle: coworker.personaStyle,
         knowledge: coworker.knowledge as unknown as Prisma.InputJsonValue,
         avatarUrl: coworker.avatarUrl ?? null,
+        voiceName: coworker.voiceName ?? null,
       },
     });
-    console.log(`  👤 Created coworker: ${created.name} (${created.role})`);
+    console.log(`  👤 Created coworker: ${created.name} (${created.role}) - Voice: ${created.voiceName || 'default'}`);
   }
 
   console.log(`\n✅ Seeded ${EXAMPLE_COWORKERS.length} coworkers for scenario`);

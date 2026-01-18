@@ -42,6 +42,8 @@ export interface CoworkerPersona {
   knowledge: CoworkerKnowledge[];
   /** Optional avatar URL */
   avatarUrl?: string | null;
+  /** Gemini Live voice name for calls (e.g., "Orus", "Aoede") */
+  voiceName?: string | null;
 }
 
 /**

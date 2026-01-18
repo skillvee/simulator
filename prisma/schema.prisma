@@ -116,6 +116,7 @@ model Coworker {
   personaStyle  String   @db.Text // Communication style description
   knowledge     Json     // Specific knowledge they hold
   avatarUrl     String?
+  voiceName     String?  // Gemini Live voice name (e.g., "Orus", "Aoede")
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
