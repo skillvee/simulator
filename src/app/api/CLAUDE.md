@@ -31,6 +31,43 @@ if (!result.success) {
 }
 ```
 
+## Request Validation
+
+Use `validateRequest` from `@/lib/api-validation` for JSON body validation:
+
+```typescript
+import { validateRequest } from "@/lib/api-validation";
+import { ChatRequestSchema } from "@/lib/schemas";
+
+export async function POST(request: Request) {
+  const validated = await validateRequest(request, ChatRequestSchema);
+  if ("error" in validated) return validated.error;
+  const { assessmentId, coworkerId, message } = validated.data;
+  // ... rest of handler
+}
+```
+
+### Creating Schemas
+
+Add Zod schemas to `src/lib/schemas/api.ts`:
+
+```typescript
+import { z } from "zod";
+
+export const MyRouteRequestSchema = z.object({
+  requiredField: z.string().min(1, "Required field is required"),
+  optionalField: z.string().optional(),
+});
+export type MyRouteRequest = z.infer<typeof MyRouteRequestSchema>;
+```
+
+### Validation Helper Behavior
+
+- Returns `{ data: T }` on success with typed data
+- Returns `{ error: NextResponse }` on failure
+- Handles invalid JSON gracefully (returns `INVALID_JSON` error)
+- Uses `validationError()` for Zod failures (consistent error format)
+
 ### Migration Pattern
 
 **Before:**

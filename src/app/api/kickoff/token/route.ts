@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { generateEphemeralToken } from "@/lib/gemini";
 import { buildManagerKickoffPrompt } from "@/prompts";
+import { success, error } from "@/lib/api-response";
+import { validateRequest } from "@/lib/api-validation";
+import { KickoffTokenRequestSchema } from "@/lib/schemas";
 
 /**
  * Manager Kickoff Call Token Endpoint
@@ -16,19 +18,13 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   try {
-    const body = await request.json();
-    const { assessmentId } = body;
-
-    if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
-    }
+    const validated = await validateRequest(request, KickoffTokenRequestSchema);
+    if ("error" in validated) return validated.error;
+    const { assessmentId } = validated.data;
 
     // Fetch the assessment and verify ownership
     const assessment = await db.assessment.findFirst({
@@ -60,10 +56,7 @@ export async function POST(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
     // Get manager coworker (or use default)
@@ -89,18 +82,15 @@ export async function POST(request: Request) {
       systemInstruction,
     });
 
-    return NextResponse.json({
+    return success({
       token,
       assessmentId: assessment.id,
       managerId: manager.id,
       managerName: manager.name,
       managerRole: manager.role,
     });
-  } catch (error) {
-    console.error("Error generating kickoff token:", error);
-    return NextResponse.json(
-      { error: "Failed to initialize kickoff call" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error generating kickoff token:", err);
+    return error("Failed to initialize kickoff call", 500);
   }
 }

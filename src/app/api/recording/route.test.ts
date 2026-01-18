@@ -162,7 +162,8 @@ describe("Recording API", () => {
       const response = await GET(request);
       expect(response.status).toBe(200);
       const json = await response.json();
-      expect(json.recordings).toHaveLength(1);
+      expect(json.success).toBe(true);
+      expect(json.data.recordings).toHaveLength(1);
     });
   });
 });

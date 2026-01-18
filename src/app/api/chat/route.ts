@@ -15,6 +15,8 @@ import {
 import type { Prisma } from "@prisma/client";
 import { buildChatPrompt } from "@/prompts";
 import { success, error } from "@/lib/api-response";
+import { validateRequest } from "@/lib/api-validation";
+import { ChatRequestSchema } from "@/lib/schemas";
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
@@ -29,15 +31,9 @@ export async function POST(request: Request) {
     return error("Unauthorized", 401);
   }
 
-  const body = await request.json();
-  const { assessmentId, coworkerId, message } = body;
-
-  if (!assessmentId || !coworkerId || !message) {
-    return error(
-      "Missing required fields: assessmentId, coworkerId, message",
-      400
-    );
-  }
+  const validated = await validateRequest(request, ChatRequestSchema);
+  if ("error" in validated) return validated.error;
+  const { assessmentId, coworkerId, message } = validated.data;
 
   // Verify assessment belongs to user and get scenario context
   const assessment = await db.assessment.findFirst({

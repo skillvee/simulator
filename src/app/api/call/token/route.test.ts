@@ -84,7 +84,13 @@ describe("POST /api/call/token", () => {
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.error).toBe("Assessment ID and Coworker ID are required");
+    expect(data.error).toBe("Validation failed");
+    expect(data.code).toBe("VALIDATION_ERROR");
+    expect(data.details).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: "assessmentId" }),
+      ])
+    );
   });
 
   it("should return 400 when coworkerId is missing", async () => {
@@ -101,7 +107,11 @@ describe("POST /api/call/token", () => {
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.error).toBe("Assessment ID and Coworker ID are required");
+    expect(data.error).toBe("Validation failed");
+    expect(data.code).toBe("VALIDATION_ERROR");
+    expect(data.details).toEqual(
+      expect.arrayContaining([expect.objectContaining({ path: "coworkerId" })])
+    );
   });
 
   it("should return 404 when assessment not found", async () => {
@@ -198,10 +208,11 @@ describe("POST /api/call/token", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
 
-    const data = await response.json();
-    expect(data.token).toBe("ephemeral-token-123");
-    expect(data.coworkerName).toBe("Jordan Rivera");
-    expect(data.coworkerRole).toBe("Senior Engineer");
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.token).toBe("ephemeral-token-123");
+    expect(json.data.coworkerName).toBe("Jordan Rivera");
+    expect(json.data.coworkerRole).toBe("Senior Engineer");
   });
 
   it("should include prior conversation context in system prompt", async () => {

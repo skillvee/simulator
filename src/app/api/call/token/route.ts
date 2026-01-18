@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { generateEphemeralToken } from "@/lib/gemini";
@@ -14,24 +13,21 @@ import {
   type ConversationWithMeta,
 } from "@/lib/conversation-memory";
 import { buildVoicePrompt } from "@/prompts";
+import { success, error } from "@/lib/api-response";
+import { validateRequest } from "@/lib/api-validation";
+import { CallTokenRequestSchema } from "@/lib/schemas";
 
 export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   try {
-    const body = await request.json();
-    const { assessmentId, coworkerId } = body;
-
-    if (!assessmentId || !coworkerId) {
-      return NextResponse.json(
-        { error: "Assessment ID and Coworker ID are required" },
-        { status: 400 }
-      );
-    }
+    const validated = await validateRequest(request, CallTokenRequestSchema);
+    if ("error" in validated) return validated.error;
+    const { assessmentId, coworkerId } = validated.data;
 
     // Fetch the assessment and verify ownership
     const assessment = await db.assessment.findFirst({
@@ -51,10 +47,7 @@ export async function POST(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
     // Get coworker persona
@@ -66,10 +59,7 @@ export async function POST(request: Request) {
     });
 
     if (!coworker) {
-      return NextResponse.json(
-        { error: "Coworker not found" },
-        { status: 404 }
-      );
+      return error("Coworker not found", 404, "NOT_FOUND");
     }
 
     // Get ALL conversations for this assessment (for cross-coworker context)
@@ -154,18 +144,15 @@ export async function POST(request: Request) {
       systemInstruction,
     });
 
-    return NextResponse.json({
+    return success({
       token,
       assessmentId: assessment.id,
       coworkerId: coworker.id,
       coworkerName: coworker.name,
       coworkerRole: coworker.role,
     });
-  } catch (error) {
-    console.error("Error generating call token:", error);
-    return NextResponse.json(
-      { error: "Failed to initialize call" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error generating call token:", err);
+    return error("Failed to initialize call", 500);
   }
 }

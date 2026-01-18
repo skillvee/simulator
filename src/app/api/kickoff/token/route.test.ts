@@ -59,7 +59,13 @@ describe("POST /api/kickoff/token", () => {
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.error).toBe("Assessment ID is required");
+    expect(data.error).toBe("Validation failed");
+    expect(data.code).toBe("VALIDATION_ERROR");
+    expect(data.details).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: "assessmentId" }),
+      ])
+    );
   });
 
   it("should return 404 when assessment not found", async () => {
@@ -115,11 +121,12 @@ describe("POST /api/kickoff/token", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
 
-    const data = await response.json();
-    expect(data.token).toBe("ephemeral-token-123");
-    expect(data.managerName).toBe("Alex Chen");
-    expect(data.managerRole).toBe("Engineering Manager");
-    expect(data.managerId).toBe("manager-id");
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.token).toBe("ephemeral-token-123");
+    expect(json.data.managerName).toBe("Alex Chen");
+    expect(json.data.managerRole).toBe("Engineering Manager");
+    expect(json.data.managerId).toBe("manager-id");
   });
 
   it("should use default manager when no manager coworker found", async () => {
@@ -151,10 +158,11 @@ describe("POST /api/kickoff/token", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
 
-    const data = await response.json();
-    expect(data.token).toBe("ephemeral-token-123");
-    expect(data.managerName).toBe("Alex Chen"); // Default
-    expect(data.managerRole).toBe("Engineering Manager"); // Default
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.token).toBe("ephemeral-token-123");
+    expect(json.data.managerName).toBe("Alex Chen"); // Default
+    expect(json.data.managerRole).toBe("Engineering Manager"); // Default
   });
 
   it("should include vague briefing instructions in system prompt", async () => {

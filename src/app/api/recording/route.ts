@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { supabaseAdmin } from "@/lib/supabase";
 import { STORAGE_BUCKETS } from "@/lib/storage";
+import { success, error } from "@/lib/api-response";
 
 // Maximum file sizes
 const MAX_VIDEO_CHUNK_SIZE = 50 * 1024 * 1024; // 50MB per chunk
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const formData = await request.formData();
@@ -25,10 +26,12 @@ export async function POST(request: NextRequest) {
     const segmentId = formData.get("segmentId") as string | null;
 
     if (!file || !assessmentId || !type) {
-      return NextResponse.json(
-        { error: "Missing required fields: file, assessmentId, type" },
-        { status: 400 }
-      );
+      return error("Missing required fields: file, assessmentId, type", 400, "VALIDATION_ERROR");
+    }
+
+    // Validate type value
+    if (type !== "video" && type !== "screenshot") {
+      return error("Invalid type. Must be 'video' or 'screenshot'", 400, "VALIDATION_ERROR");
     }
 
     // Verify the assessment belongs to the user
@@ -40,20 +43,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
     // Validate file size
     const maxSize =
       type === "video" ? MAX_VIDEO_CHUNK_SIZE : MAX_SCREENSHOT_SIZE;
     if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: `File too large. Maximum size is ${maxSize / 1024 / 1024}MB` },
-        { status: 400 }
-      );
+      return error(`File too large. Maximum size is ${maxSize / 1024 / 1024}MB`, 400, "FILE_TOO_LARGE");
     }
 
     // Generate storage path
@@ -82,10 +79,7 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error("Supabase upload error:", uploadError);
-      return NextResponse.json(
-        { error: `Failed to upload: ${uploadError.message}` },
-        { status: 500 }
-      );
+      return error(`Failed to upload: ${uploadError.message}`, 500);
     }
 
     // Create signed URL for access
@@ -150,20 +144,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
+    return success({
       path,
       url: storageUrl,
       type,
       chunkIndex: chunkIndex ? parseInt(chunkIndex) : undefined,
       segmentId,
     });
-  } catch (error) {
-    console.error("Recording upload error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Recording upload error:", err);
+    return error("Internal server error", 500);
   }
 }
 
@@ -172,17 +162,14 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const { searchParams } = new URL(request.url);
     const assessmentId = searchParams.get("assessmentId");
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "assessmentId is required" },
-        { status: 400 }
-      );
+      return error("assessmentId is required", 400, "VALIDATION_ERROR");
     }
 
     // Verify the assessment belongs to the user
@@ -203,20 +190,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
-    return NextResponse.json({
-      recordings: assessment.recordings,
-    });
-  } catch (error) {
-    console.error("Recording fetch error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return success({ recordings: assessment.recordings });
+  } catch (err) {
+    console.error("Recording fetch error:", err);
+    return error("Internal server error", 500);
   }
 }

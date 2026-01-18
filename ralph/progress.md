@@ -54,3 +54,58 @@ Learnings from autonomous issue resolution.
 5. **TDD for Test Infrastructure**: Even test utilities benefit from TDD. Write tests for factories first, watch them fail, then implement.
 
 6. **Button States**: When testing forms, be aware of disabled button states. If a button is disabled when input is empty, clicking it won't trigger validation - adjust tests accordingly.
+
+## Issue #95: REF-005 - Add API Route Validation Layer
+
+### What was implemented
+- Created `src/lib/api-validation.ts` with `validateRequest<T>(request, schema)` helper
+- Created `src/lib/schemas/api.ts` with Zod schemas for API request validation
+- Created `src/lib/schemas/index.ts` for schema re-exports
+- Migrated 5 routes to use the validation helper:
+  - `src/app/api/chat/route.ts` - chat POST endpoint
+  - `src/app/api/call/token/route.ts` - coworker call token endpoint
+  - `src/app/api/kickoff/token/route.ts` - manager kickoff token endpoint
+  - `src/app/api/defense/token/route.ts` - defense call token endpoint
+  - `src/app/api/recording/route.ts` - recording upload (POST) and metadata (GET) endpoints
+- Updated `src/app/api/CLAUDE.md` with validation pattern documentation
+- Added tests for the validation helper (`src/lib/api-validation.test.ts`)
+- Updated existing route tests to expect standardized response format
+
+### Files changed
+- `src/lib/api-validation.ts` - New validation helper
+- `src/lib/api-validation.test.ts` - Tests for validation helper
+- `src/lib/schemas/api.ts` - Zod schemas for request bodies
+- `src/lib/schemas/index.ts` - Re-exports
+- `src/app/api/chat/route.ts` - Uses validateRequest
+- `src/app/api/call/token/route.ts` - Uses validateRequest + standardized responses
+- `src/app/api/kickoff/token/route.ts` - Uses validateRequest + standardized responses
+- `src/app/api/defense/token/route.ts` - Uses validateRequest + standardized responses
+- `src/app/api/recording/route.ts` - Uses standardized responses (FormData, not JSON)
+- `src/app/api/CLAUDE.md` - Added validation documentation
+- `src/app/api/call/token/route.test.ts` - Updated expectations
+- `src/app/api/kickoff/token/route.test.ts` - Updated expectations
+- `src/app/api/defense/token/route.test.ts` - Updated expectations
+- `src/app/api/recording/route.test.ts` - Updated expectations
+
+### Learnings for future iterations
+
+1. **FormData vs JSON validation**: The `validateRequest` helper is designed for JSON bodies. Routes using FormData (like recording/upload with file uploads) need manual validation but should still use the standardized response helpers.
+
+2. **Error variable naming**: When using the `error()` helper from `api-response.ts`, rename catch block error variables to `err` to avoid shadowing:
+   ```typescript
+   } catch (err) {
+     console.error("Error:", err);
+     return error("Failed to process", 500);
+   }
+   ```
+
+3. **Test updates for standardized responses**: When migrating routes to use `success()` helper, update tests to check `json.success === true` and access data via `json.data.field` instead of `json.field`.
+
+4. **Validation error format**: The standardized validation errors include:
+   - `error`: "Validation failed"
+   - `code`: "VALIDATION_ERROR"
+   - `details`: Array of `{ path, message }` objects for each field error
+
+5. **Schema location**: Keep Zod schemas in `src/lib/schemas/api.ts` and re-export from `src/lib/schemas/index.ts`. Each schema should export both the schema and the inferred TypeScript type.
+
+6. **TDD for helpers**: Writing tests first for utility functions (like `validateRequest`) ensures the API contract is well-defined before implementation.
