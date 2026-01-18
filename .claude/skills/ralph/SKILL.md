@@ -33,9 +33,19 @@ Ralph operates with fresh context per iteration. Oversized stories result in inc
 - "Add authentication" → Split into: schema, login endpoint, logout endpoint, middleware, UI
 - "Refactor the API" → Split into specific endpoints or layers
 
+## Priority Labels
+
+Ralph processes issues by priority: **P0 → P1 → P2 → no label** (oldest first within each priority).
+
+Use priority labels for urgency:
+- **P0**: Critical/blocking - must be done first
+- **P1**: High priority - important but not blocking
+- **P2**: Normal priority - standard work
+- **No label**: Low priority - backlog items
+
 ## Dependency Ordering
 
-Create issues in dependency order (Ralph processes oldest first):
+Within the same priority, create issues in dependency order (Ralph processes oldest first):
 
 1. **Schema/database changes** - Must exist before backend uses them
 2. **Backend/server logic** - Must exist before UI calls them
@@ -72,6 +82,7 @@ Create each issue with this structure:
 gh issue create \
   --title "US-001: [Story Title]" \
   --label "task" \
+  --label "P1" \
   --body "$(cat <<'EOF'
 ## Description
 As a [user type], I want [feature] so that [benefit].
@@ -104,6 +115,7 @@ EOF
 
 5. **Create issues**: Use `gh issue create` for each story
    - Add `task` label (required for Ralph to find them)
+   - Add priority label (P0, P1, or P2) based on urgency
    - Include acceptance criteria as checklist
    - Reference dependencies between issues
 
@@ -128,6 +140,7 @@ EOF
 gh issue create \
   --title "US-001: Add task status field" \
   --label "task" \
+  --label "P1" \
   --body "## Description
 As a user, I want tasks to have a status so I can track progress.
 
@@ -147,6 +160,7 @@ Before creating issues, verify:
 - [ ] PRD exists at `tasks/prd-[feature-name].md`
 - [ ] Each story is completable in one iteration
 - [ ] Stories are ordered by dependency
+- [ ] Priority labels assigned (P0, P1, P2) based on urgency
 - [ ] Acceptance criteria are verifiable (not vague)
 - [ ] "Tests pass" included where applicable
 - [ ] No forward dependencies (earlier issues don't depend on later ones)

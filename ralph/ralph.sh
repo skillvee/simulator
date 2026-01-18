@@ -17,8 +17,19 @@ echo "   Press Ctrl+C to stop"
 ITERATION=0
 
 while true; do
-  # Fetch oldest open issue
-  ISSUE=$(gh issue list --state open --json number,title,body --limit 100 | jq 'sort_by(.number) | .[0] // empty')
+  # Fetch highest priority open issue (P0 > P1 > P2 > no priority), oldest first within each bucket
+  ISSUE=$(gh issue list --state open --json number,title,body,labels --limit 100 | jq '
+    map(. + {
+      priority_order: (
+        .labels | map(.name) |
+        if any(. == "P0") then 0
+        elif any(. == "P1") then 1
+        elif any(. == "P2") then 2
+        else 999
+        end
+      )
+    }) | sort_by(.priority_order, .number) | .[0] // empty
+  ')
 
   # If no issues, wait and poll again
   if [ -z "$ISSUE" ]; then

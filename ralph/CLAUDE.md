@@ -22,7 +22,7 @@ RALPH_POLL_INTERVAL=30 ./ralph/ralph.sh
 
 ## How It Works
 
-1. Fetches oldest open issue (any label)
+1. Fetches highest priority open issue (P0 → P1 → P2 → no label), oldest first within each priority
 2. Spawns fresh Claude instance with issue context
 3. Claude implements, tests, and commits
 4. Commit message `Closes #N` auto-closes issue
