@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { db } from "@/server/db";
+import { getAssessmentForChat } from "@/server/queries/assessment";
 import { ChatPageClient } from "./client";
 import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
 
@@ -21,18 +21,8 @@ export default async function ChatPage({
   const { id } = await params;
   const { coworkerId: selectedCoworkerId } = await searchParams;
 
-  const assessment = await db.assessment.findUnique({
-    where: { id },
-    include: {
-      scenario: {
-        include: {
-          coworkers: true,
-        },
-      },
-    },
-  });
-
-  if (!assessment || assessment.userId !== session.user.id) {
+  const assessment = await getAssessmentForChat(id, session.user.id);
+  if (!assessment) {
     redirect("/profile");
   }
 

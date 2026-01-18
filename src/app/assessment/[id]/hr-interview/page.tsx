@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { db } from "@/server/db";
+import { getAssessmentForHRInterview } from "@/server/queries/assessment";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { HRInterviewClient } from "./client";
@@ -16,36 +16,7 @@ export default async function HRInterviewPage({ params }: PageProps) {
     redirect(`/sign-in?callbackUrl=/assessment/${id}/hr-interview`);
   }
 
-  // Fetch the assessment and user data
-  const assessment = await db.assessment.findFirst({
-    where: {
-      id,
-      userId: session.user.id,
-    },
-    include: {
-      scenario: {
-        select: {
-          name: true,
-          companyName: true,
-          companyDescription: true,
-        },
-      },
-      conversations: {
-        where: {
-          coworkerId: null,
-          type: "voice",
-        },
-        select: {
-          transcript: true,
-        },
-      },
-      user: {
-        select: {
-          cvUrl: true,
-        },
-      },
-    },
-  });
+  const assessment = await getAssessmentForHRInterview(id, session.user.id);
 
   if (!assessment) {
     notFound();

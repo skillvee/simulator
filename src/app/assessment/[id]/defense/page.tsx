@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { db } from "@/server/db";
+import { getAssessmentForDefense } from "@/server/queries/assessment";
 import { DefenseClient } from "./client";
 import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
 
@@ -16,28 +16,7 @@ export default async function DefensePage({ params }: DefensePageProps) {
     redirect("/sign-in");
   }
 
-  // Fetch the assessment and verify ownership
-  const assessment = await db.assessment.findFirst({
-    where: {
-      id,
-      userId: session.user.id,
-    },
-    include: {
-      scenario: {
-        include: {
-          coworkers: {
-            where: {
-              role: {
-                contains: "Manager",
-                mode: "insensitive",
-              },
-            },
-            take: 1,
-          },
-        },
-      },
-    },
-  });
+  const assessment = await getAssessmentForDefense(id, session.user.id);
 
   if (!assessment) {
     redirect("/");

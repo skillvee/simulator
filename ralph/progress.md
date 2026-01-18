@@ -150,3 +150,41 @@ Learnings from autonomous issue resolution.
 4. **Type inference with generics**: The `api<T>()` generic pattern allows callers to specify expected response types, improving type safety across the codebase.
 
 5. **Body handling**: The api client automatically stringifies object bodies and sets Content-Type header, simplifying call sites from verbose fetch patterns.
+
+## Issue #97: REF-007 - Extract Server-Side Data Fetching Utilities
+
+### What was implemented
+- Created `src/server/queries/` directory for reusable server-side data fetching
+- Created `assessment.ts` with specialized query functions for different page needs
+- Added `CLAUDE.md` documenting available queries and usage patterns
+- Migrated 3 assessment pages to use new utilities
+
+### Files changed
+- `src/server/queries/assessment.ts` - Query functions:
+  - `getAssessmentWithContext()` - basic assessment + scenario + user
+  - `getAssessmentForHRInterview()` - HR page with conversation transcript
+  - `getAssessmentForChat()` - chat page with coworkers
+  - `getAssessmentForDefense()` - defense page with manager coworker
+  - `getAssessmentForWelcome()` - welcome page with HR assessment
+  - `getAssessmentForResults()` - results page with scenario and user
+  - `getAssessmentBasic()` - verification only
+- `src/server/queries/index.ts` - Re-exports all query functions
+- `src/server/queries/CLAUDE.md` - Documentation for query usage
+- `src/app/assessment/[id]/hr-interview/page.tsx` - Uses getAssessmentForHRInterview
+- `src/app/assessment/[id]/chat/page.tsx` - Uses getAssessmentForChat
+- `src/app/assessment/[id]/defense/page.tsx` - Uses getAssessmentForDefense
+
+### Learnings for future iterations
+
+1. **Query function naming**: Use pattern `getAssessmentFor<Purpose>(id, userId)` to clearly indicate what data is included for which page/use case.
+
+2. **Ownership verification patterns**: Two approaches exist:
+   - `findFirst({ where: { id, userId } })` - filters in query, returns null if not owner
+   - `findUnique({ where: { id } })` + manual `userId !== userId` check - separate verification
+   Both are valid; use `findFirst` for simpler code when ownership is the primary concern.
+
+3. **Include vs Select**: Use `select` when you only need specific scalar fields to reduce data transfer. Use `include` when you need related models with all their fields.
+
+4. **Query composition**: Keep queries purpose-specific rather than creating generic "fetch everything" functions. This ensures each page gets only the data it needs.
+
+5. **Documentation location**: Add CLAUDE.md to directories with reusable utilities to guide future usage and additions.
