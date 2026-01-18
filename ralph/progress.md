@@ -239,3 +239,30 @@ Learnings from autonomous issue resolution.
 5. **Token response callback**: Use `onTokenResponse` callback to let specific hooks extract additional data from token endpoint responses (e.g., managerName, prUrl) without the base hook needing to know about these fields.
 
 6. **Empty interface lint error**: ESLint complains about `interface X extends Y {}` when no new members are added. Use `type X = Y` instead for type aliases.
+
+## Issue #84: US-023 - Fix Call Widget Layout in Sidebar
+
+### What was implemented
+- Fixed call widget layout to stay fixed at bottom of sidebar
+- Made chats list scrollable when call widget is active
+- Added smooth transition when call widget appears/disappears
+
+### Files changed
+- `src/components/slack-layout.tsx` - Updated flex layout for sidebar:
+  - Changed coworker list from `overflow-auto` to `overflow-y-auto` for explicit vertical scrolling
+  - Changed call widget wrapper from `h-0` to `max-h-0` when inactive, `max-h-[100px]` when active
+  - Updated transition duration from 200ms to 300ms for smoother animation
+  - Ensured `flex-shrink-0` keeps call widget from being compressed
+
+### Learnings for future iterations
+
+1. **Flex layout for fixed footer elements**: In a flex column container, use this pattern for a scrollable list with a fixed footer:
+   - Container: `flex flex-col h-screen`
+   - Scrollable area: `flex-1 min-h-0 overflow-y-auto`
+   - Fixed footer: `flex-shrink-0`
+
+2. **max-height transitions vs height transitions**: Using `max-h-0`/`max-h-[100px]` with `overflow-hidden` allows smooth height transitions. Direct `h-0` doesn't animate well because height needs a specific value to transition to.
+
+3. **Browser testing limitations**: Headless browser testing cannot grant microphone/screen sharing permissions, so call functionality requires manual testing or mocked audio APIs.
+
+4. **min-h-0 for flex scroll children**: When a flex child should scroll its content, `min-h-0` is required to override the default `min-height: auto` which prevents the element from shrinking below its content size.

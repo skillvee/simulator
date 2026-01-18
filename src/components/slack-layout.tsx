@@ -176,7 +176,7 @@ function SlackLayoutInner({
           </div>
 
           {/* Coworker List - scrollable, shrinks when call widget appears */}
-          <div className="min-h-0 flex-1 overflow-auto">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             {/* Online/Interactive coworkers */}
             {coworkers.map((coworker) => (
               <CoworkerItem
@@ -201,10 +201,10 @@ function SlackLayoutInner({
 
           {/* Floating Call Bar - fixed at bottom when call is active */}
           <div
-            className={`flex-shrink-0 transition-all duration-200 ease-in-out ${
+            className={`flex-shrink-0 transition-all duration-300 ease-in-out ${
               activeCall && callingCoworker
-                ? "opacity-100"
-                : "h-0 overflow-hidden opacity-0"
+                ? "max-h-[100px] opacity-100"
+                : "max-h-0 overflow-hidden opacity-0"
             }`}
           >
             {activeCall && callingCoworker && (
