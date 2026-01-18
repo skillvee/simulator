@@ -46,7 +46,7 @@ const mockGenerateQueryEmbedding = generateQueryEmbedding as ReturnType<typeof v
 const mockBuildQueryText = buildQueryText as ReturnType<typeof vi.fn>;
 const mockQueryRaw = db.$queryRaw as unknown as ReturnType<typeof vi.fn>;
 const mockExecuteRaw = db.$executeRaw as unknown as ReturnType<typeof vi.fn>;
-const mockDbVideoAssessment = db.videoAssessment as {
+const mockDbVideoAssessment = db.videoAssessment as unknown as {
   findMany: ReturnType<typeof vi.fn>;
   count: ReturnType<typeof vi.fn>;
 };

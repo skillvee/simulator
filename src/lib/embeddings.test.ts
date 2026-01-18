@@ -53,7 +53,7 @@ import {
 
 // Cast mocks for type-safe access
 const mockEmbedContent = gemini.models.embedContent as ReturnType<typeof vi.fn>;
-const mockDbVideoAssessment = db.videoAssessment as { findUnique: ReturnType<typeof vi.fn> };
+const mockDbVideoAssessment = db.videoAssessment as unknown as { findUnique: ReturnType<typeof vi.fn> };
 const mockExecuteRaw = db.$executeRaw as unknown as ReturnType<typeof vi.fn>;
 const mockQueryRaw = db.$queryRaw as unknown as ReturnType<typeof vi.fn>;
 
