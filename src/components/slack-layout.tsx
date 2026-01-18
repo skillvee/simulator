@@ -2,7 +2,7 @@
 
 import { useState, Suspense, createContext, useContext } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Headphones } from "lucide-react";
 import {
   DECORATIVE_TEAM_MEMBERS,
   getInitials,
@@ -238,7 +238,8 @@ function CoworkerItem({
 
   return (
     <div
-      className={`border-b border-border p-3 ${
+      onClick={onChat}
+      className={`border-b border-border p-3 cursor-pointer transition-colors ${
         isSelected ? "bg-accent border-l-4 border-l-secondary" : "hover:bg-accent/50"
       }`}
     >
@@ -268,34 +269,28 @@ function CoworkerItem({
           <p className="text-xs text-muted-foreground truncate">
             {coworker.role}
           </p>
-          <p className="text-xs text-muted-foreground font-mono mt-0.5">
-            {isInCall ? (
+          {isInCall && (
+            <p className="text-xs font-mono mt-0.5">
               <span className="text-green-600 dark:text-green-400">in call</span>
-            ) : (
-              "online"
-            )}
-          </p>
+            </p>
+          )}
         </div>
-      </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-2 mt-3">
+        {/* Call button - top right, headphones icon (Slack style) */}
         <button
-          onClick={onChat}
-          className="flex-1 px-3 py-1.5 text-xs font-bold border-2 border-foreground bg-background hover:bg-foreground hover:text-background"
-        >
-          Chat
-        </button>
-        <button
-          onClick={onCall}
+          onClick={(e) => {
+            e.stopPropagation();
+            onCall();
+          }}
           disabled={isInCall}
-          className={`flex-1 px-3 py-1.5 text-xs font-bold border-2 border-foreground ${
+          className={`flex-shrink-0 p-1.5 border-2 border-foreground ${
             isInCall
               ? "bg-muted text-muted-foreground cursor-not-allowed"
-              : "bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background"
+              : "bg-background hover:bg-foreground hover:text-background"
           }`}
+          aria-label={isInCall ? "In call" : `Call ${coworker.name}`}
         >
-          {isInCall ? "In Call" : "Call"}
+          <Headphones size={16} />
         </button>
       </div>
     </div>
@@ -328,7 +323,6 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm truncate text-muted-foreground">{name}</p>
           <p className="text-xs text-muted-foreground truncate">{role}</p>
-          <p className="text-xs text-muted-foreground font-mono mt-0.5">offline</p>
         </div>
       </div>
     </div>

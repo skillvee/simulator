@@ -1,5 +1,6 @@
 "use client";
 
+import { Headphones } from "lucide-react";
 import {
   DECORATIVE_TEAM_MEMBERS,
   getInitials,
@@ -86,7 +87,8 @@ function CoworkerItem({
 
   return (
     <div
-      className={`border-b border-border p-3 ${
+      onClick={onChat}
+      className={`border-b border-border p-3 cursor-pointer transition-colors ${
         isSelected ? "bg-accent" : "hover:bg-accent/50"
       }`}
     >
@@ -108,25 +110,18 @@ function CoworkerItem({
           <p className="text-xs text-muted-foreground truncate">
             {coworker.role}
           </p>
-          <p className="text-xs text-muted-foreground font-mono mt-0.5">
-            online
-          </p>
         </div>
-      </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-2 mt-3">
+        {/* Call button - top right, headphones icon (Slack style) */}
         <button
-          onClick={onChat}
-          className="flex-1 px-3 py-1.5 text-xs font-bold border-2 border-foreground bg-background hover:bg-foreground hover:text-background"
+          onClick={(e) => {
+            e.stopPropagation();
+            onCall();
+          }}
+          className="flex-shrink-0 p-1.5 border-2 border-foreground bg-background hover:bg-foreground hover:text-background"
+          aria-label={`Call ${coworker.name}`}
         >
-          Chat
-        </button>
-        <button
-          onClick={onCall}
-          className="flex-1 px-3 py-1.5 text-xs font-bold border-2 border-foreground bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background"
-        >
-          Call
+          <Headphones size={16} />
         </button>
       </div>
     </div>
@@ -159,7 +154,6 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm truncate text-muted-foreground">{name}</p>
           <p className="text-xs text-muted-foreground truncate">{role}</p>
-          <p className="text-xs text-muted-foreground font-mono mt-0.5">offline</p>
         </div>
       </div>
     </div>
