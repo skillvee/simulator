@@ -140,11 +140,11 @@ describe("POST /api/code-review", () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.analyzed).toBe(false);
-    expect(data.codeReview).toEqual(existingReview);
-    expect(data.message).toContain("already exists");
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.analyzed).toBe(false);
+    expect(json.data.codeReview).toEqual(existingReview);
+    expect(json.data.message).toContain("already exists");
   });
 
   it("should run new analysis when forceReanalyze is true", async () => {
@@ -188,9 +188,9 @@ describe("POST /api/code-review", () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.analyzed).toBe(true);
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.analyzed).toBe(true);
     expect(mockAnalyzeCodeReview).toHaveBeenCalled();
     expect(mockAssessmentUpdate).toHaveBeenCalled();
   });
@@ -232,10 +232,10 @@ describe("POST /api/code-review", () => {
 
     const response = await POST(request);
     expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.analyzed).toBe(true);
-    expect(data.codeReview).toEqual(reviewData);
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.analyzed).toBe(true);
+    expect(json.data.codeReview).toEqual(reviewData);
   });
 
   it("should use existing prSnapshot if available", async () => {
@@ -339,10 +339,10 @@ describe("GET /api/code-review", () => {
 
     const response = await GET(request);
     expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.hasCodeReview).toBe(false);
-    expect(data.message).toContain("not been run yet");
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.hasCodeReview).toBe(false);
+    expect(json.data.message).toContain("not been run yet");
   });
 
   it("should return code review if exists", async () => {
@@ -366,10 +366,10 @@ describe("GET /api/code-review", () => {
 
     const response = await GET(request);
     expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.hasCodeReview).toBe(true);
-    expect(data.codeReview).toEqual(codeReview);
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.hasCodeReview).toBe(true);
+    expect(json.data.codeReview).toEqual(codeReview);
   });
 
   it("should return appropriate message when no PR URL", async () => {
@@ -389,9 +389,9 @@ describe("GET /api/code-review", () => {
 
     const response = await GET(request);
     expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.hasCodeReview).toBe(false);
-    expect(data.message).toContain("No PR URL found");
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.hasCodeReview).toBe(false);
+    expect(json.data.message).toContain("No PR URL found");
   });
 });

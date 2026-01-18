@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { gemini } from "@/lib/gemini";
@@ -15,6 +14,7 @@ import {
 } from "@/lib/conversation-memory";
 import type { Prisma } from "@prisma/client";
 import { buildChatPrompt } from "@/prompts";
+import { success, error } from "@/lib/api-response";
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
@@ -26,16 +26,16 @@ const CHAT_MODEL = "gemini-3-flash-preview";
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const body = await request.json();
   const { assessmentId, coworkerId, message } = body;
 
   if (!assessmentId || !coworkerId || !message) {
-    return NextResponse.json(
-      { error: "Missing required fields: assessmentId, coworkerId, message" },
-      { status: 400 }
+    return error(
+      "Missing required fields: assessmentId, coworkerId, message",
+      400
     );
   }
 
@@ -51,10 +51,7 @@ export async function POST(request: Request) {
   });
 
   if (!assessment) {
-    return NextResponse.json(
-      { error: "Assessment not found" },
-      { status: 404 }
-    );
+    return error("Assessment not found", 404, "NOT_FOUND");
   }
 
   // Get coworker persona
@@ -66,7 +63,7 @@ export async function POST(request: Request) {
   });
 
   if (!coworker) {
-    return NextResponse.json({ error: "Coworker not found" }, { status: 404 });
+    return error("Coworker not found", 404, "NOT_FOUND");
   }
 
   // Get ALL conversations for this assessment (for cross-coworker context)
@@ -221,7 +218,7 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({
+  return success({
     response: responseText,
     timestamp: modelMessage.timestamp,
   });
@@ -234,7 +231,7 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const { searchParams } = new URL(request.url);
@@ -242,9 +239,9 @@ export async function GET(request: Request) {
   const coworkerId = searchParams.get("coworkerId");
 
   if (!assessmentId || !coworkerId) {
-    return NextResponse.json(
-      { error: "Missing required parameters: assessmentId, coworkerId" },
-      { status: 400 }
+    return error(
+      "Missing required parameters: assessmentId, coworkerId",
+      400
     );
   }
 
@@ -257,10 +254,7 @@ export async function GET(request: Request) {
   });
 
   if (!assessment) {
-    return NextResponse.json(
-      { error: "Assessment not found" },
-      { status: 404 }
-    );
+    return error("Assessment not found", 404, "NOT_FOUND");
   }
 
   // Get conversation
@@ -276,5 +270,5 @@ export async function GET(request: Request) {
     ? (conversation.transcript as unknown as ChatMessage[])
     : [];
 
-  return NextResponse.json({ messages });
+  return success({ messages });
 }

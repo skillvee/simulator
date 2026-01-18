@@ -176,11 +176,12 @@ describe("POST /api/chat", () => {
     });
 
     const response = await POST(request);
-    const data = await response.json();
+    const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.response).toBe("Hi there! How can I help you?");
-    expect(data.timestamp).toBeDefined();
+    expect(json.success).toBe(true);
+    expect(json.data.response).toBe("Hi there! How can I help you?");
+    expect(json.data.timestamp).toBeDefined();
   });
 
   it("should include conversation history in Gemini request", async () => {
@@ -386,12 +387,13 @@ describe("GET /api/chat", () => {
     );
 
     const response = await GET(request);
-    const data = await response.json();
+    const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.messages).toHaveLength(2);
-    expect(data.messages[0].text).toBe("Hello");
-    expect(data.messages[1].text).toBe("Hi there!");
+    expect(json.success).toBe(true);
+    expect(json.data.messages).toHaveLength(2);
+    expect(json.data.messages[0].text).toBe("Hello");
+    expect(json.data.messages[1].text).toBe("Hi there!");
   });
 
   it("should return empty array when no conversation exists", async () => {
@@ -409,9 +411,10 @@ describe("GET /api/chat", () => {
     );
 
     const response = await GET(request);
-    const data = await response.json();
+    const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.messages).toEqual([]);
+    expect(json.success).toBe(true);
+    expect(json.data.messages).toEqual([]);
   });
 });

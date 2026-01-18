@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { generateEphemeralToken } from "@/lib/gemini";
@@ -8,12 +7,13 @@ import {
   formatBasicCandidateContext,
 } from "@/prompts";
 import { formatProfileForPrompt, profileFromPrismaJson } from "@/lib/cv-parser";
+import { success, error } from "@/lib/api-response";
 
 export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   try {
@@ -21,10 +21,7 @@ export async function POST(request: Request) {
     const { assessmentId } = body;
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     // Fetch the assessment and verify ownership
@@ -47,10 +44,7 @@ export async function POST(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
     // Build CV context for the HR interviewer
@@ -93,17 +87,14 @@ export async function POST(request: Request) {
       systemInstruction,
     });
 
-    return NextResponse.json({
+    return success({
       token,
       assessmentId: assessment.id,
       scenarioName: assessment.scenario.name,
       companyName: assessment.scenario.companyName,
     });
-  } catch (error) {
-    console.error("Error generating interview token:", error);
-    return NextResponse.json(
-      { error: "Failed to initialize interview" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error generating interview token:", err);
+    return error("Failed to initialize interview", 500);
   }
 }

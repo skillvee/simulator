@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { success, error } from "@/lib/api-response";
 
 interface SessionUser {
   id: string;
@@ -17,15 +17,12 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const scenarios = await db.scenario.findMany({
@@ -37,7 +34,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ scenarios });
+  return success({ scenarios });
 }
 
 /**
@@ -48,15 +45,12 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const body = await request.json();
@@ -78,18 +72,12 @@ export async function POST(request: Request) {
     !taskDescription ||
     !repoUrl
   ) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 }
-    );
+    return error("Missing required fields", 400);
   }
 
   // Validate techStack is an array
   if (techStack !== undefined && !Array.isArray(techStack)) {
-    return NextResponse.json(
-      { error: "techStack must be an array" },
-      { status: 400 }
-    );
+    return error("techStack must be an array", 400);
   }
 
   const scenario = await db.scenario.create({
@@ -104,5 +92,5 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ scenario }, { status: 201 });
+  return success({ scenario }, 201);
 }

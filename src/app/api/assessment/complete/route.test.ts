@@ -178,13 +178,13 @@ describe("POST /api/assessment/complete", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
 
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.assessment.status).toBe(AssessmentStatus.FINAL_DEFENSE);
-    expect(data.assessment.prUrl).toBe("https://github.com/org/repo/pull/123");
-    expect(data.timing.startedAt).toBeDefined();
-    expect(data.timing.completedWorkingAt).toBeDefined();
-    expect(data.timing.workingDurationSeconds).toBeGreaterThanOrEqual(0);
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.assessment.status).toBe(AssessmentStatus.FINAL_DEFENSE);
+    expect(json.data.assessment.prUrl).toBe("https://github.com/org/repo/pull/123");
+    expect(json.data.timing.startedAt).toBeDefined();
+    expect(json.data.timing.completedWorkingAt).toBeDefined();
+    expect(json.data.timing.workingDurationSeconds).toBeGreaterThanOrEqual(0);
   });
 
   it("should update assessment with correct data", async () => {
@@ -299,13 +299,14 @@ describe("GET /api/assessment/complete", () => {
     const response = await GET(request);
     expect(response.status).toBe(200);
 
-    const data = await response.json();
-    expect(data.assessment.id).toBe("test-id");
-    expect(data.assessment.status).toBe(AssessmentStatus.FINAL_DEFENSE);
-    expect(data.assessment.prUrl).toBe("https://github.com/org/repo/pull/123");
-    expect(data.timing.startedAt).toBe("2025-01-01T10:00:00.000Z");
-    expect(data.timing.completedAt).toBeNull();
-    expect(data.timing.elapsedSeconds).toBeGreaterThan(0);
+    const json = await response.json();
+    expect(json.success).toBe(true);
+    expect(json.data.assessment.id).toBe("test-id");
+    expect(json.data.assessment.status).toBe(AssessmentStatus.FINAL_DEFENSE);
+    expect(json.data.assessment.prUrl).toBe("https://github.com/org/repo/pull/123");
+    expect(json.data.timing.startedAt).toBe("2025-01-01T10:00:00.000Z");
+    expect(json.data.timing.completedAt).toBeNull();
+    expect(json.data.timing.elapsedSeconds).toBeGreaterThan(0);
   });
 });
 

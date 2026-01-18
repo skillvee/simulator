@@ -72,11 +72,12 @@ describe("GET /api/admin/scenarios", () => {
     mockFindMany.mockResolvedValue(mockScenarios);
 
     const response = await GET();
-    const data = await response.json();
+    const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.scenarios).toHaveLength(1);
-    expect(data.scenarios[0].name).toBe("Scenario 1");
+    expect(json.success).toBe(true);
+    expect(json.data.scenarios).toHaveLength(1);
+    expect(json.data.scenarios[0].name).toBe("Scenario 1");
     expect(mockFindMany).toHaveBeenCalledWith({
       include: {
         _count: {
@@ -95,10 +96,11 @@ describe("GET /api/admin/scenarios", () => {
     mockFindMany.mockResolvedValue([]);
 
     const response = await GET();
-    const data = await response.json();
+    const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.scenarios).toEqual([]);
+    expect(json.success).toBe(true);
+    expect(json.data.scenarios).toEqual([]);
   });
 });
 
@@ -175,11 +177,12 @@ describe("POST /api/admin/scenarios", () => {
     });
 
     const response = await POST(request);
-    const data = await response.json();
+    const json = await response.json();
 
     expect(response.status).toBe(201);
-    expect(data.scenario.name).toBe("Test Scenario");
-    expect(data.scenario.companyName).toBe("Test Company");
+    expect(json.success).toBe(true);
+    expect(json.data.scenario.name).toBe("Test Scenario");
+    expect(json.data.scenario.companyName).toBe("Test Company");
   });
 
   it("returns 400 when required fields are missing", async () => {

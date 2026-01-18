@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { AssessmentStatus } from "@prisma/client";
 import { isValidPrUrl } from "@/lib/pr-validation";
+import { success, error } from "@/lib/api-response";
 
 /**
  * POST /api/assessment/complete
@@ -15,33 +15,25 @@ export async function POST(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const body = await request.json();
     const { assessmentId, prUrl } = body;
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     if (!prUrl) {
-      return NextResponse.json(
-        { error: "PR URL is required" },
-        { status: 400 }
-      );
+      return error("PR URL is required", 400);
     }
 
     // Validate PR URL format
     if (!isValidPrUrl(prUrl)) {
-      return NextResponse.json(
-        {
-          error: "Invalid PR URL. Must be a valid GitHub or GitLab PR/MR link",
-        },
-        { status: 400 }
+      return error(
+        "Invalid PR URL. Must be a valid GitHub or GitLab PR/MR link",
+        400
       );
     }
 
@@ -57,26 +49,18 @@ export async function POST(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
     if (assessment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized to modify this assessment" },
-        { status: 403 }
-      );
+      return error("Unauthorized to modify this assessment", 403);
     }
 
     // Check that assessment is in WORKING status
     if (assessment.status !== AssessmentStatus.WORKING) {
-      return NextResponse.json(
-        {
-          error: `Cannot complete assessment in ${assessment.status} status. Must be in WORKING status.`,
-        },
-        { status: 400 }
+      return error(
+        `Cannot complete assessment in ${assessment.status} status. Must be in WORKING status.`,
+        400
       );
     }
 
@@ -102,8 +86,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
+    return success({
       assessment: updatedAssessment,
       timing: {
         startedAt: assessment.startedAt.toISOString(),
@@ -111,12 +94,9 @@ export async function POST(request: Request) {
         workingDurationSeconds,
       },
     });
-  } catch (error) {
-    console.error("Error completing assessment:", error);
-    return NextResponse.json(
-      { error: "Failed to complete assessment" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error completing assessment:", err);
+    return error("Failed to complete assessment", 500);
   }
 }
 
@@ -128,17 +108,14 @@ export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const { searchParams } = new URL(request.url);
     const assessmentId = searchParams.get("assessmentId");
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     const assessment = await db.assessment.findUnique({
@@ -154,17 +131,11 @@ export async function GET(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
     if (assessment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized to view this assessment" },
-        { status: 403 }
-      );
+      return error("Unauthorized to view this assessment", 403);
     }
 
     // Calculate elapsed time
@@ -172,7 +143,7 @@ export async function GET(request: Request) {
     const elapsedMs = now.getTime() - assessment.startedAt.getTime();
     const elapsedSeconds = Math.floor(elapsedMs / 1000);
 
-    return NextResponse.json({
+    return success({
       assessment: {
         id: assessment.id,
         status: assessment.status,
@@ -184,11 +155,8 @@ export async function GET(request: Request) {
         elapsedSeconds,
       },
     });
-  } catch (error) {
-    console.error("Error getting assessment status:", error);
-    return NextResponse.json(
-      { error: "Failed to get assessment status" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error getting assessment status:", err);
+    return error("Failed to get assessment status", 500);
   }
 }

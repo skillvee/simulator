@@ -437,3 +437,25 @@ const mockDb = (await import("@/lib/db")).db as {
   - Reference existing documentation (CLAUDE.md, progress.md, prd.md) rather than duplicating content
   - Table format works well for scripts documentation
   - Environment variables section should show structure but not actual values
+
+## Issue #94: REF-004 Standardize API Response Format
+
+- Created `src/lib/api-response.ts` with `success<T>()`, `error()`, and `validationError()` helpers
+- Helpers return `NextResponse` with standardized shape:
+  - Success: `{ success: true, data: T }`
+  - Error: `{ success: false, error: string, code?: string, details?: unknown }`
+- Migrated 5 representative routes to use new helpers:
+  - `interview/token` - voice interview token generation
+  - `chat` - coworker chat with Gemini
+  - `assessment/complete` - PR submission and phase transition
+  - `code-review` - AI code review analysis
+  - `admin/scenarios` - admin scenario CRUD
+- Updated route tests to use new response format (access data via `json.data.*`)
+- Documented migration pattern in `src/app/api/CLAUDE.md`
+- **Key learnings:**
+  - When renaming `error` parameter in catch blocks, use `err` to avoid conflict with `error` helper
+  - Tests expecting old format (`data.property`) need updating to new format (`json.data.property`)
+  - Types from `@/types/api.ts` (ApiSuccess, ApiError) are reused by the new helpers
+  - `validationError()` formats Zod errors with path and message for each issue
+- **Files created:** `src/lib/api-response.ts`, `src/lib/api-response.test.ts`
+- **Files modified:** 5 route files, 5 route test files, `src/app/api/CLAUDE.md`

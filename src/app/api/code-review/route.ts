@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import {
   type CodeReviewData,
 } from "@/lib/code-review";
 import { fetchGitHubPrContent } from "@/lib/github";
+import { success, error, validationError } from "@/lib/api-response";
 
 // Schema for code review request
 const codeReviewRequestSchema = z.object({
@@ -24,17 +25,14 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const body = await request.json();
     const parsed = codeReviewRequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: parsed.error.errors },
-        { status: 400 }
-      );
+      return validationError(parsed.error);
     }
 
     const { assessmentId, forceReanalyze } = parsed.data;
@@ -55,26 +53,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
     if (!assessment.prUrl) {
-      return NextResponse.json(
-        {
-          error:
-            "No PR URL found for this assessment. Please submit your PR first.",
-        },
-        { status: 400 }
+      return error(
+        "No PR URL found for this assessment. Please submit your PR first.",
+        400
       );
     }
 
     // Check if already analyzed
     if (assessment.codeReview && !forceReanalyze) {
-      return NextResponse.json({
-        success: true,
+      return success({
         analyzed: false,
         message:
           "Code review already exists. Use forceReanalyze: true to re-analyze.",
@@ -110,17 +101,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
+    return success({
       analyzed: true,
       codeReview: codeReviewData,
     });
-  } catch (error) {
-    console.error("Code review analysis error:", error);
-    return NextResponse.json(
-      { error: "Failed to analyze code" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Code review analysis error:", err);
+    return error("Failed to analyze code", 500);
   }
 }
 
@@ -132,17 +119,14 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const { searchParams } = new URL(request.url);
     const assessmentId = searchParams.get("assessmentId");
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "assessmentId is required" },
-        { status: 400 }
-      );
+      return error("assessmentId is required", 400);
     }
 
     // Fetch assessment with code review
@@ -160,15 +144,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404, "NOT_FOUND");
     }
 
     if (!assessment.codeReview) {
-      return NextResponse.json({
-        success: true,
+      return success({
         hasCodeReview: false,
         prUrl: assessment.prUrl,
         message: assessment.prUrl
@@ -177,17 +157,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
+    return success({
       hasCodeReview: true,
       prUrl: assessment.prUrl,
       codeReview: assessment.codeReview as unknown as CodeReviewData,
     });
-  } catch (error) {
-    console.error("Get code review error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Get code review error:", err);
+    return error("Internal server error", 500);
   }
 }

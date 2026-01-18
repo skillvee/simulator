@@ -119,13 +119,14 @@ describe("POST /api/interview/token", () => {
     });
 
     const response = await POST(request);
-    const data = await response.json();
+    const json = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.token).toBe("mock-token-123");
-    expect(data.assessmentId).toBe("assessment-1");
-    expect(data.scenarioName).toBe("Test Scenario");
-    expect(data.companyName).toBe("Test Company");
+    expect(json.success).toBe(true);
+    expect(json.data.token).toBe("mock-token-123");
+    expect(json.data.assessmentId).toBe("assessment-1");
+    expect(json.data.scenarioName).toBe("Test Scenario");
+    expect(json.data.companyName).toBe("Test Company");
   });
 
   it("should include parsed profile context when parsedProfile is present", async () => {
