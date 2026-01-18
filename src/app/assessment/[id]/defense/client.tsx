@@ -11,7 +11,7 @@ import {
   VolumeX,
   ExternalLink,
 } from "lucide-react";
-import { useDefenseCall, type ConnectionState } from "@/hooks/use-defense-call";
+import { useDefenseCall, type VoiceConnectionState as ConnectionState } from "@/hooks/voice";
 import type { TranscriptMessage } from "@/lib/gemini";
 
 interface DefenseClientProps {
@@ -34,6 +34,7 @@ function ConnectionStateIndicator({ state }: { state: ConnectionState }) {
     connected: { label: "In call", color: "bg-green-500" },
     error: { label: "Connection error", color: "bg-red-500" },
     ended: { label: "Call ended", color: "bg-muted" },
+    retrying: { label: "Retrying...", color: "bg-secondary" },
   };
 
   const config = stateConfig[state];

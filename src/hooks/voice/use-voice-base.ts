@@ -12,73 +12,106 @@ import {
   checkMicrophonePermission,
   requestMicrophoneAccess,
   playAudioChunk,
+  stopAudioPlayback,
   createAudioWorkletBlobUrl,
   type AudioPermissionState,
 } from "@/lib/audio";
 import type { TranscriptMessage } from "@/lib/gemini";
+import {
+  categorizeError,
+  calculateBackoffDelay,
+  saveProgress,
+  loadProgress,
+  clearProgress,
+  type CategorizedError,
+} from "@/lib/error-recovery";
+import type {
+  VoiceConnectionState,
+  VoiceBaseOptions,
+  VoiceBaseReturn,
+  VoiceConfig,
+} from "./types";
 
-export type ConnectionState =
-  | "idle"
-  | "requesting-permission"
-  | "connecting"
-  | "connected"
-  | "error"
-  | "ended";
+const DEFAULT_MAX_RETRIES = 3;
 
-export interface UseDefenseCallOptions {
-  assessmentId: string;
-  onTranscriptUpdate?: (transcript: TranscriptMessage[]) => void;
-  onConnectionStateChange?: (state: ConnectionState) => void;
-  onError?: (error: string) => void;
-  onCallEnded?: () => void;
+export interface UseVoiceBaseOptions extends VoiceBaseOptions {
+  config: VoiceConfig;
+  /** Additional body parameters for the token request */
+  tokenRequestBody?: Record<string, unknown>;
+  /** Callback when token response is received (to extract additional data) */
+  onTokenResponse?: (data: Record<string, unknown>) => void;
 }
 
-export interface UseDefenseCallReturn {
-  connectionState: ConnectionState;
-  permissionState: AudioPermissionState;
-  transcript: TranscriptMessage[];
-  error: string | null;
-  isAudioSupported: boolean;
-  isSpeaking: boolean;
-  isListening: boolean;
-  callStartedAt: Date | null;
-  callEndedAt: Date | null;
-  managerName: string | null;
-  managerRole: string | null;
-  prUrl: string | null;
-  connect: () => Promise<void>;
-  disconnect: () => void;
-  endCall: () => Promise<void>;
+export interface UseVoiceBaseReturn extends VoiceBaseReturn {
+  /** The underlying Gemini session ref (for advanced use cases) */
+  sessionRef: React.RefObject<Session | null>;
+  /** The transcript ref (for access in callbacks) */
+  transcriptRef: React.RefObject<TranscriptMessage[]>;
+  /** Update transcript manually */
+  updateTranscript: (transcript: TranscriptMessage[]) => void;
+  /** Add a message to the transcript */
+  addToTranscript: (role: "user" | "model", text: string) => void;
+  /** Whether there is a recoverable session saved */
+  hasRecoverableSession: boolean;
+  /** Recover a previously saved session */
+  recoverSession: () => void;
+  /** Clear saved progress */
+  clearSavedProgress: () => void;
+  /** When the call/session started */
+  startedAt: Date | null;
+  /** When the call/session ended */
+  endedAt: Date | null;
+  /** Set the ended time */
+  setEndedAt: (date: Date | null) => void;
 }
 
-export function useDefenseCall({
+/**
+ * Base hook for all voice conversation functionality.
+ * Extracts common logic for connection management, audio handling,
+ * transcript management, retry logic, and session recovery.
+ */
+export function useVoiceBase({
   assessmentId,
   onTranscriptUpdate,
   onConnectionStateChange,
   onError,
-  onCallEnded,
-}: UseDefenseCallOptions): UseDefenseCallReturn {
+  maxRetries = DEFAULT_MAX_RETRIES,
+  config,
+  tokenRequestBody = {},
+  onTokenResponse,
+}: UseVoiceBaseOptions): UseVoiceBaseReturn {
+  // Connection state
   const [connectionState, setConnectionState] =
-    useState<ConnectionState>("idle");
+    useState<VoiceConnectionState>("idle");
   const [permissionState, setPermissionState] =
     useState<AudioPermissionState>("prompt");
-  const [transcript, setTranscript] = useState<TranscriptMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [categorizedError, setCategorizedError] =
+    useState<CategorizedError | null>(null);
   const [isAudioSupported] = useState(() => checkAudioSupport());
+
+  // Audio state
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [callStartedAt, setCallStartedAt] = useState<Date | null>(null);
-  const [callEndedAt, setCallEndedAt] = useState<Date | null>(null);
-  const [managerName, setManagerName] = useState<string | null>(null);
-  const [managerRole, setManagerRole] = useState<string | null>(null);
-  const [managerId, setManagerId] = useState<string | null>(null);
-  const [prUrl, setPrUrl] = useState<string | null>(null);
 
+  // Transcript state
+  const [transcript, setTranscript] = useState<TranscriptMessage[]>([]);
+  const transcriptRef = useRef<TranscriptMessage[]>([]);
+
+  // Timing state
+  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [endedAt, setEndedAt] = useState<Date | null>(null);
+
+  // Retry state
+  const [retryCount, setRetryCount] = useState(0);
+  const [hasRecoverableSession, setHasRecoverableSession] = useState(false);
+
+  // Refs for WebSocket and audio handling
   const sessionRef = useRef<Session | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
-  const transcriptRef = useRef<TranscriptMessage[]>([]);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Audio playback queue
   const audioQueueRef = useRef<string[]>([]);
@@ -86,21 +119,35 @@ export function useDefenseCall({
 
   // Update connection state with callback
   const updateConnectionState = useCallback(
-    (state: ConnectionState) => {
+    (state: VoiceConnectionState) => {
       setConnectionState(state);
       onConnectionStateChange?.(state);
     },
     [onConnectionStateChange]
   );
 
-  // Update transcript with callback
+  // Update transcript with callback and optionally save progress
   const updateTranscript = useCallback(
     (newTranscript: TranscriptMessage[]) => {
       setTranscript(newTranscript);
       transcriptRef.current = newTranscript;
       onTranscriptUpdate?.(newTranscript);
+
+      // Save progress for session recovery if enabled
+      if (config.enableSessionRecovery && config.progressType) {
+        saveProgress(assessmentId, config.progressType, {
+          transcript: newTranscript,
+          startedAt: startedAt?.toISOString(),
+        });
+      }
     },
-    [onTranscriptUpdate]
+    [
+      onTranscriptUpdate,
+      assessmentId,
+      config.enableSessionRecovery,
+      config.progressType,
+      startedAt,
+    ]
   );
 
   // Add message to transcript
@@ -178,6 +225,7 @@ export function useDefenseCall({
       // Handle interruption
       if (message.serverContent?.interrupted) {
         audioQueueRef.current = [];
+        stopAudioPlayback();
         setIsSpeaking(false);
       }
     },
@@ -226,13 +274,14 @@ export function useDefenseCall({
     []
   );
 
-  // Connect to Gemini Live for defense call
+  // Connect to Gemini Live
   const connect = useCallback(async () => {
     if (connectionState !== "idle" && connectionState !== "error") {
       return;
     }
 
     setError(null);
+    setCategorizedError(null);
     updateConnectionState("requesting-permission");
 
     try {
@@ -247,23 +296,22 @@ export function useDefenseCall({
 
       updateConnectionState("connecting");
 
-      // Get ephemeral token from server for defense call
-      const tokenResponse = await fetch("/api/defense/token", {
+      // Get ephemeral token from server
+      const tokenResponse = await fetch(config.tokenEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessmentId }),
+        body: JSON.stringify({ assessmentId, ...tokenRequestBody }),
       });
 
       if (!tokenResponse.ok) {
         const data = await tokenResponse.json();
-        throw new Error(data.error || "Failed to get defense token");
+        throw new Error(data.error || "Failed to get token");
       }
 
       const tokenData = await tokenResponse.json();
-      setManagerName(tokenData.managerName);
-      setManagerRole(tokenData.managerRole);
-      setManagerId(tokenData.managerId);
-      setPrUrl(tokenData.prUrl);
+
+      // Let caller extract additional data from token response
+      onTokenResponse?.(tokenData);
 
       // Connect to Gemini Live using the ephemeral token as API key
       // Note: Must use httpOptions.baseUrl WITHOUT trailing slash to avoid double slash bug in SDK
@@ -286,7 +334,7 @@ export function useDefenseCall({
         callbacks: {
           onopen: () => {
             sessionConnected = true;
-            setCallStartedAt(new Date());
+            setStartedAt(new Date());
             updateConnectionState("connected");
           },
           onmessage: handleServerMessage,
@@ -311,43 +359,99 @@ export function useDefenseCall({
 
       // Start the conversation by sending a greeting trigger
       session.sendClientContent({
-        turns: [
-          {
-            role: "user",
-            parts: [{ text: "Hi, I'm ready to walk you through my PR!" }],
-          },
-        ],
+        turns: [{ role: "user", parts: [{ text: config.initialGreeting }] }],
         turnComplete: true,
       });
     } catch (err) {
       console.error("Connection error:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to connect";
+      const catError = categorizeError(err);
+      setCategorizedError(catError);
+      setError(catError.userMessage);
 
       // Handle permission denied specifically
-      if (
-        errorMessage.includes("Permission denied") ||
-        errorMessage.includes("NotAllowedError")
-      ) {
+      if (catError.category === "permission") {
         setPermissionState("denied");
-        setError(
-          "Microphone access was denied. Please enable microphone access to continue."
-        );
-      } else {
-        setError(errorMessage);
       }
 
       updateConnectionState("error");
-      onError?.(errorMessage);
+      onError?.(catError.userMessage);
     }
   }, [
     connectionState,
     assessmentId,
+    config.tokenEndpoint,
+    config.initialGreeting,
+    tokenRequestBody,
     updateConnectionState,
     handleServerMessage,
     initializeAudioCapture,
     onError,
+    onTokenResponse,
   ]);
+
+  // Retry connection with exponential backoff
+  const retry = useCallback(async () => {
+    if (!categorizedError?.isRetryable) {
+      return;
+    }
+
+    if (retryCount >= maxRetries) {
+      setError("Maximum retry attempts reached. Please try again later.");
+      return;
+    }
+
+    // Clear any existing retry timeout
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+    }
+
+    const attempt = retryCount + 1;
+    setRetryCount(attempt);
+    updateConnectionState("retrying");
+
+    // Calculate backoff delay
+    const delay = calculateBackoffDelay(retryCount);
+
+    // Wait for backoff delay then retry
+    await new Promise<void>((resolve) => {
+      retryTimeoutRef.current = setTimeout(resolve, delay);
+    });
+
+    // Reset error state for retry
+    setError(null);
+    setCategorizedError(null);
+    updateConnectionState("idle");
+
+    // Attempt reconnection
+    await connect();
+  }, [categorizedError, retryCount, maxRetries, updateConnectionState, connect]);
+
+  // Recover session from saved progress
+  const recoverSession = useCallback(() => {
+    if (!config.enableSessionRecovery || !config.progressType) {
+      return;
+    }
+
+    const progress = loadProgress(assessmentId, config.progressType);
+    if (progress && progress.data.transcript) {
+      const savedTranscript = progress.data.transcript as TranscriptMessage[];
+      setTranscript(savedTranscript);
+      transcriptRef.current = savedTranscript;
+
+      if (progress.data.startedAt) {
+        setStartedAt(new Date(progress.data.startedAt as string));
+      }
+
+      setHasRecoverableSession(false);
+    }
+  }, [assessmentId, config.enableSessionRecovery, config.progressType]);
+
+  // Clear saved progress
+  const clearSavedProgress = useCallback(() => {
+    if (config.progressType) {
+      clearProgress(assessmentId, config.progressType);
+    }
+  }, [assessmentId, config.progressType]);
 
   // Disconnect from Gemini Live
   const disconnect = useCallback(() => {
@@ -378,38 +482,14 @@ export function useDefenseCall({
     audioQueueRef.current = [];
   }, []);
 
-  // End call and save transcript
-  const endCall = useCallback(async () => {
-    const endTime = new Date();
-    setCallEndedAt(endTime);
-    disconnect();
-    updateConnectionState("ended");
-
-    // Save transcript to server
-    if (transcriptRef.current.length > 0) {
-      try {
-        await fetch("/api/defense/transcript", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            assessmentId,
-            managerId,
-            transcript: transcriptRef.current,
-          }),
-        });
-      } catch (err) {
-        console.error("Error saving transcript:", err);
-      }
-    }
-
-    // Call the onCallEnded callback
-    onCallEnded?.();
-  }, [assessmentId, managerId, disconnect, updateConnectionState, onCallEnded]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       disconnect();
+      // Clear any pending retry timeout
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
     };
   }, [disconnect]);
 
@@ -420,21 +500,57 @@ export function useDefenseCall({
     }
   }, [isAudioSupported]);
 
+  // Check for recoverable session on mount
+  useEffect(() => {
+    if (config.enableSessionRecovery && config.progressType) {
+      const progress = loadProgress(assessmentId, config.progressType);
+      if (progress && progress.data.transcript) {
+        const transcriptData = progress.data.transcript as TranscriptMessage[];
+        if (transcriptData.length > 0) {
+          setHasRecoverableSession(true);
+        }
+      }
+    }
+  }, [assessmentId, config.enableSessionRecovery, config.progressType]);
+
   return {
+    // Connection state
     connectionState,
     permissionState,
-    transcript,
     error,
+    categorizedError,
     isAudioSupported,
+
+    // Audio state
     isSpeaking,
     isListening,
-    callStartedAt,
-    callEndedAt,
-    managerName,
-    managerRole,
-    prUrl,
+
+    // Transcript
+    transcript,
+    transcriptRef,
+    updateTranscript,
+    addToTranscript,
+
+    // Timing
+    startedAt,
+    endedAt,
+    setEndedAt,
+
+    // Retry
+    retryCount,
+    maxRetries,
+    retry,
+
+    // Session recovery
+    hasRecoverableSession,
+    recoverSession,
+    clearSavedProgress,
+
+    // Actions
     connect,
     disconnect,
-    endCall,
+
+    // Advanced
+    sessionRef,
   };
 }

@@ -188,3 +188,54 @@ Learnings from autonomous issue resolution.
 4. **Query composition**: Keep queries purpose-specific rather than creating generic "fetch everything" functions. This ensures each page gets only the data it needs.
 
 5. **Documentation location**: Add CLAUDE.md to directories with reusable utilities to guide future usage and additions.
+
+## Issue #99: REF-009 - Consolidate Voice Hook Duplication
+
+### What was implemented
+- Created `src/hooks/voice/` directory with shared voice hook infrastructure
+- Created `types.ts` with unified `VoiceConnectionState` type (now includes "retrying" for all hooks)
+- Created `use-voice-base.ts` (~400 LOC) extracting common logic:
+  - Connection state management
+  - Audio capture initialization (16kHz input)
+  - Audio playback queue (24kHz output)
+  - WebSocket message handling
+  - Retry with exponential backoff
+  - Session recovery (optional)
+- Refactored all 4 voice hooks to extend base hook
+- Added "retrying" state to defense and kickoff hooks (previously missing)
+- Added consistent retry logic to all hooks (previously only 2 of 4 had it)
+- Updated component imports to use new path (`@/hooks/voice`)
+
+### Files changed
+- `src/hooks/voice/types.ts` - Shared types (VoiceConnectionState, VoiceBaseOptions, etc.)
+- `src/hooks/voice/use-voice-base.ts` - ~400 LOC shared base hook
+- `src/hooks/voice/use-voice-conversation.ts` - ~140 LOC HR interview hook
+- `src/hooks/voice/use-coworker-voice.ts` - ~120 LOC coworker call hook
+- `src/hooks/voice/use-defense-call.ts` - ~120 LOC defense call hook
+- `src/hooks/voice/use-manager-kickoff.ts` - ~110 LOC manager kickoff hook
+- `src/hooks/voice/index.ts` - Re-exports all voice hooks and types
+- `src/hooks/index.ts` - Main hooks re-exports
+- `src/hooks/CLAUDE.md` - Updated with new hook structure documentation
+- `src/components/voice-conversation.tsx` - Updated import path
+- `src/components/coworker-voice-call.tsx` - Updated import path
+- `src/app/assessment/[id]/defense/client.tsx` - Updated import path, added retrying state
+- Deleted: `src/hooks/use-voice-conversation.ts`, `src/hooks/use-coworker-voice.ts`, `src/hooks/use-defense-call.ts`, `src/hooks/use-manager-kickoff.ts`
+
+### LOC Reduction
+- Before: 1940 LOC across 4 hooks
+- After: 1156 LOC across 6 files (base + 4 hooks + types)
+- Reduction: 784 LOC (40.4%)
+
+### Learnings for future iterations
+
+1. **Base hook pattern**: When multiple hooks share significant code, extract shared logic into a base hook that accepts configuration. Specific hooks become thin wrappers that configure the base and add domain-specific logic.
+
+2. **Consistent typing**: Unify connection states across hooks to ensure consistent UI handling. The "retrying" state was missing in 2 of 4 hooks, causing TypeScript exhaustiveness issues.
+
+3. **Session vs Ref pattern**: The base hook exposes both the state (`transcript`) and ref (`transcriptRef`) because callbacks in closures may have stale state. Consumers use refs in callbacks but state in render.
+
+4. **Optional features via config**: Features like session recovery are controlled via config object (`enableSessionRecovery`, `progressType`), making the base hook flexible without adding complexity to hooks that don't need the feature.
+
+5. **Token response callback**: Use `onTokenResponse` callback to let specific hooks extract additional data from token endpoint responses (e.g., managerName, prUrl) without the base hook needing to know about these fields.
+
+6. **Empty interface lint error**: ESLint complains about `interface X extends Y {}` when no new members are added. Use `type X = Y` instead for type aliases.

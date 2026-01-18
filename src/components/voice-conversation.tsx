@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import {
   useVoiceConversation,
-  type ConnectionState,
-} from "@/hooks/use-voice-conversation";
+  type VoiceConnectionState as ConnectionState,
+} from "@/hooks/voice";
 import type { TranscriptMessage } from "@/lib/gemini";
 import {
   ErrorDisplay,
