@@ -2,6 +2,38 @@
 
 Learnings from autonomous issue resolution.
 
+## Issue #86: BUG - Typing Indicator Persists After Initial Manager Messages
+
+### What was implemented
+- Fixed bug where typing indicator remained visible as the first message in the chat list after all manager messages were delivered
+- Changed from storing typing indicators in the messages array to using a boolean state (`isShowingTypingIndicator`)
+- Typing indicator now renders conditionally outside the messages loop, at the end of the message list
+
+### Files changed
+- `src/app/assessment/[id]/welcome/client.tsx` - Refactored typing indicator implementation:
+  - Removed `isTyping` property from `Message` interface
+  - Replaced `allMessagesShown` state with `isShowingTypingIndicator` boolean
+  - Updated `useEffect` to set boolean state instead of adding/removing typing messages
+  - Render typing indicator as separate conditional element at end of messages
+
+### Root cause
+The bug was caused by storing typing indicators as message objects in the messages array. In React Strict Mode (development), effects run twice:
+1. First run adds typing indicator to state, starts timer
+2. Cleanup clears timer (but typing indicator already in state)
+3. Second run uses `prev` state that already contains typing indicator, potentially creating duplicates
+
+By removing the timer before it could fire, the typing indicator was never cleaned up from the messages array.
+
+### Learnings for future iterations
+
+1. **Typing indicators as boolean state**: For transient UI states like typing indicators, use a boolean state variable and render conditionally OUTSIDE the data array. This pattern (used in `chat.tsx`) is more robust than storing ephemeral UI state in data arrays.
+
+2. **React Strict Mode effect timing**: Effects that add data to state and rely on timers to clean it up are vulnerable to Strict Mode's double-invocation. The cleanup function only clears the timer, not the state update that already occurred.
+
+3. **Pattern comparison**: When fixing UI bugs, compare similar working implementations in the codebase. The `chat.tsx` component had a working typing indicator using `isSending` boolean state - this pattern was adapted for the welcome page.
+
+4. **Browser testing for visual bugs**: Use agent-browser snapshots to verify visual state. The snapshot output clearly showed `"typing... AC Alex Chen 10:01 AM"` confirming the typing indicator persisted before actual messages.
+
 ## Issue #98: REF-008 - Create Test Factory Pattern
 
 ### What was implemented

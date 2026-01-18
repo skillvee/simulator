@@ -28,7 +28,6 @@ interface Message {
   id: string;
   content: string;
   timestamp: string;
-  isTyping?: boolean;
 }
 
 export function WelcomeClient({
@@ -83,10 +82,11 @@ function WelcomeContent({
   const { startCall, activeCall } = useCallContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [allMessagesShown, setAllMessagesShown] = useState(false);
+  const [isShowingTypingIndicator, setIsShowingTypingIndicator] =
+    useState(false);
 
   // Manager's welcome messages
-  const welcomeMessages: Omit<Message, "id" | "isTyping">[] = [
+  const welcomeMessages: Omit<Message, "id">[] = [
     {
       content: `Hey ${userName}! Welcome to ${companyName}! I'm so glad to have you on the team.`,
       timestamp: "10:01 AM",
@@ -116,17 +116,13 @@ function WelcomeContent({
   // Typewriter effect for messages
   useEffect(() => {
     if (currentMessageIndex >= welcomeMessages.length) {
-      // All messages shown - set flag to hide typing indicator
-      setAllMessagesShown(true);
+      // All messages shown - hide typing indicator
+      setIsShowingTypingIndicator(false);
       return;
     }
 
-    // Add typing indicator
-    const typingId = `typing-${currentMessageIndex}`;
-    setMessages((prev) => [
-      ...prev,
-      { id: typingId, content: "", timestamp: "", isTyping: true },
-    ]);
+    // Show typing indicator
+    setIsShowingTypingIndicator(true);
 
     // Simulate typing delay (varies by message length)
     const typingDelay = Math.min(
@@ -135,17 +131,15 @@ function WelcomeContent({
     );
 
     const timer = setTimeout(() => {
-      // Remove typing indicator and add actual message
-      setMessages((prev) => {
-        const filtered = prev.filter((m) => m.id !== typingId);
-        return [
-          ...filtered,
-          {
-            id: `msg-${currentMessageIndex}`,
-            ...welcomeMessages[currentMessageIndex],
-          },
-        ];
-      });
+      // Hide typing indicator and add actual message
+      setIsShowingTypingIndicator(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `msg-${currentMessageIndex}`,
+          ...welcomeMessages[currentMessageIndex],
+        },
+      ]);
       setCurrentMessageIndex((prev) => prev + 1);
     }, typingDelay);
 
@@ -165,10 +159,6 @@ function WelcomeContent({
     .toUpperCase()
     .slice(0, 2);
 
-  // Filter out typing indicators if all messages have been shown
-  const displayMessages = allMessagesShown
-    ? messages.filter((m) => !m.isTyping)
-    : messages;
 
   // Check if currently in a call with the manager
   const isInCall = activeCall?.coworkerId === managerId;
@@ -220,7 +210,7 @@ function WelcomeContent({
 
           {/* Messages */}
           <div className="space-y-4">
-            {displayMessages.map((message) => (
+            {messages.map((message) => (
               <div key={message.id} className="flex gap-3">
                 {/* Avatar */}
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 border-foreground bg-secondary">
@@ -233,23 +223,37 @@ function WelcomeContent({
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-baseline gap-2">
                     <span className="font-bold">{managerName}</span>
-                    {!message.isTyping && (
-                      <span className="font-mono text-sm text-muted-foreground">
-                        {message.timestamp}
-                      </span>
-                    )}
+                    <span className="font-mono text-sm text-muted-foreground">
+                      {message.timestamp}
+                    </span>
                   </div>
 
-                  {message.isTyping ? (
-                    <TypingIndicator />
-                  ) : (
-                    <div className="whitespace-pre-wrap text-foreground">
-                      {formatMessageContent(message.content, repoUrl)}
-                    </div>
-                  )}
+                  <div className="whitespace-pre-wrap text-foreground">
+                    {formatMessageContent(message.content, repoUrl)}
+                  </div>
                 </div>
               </div>
             ))}
+
+            {/* Typing indicator - shown at end of messages while AI is "typing" */}
+            {isShowingTypingIndicator && (
+              <div className="flex gap-3">
+                {/* Avatar */}
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 border-foreground bg-secondary">
+                  <span className="font-mono text-sm font-bold text-secondary-foreground">
+                    {managerInitials}
+                  </span>
+                </div>
+
+                {/* Typing content */}
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-baseline gap-2">
+                    <span className="font-bold">{managerName}</span>
+                  </div>
+                  <TypingIndicator />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
