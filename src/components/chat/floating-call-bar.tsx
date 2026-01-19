@@ -17,7 +17,7 @@ import {
   type AudioPermissionState,
 } from "@/lib/media";
 import type { TranscriptMessage } from "@/lib/ai";
-import { CoworkerAvatar } from "@/components/coworker-avatar";
+import { CoworkerAvatar } from "./coworker-avatar";
 
 export type CallState =
   | "idle"

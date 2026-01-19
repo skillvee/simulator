@@ -8,12 +8,10 @@ import type {
   AssessmentStatus,
   VideoAssessmentStatus,
 } from "@prisma/client";
-import { ProfileCVSection } from "@/components/profile-cv-section";
-import { ParsedProfileDisplay } from "@/components/parsed-profile-display";
+import { ProfileCVSection, ParsedProfileDisplay } from "@/components/candidate";
 import type { AssessmentReport } from "@/lib/analysis";
 import { profileFromPrismaJson } from "@/lib/candidate";
-import { AdminNav } from "@/components/admin-nav";
-import { DataDeletionSection } from "@/components/data-deletion-section";
+import { AdminNav, DataDeletionSection } from "@/components/admin";
 import { AlertTriangle } from "lucide-react";
 
 interface ExtendedUser {

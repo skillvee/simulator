@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Phone } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api-client";
-import { useCallContext } from "@/components/slack-layout";
-import { CoworkerAvatar } from "@/components/coworker-avatar";
+import { useCallContext } from "./slack-layout";
+import { CoworkerAvatar } from "./coworker-avatar";
 
 interface ChatMessage {
   role: "user" | "model";

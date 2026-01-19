@@ -1,7 +1,7 @@
 "use client";
 
 import { ScreenRecordingProvider } from "@/contexts/screen-recording-context";
-import { ScreenRecordingGuard } from "@/components/screen-recording-guard";
+import { ScreenRecordingGuard } from "./screen-recording-guard";
 
 interface AssessmentScreenWrapperProps {
   children: React.ReactNode;

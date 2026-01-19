@@ -3,7 +3,7 @@ import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { UserRole } from "@prisma/client";
-import { AdminNav } from "@/components/admin-nav";
+import { AdminNav } from "@/components/admin";
 import { AccountDeletionSection } from "./account-deletion-section";
 
 interface ExtendedUser {

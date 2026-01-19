@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Markdown } from "@/components/markdown";
+import { Markdown } from "@/components/shared";
 import { GEMINI_VOICES } from "@/lib/ai";
 
 interface Coworker {

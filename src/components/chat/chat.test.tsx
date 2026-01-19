@@ -19,7 +19,7 @@ vi.mock("@/lib/api-client", () => ({
 
 // Mock the useCallContext hook
 const mockActiveCall = { coworkerId: "", callType: "coworker" as const };
-vi.mock("@/components/slack-layout", () => ({
+vi.mock("./slack-layout", () => ({
   useCallContext: vi.fn(() => ({
     activeCall: mockActiveCall.coworkerId ? mockActiveCall : null,
     startCall: vi.fn(),

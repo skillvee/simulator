@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CVUpload } from "@/components/cv-upload";
+import { CVUpload } from "@/components/shared";
 
 interface CVUploadClientProps {
   assessmentId: string;

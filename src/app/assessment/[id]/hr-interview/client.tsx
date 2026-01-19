@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { VoiceConversation } from "@/components/voice-conversation";
+import { VoiceConversation } from "@/components/assessment";
 import type { TranscriptMessage } from "@/lib/ai";
 
 interface HRInterviewClientProps {

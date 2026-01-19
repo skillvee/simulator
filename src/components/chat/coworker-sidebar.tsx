@@ -2,7 +2,7 @@
 
 import { Headphones } from "lucide-react";
 import { DECORATIVE_TEAM_MEMBERS, getInitials } from "@/lib/ai";
-import { CoworkerAvatar } from "@/components/coworker-avatar";
+import { CoworkerAvatar } from "./coworker-avatar";
 
 interface Coworker {
   id: string;

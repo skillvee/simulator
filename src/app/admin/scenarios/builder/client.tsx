@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { ScenarioBuilderData } from "@/lib/scenarios";
-import { Markdown } from "@/components/markdown";
+import { Markdown } from "@/components/shared";
 
 interface ChatMessage {
   role: "user" | "model";

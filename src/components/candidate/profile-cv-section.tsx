@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CVUpload } from "./cv-upload";
+import { CVUpload } from "@/components/shared";
 
 interface ProfileCVSectionProps {
   initialCvUrl?: string | null;

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getAssessmentForChat } from "@/server/queries/assessment";
 import { ChatPageClient } from "./client";
-import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
+import { AssessmentScreenWrapper } from "@/components/assessment";
 
 interface ChatPageProps {
   params: Promise<{ id: string }>;

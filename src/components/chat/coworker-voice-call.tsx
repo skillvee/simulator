@@ -12,24 +12,30 @@ import {
   MessageSquare,
 } from "lucide-react";
 import {
-  useVoiceConversation,
+  useCoworkerVoice,
   type VoiceConnectionState as ConnectionState,
 } from "@/hooks/voice";
 import type { TranscriptMessage } from "@/lib/ai";
-import {
-  ErrorDisplay,
-  SessionRecoveryPrompt,
-} from "@/components/error-display";
+import { ErrorDisplay } from "@/components/feedback";
+import { CoworkerAvatar } from "./coworker-avatar";
 
-interface VoiceConversationProps {
+interface Coworker {
+  id: string;
+  name: string;
+  role: string;
+  avatarUrl: string | null;
+}
+
+interface CoworkerVoiceCallProps {
   assessmentId: string;
-  onEnd?: (transcript: TranscriptMessage[]) => void;
+  coworker: Coworker;
+  onEnd?: () => void;
   onFallbackToText?: () => void;
 }
 
 function ConnectionStateIndicator({ state }: { state: ConnectionState }) {
   const stateConfig = {
-    idle: { label: "Ready to connect", color: "bg-muted" },
+    idle: { label: "Ready to call", color: "bg-muted" },
     "requesting-permission": {
       label: "Requesting microphone...",
       color: "bg-secondary",
@@ -37,7 +43,7 @@ function ConnectionStateIndicator({ state }: { state: ConnectionState }) {
     connecting: { label: "Connecting...", color: "bg-secondary" },
     connected: { label: "Connected", color: "bg-green-500" },
     error: { label: "Connection error", color: "bg-red-500" },
-    ended: { label: "Interview ended", color: "bg-muted" },
+    ended: { label: "Call ended", color: "bg-muted" },
     retrying: { label: "Retrying...", color: "bg-secondary" },
   };
 
@@ -51,7 +57,13 @@ function ConnectionStateIndicator({ state }: { state: ConnectionState }) {
   );
 }
 
-function TranscriptView({ messages }: { messages: TranscriptMessage[] }) {
+function TranscriptView({
+  messages,
+  coworkerName,
+}: {
+  messages: TranscriptMessage[];
+  coworkerName: string;
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,7 +75,7 @@ function TranscriptView({ messages }: { messages: TranscriptMessage[] }) {
   if (messages.length === 0) {
     return (
       <div className="flex h-full items-center justify-center font-mono text-sm text-muted-foreground">
-        Conversation transcript will appear here
+        Call transcript will appear here
       </div>
     );
   }
@@ -83,7 +95,7 @@ function TranscriptView({ messages }: { messages: TranscriptMessage[] }) {
             }`}
           >
             <div className="mb-1 font-mono text-xs opacity-70">
-              {message.role === "user" ? "You" : "HR Interviewer"}
+              {message.role === "user" ? "You" : coworkerName}
             </div>
             <p className="text-sm">{message.text}</p>
           </div>
@@ -93,30 +105,12 @@ function TranscriptView({ messages }: { messages: TranscriptMessage[] }) {
   );
 }
 
-function _AudioVisualizerBar({ active }: { active: boolean }) {
-  return (
-    <div className="flex h-8 items-center gap-1">
-      {[...Array(5)].map((_, i) => (
-        <div
-          key={i}
-          className={`w-1 bg-secondary transition-all duration-150 ${
-            active ? "animate-pulse" : ""
-          }`}
-          style={{
-            height: active ? `${Math.random() * 100}%` : "20%",
-            animationDelay: `${i * 100}ms`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-export function VoiceConversation({
+export function CoworkerVoiceCall({
   assessmentId,
+  coworker,
   onEnd,
   onFallbackToText,
-}: VoiceConversationProps) {
+}: CoworkerVoiceCallProps) {
   const {
     connectionState,
     permissionState,
@@ -129,23 +123,19 @@ export function VoiceConversation({
     retryCount,
     maxRetries,
     connect,
-    endInterview,
+    endCall,
     retry,
-    hasRecoverableSession,
-    recoverSession,
-  } = useVoiceConversation({
+  } = useCoworkerVoice({
     assessmentId,
+    coworkerId: coworker.id,
     onTranscriptUpdate: () => {
       // Transcript updated
     },
   });
 
-  const handleEndInterview = async () => {
-    const success = await endInterview();
-    if (success) {
-      onEnd?.(transcript);
-    }
-    // If save failed, don't redirect - user stays on page to retry
+  const handleEndCall = async () => {
+    await endCall();
+    onEnd?.();
   };
 
   const isRetrying = connectionState === "retrying";
@@ -153,15 +143,17 @@ export function VoiceConversation({
   // Browser not supported
   if (!isAudioSupported) {
     return (
-      <div className="border-2 border-border p-8 text-center">
-        <div className="mb-4 text-4xl">
-          <MicOff className="mx-auto h-12 w-12 text-red-500" />
+      <div className="flex h-full items-center justify-center p-8">
+        <div className="max-w-md border-2 border-border p-8 text-center">
+          <div className="mb-4 text-4xl">
+            <MicOff className="mx-auto h-12 w-12 text-red-500" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold">Browser Not Supported</h3>
+          <p className="mb-4 text-muted-foreground">
+            Your browser doesn&apos;t support audio capture. Please use a modern
+            browser like Chrome, Firefox, or Safari.
+          </p>
         </div>
-        <h3 className="mb-2 text-xl font-bold">Browser Not Supported</h3>
-        <p className="mb-4 text-muted-foreground">
-          Your browser doesn&apos;t support audio capture. Please use a modern
-          browser like Chrome, Firefox, or Safari.
-        </p>
       </div>
     );
   }
@@ -169,55 +161,40 @@ export function VoiceConversation({
   // Permission denied
   if (permissionState === "denied" && connectionState === "error") {
     return (
-      <div className="border-2 border-border p-8 text-center">
-        <div className="mb-4 text-4xl">
-          <MicOff className="mx-auto h-12 w-12 text-red-500" />
-        </div>
-        <h3 className="mb-2 text-xl font-bold">Microphone Access Required</h3>
-        <p className="mb-4 text-muted-foreground">
-          Please enable microphone access in your browser settings to continue
-          with the voice interview.
-        </p>
-        <ol className="mx-auto mb-6 max-w-md space-y-2 text-left text-sm text-muted-foreground">
-          <li>1. Click the lock icon in your browser&apos;s address bar</li>
-          <li>2. Find &quot;Microphone&quot; in the permissions list</li>
-          <li>3. Change the setting to &quot;Allow&quot;</li>
-          <li>4. Refresh this page</li>
-        </ol>
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <button
-            onClick={() => window.location.reload()}
-            className="border-2 border-foreground bg-foreground px-6 py-3 font-semibold text-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
-          >
-            Refresh Page
-          </button>
-          {onFallbackToText && (
-            <button
-              onClick={onFallbackToText}
-              className="flex items-center justify-center gap-2 border-2 border-secondary bg-secondary px-6 py-3 font-semibold text-secondary-foreground hover:border-foreground hover:bg-foreground hover:text-background"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Continue with Text
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Session recovery prompt
-  if (hasRecoverableSession && connectionState === "idle") {
-    return (
       <div className="flex h-full items-center justify-center p-8">
-        <SessionRecoveryPrompt
-          onRecover={() => {
-            recoverSession();
-            connect();
-          }}
-          onStartFresh={connect}
-          lastSaved={new Date().toISOString()}
-          progressSummary={`${transcript.length} messages saved`}
-        />
+        <div className="max-w-md border-2 border-border p-8 text-center">
+          <div className="mb-4 text-4xl">
+            <MicOff className="mx-auto h-12 w-12 text-red-500" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold">Microphone Access Required</h3>
+          <p className="mb-4 text-muted-foreground">
+            Please enable microphone access in your browser settings to start a
+            voice call.
+          </p>
+          <ol className="mx-auto mb-6 max-w-md space-y-2 text-left text-sm text-muted-foreground">
+            <li>1. Click the lock icon in your browser&apos;s address bar</li>
+            <li>2. Find &quot;Microphone&quot; in the permissions list</li>
+            <li>3. Change the setting to &quot;Allow&quot;</li>
+            <li>4. Refresh this page</li>
+          </ol>
+          <div className="flex flex-col justify-center gap-3 sm:flex-row">
+            <button
+              onClick={() => window.location.reload()}
+              className="border-2 border-foreground bg-foreground px-6 py-3 font-semibold text-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
+            >
+              Refresh Page
+            </button>
+            {onFallbackToText && (
+              <button
+                onClick={onFallbackToText}
+                className="flex items-center justify-center gap-2 border-2 border-secondary bg-secondary px-6 py-3 font-semibold text-secondary-foreground hover:border-foreground hover:bg-foreground hover:text-background"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Chat Instead
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
@@ -227,7 +204,7 @@ export function VoiceConversation({
       {/* Header */}
       <div className="flex items-center justify-between border-b-2 border-border p-4">
         <div>
-          <h2 className="text-xl font-bold">HR Interview</h2>
+          <h2 className="text-xl font-bold">Voice Call with {coworker.name}</h2>
           <ConnectionStateIndicator state={connectionState} />
         </div>
 
@@ -259,7 +236,10 @@ export function VoiceConversation({
               </h3>
             </div>
             <div className="flex-1 overflow-hidden">
-              <TranscriptView messages={transcript} />
+              <TranscriptView
+                messages={transcript}
+                coworkerName={coworker.name}
+              />
             </div>
           </div>
         </div>
@@ -268,14 +248,12 @@ export function VoiceConversation({
         <div className="flex w-80 flex-col">
           <div className="flex flex-1 flex-col items-center justify-center p-8">
             {/* Avatar */}
-            <div className="mb-6 flex h-32 w-32 items-center justify-center border-2 border-foreground bg-secondary">
-              <span className="text-5xl font-bold text-secondary-foreground">
-                SM
-              </span>
+            <div className="mb-6">
+              <CoworkerAvatar name={coworker.name} size="xl" />
             </div>
-            <h3 className="mb-1 text-xl font-bold">Sarah Mitchell</h3>
+            <h3 className="mb-1 text-xl font-bold">{coworker.name}</h3>
             <p className="mb-6 font-mono text-sm text-muted-foreground">
-              Senior Technical Recruiter
+              {coworker.role}
             </p>
 
             {/* Speaking indicator */}
@@ -302,7 +280,7 @@ export function VoiceConversation({
                 className="flex items-center gap-2 border-2 border-green-600 bg-green-600 px-6 py-3 font-semibold text-white hover:border-green-700 hover:bg-green-700"
               >
                 <Phone className="h-5 w-5" />
-                Start Interview
+                Start Call
               </button>
             )}
 
@@ -320,11 +298,11 @@ export function VoiceConversation({
 
             {connectionState === "connected" && (
               <button
-                onClick={handleEndInterview}
+                onClick={handleEndCall}
                 className="flex items-center gap-2 border-2 border-red-600 bg-red-600 px-6 py-3 font-semibold text-white hover:border-red-700 hover:bg-red-700"
               >
                 <PhoneOff className="h-5 w-5" />
-                End Interview
+                End Call
               </button>
             )}
 
@@ -334,7 +312,7 @@ export function VoiceConversation({
                   error={categorizedError}
                   onRetry={retry}
                   onFallback={onFallbackToText}
-                  fallbackLabel="Continue with Text"
+                  fallbackLabel="Chat Instead"
                   isRetrying={isRetrying}
                   retryCount={retryCount}
                   maxRetries={maxRetries}
@@ -359,7 +337,7 @@ export function VoiceConversation({
                       className="flex items-center gap-2 border-2 border-secondary bg-secondary px-6 py-3 font-semibold text-secondary-foreground hover:border-foreground hover:bg-foreground hover:text-background"
                     >
                       <MessageSquare className="h-4 w-4" />
-                      Continue with Text
+                      Chat Instead
                     </button>
                   )}
                 </div>
@@ -369,7 +347,7 @@ export function VoiceConversation({
             {connectionState === "ended" && (
               <div className="text-center">
                 <p className="mb-4 font-mono text-sm text-muted-foreground">
-                  Interview completed
+                  Call completed
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {transcript.length} messages recorded
@@ -387,8 +365,8 @@ export function VoiceConversation({
               <ul className="space-y-1 text-xs text-muted-foreground">
                 <li>Speak clearly into your microphone</li>
                 <li>Find a quiet environment</li>
-                <li>Expected duration: ~20 minutes</li>
-                <li>You can interrupt the interviewer</li>
+                <li>You can interrupt at any time</li>
+                <li>Call transcript is saved automatically</li>
               </ul>
             </div>
           )}

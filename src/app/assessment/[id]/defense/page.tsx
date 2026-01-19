@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getAssessmentForDefense } from "@/server/queries/assessment";
 import { DefenseClient } from "./client";
-import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
+import { AssessmentScreenWrapper } from "@/components/assessment";
 
 interface DefensePageProps {
   params: Promise<{ id: string }>;

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { WelcomeClient } from "./client";
-import { AssessmentScreenWrapper } from "@/components/assessment-screen-wrapper";
+import { AssessmentScreenWrapper } from "@/components/assessment";
 
 interface WelcomePageProps {
   params: Promise<{ id: string }>;

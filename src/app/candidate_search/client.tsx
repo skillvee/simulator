@@ -35,16 +35,14 @@ import type { SeniorityLevel } from "@/lib/candidate";
 import {
   CandidateSearchResultGrid,
   type CandidateSearchResult,
-} from "@/components/candidate-search-result-card";
-import { RejectionFeedbackModal } from "@/components/rejection-feedback-modal";
-import type { ConstraintUpdate } from "@/lib/candidate";
-import { AssessmentDimension } from "@prisma/client";
-import {
   ActiveFiltersBar,
   createFiltersFromIntent,
   removeFilterFromIntent,
   type ActiveFilter,
-} from "@/components/active-filters-bar";
+} from "@/components/candidate";
+import { RejectionFeedbackModal } from "@/components/feedback";
+import type { ConstraintUpdate } from "@/lib/candidate";
+import { AssessmentDimension } from "@prisma/client";
 
 // ============================================================================
 // Types

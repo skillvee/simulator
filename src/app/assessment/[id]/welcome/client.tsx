@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Phone } from "lucide-react";
-import { SlackLayout, useCallContext } from "@/components/slack-layout";
+import { SlackLayout, useCallContext } from "@/components/chat";
 
 interface Coworker {
   id: string;

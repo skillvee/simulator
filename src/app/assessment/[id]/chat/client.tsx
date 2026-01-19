@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { SlackLayout } from "@/components/slack-layout";
-import { Chat } from "@/components/chat";
+import { SlackLayout, Chat } from "@/components/chat";
 
 interface Coworker {
   id: string;
