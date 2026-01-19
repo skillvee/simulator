@@ -139,27 +139,14 @@ describe("Chat", () => {
     });
   });
 
-  describe("done button", () => {
-    it("does not show done button by default", () => {
+  describe("PR submission", () => {
+    it("does not show done button anymore (PR submitted via chat)", () => {
       render(<Chat {...defaultProps} />);
 
+      // Done button was removed - PR is now submitted via chat message
       expect(
         screen.queryByRole("button", { name: /done/i })
       ).not.toBeInTheDocument();
-    });
-
-    it("shows done button when showDoneButton is true", () => {
-      render(
-        <Chat
-          {...defaultProps}
-          showDoneButton={true}
-          onDoneClick={vi.fn()}
-        />
-      );
-
-      expect(
-        screen.getByRole("button", { name: /done/i })
-      ).toBeInTheDocument();
     });
   });
 });

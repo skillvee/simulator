@@ -13,13 +13,38 @@ import {
   type ConversationWithMeta,
 } from "@/lib/conversation-memory";
 import type { Prisma } from "@prisma/client";
+import { AssessmentStatus } from "@prisma/client";
 import { buildChatPrompt } from "@/prompts";
 import { success, error } from "@/lib/api-response";
 import { validateRequest } from "@/lib/api-validation";
 import { ChatRequestSchema } from "@/lib/schemas";
+import { isValidPrUrl } from "@/lib/pr-validation";
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
+
+// Check if a coworker is a manager based on role
+function isManager(role: string): boolean {
+  return role.toLowerCase().includes("manager");
+}
+
+// Extract potential PR URL from a message
+function extractPrUrl(message: string): string | null {
+  // Pattern to match URLs in the message
+  const urlPattern = /https?:\/\/[^\s<>"]+/g;
+  const urls = message.match(urlPattern);
+
+  if (!urls) return null;
+
+  // Check each URL for PR pattern
+  for (const url of urls) {
+    if (isValidPrUrl(url)) {
+      return url;
+    }
+  }
+
+  return null;
+}
 
 /**
  * POST /api/chat
@@ -154,33 +179,169 @@ export async function POST(request: Request) {
     parts: [{ text: msg.text }],
   }));
 
-  // Generate response from Gemini Flash
-  // Include system prompt as the first user message to set persona
-  const response = await gemini.models.generateContent({
-    model: CHAT_MODEL,
-    contents: [
-      {
-        role: "user",
-        parts: [
+  // Check if this is a manager and the message contains a PR link
+  const isCoworkerManager = isManager(coworker.role);
+  const extractedPrUrl = extractPrUrl(message);
+  let prSubmitted = false;
+  let responseText: string;
+
+  // If manager and PR link detected, validate and potentially process it
+  if (isCoworkerManager && extractedPrUrl) {
+    // Check if assessment is in WORKING status
+    if (assessment.status === AssessmentStatus.WORKING) {
+      // Valid PR link - update assessment status
+      await db.assessment.update({
+        where: { id: assessmentId },
+        data: {
+          status: AssessmentStatus.FINAL_DEFENSE,
+          prUrl: extractedPrUrl,
+        },
+      });
+      prSubmitted = true;
+
+      // Generate an acknowledgment response from the manager
+      const prAckPrompt = `The candidate just submitted their PR link: ${extractedPrUrl}
+
+As their manager, acknowledge receipt of the PR and let them know you'll take a quick look and then call them to discuss it. Be warm, encouraging, and conversational. Keep it brief (1-2 sentences). Something like acknowledging their work, mentioning you'll review it, and that you'll call them shortly.`;
+
+      const response = await gemini.models.generateContent({
+        model: CHAT_MODEL,
+        contents: [
           {
-            text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
+            role: "user",
+            parts: [
+              {
+                text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
+              },
+            ],
+          },
+          {
+            role: "model",
+            parts: [
+              { text: "I understand. I'm ready to chat as this coworker." },
+            ],
+          },
+          ...history,
+          {
+            role: "user",
+            parts: [{ text: message }],
+          },
+          {
+            role: "model",
+            parts: [
+              {
+                text: "Let me respond appropriately to this PR submission.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            parts: [{ text: prAckPrompt }],
           },
         ],
-      },
-      {
-        role: "model",
-        parts: [{ text: "I understand. I'm ready to chat as this coworker." }],
-      },
-      ...history,
-      {
-        role: "user",
-        parts: [{ text: message }],
-      },
-    ],
-  });
+      });
 
-  const responseText =
-    response.text || "I'm sorry, I couldn't generate a response.";
+      responseText =
+        response.text ||
+        "Awesome, thanks for submitting! Let me take a quick look at your PR and I'll call you in a moment to discuss.";
+    } else {
+      // Assessment not in WORKING status - can't accept PR
+      const response = await gemini.models.generateContent({
+        model: CHAT_MODEL,
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
+              },
+            ],
+          },
+          {
+            role: "model",
+            parts: [
+              { text: "I understand. I'm ready to chat as this coworker." },
+            ],
+          },
+          ...history,
+          {
+            role: "user",
+            parts: [{ text: message }],
+          },
+        ],
+      });
+      responseText =
+        response.text || "I'm sorry, I couldn't generate a response.";
+    }
+  } else if (isCoworkerManager && message.toLowerCase().includes("pr") && message.toLowerCase().includes("http")) {
+    // User tried to submit a PR but it wasn't a valid PR URL
+    const invalidPrPrompt = `The candidate just sent a message that seems like they're trying to submit a PR, but the link doesn't appear to be a valid GitHub/GitLab/Bitbucket PR link. Ask them to share the actual pull request or merge request URL. Be helpful and friendly.`;
+
+    const response = await gemini.models.generateContent({
+      model: CHAT_MODEL,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
+            },
+          ],
+        },
+        {
+          role: "model",
+          parts: [
+            { text: "I understand. I'm ready to chat as this coworker." },
+          ],
+        },
+        ...history,
+        {
+          role: "user",
+          parts: [{ text: message }],
+        },
+        {
+          role: "model",
+          parts: [{ text: "Let me respond helpfully about the PR link." }],
+        },
+        {
+          role: "user",
+          parts: [{ text: invalidPrPrompt }],
+        },
+      ],
+    });
+
+    responseText =
+      response.text ||
+      "Hmm, I don't see a valid PR link there. Could you share the GitHub, GitLab, or Bitbucket pull request URL?";
+  } else {
+    // Regular message - generate normal response
+    const response = await gemini.models.generateContent({
+      model: CHAT_MODEL,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
+            },
+          ],
+        },
+        {
+          role: "model",
+          parts: [{ text: "I understand. I'm ready to chat as this coworker." }],
+        },
+        ...history,
+        {
+          role: "user",
+          parts: [{ text: message }],
+        },
+      ],
+    });
+
+    responseText =
+      response.text || "I'm sorry, I couldn't generate a response.";
+  }
+
   const timestamp = new Date().toISOString();
 
   // Create new messages
@@ -217,6 +378,7 @@ export async function POST(request: Request) {
   return success({
     response: responseText,
     timestamp: modelMessage.timestamp,
+    prSubmitted,
   });
 }
 

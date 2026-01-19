@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SlackLayout } from "@/components/slack-layout";
 import { Chat } from "@/components/chat";
-import { PrLinkModal } from "@/components/pr-link-modal";
 
 interface Coworker {
   id: string;
@@ -30,69 +28,35 @@ export function ChatPageClient({
   selectedCoworkerId,
 }: ChatPageClientProps) {
   const router = useRouter();
-  const [showPrModal, setShowPrModal] = useState(false);
 
   const selectedCoworker = coworkers.find((c) => c.id === selectedCoworkerId);
 
-  // Find the manager for the modal
-  const manager = coworkers.find(isManager) || selectedCoworker;
+  // Check if chatting with manager for PR submission handling
+  const isChattingWithManager = selectedCoworker ? isManager(selectedCoworker) : false;
 
-  const handleDoneClick = () => {
-    setShowPrModal(true);
-  };
-
-  const handlePrSubmit = async (prUrl: string) => {
-    const response = await fetch("/api/assessment/complete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        assessmentId,
-        prUrl,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to submit PR");
-    }
-
-    // Close modal and navigate to final defense
-    setShowPrModal(false);
+  const handlePrSubmitted = () => {
+    // Navigate to defense page after PR submission
     router.push(`/assessment/${assessmentId}/defense`);
   };
 
-  // Show "I'm Done" button when chatting with manager
-  const showDoneButton = selectedCoworker ? isManager(selectedCoworker) : false;
-
   return (
-    <>
-      <SlackLayout assessmentId={assessmentId} coworkers={coworkers}>
-        {selectedCoworker ? (
-          <Chat
-            assessmentId={assessmentId}
-            coworker={selectedCoworker}
-            showDoneButton={showDoneButton}
-            onDoneClick={handleDoneClick}
-          />
-        ) : (
-          <div className="flex flex-1 items-center justify-center">
-            <div className="text-center">
-              <h2 className="mb-2 text-xl font-bold">No Coworkers Available</h2>
-              <p className="text-muted-foreground">
-                There are no coworkers configured for this scenario.
-              </p>
-            </div>
+    <SlackLayout assessmentId={assessmentId} coworkers={coworkers}>
+      {selectedCoworker ? (
+        <Chat
+          assessmentId={assessmentId}
+          coworker={selectedCoworker}
+          onPrSubmitted={isChattingWithManager ? handlePrSubmitted : undefined}
+        />
+      ) : (
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <h2 className="mb-2 text-xl font-bold">No Coworkers Available</h2>
+            <p className="text-muted-foreground">
+              There are no coworkers configured for this scenario.
+            </p>
           </div>
-        )}
-      </SlackLayout>
-
-      {/* PR Link Modal */}
-      <PrLinkModal
-        isOpen={showPrModal}
-        onClose={() => setShowPrModal(false)}
-        onSubmit={handlePrSubmit}
-        managerName={manager?.name || "your manager"}
-      />
-    </>
+        </div>
+      )}
+    </SlackLayout>
   );
 }

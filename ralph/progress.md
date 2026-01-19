@@ -482,3 +482,49 @@ https://api.dicebear.com/7.x/identicon/svg?seed={name}&backgroundColor=D4AF37&ro
    - Use `border-2 border-foreground` for consistent borders
    - Ensure square aspect ratio with equal width/height classes
    - No border-radius (0px) to match other elements
+
+## Issue #90: US-025 - Submit PR via Manager Chat Instead of Button
+
+### What was implemented
+- Removed the "I'm Done" button from chat footer and deleted PrLinkModal component
+- Added PR link detection in the chat API route when messaging a manager
+- When a valid PR link is detected (GitHub/GitLab/Bitbucket patterns):
+  1. Validates using existing `isValidPrUrl()` function
+  2. Updates assessment status from WORKING to FINAL_DEFENSE
+  3. Saves PR URL to assessment record
+  4. Manager AI responds with acknowledgment like "Awesome! Let me take a quick look..."
+  5. After 3-second delay, frontend triggers navigation to defense page
+- Invalid PR links are handled gracefully with a helpful response from manager
+
+### Files changed
+- `src/components/chat.tsx` - Removed `showDoneButton`/`onDoneClick` props, added `onPrSubmitted` callback, handles `prSubmitted` response from API
+- `src/components/pr-link-modal.tsx` - Deleted
+- `src/components/pr-link-modal.test.tsx` - Deleted
+- `src/components/chat.test.tsx` - Updated tests, removed done button tests
+- `src/app/assessment/[id]/chat/client.tsx` - Removed modal state, simplified to pass `onPrSubmitted` callback
+- `src/app/api/chat/route.ts` - Added PR link detection, manager role checking, assessment status transition, contextual responses
+
+### New flow
+1. User sends PR link message to manager in chat
+2. API detects PR link and validates it
+3. If valid and assessment is in WORKING status:
+   - Assessment status updated to FINAL_DEFENSE
+   - PR URL saved to assessment
+   - Manager AI responds with acknowledgment
+   - Response includes `prSubmitted: true`
+4. Frontend receives `prSubmitted: true`, waits 3 seconds, then navigates to defense page
+5. Defense page handles starting the call automatically
+
+### Learnings for future iterations
+
+1. **PR detection in messages**: Use regex to extract URLs from messages, then validate each URL against PR patterns. The `isValidPrUrl()` function handles GitHub, GitLab, and Bitbucket patterns.
+
+2. **Contextual AI responses**: When detecting special message types (like PR submissions), generate contextual responses by adding additional prompts to the Gemini request. This keeps the conversation natural while ensuring appropriate acknowledgment.
+
+3. **Delayed navigation pattern**: Using `setTimeout` in the frontend before navigation gives users time to read the manager's response, creating a more natural conversational feel.
+
+4. **Status-aware processing**: Check assessment status before processing PR submissions. Only allow PR submission when status is WORKING - this prevents duplicate submissions or submissions at wrong stages.
+
+5. **Browser testing limitations**: As noted in Issue #85, chat page E2E testing is blocked by `ScreenRecordingGuard` requiring screen sharing permissions unavailable in headless browsers. Use unit tests and API tests for validation.
+
+6. **Graceful invalid input handling**: When users try to submit something that looks like a PR but isn't valid, provide helpful feedback asking for the correct format rather than a generic error.

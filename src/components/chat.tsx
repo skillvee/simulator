@@ -22,15 +22,13 @@ interface Coworker {
 interface ChatProps {
   assessmentId: string;
   coworker: Coworker;
-  onDoneClick?: () => void;
-  showDoneButton?: boolean;
+  onPrSubmitted?: () => void;
 }
 
 export function Chat({
   assessmentId,
   coworker,
-  onDoneClick,
-  showDoneButton,
+  onPrSubmitted,
 }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -86,23 +84,31 @@ export function Chat({
     setIsSending(true);
 
     try {
-      const data = await api<{ response: string; timestamp: string }>(
-        "/api/chat",
-        {
-          method: "POST",
-          body: {
-            assessmentId,
-            coworkerId: coworker.id,
-            message: userMessage.text,
-          },
-        }
-      );
+      const data = await api<{
+        response: string;
+        timestamp: string;
+        prSubmitted?: boolean;
+      }>("/api/chat", {
+        method: "POST",
+        body: {
+          assessmentId,
+          coworkerId: coworker.id,
+          message: userMessage.text,
+        },
+      });
       const modelMessage: ChatMessage = {
         role: "model",
         text: data.response,
         timestamp: data.timestamp,
       };
       setMessages((prev) => [...prev, modelMessage]);
+
+      // If PR was submitted, notify parent after a brief delay
+      if (data.prSubmitted && onPrSubmitted) {
+        setTimeout(() => {
+          onPrSubmitted();
+        }, 3000); // 3 second delay for natural conversation feel
+      }
     } catch (err) {
       // Remove the optimistic message on error
       setMessages((prev) => prev.slice(0, -1));
@@ -264,15 +270,6 @@ export function Chat({
           >
             Send
           </button>
-          {showDoneButton && onDoneClick && (
-            <button
-              onClick={onDoneClick}
-              disabled={isSending}
-              className="hover:bg-secondary/80 border-2 border-foreground bg-secondary px-6 py-3 font-bold text-secondary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              I&apos;m Done
-            </button>
-          )}
         </div>
       </footer>
     </div>
