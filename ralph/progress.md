@@ -842,3 +842,51 @@ export function buildPromptContext(param: Type): string {
 4. **Multiple exports from single file**: When prompts are related (like PR acknowledgment and invalid PR prompts), group them in a single file with multiple exports.
 
 5. **Import from barrel export**: Always import prompts from `@/prompts` not from individual files. This ensures consistent imports and makes refactoring easier.
+
+## Issue #106: REF-015 - Create AI Error Context System
+
+### What was implemented
+- Created `src/lib/ai/errors.ts` with `AIError` class and `wrapAICall<T>()` helper function
+- `AIError` extends `Error` and includes: message, model, promptType, promptVersion, originalError
+- Added `isAIError()` type guard for safe error handling
+- Added `toDetailedString()` method for formatted logging output
+- Created comprehensive test suite with 13 tests covering all functionality
+- Created `src/lib/ai/CLAUDE.md` documenting usage patterns
+- Updated `src/lib/ai/index.ts` barrel exports
+
+### Files changed
+- `src/lib/ai/errors.ts` - New AIError class and wrapAICall helper
+- `src/lib/ai/errors.test.ts` - 13 tests for error utilities
+- `src/lib/ai/index.ts` - Added errors export
+- `src/lib/ai/CLAUDE.md` - Documentation for AI utilities
+
+### Usage pattern
+```typescript
+import { wrapAICall, AIError, isAIError } from "@/lib/ai";
+
+const result = await wrapAICall(
+  () => gemini.models.generateContent({ model, contents }),
+  { model: TEXT_MODEL, promptType: "cv-parsing", promptVersion: "1.0" }
+);
+
+// Error handling
+try {
+  await wrapAICall(fn, context);
+} catch (error) {
+  if (isAIError(error)) {
+    console.error(error.toDetailedString());
+  }
+}
+```
+
+### Learnings for future iterations
+
+1. **Error.captureStackTrace for custom errors**: When creating custom error classes that extend Error, use `Error.captureStackTrace(this, ClassName)` to maintain proper stack traces. This removes the constructor from the stack trace, making debugging cleaner.
+
+2. **Type guard pattern for error handling**: Export an `isErrorType()` type guard function alongside custom error classes. This allows consumers to safely narrow error types without relying on `instanceof` checks that may fail across module boundaries.
+
+3. **toDetailedString() for logging**: Adding a formatting method like `toDetailedString()` makes it easy to log structured error information in a consistent format. This is more flexible than overriding `toString()` which may affect other error handling code.
+
+4. **Generic async wrapper pattern**: The `wrapAICall<T>()` pattern works for any async operation. The generic type parameter ensures the return type is preserved, maintaining type safety through the wrapper.
+
+5. **Prompt version convention**: Use semantic versions (e.g., "1.0") or date-based versions (e.g., "2024-01") for promptVersion. This enables tracking which prompt versions cause errors over time.
