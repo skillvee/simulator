@@ -24,16 +24,12 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock gemini
+// Mock @/lib/ai (gemini + conversation-memory)
 const mockGenerateEphemeralToken = vi.fn();
-vi.mock("@/lib/gemini", () => ({
+const mockFormatMemoryForPrompt = vi.fn();
+vi.mock("@/lib/ai", () => ({
   generateEphemeralToken: (...args: unknown[]) =>
     mockGenerateEphemeralToken(...args),
-}));
-
-// Mock conversation-memory (to avoid calling Gemini for summarization in tests)
-const mockFormatMemoryForPrompt = vi.fn();
-vi.mock("@/lib/conversation-memory", () => ({
   buildCoworkerMemory: vi.fn().mockResolvedValue({
     hasPriorConversations: false,
     summary: null,
@@ -43,6 +39,7 @@ vi.mock("@/lib/conversation-memory", () => ({
   formatMemoryForPrompt: (...args: unknown[]) =>
     mockFormatMemoryForPrompt(...args),
   buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
+  parseCoworkerKnowledge: vi.fn().mockReturnValue([]),
 }));
 
 import { POST } from "./route";

@@ -5,10 +5,83 @@
  * It sets up global mocks, extends matchers, and configures the testing environment.
  *
  * @see Issue #98: REF-008
+ * @see Issue #110: BUG-001
  */
 
 import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
+
+// ============================================================================
+// External Service Mocks (must be before any imports that use them)
+// ============================================================================
+
+/**
+ * Mock @supabase/supabase-js
+ *
+ * Prevents Supabase client initialization which requires env vars.
+ * Tests that need specific supabase behavior should mock @/lib/external directly.
+ * @see Issue #110: BUG-001
+ */
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: () => ({
+    storage: {
+      from: () => ({
+        createSignedUrl: () =>
+          Promise.resolve({
+            data: { signedUrl: "https://test.com/mock-signed-url" },
+          }),
+        upload: () => Promise.resolve({ data: { path: "mock-path" } }),
+        remove: () => Promise.resolve({ data: [] }),
+        download: () => Promise.resolve({ data: null, error: null }),
+        getPublicUrl: () => ({
+          data: { publicUrl: "https://test.com/mock-url" },
+        }),
+      }),
+    },
+    auth: {
+      signOut: () => Promise.resolve({ error: null }),
+    },
+  }),
+}));
+
+/**
+ * Mock @t3-oss/env-nextjs
+ *
+ * Prevents env validation which requires real environment variables.
+ * Tests that need specific env values should mock @/lib/core directly.
+ * @see Issue #110: BUG-001
+ */
+vi.mock("@t3-oss/env-nextjs", () => ({
+  createEnv: () => ({
+    DATABASE_URL: "postgresql://localhost:5432/test",
+    DIRECT_URL: "postgresql://localhost:5432/test",
+    AUTH_SECRET: "test-secret",
+    GOOGLE_CLIENT_ID: "test-google-id",
+    GOOGLE_CLIENT_SECRET: "test-google-secret",
+    GEMINI_API_KEY: "test-gemini-key",
+    SUPABASE_SERVICE_ROLE_KEY: "test-supabase-key",
+    NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co",
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
+    E2E_TEST_MODE: false,
+    NEXT_PUBLIC_E2E_TEST_MODE: false,
+    RESEND_API_KEY: undefined,
+    GITHUB_TOKEN: "mock-github-token",
+  }),
+}));
+
+/**
+ * Mock @/auth (NextAuth)
+ *
+ * Prevents next-auth from trying to import next/server during test setup.
+ * Tests that need specific auth behavior should override this mock.
+ * @see Issue #110: BUG-001
+ */
+vi.mock("@/auth", () => ({
+  auth: vi.fn().mockResolvedValue(null),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+  handlers: { GET: vi.fn(), POST: vi.fn() },
+}));
 
 // ============================================================================
 // Global Mocks

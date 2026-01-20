@@ -28,8 +28,8 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock supabase storage
-vi.mock("@/lib/supabase", () => ({
+// Mock supabase storage (now in @/lib/external)
+vi.mock("@/lib/external", () => ({
   supabaseAdmin: {
     storage: {
       from: () => ({
@@ -41,6 +41,11 @@ vi.mock("@/lib/supabase", () => ({
       }),
     },
   },
+  STORAGE_BUCKETS: {
+    RESUMES: "resumes",
+    RECORDINGS: "recordings",
+    SCREENSHOTS: "screenshots",
+  },
 }));
 
 // Mock recording analysis module
@@ -48,7 +53,7 @@ const mockAnalyzeSegmentScreenshots = vi.fn();
 const mockBuildSegmentAnalysisData = vi.fn();
 const mockAggregateSegmentAnalyses = vi.fn();
 
-vi.mock("@/lib/recording-analysis", () => ({
+vi.mock("@/lib/analysis", () => ({
   analyzeSegmentScreenshots: (...args: unknown[]) =>
     mockAnalyzeSegmentScreenshots(...args),
   buildSegmentAnalysisData: (...args: unknown[]) =>

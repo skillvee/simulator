@@ -15,8 +15,8 @@ import {
   type Skill,
 } from "./cv-parser";
 
-// Mock gemini module
-vi.mock("@/lib/gemini", () => ({
+// Mock gemini module (now in @/lib/ai)
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: vi.fn(),
@@ -24,8 +24,8 @@ vi.mock("@/lib/gemini", () => ({
   },
 }));
 
-// Mock supabase module
-vi.mock("@/lib/supabase", () => ({
+// Mock supabase module (now in @/lib/external)
+vi.mock("@/lib/external", () => ({
   supabaseAdmin: {
     storage: {
       from: vi.fn(() => ({
@@ -299,12 +299,12 @@ describe("CV Parser Schemas", () => {
 
     it("should validate seniority levels", () => {
       const levels = [
-        "junior",
-        "mid",
-        "senior",
-        "lead",
-        "principal",
-        "unknown",
+        "JUNIOR",
+        "MID",
+        "SENIOR",
+        "LEAD",
+        "PRINCIPAL",
+        "UNKNOWN",
       ];
       levels.forEach((level) => {
         const profile = {
@@ -485,7 +485,7 @@ describe("CV Parser Utilities", () => {
       // Check for experience overview
       expect(formatted).toContain("### Experience Overview");
       expect(formatted).toContain("Total Experience: 6 years");
-      expect(formatted).toContain("Seniority Level: lead");
+      expect(formatted).toContain("Seniority Level: LEAD");
     });
 
     it("should handle profile with minimal data", () => {

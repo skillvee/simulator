@@ -8,7 +8,7 @@ vi.mock("@/auth", () => ({
   auth: () => mockAuth(),
 }));
 
-vi.mock("@/lib/gemini", () => ({
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: (...args: unknown[]) => mockGenerateContent(...args),
@@ -16,7 +16,7 @@ vi.mock("@/lib/gemini", () => ({
   },
 }));
 
-vi.mock("@/lib/scenario-builder", () => ({
+vi.mock("@/lib/scenarios", () => ({
   buildCompleteSystemPrompt: vi.fn(() => "Mock system prompt"),
   parseExtractionFromResponse: vi.fn(() => null),
   cleanResponseForDisplay: vi.fn((text: string) => text),

@@ -13,7 +13,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mock Gemini - must be before imports due to hoisting
 // ============================================================================
 
-vi.mock("@/lib/gemini", () => ({
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: vi.fn(),

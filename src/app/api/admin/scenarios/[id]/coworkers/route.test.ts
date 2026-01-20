@@ -237,6 +237,8 @@ describe("POST /api/admin/scenarios/[id]/coworkers", () => {
         role: "Product Manager",
         personaStyle: "friendly and casual",
         knowledge: { expertise: ["requirements", "user research"] },
+        avatarUrl: undefined,
+        voiceName: null,
       },
     });
   });

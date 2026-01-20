@@ -22,9 +22,9 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock Gemini
+// Mock Gemini (now in @/lib/ai)
 const mockGenerateContent = vi.fn();
-vi.mock("@/lib/gemini", () => ({
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: (...args: unknown[]) => mockGenerateContent(...args),

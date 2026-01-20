@@ -14,7 +14,7 @@ const mockEnv = {
   RESEND_API_KEY: undefined as string | undefined,
 };
 
-vi.mock("@/lib/env", () => ({
+vi.mock("@/lib/core", () => ({
   env: new Proxy(
     {},
     {

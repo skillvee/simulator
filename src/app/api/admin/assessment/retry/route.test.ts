@@ -4,13 +4,13 @@ import { db } from "@/server/db";
 import { requireAdmin } from "@/lib/core";
 import { triggerVideoAssessment } from "@/lib/analysis";
 
-// Mock admin check
-vi.mock("@/lib/admin", () => ({
+// Mock admin check (now in @/lib/core)
+vi.mock("@/lib/core", () => ({
   requireAdmin: vi.fn(),
 }));
 
-// Mock video evaluation
-vi.mock("@/lib/video-evaluation", () => ({
+// Mock video evaluation (now in @/lib/analysis)
+vi.mock("@/lib/analysis", () => ({
   triggerVideoAssessment: vi.fn(),
 }));
 

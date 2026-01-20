@@ -4,8 +4,8 @@ import type {
   AssessmentDimension,
 } from "@prisma/client";
 
-// Mock gemini module
-vi.mock("@/lib/gemini", () => ({
+// Mock gemini module (now in @/lib/ai)
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: vi.fn(),
@@ -38,7 +38,7 @@ vi.mock("@/server/db", () => ({
 }));
 
 // Mock error recovery module - need to provide the actual withRetry implementation
-vi.mock("@/lib/error-recovery", () => ({
+vi.mock("@/lib/core/error-recovery", () => ({
   withRetry: async <T>(
     operation: () => Promise<T>,
     _config?: unknown

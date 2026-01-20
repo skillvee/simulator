@@ -19,29 +19,25 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock github cleanup
+// Mock github cleanup (now in @/lib/external)
 const mockCleanupPrAfterAssessment = vi.fn();
 const mockFetchPrCiStatus = vi.fn();
-vi.mock("@/lib/github", () => ({
+vi.mock("@/lib/external", () => ({
   cleanupPrAfterAssessment: (...args: unknown[]) =>
     mockCleanupPrAfterAssessment(...args),
   fetchPrCiStatus: (...args: unknown[]) => mockFetchPrCiStatus(...args),
 }));
 
-// Mock code review module
+// Mock code review and video evaluation modules (now in @/lib/analysis)
 const mockAnalyzeCodeReview = vi.fn();
 const mockBuildCodeReviewData = vi.fn();
 const mockCodeReviewToPrismaJson = vi.fn();
-vi.mock("@/lib/code-review", () => ({
+const mockTriggerVideoAssessment = vi.fn();
+vi.mock("@/lib/analysis", () => ({
   analyzeCodeReview: (...args: unknown[]) => mockAnalyzeCodeReview(...args),
   buildCodeReviewData: (...args: unknown[]) => mockBuildCodeReviewData(...args),
   codeReviewToPrismaJson: (...args: unknown[]) =>
     mockCodeReviewToPrismaJson(...args),
-}));
-
-// Mock video-evaluation module
-const mockTriggerVideoAssessment = vi.fn();
-vi.mock("@/lib/video-evaluation", () => ({
   triggerVideoAssessment: (...args: unknown[]) =>
     mockTriggerVideoAssessment(...args),
 }));

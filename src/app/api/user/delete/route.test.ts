@@ -18,7 +18,7 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-vi.mock("@/lib/data-deletion", () => ({
+vi.mock("@/lib/core", () => ({
   processImmediateDeletion: (userId: string) =>
     mockProcessImmediateDeletion(userId),
 }));

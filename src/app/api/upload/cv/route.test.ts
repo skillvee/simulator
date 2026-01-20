@@ -6,10 +6,10 @@ vi.mock("@/auth", () => ({
   auth: () => mockAuth(),
 }));
 
-// Mock Supabase storage
+// Mock @/lib/external (supabase + storage)
 const mockUpload = vi.fn();
 const mockCreateSignedUrl = vi.fn();
-vi.mock("@/lib/supabase", () => ({
+vi.mock("@/lib/external", () => ({
   supabaseAdmin: {
     storage: {
       from: () => ({
@@ -18,9 +18,6 @@ vi.mock("@/lib/supabase", () => ({
       }),
     },
   },
-}));
-
-vi.mock("@/lib/storage", () => ({
   STORAGE_BUCKETS: {
     RESUMES: "resumes",
   },
@@ -38,9 +35,9 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock CV parser
+// Mock CV parser (now in @/lib/candidate)
 const mockParseCv = vi.fn();
-vi.mock("@/lib/cv-parser", () => ({
+vi.mock("@/lib/candidate", () => ({
   parseCv: (...args: unknown[]) => mockParseCv(...args),
   profileToPrismaJson: (profile: unknown) => profile,
 }));

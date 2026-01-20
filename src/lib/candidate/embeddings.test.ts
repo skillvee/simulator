@@ -8,8 +8,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AssessmentDimension, VideoAssessmentStatus } from "@prisma/client";
 
-// Mock the gemini module
-vi.mock("@/lib/gemini", () => ({
+// Mock the gemini module (now in @/lib/ai)
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       embedContent: vi.fn(),
@@ -29,7 +29,7 @@ vi.mock("@/server/db", () => ({
 }));
 
 // Mock error-recovery
-vi.mock("@/lib/error-recovery", () => ({
+vi.mock("@/lib/core/error-recovery", () => ({
   withRetry: vi.fn((fn: () => unknown) => fn()),
 }));
 

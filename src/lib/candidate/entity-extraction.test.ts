@@ -8,8 +8,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { RoleArchetype } from "@/lib/candidate";
 import type { SeniorityLevel } from "@/lib/candidate";
 
-// Mock Gemini before importing the module
-vi.mock("@/lib/gemini", () => ({
+// Mock Gemini before importing the module (now in @/lib/ai)
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: vi.fn(),

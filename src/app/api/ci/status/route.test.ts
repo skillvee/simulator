@@ -18,9 +18,9 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock fetchPrCiStatus
+// Mock fetchPrCiStatus (now in @/lib/external)
 const mockFetchPrCiStatus = vi.fn();
-vi.mock("@/lib/github", () => ({
+vi.mock("@/lib/external", () => ({
   fetchPrCiStatus: (...args: unknown[]) => mockFetchPrCiStatus(...args),
 }));
 

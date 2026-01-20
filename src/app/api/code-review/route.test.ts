@@ -27,17 +27,17 @@ const mockAnalyzeCodeReview = vi.fn();
 const mockBuildCodeReviewData = vi.fn();
 const mockCodeReviewToPrismaJson = vi.fn();
 
-vi.mock("@/lib/code-review", () => ({
+vi.mock("@/lib/analysis", () => ({
   analyzeCodeReview: (...args: unknown[]) => mockAnalyzeCodeReview(...args),
   buildCodeReviewData: (...args: unknown[]) => mockBuildCodeReviewData(...args),
   codeReviewToPrismaJson: (...args: unknown[]) =>
     mockCodeReviewToPrismaJson(...args),
 }));
 
-// Mock github module
+// Mock github module (now in @/lib/external)
 const mockFetchGitHubPrContent = vi.fn();
 
-vi.mock("@/lib/github", () => ({
+vi.mock("@/lib/external", () => ({
   fetchGitHubPrContent: (...args: unknown[]) =>
     mockFetchGitHubPrContent(...args),
 }));

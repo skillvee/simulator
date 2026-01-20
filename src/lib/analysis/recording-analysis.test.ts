@@ -10,7 +10,7 @@ import {
 } from "./recording-analysis";
 
 // Mock gemini module
-vi.mock("@/lib/gemini", () => ({
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: vi.fn(),

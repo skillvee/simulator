@@ -18,26 +18,22 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock gemini
+// Mock @/lib/ai (gemini + conversation-memory)
 const mockGenerateEphemeralToken = vi.fn();
-vi.mock("@/lib/gemini", () => ({
-  generateEphemeralToken: (...args: unknown[]) =>
-    mockGenerateEphemeralToken(...args),
-}));
-
-// Mock conversation memory
 const mockBuildCoworkerMemory = vi.fn();
 const mockFormatMemoryForPrompt = vi.fn();
-vi.mock("@/lib/conversation-memory", () => ({
+vi.mock("@/lib/ai", () => ({
+  generateEphemeralToken: (...args: unknown[]) =>
+    mockGenerateEphemeralToken(...args),
   buildCoworkerMemory: (...args: unknown[]) => mockBuildCoworkerMemory(...args),
   formatMemoryForPrompt: (...args: unknown[]) =>
     mockFormatMemoryForPrompt(...args),
 }));
 
-// Mock github module for CI status
+// Mock github module for CI status (now in @/lib/external)
 const mockFetchPrCiStatus = vi.fn();
 const mockFormatCiStatusForPrompt = vi.fn();
-vi.mock("@/lib/github", () => ({
+vi.mock("@/lib/external", () => ({
   fetchPrCiStatus: (...args: unknown[]) => mockFetchPrCiStatus(...args),
   formatCiStatusForPrompt: (...args: unknown[]) =>
     mockFormatCiStatusForPrompt(...args),

@@ -973,3 +973,70 @@ try {
 4. **Consistent naming with existing patterns**: The new `ai-call-logging.ts` follows the same patterns as `assessment-logging.ts` (which handles VideoAssessmentApiCall), making the codebase more consistent and predictable.
 
 5. **Schema changes note**: This schema-only change enables future observability improvements. Actual logging implementation in API routes can be done incrementally in future issues.
+
+## Issue #110: BUG-001 - Fix Test Suite - Wrong Mock Paths and Missing Fields
+
+### What was implemented
+- Fixed systemic test failures caused by module refactoring where tests were mocking old module paths that no longer exist
+- Added global mocks in `src/test/setup.tsx` for:
+  - `@supabase/supabase-js` - prevents Supabase client initialization
+  - `@t3-oss/env-nextjs` - prevents env validation errors
+  - `@/auth` - prevents next-auth from importing `next/server` during test setup
+- Updated 20+ test files to use correct mock paths
+
+### Module path changes (tests were using left, should use right)
+- `@/lib/gemini` → `@/lib/ai`
+- `@/lib/supabase` → `@/lib/external` (supabaseAdmin)
+- `@/lib/storage` → `@/lib/external`
+- `@/lib/github` → `@/lib/external`
+- `@/lib/email` → `@/lib/external`
+- `@/lib/env` → `@/lib/core`
+- `@/lib/admin` → `@/lib/core`
+- `@/lib/error-recovery` → `@/lib/core/error-recovery`
+- `@/lib/analytics` → `@/lib/core`
+- `@/lib/data-deletion` → `@/lib/core`
+- `@/lib/cv-parser` → `@/lib/candidate`
+- `@/lib/embeddings` → `@/lib/candidate`
+- `@/lib/conversation-memory` → `@/lib/ai`
+- `@/lib/recording-analysis` → `@/lib/analysis`
+- `@/lib/assessment-aggregation` → `@/lib/analysis`
+- `@/lib/code-review` → `@/lib/analysis`
+- `@/lib/video-evaluation` → `@/lib/analysis`
+
+### Files changed
+- `src/test/setup.tsx` - Added global mocks for supabase-js, t3-oss/env-nextjs, and @/auth
+- `src/app/api/admin/scenarios/[id]/coworkers/route.test.ts` - Added missing avatarUrl and voiceName fields
+- `src/app/api/call/token/route.test.ts` - Fixed @/lib/ai mock, added parseCoworkerKnowledge
+- `src/app/api/chat/route.test.ts` - Fixed @/lib/ai mock, added parseCoworkerKnowledge
+- `src/app/api/recording/analyze/route.test.ts` - Fixed @/lib/analysis mock, added STORAGE_BUCKETS
+- `src/app/api/user/delete/route.test.ts` - Fixed @/lib/core mock
+- `src/app/api/assessment/finalize/route.test.ts` - Fixed @/lib/analysis mock for triggerVideoAssessment
+- `src/app/api/assessment/report/route.test.ts` - Fixed @/lib/analysis and @/lib/external mocks
+- `src/app/api/admin/analytics/route.test.ts` - Fixed @/lib/core mock
+- `src/app/api/admin/assessment/retry/route.test.ts` - Fixed @/lib/core and @/lib/analysis mocks
+- `src/app/api/admin/video-assessment/retry/route.test.ts` - Fixed @/lib/core and @/lib/analysis mocks
+- `src/lib/candidate/cv-parser.test.ts` - Fixed SeniorityLevel enum case (lowercase → UPPERCASE)
+
+### Root cause
+When modules were consolidated into barrel exports (`@/lib/ai`, `@/lib/external`, `@/lib/analysis`, `@/lib/core`, `@/lib/candidate`), tests were not updated to mock the new paths. Vitest requires mocking the exact path that the source code imports from.
+
+Additionally, the `@/lib/core` barrel exports `admin.ts` which imports `@/auth`, creating a transitive dependency chain that caused test setup failures (next-auth tries to import `next/server` which doesn't resolve in jsdom).
+
+### Learnings for future iterations
+
+1. **Mock the import path, not the original file**: When code imports from `@/lib/ai`, mock `@/lib/ai`, not `@/lib/ai/gemini`. Vitest intercepts at the import path level.
+
+2. **Barrel exports chain imports**: If `@/lib/core/index.ts` re-exports from `admin.ts`, and `admin.ts` imports `@/auth`, then importing ANYTHING from `@/lib/core` will trigger the full import chain. Mock the root of the chain (`@/auth` or the external package) in `setup.tsx`.
+
+3. **Mock at the lowest level**: Instead of mocking `@/lib/external` globally, mock `@supabase/supabase-js` directly. This prevents conflicts when tests need to override specific behavior from `@/lib/external`.
+
+4. **Check all exports in mock**: When a test mocks a barrel export, it must include ALL exports that the source code uses. The error message "No X export is defined on the Y mock" clearly indicates missing mock exports.
+
+5. **Global vs test-specific mocks**: Use global mocks in `setup.tsx` for:
+   - External packages that fail during initialization (`@supabase/supabase-js`, `@t3-oss/env-nextjs`)
+   - Modules that chain to problematic imports (`@/auth` → `next/server`)
+   - Use test-specific mocks for business logic (database, API functions)
+
+6. **Enum case sensitivity**: When refactoring, check if enums changed case. Prisma enums are typically UPPERCASE, so tests expecting `"junior"` fail when the schema uses `"JUNIOR"`.
+
+7. **Test file prefixes**: Look for the pattern `vi.mock("@/lib/OLD_PATH"` across test files when refactoring module structure. A simple grep can identify all tests that need updating.

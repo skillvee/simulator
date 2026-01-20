@@ -42,21 +42,7 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock supabaseAdmin for storage operations
-vi.mock("@/lib/supabase", () => ({
-  supabaseAdmin: {
-    storage: {
-      from: () => ({
-        createSignedUrl: () =>
-          Promise.resolve({
-            data: { signedUrl: "https://test.com/screenshot.png" },
-          }),
-      }),
-    },
-  },
-}));
-
-// Mock external module to prevent Supabase initialization
+// Mock @/lib/external (supabase + storage)
 vi.mock("@/lib/external", () => ({
   supabaseAdmin: {
     storage: {

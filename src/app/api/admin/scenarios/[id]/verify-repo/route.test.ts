@@ -17,7 +17,7 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-vi.mock("@/lib/env", () => ({
+vi.mock("@/lib/core", () => ({
   env: {
     GITHUB_TOKEN: "mock-github-token",
   },

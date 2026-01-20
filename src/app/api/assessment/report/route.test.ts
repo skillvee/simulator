@@ -33,19 +33,15 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock assessment aggregation module
-vi.mock("@/lib/assessment-aggregation", () => ({
+// Mock analysis module (assessment-aggregation + recording-analysis)
+vi.mock("@/lib/analysis", () => ({
   generateAssessmentReport: (...args: unknown[]) => mockGenerateReport(...args),
   reportToPrismaJson: (report: unknown) => mockReportToPrismaJson(report),
-}));
-
-// Mock recording analysis
-vi.mock("@/lib/recording-analysis", () => ({
   aggregateSegmentAnalyses: () => mockAggregateSegments(),
 }));
 
-// Mock email module
-vi.mock("@/lib/email", () => ({
+// Mock email module (now in @/lib/external)
+vi.mock("@/lib/external", () => ({
   sendReportEmail: vi.fn().mockResolvedValue({ success: true }),
   isEmailServiceConfigured: vi.fn().mockReturnValue(false),
 }));

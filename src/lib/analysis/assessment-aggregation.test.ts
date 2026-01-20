@@ -14,7 +14,7 @@ import {
 } from "./assessment-aggregation";
 
 // Mock gemini module
-vi.mock("@/lib/gemini", () => ({
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: vi.fn(),

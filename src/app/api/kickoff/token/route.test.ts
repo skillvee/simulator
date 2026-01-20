@@ -16,9 +16,9 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock gemini
+// Mock gemini (now in @/lib/ai)
 const mockGenerateEphemeralToken = vi.fn();
-vi.mock("@/lib/gemini", () => ({
+vi.mock("@/lib/ai", () => ({
   generateEphemeralToken: (...args: unknown[]) =>
     mockGenerateEphemeralToken(...args),
 }));

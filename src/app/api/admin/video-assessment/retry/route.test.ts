@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { VideoAssessmentStatus } from "@prisma/client";
 
-// Mock requireAdmin
+// Mock requireAdmin (now in @/lib/core)
 const mockRequireAdmin = vi.fn();
-vi.mock("@/lib/admin", () => ({
+vi.mock("@/lib/core", () => ({
   requireAdmin: () => mockRequireAdmin(),
 }));
 
@@ -17,10 +17,10 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock video-evaluation
+// Mock video-evaluation (now in @/lib/analysis)
 const mockRetryVideoAssessment = vi.fn();
 const mockForceRetryVideoAssessment = vi.fn();
-vi.mock("@/lib/video-evaluation", () => ({
+vi.mock("@/lib/analysis", () => ({
   retryVideoAssessment: (...args: unknown[]) =>
     mockRetryVideoAssessment(...args),
   forceRetryVideoAssessment: (...args: unknown[]) =>

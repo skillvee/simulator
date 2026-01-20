@@ -17,7 +17,7 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-vi.mock("@/lib/analytics", () => ({
+vi.mock("@/lib/core", () => ({
   getAnalytics: (...args: unknown[]) => mockGetAnalytics(...args),
   TimePeriodSchema: {
     safeParse: (value: string) => {

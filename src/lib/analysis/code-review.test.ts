@@ -12,7 +12,7 @@ import {
 } from "./code-review";
 
 // Mock gemini module
-vi.mock("@/lib/gemini", () => ({
+vi.mock("@/lib/ai", () => ({
   gemini: {
     models: {
       generateContent: vi.fn(),
@@ -20,8 +20,8 @@ vi.mock("@/lib/gemini", () => ({
   },
 }));
 
-// Mock github module
-vi.mock("@/lib/github", () => ({
+// Mock github module (now in @/lib/external)
+vi.mock("@/lib/external", () => ({
   fetchGitHubPrContent: vi.fn(),
 }));
 

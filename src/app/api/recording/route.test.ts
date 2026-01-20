@@ -21,10 +21,10 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock Supabase admin client
+// Mock Supabase admin client (now in @/lib/external)
 const mockUpload = vi.fn();
 const mockCreateSignedUrl = vi.fn();
-vi.mock("@/lib/supabase", () => ({
+vi.mock("@/lib/external", () => ({
   supabaseAdmin: {
     storage: {
       from: () => ({
