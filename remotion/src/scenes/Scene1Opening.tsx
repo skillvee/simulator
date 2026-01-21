@@ -11,7 +11,6 @@ import { colors, animations } from '../lib/design-system';
 import { fonts } from '../lib/fonts';
 
 export const Scene1Opening: React.FC = () => {
-  const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
   // Scene timing (8 seconds total = 240 frames at 30fps)
@@ -23,7 +22,7 @@ export const Scene1Opening: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: colors.background }}>
       {/* LeetCode problem (0-3s) */}
-      <Sequence from={0} durationInFrames={leetcodeEnd} premountFor={fps}>
+      <Sequence durationInFrames={leetcodeEnd} premountFor={fps}>
         <LeetCodeProblem />
       </Sequence>
 

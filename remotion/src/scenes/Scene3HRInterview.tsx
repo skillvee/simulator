@@ -23,7 +23,7 @@ export const Scene3HRInterview: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: colors.background }}>
       {/* "REAL CONVERSATIONS." (0-2s) */}
-      <Sequence from={0} durationInFrames={textPunchEnd} premountFor={fps}>
+      <Sequence durationInFrames={textPunchEnd} premountFor={fps}>
         <TextPunch text="REAL CONVERSATIONS." fontSize={72} />
       </Sequence>
 

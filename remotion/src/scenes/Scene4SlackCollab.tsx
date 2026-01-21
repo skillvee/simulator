@@ -49,7 +49,7 @@ export const Scene4SlackCollab: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: colors.background }}>
       {/* "REAL TEAMWORK." (0-2s) */}
-      <Sequence from={0} durationInFrames={textPunchEnd} premountFor={fps}>
+      <Sequence durationInFrames={textPunchEnd} premountFor={fps}>
         <TextPunch text="REAL TEAMWORK." fontSize={72} />
       </Sequence>
 

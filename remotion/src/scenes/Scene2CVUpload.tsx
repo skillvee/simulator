@@ -20,7 +20,7 @@ export const Scene2CVUpload: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: colors.background }}>
       {/* "YOUR EXPERIENCE MATTERS" (0-2s) */}
-      <Sequence from={0} durationInFrames={textPunchEnd} premountFor={fps}>
+      <Sequence durationInFrames={textPunchEnd} premountFor={fps}>
         <TextPunch text="YOUR EXPERIENCE MATTERS." fontSize={72} />
       </Sequence>
 

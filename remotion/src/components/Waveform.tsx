@@ -1,5 +1,5 @@
 // remotion/src/components/Waveform.tsx
-import { useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
+import { useCurrentFrame, interpolate } from 'remotion';
 import { colors, borders } from '../lib/design-system';
 
 type WaveformProps = {
@@ -16,7 +16,6 @@ export const Waveform: React.FC<WaveformProps> = ({
   active = true,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
 
   const barWidth = (width - (bars - 1) * 4) / bars;
 
@@ -46,7 +45,6 @@ export const Waveform: React.FC<WaveformProps> = ({
               backgroundColor: colors.accent,
               border: `${borders.width}px solid ${colors.border}`,
               borderRadius: borders.radius,
-              transition: 'height 0.1s',
             }}
           />
         );

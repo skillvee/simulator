@@ -22,7 +22,7 @@ export const Scene5SubmitPR: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: colors.background }}>
       {/* "REAL CODE REVIEWS." (0-2s) */}
-      <Sequence from={0} durationInFrames={textPunchEnd} premountFor={fps}>
+      <Sequence durationInFrames={textPunchEnd} premountFor={fps}>
         <TextPunch text="REAL CODE REVIEWS." fontSize={72} />
       </Sequence>
 

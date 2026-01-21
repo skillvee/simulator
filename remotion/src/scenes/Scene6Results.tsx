@@ -31,7 +31,7 @@ export const Scene6Results: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: colors.background }}>
       {/* "See HOW you work." title (0-4s) */}
-      <Sequence from={0} durationInFrames={titleEnd} premountFor={fps}>
+      <Sequence durationInFrames={titleEnd} premountFor={fps}>
         <TitleSection />
       </Sequence>
 
