@@ -20,7 +20,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   backgroundColor = colors.accent,
 }) => {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
       <div style={{ position: 'relative' }}>
         <div
           style={{
@@ -61,7 +61,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             <span
               style={{
                 fontFamily: fonts.heading,
-                fontSize: 14,
+                fontSize: 28,
                 fontWeight: 700,
                 color: colors.text,
               }}
@@ -73,7 +73,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             <span
               style={{
                 fontFamily: fonts.heading,
-                fontSize: 12,
+                fontSize: 22,
                 color: '#666',
               }}
             >

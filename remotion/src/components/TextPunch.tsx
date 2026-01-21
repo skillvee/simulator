@@ -11,7 +11,7 @@ type TextPunchProps = {
 
 export const TextPunch: React.FC<TextPunchProps> = ({
   text,
-  fontSize = 80,
+  fontSize = 120,
   color = colors.text,
 }) => {
   const frame = useCurrentFrame();

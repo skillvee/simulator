@@ -27,14 +27,14 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const barWidth = progress * value;
 
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: 24 }}>
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginBottom: 8,
+          marginBottom: 12,
           fontFamily: fonts.heading,
-          fontSize: 14,
+          fontSize: 28,
           color: colors.text,
         }}
       >
@@ -44,7 +44,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       <div
         style={{
           width: '100%',
-          height: 24,
+          height: 36,
           backgroundColor: colors.background,
           border: `${borders.width}px solid ${colors.border}`,
           borderRadius: borders.radius,

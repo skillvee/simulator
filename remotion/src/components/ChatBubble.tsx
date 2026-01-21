@@ -32,20 +32,21 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
       style={{
         display: 'flex',
         justifyContent: isUser ? 'flex-end' : 'flex-start',
-        marginBottom: 12,
+        marginBottom: 20,
         opacity,
         transform: `translateX(${translateX}px)`,
       }}
     >
       <div
         style={{
-          maxWidth: '70%',
-          padding: '12px 16px',
+          maxWidth: '80%',
+          padding: '16px 24px',
           backgroundColor: isUser ? colors.accent : colors.background,
           border: `${borders.width}px solid ${colors.border}`,
           borderRadius: borders.radius,
           fontFamily: fonts.heading,
-          fontSize: 14,
+          fontSize: 28,
+          lineHeight: 1.4,
           color: colors.text,
         }}
       >

@@ -11,17 +11,17 @@ const FPS = 30;
 const WIDTH = 1920;
 const HEIGHT = 1080;
 
-// Scene durations in frames (at 30fps)
+// Scene durations in frames (at 30fps) - 60 seconds total
 const SCENE_DURATIONS = {
-  scene1Opening: 8 * FPS,     // 240 frames (8 seconds)
-  scene2CVUpload: 12 * FPS,   // 360 frames (12 seconds)
-  scene3HRInterview: 18 * FPS, // 540 frames (18 seconds)
-  scene4SlackCollab: 22 * FPS, // 660 frames (22 seconds)
-  scene5SubmitPR: 12 * FPS,   // 360 frames (12 seconds)
-  scene6Results: 18 * FPS,    // 540 frames (18 seconds)
+  scene1Opening: 5 * FPS,     // 150 frames (5 seconds)
+  scene2CVUpload: 8 * FPS,    // 240 frames (8 seconds)
+  scene3HRInterview: 12 * FPS, // 360 frames (12 seconds)
+  scene4SlackCollab: 15 * FPS, // 450 frames (15 seconds)
+  scene5SubmitPR: 8 * FPS,    // 240 frames (8 seconds)
+  scene6Results: 12 * FPS,    // 360 frames (12 seconds)
 } as const;
 
-// Total duration: 90 seconds = 2700 frames
+// Total duration: 60 seconds = 1800 frames
 const TOTAL_DURATION = Object.values(SCENE_DURATIONS).reduce((a, b) => a + b, 0);
 
 // Full promo video composition using Series
@@ -53,7 +53,7 @@ const PromoVideo: React.FC = () => {
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* Full promo video - 90 seconds */}
+      {/* Full promo video - 60 seconds */}
       <Composition
         id="PromoVideo"
         component={PromoVideo}
