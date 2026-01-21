@@ -6,3 +6,8 @@ build
 
 # Ignore the output video from Git but not videos you import into src/.
 out
+
+# Audio assets (need to be sourced separately due to licensing)
+public/*.mp3
+public/*.wav
+!public/README.md
