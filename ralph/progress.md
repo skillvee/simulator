@@ -78,3 +78,33 @@
 ### Gotchas discovered
 - Comments in the CSS still referenced "gold" and "neo-brutalist" - updated them to reflect the new theme
 - The design system migration is incremental: globals.css provides new tokens, but components can still use old class patterns until individually migrated
+
+## Issue #113: DS-003: Enable border radius and shadows in Tailwind
+
+### What was implemented
+**No changes needed** - All acceptance criteria were already satisfied by Issue #111 (DS-001).
+
+### Current state (verified)
+- `tailwind.config.ts` lines 59-63: Border radius already uses CSS variables
+  ```typescript
+  borderRadius: {
+    lg: "var(--radius)",
+    md: "calc(var(--radius) - 2px)",
+    sm: "calc(var(--radius) - 4px)",
+  }
+  ```
+- `globals.css` line 29: `--radius: 0.5rem` already exists
+- No `boxShadow` overrides exist - Tailwind defaults are used
+
+### Verification
+- Build passes: `npm run build` exits 0
+- Lint passes: `npm run lint` (only pre-existing warnings)
+
+### Learnings for future iterations
+1. **Check issue dependencies carefully** - DS-003 depended on DS-001, and DS-001 already implemented the border radius and CSS variable changes as part of shadcn/ui initialization
+2. **Issue descriptions may reference outdated state** - The issue described "Current State (to remove)" with 0px overrides, but those never existed in the codebase (DS-001 went directly to the correct values)
+3. **Verify before implementing** - Reading the actual files first prevented unnecessary duplicate work
+
+### Gotchas discovered
+- The neo-brutalist 0px radius overrides mentioned in the issue were from an older version of the codebase that was replaced before DS-001 was implemented
+- Issues in a dependency chain may have overlapping scope - worth checking if the work was already done upstream
