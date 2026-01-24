@@ -61,9 +61,9 @@ export function SlackLayout(props: SlackLayoutProps) {
 function SlackLayoutSkeleton({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="hidden h-screen w-64 flex-col border-r-2 border-foreground bg-background md:flex">
-        <div className="flex h-[74px] flex-shrink-0 items-center border-b-2 border-foreground bg-background px-4 py-3">
-          <h2 className="font-mono text-sm font-bold uppercase tracking-wider">
+      <aside className="hidden h-screen w-64 flex-col rounded-r-lg border-r border-border bg-background shadow-md md:flex">
+        <div className="flex h-[74px] flex-shrink-0 items-center border-b border-border bg-background px-4 py-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
             Team
           </h2>
         </div>
@@ -72,10 +72,10 @@ function SlackLayoutSkeleton({ children }: { children: React.ReactNode }) {
           {[...Array(5)].map((_, i) => (
             <div key={i} className="border-b border-border p-3">
               <div className="flex items-start gap-3">
-                <div className="h-10 w-10 border-2 border-muted-foreground bg-muted" />
+                <div className="h-10 w-10 rounded-full bg-muted" />
                 <div className="flex-1">
-                  <div className="mb-2 h-4 w-24 bg-muted" />
-                  <div className="h-3 w-32 bg-muted" />
+                  <div className="mb-2 h-4 w-24 rounded bg-muted" />
+                  <div className="h-3 w-32 rounded bg-muted" />
                 </div>
               </div>
             </div>
@@ -150,7 +150,7 @@ function SlackLayoutInner({
         {/* Mobile menu button */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="fixed left-4 top-4 z-50 border-2 border-foreground bg-background p-2 hover:bg-accent md:hidden"
+          className="fixed left-4 top-4 z-50 rounded-lg border border-border bg-background p-2 shadow-md transition-colors hover:bg-accent md:hidden"
           aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
         >
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
@@ -166,11 +166,11 @@ function SlackLayoutInner({
 
         {/* Sidebar */}
         <aside
-          className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 transform flex-col border-r-2 border-foreground bg-background transition-transform duration-200 ease-in-out md:static ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} `}
+          className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 transform flex-col rounded-r-lg border-r border-border bg-background shadow-md transition-transform duration-200 ease-in-out md:static ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} `}
         >
           {/* Header - matches chat header height (74px) */}
-          <div className="flex h-[74px] flex-shrink-0 items-center border-b-2 border-foreground bg-background px-4 py-3">
-            <h2 className="font-mono text-sm font-bold uppercase tracking-wider">
+          <div className="flex h-[74px] flex-shrink-0 items-center border-b border-border bg-background px-4 py-3">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
               Team
             </h2>
           </div>
@@ -247,27 +247,27 @@ function CoworkerItem({
   return (
     <div
       onClick={onChat}
-      className={`cursor-pointer border-b border-border p-3 transition-colors ${
+      className={`cursor-pointer border-b border-border p-3 transition-all duration-200 ease-in-out ${
         isSelected
-          ? "border-l-4 border-l-secondary bg-accent"
-          : "hover:bg-accent/50"
+          ? "border-l-4 border-l-primary bg-primary/10"
+          : "mx-2 my-1 rounded-lg hover:bg-accent/80"
       }`}
     >
       <div className="flex items-start gap-3">
         {/* Avatar with online/in-call indicator */}
         <div className="relative flex-shrink-0">
           <div
-            className={`flex h-10 w-10 items-center justify-center border-2 border-foreground bg-secondary ${
-              isInCall ? "ring-2 ring-green-500 ring-offset-1" : ""
+            className={`flex h-10 w-10 items-center justify-center rounded-full bg-secondary ${
+              isInCall ? "ring-2 ring-green-500 ring-offset-2" : ""
             }`}
           >
-            <span className="font-mono text-sm font-bold text-secondary-foreground">
+            <span className="text-sm font-semibold text-secondary-foreground">
               {initials}
             </span>
           </div>
           {/* Status indicator - green dot (in call = pulsing) */}
           <div
-            className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 border border-foreground bg-green-500 ${
+            className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-green-500 ${
               isInCall ? "animate-pulse" : ""
             }`}
           />
@@ -275,13 +275,13 @@ function CoworkerItem({
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold">{coworker.name}</p>
+          <p className="truncate text-sm font-semibold">{coworker.name}</p>
           <p className="truncate text-xs text-muted-foreground">
             {coworker.role}
           </p>
           {isInCall && (
-            <p className="mt-0.5 font-mono text-xs">
-              <span className="text-green-600 dark:text-green-400">
+            <p className="mt-0.5 text-xs">
+              <span className="font-medium text-green-600 dark:text-green-400">
                 in call
               </span>
             </p>
@@ -295,10 +295,10 @@ function CoworkerItem({
             onCall();
           }}
           disabled={isInCall}
-          className={`flex-shrink-0 border-2 border-foreground p-1.5 ${
+          className={`flex-shrink-0 rounded-lg p-1.5 transition-all duration-200 ease-in-out ${
             isInCall
               ? "cursor-not-allowed bg-muted text-muted-foreground"
-              : "bg-background hover:bg-foreground hover:text-background"
+              : "bg-background shadow-sm hover:bg-primary hover:text-primary-foreground hover:shadow-md"
           }`}
           aria-label={isInCall ? "In call" : `Call ${coworker.name}`}
         >
@@ -319,24 +319,24 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
 
   return (
     <div
-      className="cursor-default border-b border-border p-3 opacity-60"
+      className="mx-2 my-1 cursor-default rounded-lg border-b border-border p-3 opacity-60 transition-all duration-200 ease-in-out"
       title="Unavailable"
     >
       <div className="flex items-start gap-3">
         {/* Avatar with offline indicator */}
         <div className="relative flex-shrink-0">
-          <div className="flex h-10 w-10 items-center justify-center border-2 border-muted-foreground bg-muted">
-            <span className="font-mono text-sm font-bold text-muted-foreground">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <span className="text-sm font-semibold text-muted-foreground">
               {initials}
             </span>
           </div>
           {/* Offline status indicator - red dot */}
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 border border-muted-foreground bg-red-500" />
+          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-red-500" />
         </div>
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-muted-foreground">
+          <p className="truncate text-sm font-semibold text-muted-foreground">
             {name}
           </p>
           <p className="truncate text-xs text-muted-foreground">{role}</p>

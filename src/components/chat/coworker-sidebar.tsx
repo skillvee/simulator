@@ -25,10 +25,10 @@ export function CoworkerSidebar({
   const totalTeamSize = coworkers.length + DECORATIVE_TEAM_MEMBERS.length;
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r-2 border-foreground bg-background">
+    <aside className="flex h-full w-64 flex-col border-r border-border bg-background shadow-sm">
       {/* Header */}
-      <div className="border-b-2 border-foreground p-4">
-        <h2 className="font-mono text-sm font-bold uppercase tracking-wider">
+      <div className="border-b border-border p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
           Team Directory
         </h2>
       </div>
@@ -57,8 +57,8 @@ export function CoworkerSidebar({
       </div>
 
       {/* Footer */}
-      <div className="border-t-2 border-foreground p-3">
-        <p className="font-mono text-xs text-muted-foreground">
+      <div className="border-t border-border p-3">
+        <p className="text-xs text-muted-foreground">
           {coworkers.length} online · {totalTeamSize} total
         </p>
       </div>
@@ -82,8 +82,10 @@ function CoworkerItem({
   return (
     <div
       onClick={onChat}
-      className={`cursor-pointer border-b border-border p-3 transition-colors ${
-        isSelected ? "bg-accent" : "hover:bg-accent/50"
+      className={`cursor-pointer border-b border-border p-3 transition-all duration-200 ease-in-out ${
+        isSelected
+          ? "border-l-4 border-l-primary bg-primary/10"
+          : "mx-2 my-1 rounded-lg hover:bg-accent/80"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -91,12 +93,12 @@ function CoworkerItem({
         <div className="relative flex-shrink-0">
           <CoworkerAvatar name={coworker.name} size="md" />
           {/* Online status indicator - green dot */}
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 border border-foreground bg-green-500" />
+          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-green-500" />
         </div>
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold">{coworker.name}</p>
+          <p className="truncate text-sm font-semibold">{coworker.name}</p>
           <p className="truncate text-xs text-muted-foreground">
             {coworker.role}
           </p>
@@ -108,7 +110,7 @@ function CoworkerItem({
             e.stopPropagation();
             onCall();
           }}
-          className="flex-shrink-0 border-2 border-foreground bg-background p-1.5 hover:bg-foreground hover:text-background"
+          className="flex-shrink-0 rounded-lg bg-background p-1.5 shadow-sm transition-all duration-200 ease-in-out hover:bg-primary hover:text-primary-foreground hover:shadow-md"
           aria-label={`Call ${coworker.name}`}
         >
           <Headphones size={16} />
@@ -128,24 +130,24 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
 
   return (
     <div
-      className="cursor-default border-b border-border p-3 opacity-60"
+      className="mx-2 my-1 cursor-default rounded-lg border-b border-border p-3 opacity-60 transition-all duration-200 ease-in-out"
       title="Unavailable"
     >
       <div className="flex items-start gap-3">
         {/* Avatar with offline indicator */}
         <div className="relative flex-shrink-0">
-          <div className="flex h-10 w-10 items-center justify-center border-2 border-muted-foreground bg-muted">
-            <span className="font-mono text-sm font-bold text-muted-foreground">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <span className="text-sm font-semibold text-muted-foreground">
               {initials}
             </span>
           </div>
           {/* Offline status indicator - red dot */}
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 border border-muted-foreground bg-red-500" />
+          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-red-500" />
         </div>
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold text-muted-foreground">
+          <p className="truncate text-sm font-semibold text-muted-foreground">
             {name}
           </p>
           <p className="truncate text-xs text-muted-foreground">{role}</p>

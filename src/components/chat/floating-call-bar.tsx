@@ -18,6 +18,8 @@ import {
 } from "@/lib/media";
 import type { TranscriptMessage } from "@/lib/ai";
 import { CoworkerAvatar } from "./coworker-avatar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export type CallState =
   | "idle"
@@ -448,14 +450,14 @@ export function FloatingCallBar({
   // Error state (matches chat footer height)
   if (callState === "error") {
     return (
-      <div className="flex h-[78px] items-center border-t-2 border-foreground bg-red-50 px-4 py-3 dark:bg-red-950">
-        <div className="flex items-center justify-between">
+      <div className="flex h-[78px] items-center rounded-xl border border-red-200 bg-red-50 px-4 py-3 shadow-lg dark:border-red-800 dark:bg-red-950">
+        <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center border-2 border-foreground bg-red-500">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500">
               <PhoneOff size={16} className="text-white" />
             </div>
             <div>
-              <p className="text-sm font-bold text-red-700 dark:text-red-300">
+              <p className="text-sm font-semibold text-red-700 dark:text-red-300">
                 Call Failed
               </p>
               <p className="max-w-[150px] truncate text-xs text-red-600 dark:text-red-400">
@@ -463,12 +465,13 @@ export function FloatingCallBar({
               </p>
             </div>
           </div>
-          <button
+          <Button
             onClick={onCallEnd}
-            className="border-2 border-foreground bg-background px-2 py-1 text-xs hover:bg-accent"
+            variant="outline"
+            size="sm"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -477,14 +480,14 @@ export function FloatingCallBar({
   // Connecting state (matches chat footer height)
   if (callState === "requesting-permission" || callState === "connecting") {
     return (
-      <div className="bg-secondary/20 flex h-[78px] items-center border-t-2 border-foreground px-4 py-3">
+      <div className="flex h-[78px] items-center rounded-xl border border-border bg-secondary/20 px-4 py-3 shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center border-2 border-foreground bg-secondary">
-            <div className="h-4 w-4 animate-spin border-2 border-secondary-foreground border-t-transparent" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-secondary-foreground border-t-transparent" />
           </div>
           <div>
-            <p className="text-sm font-bold">{coworker.name}</p>
-            <p className="font-mono text-xs text-muted-foreground">
+            <p className="text-sm font-semibold">{coworker.name}</p>
+            <p className="text-xs text-muted-foreground">
               {callState === "requesting-permission"
                 ? "Requesting mic..."
                 : "Connecting..."}
@@ -498,74 +501,71 @@ export function FloatingCallBar({
   // Connected state - the main call bar UI (matches chat footer height)
   if (callState === "connected") {
     return (
-      <div className="bg-secondary/10 flex h-[78px] items-center border-t-2 border-foreground px-4 py-3">
-        <div className="flex items-center justify-between">
+      <div className="flex h-[78px] items-center rounded-xl border border-border bg-secondary/10 px-4 py-3 shadow-lg">
+        <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Avatar with speaking indicator */}
             <div className="relative">
-              <div className={isSpeaking ? "ring-2 ring-secondary ring-offset-1" : ""}>
+              <div className={isSpeaking ? "rounded-full ring-2 ring-secondary ring-offset-2" : ""}>
                 <CoworkerAvatar name={coworker.name} size="md" />
               </div>
               {/* Speaking indicator - sound wave icon */}
               {isSpeaking && (
-                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center border border-foreground bg-secondary">
+                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-secondary">
                   <Volume2 size={10} className="text-secondary-foreground" />
                 </div>
               )}
               {/* Listening indicator - mic icon (when not speaking and not muted) */}
               {!isSpeaking && isListening && !isMuted && (
-                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center border border-foreground bg-foreground">
+                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-foreground">
                   <Mic size={10} className="text-background" />
                 </div>
               )}
             </div>
 
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold">{coworker.name}</p>
-              <p className="flex items-center gap-1 font-mono text-xs text-muted-foreground">
+              <p className="truncate text-sm font-semibold">{coworker.name}</p>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {isSpeaking ? (
                   <>
-                    <span className="inline-block h-1.5 w-1.5 animate-pulse bg-secondary" />
+                    <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-secondary" />
                     Speaking...
                   </>
                 ) : isListening && !isMuted ? (
-                  <>
-                    <span className="inline-block h-1.5 w-1.5 bg-foreground" />
+                  <Badge className="bg-green-500 px-1.5 py-0 text-[10px] text-white hover:bg-green-500">
                     In call
-                  </>
+                  </Badge>
                 ) : (
                   <>
-                    <span className="inline-block h-1.5 w-1.5 bg-muted-foreground" />
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
                     Muted
                   </>
                 )}
-              </p>
+              </div>
             </div>
           </div>
 
           {/* Call controls */}
           <div className="flex items-center gap-2">
             {/* Mute button */}
-            <button
+            <Button
               onClick={toggleMute}
-              className={`border-2 border-foreground px-3 py-3 ${
-                isMuted
-                  ? "bg-foreground text-background"
-                  : "bg-background hover:bg-foreground hover:text-background"
-              }`}
+              variant={isMuted ? "default" : "outline"}
+              size="icon"
               aria-label={isMuted ? "Unmute" : "Mute"}
             >
               {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
-            </button>
+            </Button>
 
             {/* End call button */}
-            <button
+            <Button
               onClick={endCall}
-              className="border-2 border-foreground bg-foreground px-3 py-3 text-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
+              variant="destructive"
+              size="icon"
               aria-label="End call"
             >
               <PhoneOff size={16} />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
