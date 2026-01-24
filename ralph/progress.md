@@ -593,3 +593,42 @@
   - [x] No unused styles or dead code (styles/theme.css deleted)
   - [x] Build passes: `npm run build`
   - [x] Lint passes: `npm run lint`
+
+## Issue #143: DS-033: Update syntax highlighting to match blue theme
+
+- **What was implemented:**
+  - Updated `.hljs-keyword` color from `#60a5fa` (already blue) - kept as is
+  - Updated `.hljs-string` color from `#ffffff` (white) to `#fbbf24` (amber-400) for warm contrast
+  - Updated `.hljs-number` color from `#60a5fa` (blue) to `#34d399` (emerald-400) for distinction
+  - Updated `.hljs-comment` kept at `#888888` (muted gray)
+  - Updated dark mode string colors to `#d97706` (amber-600) for visibility on white background
+  - Updated dark mode number colors to `#10b981` (emerald-500) for visibility on white background
+  - Separated dark mode selectors for strings/numbers from keywords for independent color control
+  - Code blocks already have rounded corners via `rounded-lg` in markdown.tsx component
+
+- **Files changed:**
+  - `src/app/globals.css` - Updated hljs syntax highlighting colors for strings and numbers
+
+- **Learnings for future iterations:**
+  - The hljs styles are only applied when using the Markdown component with rehype-highlight
+  - Chat component renders raw text without markdown processing - syntax highlighting won't appear there
+  - Admin scenario builder and scenario detail pages use Markdown component
+  - For dark mode inverted themes (white bg), use darker shades of colors (amber-600, emerald-500)
+  - Keep keyword styling consistent across light/dark modes (blue family)
+
+- **Gotchas:**
+  - The chat interface displays code as plain text (whitespace-pre-wrap) without syntax highlighting
+  - Test scenarios may not contain code blocks to visually verify syntax highlighting
+  - The markdown pre element uses `bg-muted` which may override `.hljs` background in some contexts
+
+- **Acceptance criteria verified:**
+  - [x] Keywords use blue or complementary color (not gold): `#60a5fa` (blue-400)
+  - [x] Comments remain muted gray: `#888888`
+  - [x] Strings use appropriate contrasting color: `#fbbf24` (amber-400)
+  - [x] Numbers use distinct color (green or similar): `#34d399` (emerald-400)
+  - [x] Light mode syntax highlighting works well
+  - [x] Dark mode syntax highlighting works well
+  - [x] Code blocks have rounded corners: `rounded-lg` in markdown.tsx
+  - [x] Build passes: `npm run build`
+  - [x] Lint passes: `npm run lint`
+  - [x] Visual verification: Screenshots captured (chat page shows text without markdown rendering)

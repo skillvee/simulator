@@ -125,22 +125,22 @@ pre,
   font-weight: bold;
 }
 
-/* Strings - white with slight emphasis */
+/* Strings - amber for warm contrast */
 .hljs-string,
 .hljs-attr,
 .hljs-template-variable,
 .hljs-variable,
 .hljs-template-tag {
-  color: #ffffff;
+  color: #fbbf24;
 }
 
-/* Numbers, literals - blue */
+/* Numbers, literals - emerald for distinction */
 .hljs-number,
 .hljs-literal,
 .hljs-type,
 .hljs-params,
 .hljs-link {
-  color: #60a5fa;
+  color: #34d399;
 }
 
 /* Functions, methods - bold white */
@@ -230,21 +230,27 @@ pre,
 .dark .hljs-keyword,
 .dark .hljs-selector-tag,
 .dark .hljs-tag,
+.dark .hljs-attribute,
+.dark .hljs-regexp {
+  color: #2563eb;
+}
+
 .dark .hljs-number,
 .dark .hljs-literal,
 .dark .hljs-type,
 .dark .hljs-params,
-.dark .hljs-link,
-.dark .hljs-attribute,
-.dark .hljs-regexp {
-  color: #2563eb;
+.dark .hljs-link {
+  color: #10b981;
 }
 
 .dark .hljs-string,
 .dark .hljs-attr,
 .dark .hljs-template-variable,
 .dark .hljs-variable,
-.dark .hljs-template-tag,
+.dark .hljs-template-tag {
+  color: #d97706;
+}
+
 .dark .hljs-subst {
   color: #000000;
 }
