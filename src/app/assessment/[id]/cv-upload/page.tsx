@@ -51,21 +51,21 @@ export default async function CVUploadPage({ params }: PageProps) {
   return (
     <main className="flex min-h-screen flex-col bg-background text-foreground">
       {/* Header */}
-      <header className="border-b-2 border-border">
+      <header className="border-b border-border">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-xl font-bold">
+            <Link href="/" className="text-xl font-semibold">
               Skillvee
             </Link>
             <span className="text-muted-foreground">/</span>
-            <span className="font-mono text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {assessment.scenario.name}
             </span>
           </div>
           <nav className="flex items-center gap-4">
             <Link
               href="/profile"
-              className="font-mono text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               Profile
             </Link>
@@ -74,11 +74,11 @@ export default async function CVUploadPage({ params }: PageProps) {
       </header>
 
       {/* Progress indicator */}
-      <div className="border-b-2 border-border">
+      <div className="border-b border-border">
         <div className="mx-auto max-w-7xl px-6 py-3">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center bg-secondary font-bold text-secondary-foreground">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">
                 <svg
                   className="h-4 w-4"
                   fill="none"
@@ -86,8 +86,8 @@ export default async function CVUploadPage({ params }: PageProps) {
                   viewBox="0 0 24 24"
                 >
                   <path
-                    strokeLinecap="square"
-                    strokeLinejoin="miter"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     strokeWidth={2}
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
@@ -97,28 +97,28 @@ export default async function CVUploadPage({ params }: PageProps) {
             </div>
             <div className="h-px flex-1 bg-border" />
             <div className="flex items-center gap-2 opacity-40">
-              <div className="flex h-8 w-8 items-center justify-center border-2 border-border font-bold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border font-semibold">
                 1
               </div>
               <span>HR Interview</span>
             </div>
             <div className="h-px flex-1 bg-border" />
             <div className="flex items-center gap-2 opacity-40">
-              <div className="flex h-8 w-8 items-center justify-center border-2 border-border font-bold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border font-semibold">
                 2
               </div>
               <span>Manager Kickoff</span>
             </div>
             <div className="h-px flex-1 bg-border" />
             <div className="flex items-center gap-2 opacity-40">
-              <div className="flex h-8 w-8 items-center justify-center border-2 border-border font-bold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border font-semibold">
                 3
               </div>
               <span>Coding Task</span>
             </div>
             <div className="h-px flex-1 bg-border" />
             <div className="flex items-center gap-2 opacity-40">
-              <div className="flex h-8 w-8 items-center justify-center border-2 border-border font-bold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border font-semibold">
                 4
               </div>
               <span>PR Defense</span>

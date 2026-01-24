@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Card, CardContent, Button } from "@/components/ui";
+import { Check, Sparkles } from "lucide-react";
 
 interface CongratulationsClientProps {
   assessmentId: string;
@@ -26,9 +28,8 @@ export function CongratulationsClient({
   const [showButton, setShowButton] = useState(false);
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(10);
 
-  // Sharp, stepped animation sequence (no smooth transitions)
+  // Smooth animation sequence
   useEffect(() => {
-    // Each step appears instantly after a delay
     const timers = [
       setTimeout(() => setShowContent(true), 100),
       setTimeout(() => setShowBadge(true), 300),
@@ -69,65 +70,45 @@ export function CongratulationsClient({
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      {/* Decorative geometric shapes - neo-brutalist style */}
+      {/* Decorative gradient circles */}
       <div
-        className="absolute left-0 top-0 h-32 w-32 border-2 border-foreground bg-secondary"
-        style={{
-          clipPath: "polygon(0 0, 100% 0, 0 100%)",
-          opacity: showContent ? 1 : 0,
-        }}
+        className="pointer-events-none absolute left-0 top-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-green-500/5 blur-3xl transition-opacity duration-500"
+        style={{ opacity: showContent ? 1 : 0 }}
       />
       <div
-        className="absolute right-0 top-0 h-24 w-24 bg-foreground"
-        style={{
-          clipPath: "polygon(100% 0, 100% 100%, 0 0)",
-          opacity: showContent ? 1 : 0,
-        }}
-      />
-      <div
-        className="absolute bottom-0 right-0 h-40 w-40 border-2 border-foreground bg-secondary"
-        style={{
-          clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
-          opacity: showContent ? 1 : 0,
-        }}
-      />
-      <div
-        className="absolute bottom-0 left-0 h-20 w-20 bg-foreground"
-        style={{
-          clipPath: "polygon(0 0, 100% 100%, 0 100%)",
-          opacity: showContent ? 1 : 0,
-        }}
+        className="pointer-events-none absolute bottom-0 right-0 h-96 w-96 translate-x-1/2 translate-y-1/2 rounded-full bg-green-500/10 blur-3xl transition-opacity duration-500"
+        style={{ opacity: showContent ? 1 : 0 }}
       />
 
       {/* Main content */}
       <div className="relative z-10 max-w-xl text-center">
         {/* Celebratory badge */}
         <div
-          className="mb-8"
+          className="mb-8 transition-all duration-300"
           style={{
             opacity: showBadge ? 1 : 0,
-            transform: showBadge ? "scale(1)" : "scale(0)",
+            transform: showBadge ? "scale(1)" : "scale(0.8)",
           }}
         >
-          <div className="inline-block border-4 border-foreground bg-secondary p-6">
-            <div className="text-6xl font-bold text-secondary-foreground">
-              &#10003;
-            </div>
+          <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-green-500/10">
+            <Check className="h-12 w-12 text-green-500" />
           </div>
         </div>
 
         {/* Main message */}
         <div
+          className="transition-all duration-300"
           style={{
             opacity: showMessage ? 1 : 0,
             transform: showMessage ? "translateY(0)" : "translateY(-20px)",
           }}
         >
-          <h1 className="mb-4 text-4xl font-bold md:text-5xl">
+          <h1 className="mb-4 text-4xl font-semibold md:text-5xl">
             Congratulations, {userName}!
           </h1>
           <p className="mb-2 text-2xl md:text-3xl">
-            <span className="inline-block bg-foreground px-3 py-1 text-secondary">
+            <span className="inline-flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-white">
+              <Sparkles className="h-5 w-5" />
               You got the job!
             </span>
           </p>
@@ -135,33 +116,37 @@ export function CongratulationsClient({
 
         {/* Job details */}
         <div
-          className="mb-8 mt-8"
+          className="mb-8 mt-8 transition-opacity duration-300"
           style={{
             opacity: showDetails ? 1 : 0,
           }}
         >
-          <div className="inline-block border-2 border-foreground bg-muted p-6">
-            <p className="mb-2 text-sm uppercase tracking-wider text-muted-foreground">
-              Your new role
-            </p>
-            <p className="mb-1 text-xl font-bold">{scenarioName}</p>
-            <p className="text-muted-foreground">at {companyName}</p>
-          </div>
+          <Card className="inline-block shadow-md">
+            <CardContent className="p-6">
+              <p className="mb-2 text-sm font-medium text-muted-foreground">
+                Your new role
+              </p>
+              <p className="mb-1 text-xl font-semibold">{scenarioName}</p>
+              <p className="text-muted-foreground">at {companyName}</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Continue button with auto-advance */}
         <div
+          className="transition-opacity duration-300"
           style={{
             opacity: showButton ? 1 : 0,
           }}
         >
-          <button
+          <Button
             onClick={handleContinue}
-            className="border-4 border-foreground bg-foreground px-8 py-4 text-lg font-bold text-background hover:bg-secondary hover:text-secondary-foreground"
+            size="lg"
+            className="bg-green-500 px-8 text-lg hover:bg-green-600"
           >
             Start Your First Day
-          </button>
-          <p className="mt-4 font-mono text-sm text-muted-foreground">
+          </Button>
+          <p className="mt-4 text-sm text-muted-foreground">
             Auto-advancing in {autoAdvanceTimer}s...
           </p>
         </div>

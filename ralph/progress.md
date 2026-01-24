@@ -388,3 +388,66 @@
 - **Visual verification:**
   - Screenshot captured: `screenshots/issue-139-chat-page.png`
   - Defense and results pages use same patterns as already-migrated voice-conversation component
+
+## Issue #140: DS-030: Migrate remaining assessment pages to modern design
+
+- **What was implemented:**
+  - Updated `src/app/assessment/[id]/cv-upload/page.tsx` with modern design:
+    - Header uses border-b instead of border-b-2, font-semibold instead of font-bold
+    - Progress indicators use rounded-full with bg-primary for active step
+    - Inactive step numbers use rounded-full with border instead of border-2
+    - Profile link uses transition-colors for smooth hover effect
+    - Removed font-mono from non-code text
+  - Updated `src/app/assessment/[id]/cv-upload/client.tsx` with modern design:
+    - Removed neo-brutalist decorative triangles with bg-secondary
+    - Badge uses rounded-full bg-primary/10 with text-primary
+    - "Why we need it" section uses Card/CardContent components
+    - Arrow bullets use ArrowRight icon with text-primary
+    - All font-bold replaced with font-semibold
+    - text-secondary replaced with text-primary
+  - Updated `src/app/assessment/[id]/processing/client.tsx` with complete overhaul:
+    - Header uses Badge component for company name, border-b instead of border-b-2
+    - Success message uses Card with rounded-full bg-green-500/10 checkmark icon
+    - StatCard uses Card/CardContent with text-primary for highlighted values
+    - CompletionBadge uses rounded-full with bg-green-500 and Check icon
+    - Processing indicator uses Card with bg-muted/50 and text-primary spinner
+    - Removed neo-brutalist decorative triangles
+    - All font-mono removed from non-code text, replaced with font-medium
+    - All font-bold replaced with font-semibold
+    - All border-2 replaced with subtle borders via Card components
+    - Video assessment status uses text-primary instead of text-secondary
+  - Updated `src/app/assessment/[id]/congratulations/client.tsx` with success styling:
+    - Removed neo-brutalist decorative triangles with bg-secondary
+    - Added gradient blur circles with bg-green-500/5 and bg-green-500/10
+    - Celebratory badge uses rounded-full bg-green-500/10 with Check icon
+    - "You got the job!" badge uses bg-green-500 with text-white
+    - Job details card uses Card/CardContent components
+    - Continue button uses Button component with green styling (bg-green-500)
+    - All animations use transition-all duration-300 for smooth effects
+    - All font-bold replaced with font-semibold
+    - Removed font-mono from timer text
+  - Note: Call page is redirect-only with no visual UI to update
+
+- **Files changed:**
+  - `src/app/assessment/[id]/cv-upload/page.tsx` - Progress indicators and header modernization
+  - `src/app/assessment/[id]/cv-upload/client.tsx` - Complete modern design overhaul
+  - `src/app/assessment/[id]/processing/client.tsx` - Complete modern design overhaul
+  - `src/app/assessment/[id]/congratulations/client.tsx` - Complete modern design with green accent
+
+- **Learnings for future iterations:**
+  - CV upload page uses shared cv-upload component which was already updated in DS-013
+  - Processing page is a good example of using green for success states (checkmark, completion badges)
+  - Congratulations page uses green as the accent color for the success theme
+  - Card/CardContent wrapping is sufficient for modern borders - no explicit border classes needed
+  - For LucideIcon prop types, import the type from lucide-react directly
+  - Gradient blur circles (bg-{color}/5, blur-3xl) work well as subtle decorations
+
+- **Gotchas:**
+  - Test assessment already has CV uploaded so cv-upload page redirects to hr-interview
+  - Congratulations page requires completed HR interview transcript to access
+  - Call page is a redirect handler - no visual UI to migrate
+
+- **Visual verification:**
+  - Screenshots captured: `screenshots/issue-140-processing.png`, `screenshots/issue-140-hr-interview.png`
+  - Processing page shows green success styling, Card components, and primary blue highlights
+  - HR interview page shows updated progress indicator with rounded-full step numbers

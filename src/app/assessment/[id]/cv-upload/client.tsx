@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { CVUpload } from "@/components/shared";
+import { Card, CardContent } from "@/components/ui";
+import { ArrowRight } from "lucide-react";
 
 interface CVUploadClientProps {
   assessmentId: string;
@@ -23,54 +25,51 @@ export function CVUploadClient({
 
   return (
     <div className="w-full max-w-2xl">
-      {/* Decorative triangles */}
-      <div className="relative">
-        <div
-          className="absolute -right-16 -top-16 h-32 w-32 bg-secondary opacity-20"
-          style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}
-        />
-      </div>
-
       {/* Header */}
       <div className="mb-8">
-        <div className="mb-6 inline-block border-2 border-border px-4 py-2">
-          <span className="font-mono text-sm">BEFORE THE INTERVIEW</span>
+        <div className="mb-6 inline-block rounded-full bg-primary/10 px-4 py-2">
+          <span className="text-sm font-medium text-primary">
+            Before the interview
+          </span>
         </div>
-        <h1 className="mb-4 text-4xl font-bold">Upload Your CV</h1>
+        <h1 className="mb-4 text-4xl font-semibold">Upload Your CV</h1>
         <p className="text-lg text-muted-foreground">
           Before starting your{" "}
-          <span className="font-semibold text-secondary">{scenarioName}</span>{" "}
+          <span className="font-semibold text-primary">{scenarioName}</span>{" "}
           interview at <span className="font-semibold">{companyName}</span>,
           please upload your CV or resume.
         </p>
       </div>
 
       {/* Why we need it */}
-      <div className="bg-accent/10 mb-8 border-2 border-border p-6">
-        <h3 className="mb-3 font-bold">Why do we need your CV?</h3>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          <li className="flex items-start gap-2">
-            <span className="text-secondary">→</span>
-            <span>
-              The HR interviewer will reference your experience to ask relevant
-              questions
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-secondary">→</span>
-            <span>
-              Your background helps us tailor the assessment to your skill level
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-secondary">→</span>
-            <span>
-              It enables more accurate and personalized feedback after the
-              assessment
-            </span>
-          </li>
-        </ul>
-      </div>
+      <Card className="mb-8 shadow-sm">
+        <CardContent className="p-6">
+          <h3 className="mb-3 font-semibold">Why do we need your CV?</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span>
+                The HR interviewer will reference your experience to ask
+                relevant questions
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span>
+                Your background helps us tailor the assessment to your skill
+                level
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span>
+                It enables more accurate and personalized feedback after the
+                assessment
+              </span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
       {/* Upload component */}
       <div className="mb-8">
