@@ -386,3 +386,39 @@
 
 - **Visual verification:**
   - Screenshots captured: `screenshots/issue-136-scenarios-list.png`, `screenshots/issue-136-scenario-detail.png`, `screenshots/issue-136-scenario-builder.png`
+
+## Issue #137: DS-027: Migrate admin assessments and users pages to modern design
+
+- **What was implemented:**
+  - Verified `src/app/admin/assessments/client.tsx` and `src/app/admin/assessments/[id]/client.tsx` were already migrated to modern design
+  - Migrated `src/app/admin/users/client.tsx` to use Card, CardContent, Button, Badge, Input, and Avatar components from shadcn/ui
+  - Users table wrapped in Card with CardContent p-0 for proper padding
+  - StatCard component now uses Card/CardContent with text-primary for highlight instead of text-secondary
+  - Search input migrated from native input to Input component
+  - Date range filter buttons migrated from custom buttons to Button components with variant="default"/"outline"
+  - Role filter select updated with rounded-md and ring focus states
+  - User avatar migrated from custom div to Avatar/AvatarFallback with bg-primary/10 and text-primary
+  - Role badges migrated from custom spans to Badge component with proper variants
+  - Table rows have hover:bg-muted/50 with transition-colors for smooth hover effect
+  - All font-mono removed from non-code text
+  - All font-bold replaced with font-semibold
+  - All bg-secondary (gold) references replaced with bg-primary or text-primary
+
+- **Files changed:**
+  - `src/app/admin/users/client.tsx` - Complete modern design migration
+
+- **Learnings for future iterations:**
+  - Admin assessments pages were already migrated in a previous iteration (evidenced by Card, Button, Badge imports)
+  - When using Card for tables, use CardContent with className="p-0" to remove internal padding
+  - StatCard components should use Card/CardContent wrapper with text-primary for highlighted values
+  - Avatar/AvatarFallback with bg-primary/10 text-primary creates consistent user initials styling
+  - Badge component handles role badges better than custom spans with conditional classes
+  - For LucideIcon prop types, import the type from lucide-react directly
+
+- **Gotchas:**
+  - The assessments pages (client.tsx and [id]/client.tsx) were already migrated before this issue
+  - The issue description listed assessments pages but they were already done - only users page needed work
+  - Import LucideIcon type when passing icon components as props to avoid type errors
+
+- **Visual verification:**
+  - Screenshots captured: `screenshots/issue-137-users.png`, `screenshots/issue-137-assessments.png`, `screenshots/issue-137-assessments-expanded.png`, `screenshots/issue-137-assessment-detail.png`

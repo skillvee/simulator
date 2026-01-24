@@ -3,6 +3,12 @@
 import { useState, useMemo } from "react";
 import { Search, X, User, Shield, Calendar, FileText } from "lucide-react";
 import type { UserRole } from "@prisma/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import type { LucideIcon } from "lucide-react";
 
 // Serialized types from server (dates as strings)
 interface SerializedUser {
@@ -88,7 +94,7 @@ export function UsersClient({ users, stats }: UsersClientProps) {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
-      <h1 className="mb-8 text-3xl font-bold">Users</h1>
+      <h1 className="mb-8 text-3xl font-semibold">Users</h1>
 
       {/* Aggregate Stats */}
       <div
@@ -117,12 +123,12 @@ export function UsersClient({ users, stats }: UsersClientProps) {
         {/* Search */}
         <div className="relative min-w-[200px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             placeholder="Search by name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border-2 border-border bg-background py-2 pl-10 pr-10 font-mono text-sm focus:border-foreground focus:outline-none"
+            className="pl-10 pr-10"
             data-testid="search-input"
           />
           {searchQuery && (
@@ -140,7 +146,7 @@ export function UsersClient({ users, stats }: UsersClientProps) {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value as UserRole | "all")}
-          className="border-2 border-border bg-background px-3 py-2 font-mono text-sm focus:border-foreground focus:outline-none"
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           data-testid="role-filter"
         >
           <option value="all">All Roles</option>
@@ -154,58 +160,57 @@ export function UsersClient({ users, stats }: UsersClientProps) {
         {/* Date Range Filter */}
         <div className="flex gap-1" data-testid="date-range-filter">
           {DATE_RANGE_OPTIONS.map((option) => (
-            <button
+            <Button
               key={option.value}
               onClick={() => setDateRange(option.value)}
-              className={`border-2 px-3 py-2 font-mono text-xs ${
-                dateRange === option.value
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-background text-foreground hover:border-foreground"
-              }`}
+              variant={dateRange === option.value ? "default" : "outline"}
+              size="sm"
             >
               {option.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
       {/* Results count */}
-      <p className="mb-4 font-mono text-sm text-muted-foreground">
+      <p className="mb-4 text-sm text-muted-foreground">
         Showing {filteredUsers.length} of {users.length} users
       </p>
 
       {/* Users Table */}
-      <div className="border-2 border-border" data-testid="users-table">
-        {filteredUsers.length === 0 ? (
-          <div className="p-6 text-center text-muted-foreground">
-            No users found matching your criteria
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b-2 border-border">
-                <th className="p-4 text-left font-mono text-xs text-muted-foreground">
-                  USER
-                </th>
-                <th className="p-4 text-left font-mono text-xs text-muted-foreground">
-                  ROLE
-                </th>
-                <th className="p-4 text-left font-mono text-xs text-muted-foreground">
-                  MEMBER SINCE
-                </th>
-                <th className="p-4 text-left font-mono text-xs text-muted-foreground">
-                  ASSESSMENTS
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user) => (
-                <UserRow key={user.id} user={user} />
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <Card data-testid="users-table">
+        <CardContent className="p-0">
+          {filteredUsers.length === 0 ? (
+            <div className="p-6 text-center text-muted-foreground">
+              No users found matching your criteria
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                    USER
+                  </th>
+                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                    ROLE
+                  </th>
+                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                    MEMBER SINCE
+                  </th>
+                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                    ASSESSMENTS
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <UserRow key={user.id} user={user} />
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -218,61 +223,64 @@ function StatCard({
 }: {
   label: string;
   value: string | number;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   highlight?: boolean;
 }) {
   return (
-    <div className="border-2 border-border p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-        <p className="font-mono text-xs text-muted-foreground">{label}</p>
-      </div>
-      <p className={`text-2xl font-bold ${highlight ? "text-secondary" : ""}`}>
-        {value}
-      </p>
-    </div>
+    <Card>
+      <CardContent className="p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <Icon className="h-4 w-4 text-muted-foreground" />
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        </div>
+        <p className={`text-2xl font-semibold ${highlight ? "text-primary" : ""}`}>
+          {value}
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 
 function UserRow({ user }: { user: SerializedUser }) {
   return (
     <tr
-      className="hover:bg-muted/30 border-b border-border"
+      className="border-b border-border transition-colors hover:bg-muted/50"
       data-testid={`user-row-${user.id}`}
     >
       <td className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center bg-secondary">
-            <span className="font-bold text-secondary-foreground">
+          <Avatar>
+            <AvatarFallback className="bg-primary/10 text-primary">
               {getInitials(user.name, user.email)}
-            </span>
-          </div>
+            </AvatarFallback>
+          </Avatar>
           <div>
             <p className="font-semibold">{user.name || "Anonymous"}</p>
-            <p className="font-mono text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {user.email || "No email"}
             </p>
           </div>
         </div>
       </td>
       <td className="p-4">
-        <span
-          className={`px-2 py-1 font-mono text-xs ${
+        <Badge
+          variant={user.role === "ADMIN" ? "default" : "secondary"}
+          className={
             user.role === "ADMIN"
-              ? "bg-secondary text-secondary-foreground"
-              : "bg-muted text-muted-foreground"
-          }`}
+              ? "bg-primary/10 text-primary hover:bg-primary/20"
+              : ""
+          }
         >
           {user.role}
-        </span>
+        </Badge>
       </td>
-      <td className="p-4 font-mono text-sm text-muted-foreground">
+      <td className="p-4 text-sm text-muted-foreground">
         {formatDate(user.createdAt)}
       </td>
       <td className="p-4">
         <span
-          className={`font-mono text-sm ${
-            user.assessmentCount > 0 ? "font-bold" : "text-muted-foreground"
+          className={`text-sm ${
+            user.assessmentCount > 0 ? "font-semibold" : "text-muted-foreground"
           }`}
         >
           {user.assessmentCount}
