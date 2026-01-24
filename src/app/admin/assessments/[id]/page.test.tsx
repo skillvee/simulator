@@ -6,18 +6,23 @@ import { AssessmentTimelineClient, formatDuration } from "./client";
 // Mock next/navigation
 const mockNotFound = vi.fn();
 const mockRouterPush = vi.fn();
+const mockRedirect = vi.fn();
 vi.mock("next/navigation", () => ({
   notFound: () => {
     mockNotFound();
     throw new Error("NOT_FOUND");
+  },
+  redirect: (url: string) => {
+    mockRedirect(url);
+    throw new Error(`REDIRECT:${url}`);
   },
   useRouter: () => ({
     push: mockRouterPush,
   }),
 }));
 
-// Mock admin check
-vi.mock("@/lib/admin", () => ({
+// Mock admin check - must match exact import path used by page.tsx
+vi.mock("@/lib/core/admin", () => ({
   requireAdmin: vi.fn(),
 }));
 

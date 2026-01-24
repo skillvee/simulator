@@ -773,3 +773,59 @@ vi.mock("@/lib/core/data-deletion", () => ({...}));
 
 ### Gotchas discovered
 - The test was likely written when the import path was different, or copy-pasted from a test that used the barrel export - always verify the actual import in the source file before writing mocks
+
+## Issue #155: Fix next/navigation mock in admin assessment page test (3 failing tests)
+
+### What was implemented
+- Added `redirect` mock to the `next/navigation` mock
+- Fixed mock path from `@/lib/admin` to `@/lib/core/admin`
+
+### Root cause
+Two issues were causing the 3 test failures:
+
+1. **Missing `redirect` export in next/navigation mock**: The `requireAdmin` function in `@/lib/core/admin.ts` calls `redirect("/sign-in?callbackUrl=/admin")` when no session exists, but the mock only provided `notFound` and `useRouter`.
+
+2. **Wrong mock path**: The test was mocking `@/lib/admin` which doesn't exist:
+```typescript
+vi.mock("@/lib/admin", () => ({...}));
+```
+
+But the page imports from `@/lib/core`:
+```typescript
+import { requireAdmin } from "@/lib/core";
+```
+
+Since `@/lib/core/index.ts` re-exports from `./admin`, the mock needs to target `@/lib/core/admin`.
+
+### Files changed
+- `src/app/admin/assessments/[id]/page.test.tsx` - Added redirect mock and fixed admin mock path
+
+### Code changes
+```typescript
+// Before (broken):
+vi.mock("next/navigation", () => ({
+  notFound: () => {...},
+  useRouter: () => ({...}),
+}));
+vi.mock("@/lib/admin", () => ({...}));
+
+// After (fixed):
+vi.mock("next/navigation", () => ({
+  notFound: () => {...},
+  redirect: (url: string) => {
+    mockRedirect(url);
+    throw new Error(`REDIRECT:${url}`);
+  },
+  useRouter: () => ({...}),
+}));
+vi.mock("@/lib/core/admin", () => ({...}));
+```
+
+### Learnings for future iterations
+1. **This is the same lesson as Issues #151-154** - Mock paths must match the exact import paths used by the module under test
+2. **Mock ALL exports used by dependencies** - When mocking `next/navigation`, all exports used by any code in the call chain must be mocked, not just the ones used directly in the test file
+3. **Five consecutive issues (151-155) with the same root cause** - Mock path mismatch is a very common error pattern. Consider adding a lint rule or test helper to catch these.
+
+### Gotchas discovered
+- The `redirect` function from `next/navigation` is called by `requireAdmin` (a dependency), not by the page itself - but since the test mocks `next/navigation`, all exports used anywhere in the call chain must be included
+- The act() warnings in stderr are unrelated to the 3 failing tests - they're from the retry assessment tests and are noted as "bonus, not required" in the acceptance criteria
