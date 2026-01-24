@@ -338,3 +338,40 @@ The existing `CoworkerAvatar` component uses DiceBear identicon URLs. The shadcn
 
 ### Gotchas discovered
 - None - this was a straightforward component installation with no modifications needed
+
+## Issue #121: DS-011: Add shadcn Badge, Separator, and Tabs components
+
+### What was implemented
+- Installed Badge, Separator, and Tabs components via `npx shadcn@latest add badge separator tabs --yes`
+- Customized TabsTrigger to use blue underline/highlight when active (changed `text-foreground` to `text-primary` and added `border-b-2 border-primary`)
+
+### Files changed
+- `src/components/ui/badge.tsx` (new) - shadcn Badge component with default, secondary, destructive, and outline variants
+- `src/components/ui/separator.tsx` (new) - shadcn Separator component (horizontal and vertical)
+- `src/components/ui/tabs.tsx` (new, customized) - shadcn Tabs component with blue active state
+
+### Components available
+
+**Badge variants:**
+- **default**: Blue background (`bg-primary`), white text - uses #237CF1 via CSS variables
+- **secondary**: Gray background (`bg-secondary`)
+- **destructive**: Red background (`bg-destructive`)
+- **outline**: Border only, no background
+
+**Separator:**
+- Works with `orientation="horizontal"` (default) or `orientation="vertical"`
+- Uses `bg-border` for consistent styling with the theme
+
+**Tabs components:**
+- **Tabs** - Root component managing active tab state
+- **TabsList** - Container for tab triggers with muted background
+- **TabsTrigger** - Individual tab button; when active uses blue text (`text-primary`) and blue bottom border (`border-b-2 border-primary`)
+- **TabsContent** - Content panel shown when corresponding tab is active
+
+### Learnings for future iterations
+1. **Badge already had rounded-full** - Unlike Card (DS-007) which needed customization, the shadcn Badge component comes with `rounded-full` by default.
+2. **TabsTrigger needed blue active state** - The default shadcn Tabs uses white background highlight on active tabs. Changed to blue text color and blue underline to match design system.
+3. **Multiple components can share dependencies** - All three components use Radix UI primitives which were already installed from previous issues.
+
+### Gotchas discovered
+- The issue specified "TabsTrigger uses blue underline/highlight when active" but the default shadcn implementation uses `data-[state=active]:text-foreground` (black text) and `data-[state=active]:bg-background` (white background). Changed to `text-primary` and added `border-b-2 border-primary` for the blue underline effect.
