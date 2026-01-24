@@ -523,3 +523,31 @@ import { Input } from "@/components/ui/input";
 ### Gotchas discovered
 - The original cv-upload used `font-mono` extensively which gave a technical feel but doesn't match the modern design - removed in favor of system fonts
 - List markers in markdown needed `marker:text-primary` Tailwind class to color the bullet points blue
+
+## Issue #148: US-001: Create manager greeting generator utility
+
+### What was implemented
+- Created `src/lib/chat/greeting-generator.ts` with `generateManagerGreetings()` function
+- Function accepts a `GreetingContext` parameter with userName, managerName, managerRole, companyName, repoUrl, taskDescription
+- Returns an array of 6 `ChatMessage` objects matching the welcome page content
+- Each message has `role: "model"`, `text`, and `timestamp` fields
+- Timestamps are dynamically generated using the current time with realistic offsets (0, 1, 2 minutes)
+
+### Files changed
+- `src/lib/chat/greeting-generator.ts` (new) - Manager greeting generator utility
+
+### Message sequence generated
+1. Welcome to company + glad to have you
+2. Manager introduction (name and role)
+3. Kickoff call invitation
+4. Repo link
+5. Task preview (truncated to 200 chars with ellipsis if needed)
+6. Ready to hop on call CTA
+
+### Learnings for future iterations
+1. **Use ChatMessage type from @/types** - The project has centralized types in `@/types/index.ts`, always import from there
+2. **Dynamic timestamps** - Instead of hardcoded "10:01 AM" strings, the new utility generates timestamps based on current time with minute offsets for realism
+3. **Export interface for context** - Exported `GreetingContext` interface so consumers can properly type their context objects
+
+### Gotchas discovered
+- The welcome page used a local `Message` type (from its own component) with `content` field, while `ChatMessage` uses `text` field - the utility correctly uses `ChatMessage` with `text`
