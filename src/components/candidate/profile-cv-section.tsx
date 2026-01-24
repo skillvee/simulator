@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ExternalLink, CheckCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, Button } from "@/components/ui";
 import { CVUpload } from "@/components/shared";
 
 interface ProfileCVSectionProps {
@@ -30,36 +32,50 @@ export function ProfileCVSection({
   };
 
   return (
-    <section className="mb-12">
-      <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-bold">CV / Resume</h2>
-        {cvUrl && (
-          <a
-            href={cvUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border-b-2 border-secondary font-mono text-sm text-foreground hover:text-secondary"
-          >
-            View Current CV
-          </a>
-        )}
-      </div>
-
-      {uploadSuccess && (
-        <div className="bg-secondary/10 mb-4 border-2 border-secondary p-3 font-mono text-sm">
-          CV uploaded successfully!
+    <Card className="shadow-sm">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl font-semibold">CV / Resume</CardTitle>
+          {cvUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="gap-2"
+            >
+              <a
+                href={cvUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink size={14} />
+                View Current CV
+              </a>
+            </Button>
+          )}
         </div>
-      )}
+      </CardHeader>
 
-      <CVUpload
-        onUploadComplete={handleUploadComplete}
-        currentFileName={cvFileName || undefined}
-      />
+      <CardContent className="space-y-4">
+        {uploadSuccess && (
+          <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
+            <CheckCircle size={16} className="text-green-600 dark:text-green-400" />
+            CV uploaded successfully!
+          </div>
+        )}
 
-      <p className="mt-4 font-mono text-xs text-muted-foreground">
-        Your CV will be used during the HR interview phase. The AI interviewer
-        will reference it to ask relevant questions about your experience.
-      </p>
-    </section>
+        <div className="rounded-lg">
+          <CVUpload
+            onUploadComplete={handleUploadComplete}
+            currentFileName={cvFileName || undefined}
+          />
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Your CV will be used during the HR interview phase. The AI interviewer
+          will reference it to ask relevant questions about your experience.
+        </p>
+      </CardContent>
+    </Card>
   );
 }

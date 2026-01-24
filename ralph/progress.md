@@ -984,3 +984,46 @@ vi.mock("@/lib/core/admin", () => ({...}));
 - The FitScoreBadge was using complex conditional classes for backgrounds. Simplified to Badge variants which handle the styling automatically.
 - The Avatar component uses `rounded-full` by default, which is perfect for candidate initials.
 - Work experience duration badges needed to be wrapped in `<div>` instead of staying in `<p>` to avoid hydration errors.
+
+## Issue #127: DS-017: Migrate candidate/ filter components to modern design
+
+### What was implemented
+- Migrated `active-filters-bar.tsx` to use Badge, Button, Card, and CardContent components
+- Migrated `profile-cv-section.tsx` to use Card, CardHeader, CardTitle, CardContent, and Button components
+
+### active-filters-bar.tsx changes
+- Replaced outer `<div>` with `<Card>` and `<CardContent>` for modern container styling
+- Changed filter chips from custom `<div>` elements to `<Badge>` component with `variant="outline"` (or `variant="default"` for refined-by-feedback filters)
+- Replaced plain `<button>` remove icons with `<Button variant="ghost" size="icon">` with `rounded-full` styling
+- Changed "Clear all filters" link to `<Button variant="ghost" size="sm">`
+- Added `animate-fade-in` wrapper for smooth filter chip entrance animations
+- Removed `font-mono` from labels in favor of system fonts
+- Changed `border-2 border-foreground` to Card's default subtle border
+- Removed `bg-muted/10` background for cleaner Card appearance
+
+### profile-cv-section.tsx changes
+- Replaced `<section>` container with `<Card>` component with `shadow-sm`
+- Added `<CardHeader>` with `<CardTitle>` for "CV / Resume" heading
+- Wrapped content in `<CardContent>` with proper spacing
+- Replaced "View Current CV" link with `<Button variant="outline" size="sm" asChild>` wrapping a link
+- Added `ExternalLink` icon to the view CV button
+- Changed success message from `border-2 border-secondary` to modern `rounded-lg border border-green-200 bg-green-50` styling
+- Added `CheckCircle` icon to success message
+- Removed `font-mono` classes throughout
+- Added `rounded-lg` wrapper around CVUpload component
+
+### Files changed
+- `src/components/candidate/active-filters-bar.tsx` (modified)
+- `src/components/candidate/profile-cv-section.tsx` (modified)
+
+### Learnings for future iterations
+1. **Badge handles filter chips well** - The Badge component with `variant="outline"` provides consistent styling for filter chips without custom border classes
+2. **Button asChild for links** - Use `<Button asChild>` to wrap links and maintain button styling while preserving link behavior
+3. **Card simplifies containers** - Replacing custom `div` with `border-2 border-foreground` with `<Card>` provides consistent shadows and rounded corners automatically
+4. **Smooth transitions with animate-fade-in** - Wrapping dynamic elements in a div with `animate-fade-in` provides smooth entrance animations
+5. **Icon buttons with rounded-full** - For X/close buttons, use `<Button variant="ghost" size="icon" className="rounded-full">` for circular icon buttons
+
+### Gotchas discovered
+- The active-filters-bar had complex conditional styling for "refined by feedback" filters (purple colors) - these were preserved while changing the base components to Badge/Button
+- The Badge component accepts `className` to customize styling beyond the variant defaults, useful for special states like the purple feedback-refined styling
+- ProfileCVSection was wrapped in a `<section className="mb-12">` - this was removed since the Card component handles container styling and the parent page controls spacing

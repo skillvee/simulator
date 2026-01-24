@@ -21,6 +21,7 @@ import {
   Building2,
   Sparkles,
 } from "lucide-react";
+import { Badge, Button, Card, CardContent } from "@/components/ui";
 import type { ExtractedIntent } from "@/lib/candidate";
 
 // ============================================================================
@@ -98,12 +99,13 @@ function FilterChip({
   onRemove: () => void;
 }) {
   return (
-    <div
-      className={`inline-flex items-center gap-2 border-2 px-3 py-2 ${
+    <Badge
+      variant={filter.isRefinedByFeedback ? "default" : "outline"}
+      className={`inline-flex items-center gap-2 px-3 py-1.5 transition-all ${
         filter.isRefinedByFeedback
-          ? "border-purple-500 bg-purple-50 dark:bg-purple-950"
-          : "border-foreground bg-secondary"
-      } `}
+          ? "border-purple-500 bg-purple-100 text-purple-900 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-100 dark:hover:bg-purple-800"
+          : "hover:bg-secondary/80"
+      }`}
       data-testid="filter-chip"
       data-filter-type={filter.type}
     >
@@ -112,7 +114,7 @@ function FilterChip({
         className={
           filter.isRefinedByFeedback
             ? "text-purple-700 dark:text-purple-300"
-            : "text-secondary-foreground"
+            : "text-muted-foreground"
         }
       >
         {getFilterIcon(filter.type)}
@@ -121,10 +123,10 @@ function FilterChip({
       {/* Label and Value */}
       <span className="flex items-center gap-1">
         <span
-          className={`font-mono text-xs uppercase tracking-wider ${
+          className={`text-xs uppercase tracking-wider ${
             filter.isRefinedByFeedback
               ? "text-purple-600 dark:text-purple-400"
-              : "text-secondary-foreground/70"
+              : "text-muted-foreground"
           }`}
         >
           {filter.label}:
@@ -133,7 +135,7 @@ function FilterChip({
           className={`text-sm font-medium ${
             filter.isRefinedByFeedback
               ? "text-purple-900 dark:text-purple-100"
-              : "text-secondary-foreground"
+              : "text-foreground"
           }`}
         >
           {filter.value}
@@ -149,20 +151,22 @@ function FilterChip({
         />
       )}
 
-      {/* Remove button */}
-      <button
+      {/* Remove button - rounded icon button */}
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onRemove}
-        className={`hover:bg-foreground/10 p-0.5 transition-colors ${
+        className={`h-5 w-5 rounded-full p-0 transition-colors ${
           filter.isRefinedByFeedback
-            ? "text-purple-700 hover:text-purple-900 dark:text-purple-300 dark:hover:text-purple-100"
-            : "text-secondary-foreground hover:text-foreground"
-        } `}
+            ? "text-purple-700 hover:bg-purple-200 hover:text-purple-900 dark:text-purple-300 dark:hover:bg-purple-700 dark:hover:text-purple-100"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        }`}
         aria-label={`Remove ${filter.label} filter`}
         data-testid="remove-filter-button"
       >
-        <X size={16} />
-      </button>
-    </div>
+        <X size={14} />
+      </Button>
+    </Badge>
   );
 }
 
@@ -192,53 +196,61 @@ export function ActiveFiltersBar({
   const hasRefinedFilters = filters.some((f) => f.isRefinedByFeedback);
 
   return (
-    <div
-      className={`bg-muted/10 border-2 border-foreground p-4 ${className}`}
+    <Card
+      className={`shadow-sm ${className}`}
       data-testid="active-filters-bar"
     >
-      {/* Header row with label and clear all */}
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            Active Filters
-          </span>
-          {hasRefinedFilters && (
-            <span
-              className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400"
-              data-testid="refined-by-feedback-indicator"
-            >
-              <Sparkles size={12} />
-              Refined by feedback
+      <CardContent className="p-4">
+        {/* Header row with label and clear all */}
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Active Filters
             </span>
+            {hasRefinedFilters && (
+              <span
+                className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400"
+                data-testid="refined-by-feedback-indicator"
+              >
+                <Sparkles size={12} />
+                Refined by feedback
+              </span>
+            )}
+          </div>
+
+          {/* Clear all link */}
+          {hasMultipleFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearAll}
+              className="h-auto px-2 py-1 text-sm text-muted-foreground hover:text-foreground"
+              data-testid="clear-all-filters-button"
+            >
+              Clear all filters
+            </Button>
           )}
         </div>
 
-        {/* Clear all link */}
-        {hasMultipleFilters && (
-          <button
-            onClick={onClearAll}
-            className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
-            data-testid="clear-all-filters-button"
-          >
-            Clear all filters
-          </button>
-        )}
-      </div>
-
-      {/* Filter chips */}
-      <div
-        className="flex flex-wrap gap-2"
-        data-testid="filter-chips-container"
-      >
-        {filters.map((filter, index) => (
-          <FilterChip
-            key={`${filter.type}-${filter.value}-${index}`}
-            filter={filter}
-            onRemove={() => onRemoveFilter(filter)}
-          />
-        ))}
-      </div>
-    </div>
+        {/* Filter chips with smooth transitions */}
+        <div
+          className="flex flex-wrap gap-2"
+          data-testid="filter-chips-container"
+        >
+          {filters.map((filter, index) => (
+            <div
+              key={`${filter.type}-${filter.value}-${index}`}
+              className="animate-fade-in"
+            >
+              <FilterChip
+                filter={filter}
+                onRemove={() => onRemoveFilter(filter)}
+              />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
