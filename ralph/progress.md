@@ -168,3 +168,34 @@
 
 ### Gotchas discovered
 - None - this was a straightforward documentation update
+
+## Issue #116: DS-006: Add shadcn Button component
+
+### What was implemented
+- Installed the shadcn Button component via `npx shadcn@latest add button`
+- The component automatically uses the blue theme via CSS variables configured in DS-001 and DS-002
+
+### Files changed
+- `src/components/ui/button.tsx` (new) - shadcn Button component with all variants and sizes
+
+### Variants available
+- **default**: Blue background (#237CF1 via `--primary`), white text
+- **destructive**: Red background
+- **outline**: Border with transparent background, hover shows accent
+- **secondary**: Light gray background
+- **ghost**: No background, hover shows accent
+- **link**: Underlined text style with primary color
+
+### Sizes available
+- **sm**: `h-9 px-3`
+- **default**: `h-10 px-4 py-2`
+- **lg**: `h-11 px-8`
+- **icon**: `h-10 w-10` (square)
+
+### Learnings for future iterations
+1. **No customization needed** - shadcn components use CSS variables from globals.css, so they automatically inherit the blue theme configured in DS-001/DS-002
+2. **The `--yes` flag** - Using `npx shadcn@latest add button --yes` skips the confirmation prompt, useful for automated scripts
+3. **Component uses cva** - The button uses `class-variance-authority` for variant management, which is already a project dependency
+
+### Gotchas discovered
+- None - this was a straightforward component installation
