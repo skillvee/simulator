@@ -832,6 +832,36 @@
   - Integration tests run against the actual database - use careful cleanup in afterAll
   - Test timeout should be increased (30s) for database operations
 
+## Issue #159: DI-004: Add cascade SetNull for Conversation → Coworker relation
+
+- **What was implemented:**
+  - Added `onDelete: SetNull` to Conversation→Coworker relation in `prisma/schema.prisma`
+  - When a coworker is deleted directly (not via scenario cascade), conversations that reference that coworker have their `coworkerId` set to null instead of being deleted
+  - This preserves conversation history (transcripts) even when a coworker is removed
+  - Created 5 new integration tests covering SetNull behavior
+
+- **Files changed:**
+  - `prisma/schema.prisma` - Added `onDelete: SetNull` to Conversation→Coworker relation (line 191)
+  - `src/server/cascade-delete.integration.test.ts` - Added new describe block with 5 SetNull tests
+
+- **Test coverage:**
+  - Tests coworkerId is set to null when coworker is deleted directly
+  - Tests multiple conversations with different coworkers (only affected coworker's conversations are nullified)
+  - Tests HR interview conversations (already null coworkerId) continue to work
+  - Tests scenario cascade still deletes conversations (via Assessment cascade)
+  - Tests multiple conversations with same coworker all get nullified
+
+- **Learnings for future iterations:**
+  - SetNull is the safer choice for optional foreign keys when you want to preserve related records
+  - The `coworkerId` column was already nullable (used for HR interviews without a coworker), so SetNull works correctly
+  - Cascade delete still applies through the Assessment→Conversation relation, so deleting a scenario or assessment still cleans up conversations properly
+  - This project uses `prisma db push` instead of migrations (Supabase workflow) - the database was already in sync with the updated schema
+
+- **Gotchas:**
+  - SetNull requires the foreign key column to be nullable - Prisma will error if you try to add SetNull to a required relation
+  - When checking if schema changes are applied, use `prisma db pull --print` or query information_schema to verify the actual FK constraint delete_rule
+  - The integration tests are run separately with `npm run test:integration` and are skipped by the regular `npm test` command
+
 ## Issue #157: DI-002: Add transaction wrapping for multi-step database operations
 
 - **What was implemented:**

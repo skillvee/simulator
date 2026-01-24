@@ -188,7 +188,7 @@ model Conversation {
   updatedAt     DateTime @updatedAt
 
   assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  coworker      Coworker?  @relation(fields: [coworkerId], references: [id])
+  coworker      Coworker?  @relation(fields: [coworkerId], references: [id], onDelete: SetNull)
 }
 
 model Recording {

@@ -375,3 +375,405 @@ describe("Scenario → Assessment Cascade Delete", () => {
     ).toBeNull();
   });
 });
+
+/**
+ * Tests for Conversation → Coworker SetNull behavior.
+ *
+ * When a coworker is deleted directly (not via scenario cascade), conversations
+ * that reference that coworker should have their coworkerId set to null rather
+ * than being deleted. This preserves conversation history.
+ *
+ * @see Issue #159: DI-004
+ */
+describe("Conversation → Coworker SetNull Behavior", () => {
+  let testUserId: string;
+  let testScenarioId: string;
+
+  const TEST_PREFIX_SETNULL = `setnull-test-${Date.now()}`;
+
+  beforeAll(async () => {
+    // Create a test user
+    const user = await prisma.user.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-user`,
+        email: `${TEST_PREFIX_SETNULL}@test.com`,
+        name: "SetNull Test User",
+      },
+    });
+    testUserId = user.id;
+
+    // Create a test scenario
+    const scenario = await prisma.scenario.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-scenario`,
+        name: "SetNull Test Scenario",
+        companyName: "Test Company",
+        companyDescription: "Test Description",
+        taskDescription: "Test Task",
+        repoUrl: "https://github.com/test/repo",
+        techStack: ["typescript"],
+      },
+    });
+    testScenarioId = scenario.id;
+  });
+
+  afterAll(async () => {
+    // Cleanup test data
+    try {
+      await prisma.scenario.delete({
+        where: { id: testScenarioId },
+      });
+    } catch {
+      // May already be deleted
+    }
+
+    try {
+      await prisma.user.delete({
+        where: { id: testUserId },
+      });
+    } catch {
+      // May already be deleted
+    }
+
+    await prisma.$disconnect();
+  });
+
+  it("should set coworkerId to null when coworker is deleted", async () => {
+    // Create a coworker
+    const coworker = await prisma.coworker.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-coworker-1`,
+        scenarioId: testScenarioId,
+        name: "Test Coworker",
+        role: "Developer",
+        personaStyle: "friendly",
+        knowledge: {},
+      },
+    });
+
+    // Create an assessment
+    const assessment = await prisma.assessment.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-assessment-1`,
+        userId: testUserId,
+        scenarioId: testScenarioId,
+        status: AssessmentStatus.WORKING,
+      },
+    });
+
+    // Create a conversation with the coworker
+    const conversation = await prisma.conversation.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-conversation-1`,
+        assessmentId: assessment.id,
+        coworkerId: coworker.id,
+        type: "voice",
+        transcript: [
+          { role: "user", content: "Hello" },
+          { role: "assistant", content: "Hi there!" },
+        ],
+      },
+    });
+
+    // Verify conversation has coworkerId set
+    const conversationBefore = await prisma.conversation.findUnique({
+      where: { id: conversation.id },
+    });
+    expect(conversationBefore?.coworkerId).toBe(coworker.id);
+
+    // Delete the coworker directly
+    await prisma.coworker.delete({
+      where: { id: coworker.id },
+    });
+
+    // Verify conversation still exists but with null coworkerId
+    const conversationAfter = await prisma.conversation.findUnique({
+      where: { id: conversation.id },
+    });
+    expect(conversationAfter).not.toBeNull();
+    expect(conversationAfter?.coworkerId).toBeNull();
+
+    // Verify transcript is preserved
+    expect(conversationAfter?.transcript).toEqual([
+      { role: "user", content: "Hello" },
+      { role: "assistant", content: "Hi there!" },
+    ]);
+  });
+
+  it("should preserve all conversations with different coworkers when one is deleted", async () => {
+    // Create two coworkers
+    const coworker1 = await prisma.coworker.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-coworker-2a`,
+        scenarioId: testScenarioId,
+        name: "Coworker One",
+        role: "Manager",
+        personaStyle: "professional",
+        knowledge: {},
+      },
+    });
+
+    const coworker2 = await prisma.coworker.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-coworker-2b`,
+        scenarioId: testScenarioId,
+        name: "Coworker Two",
+        role: "Developer",
+        personaStyle: "casual",
+        knowledge: {},
+      },
+    });
+
+    // Create an assessment
+    const assessment = await prisma.assessment.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-assessment-2`,
+        userId: testUserId,
+        scenarioId: testScenarioId,
+        status: AssessmentStatus.WORKING,
+      },
+    });
+
+    // Create conversations with each coworker
+    const conversation1 = await prisma.conversation.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-conversation-2a`,
+        assessmentId: assessment.id,
+        coworkerId: coworker1.id,
+        type: "voice",
+        transcript: [{ role: "user", content: "Talk with manager" }],
+      },
+    });
+
+    const conversation2 = await prisma.conversation.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-conversation-2b`,
+        assessmentId: assessment.id,
+        coworkerId: coworker2.id,
+        type: "voice",
+        transcript: [{ role: "user", content: "Talk with developer" }],
+      },
+    });
+
+    // Delete only coworker1
+    await prisma.coworker.delete({
+      where: { id: coworker1.id },
+    });
+
+    // Verify conversation1 exists with null coworkerId
+    const conv1After = await prisma.conversation.findUnique({
+      where: { id: conversation1.id },
+    });
+    expect(conv1After).not.toBeNull();
+    expect(conv1After?.coworkerId).toBeNull();
+
+    // Verify conversation2 still has its coworkerId intact
+    const conv2After = await prisma.conversation.findUnique({
+      where: { id: conversation2.id },
+    });
+    expect(conv2After).not.toBeNull();
+    expect(conv2After?.coworkerId).toBe(coworker2.id);
+
+    // Cleanup
+    await prisma.coworker.delete({
+      where: { id: coworker2.id },
+    });
+  });
+
+  it("should handle HR interview conversations (already null coworkerId) correctly", async () => {
+    // Create an assessment
+    const assessment = await prisma.assessment.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-assessment-3`,
+        userId: testUserId,
+        scenarioId: testScenarioId,
+        status: AssessmentStatus.HR_INTERVIEW,
+      },
+    });
+
+    // Create an HR interview conversation (no coworker - simulates HR)
+    const hrConversation = await prisma.conversation.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-conversation-hr`,
+        assessmentId: assessment.id,
+        coworkerId: null, // HR interviews don't have a coworker
+        type: "voice",
+        transcript: [
+          { role: "assistant", content: "Welcome to the HR interview" },
+          { role: "user", content: "Thank you" },
+        ],
+      },
+    });
+
+    // Verify HR conversation works with null coworkerId
+    const hrConversationFetched = await prisma.conversation.findUnique({
+      where: { id: hrConversation.id },
+    });
+    expect(hrConversationFetched).not.toBeNull();
+    expect(hrConversationFetched?.coworkerId).toBeNull();
+    expect(hrConversationFetched?.transcript).toHaveLength(2);
+  });
+
+  it("should still cascade delete conversations when scenario is deleted", async () => {
+    // Create a new scenario specifically for this test
+    const localScenario = await prisma.scenario.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-scenario-cascade`,
+        name: "Cascade Test Scenario",
+        companyName: "Test Company",
+        companyDescription: "Test Description",
+        taskDescription: "Test Task",
+        repoUrl: "https://github.com/test/repo",
+        techStack: ["typescript"],
+      },
+    });
+
+    // Create a coworker in this scenario
+    const coworker = await prisma.coworker.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-coworker-cascade`,
+        scenarioId: localScenario.id,
+        name: "Cascade Coworker",
+        role: "Developer",
+        personaStyle: "helpful",
+        knowledge: {},
+      },
+    });
+
+    // Create an assessment
+    const assessment = await prisma.assessment.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-assessment-cascade`,
+        userId: testUserId,
+        scenarioId: localScenario.id,
+        status: AssessmentStatus.WORKING,
+      },
+    });
+
+    // Create a conversation with the coworker
+    const conversation = await prisma.conversation.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-conversation-cascade`,
+        assessmentId: assessment.id,
+        coworkerId: coworker.id,
+        type: "text",
+        transcript: [{ role: "user", content: "Testing cascade" }],
+      },
+    });
+
+    // Verify all exist
+    expect(
+      await prisma.coworker.findUnique({ where: { id: coworker.id } })
+    ).not.toBeNull();
+    expect(
+      await prisma.conversation.findUnique({ where: { id: conversation.id } })
+    ).not.toBeNull();
+
+    // Delete the scenario (should cascade delete everything)
+    await prisma.scenario.delete({
+      where: { id: localScenario.id },
+    });
+
+    // Verify scenario cascade deleted the coworker
+    expect(
+      await prisma.coworker.findUnique({ where: { id: coworker.id } })
+    ).toBeNull();
+
+    // Verify assessment cascade deleted the conversation
+    expect(
+      await prisma.assessment.findUnique({ where: { id: assessment.id } })
+    ).toBeNull();
+    expect(
+      await prisma.conversation.findUnique({ where: { id: conversation.id } })
+    ).toBeNull();
+  });
+
+  it("should handle multiple conversations with same coworker", async () => {
+    // Create a coworker
+    const coworker = await prisma.coworker.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-coworker-multi`,
+        scenarioId: testScenarioId,
+        name: "Multi Conversation Coworker",
+        role: "Tech Lead",
+        personaStyle: "analytical",
+        knowledge: {},
+      },
+    });
+
+    // Create an assessment
+    const assessment = await prisma.assessment.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-assessment-multi`,
+        userId: testUserId,
+        scenarioId: testScenarioId,
+        status: AssessmentStatus.WORKING,
+      },
+    });
+
+    // Create multiple conversations with the same coworker
+    const conversation1 = await prisma.conversation.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-conversation-multi-1`,
+        assessmentId: assessment.id,
+        coworkerId: coworker.id,
+        type: "voice",
+        transcript: [{ role: "user", content: "First conversation" }],
+      },
+    });
+
+    const conversation2 = await prisma.conversation.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-conversation-multi-2`,
+        assessmentId: assessment.id,
+        coworkerId: coworker.id,
+        type: "text",
+        transcript: [{ role: "user", content: "Second conversation" }],
+      },
+    });
+
+    const conversation3 = await prisma.conversation.create({
+      data: {
+        id: `${TEST_PREFIX_SETNULL}-conversation-multi-3`,
+        assessmentId: assessment.id,
+        coworkerId: coworker.id,
+        type: "voice",
+        transcript: [{ role: "user", content: "Third conversation" }],
+      },
+    });
+
+    // Delete the coworker
+    await prisma.coworker.delete({
+      where: { id: coworker.id },
+    });
+
+    // Verify all conversations exist with null coworkerId
+    const conv1 = await prisma.conversation.findUnique({
+      where: { id: conversation1.id },
+    });
+    const conv2 = await prisma.conversation.findUnique({
+      where: { id: conversation2.id },
+    });
+    const conv3 = await prisma.conversation.findUnique({
+      where: { id: conversation3.id },
+    });
+
+    expect(conv1).not.toBeNull();
+    expect(conv1?.coworkerId).toBeNull();
+    expect(conv1?.transcript).toEqual([
+      { role: "user", content: "First conversation" },
+    ]);
+
+    expect(conv2).not.toBeNull();
+    expect(conv2?.coworkerId).toBeNull();
+    expect(conv2?.transcript).toEqual([
+      { role: "user", content: "Second conversation" },
+    ]);
+
+    expect(conv3).not.toBeNull();
+    expect(conv3?.coworkerId).toBeNull();
+    expect(conv3?.transcript).toEqual([
+      { role: "user", content: "Third conversation" },
+    ]);
+  });
+});
