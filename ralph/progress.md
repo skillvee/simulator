@@ -895,3 +895,66 @@
   - The `tx` object inside the transaction has the same API as `db` but scoped to that transaction
   - If the callback throws, Prisma automatically rolls back all operations within that transaction
   - Tests using transaction mocks are more complex - consider tracking operation order for atomicity verification
+
+## Issue #160: SEC-001: Implement centralized auth middleware for API routes
+
+- **What was implemented:**
+  - Created `/src/middleware.ts` using NextAuth's `auth()` middleware wrapper pattern
+  - Middleware protects all `/api/*` routes except `/api/auth/*` (handled by NextAuth) and PUBLIC_ROUTES
+  - Admin role check for `/api/admin/*` routes returns 403 if user is not ADMIN
+  - Unauthenticated requests to protected routes return 401 with `{ success: false, error: "Unauthorized" }`
+  - Non-admin requests to admin routes return 403 with `{ success: false, error: "Admin access required" }`
+  - PUBLIC_ROUTES allowlist: `/api/search/extract`, `/api/search/parse-feedback`
+
+- **Files changed:**
+  - `src/middleware.ts` - New centralized authentication middleware
+
+- **Pattern used:**
+  ```typescript
+  export default auth((req) => {
+    const { pathname } = req.nextUrl;
+
+    // Skip non-API routes
+    if (!pathname.startsWith("/api/")) return NextResponse.next();
+
+    // Skip auth routes (NextAuth handles these)
+    if (pathname.startsWith("/api/auth/")) return NextResponse.next();
+
+    // Allow public routes
+    if (PUBLIC_ROUTES.includes(pathname)) return NextResponse.next();
+
+    // Check authentication
+    if (!req.auth?.user) return NextResponse.json({ error }, { status: 401 });
+
+    // Check admin role for admin routes
+    if (pathname.startsWith("/api/admin/") && user.role !== "ADMIN") {
+      return NextResponse.json({ error }, { status: 403 });
+    }
+
+    return NextResponse.next();
+  });
+  ```
+
+- **Learnings for future iterations:**
+  - NextAuth's `auth()` function can wrap middleware to provide `req.auth` with the session
+  - The middleware only runs for paths matching the `config.matcher` pattern
+  - Using `matcher: ["/api/:path*"]` ensures middleware only runs on API routes (more efficient)
+  - Existing inline auth checks in routes will still run, providing defense in depth
+  - Response format `{ success: false, error: "..." }` matches existing API response patterns
+
+- **Gotchas:**
+  - The `auth()` middleware wrapper requires importing from `@/auth` (the NextAuth configuration)
+  - The `req.auth` property contains the session, with `req.auth.user` having the user object
+  - User role is accessed via type casting: `(session.user as ExtendedSessionUser).role`
+  - Middleware runs before route handlers, so auth errors are returned before any route code executes
+  - The existing inline auth checks in routes remain as a secondary check (defense in depth)
+
+- **Acceptance criteria verified:**
+  - [x] Create `/src/middleware.ts` using NextAuth middleware pattern
+  - [x] Protect all `/api/*` routes except `/api/auth/*`
+  - [x] Add admin role check for `/api/admin/*` routes (return 403 if not admin)
+  - [x] Define a `PUBLIC_ROUTES` allowlist for unauthenticated endpoints
+  - [x] Unauthenticated requests to protected routes return 401
+  - [x] Non-admin requests to admin routes return 403
+  - [x] Existing API route tests pass
+  - [x] Typecheck passes
