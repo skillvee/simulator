@@ -742,3 +742,31 @@
   - Dev server may need restart if it becomes unresponsive during testing
 
 - **This completes the Design System Migration: Neo-Brutalist → Modern shadcn/ui**
+
+## Issue #109: REF-018: Create Comprehensive ARCHITECTURE.md
+
+- **What was implemented:**
+  - Created `docs/ARCHITECTURE.md` as a single source of truth for system architecture
+  - System overview section with ASCII assessment flow diagram (HR Interview → Manager Kickoff → Coding Task → PR Defense)
+  - Data model section with ASCII entity relationship diagram and key entities table
+  - AI integration section with models used table and prompt files table (13 prompt files across 4 domains)
+  - Design decisions section documenting 6 key architectural choices with rationale
+  - Common patterns section covering API responses, request validation, DB queries, Prisma JSON, pgvector, error recovery
+  - Directory structure showing full project organization
+  - Testing section with E2E test data and testing patterns
+
+- **Files changed:**
+  - `docs/ARCHITECTURE.md` - New comprehensive architecture document (~400 lines)
+
+- **Learnings for future iterations:**
+  - ASCII diagrams work well for architecture documentation (portable, works in any viewer)
+  - Tables are excellent for scannable documentation (AI models, prompt files, entities)
+  - Including code examples in patterns section helps developers copy-paste
+  - Cross-referencing other docs (CLAUDE.md, PRD, progress.md) at the end keeps the doc focused
+  - Documenting "why" not just "what" for design decisions is valuable
+
+- **Gotchas:**
+  - All file references should be verified to exist before finalizing documentation
+  - The 8 assessment dimensions are defined in both schema and prompts - keep them in sync
+  - Voice models use `gemini-2.5-flash-native-audio-latest`, text uses `gemini-3-flash-preview`
+  - Prisma JSON handling requires double-casting pattern documented in Common Patterns
