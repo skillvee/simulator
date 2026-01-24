@@ -1,5 +1,8 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+
 interface CoworkerAvatarProps {
   name: string;
   size?: "sm" | "md" | "lg" | "xl";
@@ -9,8 +12,7 @@ interface CoworkerAvatarProps {
 /**
  * CoworkerAvatar component using DiceBear identicons.
  * Generates deterministic geometric patterns based on name.
- * Uses yellow (#D4AF37) background and black (#000000) foreground
- * to match the neo-brutalist design system.
+ * Uses Avatar component from shadcn/ui with proper sizing variants.
  */
 export function CoworkerAvatar({
   name,
@@ -24,21 +26,23 @@ export function CoworkerAvatar({
     xl: "h-32 w-32",
   };
 
-  // DiceBear identicon API with yellow background and black pattern
-  // Colors are without # prefix for URL encoding
-  const avatarUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name)}&backgroundColor=D4AF37&rowColor=000000`;
+  // DiceBear identicon API with primary blue background
+  const avatarUrl = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name)}&backgroundColor=237CF1&rowColor=ffffff`;
+
+  // Get initials for fallback
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
-    <div
-      className={`flex items-center justify-center border-2 border-foreground ${sizeClasses[size]} ${className}`}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={avatarUrl}
-        alt={`${name}'s avatar`}
-        className="h-full w-full"
-        loading="lazy"
-      />
-    </div>
+    <Avatar className={cn(sizeClasses[size], className)}>
+      <AvatarImage src={avatarUrl} alt={`${name}'s avatar`} />
+      <AvatarFallback className="bg-primary text-primary-foreground font-medium">
+        {initials}
+      </AvatarFallback>
+    </Avatar>
   );
 }

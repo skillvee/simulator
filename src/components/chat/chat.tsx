@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Phone } from "lucide-react";
+import { Phone, Send } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api";
 import { useCallContext } from "./slack-layout";
 import { CoworkerAvatar } from "./coworker-avatar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { ChatMessage } from "@/types";
 
 interface Coworker {
@@ -132,11 +135,11 @@ export function Chat({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <header className="flex items-center gap-3 border-b-2 border-foreground bg-background px-4 py-3">
+      <header className="flex items-center gap-3 border-b border-border bg-background px-4 py-3">
         {/* Coworker avatar */}
         <CoworkerAvatar name={coworker.name} size="md" />
         <div>
-          <h1 className="text-lg font-bold">{coworker.name}</h1>
+          <h1 className="text-lg font-semibold">{coworker.name}</h1>
           <p className="text-sm text-muted-foreground">{coworker.role}</p>
         </div>
         {/* Status indicator */}
@@ -144,9 +147,9 @@ export function Chat({
           {isInCall ? (
             <>
               {/* In-call indicator - green bar with phone icon */}
-              <div className="flex items-center gap-2 border-2 border-green-600 bg-green-500 px-3 py-1">
+              <div className="flex items-center gap-2 rounded-lg bg-green-500 px-3 py-1.5">
                 <Phone size={14} className="text-white" />
-                <span className="font-mono text-sm font-bold text-white">
+                <span className="text-sm font-medium text-white">
                   In call
                 </span>
               </div>
@@ -154,8 +157,8 @@ export function Chat({
           ) : (
             <>
               {/* Online indicator */}
-              <div className="h-3 w-3 border border-foreground bg-secondary" />
-              <span className="font-mono text-sm text-muted-foreground">
+              <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
+              <span className="text-sm text-muted-foreground">
                 online
               </span>
             </>
@@ -174,7 +177,7 @@ export function Chat({
             <div className="mb-4">
               <CoworkerAvatar name={coworker.name} size="lg" />
             </div>
-            <h2 className="mb-2 text-lg font-bold">
+            <h2 className="mb-2 text-lg font-semibold">
               Start a conversation with {coworker.name}
             </h2>
             <p className="max-w-md text-sm text-muted-foreground">
@@ -187,7 +190,7 @@ export function Chat({
             {/* Date divider */}
             <div className="mb-6 flex items-center gap-4">
               <div className="h-px flex-1 bg-border" />
-              <span className="border border-foreground bg-background px-2 font-mono text-sm text-muted-foreground">
+              <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
                 Today
               </span>
               <div className="h-px flex-1 bg-border" />
@@ -197,11 +200,11 @@ export function Chat({
               <div key={index} className="flex gap-3">
                 {/* Avatar */}
                 {message.role === "user" ? (
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 border-foreground bg-foreground">
-                    <span className="font-mono text-sm font-bold text-background">
+                  <Avatar className="h-10 w-10 flex-shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
                       You
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
                 ) : (
                   <div className="flex-shrink-0">
                     <CoworkerAvatar name={coworker.name} size="md" />
@@ -211,14 +214,20 @@ export function Chat({
                 {/* Message content */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-baseline gap-2">
-                    <span className="font-bold">
+                    <span className="font-semibold">
                       {message.role === "user" ? "You" : coworker.name}
                     </span>
-                    <span className="font-mono text-sm text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {formatTimestamp(message.timestamp)}
                     </span>
                   </div>
-                  <div className="whitespace-pre-wrap text-foreground">
+                  <div
+                    className={`inline-block max-w-[85%] whitespace-pre-wrap rounded-lg px-4 py-2 ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground"
+                    }`}
+                  >
                     {message.text}
                   </div>
                 </div>
@@ -233,7 +242,7 @@ export function Chat({
                 </div>
                 <div className="flex-1">
                   <div className="mb-1 flex items-baseline gap-2">
-                    <span className="font-bold">{coworker.name}</span>
+                    <span className="font-semibold">{coworker.name}</span>
                   </div>
                   <TypingIndicator />
                 </div>
@@ -246,9 +255,9 @@ export function Chat({
       </main>
 
       {/* Input area */}
-      <footer className="border-t-2 border-foreground bg-background px-4 py-3">
+      <footer className="border-t border-border bg-background px-4 py-3">
         <div className="flex gap-2">
-          <input
+          <Input
             ref={inputRef}
             type="text"
             value={input}
@@ -256,40 +265,40 @@ export function Chat({
             onKeyDown={handleKeyDown}
             placeholder={`Message ${coworker.name}...`}
             disabled={isSending}
-            className="flex-1 border-2 border-foreground bg-background px-4 py-3 font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-50"
+            className="flex-1"
           />
-          <button
+          <Button
             onClick={sendMessage}
             disabled={!input.trim() || isSending}
-            className="border-2 border-foreground bg-foreground px-6 py-3 font-bold text-background hover:bg-secondary hover:text-secondary-foreground disabled:cursor-not-allowed disabled:opacity-50"
           >
+            <Send className="mr-2 h-4 w-4" />
             Send
-          </button>
+          </Button>
         </div>
       </footer>
     </div>
   );
 }
 
-// Typing indicator component - neo-brutalist style
+// Typing indicator component - modern design
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 py-1">
+    <div className="inline-flex items-center gap-2 rounded-lg bg-muted px-4 py-2">
       <div className="flex gap-1">
         <span
-          className="h-2 w-2 animate-pulse bg-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground"
           style={{ animationDelay: "0ms" }}
         />
         <span
-          className="h-2 w-2 animate-pulse bg-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground"
           style={{ animationDelay: "150ms" }}
         />
         <span
-          className="h-2 w-2 animate-pulse bg-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground"
           style={{ animationDelay: "300ms" }}
         />
       </div>
-      <span className="ml-2 font-mono text-sm text-muted-foreground">
+      <span className="text-sm text-muted-foreground">
         typing...
       </span>
     </div>
