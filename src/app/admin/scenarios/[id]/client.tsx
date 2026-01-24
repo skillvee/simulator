@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Markdown } from "@/components/shared";
 import { GEMINI_VOICES } from "@/lib/ai";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface Coworker {
   id: string;
@@ -193,176 +197,185 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
     <div className="space-y-8">
       {/* Error display */}
       {error && (
-        <div className="border-2 border-red-600 bg-red-50 p-4 text-red-700">
+        <div className="rounded-lg bg-destructive/10 p-4 text-destructive">
           {error}
         </div>
       )}
 
       {/* Actions Section */}
-      <section className="border-2 border-foreground bg-background p-6">
-        <h2 className="mb-4 text-xl font-bold">Preview & Testing</h2>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {/* Preview Full Flow */}
-          <button
-            onClick={startPreview}
-            disabled={isPreviewLoading}
-            className="hover:bg-secondary/80 border-2 border-foreground bg-secondary p-4 text-left font-bold text-secondary-foreground disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <div className="mb-1 text-lg">Preview Full Flow</div>
-            <p className="text-sm font-normal opacity-80">
-              Test as a candidate would experience it (HR → Kickoff → Work →
-              Defense)
-            </p>
-          </button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Preview & Testing</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {/* Preview Full Flow */}
+            <Button
+              variant="default"
+              onClick={startPreview}
+              disabled={isPreviewLoading}
+              className="h-auto flex-col items-start gap-1 p-4 text-left"
+            >
+              <div className="text-lg font-semibold">Preview Full Flow</div>
+              <p className="text-sm font-normal opacity-80">
+                Test as a candidate would experience it (HR → Kickoff → Work →
+                Defense)
+              </p>
+            </Button>
 
-          {/* Test Coworkers */}
-          <button
-            onClick={testCoworkers}
-            disabled={isPreviewLoading || scenario.coworkers.length === 0}
-            className="border-2 border-foreground bg-background p-4 text-left font-bold hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <div className="mb-1 text-lg">Test Coworkers</div>
-            <p className="text-sm font-normal text-muted-foreground">
-              Jump directly to coworker chat/call testing
-            </p>
-          </button>
+            {/* Test Coworkers */}
+            <Button
+              variant="outline"
+              onClick={testCoworkers}
+              disabled={isPreviewLoading || scenario.coworkers.length === 0}
+              className="h-auto flex-col items-start gap-1 p-4 text-left"
+            >
+              <div className="text-lg font-semibold">Test Coworkers</div>
+              <p className="text-sm font-normal text-muted-foreground">
+                Jump directly to coworker chat/call testing
+              </p>
+            </Button>
 
-          {/* Verify Repo */}
-          <button
-            onClick={verifyRepo}
-            disabled={isVerifyingRepo}
-            className="border-2 border-foreground bg-background p-4 text-left font-bold hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <div className="mb-1 text-lg">Verify Repository</div>
-            <p className="text-sm font-normal text-muted-foreground">
-              Check if the GitHub repo is accessible
-            </p>
-          </button>
-        </div>
-
-        {/* Repo verification result */}
-        {repoStatus && (
-          <div
-            className={`mt-4 border-2 p-4 ${
-              repoStatus.accessible
-                ? "border-green-600 bg-green-50"
-                : "border-red-600 bg-red-50"
-            }`}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <span
-                className={`h-3 w-3 ${
-                  repoStatus.accessible ? "bg-green-600" : "bg-red-600"
-                }`}
-              />
-              <span className="font-bold">
-                {repoStatus.accessible
-                  ? "Repository Accessible"
-                  : "Repository Not Accessible"}
-              </span>
-            </div>
-            {repoStatus.accessible && repoStatus.repoInfo && (
-              <div className="space-y-1 text-sm">
-                <p>
-                  <span className="font-mono">
-                    {repoStatus.repoInfo.fullName}
-                  </span>
-                  {repoStatus.repoInfo.isPrivate && (
-                    <span className="ml-2 text-yellow-700">(Private)</span>
-                  )}
-                </p>
-                <p>Default branch: {repoStatus.repoInfo.defaultBranch}</p>
-                {repoStatus.hasReadme !== undefined && (
-                  <p>
-                    README.md: {repoStatus.hasReadme ? "Found" : "Not found"}
-                  </p>
-                )}
-              </div>
-            )}
-            {repoStatus.error && (
-              <p className="text-sm text-red-700">{repoStatus.error}</p>
-            )}
+            {/* Verify Repo */}
+            <Button
+              variant="outline"
+              onClick={verifyRepo}
+              disabled={isVerifyingRepo}
+              className="h-auto flex-col items-start gap-1 p-4 text-left"
+            >
+              <div className="text-lg font-semibold">Verify Repository</div>
+              <p className="text-sm font-normal text-muted-foreground">
+                Check if the GitHub repo is accessible
+              </p>
+            </Button>
           </div>
-        )}
-      </section>
+
+          {/* Repo verification result */}
+          {repoStatus && (
+            <div
+              className={`mt-4 rounded-lg p-4 ${
+                repoStatus.accessible
+                  ? "bg-green-500/10"
+                  : "bg-destructive/10"
+              }`}
+            >
+              <div className="mb-2 flex items-center gap-2">
+                <span
+                  className={`h-3 w-3 rounded-full ${
+                    repoStatus.accessible ? "bg-green-600" : "bg-destructive"
+                  }`}
+                />
+                <span className="font-semibold">
+                  {repoStatus.accessible
+                    ? "Repository Accessible"
+                    : "Repository Not Accessible"}
+                </span>
+              </div>
+              {repoStatus.accessible && repoStatus.repoInfo && (
+                <div className="space-y-1 text-sm">
+                  <p>
+                    <span className="font-mono">
+                      {repoStatus.repoInfo.fullName}
+                    </span>
+                    {repoStatus.repoInfo.isPrivate && (
+                      <span className="ml-2 text-yellow-700">(Private)</span>
+                    )}
+                  </p>
+                  <p>Default branch: {repoStatus.repoInfo.defaultBranch}</p>
+                  {repoStatus.hasReadme !== undefined && (
+                    <p>
+                      README.md: {repoStatus.hasReadme ? "Found" : "Not found"}
+                    </p>
+                  )}
+                </div>
+              )}
+              {repoStatus.error && (
+                <p className="text-sm text-destructive">{repoStatus.error}</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Publish Section */}
-      <section className="border-2 border-foreground bg-background p-6">
-        <h2 className="mb-4 text-xl font-bold">Publication Status</h2>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="mb-2">
-              {isPublished ? (
-                <span className="text-green-700">
-                  This scenario is <strong>published</strong> and visible to
-                  candidates.
-                </span>
-              ) : (
-                <span className="text-muted-foreground">
-                  This scenario is a <strong>draft</strong> and not visible to
-                  candidates.
-                </span>
-              )}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {isPublished
-                ? "Unpublishing will hide this scenario from new candidates (existing assessments will continue)."
-                : "Publishing will make this scenario available for candidates to take."}
-            </p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Publication Status</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="mb-2">
+                {isPublished ? (
+                  <span className="text-green-600">
+                    This scenario is <strong>published</strong> and visible to
+                    candidates.
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    This scenario is a <strong>draft</strong> and not visible to
+                    candidates.
+                  </span>
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {isPublished
+                  ? "Unpublishing will hide this scenario from new candidates (existing assessments will continue)."
+                  : "Publishing will make this scenario available for candidates to take."}
+              </p>
+            </div>
+            <Button
+              onClick={togglePublish}
+              disabled={isPublishing}
+              variant={isPublished ? "outline" : "default"}
+              className={!isPublished ? "bg-green-600 hover:bg-green-700" : ""}
+            >
+              {isPublishing
+                ? "Updating..."
+                : isPublished
+                  ? "Unpublish"
+                  : "Publish Scenario"}
+            </Button>
           </div>
-          <button
-            onClick={togglePublish}
-            disabled={isPublishing}
-            className={`border-2 border-foreground px-6 py-3 font-bold disabled:cursor-not-allowed disabled:opacity-50 ${
-              isPublished
-                ? "bg-background hover:bg-muted"
-                : "bg-green-600 text-white hover:bg-green-700"
-            }`}
-          >
-            {isPublishing
-              ? "Updating..."
-              : isPublished
-                ? "Unpublish"
-                : "Publish Scenario"}
-          </button>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       {/* Scenario Details */}
-      <section className="border-2 border-foreground bg-background p-6">
-        <h2 className="mb-4 text-xl font-bold">Scenario Details</h2>
-
-        <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Scenario Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
           {/* Company Description */}
           <div>
-            <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            <h3 className="mb-2 text-sm font-medium text-muted-foreground">
               Company Description
             </h3>
-            <div className="border-foreground/20 bg-muted/10 border p-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
               <Markdown>{scenario.companyDescription}</Markdown>
             </div>
           </div>
 
           {/* Task Description */}
           <div>
-            <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            <h3 className="mb-2 text-sm font-medium text-muted-foreground">
               Task Description
             </h3>
-            <div className="border-foreground/20 bg-muted/10 border p-4">
+            <div className="rounded-lg border bg-muted/30 p-4">
               <Markdown>{scenario.taskDescription}</Markdown>
             </div>
           </div>
 
           {/* Repository */}
           <div>
-            <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+            <h3 className="mb-2 text-sm font-medium text-muted-foreground">
               Repository URL
             </h3>
             <a
               href={scenario.repoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-secondary px-2 py-1 font-mono text-sm text-secondary-foreground hover:underline"
+              className="inline-block rounded-md bg-primary/10 px-3 py-1 font-mono text-sm text-primary transition-colors hover:bg-primary/20"
             >
               {scenario.repoUrl}
             </a>
@@ -371,100 +384,100 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
           {/* Tech Stack */}
           {scenario.techStack.length > 0 && (
             <div>
-              <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              <h3 className="mb-2 text-sm font-medium text-muted-foreground">
                 Tech Stack
               </h3>
               <div className="flex flex-wrap gap-2">
                 {scenario.techStack.map((tech, i) => (
-                  <span
-                    key={i}
-                    className="border border-foreground bg-muted px-3 py-1 font-mono text-sm"
-                  >
+                  <Badge key={i} variant="secondary">
                     {tech}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
           )}
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
       {/* Coworkers Section */}
-      <section className="border-2 border-foreground bg-background p-6">
-        <h2 className="mb-4 text-xl font-bold">
-          Coworkers ({coworkers.length})
-        </h2>
-
-        {coworkers.length === 0 ? (
-          <p className="text-muted-foreground">
-            No coworkers configured. Add coworkers to enable team collaboration
-            testing.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {coworkers.map((coworker) => (
-              <div key={coworker.id} className="border border-foreground p-4">
-                <div className="mb-2 flex items-center gap-3">
-                  {/* Avatar */}
-                  <div className="flex h-10 w-10 items-center justify-center border border-foreground bg-secondary font-bold">
-                    {coworker.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)}
+      <Card>
+        <CardHeader>
+          <CardTitle>Coworkers ({coworkers.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {coworkers.length === 0 ? (
+            <p className="text-muted-foreground">
+              No coworkers configured. Add coworkers to enable team collaboration
+              testing.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {coworkers.map((coworker) => (
+                <Card key={coworker.id} className="p-4">
+                  <div className="mb-3 flex items-center gap-3">
+                    {/* Avatar */}
+                    <Avatar>
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {coworker.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold">{coworker.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {coworker.role}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold">{coworker.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {coworker.role}
-                    </p>
+                  <p className="mb-3 text-sm text-muted-foreground">
+                    Style: {coworker.personaStyle.slice(0, 100)}
+                    {coworker.personaStyle.length > 100 && "..."}
+                  </p>
+                  {/* Voice selector */}
+                  <div className="mb-3">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Voice
+                    </label>
+                    <select
+                      value={coworker.voiceName || ""}
+                      onChange={(e) =>
+                        updateCoworkerVoice(
+                          coworker.id,
+                          e.target.value || null
+                        )
+                      }
+                      disabled={updatingVoice === coworker.id}
+                      className="w-full rounded-md border bg-background px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                    >
+                      <option value="">Default (Aoede - Female)</option>
+                      <optgroup label="Male Voices">
+                        {GEMINI_VOICES.male.map((v) => (
+                          <option key={v.name} value={v.name}>
+                            {v.name} - {v.description}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Female Voices">
+                        {GEMINI_VOICES.female.map((v) => (
+                          <option key={v.name} value={v.name}>
+                            {v.name} - {v.description}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
                   </div>
-                </div>
-                <p className="mb-2 text-sm text-muted-foreground">
-                  Style: {coworker.personaStyle.slice(0, 100)}
-                  {coworker.personaStyle.length > 100 && "..."}
-                </p>
-                {/* Voice selector */}
-                <div className="mb-2">
-                  <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Voice
-                  </label>
-                  <select
-                    value={coworker.voiceName || ""}
-                    onChange={(e) =>
-                      updateCoworkerVoice(
-                        coworker.id,
-                        e.target.value || null
-                      )
-                    }
-                    disabled={updatingVoice === coworker.id}
-                    className="w-full border-2 border-foreground bg-background px-2 py-1 font-mono text-sm disabled:opacity-50"
-                  >
-                    <option value="">Default (Aoede - Female)</option>
-                    <optgroup label="Male Voices">
-                      {GEMINI_VOICES.male.map((v) => (
-                        <option key={v.name} value={v.name}>
-                          {v.name} - {v.description}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Female Voices">
-                      {GEMINI_VOICES.female.map((v) => (
-                        <option key={v.name} value={v.name}>
-                          {v.name} - {v.description}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
-                </div>
-                <p className="font-mono text-xs text-muted-foreground">
-                  {getKnowledgeCount(coworker.knowledge)} knowledge items
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+                  <p className="text-xs text-muted-foreground">
+                    {getKnowledgeCount(coworker.knowledge)} knowledge items
+                  </p>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

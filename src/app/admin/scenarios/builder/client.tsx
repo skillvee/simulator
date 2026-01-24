@@ -6,6 +6,12 @@ import Link from "next/link";
 import type { ScenarioBuilderData } from "@/lib/scenarios";
 import { Markdown } from "@/components/shared";
 import type { ChatMessage } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Send, FileQuestion } from "lucide-react";
 
 export function ScenarioBuilderClient() {
   const router = useRouter();
@@ -218,71 +224,64 @@ export function ScenarioBuilderClient() {
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* Chat Panel */}
-      <div className="flex flex-1 flex-col border-r-2 border-foreground">
+      <div className="flex flex-1 flex-col border-r border-border">
         {/* Header */}
-        <header className="flex items-center gap-3 border-b-2 border-foreground bg-background px-4 py-3">
-          <div className="flex h-10 w-10 items-center justify-center border-2 border-foreground bg-secondary">
-            <span className="font-mono text-sm font-bold text-secondary-foreground">
+        <header className="flex items-center gap-3 border-b border-border bg-background px-4 py-3">
+          <Avatar>
+            <AvatarFallback className="bg-primary text-primary-foreground">
               AI
-            </span>
-          </div>
+            </AvatarFallback>
+          </Avatar>
           <div>
-            <h1 className="text-lg font-bold">Scenario Builder</h1>
+            <h1 className="text-lg font-semibold">Scenario Builder</h1>
             <p className="text-sm text-muted-foreground">
               Chat with AI to create your scenario
             </p>
           </div>
-          <Link
-            href="/admin/scenarios"
-            className="ml-auto font-mono text-sm text-muted-foreground hover:text-foreground"
-          >
-            Cancel
-          </Link>
+          <Button variant="ghost" asChild className="ml-auto text-muted-foreground">
+            <Link href="/admin/scenarios">Cancel</Link>
+          </Button>
         </header>
 
         {/* Messages area */}
         <main className="flex-1 overflow-auto px-4 py-6">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
-              <div className="font-mono text-muted-foreground">Loading...</div>
+              <div className="text-muted-foreground">Loading...</div>
             </div>
           ) : (
             <div className="mx-auto max-w-3xl space-y-4">
               {/* Date divider */}
               <div className="mb-6 flex items-center gap-4">
                 <div className="h-px flex-1 bg-border" />
-                <span className="border border-foreground bg-background px-2 font-mono text-sm text-muted-foreground">
+                <Badge variant="outline" className="bg-background">
                   Today
-                </span>
+                </Badge>
                 <div className="h-px flex-1 bg-border" />
               </div>
 
               {messages.map((message, index) => (
                 <div key={index} className="flex gap-3">
                   {/* Avatar */}
-                  <div
-                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 border-foreground ${
-                      message.role === "user" ? "bg-foreground" : "bg-secondary"
-                    }`}
-                  >
-                    <span
-                      className={`font-mono text-sm font-bold ${
+                  <Avatar className="flex-shrink-0">
+                    <AvatarFallback
+                      className={
                         message.role === "user"
-                          ? "text-background"
-                          : "text-secondary-foreground"
-                      }`}
+                          ? "bg-foreground text-background"
+                          : "bg-primary text-primary-foreground"
+                      }
                     >
                       {message.role === "user" ? "You" : "AI"}
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
 
                   {/* Message content */}
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-baseline gap-2">
-                      <span className="font-bold">
+                      <span className="font-semibold">
                         {message.role === "user" ? "You" : "Scenario Builder"}
                       </span>
-                      <span className="font-mono text-sm text-muted-foreground">
+                      <span className="text-sm text-muted-foreground">
                         {formatTimestamp(message.timestamp)}
                       </span>
                     </div>
@@ -296,14 +295,14 @@ export function ScenarioBuilderClient() {
               {/* Typing indicator when sending */}
               {isSending && (
                 <div className="flex gap-3">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center border-2 border-foreground bg-secondary">
-                    <span className="font-mono text-sm font-bold text-secondary-foreground">
+                  <Avatar className="flex-shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
                       AI
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex-1">
                     <div className="mb-1 flex items-baseline gap-2">
-                      <span className="font-bold">Scenario Builder</span>
+                      <span className="font-semibold">Scenario Builder</span>
                     </div>
                     <TypingIndicator />
                   </div>
@@ -317,15 +316,15 @@ export function ScenarioBuilderClient() {
 
         {/* Error message */}
         {error && (
-          <div className="border-t-2 border-red-500 bg-red-100 px-4 py-2 font-mono text-sm text-red-700">
+          <div className="border-t border-destructive bg-destructive/10 px-4 py-2 text-sm text-destructive">
             {error}
           </div>
         )}
 
         {/* Input area */}
-        <footer className="border-t-2 border-foreground bg-background px-4 py-3">
+        <footer className="border-t border-border bg-background px-4 py-3">
           <div className="mx-auto flex max-w-3xl gap-2">
-            <input
+            <Input
               ref={inputRef}
               type="text"
               value={input}
@@ -333,23 +332,24 @@ export function ScenarioBuilderClient() {
               onKeyDown={handleKeyDown}
               placeholder="Describe your scenario..."
               disabled={isSending || isLoading}
-              className="flex-1 border-2 border-foreground bg-background px-4 py-3 font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-50"
+              className="flex-1"
             />
-            <button
+            <Button
               onClick={sendMessage}
               disabled={!input.trim() || isSending || isLoading}
-              className="border-2 border-foreground bg-foreground px-6 py-3 font-bold text-background hover:bg-secondary hover:text-secondary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="gap-2"
             >
+              <Send className="h-4 w-4" />
               Send
-            </button>
+            </Button>
           </div>
         </footer>
       </div>
 
       {/* Preview Panel */}
-      <div className="bg-muted/20 flex w-96 flex-col">
-        <header className="border-b-2 border-foreground bg-background px-4 py-3">
-          <h2 className="text-lg font-bold">Preview</h2>
+      <div className="flex w-96 flex-col bg-muted/20">
+        <header className="border-b border-border bg-background px-4 py-3">
+          <h2 className="text-lg font-semibold">Preview</h2>
           <p className="text-sm text-muted-foreground">
             Scenario data collected so far
           </p>
@@ -359,20 +359,16 @@ export function ScenarioBuilderClient() {
           <ScenarioPreview data={scenarioData} />
         </div>
 
-        <footer className="border-t-2 border-foreground bg-background p-4">
-          <button
+        <footer className="border-t border-border bg-background p-4">
+          <Button
             onClick={saveScenario}
             disabled={!isReadyToSave || isSaving}
-            className={`w-full border-2 border-foreground px-6 py-3 font-bold ${
-              isReadyToSave
-                ? "hover:bg-secondary/80 bg-secondary text-secondary-foreground"
-                : "cursor-not-allowed bg-muted text-muted-foreground"
-            }`}
+            className="w-full"
           >
             {isSaving ? "Saving..." : "Save Scenario"}
-          </button>
+          </Button>
           {!isReadyToSave && (
-            <p className="mt-2 text-center font-mono text-xs text-muted-foreground">
+            <p className="mt-2 text-center text-xs text-muted-foreground">
               Complete all required fields to save
             </p>
           )}
@@ -382,25 +378,25 @@ export function ScenarioBuilderClient() {
   );
 }
 
-// Typing indicator component - neo-brutalist style
+// Typing indicator component - modern style
 function TypingIndicator() {
   return (
     <div className="flex items-center gap-1 py-1">
       <div className="flex gap-1">
         <span
-          className="h-2 w-2 animate-pulse bg-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-primary"
           style={{ animationDelay: "0ms" }}
         />
         <span
-          className="h-2 w-2 animate-pulse bg-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-primary"
           style={{ animationDelay: "150ms" }}
         />
         <span
-          className="h-2 w-2 animate-pulse bg-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-primary"
           style={{ animationDelay: "300ms" }}
         />
       </div>
-      <span className="ml-2 font-mono text-sm text-muted-foreground">
+      <span className="ml-2 text-sm text-muted-foreground">
         thinking...
       </span>
     </div>
@@ -421,8 +417,8 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
   if (!hasAnyData) {
     return (
       <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center border-2 border-foreground bg-muted">
-          <span className="text-2xl">?</span>
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <FileQuestion className="h-8 w-8 text-primary" />
         </div>
         <p className="text-sm text-muted-foreground">
           Start chatting to build your scenario. Information will appear here as
@@ -436,7 +432,7 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
     <div className="space-y-4">
       {/* Basic Info Section */}
       <div className="space-y-2">
-        <h3 className="font-mono text-sm font-bold uppercase tracking-wider text-muted-foreground">
+        <h3 className="text-sm font-medium text-muted-foreground">
           Basic Info
         </h3>
         <div className="space-y-2">
@@ -457,17 +453,14 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
           <PreviewField label="Repo" value={data.repoUrl} />
           {data.techStack && data.techStack.length > 0 && (
             <div>
-              <span className="font-mono text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 Tech Stack:
               </span>
               <div className="mt-1 flex flex-wrap gap-1">
                 {data.techStack.map((tech, i) => (
-                  <span
-                    key={i}
-                    className="border border-foreground bg-muted px-2 py-0.5 font-mono text-xs"
-                  >
+                  <Badge key={i} variant="secondary" className="text-xs">
                     {tech}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -478,27 +471,24 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
       {/* Coworkers Section */}
       {data.coworkers && data.coworkers.length > 0 && (
         <div className="space-y-2">
-          <h3 className="font-mono text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          <h3 className="text-sm font-medium text-muted-foreground">
             Coworkers ({data.coworkers.length})
           </h3>
           <div className="space-y-3">
             {data.coworkers.map((coworker, i) => (
-              <div
-                key={i}
-                className="border-2 border-foreground bg-background p-3"
-              >
+              <Card key={i} className="p-3">
                 <div className="mb-2 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center border-2 border-foreground bg-secondary">
-                    <span className="font-mono text-xs font-bold">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
                       {coworker.name
                         .split(" ")
                         .map((n) => n[0])
                         .join("")
                         .slice(0, 2)}
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
-                    <div className="text-sm font-bold">{coworker.name}</div>
+                    <div className="text-sm font-semibold">{coworker.name}</div>
                     <div className="text-xs text-muted-foreground">
                       {coworker.role}
                     </div>
@@ -507,18 +497,18 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
                 <div className="mb-2 line-clamp-2 text-xs text-muted-foreground">
                   {coworker.personaStyle}
                 </div>
-                <div className="font-mono text-xs">
+                <div className="text-xs">
                   {coworker.knowledge.length} knowledge item
                   {coworker.knowledge.length !== 1 ? "s" : ""}
                   {coworker.knowledge.filter((k) => k.isCritical).length >
                     0 && (
-                    <span className="ml-1 text-secondary">
+                    <span className="ml-1 text-primary">
                       ({coworker.knowledge.filter((k) => k.isCritical).length}{" "}
                       critical)
                     </span>
                   )}
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
@@ -541,7 +531,7 @@ function PreviewField({
   if (!value) {
     return (
       <div className="opacity-50">
-        <span className="font-mono text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           {label}:
         </span>
         <span className="ml-1 text-sm italic text-muted-foreground">
@@ -556,7 +546,7 @@ function PreviewField({
 
   return (
     <div>
-      <span className="font-mono text-sm text-muted-foreground">{label}:</span>
+      <span className="text-sm text-muted-foreground">{label}:</span>
       {markdown ? (
         <div className="mt-1 text-sm">
           <Markdown>{displayValue}</Markdown>
