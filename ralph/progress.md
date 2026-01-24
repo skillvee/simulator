@@ -413,3 +413,38 @@ This resulted in `undefined` being passed to `new GoogleGenAI({ apiKey: undefine
 ### Gotchas discovered
 - The `use-voice-base.ts` hook passes `tokenData` to an `onTokenResponse` callback, so it needed to be the unwrapped data object, not just the token string
 - The existing error handling (`if (!tokenResponse.ok)`) was correctly extracting error data, but the success path was incorrectly extracting from the top level
+
+## Issue #122: DS-012: Create ui/index.ts barrel export
+
+### What was implemented
+- Created `src/components/ui/index.ts` barrel export file that re-exports all UI components from DS-006 through DS-011
+
+### Files changed
+- `src/components/ui/index.ts` (new) - Barrel export file
+
+### Exports included
+- **Button**: `Button`, `buttonVariants` (DS-006)
+- **Card**: `Card`, `CardHeader`, `CardFooter`, `CardTitle`, `CardDescription`, `CardContent` (DS-007)
+- **Input/Label/Textarea**: `Input`, `Label`, `Textarea` (DS-008)
+- **Dialog**: `Dialog`, `DialogPortal`, `DialogOverlay`, `DialogClose`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogFooter`, `DialogTitle`, `DialogDescription` (DS-009)
+- **Avatar**: `Avatar`, `AvatarImage`, `AvatarFallback` (DS-010)
+- **Badge/Separator/Tabs**: `Badge`, `badgeVariants`, `Separator`, `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` (DS-011)
+
+### Usage
+```typescript
+// Clean single import
+import { Button, Card, Input } from "@/components/ui";
+
+// Instead of multiple imports
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+```
+
+### Learnings for future iterations
+1. **Barrel exports simplify imports** - Instead of importing from individual files, consumers can use a single import path
+2. **Check actual exports in source files** - The issue provided a template, but I verified the exact exports from each component file (e.g., Dialog has more exports than the template showed)
+3. **No circular dependencies** - Using named re-exports (`export { X } from "./x"`) avoids circular dependency issues because we're just re-exporting, not importing and then exporting
+
+### Gotchas discovered
+- None - this was a straightforward barrel export file creation
