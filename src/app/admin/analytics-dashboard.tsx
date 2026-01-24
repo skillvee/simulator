@@ -111,7 +111,7 @@ export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
         <TrendChart
           title="Completions"
           data={data.trends.assessmentCompletions}
-          color="bg-secondary"
+          color="bg-primary"
         />
       </div>
 
@@ -266,8 +266,8 @@ function TrendChart({
   const maxCount = Math.max(...recentData.map((d) => d.count), 1);
   const total = recentData.reduce((sum, d) => sum + d.count, 0);
 
-  // Map old colors to new modern colors
-  const barColor = color === "bg-secondary" ? "bg-primary" : "bg-primary/70";
+  // Use the provided color directly (all charts use bg-primary now)
+  const barColor = color;
 
   return (
     <Card className="shadow-sm">

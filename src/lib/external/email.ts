@@ -172,21 +172,21 @@ export function generateReportEmailHtml(params: SendReportEmailParams): string {
       margin-bottom: 24px;
     }
     .score-box {
-      background-color: #f7da50;
+      background-color: #237CF1;
       padding: 24px;
       text-align: center;
       margin-bottom: 24px;
-      border: 2px solid #000000;
+      border-radius: 12px;
     }
     .score-value {
       font-size: 48px;
       font-weight: 700;
-      color: #000000;
+      color: #ffffff;
       margin: 0;
     }
     .score-label {
       font-size: 14px;
-      color: #000000;
+      color: #ffffff;
       margin-top: 8px;
       font-weight: 500;
     }

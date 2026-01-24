@@ -480,10 +480,10 @@ export function FloatingCallBar({
   // Connecting state (matches chat footer height)
   if (callState === "requesting-permission" || callState === "connecting") {
     return (
-      <div className="flex h-[78px] items-center rounded-xl border border-border bg-secondary/20 px-4 py-3 shadow-lg">
+      <div className="flex h-[78px] items-center rounded-xl border border-border bg-primary/10 px-4 py-3 shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-secondary-foreground border-t-transparent" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
           </div>
           <div>
             <p className="text-sm font-semibold">{coworker.name}</p>
@@ -501,18 +501,18 @@ export function FloatingCallBar({
   // Connected state - the main call bar UI (matches chat footer height)
   if (callState === "connected") {
     return (
-      <div className="flex h-[78px] items-center rounded-xl border border-border bg-secondary/10 px-4 py-3 shadow-lg">
+      <div className="flex h-[78px] items-center rounded-xl border border-border bg-primary/10 px-4 py-3 shadow-lg">
         <div className="flex w-full items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Avatar with speaking indicator */}
             <div className="relative">
-              <div className={isSpeaking ? "rounded-full ring-2 ring-secondary ring-offset-2" : ""}>
+              <div className={isSpeaking ? "rounded-full ring-2 ring-primary ring-offset-2" : ""}>
                 <CoworkerAvatar name={coworker.name} size="md" />
               </div>
               {/* Speaking indicator - sound wave icon */}
               {isSpeaking && (
-                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-secondary">
-                  <Volume2 size={10} className="text-secondary-foreground" />
+                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
+                  <Volume2 size={10} className="text-primary-foreground" />
                 </div>
               )}
               {/* Listening indicator - mic icon (when not speaking and not muted) */}
@@ -528,7 +528,7 @@ export function FloatingCallBar({
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {isSpeaking ? (
                   <>
-                    <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-secondary" />
+                    <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
                     Speaking...
                   </>
                 ) : isListening && !isMuted ? (

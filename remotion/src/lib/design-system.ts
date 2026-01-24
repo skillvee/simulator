@@ -2,8 +2,8 @@
 export const colors = {
   background: '#FFFFFF',
   text: '#000000',
-  accent: '#f7da50',
-  border: '#000000',
+  accent: '#237CF1',
+  border: '#e2e8f0',
   success: '#22c55e',
 } as const;
 
@@ -17,8 +17,8 @@ export const spacing = {
 } as const;
 
 export const borders = {
-  width: 2,
-  radius: 0,
+  width: 1,
+  radius: 12,
 } as const;
 
 // Animation configs for consistent feel

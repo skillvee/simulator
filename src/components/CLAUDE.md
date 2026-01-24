@@ -1,6 +1,6 @@
 # src/components - React Components
 
-Domain-based organization following Neo-brutalist design. See `.claude/skills/frontend-design/SKILL.md` for full rules.
+Domain-based organization following modern shadcn/ui design. See `.claude/skills/frontend-design/SKILL.md` for full rules.
 
 ## Structure
 
@@ -35,7 +35,7 @@ import { CoworkerAvatar } from "./coworker-avatar";
 
 ## Design Quick Reference
 
-0px radius, no shadows, 2px black borders, gold (#f7da50) accent, DM Sans + Space Mono fonts.
+Rounded corners (0.5rem default), subtle shadows, blue (#237CF1) primary, DM Sans + Space Mono fonts.
 
 ## Server/Client Split
 

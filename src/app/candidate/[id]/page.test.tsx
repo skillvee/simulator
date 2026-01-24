@@ -529,7 +529,7 @@ describe("CandidateProfileClient", () => {
     });
   });
 
-  describe("neo-brutalist styling", () => {
+  describe("modern design styling", () => {
     it("uses score bar segments for visual indicators", () => {
       const data = createClientData();
       const { container } = render(<CandidateProfileClient data={data} />);
@@ -537,11 +537,12 @@ describe("CandidateProfileClient", () => {
       expect(scoreBar).toBeInTheDocument();
     });
 
-    it("applies border-2 styling to sections", () => {
+    it("uses Card components for sections", () => {
       const data = createClientData();
       const { container } = render(<CandidateProfileClient data={data} />);
-      const sections = container.querySelectorAll(".border-2");
-      expect(sections.length).toBeGreaterThan(0);
+      // Card component renders with rounded borders instead of border-2
+      const cards = container.querySelectorAll('[class*="rounded"]');
+      expect(cards.length).toBeGreaterThan(0);
     });
   });
 });
@@ -671,7 +672,7 @@ describe("video player controls", () => {
       fireEvent.click(timestampLinks[0]);
 
       const speed1Button = screen.getByTestId("speed-1");
-      expect(speed1Button).toHaveClass("bg-secondary");
+      expect(speed1Button).toHaveClass("bg-primary");
     });
 
     it("clicking speed button updates selected state", () => {
@@ -684,7 +685,7 @@ describe("video player controls", () => {
 
       const speed2Button = screen.getByTestId("speed-2");
       fireEvent.click(speed2Button);
-      expect(speed2Button).toHaveClass("bg-secondary");
+      expect(speed2Button).toHaveClass("bg-primary");
     });
   });
 });

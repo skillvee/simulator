@@ -257,11 +257,11 @@ function CoworkerItem({
         {/* Avatar with online/in-call indicator */}
         <div className="relative flex-shrink-0">
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full bg-secondary ${
+            className={`flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 ${
               isInCall ? "ring-2 ring-green-500 ring-offset-2" : ""
             }`}
           >
-            <span className="text-sm font-semibold text-secondary-foreground">
+            <span className="text-sm font-semibold text-primary">
               {initials}
             </span>
           </div>

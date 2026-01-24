@@ -30,7 +30,7 @@ describe("Markdown component", () => {
       const h1 = container.querySelector("h1");
       expect(h1).toBeInTheDocument();
       expect(h1).toHaveTextContent("Heading 1");
-      expect(h1).toHaveClass("border-b-2");
+      expect(h1).toHaveClass("border-b");
     });
 
     it("renders h2", () => {
@@ -96,7 +96,7 @@ describe("Markdown component", () => {
   });
 
   describe("links", () => {
-    it("renders links with gold underline decoration", () => {
+    it("renders links with primary underline decoration", () => {
       const { container } = render(
         <Markdown>[Link text](https://example.com)</Markdown>
       );
@@ -104,7 +104,7 @@ describe("Markdown component", () => {
       expect(link).toBeInTheDocument();
       expect(link).toHaveTextContent("Link text");
       expect(link).toHaveAttribute("href", "https://example.com");
-      expect(link).toHaveClass("decoration-secondary");
+      expect(link).toHaveClass("text-primary");
     });
 
     it("opens links in new tab", () => {
@@ -118,12 +118,13 @@ describe("Markdown component", () => {
   });
 
   describe("lists", () => {
-    it("renders unordered lists", () => {
+    it("renders unordered lists with disc bullets", () => {
       const { container } = render(
         <Markdown>{"- Item 1\n- Item 2\n- Item 3"}</Markdown>
       );
       const ul = container.querySelector("ul");
       expect(ul).toBeInTheDocument();
+      expect(ul).toHaveClass("list-disc");
       const items = container.querySelectorAll("li");
       expect(items).toHaveLength(3);
     });
@@ -134,72 +135,66 @@ describe("Markdown component", () => {
       );
       const ol = container.querySelector("ol");
       expect(ol).toBeInTheDocument();
+      expect(ol).toHaveClass("list-decimal");
       const items = container.querySelectorAll("li");
       expect(items).toHaveLength(3);
-    });
-
-    it("applies square bullet styling to list items", () => {
-      const { container } = render(<Markdown>- Item</Markdown>);
-      const li = container.querySelector("li");
-      expect(li).toHaveClass("before:content-['\u25A0']");
     });
   });
 
   describe("code", () => {
-    it("renders inline code with gold background tint", () => {
+    it("renders inline code with primary background tint", () => {
       const { container } = render(<Markdown>Use `code` here</Markdown>);
       const code = container.querySelector("code");
       expect(code).toBeInTheDocument();
       expect(code).toHaveTextContent("code");
       expect(code).toHaveClass("font-mono");
-      expect(code).toHaveClass("bg-secondary/30");
+      expect(code).toHaveClass("bg-primary/10");
     });
 
-    it("renders code blocks with black background", () => {
+    it("renders code blocks with muted background", () => {
       const { container } = render(
         <Markdown>{"```javascript\nconst x = 1;\n```"}</Markdown>
       );
       const pre = container.querySelector("pre");
       expect(pre).toBeInTheDocument();
-      expect(pre).toHaveClass("bg-foreground");
-      expect(pre).toHaveClass("text-background");
+      expect(pre).toHaveClass("bg-muted");
     });
 
-    it("renders code blocks with border", () => {
+    it("renders code blocks with rounded corners and border", () => {
       const { container } = render(
         <Markdown>{"```\ncode block\n```"}</Markdown>
       );
       const pre = container.querySelector("pre");
-      expect(pre).toHaveClass("border-2");
-      expect(pre).toHaveClass("border-foreground");
+      expect(pre).toHaveClass("rounded-lg");
+      expect(pre).toHaveClass("border-border");
     });
   });
 
   describe("blockquotes", () => {
-    it("renders blockquotes with gold left border", () => {
+    it("renders blockquotes with primary left border", () => {
       const { container } = render(<Markdown>&gt; Quote text</Markdown>);
       const blockquote = container.querySelector("blockquote");
       expect(blockquote).toBeInTheDocument();
       expect(blockquote).toHaveClass("border-l-4");
-      expect(blockquote).toHaveClass("border-secondary");
+      expect(blockquote).toHaveClass("border-primary");
       expect(blockquote).toHaveClass("italic");
     });
   });
 
   describe("horizontal rule", () => {
-    it("renders hr with thick border", () => {
+    it("renders hr with border", () => {
       const { container } = render(
         <Markdown>{"Above\n\n---\n\nBelow"}</Markdown>
       );
       const hr = container.querySelector("hr");
       expect(hr).toBeInTheDocument();
-      expect(hr).toHaveClass("border-t-2");
-      expect(hr).toHaveClass("border-foreground");
+      expect(hr).toHaveClass("border-t");
+      expect(hr).toHaveClass("border-border");
     });
   });
 
   describe("images", () => {
-    it("renders images with border", () => {
+    it("renders images with rounded corners and border", () => {
       const { container } = render(
         <Markdown>![Alt text](https://example.com/image.png)</Markdown>
       );
@@ -207,8 +202,8 @@ describe("Markdown component", () => {
       expect(img).toBeInTheDocument();
       expect(img).toHaveAttribute("src", "https://example.com/image.png");
       expect(img).toHaveAttribute("alt", "Alt text");
-      expect(img).toHaveClass("border-2");
-      expect(img).toHaveClass("border-foreground");
+      expect(img).toHaveClass("rounded-lg");
+      expect(img).toHaveClass("border-border");
     });
   });
 
@@ -223,15 +218,23 @@ describe("Markdown component", () => {
 
       const table = container.querySelector("table");
       expect(table).toBeInTheDocument();
-      expect(table).toHaveClass("border-2");
 
       const thead = container.querySelector("thead");
-      expect(thead).toHaveClass("bg-foreground");
-      expect(thead).toHaveClass("text-background");
+      expect(thead).toHaveClass("bg-muted");
 
       const th = container.querySelector("th");
-      expect(th).toHaveClass("font-mono");
-      expect(th).toHaveClass("uppercase");
+      expect(th).toHaveClass("font-semibold");
+    });
+
+    it("wraps tables in rounded container", () => {
+      const tableMarkdown = `
+| Header |
+|--------|
+| Cell   |
+      `;
+      const { container } = render(<Markdown>{tableMarkdown}</Markdown>);
+      const tableWrapper = container.querySelector(".rounded-lg");
+      expect(tableWrapper).toBeInTheDocument();
     });
   });
 
@@ -269,7 +272,7 @@ const greeting = "hello";
     });
   });
 
-  describe("neo-brutalist design compliance", () => {
+  describe("modern design compliance", () => {
     it("uses DM Sans for prose (via font-sans inherited)", () => {
       // The markdown-content container doesn't override font, inheriting DM Sans
       const { container } = render(<Markdown>Regular text</Markdown>);
@@ -282,19 +285,18 @@ const greeting = "hello";
       expect(code).toHaveClass("font-mono");
     });
 
-    it("has no rounded corners on code blocks", () => {
+    it("has rounded corners on code blocks for modern style", () => {
       const { container } = render(<Markdown>{"```\ncode\n```"}</Markdown>);
       const pre = container.querySelector("pre");
-      // No rounded-* classes should be present
       const classes = pre?.className || "";
-      expect(classes).not.toMatch(/rounded/);
+      expect(classes).toMatch(/rounded-lg/);
     });
 
-    it("has no shadow classes", () => {
+    it("has subtle border on code blocks", () => {
       const { container } = render(<Markdown>{"```\ncode\n```"}</Markdown>);
       const pre = container.querySelector("pre");
       const classes = pre?.className || "";
-      expect(classes).not.toMatch(/shadow/);
+      expect(classes).toMatch(/border-border/);
     });
   });
 });

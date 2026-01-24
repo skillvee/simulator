@@ -128,14 +128,14 @@ describe("CoworkerSidebar", () => {
       );
     });
 
-    it("uses yellow background color for neo-brutalist theme", () => {
+    it("uses blue background color for modern design theme", () => {
       const coworker = createMockCoworker({ name: "Test User" });
       render(<CoworkerSidebar {...defaultProps} coworkers={[coworker]} />);
 
       const avatar = screen.getByAltText("Test User's avatar");
       expect(avatar).toHaveAttribute(
         "src",
-        expect.stringContaining("backgroundColor=D4AF37")
+        expect.stringContaining("backgroundColor=237CF1")
       );
     });
   });

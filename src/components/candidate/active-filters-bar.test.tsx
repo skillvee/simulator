@@ -269,9 +269,9 @@ describe("ActiveFiltersBar", () => {
       );
 
       const chips = screen.getAllByTestId("filter-chip");
-      // First chip is not refined - should have gold styling
-      expect(chips[0]).toHaveClass("bg-secondary");
-      // Second chip is refined - should have purple border
+      // First chip is not refined - should use outline variant (text-foreground)
+      expect(chips[0]).toHaveClass("text-foreground");
+      // Second chip is refined - should have purple styling
       expect(chips[1]).toHaveClass("border-purple-500");
     });
   });

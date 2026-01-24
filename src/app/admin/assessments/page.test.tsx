@@ -425,7 +425,7 @@ describe("AssessmentsClient", () => {
       );
 
       const allTimeButton = screen.getByText("All time");
-      expect(allTimeButton).toHaveClass("bg-foreground");
+      expect(allTimeButton).toHaveClass("bg-primary");
     });
 
     it("changes active state when date range is selected", () => {
@@ -439,8 +439,8 @@ describe("AssessmentsClient", () => {
       const last7DaysButton = screen.getByText("Last 7 days");
       fireEvent.click(last7DaysButton);
 
-      expect(last7DaysButton).toHaveClass("bg-foreground");
-      expect(screen.getByText("All time")).not.toHaveClass("bg-foreground");
+      expect(last7DaysButton).toHaveClass("bg-primary");
+      expect(screen.getByText("All time")).not.toHaveClass("bg-primary");
     });
   });
 
@@ -643,10 +643,11 @@ describe("AssessmentsClient", () => {
       const secondRow = screen.getByTestId("assessment-row-assess-2");
       fireEvent.click(secondRow);
 
-      // The ERROR log should have red styling
+      // The ERROR log should have destructive styling
       const details = screen.getByTestId("details-assess-2");
       const errorLog = within(details).getAllByText("ERROR")[0];
-      expect(errorLog.closest("div")).toHaveClass("bg-red-100");
+      // The Badge with variant="destructive" has bg-destructive class
+      expect(errorLog).toHaveClass("bg-destructive");
     });
 
     it("shows error status in API calls table", () => {
