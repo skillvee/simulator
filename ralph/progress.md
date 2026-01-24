@@ -829,3 +829,51 @@ vi.mock("@/lib/core/admin", () => ({...}));
 ### Gotchas discovered
 - The `redirect` function from `next/navigation` is called by `requireAdmin` (a dependency), not by the page itself - but since the test mocks `next/navigation`, all exports used anywhere in the call chain must be included
 - The act() warnings in stderr are unrelated to the 3 failing tests - they're from the retry assessment tests and are noted as "bonus, not required" in the acceptance criteria
+
+## Issue #124: DS-014: Migrate feedback/ components to modern design
+
+### What was implemented
+- Migrated `error-display.tsx` to use Card and Button components with modern design
+- Migrated `rejection-feedback-modal.tsx` to use Dialog component with smooth animations
+- Updated tests to reflect modern design patterns (rounded corners, shadows instead of neo-brutalist)
+
+### error-display.tsx changes
+- Replaced plain `<div>` with `<Card>` component using `border-destructive bg-destructive/5` for error styling
+- Replaced custom button elements with `<Button>` component (default, outline variants)
+- Used `<CardContent>` for content wrapper
+- Applied `rounded-full bg-primary/10` to SessionRecoveryPrompt icon container
+- Used `text-destructive` instead of `text-red-500` for semantic color tokens
+- Removed `font-mono` from retry progress indicator
+
+### rejection-feedback-modal.tsx changes
+- Replaced custom modal implementation with Radix-based `<Dialog>` component
+- Used `<DialogContent>`, `<DialogHeader>`, `<DialogTitle>`, `<DialogDescription>`, `<DialogFooter>`
+- Replaced custom textarea with `<Textarea>` component
+- Replaced custom buttons with `<Button variant="outline">` for Cancel and `<Button>` for Submit
+- Dialog provides built-in animations (scale-in on enter, fade-out on exit)
+- Removed manual Escape key handler and overlay click handler (handled by Radix Dialog)
+- Removed unused `useEffect` import
+
+### Test file changes
+- Updated "neo-brutalist styling" describe block to "modern design styling"
+- Changed assertions from expecting no rounded corners to expecting rounded corners
+- Changed assertions from expecting "sharp borders" to expecting shadows
+- Updated test for close button to use role-based selector instead of testid (Dialog uses built-in close button)
+- Simplified "does not close when clicking inside" test to click on feedback input
+
+### Files changed
+- `src/components/feedback/error-display.tsx` (modified)
+- `src/components/feedback/rejection-feedback-modal.tsx` (modified)
+- `src/components/feedback/rejection-feedback-modal.test.tsx` (modified)
+
+### Learnings for future iterations
+1. **Dialog provides accessibility for free** - Radix Dialog handles focus trap, Escape key, overlay click, and ARIA attributes automatically. No need for custom handlers.
+2. **Import from barrel exports** - Use `import { Dialog, Button, Textarea } from "@/components/ui"` rather than individual files to follow project conventions.
+3. **Tests need updating when design changes** - Neo-brutalist tests (expecting no rounded corners) must be updated to expect modern design patterns.
+4. **Semantic color tokens** - Use `destructive`, `primary`, `muted-foreground` instead of raw colors like `red-500` for consistency.
+5. **Button handles disabled states** - The shadcn Button component has built-in `disabled:opacity-50 disabled:pointer-events-none` styling.
+
+### Gotchas discovered
+- The Dialog component's close button doesn't have a testid by default - use `screen.getByRole("button", { name: /close/i })` to find it via the sr-only "Close" text
+- When using Dialog, don't add a second close button with your own testid - use the built-in one or customize DialogContent
+- The Dialog's `onOpenChange` callback handles both opening and closing - check if `open` is false to call `onClose`
