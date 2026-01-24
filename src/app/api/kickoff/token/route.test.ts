@@ -16,9 +16,9 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock gemini (now in @/lib/ai)
+// Mock gemini - must match exact import path in route.ts
 const mockGenerateEphemeralToken = vi.fn();
-vi.mock("@/lib/ai", () => ({
+vi.mock("@/lib/ai/gemini", () => ({
   generateEphemeralToken: (...args: unknown[]) =>
     mockGenerateEphemeralToken(...args),
 }));

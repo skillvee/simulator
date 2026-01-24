@@ -8,7 +8,8 @@ vi.mock("@/auth", () => ({
   auth: () => mockAuth(),
 }));
 
-vi.mock("@/lib/ai", () => ({
+// Mock Gemini - must match exact import path in route.ts
+vi.mock("@/lib/ai/gemini", () => ({
   gemini: {
     models: {
       generateContent: (...args: unknown[]) => mockGenerateContent(...args),

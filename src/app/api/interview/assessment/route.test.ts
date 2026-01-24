@@ -22,9 +22,9 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock Gemini (now in @/lib/ai)
+// Mock Gemini - must match exact import path in route.ts
 const mockGenerateContent = vi.fn();
-vi.mock("@/lib/ai", () => ({
+vi.mock("@/lib/ai/gemini", () => ({
   gemini: {
     models: {
       generateContent: (...args: unknown[]) => mockGenerateContent(...args),
