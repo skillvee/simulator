@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { UserRole } from "@prisma/client";
 import { AdminNav } from "@/components/admin";
 import { AccountDeletionSection } from "./account-deletion-section";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronRight } from "lucide-react";
 
 interface ExtendedUser {
   id: string;
@@ -41,22 +43,22 @@ export default async function SettingsPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="border-b-2 border-border">
+      <header className="border-b border-border">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-bold">
+          <Link href="/" className="text-xl font-semibold">
             Skillvee
           </Link>
           <nav className="flex items-center gap-4">
             <AdminNav />
             <Link
               href="/profile"
-              className="font-mono text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               Profile
             </Link>
             <Link
               href="/"
-              className="font-mono text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               Home
             </Link>
@@ -67,7 +69,7 @@ export default async function SettingsPage() {
       <div className="mx-auto max-w-4xl px-6 py-12">
         {/* Settings Header */}
         <section className="mb-12">
-          <h1 className="mb-2 text-3xl font-bold">Settings</h1>
+          <h1 className="mb-2 text-3xl font-semibold">Settings</h1>
           <p className="text-muted-foreground">
             Manage your account settings and preferences
           </p>
@@ -75,67 +77,64 @@ export default async function SettingsPage() {
 
         {/* Account Information */}
         <section className="mb-12">
-          <h2 className="mb-6 text-2xl font-bold">Account Information</h2>
-          <div className="border-2 border-border p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-border py-3">
-                <div>
-                  <p className="font-semibold">Name</p>
-                  <p className="font-mono text-sm text-muted-foreground">
-                    {dbUser.name || "Not set"}
-                  </p>
+          <h2 className="mb-6 text-2xl font-semibold">Account Information</h2>
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border py-3">
+                  <div>
+                    <p className="font-medium">Name</p>
+                    <p className="text-sm text-muted-foreground">
+                      {dbUser.name || "Not set"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-b border-border py-3">
+                  <div>
+                    <p className="font-medium">Email</p>
+                    <p className="text-sm text-muted-foreground">
+                      {dbUser.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                  <div>
+                    <p className="font-medium">Member Since</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Intl.DateTimeFormat("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }).format(dbUser.createdAt)}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between border-b border-border py-3">
-                <div>
-                  <p className="font-semibold">Email</p>
-                  <p className="font-mono text-sm text-muted-foreground">
-                    {dbUser.email}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-semibold">Member Since</p>
-                  <p className="font-mono text-sm text-muted-foreground">
-                    {new Intl.DateTimeFormat("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    }).format(dbUser.createdAt)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Privacy Section */}
         <section className="mb-12">
-          <h2 className="mb-6 text-2xl font-bold">Privacy</h2>
-          <div className="border-2 border-border p-6">
-            <Link
-              href="/privacy"
-              className="group flex items-center justify-between py-3 hover:text-secondary"
-            >
-              <div>
-                <p className="font-semibold group-hover:text-secondary">
-                  Privacy Policy
-                </p>
-                <p className="font-mono text-sm text-muted-foreground">
-                  Read how we handle your data
-                </p>
-              </div>
-              <svg
-                className="h-5 w-5 text-muted-foreground group-hover:text-secondary"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+          <h2 className="mb-6 text-2xl font-semibold">Privacy</h2>
+          <Card>
+            <CardContent className="p-0">
+              <Link
+                href="/privacy"
+                className="group flex items-center justify-between p-6 transition-colors hover:bg-muted/50"
               >
-                <path strokeLinecap="square" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
+                <div>
+                  <p className="font-medium group-hover:text-primary">
+                    Privacy Policy
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Read how we handle your data
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
+              </Link>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Delete Account Section */}

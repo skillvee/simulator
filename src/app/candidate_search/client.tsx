@@ -43,6 +43,9 @@ import {
 import { RejectionFeedbackModal } from "@/components/feedback";
 import type { ConstraintUpdate } from "@/lib/candidate";
 import { AssessmentDimension } from "@prisma/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 // ============================================================================
 // Types
@@ -702,22 +705,23 @@ export function CandidateSearchClient() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="border-b-2 border-foreground px-6 py-4">
+      <header className="border-b border-border px-6 py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div className="flex items-center gap-4">
             {hasSearched && (
-              <button
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={handleBackToSearch}
-                className="border-2 border-foreground p-2 hover:bg-accent"
                 aria-label="Back to search"
                 data-testid="back-button"
               >
                 <ArrowLeft size={20} />
-              </button>
+              </Button>
             )}
-            <h1 className="text-xl font-bold">Candidate Search</h1>
+            <h1 className="text-xl font-semibold">Candidate Search</h1>
           </div>
-          <span className="font-mono text-sm text-muted-foreground">BETA</span>
+          <Badge variant="secondary" className="rounded-md">BETA</Badge>
         </div>
       </header>
 
@@ -737,9 +741,9 @@ export function CandidateSearchClient() {
                   data-testid="loading-indicator"
                 >
                   {/* Outer spinning ring */}
-                  <div className="absolute inset-0 animate-spin border-4 border-muted border-t-secondary" />
+                  <div className="absolute inset-0 animate-spin rounded-full border-4 border-muted border-t-primary" />
                   {/* Inner pulsing circle */}
-                  <div className="absolute inset-3 animate-pulse bg-secondary" />
+                  <div className="absolute inset-3 animate-pulse rounded-full bg-primary" />
                 </div>
 
                 {/* Sequential loading messages */}
@@ -750,7 +754,7 @@ export function CandidateSearchClient() {
                   >
                     {LOADING_MESSAGES[loadingMessageIndex]}
                   </p>
-                  <p className="font-mono text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Please wait while we search our database
                   </p>
                 </div>
@@ -763,9 +767,9 @@ export function CandidateSearchClient() {
                   {LOADING_MESSAGES.map((_, index) => (
                     <div
                       key={index}
-                      className={`h-2 w-2 transition-colors ${
+                      className={`h-2 w-2 rounded-full transition-colors ${
                         index <= loadingMessageIndex
-                          ? "bg-secondary"
+                          ? "bg-primary"
                           : "bg-muted"
                       }`}
                       data-testid={`progress-dot-${index}`}
@@ -814,7 +818,7 @@ export function CandidateSearchClient() {
             <div className="w-full max-w-3xl">
               {/* Greeting */}
               <div className="mb-8 text-center">
-                <h2 className="mb-3 text-3xl font-bold">
+                <h2 className="mb-3 text-3xl font-semibold">
                   Hi there, please describe the profile you&apos;re looking for.
                 </h2>
                 <p className="text-muted-foreground">
@@ -823,55 +827,60 @@ export function CandidateSearchClient() {
               </div>
 
               {/* Search input */}
-              <div className="relative mb-6">
-                <textarea
-                  ref={inputRef}
-                  value={query}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder={EXAMPLE_QUERY}
-                  rows={4}
-                  className="w-full resize-none border-2 border-foreground bg-background px-4 py-4 pr-16 font-sans text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-secondary"
-                  disabled={isSearching}
-                  data-testid="search-input"
-                />
-                {/* Send button - positioned inside the textarea */}
-                <button
-                  onClick={handleSearch}
-                  disabled={!query.trim() || isSearching}
-                  className="absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center border-2 border-foreground bg-purple-600 text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  aria-label="Search"
-                  data-testid="search-button"
-                >
-                  {isSearching ? (
-                    <Loader2 size={20} className="animate-spin" />
-                  ) : (
-                    <ArrowUp size={20} />
-                  )}
-                </button>
-              </div>
+              <Card className="mb-6 overflow-hidden">
+                <CardContent className="relative p-0">
+                  <textarea
+                    ref={inputRef}
+                    value={query}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={EXAMPLE_QUERY}
+                    rows={4}
+                    className="w-full resize-none border-0 bg-background px-4 py-4 pr-16 font-sans text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
+                    disabled={isSearching}
+                    data-testid="search-input"
+                  />
+                  {/* Send button - positioned inside the textarea */}
+                  <Button
+                    onClick={handleSearch}
+                    disabled={!query.trim() || isSearching}
+                    size="icon"
+                    className="absolute bottom-4 right-4"
+                    aria-label="Search"
+                    data-testid="search-button"
+                  >
+                    {isSearching ? (
+                      <Loader2 size={20} className="animate-spin" />
+                    ) : (
+                      <ArrowUp size={20} />
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
 
               {/* Context tags */}
-              <div className="border-2 border-foreground bg-background p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-                    Detected Entities
-                  </span>
-                  {isExtracting && (
-                    <span className="h-2 w-2 animate-pulse bg-secondary" />
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {contextTags.map((tag) => (
-                    <ContextTagBadge key={tag.label} tag={tag} />
-                  ))}
-                </div>
-              </div>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Detected Entities
+                    </span>
+                    {isExtracting && (
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {contextTags.map((tag) => (
+                      <ContextTagBadge key={tag.label} tag={tag} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Processing time indicator */}
               {extraction && (
                 <div className="mt-4 text-center">
-                  <span className="font-mono text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     Extracted in {extraction.processingTimeMs}ms
                   </span>
                 </div>
@@ -882,9 +891,9 @@ export function CandidateSearchClient() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t-2 border-foreground px-6 py-4">
+      <footer className="border-t border-border px-6 py-4">
         <div className="mx-auto max-w-6xl text-center text-sm text-muted-foreground">
-          <span className="font-mono">Powered by AI entity extraction</span>
+          <span>Powered by AI entity extraction</span>
         </div>
       </footer>
 
@@ -908,16 +917,18 @@ export function CandidateSearchClient() {
         data-testid="toast-container"
       >
         {toasts.map((toast) => (
-          <div
+          <Card
             key={toast.id}
-            className={`flex items-center gap-3 border-2 border-foreground px-4 py-3 ${toast.type === "success" ? "bg-green-100 dark:bg-green-900" : ""} ${toast.type === "error" ? "bg-red-100 dark:bg-red-900" : ""} ${toast.type === "info" ? "bg-background" : ""} `}
+            className={`${toast.type === "success" ? "bg-green-500/10 border-green-500/50" : ""} ${toast.type === "error" ? "bg-red-500/10 border-red-500/50" : ""} ${toast.type === "info" ? "" : ""}`}
             data-testid="toast"
           >
-            {toast.type === "success" && (
-              <CheckCircle size={20} className="text-green-600" />
-            )}
-            <span className="font-medium">{toast.message}</span>
-          </div>
+            <CardContent className="flex items-center gap-3 px-4 py-3">
+              {toast.type === "success" && (
+                <CheckCircle size={20} className="text-green-600" />
+              )}
+              <span className="font-medium">{toast.message}</span>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>
@@ -935,21 +946,21 @@ interface ContextTagBadgeProps {
 function ContextTagBadge({ tag }: ContextTagBadgeProps) {
   return (
     <div
-      className={`flex items-center gap-2 border-2 px-3 py-2 transition-colors ${
+      className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-all duration-200 ${
         tag.isActive
-          ? "border-foreground bg-secondary text-secondary-foreground"
-          : "border-muted-foreground/30 bg-muted/20 text-muted-foreground"
-      } `}
+          ? "bg-primary/10 text-primary"
+          : "bg-muted/50 text-muted-foreground"
+      }`}
     >
       <span
         className={
-          tag.isActive ? "text-secondary-foreground" : "text-muted-foreground"
+          tag.isActive ? "text-primary" : "text-muted-foreground"
         }
       >
         {tag.icon}
       </span>
       <div className="flex flex-col">
-        <span className="font-mono text-xs uppercase tracking-wider opacity-70">
+        <span className="text-xs uppercase tracking-wider opacity-70">
           {tag.label}
         </span>
         <span

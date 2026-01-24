@@ -451,3 +451,90 @@
   - Screenshots captured: `screenshots/issue-140-processing.png`, `screenshots/issue-140-hr-interview.png`
   - Processing page shows green success styling, Card components, and primary blue highlights
   - HR interview page shows updated progress indicator with rounded-full step numbers
+
+## Issue #141: DS-031: Migrate profile, settings, and candidate pages to modern design
+
+- **What was implemented:**
+  - Updated `src/app/profile/page.tsx` with comprehensive modern design:
+    - Header uses border-b instead of border-b-2, font-semibold instead of font-bold
+    - Profile header section wrapped in Card with Avatar component for user initial
+    - Role badge uses Badge component with outline variant
+    - Assessment cards use Card/CardContent with hover:shadow-md transition
+    - ScoreBar segments use bg-primary instead of bg-secondary, with rounded-sm
+    - Status badges use Badge component with appropriate color variants
+    - Improvement Trends chart uses Card/CardContent with rounded-full data points
+    - Links use text-primary with transition-colors hover effect
+    - Empty state uses Card with Button component
+    - All font-bold replaced with font-semibold, font-mono removed from non-code text
+  - Updated `src/app/settings/page.tsx` with modern design:
+    - Header uses border-b instead of border-b-2, font-semibold instead of font-bold
+    - Account Information section uses Card/CardContent
+    - Privacy section uses Card with hover:bg-muted/50 transition
+    - ChevronRight icon replaces custom SVG arrow
+    - Links use text-primary with transition-colors hover effect
+    - All font-mono removed from non-code text
+  - Updated `src/app/settings/account-deletion-section.tsx` with modern design:
+    - Danger Zone uses Card with border-destructive
+    - Warning icon uses rounded-full bg-destructive/10 container with AlertTriangle icon
+    - Privacy Policy link uses text-primary with ChevronRight icon
+    - Error/success messages use rounded-lg with appropriate background colors
+    - Pending deletion notice uses rounded-lg with yellow color scheme and Clock icon
+    - Deletion confirmation uses rounded-lg border, radio options have rounded-lg hover states
+    - "What will be deleted" list uses Card/CardContent with rounded-full bullet points
+    - Confirmation input uses Input component
+    - All buttons use Button component with appropriate variants
+  - Updated `src/app/candidate/[id]/client.tsx` with Card layout:
+    - All sections use Card/CardContent instead of border-2
+    - Header uses border-b instead of border-b-2
+    - Avatar uses Avatar/AvatarFallback with bg-primary/10 and text-primary
+    - ScoreBar segments use bg-primary with rounded-sm
+    - DimensionScoreCard uses Card with overflow-hidden
+    - Weight level badges use Badge component
+    - Timestamp links use rounded-md bg-primary/10 with hover:bg-primary
+    - Trainable gap indicator uses Badge component
+    - Video player modal uses rounded-xl with shadow-lg
+    - Playback speed buttons use rounded-md styling
+    - RoleBanner uses Card with border-primary bg-primary/5
+    - FitScoreBreakdown uses Card with rounded-full score display and progress bars
+    - ViewModeToggle uses Button component with outline variant
+    - Searchable status badge uses Badge component with green styling
+    - All font-bold replaced with font-semibold, font-mono removed from headers
+  - Updated `src/app/candidate_search/client.tsx` with modern design:
+    - Header uses border-b instead of border-b-2
+    - Back button uses Button component with outline variant and icon size
+    - BETA badge uses Badge component
+    - Loading indicator uses rounded-full with bg-primary
+    - Progress dots use rounded-full with bg-primary
+    - Search textarea wrapped in Card with Button for submit
+    - Context tags section uses Card/CardContent
+    - ContextTagBadge uses rounded-lg bg-primary/10 instead of border-2
+    - Toast notifications use Card component with appropriate color classes
+    - All font-mono removed from non-code text
+
+- **Files changed:**
+  - `src/app/profile/page.tsx` - Complete modern design overhaul with Card, Avatar, Badge, Button
+  - `src/app/settings/page.tsx` - Card components and modern styling
+  - `src/app/settings/account-deletion-section.tsx` - Card, Button, Input components with danger zone styling
+  - `src/app/candidate/[id]/client.tsx` - Complete Card-based layout overhaul
+  - `src/app/candidate_search/client.tsx` - Card components and modern styling
+
+- **Learnings for future iterations:**
+  - Avatar component with AvatarFallback creates consistent user initials styling
+  - Badge component with variant="outline" works well for status indicators
+  - Card components already include rounded-xl so no explicit rounded styling needed
+  - Use bg-primary/10 with text-primary for subtle highlighted elements
+  - Button with asChild prop works well for Link wrapping
+  - For danger zones, use border-destructive on Card and rounded-full bg-destructive/10 for icons
+  - Input component provides consistent styling for form fields
+  - Toast notifications work well with Card component and conditional color classes
+
+- **Gotchas:**
+  - Candidate search page has a pre-existing runtime error related to environment variables (unrelated to design changes)
+  - Candidate detail page requires a completed video assessment to access (used existing components)
+  - Profile page ImprovementTrends component only renders with 2+ completed assessments
+
+- **Visual verification:**
+  - Screenshots captured: `screenshots/issue-141-profile.png`, `screenshots/issue-141-settings.png`, `screenshots/issue-141-settings-danger.png`
+  - Profile page shows Card-based sections with Avatar, Badge, and Button components
+  - Settings page shows Card layout with Danger Zone using destructive styling
+  - No gold (#f7da50) color visible in any migrated pages

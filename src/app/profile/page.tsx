@@ -13,6 +13,10 @@ import type { AssessmentReport } from "@/lib/analysis";
 import { profileFromPrismaJson } from "@/lib/candidate";
 import { AdminNav, DataDeletionSection } from "@/components/admin";
 import { AlertTriangle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface ExtendedUser {
   id: string;
@@ -37,11 +41,11 @@ function getStatusLabel(status: AssessmentStatus): string {
 function getStatusColor(status: AssessmentStatus): string {
   switch (status) {
     case "COMPLETED":
-      return "bg-secondary text-secondary-foreground";
+      return "bg-green-500/10 text-green-600";
     case "PROCESSING":
       return "bg-muted text-muted-foreground";
     default:
-      return "bg-foreground text-background";
+      return "bg-primary/10 text-primary";
   }
 }
 
@@ -69,7 +73,7 @@ function formatDuration(startedAt: Date, completedAt: Date | null): string {
 
 function getLevelColor(level: string): string {
   const colors: Record<string, string> = {
-    exceptional: "text-secondary",
+    exceptional: "text-primary",
     strong: "text-green-600",
     adequate: "text-blue-600",
     developing: "text-yellow-600",
@@ -108,9 +112,9 @@ function ScoreBar({ score }: { score: number }) {
       {segments.map((segment) => (
         <div
           key={segment}
-          className={`h-2 w-3 ${
-            segment <= score ? "bg-secondary" : "bg-muted"
-          } border border-foreground`}
+          className={`h-2 w-3 rounded-sm ${
+            segment <= score ? "bg-primary" : "bg-muted"
+          }`}
         />
       ))}
     </div>
@@ -157,113 +161,115 @@ function ImprovementTrends({
 
   return (
     <section className="mb-12">
-      <h2 className="mb-6 text-2xl font-bold">Improvement Trends</h2>
-      <div className="border-2 border-foreground p-6">
-        {/* Summary */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="font-mono text-sm text-muted-foreground">
-              {trendData.length} completed assessments
-            </p>
-            <p className="mt-1 text-lg font-bold">
-              {improvement > 0 ? (
-                <span className="text-green-600">
-                  +{improvement.toFixed(1)} points (
-                  {improvementPercentage > 0 ? "+" : ""}
-                  {improvementPercentage}%)
-                </span>
-              ) : improvement < 0 ? (
-                <span className="text-red-600">
-                  {improvement.toFixed(1)} points ({improvementPercentage}%)
-                </span>
-              ) : (
-                <span className="text-muted-foreground">No change</span>
-              )}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="font-mono text-xs text-muted-foreground">
-              LATEST SCORE
-            </p>
-            <p className="text-3xl font-bold">{lastScore.toFixed(1)}/5</p>
-          </div>
-        </div>
-
-        {/* Visual trend chart */}
-        <div className="relative h-24 border-b-2 border-l-2 border-border">
-          {/* Y-axis labels */}
-          <div className="absolute -left-8 top-0 font-mono text-xs text-muted-foreground">
-            {maxScore}
-          </div>
-          <div className="absolute -left-8 bottom-0 font-mono text-xs text-muted-foreground">
-            {minScore}
-          </div>
-
-          {/* Data points and lines */}
-          <div className="absolute inset-0 flex items-end justify-around px-4">
-            {trendData.map((data, index) => {
-              const heightPercentage =
-                ((data.score - minScore) / (maxScore - minScore)) * 100;
-              const prevData = index > 0 ? trendData[index - 1] : null;
-
-              return (
-                <div
-                  key={data.assessmentId}
-                  className="relative flex flex-col items-center"
-                  style={{ height: "100%" }}
-                >
-                  {/* Trend line connector */}
-                  {prevData && (
-                    <div
-                      className="absolute h-px w-full bg-secondary opacity-50"
-                      style={{
-                        bottom: `${((prevData.score - minScore) / (maxScore - minScore)) * 100}%`,
-                        transform: `rotate(${Math.atan2(
-                          (data.score - prevData.score) *
-                            (100 / (maxScore - minScore)),
-                          100 / trendData.length
-                        )}rad)`,
-                        transformOrigin: "left center",
-                      }}
-                    />
-                  )}
-                  {/* Data point */}
-                  <div
-                    className="absolute h-3 w-3 border-2 border-foreground bg-secondary"
-                    style={{
-                      bottom: `${heightPercentage}%`,
-                      transform: "translateY(50%)",
-                    }}
-                    title={`${data.score.toFixed(1)}/5 on ${formatDate(data.date)}`}
-                  />
-                  {/* Score label */}
-                  <div
-                    className="absolute font-mono text-xs font-bold"
-                    style={{
-                      bottom: `${heightPercentage}%`,
-                      transform: "translateY(-100%)",
-                    }}
-                  >
-                    {data.score.toFixed(1)}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* X-axis dates */}
-        <div className="mt-2 flex justify-around px-4">
-          {trendData.map((data) => (
-            <div
-              key={data.assessmentId}
-              className="text-center font-mono text-xs text-muted-foreground"
-            >
-              {formatDate(data.date)}
+      <h2 className="mb-6 text-2xl font-semibold">Improvement Trends</h2>
+      <Card>
+        <CardContent className="p-6">
+          {/* Summary */}
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                {trendData.length} completed assessments
+              </p>
+              <p className="mt-1 text-lg font-semibold">
+                {improvement > 0 ? (
+                  <span className="text-green-600">
+                    +{improvement.toFixed(1)} points (
+                    {improvementPercentage > 0 ? "+" : ""}
+                    {improvementPercentage}%)
+                  </span>
+                ) : improvement < 0 ? (
+                  <span className="text-red-600">
+                    {improvement.toFixed(1)} points ({improvementPercentage}%)
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">No change</span>
+                )}
+              </p>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                Latest Score
+              </p>
+              <p className="text-3xl font-semibold text-primary">{lastScore.toFixed(1)}/5</p>
+            </div>
+          </div>
+
+          {/* Visual trend chart */}
+          <div className="relative h-24 border-b border-l border-border">
+            {/* Y-axis labels */}
+            <div className="absolute -left-8 top-0 text-xs text-muted-foreground">
+              {maxScore}
+            </div>
+            <div className="absolute -left-8 bottom-0 text-xs text-muted-foreground">
+              {minScore}
+            </div>
+
+            {/* Data points and lines */}
+            <div className="absolute inset-0 flex items-end justify-around px-4">
+              {trendData.map((data, index) => {
+                const heightPercentage =
+                  ((data.score - minScore) / (maxScore - minScore)) * 100;
+                const prevData = index > 0 ? trendData[index - 1] : null;
+
+                return (
+                  <div
+                    key={data.assessmentId}
+                    className="relative flex flex-col items-center"
+                    style={{ height: "100%" }}
+                  >
+                    {/* Trend line connector */}
+                    {prevData && (
+                      <div
+                        className="absolute h-px w-full bg-primary opacity-50"
+                        style={{
+                          bottom: `${((prevData.score - minScore) / (maxScore - minScore)) * 100}%`,
+                          transform: `rotate(${Math.atan2(
+                            (data.score - prevData.score) *
+                              (100 / (maxScore - minScore)),
+                            100 / trendData.length
+                          )}rad)`,
+                          transformOrigin: "left center",
+                        }}
+                      />
+                    )}
+                    {/* Data point */}
+                    <div
+                      className="absolute h-3 w-3 rounded-full bg-primary"
+                      style={{
+                        bottom: `${heightPercentage}%`,
+                        transform: "translateY(50%)",
+                      }}
+                      title={`${data.score.toFixed(1)}/5 on ${formatDate(data.date)}`}
+                    />
+                    {/* Score label */}
+                    <div
+                      className="absolute text-xs font-medium"
+                      style={{
+                        bottom: `${heightPercentage}%`,
+                        transform: "translateY(-100%)",
+                      }}
+                    >
+                      {data.score.toFixed(1)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* X-axis dates */}
+          <div className="mt-2 flex justify-around px-4">
+            {trendData.map((data) => (
+              <div
+                key={data.assessmentId}
+                className="text-center text-xs text-muted-foreground"
+              >
+                {formatDate(data.date)}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </section>
   );
 }
@@ -323,22 +329,22 @@ export default async function ProfilePage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="border-b-2 border-border">
+      <header className="border-b border-border">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-bold">
+          <Link href="/" className="text-xl font-semibold">
             Skillvee
           </Link>
           <nav className="flex items-center gap-4">
             <AdminNav />
             <Link
               href="/settings"
-              className="font-mono text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               Settings
             </Link>
             <Link
               href="/"
-              className="font-mono text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               Home
             </Link>
@@ -349,29 +355,33 @@ export default async function ProfilePage() {
       <div className="mx-auto max-w-4xl px-6 py-12">
         {/* Profile Header */}
         <section className="mb-12">
-          <div className="flex items-start gap-6">
-            <div className="flex h-20 w-20 items-center justify-center border-2 border-foreground bg-secondary">
-              <span className="text-3xl font-bold text-secondary-foreground">
-                {dbUser.name?.[0]?.toUpperCase() ||
-                  dbUser.email?.[0]?.toUpperCase() ||
-                  "?"}
-              </span>
-            </div>
-            <div className="flex-1">
-              <h1 className="mb-1 text-3xl font-bold">
-                {dbUser.name || "Anonymous User"}
-              </h1>
-              <p className="font-mono text-muted-foreground">{dbUser.email}</p>
-              <div className="mt-3 flex items-center gap-4">
-                <span className="border-2 border-border px-3 py-1 font-mono text-sm">
-                  {dbUser.role}
-                </span>
-                <span className="font-mono text-sm text-muted-foreground">
-                  Member since {formatDate(dbUser.createdAt)}
-                </span>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start gap-6">
+                <Avatar className="h-20 w-20">
+                  <AvatarFallback className="bg-primary/10 text-3xl font-semibold text-primary">
+                    {dbUser.name?.[0]?.toUpperCase() ||
+                      dbUser.email?.[0]?.toUpperCase() ||
+                      "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h1 className="mb-1 text-3xl font-semibold">
+                    {dbUser.name || "Anonymous User"}
+                  </h1>
+                  <p className="text-muted-foreground">{dbUser.email}</p>
+                  <div className="mt-3 flex items-center gap-4">
+                    <Badge variant="outline" className="rounded-md">
+                      {dbUser.role}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      Member since {formatDate(dbUser.createdAt)}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </section>
 
         {/* CV Upload Section */}
@@ -391,24 +401,23 @@ export default async function ProfilePage() {
         {/* Assessments Section */}
         <section>
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Past Assessments</h2>
-            <span className="font-mono text-sm text-muted-foreground">
+            <h2 className="text-2xl font-semibold">Past Assessments</h2>
+            <span className="text-sm text-muted-foreground">
               {assessments.length} total
             </span>
           </div>
 
           {assessments.length === 0 ? (
-            <div className="border-2 border-border p-12 text-center">
-              <p className="mb-4 text-muted-foreground">
-                No assessments yet. Start your first one to begin practicing.
-              </p>
-              <Link
-                href="/"
-                className="inline-block border-2 border-foreground bg-foreground px-6 py-3 font-semibold text-background hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
-              >
-                Start Practicing
-              </Link>
-            </div>
+            <Card>
+              <CardContent className="p-12 text-center">
+                <p className="mb-4 text-muted-foreground">
+                  No assessments yet. Start your first one to begin practicing.
+                </p>
+                <Button asChild>
+                  <Link href="/">Start Practicing</Link>
+                </Button>
+              </CardContent>
+            </Card>
           ) : (
             <div className="space-y-4">
               {assessments.map((assessment) => {
@@ -419,133 +428,137 @@ export default async function ProfilePage() {
                 );
 
                 return (
-                  <div
+                  <Card
                     key={assessment.id}
-                    className="border-2 border-border p-6 transition-colors hover:border-foreground"
+                    className="transition-all duration-200 hover:shadow-md"
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold">
-                          {assessment.scenario.name}
-                        </h3>
-                        <p className="font-mono text-sm text-muted-foreground">
-                          {assessment.scenario.companyName}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {/* Overall Score - only for completed assessments with reports */}
-                        {report && (
-                          <div className="text-right">
-                            <div className="flex items-center gap-2">
-                              <ScoreBar
-                                score={Math.round(report.overallScore)}
-                              />
-                              <span className="text-lg font-bold">
-                                {report.overallScore.toFixed(1)}
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold">
+                            {assessment.scenario.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {assessment.scenario.companyName}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {/* Overall Score - only for completed assessments with reports */}
+                          {report && (
+                            <div className="text-right">
+                              <div className="flex items-center gap-2">
+                                <ScoreBar
+                                  score={Math.round(report.overallScore)}
+                                />
+                                <span className="text-lg font-semibold">
+                                  {report.overallScore.toFixed(1)}
+                                </span>
+                              </div>
+                              <span
+                                className={`text-xs ${getLevelColor(report.overallLevel)}`}
+                              >
+                                {report.overallLevel
+                                  .replace(/_/g, " ")
+                                  .toUpperCase()}
                               </span>
                             </div>
-                            <span
-                              className={`font-mono text-xs ${getLevelColor(report.overallLevel)}`}
-                            >
-                              {report.overallLevel
-                                .replace(/_/g, " ")
-                                .toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                        <span
-                          className={`px-3 py-1 font-mono text-xs ${getStatusColor(assessment.status)}`}
-                        >
-                          {getStatusLabel(assessment.status)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex items-center gap-6 font-mono text-sm text-muted-foreground">
-                      <span>Started: {formatDate(assessment.startedAt)}</span>
-                      {assessment.completedAt && (
-                        <span>
-                          Completed: {formatDate(assessment.completedAt)}
-                        </span>
-                      )}
-                      {assessment.completedAt && (
-                        <span className="border border-border bg-muted px-2 py-0.5">
-                          Time: {timeSpent}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Report Summary - only for completed assessments */}
-                    {report && (
-                      <div className="mt-4 border-t border-border pt-4">
-                        <p className="line-clamp-2 text-sm text-muted-foreground">
-                          {report.narrative?.overallSummary?.substring(0, 200)}
-                          {(report.narrative?.overallSummary?.length || 0) >
-                            200 && "..."}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Assessment unavailable message - for failed video assessments */}
-                    {assessment.videoAssessment?.status === "FAILED" && (
-                      <div className="mt-4 border-t border-border pt-4">
-                        <div className="flex items-center gap-3 border-2 border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
-                          <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" />
-                          <div>
-                            <p className="text-sm font-semibold text-red-800 dark:text-red-200">
-                              Assessment unavailable
-                            </p>
-                            <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">
-                              Video assessment could not be processed after{" "}
-                              {assessment.videoAssessment.retryCount} attempt
-                              {assessment.videoAssessment.retryCount !== 1
-                                ? "s"
-                                : ""}
-                              .
-                              {assessment.videoAssessment.lastFailureReason && (
-                                <span className="mt-1 block font-mono">
-                                  Reason:{" "}
-                                  {assessment.videoAssessment.lastFailureReason}
-                                </span>
-                              )}
-                            </p>
-                          </div>
+                          )}
+                          <Badge
+                            variant="secondary"
+                            className={`rounded-md ${getStatusColor(assessment.status)}`}
+                          >
+                            {getStatusLabel(assessment.status)}
+                          </Badge>
                         </div>
                       </div>
-                    )}
 
-                    <div className="mt-4 flex items-center gap-4 border-t border-border pt-4">
-                      {assessment.cvUrl && (
-                        <a
-                          href={assessment.cvUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="border-b-2 border-secondary font-mono text-sm text-foreground hover:text-secondary"
-                        >
-                          View Submitted CV
-                        </a>
+                      <div className="mt-4 flex items-center gap-6 text-sm text-muted-foreground">
+                        <span>Started: {formatDate(assessment.startedAt)}</span>
+                        {assessment.completedAt && (
+                          <span>
+                            Completed: {formatDate(assessment.completedAt)}
+                          </span>
+                        )}
+                        {assessment.completedAt && (
+                          <Badge variant="outline" className="rounded-md">
+                            Time: {timeSpent}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Report Summary - only for completed assessments */}
+                      {report && (
+                        <div className="mt-4 border-t border-border pt-4">
+                          <p className="line-clamp-2 text-sm text-muted-foreground">
+                            {report.narrative?.overallSummary?.substring(0, 200)}
+                            {(report.narrative?.overallSummary?.length || 0) >
+                              200 && "..."}
+                          </p>
+                        </div>
                       )}
 
-                      {assessment.status === "COMPLETED" &&
-                        assessment.report && (
-                          <Link
-                            href={`/assessment/${assessment.id}/results`}
-                            className="border-b-2 border-secondary font-mono text-sm text-foreground hover:text-secondary"
+                      {/* Assessment unavailable message - for failed video assessments */}
+                      {assessment.videoAssessment?.status === "FAILED" && (
+                        <div className="mt-4 border-t border-border pt-4">
+                          <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
+                            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400" />
+                            <div>
+                              <p className="text-sm font-semibold text-red-800 dark:text-red-200">
+                                Assessment unavailable
+                              </p>
+                              <p className="mt-0.5 text-xs text-red-600 dark:text-red-400">
+                                Video assessment could not be processed after{" "}
+                                {assessment.videoAssessment.retryCount} attempt
+                                {assessment.videoAssessment.retryCount !== 1
+                                  ? "s"
+                                  : ""}
+                                .
+                                {assessment.videoAssessment.lastFailureReason && (
+                                  <span className="mt-1 block font-mono">
+                                    Reason:{" "}
+                                    {assessment.videoAssessment.lastFailureReason}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mt-4 flex items-center gap-4 border-t border-border pt-4">
+                        {assessment.cvUrl && (
+                          <a
+                            href={assessment.cvUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary transition-colors hover:text-primary/80"
                           >
-                            View Full Report
-                          </Link>
+                            View Submitted CV
+                          </a>
                         )}
 
-                      {assessment.status !== "COMPLETED" && (
-                        <Link
-                          href={`/assessment/${assessment.id}/hr-interview`}
-                          className="bg-foreground px-3 py-1 font-mono text-sm text-background hover:bg-secondary hover:text-secondary-foreground"
-                        >
-                          Continue Assessment
-                        </Link>
-                      )}
-                    </div>
-                  </div>
+                        {assessment.status === "COMPLETED" &&
+                          assessment.report && (
+                            <Link
+                              href={`/assessment/${assessment.id}/results`}
+                              className="text-sm text-primary transition-colors hover:text-primary/80"
+                            >
+                              View Full Report
+                            </Link>
+                          )}
+
+                        {assessment.status !== "COMPLETED" && (
+                          <Button size="sm" asChild>
+                            <Link
+                              href={`/assessment/${assessment.id}/hr-interview`}
+                            >
+                              Continue Assessment
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
