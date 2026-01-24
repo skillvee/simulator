@@ -731,3 +731,45 @@ vi.mock("@/lib/external", () => ({
 
 ### Gotchas discovered
 - The original mock path `./supabase` was likely a copy-paste error from another test file or an assumption about relative imports - always verify the actual import in the source file
+
+## Issue #154: Fix user/delete route test mock path (2 failing tests)
+
+### What was implemented
+- Fixed mock path from `@/lib/core` to `@/lib/core/data-deletion` in `route.test.ts`
+
+### Root cause
+The test was mocking `@/lib/core`:
+```typescript
+vi.mock("@/lib/core", () => ({
+  processImmediateDeletion: (userId: string) => mockProcessImmediateDeletion(userId),
+}));
+```
+
+But the implementation imports from `@/lib/core/data-deletion`:
+```typescript
+import { processImmediateDeletion } from "@/lib/core/data-deletion";
+```
+
+Vitest mocks must match the exact import path. Since the mock wasn't applied, `mockProcessImmediateDeletion` was never called, causing:
+- "executes deletion and returns success" - returned 500 instead of 200 (real function threw error)
+- "returns 500 if deletion fails" - mock wasn't applied to test the failure case
+
+### Files changed
+- `src/app/api/user/delete/route.test.ts` - Fixed mock path
+
+### Code changes
+```typescript
+// Before (broken):
+vi.mock("@/lib/core", () => ({...}));
+
+// After (fixed):
+vi.mock("@/lib/core/data-deletion", () => ({...}));
+```
+
+### Learnings for future iterations
+1. **This is the same lesson as Issues #151, #152, and #153** - Mock paths must match the exact import paths used by the module under test
+2. **A pattern is emerging** - Four consecutive issues (151-154) all had the same root cause: mock path not matching import path. This is a common mistake when tests are written before implementations stabilize or when copy-pasting from other test files.
+3. **Barrel export shorthand doesn't work for mocks** - Even if `@/lib/core/index.ts` re-exports from `./data-deletion`, mocking `@/lib/core` won't intercept imports that go directly to `@/lib/core/data-deletion`
+
+### Gotchas discovered
+- The test was likely written when the import path was different, or copy-pasted from a test that used the barrel export - always verify the actual import in the source file before writing mocks
