@@ -32,6 +32,11 @@ const TEST_USERS = {
   },
 };
 
+// Fixed test assessment IDs - used by AI agents for visual testing
+const TEST_ASSESSMENT_IDS = {
+  chat: "test-assessment-chat", // Status: WORKING - for chat/sidebar testing
+};
+
 async function main() {
   console.log("🌱 Starting database seed...\n");
 
@@ -341,37 +346,31 @@ Acceptance Criteria:
       parseQuality: "high" as const,
     };
 
-    // Check if assessment exists
-    const existingAssessment = await prisma.assessment.findFirst({
-      where: {
+    // Create test assessment with fixed ID for visual testing
+    // Uses WORKING status so chat/sidebar pages are accessible
+    await prisma.assessment.upsert({
+      where: { id: TEST_ASSESSMENT_IDS.chat },
+      update: {
+        status: "WORKING",
+        parsedProfile: testParsedProfile as unknown as Prisma.InputJsonValue,
+      },
+      create: {
+        id: TEST_ASSESSMENT_IDS.chat,
         userId: testUser.id,
         scenarioId: defaultScenario.id,
+        status: "WORKING",
+        parsedProfile: testParsedProfile as unknown as Prisma.InputJsonValue,
       },
     });
-
-    if (existingAssessment) {
-      await prisma.assessment.update({
-        where: { id: existingAssessment.id },
-        data: {
-          parsedProfile: testParsedProfile as unknown as Prisma.InputJsonValue,
-        },
-      });
-      console.log(
-        `\n📋 Updated assessment with parsed profile for ${testUser.email}`
-      );
-    } else {
-      await prisma.assessment.create({
-        data: {
-          userId: testUser.id,
-          scenarioId: defaultScenario.id,
-          status: "HR_INTERVIEW",
-          parsedProfile: testParsedProfile as unknown as Prisma.InputJsonValue,
-        },
-      });
-      console.log(
-        `\n📋 Created assessment with parsed profile for ${testUser.email}`
-      );
-    }
+    console.log(
+      `\n📋 Created/updated test assessment for chat page:`
+    );
+    console.log(
+      `   ID: ${TEST_ASSESSMENT_IDS.chat}`
+    );
+    console.log(
+      `   URL: /assessment/${TEST_ASSESSMENT_IDS.chat}/chat`
+    );
 
     // Create VideoAssessment with dimension scores for candidate profile testing
     const existingVideoAssessment = await prisma.videoAssessment.findFirst({

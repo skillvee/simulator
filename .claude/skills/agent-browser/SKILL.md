@@ -166,6 +166,46 @@ Then run your tests against that server. The screen recording modal will be skip
 
 **Note:** This only works in development mode (`NODE_ENV=development`). The bypass is disabled in production.
 
+## Test Assessment IDs
+
+After running `npx tsx prisma/seed.ts`, these test assessments are available:
+
+| ID                   | Status  | Page URL                                         |
+| -------------------- | ------- | ------------------------------------------------ |
+| test-assessment-chat | WORKING | /assessment/test-assessment-chat/chat            |
+
+**Note:** The test assessment is owned by `user@test.com`, so you must login as that user first.
+
+### Taking Screenshots of Chat/Sidebar Components
+
+Complete workflow for visual verification of chat layout components:
+
+```bash
+# 1. Ensure database is seeded
+npx tsx prisma/seed.ts
+
+# 2. Start dev server with E2E mode (if not already running)
+E2E_TEST_MODE=true NEXT_PUBLIC_E2E_TEST_MODE=true npm run dev &
+sleep 10
+
+# 3. Login as test user
+agent-browser open "http://localhost:3000/sign-in" --session "visual-test"
+agent-browser fill "#email" "user@test.com" --session "visual-test"
+agent-browser fill "#password" "testpassword123" --session "visual-test"
+agent-browser click "button[type='submit']" --session "visual-test"
+agent-browser wait 3000 --session "visual-test"
+
+# 4. Navigate to chat page (uses fixed test assessment ID)
+agent-browser open "http://localhost:3000/assessment/test-assessment-chat/chat" --session "visual-test"
+agent-browser wait 2000 --session "visual-test"
+
+# 5. Take screenshot
+mkdir -p screenshots
+agent-browser screenshot ./screenshots/chat-page.png --session "visual-test"
+```
+
+This captures: SlackLayout sidebar, CoworkerSidebar, chat interface, and FloatingCallBar (if in call).
+
 ## Tips
 
 - Use `snapshot` to get accessibility tree with element references (@ref) - more reliable than CSS selectors
