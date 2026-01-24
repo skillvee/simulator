@@ -770,3 +770,34 @@
   - The 8 assessment dimensions are defined in both schema and prompts - keep them in sync
   - Voice models use `gemini-2.5-flash-native-audio-latest`, text uses `gemini-3-flash-preview`
   - Prisma JSON handling requires double-casting pattern documented in Common Patterns
+
+## Issue #156: DI-001: Add cascade delete for Scenario → Assessment relation
+
+- **What was implemented:**
+  - Added `onDelete: Cascade` to Assessment→Scenario relation in `prisma/schema.prisma`
+  - Pushed schema changes to database using `npx prisma db push`
+  - Created comprehensive integration tests for cascade delete behavior in `src/server/cascade-delete.integration.test.ts`
+  - Added `npm run test:integration` script and `vitest.integration.config.ts` for running integration tests
+
+- **Files changed:**
+  - `prisma/schema.prisma` - Added `onDelete: Cascade` to Assessment→Scenario relation (line 171)
+  - `src/server/cascade-delete.integration.test.ts` - New integration test file with 4 test cases
+  - `vitest.integration.config.ts` - New Vitest config for integration tests
+  - `package.json` - Added `test:integration` script
+
+- **Test Coverage:**
+  - Tests cascade delete of multiple assessments when scenario deleted
+  - Tests cascade delete of nested relations (conversations, recordings, HR assessments)
+  - Tests isolation (deleting one scenario doesn't affect other scenarios' assessments)
+  - Tests cascade through coworkers (scenario→coworker→conversation)
+
+- **Learnings for future iterations:**
+  - This project uses `prisma db push` instead of migrations (Supabase workflow)
+  - Integration tests that hit the actual database should use unique prefixes with timestamps to avoid conflicts
+  - The cascade delete chain: Scenario → Assessment → (Conversation, Recording, HRInterviewAssessment, AssessmentLog, AssessmentApiCall, VideoAssessment)
+  - Related cascade deletes already exist: User→Assessment, Scenario→Coworker, Assessment→Conversation, etc.
+
+- **Gotchas:**
+  - Migration drift warning from `prisma migrate dev` is expected when using Supabase (extensions are managed by Supabase)
+  - Integration tests run against the actual database - use careful cleanup in afterAll
+  - Test timeout should be increased (30s) for database operations
