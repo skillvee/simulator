@@ -346,3 +346,43 @@
 
 - **Visual verification:**
   - Screenshots captured: `screenshots/issue-135-admin-dashboard.png`, `screenshots/issue-135-admin-dashboard-bottom.png`
+
+## Issue #136: DS-026: Migrate admin scenarios pages to modern design
+
+- **What was implemented:**
+  - Migrated `src/app/admin/scenarios/page.tsx` to use Button, Card, CardContent, Badge components
+  - Scenario cards use Card with hover effects (hover:shadow-md, hover:bg-muted/50)
+  - Empty state uses FileQuestion icon with rounded-full bg-primary/10 container
+  - Migrated `src/app/admin/scenarios/[id]/page.tsx` to use Button, Badge, ArrowLeft icon
+  - Back navigation uses Button variant="ghost" with ArrowLeft icon
+  - Migrated `src/app/admin/scenarios/[id]/client.tsx` to use Card, CardHeader, CardTitle, CardContent, Button, Badge, Avatar
+  - Preview & Testing buttons use flex-col styling for card-like appearance
+  - Publication status uses Button with conditional green styling for publish action
+  - Coworker cards use Avatar component with AvatarFallback
+  - Voice selector uses modern rounded-md styling with ring focus states
+  - Migrated `src/app/admin/scenarios/builder/client.tsx` to use Button, Input, Card, Badge, Avatar
+  - Chat messages use Avatar component with role-based colors
+  - Date divider uses Badge variant="outline"
+  - Typing indicator uses rounded-full dots with bg-primary
+  - Preview panel empty state uses FileQuestion icon with rounded bg-primary/10
+
+- **Files changed:**
+  - `src/app/admin/scenarios/page.tsx` - Card, Badge, Button components for list and empty state
+  - `src/app/admin/scenarios/[id]/page.tsx` - Button ghost variant for back navigation, Badge for status
+  - `src/app/admin/scenarios/[id]/client.tsx` - Card/CardHeader/CardContent for sections, Avatar for coworkers
+  - `src/app/admin/scenarios/builder/client.tsx` - Avatar, Input, Button, Badge for chat and preview
+
+- **Learnings for future iterations:**
+  - Button component with h-auto and flex-col can create card-like buttons for action items
+  - Avatar with AvatarFallback works well for initials-based avatars
+  - Use variant="outline" for subtle Badge styling in dividers
+  - Card components already include border-border so no need for explicit border styling
+  - For chat interfaces, Avatar colors can distinguish roles (bg-foreground for user, bg-primary for AI)
+
+- **Gotchas:**
+  - builder/client.tsx imports Card but not CardContent/CardHeader/CardTitle (different usage pattern)
+  - Voice selector is a native select element, not a shadcn Select component
+  - The builder page has a two-panel layout that doesn't use Tabs
+
+- **Visual verification:**
+  - Screenshots captured: `screenshots/issue-136-scenarios-list.png`, `screenshots/issue-136-scenario-detail.png`, `screenshots/issue-136-scenario-builder.png`
