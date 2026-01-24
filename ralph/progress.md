@@ -646,3 +646,38 @@ Vitest mocks must match the exact import path. When the mock path doesn't match,
 
 ### Gotchas discovered
 - The `interview/token/route.test.ts` also had an unused mock export `HR_PERSONA_SYSTEM_PROMPT` that was removed since it's not needed.
+
+## Issue #152: Fix candidate-search test mock type casting (6 failing tests)
+
+### What was implemented
+- Fixed mock path from `@/lib/embeddings` to `@/lib/candidate/embeddings`
+- Fixed mock type casting from `ReturnType<typeof vi.fn>` to `Mock` from Vitest
+
+### Root cause
+Two issues were causing the 6 test failures:
+
+1. **Wrong mock path**: The test was mocking `@/lib/embeddings` which doesn't exist. The actual module path is `@/lib/candidate/embeddings`. The test imports from `@/lib/candidate` (barrel export) which re-exports from `./embeddings`, so the mock needs to target the actual module file.
+
+2. **Wrong type casting**: Using `ReturnType<typeof vi.fn>` doesn't preserve mock methods like `mockResolvedValue`. The correct type is `Mock` from Vitest.
+
+### Files changed
+- `src/lib/candidate/candidate-search.test.ts` - Fixed mock path and type casting
+
+### Code changes
+```typescript
+// Before (broken):
+vi.mock("@/lib/embeddings", () => ({...}));
+const mockGenerateQueryEmbedding = generateQueryEmbedding as ReturnType<typeof vi.fn>;
+
+// After (fixed):
+vi.mock("@/lib/candidate/embeddings", () => ({...}));
+const mockGenerateQueryEmbedding = generateQueryEmbedding as Mock;
+```
+
+### Learnings for future iterations
+1. **Mock the actual module file, not a non-existent path** - Even though the test imports from `@/lib/candidate` (barrel), the mock must target the actual module `@/lib/candidate/embeddings` where the functions are defined.
+2. **Use `Mock` type from Vitest for mock casting** - `ReturnType<typeof vi.fn>` loses the mock methods. Import `Mock` from vitest and cast to it directly.
+3. **This is the same lesson as Issue #151** - Mock paths must match the actual import paths used by the module under test.
+
+### Gotchas discovered
+- The error message `mockResolvedValue is not a function` indicated a type casting issue, but the actual root cause was the mock not being applied at all (due to wrong path). Once the mock was applied, the `Mock` type cast then became necessary.
