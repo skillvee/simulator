@@ -48,3 +48,21 @@
 - **Gotchas:**
   - slack-layout.tsx has its own CoworkerItem component (different from coworker-sidebar.tsx) - must update both
   - The floating-call-bar already had Button imported but wasn't using it for all buttons
+
+## Issue #164: Fix missing @react-email/render dependency
+
+- **What was implemented:**
+  - Installed `@react-email/render` package (v2.0.4) as a direct dependency
+  - This resolves the build warning about module not found in the resend package
+
+- **Files changed:**
+  - `package.json` - Added `@react-email/render` dependency
+  - `package-lock.json` - Updated with new package and its dependencies
+
+- **Learnings for future iterations:**
+  - The `resend` package has a peer dependency on `@react-email/render` that wasn't automatically installed
+  - The dependency trace was: `resend` → `email.ts` → `external/index.ts` → `cv-parser.ts`
+  - When adding email packages like `resend`, check if peer dependencies need manual installation
+
+- **Verification:**
+  - Build passes without the `@react-email/render` module not found warning
