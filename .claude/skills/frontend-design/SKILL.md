@@ -12,20 +12,26 @@ The user provides frontend requirements: a component, page, application, or inte
 
 ## PROJECT DESIGN SYSTEM (MANDATORY)
 
-**This project uses a neo-brutalist design system. ALL frontend code MUST follow these rules.**
+**This project uses a modern blue theme with shadcn/ui components. ALL frontend code MUST follow these rules.**
 
-### Theme File
+### Component Library
 
-Import and use the theme from `styles/theme.css`. All CSS variables are defined there.
+Use shadcn/ui components from `@/components/ui/`. Import like:
+
+```typescript
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+```
 
 ### Core Principles
 
-| Rule           | Value                                            | Rationale                                           |
-| -------------- | ------------------------------------------------ | --------------------------------------------------- |
-| Border radius  | `0rem`                                           | Sharp corners only. Never rounded.                  |
-| Shadows        | None                                             | Flat design. No drop shadows, box shadows, or blur. |
-| Primary colors | Black `#000000`, White `#ffffff`, Gold `#f7da50` | High contrast, minimal palette.                     |
-| Borders        | Hard 1px black                                   | Define containers with lines, not shadows.          |
+| Rule           | Value                                | Rationale                                       |
+| -------------- | ------------------------------------ | ----------------------------------------------- |
+| Border radius  | `0.5rem` (default), `rounded-lg`     | Soft, modern corners. Never sharp 0px.          |
+| Shadows        | Subtle elevation (`shadow-sm/md/lg`) | Depth through soft shadows, not hard borders.   |
+| Primary color  | Blue `#237CF1` (HSL: 217 91% 54%)    | Professional, accessible, modern.               |
+| Borders        | Soft 1px borders (`border-border`)   | Define containers subtly, not harshly.          |
 
 ### Typography
 
@@ -33,66 +39,118 @@ Import and use the theme from `styles/theme.css`. All CSS variables are defined 
 - **Code/system/timestamps**: `Space Mono` - technical, monospace
 - Never use: Inter, Roboto, Arial, system fonts, or other generic choices
 
-### Color Usage
+### Color Palette
+
+The design uses HSL CSS variables. Reference them via Tailwind classes.
 
 ```
 Light mode:
-- Background: #ffffff (white)
-- Foreground/text: #000000 (black)
-- Primary action: #000000 (black)
-- Accent/highlight: #f7da50 (gold)
+- Background: hsl(0 0% 100%) - white
+- Foreground: hsl(222.2 84% 4.9%) - near-black
+- Primary: hsl(217 91% 54%) - #237CF1 blue
+- Secondary: hsl(210 40% 96.1%) - light slate
+- Accent: hsl(199 89% 94%) - sky-100
+- Muted: hsl(210 40% 96.1%) - slate tones
+- Border: hsl(214.3 31.8% 91.4%) - light border
 
 Dark mode:
-- Background: #000000 (black)
-- Foreground/text: #ffffff (white)
-- Primary action: #f7da50 (gold)
-- Accent: #ffffff (white)
+- Background: hsl(222.2 84% 4.9%) - near-black
+- Foreground: hsl(210 40% 98%) - near-white
+- Primary: hsl(217 91% 54%) - #237CF1 blue
+- Secondary/Muted/Accent: hsl(217.2 32.6% 17.5%) - blue-slate
+- Border: hsl(217.2 32.6% 17.5%) - dark border
 ```
-
-The gold `#f7da50` is the "hero" accent. Use it sparingly for:
-
-- Active states
-- Important highlights
-- Call-to-action buttons
-- Progress indicators
-- Selected items
 
 ### Visual Language
 
-The logo uses **tangram-style geometric shapes** (triangles, parallelograms). Extend this motif:
+The design emphasizes:
 
-- Loading animations: geometric pieces assembling
-- Section dividers: angular lines
-- Decorative elements: triangle patterns
-- Progress indicators: modular blocks
+- **Clean hierarchy**: Use spacing, typography weight, and subtle color to create structure
+- **Soft elevation**: Cards and modals float with shadows, not harsh borders
+- **Blue accents**: Primary actions and interactive elements use the blue palette
+- **Rounded shapes**: All corners use border radius for a modern, approachable feel
 
 ### Interactions & Motion
 
-- Prefer **instant state changes** over smooth transitions
-- When using animation, make it **sharp and deliberate**
-- Hover states: instant color flip (black ↔ gold), not fade
-- No bounce, no spring physics, no gradual easing
+Use smooth, professional animations:
 
-### MANDATORY DON'Ts
+- `animate-fade-in` - Gentle opacity entrance (200ms ease-out)
+- `animate-slide-up` - Content sliding up from below (300ms ease-out)
+- `animate-slide-down` - Content sliding down (300ms ease-out)
+- `animate-scale-in` - Subtle scale entrance (200ms ease-out)
+- `animate-accordion-down/up` - For collapsible content
 
-- ❌ No rounded corners (`border-radius` must be 0)
-- ❌ No shadows (no `box-shadow`, no `drop-shadow`, no blur)
-- ❌ No gradients
-- ❌ No blur effects (`backdrop-filter: blur`, etc.)
-- ❌ No colors outside the palette (no grays except `--muted-foreground`)
-- ❌ No generic fonts (Inter, Roboto, Arial)
-- ❌ No soft/smooth transitions (no `ease-in-out` on colors)
+Transitions should use `transition-colors`, `transition-all`, or specific properties with smooth easing.
+
+### Border Radius Standards
+
+| Element       | Class          | Value          |
+| ------------- | -------------- | -------------- |
+| Buttons       | `rounded-lg`   | var(--radius)  |
+| Cards         | `rounded-xl`   | calc(var(--radius) + 4px) |
+| Inputs        | `rounded-md`   | calc(var(--radius) - 2px) |
+| Badges/chips  | `rounded-full` | 9999px         |
+| Default       | `rounded-lg`   | 0.5rem         |
+
+### Shadow Standards
+
+| Purpose           | Class       | Use Case                          |
+| ----------------- | ----------- | --------------------------------- |
+| Cards             | `shadow-sm` | Default card elevation            |
+| Elevated elements | `shadow-md` | Dropdowns, popovers, hover states |
+| Modals/dialogs    | `shadow-lg` | Overlays, important focus areas   |
+| Buttons (hover)   | `shadow-sm` | Subtle lift on interaction        |
 
 ### MANDATORY DO's
 
-- ✅ Use CSS variables from `styles/theme.css`
-- ✅ Sharp 90° corners everywhere
-- ✅ Hard 1px borders to define space
-- ✅ High contrast (black on white, white on black)
-- ✅ Gold for emphasis and active states
-- ✅ DM Sans for body, Space Mono for code
-- ✅ Flat, poster-like aesthetic
-- ✅ Geometric/angular decorative elements
+- ✅ Use shadcn/ui Button, Card, Input, and other components
+- ✅ Use blue (#237CF1) as the primary accent color
+- ✅ Use rounded corners (`rounded-lg` minimum for containers)
+- ✅ Use subtle shadows for elevation (`shadow-sm`, `shadow-md`)
+- ✅ Use smooth transitions (`transition-colors`, `transition-all`)
+- ✅ Use CSS variables from globals.css via Tailwind classes
+- ✅ Use DM Sans for body, Space Mono for code
+- ✅ Use animation utilities for entrances (`animate-fade-in`, etc.)
+
+### MANDATORY DON'Ts
+
+- ❌ No 0px border radius (sharp corners are deprecated)
+- ❌ No 2px black borders as the primary styling method
+- ❌ No gold (#f7da50) color - this is deprecated
+- ❌ No `transition-none` - always allow smooth transitions
+- ❌ No custom buttons when shadcn Button component works
+- ❌ No generic fonts (Inter, Roboto, Arial)
+- ❌ No colors outside the CSS variable palette
+
+### Example: Common Tailwind Patterns
+
+```tsx
+// Card with proper styling
+<Card className="rounded-xl shadow-sm border-border">
+  <CardHeader>
+    <CardTitle className="text-lg font-semibold">Title</CardTitle>
+  </CardHeader>
+  <CardContent>Content here</CardContent>
+</Card>
+
+// Primary button
+<Button className="rounded-lg shadow-sm hover:shadow-md transition-shadow">
+  Click me
+</Button>
+
+// Input field
+<Input className="rounded-md border-border focus:ring-primary" />
+
+// Animated entrance
+<div className="animate-fade-in">
+  Content that fades in
+</div>
+
+// Card with hover elevation
+<Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
+  Hoverable card
+</Card>
+```
 
 ---
 
@@ -107,7 +165,7 @@ Beyond the mandatory project rules above, consider:
 Implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
 
 - Production-grade and functional
-- Visually striking within the brutalist constraints
+- Visually polished with attention to detail
 - Cohesive with the established design system
 - Meticulously refined in every detail
 
@@ -116,11 +174,11 @@ Implement working code (HTML/CSS/JS, React, Vue, etc.) that is:
 Focus on:
 
 - **Typography**: Use DM Sans and Space Mono as specified. Create hierarchy through weight, size, and spacing—not font variety.
-- **Color & Theme**: Use CSS variables from `styles/theme.css`. The black/white/gold palette is non-negotiable.
-- **Motion**: Use animations sparingly. When used, make them sharp and immediate. CSS-only preferred. Focus on high-impact moments with instant reveals rather than gradual fades.
-- **Spatial Composition**: Use bold layouts with generous negative space. Asymmetry and grid-breaking work well. Angular dividers and geometric motifs reinforce the brand.
-- **Backgrounds & Visual Details**: Solid colors only. Add interest through borders, geometric patterns, and angular shapes—not gradients or textures.
+- **Color & Theme**: Use CSS variables via Tailwind. The blue palette with slate accents is the standard.
+- **Motion**: Use the provided animation utilities. Smooth, professional transitions enhance user experience. Avoid jarring instant changes.
+- **Spatial Composition**: Use clean layouts with appropriate negative space. Let content breathe.
+- **Elevation**: Use shadows to create depth and visual hierarchy. Cards float, modals rise above content.
 
-**IMPORTANT**: This is a refined brutalist aesthetic. Elegance comes from restraint, precision, and perfect execution of simple elements. Every pixel matters when there's nowhere to hide.
+**IMPORTANT**: This is a modern, professional aesthetic. Elegance comes from clean lines, subtle shadows, and smooth interactions. Quality is in the details—consistent spacing, proper elevation, and cohesive color usage.
 
-Remember: The constraint of the design system IS the creative challenge. Find beauty in the sharp corners and bold contrasts.
+Remember: The design system provides the foundation. Build upon it with care for accessibility, usability, and visual polish.

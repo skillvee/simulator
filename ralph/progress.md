@@ -128,3 +128,43 @@
 
 ### Gotchas discovered
 - The issue description mentioned "Remove `transition: none` overrides from buttons/links in globals.css" but the actual override was in markdown.tsx using the Tailwind class `transition-none`, not in globals.css
+
+## Issue #115: DS-005: Update frontend-design skill documentation
+
+### What was implemented
+- Complete rewrite of `.claude/skills/frontend-design/SKILL.md` to reflect the new modern blue theme
+- Updated `CLAUDE.md` to remove all neo-brutalist references
+
+### Changes to SKILL.md
+**Removed:**
+- All neo-brutalist references (0px radius, no shadows, 2px borders)
+- Gold (#f7da50) color references
+- Geometric/tangram decoration patterns
+- "Brutalist" terminology throughout
+- Instant/sharp animation preferences
+
+**Added:**
+- Blue color palette documentation (#237CF1 primary, HSL values for all colors)
+- Border radius standards table (rounded-lg for buttons, rounded-xl for cards, etc.)
+- Shadow guidelines table (shadow-sm for cards, shadow-md for elevated, shadow-lg for modals)
+- Animation patterns section (animate-fade-in, animate-slide-up, etc.)
+- shadcn/ui component usage guidelines with import examples
+- Example Tailwind patterns for common components (Card, Button, Input)
+- Updated MANDATORY DO's and DON'Ts sections
+
+### Changes to CLAUDE.md
+- Updated "Design" line from "Neo-brutalist - 0px radius, no shadows, 2px black borders, gold (#f7da50)" to "Modern blue theme with shadcn/ui - rounded corners, subtle shadows, blue (#237CF1) primary"
+- Updated components directory description from "Neo-brutalist design" to "Modern blue theme"
+- Updated frontend-design skill description from "Neo-brutalist UI" to "Modern blue theme UI"
+
+### Files changed
+- `.claude/skills/frontend-design/SKILL.md` (complete rewrite)
+- `CLAUDE.md` (3 line edits)
+
+### Learnings for future iterations
+1. **Documentation must match implementation** - The skill file is critical for Ralph and other agents. It must accurately reflect the current design system to prevent reverting to old patterns.
+2. **Use concrete values from previous issues** - DS-001, DS-002, and DS-004 provided exact HSL values and animation names. Reference progress.md for these details.
+3. **Update all references** - CLAUDE.md had 3 separate mentions of neo-brutalist that all needed updating.
+
+### Gotchas discovered
+- None - this was a straightforward documentation update

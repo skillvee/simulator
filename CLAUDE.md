@@ -13,7 +13,7 @@ Assesses HOW developers work, not just WHAT they produce: communication, AI leve
 ## Key Directories
 
 - `src/app/` - Pages and API routes (Next.js app router)
-- `src/components/` - React components (Neo-brutalist design)
+- `src/components/` - React components (Modern blue theme)
 - `src/hooks/` - Voice conversation and recording hooks
 - `src/lib/` - Utilities (Gemini, storage, analytics, etc.)
 - `src/prompts/` - AI prompt templates by domain
@@ -25,7 +25,7 @@ Each has its own CLAUDE.md with specific patterns and gotchas.
 
 ## How
 
-**Design:** Neo-brutalist - 0px radius, no shadows, 2px black borders, gold (#f7da50). See `.claude/skills/frontend-design/SKILL.md`.
+**Design:** Modern blue theme with shadcn/ui - rounded corners, subtle shadows, blue (#237CF1) primary. See `.claude/skills/frontend-design/SKILL.md`.
 
 **Key docs:**
 
@@ -60,7 +60,7 @@ ESLint will warn when importing from implementation files. See `src/types/CLAUDE
 
 ## Skills
 
-- `frontend-design` - Neo-brutalist UI (auto-activates)
+- `frontend-design` - Modern blue theme UI (auto-activates)
 - `prd` - Generate PRDs
 - `ralph` - Autonomous issue runner
 - `react-best-practices` - Performance optimization
