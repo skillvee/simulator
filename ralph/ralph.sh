@@ -10,7 +10,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$REPO_ROOT"
 
-echo "🚀 Ralph starting (continuous mode, poll interval: ${POLL_INTERVAL}s)"
+echo "Ralph starting (continuous mode, poll interval: ${POLL_INTERVAL}s)"
 echo "   Press Ctrl+C to stop"
 
 ITERATION=0
@@ -32,7 +32,7 @@ while true; do
 
   # If no issues, wait and poll again
   if [ -z "$ISSUE" ]; then
-    echo "💤 No tasks found. Waiting ${POLL_INTERVAL}s... ($(date '+%H:%M:%S'))"
+    echo "No tasks found. Waiting ${POLL_INTERVAL}s... ($(date '+%H:%M:%S'))"
     sleep "$POLL_INTERVAL"
     continue
   fi
@@ -44,7 +44,7 @@ while true; do
 
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "🔄 Iteration $ITERATION: Issue #$ISSUE_NUM - $ISSUE_TITLE"
+  echo "Iteration $ITERATION: Issue #$ISSUE_NUM - $ISSUE_TITLE"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   # Build the prompt
@@ -58,19 +58,65 @@ $ISSUE_BODY
 ## Previous Learnings
 Read \`ralph/progress.md\` for learnings from previous iterations."
 
-  # Run Claude - || true ensures crashes don't kill the loop
+  # Run Claude with hang recovery
+  # See: https://github.com/anthropics/claude-code/issues/19060
   LOG_FILE="/tmp/ralph-iteration-$ITERATION.log"
-  claude --dangerously-skip-permissions --verbose -p "$PROMPT" 2>&1 | tee "$LOG_FILE" || true
+  > "$LOG_FILE"
+
+  # Run Claude with stream-json to detect completion
+  claude --dangerously-skip-permissions -p "$PROMPT" --output-format stream-json --verbose > "$LOG_FILE" 2>&1 &
+  CLAUDE_PID=$!
+
+  echo "Running Claude (PID: $CLAUDE_PID)..."
+
+  # Stream output in background for real-time display
+  {
+    tail -f "$LOG_FILE" 2>/dev/null | while IFS= read -r line; do
+      # Show text deltas (streaming output)
+      if [[ "$line" == *'content_block_delta'* ]] && [[ "$line" == *'"text"'* ]]; then
+        echo -n "$(echo "$line" | jq -r '.delta.text // empty' 2>/dev/null)"
+      fi
+    done
+  } &
+  TAIL_PID=$!
+
+  # Monitor for completion - the key fix for the hang bug
+  # The "type":"result" message is emitted BEFORE the hang occurs
+  while kill -0 $CLAUDE_PID 2>/dev/null; do
+    if grep -q '"type":"result"' "$LOG_FILE" 2>/dev/null; then
+      echo ""
+      echo "Result received, waiting for graceful exit..."
+      sleep 2
+      if kill -0 $CLAUDE_PID 2>/dev/null; then
+        echo "Claude hung after completion, killing process..."
+        kill $CLAUDE_PID 2>/dev/null
+      fi
+      break
+    fi
+    sleep 0.5
+  done
+
+  # Cleanup
+  kill $TAIL_PID 2>/dev/null 2>&1
+  wait $CLAUDE_PID 2>/dev/null
+  wait $TAIL_PID 2>/dev/null 2>&1
 
   echo ""
-  echo "📝 Log saved to: $LOG_FILE"
+  echo "Log saved to: $LOG_FILE"
+
+  # Check if we got a result
+  if grep -q '"type":"result"' "$LOG_FILE" 2>/dev/null; then
+    echo "Session completed (detected via stream-json)"
+  else
+    echo "Session ended without result message"
+  fi
 
   # Check if issue is now closed (source of truth)
   ISSUE_STATE=$(gh issue view "$ISSUE_NUM" --json state -q '.state' 2>/dev/null || echo "UNKNOWN")
   if [ "$ISSUE_STATE" = "CLOSED" ]; then
-    echo "✅ Issue #$ISSUE_NUM closed successfully"
+    echo "Issue #$ISSUE_NUM closed successfully"
   else
-    echo "⚠️  Issue #$ISSUE_NUM still open - will retry next run"
+    echo "Issue #$ISSUE_NUM still open - will retry next run"
   fi
 
   sleep 2
