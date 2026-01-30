@@ -40,7 +40,7 @@ export default async function WelcomePage({ params }: WelcomePageProps) {
 
   // Redirect to chat with manager, or fallback to profile
   if (manager) {
-    redirect(`/chat?coworkerId=${manager.id}`);
+    redirect(`/assessment/${id}/chat?coworkerId=${manager.id}`);
   } else {
     // Fallback if no manager found - shouldn't happen in normal flow
     redirect("/profile");

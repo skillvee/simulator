@@ -104,9 +104,11 @@ describe("/start page", () => {
       });
 
       await expect(StartPage()).rejects.toThrow(
-        "REDIRECT:/chat?coworkerId=manager-1"
+        "REDIRECT:/assessment/assessment-123/chat?coworkerId=manager-1"
       );
-      expect(mockRedirect).toHaveBeenCalledWith("/chat?coworkerId=manager-1");
+      expect(mockRedirect).toHaveBeenCalledWith(
+        "/assessment/assessment-123/chat?coworkerId=manager-1"
+      );
     });
 
     it("redirects to welcome for WORKING status when no manager", async () => {
@@ -194,7 +196,7 @@ describe("/start page", () => {
       });
 
       await expect(StartPage()).rejects.toThrow(
-        "REDIRECT:/chat?coworkerId=manager-1"
+        "REDIRECT:/assessment/most-recent-assessment/chat?coworkerId=manager-1"
       );
 
       // Verify orderBy is desc

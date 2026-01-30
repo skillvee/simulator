@@ -102,3 +102,5 @@ export default auth((req) => {
 export const config = {
   matcher: ["/api/:path*"],
 };
+
+export const runtime = "nodejs";

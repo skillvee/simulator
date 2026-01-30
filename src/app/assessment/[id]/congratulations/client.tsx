@@ -49,7 +49,7 @@ export function CongratulationsClient({
       setAutoAdvanceTimer((prev) => {
         if (prev <= 1) {
           const chatUrl = managerId
-            ? `/chat?coworkerId=${managerId}`
+            ? `/assessment/${assessmentId}/chat?coworkerId=${managerId}`
             : `/assessment/${assessmentId}/welcome`;
           router.push(chatUrl);
           return 0;
@@ -63,7 +63,7 @@ export function CongratulationsClient({
 
   const handleContinue = () => {
     const chatUrl = managerId
-      ? `/chat?coworkerId=${managerId}`
+      ? `/assessment/${assessmentId}/chat?coworkerId=${managerId}`
       : `/assessment/${assessmentId}/welcome`;
     router.push(chatUrl);
   };

@@ -103,7 +103,7 @@ function getRedirectUrlForStatus(
     case AssessmentStatus.WORKING:
       // Redirect to chat with manager if managerId available, otherwise fallback to welcome
       return managerId
-        ? `/chat?coworkerId=${managerId}`
+        ? `/assessment/${assessmentId}/chat?coworkerId=${managerId}`
         : `/assessment/${assessmentId}/welcome`;
     case AssessmentStatus.FINAL_DEFENSE:
       return `/assessment/${assessmentId}/defense`;

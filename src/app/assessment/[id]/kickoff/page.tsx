@@ -44,7 +44,7 @@ export default async function KickoffPage({ params }: KickoffPageProps) {
 
   // Redirect to chat with manager, or fallback to welcome page
   if (manager) {
-    redirect(`/chat?coworkerId=${manager.id}`);
+    redirect(`/assessment/${id}/chat?coworkerId=${manager.id}`);
   } else {
     redirect(`/assessment/${id}/welcome`);
   }
