@@ -1,313 +1,319 @@
 import Link from "next/link";
+import { type Metadata } from "next";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="mb-4 mt-12 flex items-center gap-3 text-2xl font-semibold">
-      <div className="h-6 w-1 rounded-full bg-primary" />
-      {children}
-    </h2>
-  );
-}
-
-function SubHeading({ children }: { children: React.ReactNode }) {
-  return <h3 className="mb-2 mt-6 text-lg font-semibold">{children}</h3>;
-}
+export const metadata: Metadata = {
+  title: "Privacy Policy - Your Data, Your Control | SkillVee",
+  description:
+    "Learn how SkillVee protects your privacy and handles your data. Our commitment to transparency and data security in AI-powered interview practice.",
+};
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = "January 2025";
-
   return (
-    <main className="min-h-screen animate-page-enter bg-background text-foreground">
-      {/* Header */}
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
           <Link
             href="/"
-            className="text-xl font-semibold transition-colors hover:text-primary"
+            className="font-medium text-blue-600 hover:text-blue-700"
           >
-            Skillvee
+            ← Back to Home
           </Link>
-          <nav className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground transition-colors hover:text-primary"
+          <Link href="/">
+            <Button variant="outline">Home</Button>
+          </Link>
+        </div>
+      </nav>
+
+      <div className="mx-auto max-w-4xl px-6 py-16">
+        <div className="prose prose-lg max-w-none">
+          <h1 className="mb-8 text-4xl font-bold text-gray-900">
+            SkillVee Privacy Policy
+          </h1>
+
+          <p className="mb-8 text-gray-600">
+            At SkillVee, we are committed to protecting the privacy and security
+            of our users&apos; personal information. This Privacy Policy
+            outlines how we collect, use, and share data provided by individuals
+            (&quot;Users&quot;) who use our AI-powered interview platform to
+            practice interviews, validate skills, and connect with potential
+            employers. By using the SkillVee platform, you acknowledge and
+            consent to the data practices described in this Privacy Policy.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            Information We Collect
+          </h2>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Personal Information
+          </h3>
+          <p className="mb-4 text-gray-700">
+            We collect personal information you provide directly to us,
+            including:
+          </p>
+          <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+            <li>Name, email address, and contact information</li>
+            <li>Resume, work history, and professional qualifications</li>
+            <li>Educational background and certifications</li>
+            <li>Skills, competencies, and career preferences</li>
+            <li>Salary expectations and job preferences</li>
+          </ul>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Interview and Assessment Data
+          </h3>
+          <p className="mb-4 text-gray-700">
+            When you use our AI interview platform, we collect:
+          </p>
+          <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+            <li>Video and audio recordings of practice interviews</li>
+            <li>Transcriptions of your responses and conversations</li>
+            <li>
+              Screen recordings and shared content during technical assessments
+            </li>
+            <li>AI-generated performance evaluations and feedback</li>
+            <li>
+              Response times, interaction patterns, and platform usage data
+            </li>
+          </ul>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Technical Data
+          </h3>
+          <p className="mb-6 text-gray-700">
+            We automatically collect technical information including IP
+            addresses, browser type, device information, operating system, and
+            usage analytics to improve platform performance and user experience.
+          </p>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Google Sign-In Data
+          </h3>
+          <p className="mb-4 text-gray-700">
+            When you sign in using Google, we receive the following information
+            from your Google account:
+          </p>
+          <ul className="mb-4 ml-4 list-inside list-disc text-gray-700">
+            <li>Your email address</li>
+            <li>Your name (first and last)</li>
+            <li>Your profile picture URL</li>
+          </ul>
+          <p className="mb-4 text-gray-700">
+            This information is used solely to create and authenticate your
+            SkillVee account and personalize your experience. We do not access
+            your Google Drive, Gmail, Google Calendar, or any other Google
+            services data.
+          </p>
+          <p className="mb-6 text-gray-700">
+            You can revoke SkillVee&apos;s access to your Google account at any
+            time through your Google Account settings at{" "}
+            <a
+              href="https://myaccount.google.com/permissions"
+              className="text-blue-600 hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Home
-            </Link>
-          </nav>
+              https://myaccount.google.com/permissions
+            </a>
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            How We Use Your Data
+          </h2>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Core Platform Services
+          </h3>
+          <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+            <li>
+              Conducting AI-powered interview simulations and assessments
+            </li>
+            <li>Providing personalized feedback and performance analytics</li>
+            <li>Validating and certifying your demonstrated skills</li>
+            <li>Creating professional profiles for employer matching</li>
+            <li>
+              Facilitating connections between candidates and hiring companies
+            </li>
+          </ul>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Platform Improvement
+          </h3>
+          <p className="mb-6 text-gray-700">
+            We may use aggregated and anonymized interview data to improve our
+            AI models, assessment accuracy, and platform functionality. This
+            helps us provide better interview simulations and more accurate
+            skill evaluations.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            Data Usage and Sharing
+          </h2>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Third-Party AI Services
+          </h3>
+          <p className="mb-4 text-gray-700">
+            Your interview recordings, transcriptions, and assessment data may
+            be processed by external AI services, including large language model
+            providers (such as Google&apos;s Gemini AI), for evaluation and
+            analysis purposes. These services help us provide accurate feedback
+            and skill assessments.
+          </p>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Employer Access
+          </h3>
+          <p className="mb-4 text-gray-700">
+            When you participate in our job matching program, the following
+            information may be shared with potential employers:
+          </p>
+          <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+            <li>Your professional profile, resume, and qualifications</li>
+            <li>Validated skill assessments and performance metrics</li>
+            <li>
+              Interview recordings and transcriptions (with your explicit
+              consent)
+            </li>
+            <li>
+              AI-generated professional photos derived from interview footage
+            </li>
+            <li>Salary expectations and job preferences</li>
+          </ul>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Professional Profile Enhancement
+          </h3>
+          <p className="mb-6 text-gray-700">
+            We may use images from your interview sessions to generate
+            high-quality, professional photos for your profile. This process may
+            involve third-party image processing APIs to create polished
+            headshots that present you professionally to potential employers.
+          </p>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            External Profile Information
+          </h3>
+          <p className="mb-6 text-gray-700">
+            To provide a comprehensive view to employers, we may supplement your
+            profile with publicly available professional information from
+            platforms like LinkedIn, GitHub, or personal websites where you
+            maintain a presence.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            Data Security and Protection
+          </h2>
+          <p className="mb-6 text-gray-700">
+            We implement industry-standard security measures to protect your
+            personal information, including encryption, secure data
+            transmission, access controls, and regular security audits. However,
+            no system is completely secure, and we cannot guarantee absolute
+            security of data transmitted over the internet.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            Data Retention
+          </h2>
+          <p className="mb-6 text-gray-700">
+            We retain your personal information and interview data for as long
+            as necessary to provide our services, comply with legal obligations,
+            and fulfill the purposes outlined in this policy. Interview
+            recordings and assessments may be retained indefinitely to maintain
+            the integrity of skill validations and employer references.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            Your Rights and Choices
+          </h2>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Data Access and Portability
+          </h3>
+          <p className="mb-4 text-gray-700">You have the right to:</p>
+          <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+            <li>Access and review your personal data stored on our platform</li>
+            <li>Request a copy of your data in a portable format</li>
+            <li>Update or correct inaccurate information in your profile</li>
+          </ul>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Data Deletion
+          </h3>
+          <p className="mb-4 text-gray-700">
+            If you wish to have your data deleted from SkillVee&apos;s systems,
+            you may submit a request through our support channels. We will
+            comply with such requests in accordance with applicable laws and
+            regulations.
+          </p>
+          <p className="mb-6 text-gray-700">
+            <strong>Important Note:</strong> Certain data may be retained for
+            legal, regulatory, or business purposes even after a deletion
+            request, including data needed to honor existing employer
+            commitments, skill validations, or comply with legal obligations.
+          </p>
+
+          <h3 className="mb-3 mt-6 text-xl font-semibold text-gray-900">
+            Opt-Out Options
+          </h3>
+          <p className="mb-6 text-gray-700">
+            You can opt out of certain data uses, including job matching
+            services and marketing communications, through your account settings
+            or by contacting our support team.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            Cookies and Tracking
+          </h2>
+          <p className="mb-6 text-gray-700">
+            We use cookies and similar technologies to enhance your experience,
+            remember your preferences, and analyze platform usage. You can
+            control cookie settings through your browser preferences, though
+            some features may not function properly with cookies disabled.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            International Data Transfers
+          </h2>
+          <p className="mb-6 text-gray-700">
+            Your information may be transferred to and processed in countries
+            other than your country of residence. We ensure appropriate
+            safeguards are in place to protect your data in accordance with
+            applicable privacy laws.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            Changes to This Policy
+          </h2>
+          <p className="mb-6 text-gray-700">
+            We may update this Privacy Policy periodically to reflect changes in
+            our practices or legal requirements. We will notify you of
+            significant changes through email or platform notifications and
+            encourage you to review this policy regularly.
+          </p>
+
+          <h2 className="mb-4 mt-8 text-2xl font-semibold text-gray-900">
+            Contact Information
+          </h2>
+          <p className="mb-6 text-gray-700">
+            If you have questions about this Privacy Policy or our data
+            practices, please contact us through our support channels or privacy
+            inquiry form available on our platform.
+          </p>
+
+          <hr className="my-8 border-gray-300" />
+
+          <p className="text-sm italic text-gray-500">
+            <strong>Last Updated:</strong> November 26, 2025
+            <br />
+            By using SkillVee, you acknowledge that you have read, understood,
+            and agree to the collection, use, and sharing of your information as
+            described in this Privacy Policy.
+          </p>
         </div>
-      </header>
-
-      {/* Content */}
-      <article className="mx-auto max-w-4xl px-6 py-12">
-        {/* Title section */}
-        <div className="mb-12">
-          <div className="mb-6 inline-block rounded-full bg-primary/10 px-4 py-2">
-            <span className="text-sm font-medium text-primary">Legal</span>
-          </div>
-          <h1 className="mb-4 text-5xl font-semibold">Privacy Policy</h1>
-          <p className="text-muted-foreground">Last updated: {lastUpdated}</p>
-        </div>
-
-        {/* Introduction */}
-        <Card className="mb-8 border-l-4 border-l-primary">
-          <CardContent className="py-6">
-            <p className="text-lg">
-              At Skillvee, we take your privacy seriously. This Privacy Policy
-              explains how we collect, use, disclose, and safeguard your
-              information when you use our developer assessment platform.
-            </p>
-          </CardContent>
-        </Card>
-
-        <SectionHeading>1. Information We Collect</SectionHeading>
-
-        <SubHeading>Account Information</SubHeading>
-        <p className="mb-4 text-muted-foreground">
-          When you create an account, we collect:
-        </p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>Email address</li>
-          <li>Name (optional)</li>
-          <li>Password (stored securely using industry-standard hashing)</li>
-          <li>
-            Profile information from OAuth providers (if you sign in with
-            Google)
-          </li>
-        </ul>
-
-        <SubHeading>Assessment Data</SubHeading>
-        <p className="mb-4 text-muted-foreground">
-          During assessments, with your explicit consent, we collect:
-        </p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>
-            <strong className="text-foreground">Screen recordings:</strong>{" "}
-            Video capture of your screen during the coding task portion of the
-            assessment
-          </li>
-          <li>
-            <strong className="text-foreground">Voice recordings:</strong> Audio
-            from HR interviews, manager kickoff calls, and PR defense sessions
-          </li>
-          <li>
-            <strong className="text-foreground">
-              Conversation transcripts:
-            </strong>{" "}
-            Text transcriptions of all voice and chat interactions
-          </li>
-          <li>
-            <strong className="text-foreground">CV/Resume:</strong> Documents
-            you upload for use during the assessment
-          </li>
-          <li>
-            <strong className="text-foreground">Code submissions:</strong> Links
-            to pull requests and code you submit
-          </li>
-        </ul>
-
-        <SubHeading>Technical Data</SubHeading>
-        <p className="mb-4 text-muted-foreground">
-          We automatically collect certain technical information:
-        </p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>Browser type and version</li>
-          <li>Device information</li>
-          <li>Session timestamps and duration</li>
-          <li>Error logs for troubleshooting</li>
-        </ul>
-
-        <SectionHeading>2. How We Use Your Information</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          We use the collected information to:
-        </p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>Provide and improve our assessment services</li>
-          <li>Generate personalized feedback and assessment reports</li>
-          <li>
-            Analyze your problem-solving approach and communication skills
-          </li>
-          <li>Identify areas for improvement in your developer workflow</li>
-          <li>Communicate with you about your assessments</li>
-          <li>Ensure the security and integrity of our platform</li>
-        </ul>
-
-        <SectionHeading>3. AI Processing</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          Your assessment data is processed using artificial intelligence to:
-        </p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>Power voice conversations during interviews and calls</li>
-          <li>
-            Analyze screen recordings to understand your development workflow
-          </li>
-          <li>Review code quality, patterns, and security practices</li>
-          <li>Generate comprehensive assessment reports</li>
-        </ul>
-        <p className="mb-4 text-muted-foreground">
-          We use Google&apos;s Gemini AI models for processing. Your data is
-          transmitted securely and is not used to train AI models.
-        </p>
-
-        <SectionHeading>4. Data Storage and Security</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          We implement appropriate technical and organizational measures to
-          protect your data:
-        </p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>All data is encrypted in transit using TLS/HTTPS</li>
-          <li>
-            Recordings and documents are stored securely on Supabase Storage
-          </li>
-          <li>Database hosted on Supabase with encryption at rest</li>
-          <li>Access controls limit who can view your assessment data</li>
-        </ul>
-
-        <SectionHeading>5. Data Retention</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          We retain your data as follows:
-        </p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>
-            <strong className="text-foreground">Account data:</strong> Retained
-            until you delete your account
-          </li>
-          <li>
-            <strong className="text-foreground">Assessment recordings:</strong>{" "}
-            Retained for 1 year after completion
-          </li>
-          <li>
-            <strong className="text-foreground">Assessment reports:</strong>{" "}
-            Retained indefinitely unless you request deletion
-          </li>
-        </ul>
-
-        <SectionHeading>6. Your Rights</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">You have the right to:</p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>
-            <strong className="text-foreground">Access:</strong> Request a copy
-            of your personal data
-          </li>
-          <li>
-            <strong className="text-foreground">Correction:</strong> Update or
-            correct inaccurate information
-          </li>
-          <li>
-            <strong className="text-foreground">Deletion:</strong> Request
-            deletion of your data (see below)
-          </li>
-          <li>
-            <strong className="text-foreground">Portability:</strong> Receive
-            your data in a portable format
-          </li>
-          <li>
-            <strong className="text-foreground">Withdraw consent:</strong> Opt
-            out of future data collection
-          </li>
-        </ul>
-
-        <Card className="my-8 bg-primary/5">
-          <CardContent className="py-6">
-            <h3 className="mb-2 font-semibold">Requesting Data Deletion</h3>
-            <p className="mb-4 text-muted-foreground">
-              You can request deletion of your data at any time from your
-              profile settings. We will process your request within 30 days and
-              confirm deletion via email.
-            </p>
-            <Button asChild>
-              <Link href="/profile">Go to Profile Settings</Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <SectionHeading>7. Third-Party Services</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          We use the following third-party services:
-        </p>
-        <ul className="mb-4 list-inside list-disc space-y-2 text-muted-foreground">
-          <li>
-            <strong className="text-foreground">Supabase:</strong> Database and
-            file storage
-          </li>
-          <li>
-            <strong className="text-foreground">Vercel:</strong> Application
-            hosting
-          </li>
-          <li>
-            <strong className="text-foreground">Google (Gemini AI):</strong> AI
-            processing for assessments
-          </li>
-          <li>
-            <strong className="text-foreground">Resend:</strong> Transactional
-            emails
-          </li>
-        </ul>
-        <p className="mb-4 text-muted-foreground">
-          Each of these services has their own privacy policies governing data
-          handling.
-        </p>
-
-        <SectionHeading>8. Cookies</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          We use essential cookies for authentication and session management. We
-          do not use tracking or advertising cookies.
-        </p>
-
-        <SectionHeading>9. Children&apos;s Privacy</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          Our service is not intended for users under 18 years of age. We do not
-          knowingly collect data from children.
-        </p>
-
-        <SectionHeading>10. Changes to This Policy</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          We may update this Privacy Policy from time to time. We will notify
-          you of any material changes by posting the new policy on this page and
-          updating the &quot;Last updated&quot; date.
-        </p>
-
-        <SectionHeading>11. Contact Us</SectionHeading>
-
-        <p className="mb-4 text-muted-foreground">
-          If you have questions about this Privacy Policy or your data, please
-          contact us at:
-        </p>
-        <Card className="bg-muted/50">
-          <CardContent className="py-6">
-            <p className="font-mono text-sm">Email: privacy@skillvee.com</p>
-          </CardContent>
-        </Card>
-
-        {/* Back to home */}
-        <div className="mt-12 border-t border-border pt-8">
-          <Button asChild variant="ghost" className="gap-2">
-            <Link href="/">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
-            </Link>
-          </Button>
-        </div>
-      </article>
-
-      {/* Footer */}
-      <footer className="border-t border-border">
-        <div className="mx-auto max-w-4xl px-6 py-8 text-center text-sm text-muted-foreground">
-          © 2025 Skillvee. All rights reserved.
-        </div>
-      </footer>
-    </main>
+      </div>
+    </div>
   );
 }

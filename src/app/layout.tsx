@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Skillvee - Practice Real Developer Scenarios",
   description:
     "Assess and improve your developer skills through realistic work simulations",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

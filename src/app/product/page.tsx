@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Play,
@@ -19,6 +20,9 @@ import {
   Lock,
   Globe,
   ChevronDown,
+  Send,
+  Eye,
+  GitCompare,
 } from "lucide-react";
 import Navigation from "@/components/landing/Navigation";
 import Footer from "@/components/landing/Footer";
@@ -78,12 +82,82 @@ export default function ProductPage() {
         <CurveDivider fillColor="fill-slate-50" />
       </section>
 
-      {/* The Simulation Experience - Deep Dive */}
+      {/* Your Workflow - Employer View */}
       <section className="relative py-20 sm:py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
           <SectionReveal className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              A realistic first day—not algorithm puzzles
+              Your workflow: 5 minutes to set up, zero time to proctor
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Create once. Send to many. Review the evidence. Make better hires.
+            </p>
+          </SectionReveal>
+
+          {/* 3-Step Horizontal Flow */}
+          <SectionReveal>
+            <div className="max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Step 1 */}
+                <div className="relative">
+                  <div className="bg-white rounded-2xl p-8 h-full shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                      <FileText className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="text-4xl font-bold text-gray-900 mb-1">1</div>
+                    <h3 className="text-lg font-semibold text-blue-600 mb-3">Paste your JD</h3>
+                    <p className="text-gray-600">
+                      AI generates a realistic simulation based on your job description.
+                    </p>
+                  </div>
+                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+                    <ArrowRight className="w-5 h-5 text-gray-300" />
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="relative">
+                  <div className="bg-white rounded-2xl p-8 h-full shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                      <Send className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="text-4xl font-bold text-gray-900 mb-1">2</div>
+                    <h3 className="text-lg font-semibold text-blue-600 mb-3">Send the link</h3>
+                    <p className="text-gray-600">
+                      Candidates complete it on their own time. No scheduling required.
+                    </p>
+                  </div>
+                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+                    <ArrowRight className="w-5 h-5 text-gray-300" />
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="relative">
+                  <div className="bg-white rounded-2xl p-8 h-full shadow-sm">
+                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                      <Eye className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="text-4xl font-bold text-gray-900 mb-1">3</div>
+                    <h3 className="text-lg font-semibold text-blue-600 mb-3">Review & decide</h3>
+                    <p className="text-gray-600">
+                      Watch recordings, read transcripts, compare candidates side-by-side.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </SectionReveal>
+        </div>
+        <CurveDivider fillColor="fill-white" />
+      </section>
+
+      {/* The Simulation Experience - Deep Dive */}
+      <section className="relative py-20 sm:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
+          <SectionReveal className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              A realistic day at work—not algorithm puzzles
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Candidates experience what the job actually feels like. You see how they
@@ -94,7 +168,7 @@ export default function ProductPage() {
           {/* Timeline/Journey View */}
           <div className="max-w-5xl mx-auto">
             <StaggerReveal className="space-y-6" staggerMs={150}>
-              {/* Stage 1: Kickoff */}
+              {/* Stage 1: Gather requirements (includes manager kickoff) */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                 <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                   <div className="flex items-start gap-4">
@@ -103,19 +177,19 @@ export default function ProductPage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 mb-2">
-                        Manager kickoff call
+                        Gather requirements
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        Candidate joins a voice call with their AI &ldquo;manager&rdquo; who explains
-                        the project context, team dynamics, and expectations. Just like a
-                        real first day.
+                        Candidate joins a kickoff call with their AI manager, then chats
+                        with stakeholders to clarify the task. Great candidates ask smart
+                        questions. Others dive in blind. You&apos;ll see the difference.
                       </p>
                       <div className="flex flex-wrap gap-2">
                         <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                          Voice conversation
+                          Manager kickoff
                         </span>
                         <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                          ~5 minutes
+                          Stakeholder chat
                         </span>
                       </div>
                     </div>
@@ -125,64 +199,32 @@ export default function ProductPage() {
                   <div className="aspect-[16/10] bg-gradient-to-br from-blue-50 to-gray-50 rounded-lg flex items-center justify-center">
                     <div className="text-center text-gray-400">
                       <div className="w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        <span className="text-xl">📞</span>
+                        <span className="text-xl">💬</span>
                       </div>
                       <p className="text-xs font-medium">
-                        Screenshot: Manager voice call interface with transcript
+                        Screenshot: Manager call and stakeholder chat
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Stage 2: Requirements */}
+              {/* Stage 2: Do the work */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
                 <div className="bg-white rounded-xl border border-gray-200 p-3 order-2 lg:order-1">
-                  <div className="aspect-[16/10] bg-gradient-to-br from-purple-50 to-gray-50 rounded-lg flex items-center justify-center">
+                  <div className="aspect-[16/10] bg-gradient-to-br from-emerald-50 to-gray-50 rounded-lg flex items-center justify-center">
                     <div className="text-center text-gray-400">
-                      <div className="w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        <span className="text-xl">💬</span>
+                      <div className="w-12 h-12 bg-emerald-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-xl">💻</span>
                       </div>
                       <p className="text-xs font-medium">
-                        Screenshot: Chat with PM showing requirement clarification
+                        Screenshot: Candidate working with screen recording indicator
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm order-1 lg:order-2">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl font-bold text-purple-600">2</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2">
-                        Gather requirements
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        They chat with the PM, designer, or other stakeholders to clarify
-                        the task. Great candidates ask smart questions. Others dive in
-                        blind. You&apos;ll see the difference.
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                          Text chat
-                        </span>
-                        <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                          Multiple stakeholders
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stage 3: Do the work */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
-                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl font-bold text-emerald-600">3</span>
-                    </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 mb-2">
                         Do the actual work
@@ -206,38 +248,14 @@ export default function ProductPage() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-3">
-                  <div className="aspect-[16/10] bg-gradient-to-br from-emerald-50 to-gray-50 rounded-lg flex items-center justify-center">
-                    <div className="text-center text-gray-400">
-                      <div className="w-12 h-12 bg-emerald-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        <span className="text-xl">💻</span>
-                      </div>
-                      <p className="text-xs font-medium">
-                        Screenshot: Candidate working with screen recording indicator
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
 
-              {/* Stage 4: Present & Defend */}
+              {/* Stage 3: Present & Defend */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
-                <div className="bg-white rounded-xl border border-gray-200 p-3 order-2 lg:order-1">
-                  <div className="aspect-[16/10] bg-gradient-to-br from-amber-50 to-gray-50 rounded-lg flex items-center justify-center">
-                    <div className="text-center text-gray-400">
-                      <div className="w-12 h-12 bg-amber-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        <span className="text-xl">🎤</span>
-                      </div>
-                      <p className="text-xs font-medium">
-                        Screenshot: PR defense call with challenging questions
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm order-1 lg:order-2">
+                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl font-bold text-amber-600">4</span>
+                      <span className="text-xl font-bold text-amber-600">3</span>
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 mb-2">
@@ -259,15 +277,27 @@ export default function ProductPage() {
                     </div>
                   </div>
                 </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-3">
+                  <div className="aspect-[16/10] bg-gradient-to-br from-amber-50 to-gray-50 rounded-lg flex items-center justify-center">
+                    <div className="text-center text-gray-400">
+                      <div className="w-12 h-12 bg-amber-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                        <span className="text-xl">🎤</span>
+                      </div>
+                      <p className="text-xs font-medium">
+                        Screenshot: PR defense call with challenging questions
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </StaggerReveal>
           </div>
         </div>
-        <CurveDivider fillColor="fill-white" />
+        <CurveDivider fillColor="fill-slate-50" />
       </section>
 
       {/* What You Get - Concrete Deliverables */}
-      <section className="relative py-20 sm:py-24 bg-white">
+      <section className="relative py-20 sm:py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
           <SectionReveal className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -278,8 +308,7 @@ export default function ProductPage() {
             </p>
           </SectionReveal>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <StaggerReveal className="contents" staggerMs={100}>
+          <StaggerReveal className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto" staggerMs={100}>
               {/* Deliverable 1: Scorecard */}
               <Card className="border-2 border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300">
                 <CardContent className="p-0">
@@ -357,27 +386,26 @@ export default function ProductPage() {
                   </div>
                 </CardContent>
               </Card>
-            </StaggerReveal>
-          </div>
+          </StaggerReveal>
 
           {/* Additional deliverables row */}
           <SectionReveal className="mt-8 max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-3 bg-white rounded-lg p-4 border border-gray-200">
                 <FileText className="w-5 h-5 text-blue-600" />
                 <div>
                   <p className="font-medium text-gray-900">Work Artifacts</p>
                   <p className="text-sm text-gray-500">Code, docs, or deliverables</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-3 bg-white rounded-lg p-4 border border-gray-200">
                 <Clock className="w-5 h-5 text-blue-600" />
                 <div>
                   <p className="font-medium text-gray-900">Time Analysis</p>
                   <p className="text-sm text-gray-500">How they allocated their time</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-3 bg-white rounded-lg p-4 border border-gray-200">
                 <Users className="w-5 h-5 text-blue-600" />
                 <div>
                   <p className="font-medium text-gray-900">Side-by-Side Compare</p>
@@ -387,11 +415,11 @@ export default function ProductPage() {
             </div>
           </SectionReveal>
         </div>
-        <CurveDivider fillColor="fill-slate-50" />
+        <CurveDivider fillColor="fill-white" />
       </section>
 
       {/* Signals Grid - What You Learn */}
-      <section className="relative py-20 sm:py-24 bg-slate-50">
+      <section className="relative py-20 sm:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
           <SectionReveal className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -403,9 +431,9 @@ export default function ProductPage() {
             </p>
           </SectionReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <StaggerReveal className="contents" staggerMs={75}>
-              <Card className="border-2 border-gray-100 hover:border-blue-200 transition-colors">
+          <SectionReveal>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              <Card className="bg-white border-2 border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
                     <MessageSquare className="w-6 h-6 text-blue-600" />
@@ -420,7 +448,7 @@ export default function ProductPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-gray-100 hover:border-blue-200 transition-colors">
+              <Card className="bg-white border-2 border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
                     <Brain className="w-6 h-6 text-blue-600" />
@@ -433,7 +461,7 @@ export default function ProductPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-gray-100 hover:border-blue-200 transition-colors">
+              <Card className="bg-white border-2 border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
                     <Zap className="w-6 h-6 text-blue-600" />
@@ -448,7 +476,7 @@ export default function ProductPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-gray-100 hover:border-blue-200 transition-colors">
+              <Card className="bg-white border-2 border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
                     <Users className="w-6 h-6 text-blue-600" />
@@ -461,7 +489,7 @@ export default function ProductPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-gray-100 hover:border-blue-200 transition-colors">
+              <Card className="bg-white border-2 border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
                     <CheckCircle className="w-6 h-6 text-blue-600" />
@@ -476,7 +504,7 @@ export default function ProductPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-gray-100 hover:border-blue-200 transition-colors">
+              <Card className="bg-white border-2 border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
                     <Clock className="w-6 h-6 text-blue-600" />
@@ -488,14 +516,14 @@ export default function ProductPage() {
                   </p>
                 </CardContent>
               </Card>
-            </StaggerReveal>
-          </div>
+            </div>
+          </SectionReveal>
         </div>
-        <CurveDivider fillColor="fill-white" />
+        <CurveDivider fillColor="fill-slate-50" />
       </section>
 
       {/* Social Proof Section */}
-      <section className="relative py-20 sm:py-24 bg-white">
+      <section className="relative py-20 sm:py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
           <SectionReveal className="text-center mb-12">
             <p className="text-sm font-semibold text-blue-600 uppercase tracking-wide mb-4">
@@ -563,10 +591,10 @@ export default function ProductPage() {
             </p>
           </SectionReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <StaggerReveal className="contents" staggerMs={100}>
+          <SectionReveal>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               <div className="text-center">
-                <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Shield className="w-8 h-8 text-blue-400" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">SOC 2 Type II</h3>
@@ -577,7 +605,7 @@ export default function ProductPage() {
               </div>
 
               <div className="text-center">
-                <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Lock className="w-8 h-8 text-blue-400" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">GDPR Compliant</h3>
@@ -588,7 +616,7 @@ export default function ProductPage() {
               </div>
 
               <div className="text-center">
-                <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Globe className="w-8 h-8 text-blue-400" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">SSO & Integrations</h3>
@@ -597,14 +625,14 @@ export default function ProductPage() {
                   Enterprise.
                 </p>
               </div>
-            </StaggerReveal>
-          </div>
+            </div>
+          </SectionReveal>
 
           <SectionReveal className="text-center mt-12">
             <Link href="/demo">
               <Button
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10"
+                className="bg-transparent border-white/50 text-white hover:bg-white/10 hover:border-white"
               >
                 Contact us for Enterprise
               </Button>
@@ -623,6 +651,16 @@ export default function ProductPage() {
           </SectionReveal>
 
           <ProductFAQ />
+
+          <div className="text-center mt-8">
+            <Link
+              href="/faq"
+              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            >
+              See all questions
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -636,8 +674,13 @@ export default function ProductPage() {
 
         <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-6 text-center relative z-10">
           <SectionReveal>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-              Ready to see it yourself?
+            <Badge className="bg-yellow-400 text-yellow-900 mb-6 sm:mb-8 text-sm font-semibold">
+              See the difference
+            </Badge>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
+              <span className="text-white">Ready to </span>
+              <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">see it yourself?</span>
             </h2>
             <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
               Get a personalized demo or try a sample assessment as a candidate.
@@ -657,7 +700,7 @@ export default function ProductPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="min-w-[200px] h-14 text-lg border-2 border-white text-white hover:bg-white/10"
+                  className="min-w-[200px] h-14 text-lg bg-transparent border-2 border-white text-white hover:bg-white/10"
                 >
                   Try Sample Assessment
                 </Button>
@@ -709,26 +752,31 @@ function ProductFAQ() {
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {faqs.map((faq, index) => (
         <div
           key={index}
-          className="border border-gray-200 rounded-xl overflow-hidden"
+          className="bg-white border-2 border-gray-100 hover:border-blue-200 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg"
         >
           <button
-            className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+            className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-blue-50/50 transition-colors"
             onClick={() => setOpenIndex(openIndex === index ? null : index)}
           >
-            <span className="font-medium text-gray-900">{faq.question}</span>
+            <div className="flex items-start space-x-4 flex-1">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-blue-600 font-bold text-sm">Q</span>
+              </div>
+              <h3 className="font-semibold text-gray-900 text-lg pr-4">{faq.question}</h3>
+            </div>
             <ChevronDown
-              className={`w-5 h-5 text-gray-400 transition-transform ${
+              className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-300 ${
                 openIndex === index ? "rotate-180" : ""
               }`}
             />
           </button>
           {openIndex === index && (
-            <div className="px-6 pb-4">
-              <p className="text-gray-600">{faq.answer}</p>
+            <div className="px-6 pb-5 animate-fade-in">
+              <div className="pl-12 text-gray-600 leading-relaxed">{faq.answer}</div>
             </div>
           )}
         </div>
