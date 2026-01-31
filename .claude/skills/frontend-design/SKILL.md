@@ -41,7 +41,12 @@ import { Input } from "@/components/ui/input";
 
 ### Color Palette
 
-The design uses HSL CSS variables. Reference them via Tailwind classes.
+**Use ONLY blue and grays.** No purple, green, yellow, orange, or other accent colors.
+
+The design uses HSL CSS variables. Reference them via Tailwind classes:
+- `bg-primary`, `text-primary`, `border-primary` - blue accents
+- `bg-muted`, `text-muted-foreground`, `bg-secondary` - neutral grays
+- `bg-background`, `text-foreground` - base colors
 
 ```
 Light mode:
@@ -49,7 +54,6 @@ Light mode:
 - Foreground: hsl(222.2 84% 4.9%) - near-black
 - Primary: hsl(217 91% 54%) - #237CF1 blue
 - Secondary: hsl(210 40% 96.1%) - light slate
-- Accent: hsl(199 89% 94%) - sky-100
 - Muted: hsl(210 40% 96.1%) - slate tones
 - Border: hsl(214.3 31.8% 91.4%) - light border
 
@@ -57,7 +61,7 @@ Dark mode:
 - Background: hsl(222.2 84% 4.9%) - near-black
 - Foreground: hsl(210 40% 98%) - near-white
 - Primary: hsl(217 91% 54%) - #237CF1 blue
-- Secondary/Muted/Accent: hsl(217.2 32.6% 17.5%) - blue-slate
+- Secondary/Muted: hsl(217.2 32.6% 17.5%) - blue-slate
 - Border: hsl(217.2 32.6% 17.5%) - dark border
 ```
 
@@ -114,6 +118,7 @@ Transitions should use `transition-colors`, `transition-all`, or specific proper
 
 ### MANDATORY DON'Ts
 
+- ❌ No purple, green, yellow, orange, or other accent colors - use ONLY blue and grays
 - ❌ No 0px border radius (sharp corners are deprecated)
 - ❌ No 2px black borders as the primary styling method
 - ❌ No gold (#f7da50) color - this is deprecated
