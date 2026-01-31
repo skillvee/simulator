@@ -25,12 +25,6 @@ export default async function HRInterviewPage({ params }: PageProps) {
     notFound();
   }
 
-  // Check if CV was uploaded, redirect to CV upload page if not
-  const hasCv = assessment.cvUrl || assessment.user.cvUrl;
-  if (!hasCv) {
-    redirect(`/assessment/${id}/cv-upload`);
-  }
-
   // Check if interview was already completed
   const existingTranscript = assessment.conversations[0]?.transcript;
   const hasCompletedInterview =

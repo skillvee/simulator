@@ -55,8 +55,9 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   // Determine starting status and URL based on skipTo
-  let status: "HR_INTERVIEW" | "ONBOARDING" | "WORKING" = "HR_INTERVIEW";
-  let urlSuffix = "/cv-upload"; // Default: start at CV upload screen
+  // Default: start at welcome page (new recruiter-focused flow)
+  let status: "WELCOME" | "WORKING" = "WELCOME";
+  let urlSuffix = "/welcome";
 
   if (skipTo === "coworkers") {
     // Skip directly to the working/coworker chat phase
@@ -66,9 +67,6 @@ export async function POST(request: Request, context: RouteContext) {
     // Skip to welcome (kickoff call happens via floating bar there)
     status = "WORKING";
     urlSuffix = "/welcome";
-  } else if (skipTo === "hr-interview") {
-    // Go directly to HR interview
-    urlSuffix = "/hr-interview";
   }
 
   // Create a preview assessment for this admin

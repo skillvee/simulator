@@ -17,4 +17,3 @@ export type {
 } from "./candidate-search-result-card";
 
 export { ParsedProfileDisplay } from "./parsed-profile-display";
-export { ProfileCVSection } from "./profile-cv-section";

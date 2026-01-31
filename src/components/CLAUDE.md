@@ -6,7 +6,7 @@ Domain-based organization following modern shadcn/ui design. See `.claude/skills
 
 ```
 src/components/
-├── shared/        # Providers, cv-upload, markdown
+├── shared/        # Providers, markdown, page-transition
 ├── admin/         # Admin navigation, data deletion
 ├── feedback/      # Error display, rejection feedback modal
 ├── candidate/     # Filters bar, search result cards, profile display

@@ -8,7 +8,7 @@ import type {
   AssessmentStatus,
   VideoAssessmentStatus,
 } from "@prisma/client";
-import { ProfileCVSection, ParsedProfileDisplay } from "@/components/candidate";
+import { ParsedProfileDisplay } from "@/components/candidate";
 import type { AssessmentReport } from "@/lib/analysis";
 import { profileFromPrismaJson } from "@/lib/candidate";
 import { AdminNav, DataDeletionSection } from "@/components/admin";
@@ -383,9 +383,6 @@ export default async function ProfilePage() {
             </CardContent>
           </Card>
         </section>
-
-        {/* CV Upload Section */}
-        <ProfileCVSection initialCvUrl={dbUser.cvUrl} />
 
         {/* Parsed Profile Display - shows when profile exists */}
         <ParsedProfileDisplay profile={parsedProfile} />
