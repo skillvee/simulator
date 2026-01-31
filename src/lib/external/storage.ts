@@ -4,6 +4,7 @@ export const STORAGE_BUCKETS = {
   RESUMES: "resumes",
   RECORDINGS: "recordings",
   SCREENSHOTS: "screenshots",
+  AVATARS: "avatars",
 } as const;
 
 interface UploadResult {

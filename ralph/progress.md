@@ -1787,3 +1787,65 @@ The following files have TypeScript errors that will be resolved when pages are 
 ### Gotchas discovered
 - The `isE2ETestModeClient()` was being used in multiple places; replaced with `shouldSkipScreenRecording()` for clarity
 - Environment variables need both server (`E2E_TEST_MODE`) and client (`NEXT_PUBLIC_*`) versions for Next.js
+
+---
+
+## Issue #189: RF-021 - Generate realistic avatar images for coworkers
+
+### What was implemented
+- Created avatar generation service using Google's Imagen 3 image generation API
+- Integrated with existing Gemini SDK (no new dependencies needed)
+- Background avatar generation on scenario save (both recruiter and admin flows)
+- Updated CoworkerAvatar component to display AI-generated avatars with fallback
+
+### Files created
+- `src/lib/avatar/avatar-generation.ts` - Core avatar generation service:
+  - Uses Imagen 3 model (`imagen-3.0-generate-002`) for photorealistic headshots
+  - Builds prompts from coworker data (name, role, personaStyle)
+  - Uploads to Supabase Storage `avatars` bucket
+  - Retry logic with exponential backoff (max 3 retries)
+  - Creates signed URLs (1 year expiry) for avatar display
+- `src/lib/avatar/index.ts` - Module exports
+- `src/lib/avatar/avatar-generation.test.ts` - Unit tests
+- `src/app/api/avatar/generate/route.ts` - API endpoint for triggering avatar generation
+
+### Files modified
+- `src/lib/external/storage.ts` - Added AVATARS bucket constant
+- `src/components/chat/coworker-avatar.tsx` - Updated to accept `avatarUrl` prop:
+  - Displays AI-generated avatar if available
+  - Falls back to DiceBear identicon if no avatarUrl
+  - Falls back to initials if image fails to load
+- `src/components/chat/coworker-sidebar.tsx` - Pass avatarUrl to CoworkerAvatar
+- `src/components/chat/chat.tsx` - Pass avatarUrl to CoworkerAvatar (4 usages)
+- `src/app/recruiter/scenarios/new/client.tsx` - Trigger avatar generation on save
+- `src/app/admin/scenarios/builder/client.tsx` - Trigger avatar generation on save
+
+### API Research Notes
+**Google Imagen 3 (chosen approach):**
+- Available via existing `@google/genai` SDK with `imagen-3.0-generate-002` model
+- High quality photorealistic images
+- Pricing: ~$0.04 per image
+- Uses `gemini.models.generateImages()` API
+- No additional SDK or authentication needed
+
+**Prompt strategy:**
+- Professional headshot photograph style
+- Corporate/neutral gray background
+- Head and shoulders framing
+- Persona style mapped to appearance hints (friendly → approachable, etc.)
+
+### Learnings
+1. **Imagen via Gemini SDK**: The `@google/genai` SDK supports image generation via `models.generateImages()` method - no need for separate Vertex AI SDK
+2. **Async generation**: Avatar generation runs asynchronously after scenario save to avoid blocking the user
+3. **Only generate for new coworkers**: Service checks `avatarUrl: null` to skip coworkers that already have avatars
+4. **Fallback chain**: Avatar display has 3 fallback levels: AI avatar → DiceBear identicon → Initials
+
+### Gotchas discovered
+- Signed URLs have expiry - using 1 year expiry for avatar URLs
+- Supabase bucket needs to be created if it doesn't exist - handled in code
+- Image generation may fail occasionally - retry logic with exponential backoff handles this
+
+### Verification
+- ✅ TypeScript compiles: `npm run typecheck`
+- ✅ Tests pass: `npm test src/lib/avatar`
+

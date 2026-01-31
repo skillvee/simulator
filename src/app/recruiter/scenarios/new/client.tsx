@@ -198,6 +198,17 @@ export function RecruiterScenarioBuilderClient() {
         }
       }
 
+      // Trigger avatar generation in the background (RF-021)
+      // Don't await - let it run asynchronously
+      fetch("/api/avatar/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenarioId: scenario.id }),
+      }).catch((err) => {
+        // Log but don't block navigation
+        console.error("Avatar generation trigger failed:", err);
+      });
+
       // Navigate to the recruiter scenarios list
       router.push(`/recruiter/scenarios`);
     } catch (err) {

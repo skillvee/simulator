@@ -91,7 +91,7 @@ function CoworkerItem({
       <div className="flex items-start gap-3">
         {/* Avatar with online indicator */}
         <div className="relative flex-shrink-0">
-          <CoworkerAvatar name={coworker.name} size="md" />
+          <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
           {/* Online status indicator - green dot */}
           <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-green-500" />
         </div>

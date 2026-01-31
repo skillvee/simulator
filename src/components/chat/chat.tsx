@@ -166,7 +166,7 @@ export function Chat({
       {/* Header */}
       <header className="flex items-center gap-3 border-b border-border bg-background px-4 py-3">
         {/* Coworker avatar */}
-        <CoworkerAvatar name={coworker.name} size="md" />
+        <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
         <div>
           <h1 className="text-lg font-semibold">{coworker.name}</h1>
           <p className="text-sm text-muted-foreground">{coworker.role}</p>
@@ -204,7 +204,7 @@ export function Chat({
         ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="mb-4">
-              <CoworkerAvatar name={coworker.name} size="lg" />
+              <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="lg" />
             </div>
             <h2 className="mb-2 text-lg font-semibold">
               Start a conversation with {coworker.name}
@@ -236,7 +236,7 @@ export function Chat({
                   </Avatar>
                 ) : (
                   <div className="flex-shrink-0">
-                    <CoworkerAvatar name={coworker.name} size="md" />
+                    <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
                   </div>
                 )}
 
@@ -267,7 +267,7 @@ export function Chat({
             {(isSending || isManagerTyping) && (
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
-                  <CoworkerAvatar name={coworker.name} size="md" />
+                  <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
                 </div>
                 <div className="flex-1">
                   <div className="mb-1 flex items-baseline gap-2">
