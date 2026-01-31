@@ -18,7 +18,7 @@ import {
   type ScreenPermissionState,
 } from "@/lib/media";
 import { VideoRecorder, checkMediaRecorderSupport } from "@/lib/media";
-import { isE2ETestModeClient } from "@/lib/core";
+import { shouldSkipScreenRecording } from "@/lib/core";
 
 export type ScreenRecordingState =
   | "idle"
@@ -404,8 +404,8 @@ export function ScreenRecordingProvider({
   // Load session status on mount (for persistence across page reloads/laptop close)
   useEffect(() => {
     async function loadSession() {
-      // In E2E test mode, auto-start a fake recording session
-      if (isE2ETestModeClient()) {
+      // In E2E test mode or when screen recording is skipped, auto-start a fake recording session
+      if (shouldSkipScreenRecording()) {
         const sessionResult = await startFakeRecordingSession(assessmentId);
         if (sessionResult) {
           segmentIdRef.current = sessionResult.segmentId;

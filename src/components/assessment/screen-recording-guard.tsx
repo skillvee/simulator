@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Monitor, Mic, AlertTriangle, ArrowRight } from "lucide-react";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
-import { isE2ETestModeClient } from "@/lib/core";
+import { shouldSkipScreenRecording } from "@/lib/core";
 import {
   Dialog,
   DialogContent,
@@ -25,8 +25,8 @@ export function ScreenRecordingGuard({
   assessmentId,
   companyName = "the company",
 }: ScreenRecordingGuardProps) {
-  // In E2E test mode, bypass the guard entirely and render children directly
-  if (isE2ETestModeClient()) {
+  // In E2E test mode or when screen recording is skipped, bypass the guard entirely
+  if (shouldSkipScreenRecording()) {
     return <>{children}</>;
   }
 

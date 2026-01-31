@@ -16,6 +16,8 @@ import { createMockPrismaClient, setupMediaMocks } from "@/test/mocks";
 src/test/
 ├── setup.tsx              # Global test setup (runs before each file)
 ├── utils.tsx              # renderWithProviders, waitForAsync
+├── fixtures.ts            # Test constants (RF-001) - TEST_RECRUITER, TEST_CANDIDATE, etc.
+├── helpers.ts             # E2E helpers (RF-001) - login command generators
 ├── factories/
 │   ├── assessment.ts      # createMockAssessment()
 │   ├── user.ts            # createMockUser()
@@ -207,26 +209,54 @@ For visual testing and E2E tests of assessment pages, use the seeded test data.
 
 ```bash
 # 1. Seed the database (creates test users + fixed assessment IDs)
-export $(grep -v '^#' .env.local | xargs) && npx tsx prisma/seed.ts
+npx tsx prisma/seed.ts
 
-# 2. Start dev server with E2E mode (bypasses screen recording)
+# 2. Start dev server with screen recording bypass
+# Option A: Skip just screen recording (recommended for RF-001)
+NEXT_PUBLIC_SKIP_SCREEN_RECORDING=true npm run dev
+
+# Option B: Full E2E mode (bypasses all test guards)
 E2E_TEST_MODE=true NEXT_PUBLIC_E2E_TEST_MODE=true npm run dev
+```
+
+### Test Fixtures (RF-001)
+
+Use the fixtures from `src/test/fixtures.ts`:
+
+```typescript
+import {
+  TEST_RECRUITER,
+  TEST_CANDIDATE,
+  TEST_SCENARIO_ID,
+  TEST_ASSESSMENT_IDS,
+} from "@/test/fixtures";
 ```
 
 ### Test Users
 
-| Role  | Email            | Password        |
-| ----- | ---------------- | --------------- |
-| Admin | admin@test.com   | testpassword123 |
-| User  | user@test.com    | testpassword123 |
+| Role      | Email              | Password        |
+| --------- | ------------------ | --------------- |
+| Admin     | admin@test.com     | testpassword123 |
+| User      | user@test.com      | testpassword123 |
+| Recruiter | recruiter@test.com | testpassword123 |
+| Candidate | candidate@test.com | testpassword123 |
 
 ### Fixed Test Assessment IDs
 
 These IDs are created by the seed script and can be used for predictable E2E testing:
 
-| ID                     | Status  | Owner          | URL                                        |
-| ---------------------- | ------- | -------------- | ------------------------------------------ |
-| `test-assessment-chat` | WORKING | user@test.com  | `/assessment/test-assessment-chat/chat`    |
+| ID                                 | Status     | Owner              | URL                                                 |
+| ---------------------------------- | ---------- | ------------------ | --------------------------------------------------- |
+| `test-assessment-chat`             | WORKING    | user@test.com      | `/assessment/test-assessment-chat/chat`             |
+| `test-assessment-welcome`          | ONBOARDING | candidate@test.com | `/assessment/test-assessment-welcome`               |
+| `test-assessment-working-recruiter`| WORKING    | candidate@test.com | `/assessment/test-assessment-working-recruiter/chat`|
+
+### Test Scenarios
+
+| ID                      | Company                | Name                           |
+| ----------------------- | ---------------------- | ------------------------------ |
+| `default-scenario`      | TechFlow Inc.          | Full-Stack Feature Implementation |
+| `test-scenario-recruiter` | Test Recruiter Company | Frontend Developer Assessment  |
 
 ### Visual Testing Workflow
 
@@ -264,5 +294,5 @@ Then create the assessment with `prisma.assessment.upsert()` using the fixed ID.
 3. **Async mocks**: Always `await` async operations
 4. **Mock cleanup**: Reset mocks in `afterEach` if they hold state
 5. **Provider wrapping**: Use `renderWithProviders`, not bare `render`
-6. **E2E env vars**: Must export env vars before running seed script
-7. **E2E test mode**: Assessment pages require `E2E_TEST_MODE=true` to bypass screen recording
+6. **Screen recording bypass**: Use `NEXT_PUBLIC_SKIP_SCREEN_RECORDING=true` or `NEXT_PUBLIC_E2E_TEST_MODE=true`
+7. **Test fixtures**: Import from `@/test/fixtures` for consistent test data constants

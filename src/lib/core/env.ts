@@ -24,6 +24,11 @@ export const env = createEnv({
       .enum(["true", "false"])
       .optional()
       .transform((val) => val === "true"),
+    // Skip screen recording permission prompts in E2E tests (RF-001)
+    NEXT_PUBLIC_SKIP_SCREEN_RECORDING: z
+      .enum(["true", "false"])
+      .optional()
+      .transform((val) => val === "true"),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
@@ -39,6 +44,8 @@ export const env = createEnv({
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     E2E_TEST_MODE: process.env.E2E_TEST_MODE,
     NEXT_PUBLIC_E2E_TEST_MODE: process.env.NEXT_PUBLIC_E2E_TEST_MODE,
+    NEXT_PUBLIC_SKIP_SCREEN_RECORDING:
+      process.env.NEXT_PUBLIC_SKIP_SCREEN_RECORDING,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
@@ -66,5 +73,21 @@ export function isE2ETestModeClient(): boolean {
   return (
     process.env.NODE_ENV === "development" &&
     env.NEXT_PUBLIC_E2E_TEST_MODE === true
+  );
+}
+
+/**
+ * Check if screen recording should be skipped (RF-001).
+ * Returns true when:
+ * 1. NODE_ENV is "development"
+ * 2. Either NEXT_PUBLIC_SKIP_SCREEN_RECORDING or NEXT_PUBLIC_E2E_TEST_MODE is "true"
+ *
+ * This enables bypassing screen recording permission prompts in E2E tests.
+ */
+export function shouldSkipScreenRecording(): boolean {
+  return (
+    process.env.NODE_ENV === "development" &&
+    (env.NEXT_PUBLIC_SKIP_SCREEN_RECORDING === true ||
+      env.NEXT_PUBLIC_E2E_TEST_MODE === true)
   );
 }

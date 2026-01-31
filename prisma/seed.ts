@@ -30,11 +30,33 @@ const TEST_USERS = {
     name: "Test User",
     role: "USER" as const,
   },
+  // Recruiter-focused flow test users (RF-001)
+  recruiter: {
+    email: "recruiter@test.com",
+    password: "testpassword123",
+    name: "Test Recruiter",
+    // TODO: Change to "RECRUITER" after RF-002 schema changes
+    role: "USER" as const,
+  },
+  candidate: {
+    email: "candidate@test.com",
+    password: "testpassword123",
+    name: "Test Candidate",
+    role: "USER" as const,
+  },
 };
 
 // Fixed test assessment IDs - used by AI agents for visual testing
 const TEST_ASSESSMENT_IDS = {
   chat: "test-assessment-chat", // Status: WORKING - for chat/sidebar testing
+  // Recruiter-focused flow test assessments (RF-001)
+  welcome: "test-assessment-welcome", // TODO: Change to WELCOME status after RF-002 schema changes
+  workingRecruiter: "test-assessment-working-recruiter", // Status: WORKING - for recruiter flow testing
+};
+
+// Fixed test scenario ID for recruiter-focused flow (RF-001)
+const TEST_SCENARIO_IDS = {
+  recruiter: "test-scenario-recruiter",
 };
 
 async function main() {
@@ -535,16 +557,156 @@ Acceptance Criteria:
     }
   }
 
+  // ============================================================================
+  // RECRUITER-FOCUSED FLOW TEST DATA (RF-001)
+  // ============================================================================
+
+  console.log("\n🎯 Creating recruiter-focused flow test data...");
+
+  // Create test scenario for recruiter flow
+  const recruiterScenario = await prisma.scenario.upsert({
+    where: { id: TEST_SCENARIO_IDS.recruiter },
+    update: {
+      name: "Frontend Developer Assessment",
+      companyName: "Test Recruiter Company",
+      companyDescription: `Test Recruiter Company is a technology company focused on building modern web applications.
+
+We value clean code, collaboration, and continuous improvement. Our engineering team works with the latest frontend technologies.
+
+Tech Stack: TypeScript, React, Next.js, Tailwind CSS.`,
+      taskDescription: `Build a responsive dashboard component with the following requirements:
+
+Requirements:
+- Create a dashboard layout with a sidebar and main content area
+- Implement a responsive navigation menu
+- Add data visualization components
+- Ensure accessibility standards are met
+
+Acceptance Criteria:
+1. Dashboard layout renders correctly on desktop and mobile
+2. Navigation menu collapses on mobile devices
+3. Data charts display sample data
+4. All components are keyboard accessible`,
+      repoUrl: "https://github.com/skillvee/frontend-task",
+      techStack: ["TypeScript", "React", "Next.js", "Tailwind CSS"],
+      isPublished: true,
+    },
+    create: {
+      id: TEST_SCENARIO_IDS.recruiter,
+      name: "Frontend Developer Assessment",
+      companyName: "Test Recruiter Company",
+      companyDescription: `Test Recruiter Company is a technology company focused on building modern web applications.
+
+We value clean code, collaboration, and continuous improvement. Our engineering team works with the latest frontend technologies.
+
+Tech Stack: TypeScript, React, Next.js, Tailwind CSS.`,
+      taskDescription: `Build a responsive dashboard component with the following requirements:
+
+Requirements:
+- Create a dashboard layout with a sidebar and main content area
+- Implement a responsive navigation menu
+- Add data visualization components
+- Ensure accessibility standards are met
+
+Acceptance Criteria:
+1. Dashboard layout renders correctly on desktop and mobile
+2. Navigation menu collapses on mobile devices
+3. Data charts display sample data
+4. All components are keyboard accessible`,
+      repoUrl: "https://github.com/skillvee/frontend-task",
+      techStack: ["TypeScript", "React", "Next.js", "Tailwind CSS"],
+      isPublished: true,
+    },
+  });
+
+  console.log(`  ✅ Recruiter scenario: ${recruiterScenario.name}`);
+
+  // Create a manager coworker for the recruiter scenario
+  await prisma.coworker.deleteMany({
+    where: { scenarioId: recruiterScenario.id },
+  });
+
+  const manager = await prisma.coworker.create({
+    data: {
+      scenarioId: recruiterScenario.id,
+      name: "Sarah Chen",
+      role: "Engineering Manager",
+      personaStyle:
+        "Friendly and supportive manager who focuses on clear communication and team collaboration. Provides constructive feedback and encourages questions.",
+      knowledge: {
+        teamSize: 8,
+        projectContext: "Dashboard redesign project",
+        techDecisions: ["Chose React for frontend", "Using Tailwind for styling"],
+      } as unknown as Prisma.InputJsonValue,
+      avatarUrl: null,
+      voiceName: "Aoede",
+    },
+  });
+  console.log(`  ✅ Manager coworker: ${manager.name} (${manager.role})`);
+
+  // Get the test candidate user
+  const testCandidate = await prisma.user.findUnique({
+    where: { email: TEST_USERS.candidate.email },
+  });
+
+  if (testCandidate) {
+    // Create test assessment for welcome/resume flow
+    // TODO: Change to WELCOME status after RF-002 schema changes
+    await prisma.assessment.upsert({
+      where: { id: TEST_ASSESSMENT_IDS.welcome },
+      update: {
+        status: "ONBOARDING", // TODO: Change to WELCOME after RF-002
+        scenarioId: recruiterScenario.id,
+      },
+      create: {
+        id: TEST_ASSESSMENT_IDS.welcome,
+        userId: testCandidate.id,
+        scenarioId: recruiterScenario.id,
+        status: "ONBOARDING", // TODO: Change to WELCOME after RF-002
+      },
+    });
+    console.log(`  ✅ Welcome assessment: ${TEST_ASSESSMENT_IDS.welcome}`);
+    console.log(`     Status: ONBOARDING (TODO: change to WELCOME)`);
+
+    // Create test assessment in working state for recruiter flow
+    await prisma.assessment.upsert({
+      where: { id: TEST_ASSESSMENT_IDS.workingRecruiter },
+      update: {
+        status: "WORKING",
+        scenarioId: recruiterScenario.id,
+      },
+      create: {
+        id: TEST_ASSESSMENT_IDS.workingRecruiter,
+        userId: testCandidate.id,
+        scenarioId: recruiterScenario.id,
+        status: "WORKING",
+      },
+    });
+    console.log(`  ✅ Working assessment: ${TEST_ASSESSMENT_IDS.workingRecruiter}`);
+    console.log(`     URL: /assessment/${TEST_ASSESSMENT_IDS.workingRecruiter}/chat`);
+  } else {
+    console.log("  ⚠️ Test candidate user not found, skipping recruiter flow assessments");
+  }
+
   // Print summary
   const coworkerCount = await prisma.coworker.count({
     where: { scenarioId: defaultScenario.id },
   });
 
+  const recruiterCoworkerCount = await prisma.coworker.count({
+    where: { scenarioId: recruiterScenario.id },
+  });
+
   console.log("\n📊 Summary:");
-  console.log(`   Scenario: ${defaultScenario.name}`);
+  console.log(`   Default Scenario: ${defaultScenario.name}`);
   console.log(`   Company: ${defaultScenario.companyName}`);
   console.log(`   Coworkers: ${coworkerCount}`);
   console.log(`   Tech Stack: ${defaultScenario.techStack.join(", ")}`);
+  console.log("");
+  console.log(`   Recruiter Scenario: ${recruiterScenario.name}`);
+  console.log(`   Company: ${recruiterScenario.companyName}`);
+  console.log(`   Coworkers: ${recruiterCoworkerCount}`);
+  console.log(`   Tech Stack: ${recruiterScenario.techStack.join(", ")}`);
 
   console.log("\n🎉 Seed completed successfully!");
 }
