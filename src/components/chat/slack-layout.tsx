@@ -17,11 +17,11 @@ interface Coworker {
 interface CallContextValue {
   activeCall: {
     coworkerId: string;
-    callType: "coworker" | "kickoff" | "defense";
+    callType: "coworker" | "defense";
   } | null;
   startCall: (
     coworkerId: string,
-    callType: "coworker" | "kickoff" | "defense"
+    callType: "coworker" | "defense"
   ) => void;
   endCall: () => void;
 }
@@ -100,7 +100,7 @@ function SlackLayoutInner({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeCall, setActiveCall] = useState<{
     coworkerId: string;
-    callType: "coworker" | "kickoff" | "defense";
+    callType: "coworker" | "defense";
   } | null>(null);
 
   // Determine selected coworker from prop override or URL
@@ -109,7 +109,7 @@ function SlackLayoutInner({
 
   const startCall = (
     coworkerId: string,
-    callType: "coworker" | "kickoff" | "defense"
+    callType: "coworker" | "defense"
   ) => {
     setActiveCall({ coworkerId, callType });
   };

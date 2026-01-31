@@ -27,14 +27,6 @@ export const CallTokenRequestSchema = z.object({
 export type CallTokenRequest = z.infer<typeof CallTokenRequestSchema>;
 
 /**
- * POST /api/kickoff/token - Get token for manager kickoff call
- */
-export const KickoffTokenRequestSchema = z.object({
-  assessmentId: z.string().min(1, "Assessment ID is required"),
-});
-export type KickoffTokenRequest = z.infer<typeof KickoffTokenRequestSchema>;
-
-/**
  * POST /api/defense/token - Get token for defense call
  */
 export const DefenseTokenRequestSchema = z.object({

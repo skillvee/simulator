@@ -10,8 +10,6 @@ export {
   type ChatRequest,
   CallTokenRequestSchema,
   type CallTokenRequest,
-  KickoffTokenRequestSchema,
-  type KickoffTokenRequest,
   DefenseTokenRequestSchema,
   type DefenseTokenRequest,
   RegisterRequestSchema,

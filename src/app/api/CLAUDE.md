@@ -116,7 +116,7 @@ return success({ data });
 
 ## Route Groups
 
-- **Assessment flow:** interview/, kickoff/, call/, chat/, defense/, assessment/
+- **Assessment flow:** call/, chat/, defense/, assessment/
 - **Admin:** admin/\* (protected by `requireAdmin()`)
 
 ## Gotchas

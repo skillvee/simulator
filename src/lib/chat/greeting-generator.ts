@@ -51,22 +51,17 @@ export function generateManagerGreetings(context: GreetingContext): ChatMessage[
     },
     {
       role: "model",
-      text: `Let's schedule a quick kickoff call to go over your first task and answer any questions you might have. Sound good?`,
+      text: `Here's what you'll be working on:\n\n"${taskDescription.slice(0, 200)}${taskDescription.length > 200 ? "..." : ""}"`,
       timestamp: formatTime(1),
     },
     {
       role: "model",
-      text: `In the meantime, you can check out the repo here: ${repoUrl}`,
+      text: `You can check out the repo here: ${repoUrl}`,
       timestamp: formatTime(1),
     },
     {
       role: "model",
-      text: `Here's a quick preview of what you'll be working on:\n\n"${taskDescription.slice(0, 200)}${taskDescription.length > 200 ? "..." : ""}"`,
-      timestamp: formatTime(2),
-    },
-    {
-      role: "model",
-      text: `When you're ready, hop on the kickoff call and we'll dive into the details together!`,
+      text: `Feel free to ask me any questions you have, or reach out to the team. When you're done, submit your PR and give me a call to discuss!`,
       timestamp: formatTime(2),
     },
   ];

@@ -59,7 +59,6 @@ async function collectAssessmentSignals(
 
   // Build conversation signals
   const conversationSignals: ConversationSignals = {
-    kickoffTranscript: [],
     coworkerChats: [],
     defenseTranscript: [],
     totalCoworkerInteractions: 0,
@@ -70,11 +69,9 @@ async function collectAssessmentSignals(
 
   for (const conv of assessment.conversations) {
     const messages = (conv.transcript as unknown as ChatMessage[]) || [];
-    const convType = conv.type as "text" | "voice" | "kickoff" | "defense";
+    const convType = conv.type as "text" | "voice" | "defense";
 
-    if (convType === "kickoff") {
-      conversationSignals.kickoffTranscript = messages;
-    } else if (convType === "defense") {
+    if (convType === "defense") {
       conversationSignals.defenseTranscript = messages;
     } else if (conv.coworkerId && conv.coworker) {
       conversationSignals.coworkerChats.push({

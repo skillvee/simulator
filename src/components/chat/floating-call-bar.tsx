@@ -39,7 +39,7 @@ interface Coworker {
 interface FloatingCallBarProps {
   assessmentId: string;
   coworker: Coworker;
-  callType: "coworker" | "kickoff" | "defense";
+  callType: "coworker" | "defense";
   onCallEnd: () => void;
   onError?: (error: string) => void;
 }
@@ -81,8 +81,6 @@ export function FloatingCallBar({
   // Determine which API endpoint to use based on call type
   const getTokenEndpoint = useCallback(() => {
     switch (callType) {
-      case "kickoff":
-        return "/api/kickoff/token";
       case "defense":
         return "/api/defense/token";
       default:
@@ -92,8 +90,6 @@ export function FloatingCallBar({
 
   const getTranscriptEndpoint = useCallback(() => {
     switch (callType) {
-      case "kickoff":
-        return "/api/kickoff/transcript";
       case "defense":
         return "/api/defense/transcript";
       default:

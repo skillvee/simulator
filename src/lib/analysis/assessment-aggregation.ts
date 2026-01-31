@@ -112,7 +112,6 @@ export interface RecordingSignals {
  * Conversation signals (chat/voice with coworkers)
  */
 export interface ConversationSignals {
-  kickoffTranscript: ChatMessage[];
   coworkerChats: Array<{
     coworkerName: string;
     coworkerRole: string;
@@ -704,12 +703,6 @@ function formatCollaborationForPrompt(
       )
       .join("; ");
     parts.push(`Interactions: ${coworkerList}`);
-  }
-
-  if (conversations.kickoffTranscript.length > 0) {
-    parts.push(
-      `Kickoff call: ${conversations.kickoffTranscript.length} exchanges`
-    );
   }
 
   if (conversations.defenseTranscript.length > 0) {

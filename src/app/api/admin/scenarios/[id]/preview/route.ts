@@ -63,10 +63,6 @@ export async function POST(request: Request, context: RouteContext) {
     // Skip directly to the working/coworker chat phase
     status = "WORKING";
     urlSuffix = "/chat";
-  } else if (skipTo === "kickoff") {
-    // Skip to welcome (kickoff call happens via floating bar there)
-    status = "WORKING";
-    urlSuffix = "/welcome";
   }
 
   // Create a preview assessment for this admin

@@ -94,29 +94,19 @@ export async function POST(request: Request) {
     };
 
     // Build conversation summary from all conversations
-    // Extended type for conversation types (the DB stores more than just text/voice)
-    type ExtendedConversationType = "text" | "voice" | "kickoff" | "defense";
-
-    interface ExtendedConversationWithMeta extends Omit<
-      ConversationWithMeta,
-      "type"
-    > {
-      type: ExtendedConversationType;
-    }
-
-    const allConversations: ExtendedConversationWithMeta[] =
+    const allConversations: ConversationWithMeta[] =
       assessment.conversations.map((conv) => ({
-        type: conv.type as ExtendedConversationType,
+        type: conv.type as "text" | "voice",
         coworkerId: conv.coworkerId,
         messages: (conv.transcript as unknown as ChatMessage[]) || [],
         createdAt: conv.createdAt,
         updatedAt: conv.updatedAt,
       }));
 
-    // Get memory context for manager (they were in kickoff call)
+    // Get memory context for manager
     const managerConversations = allConversations.filter(
-      (c) => c.coworkerId === manager.id || c.type === "kickoff"
-    ) as ConversationWithMeta[];
+      (c) => c.coworkerId === manager.id
+    );
     const managerMemory = await buildCoworkerMemory(
       managerConversations,
       manager.name
@@ -126,7 +116,7 @@ export async function POST(request: Request) {
     // Build conversation summary (all conversations)
     let conversationSummary = memoryPrompt;
     const otherConversations = allConversations.filter(
-      (c) => c.coworkerId !== manager.id && c.type !== "kickoff"
+      (c) => c.coworkerId !== manager.id
     );
     if (otherConversations.length > 0) {
       conversationSummary += `\n\n### Other Team Conversations\nThe candidate also had ${otherConversations.length} conversation(s) with other team members.`;

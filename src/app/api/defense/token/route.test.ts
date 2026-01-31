@@ -312,7 +312,7 @@ describe("POST /api/defense/token", () => {
       user: { name: "Test User", email: "test@example.com" },
       conversations: [
         {
-          type: "kickoff",
+          type: "text",
           coworkerId: "manager-id",
           transcript: [
             { role: "user", text: "Hello", timestamp: "2024-01-01" },

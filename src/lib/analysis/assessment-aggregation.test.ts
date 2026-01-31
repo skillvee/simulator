@@ -485,7 +485,6 @@ describe("Score Calculation Functions", () => {
       scenarioName: "Test Scenario",
       hrInterview: null,
       conversations: {
-        kickoffTranscript: [],
         coworkerChats: [],
         defenseTranscript: [],
         totalCoworkerInteractions: 0,
@@ -561,7 +560,6 @@ describe("Score Calculation Functions", () => {
       // 3+ coworkers contacted
       const goodCollab = createMockSignals({
         conversations: {
-          kickoffTranscript: [],
           coworkerChats: [
             {
               coworkerName: "Alice",

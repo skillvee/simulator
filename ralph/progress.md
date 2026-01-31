@@ -1,5 +1,60 @@
 # Ralph Progress Log
 
+## Issue #173: RF-005 - Remove congratulations and kickoff pages
+
+### What was implemented
+- Deleted `/src/app/assessment/[id]/kickoff/` directory (redirect page)
+- Deleted `/src/app/api/kickoff/token/` directory (route.ts, route.test.ts)
+- Deleted `/src/app/api/kickoff/transcript/` directory (route.ts, route.test.ts)
+- Deleted `src/hooks/voice/use-manager-kickoff.ts` hook
+- Deleted `src/prompts/manager/kickoff.ts` prompt builder
+- Updated `src/hooks/voice/index.ts` to remove useManagerKickoff export
+- Updated `src/prompts/index.ts` to remove kickoff prompt exports and update comment
+- Updated `src/lib/schemas/api.ts` to remove KickoffTokenRequestSchema
+- Updated `src/lib/schemas/index.ts` to remove kickoff schema exports
+- Updated `src/components/chat/slack-layout.tsx` to remove "kickoff" from call types
+- Updated `src/components/chat/floating-call-bar.tsx` to remove "kickoff" call type handling
+- Updated `src/app/api/defense/token/route.ts` to remove kickoff conversation filtering
+- Updated `src/lib/chat/greeting-generator.ts` to remove kickoff call references from manager greetings
+- Updated `src/app/api/assessment/report/route.ts` to remove kickoff transcript handling
+- Updated `src/lib/analysis/assessment-aggregation.ts` to remove kickoffTranscript from ConversationSignals
+- Updated `src/app/api/admin/scenarios/[id]/preview/route.ts` to remove kickoff skipTo option
+- Updated `src/hooks/CLAUDE.md` to remove kickoff hook documentation
+- Updated `src/app/api/CLAUDE.md` to remove kickoff from route groups
+- Updated `src/app/api/defense/token/route.test.ts` to use "text" instead of "kickoff" conversation type
+- Updated `src/lib/analysis/assessment-aggregation.test.ts` to remove kickoffTranscript from test data
+
+### Files deleted
+- `src/app/assessment/[id]/kickoff/page.tsx`
+- `src/app/api/kickoff/token/route.ts`
+- `src/app/api/kickoff/token/route.test.ts`
+- `src/app/api/kickoff/transcript/route.ts`
+- `src/app/api/kickoff/transcript/route.test.ts`
+- `src/hooks/voice/use-manager-kickoff.ts`
+- `src/prompts/manager/kickoff.ts`
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes (excluding pre-existing test failures from RF-002)
+- Build succeeds: `npm run build` passes
+- Route `/assessment/[id]/kickoff` is no longer accessible (verified with agent-browser)
+- Route `/assessment/[id]/congratulations` is no longer accessible (already removed in RF-004)
+- Screenshots saved to `screenshots/issue-173-kickoff-404.png` and `screenshots/issue-173-congratulations-404.png`
+
+### Learnings for future iterations
+- The congratulations page was already deleted in RF-004 as part of HR interview flow cleanup
+- The kickoff call type was used in multiple places: call context, floating call bar, and API endpoints
+- The greeting generator still referenced kickoff calls - updated messaging to reflect new flow where manager gives tasks directly in chat
+- ConversationSignals interface had kickoffTranscript field that needed removal
+- Test files referenced old conversation types that needed updating
+
+### Gotchas discovered
+- The defense token route was filtering for kickoff conversations to build manager context - changed to filter by manager coworker ID only
+- The preview route had a "kickoff" skipTo option that needed removal
+- Multiple documentation files (CLAUDE.md) referenced kickoff hooks and routes
+- Pre-existing test failures from RF-002 (HR_INTERVIEW, FINAL_DEFENSE status values) are unrelated to this issue
+
+---
+
 ## Issue #172: RF-004 - Remove HR interview pages and API routes
 
 ### What was implemented

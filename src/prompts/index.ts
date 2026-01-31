@@ -2,16 +2,12 @@
  * Centralized Prompts Module
  *
  * All AI prompts are organized by domain:
- * - manager/   - Manager kickoff and defense call prompts
+ * - manager/   - Manager defense call and PR submission prompts
  * - coworker/  - Coworker chat and voice prompts
  * - analysis/  - Code review, CV parsing, recording analysis, assessment prompts
  */
 
 // Manager Calls
-export {
-  buildManagerKickoffPrompt,
-  type KickoffContext,
-} from "./manager/kickoff";
 export { buildDefensePrompt, type DefenseContext } from "./manager/defense";
 export {
   PR_ACKNOWLEDGMENT_PROMPT,

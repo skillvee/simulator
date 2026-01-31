@@ -26,10 +26,3 @@ export type {
   UseDefenseCallOptions,
   UseDefenseCallReturn,
 } from "./use-defense-call";
-
-// Manager kickoff hook
-export { useManagerKickoff } from "./use-manager-kickoff";
-export type {
-  UseManagerKickoffOptions,
-  UseManagerKickoffReturn,
-} from "./use-manager-kickoff";

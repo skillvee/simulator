@@ -7,10 +7,8 @@ src/hooks/
 ├── voice/
 │   ├── types.ts                    # VoiceConnectionState, shared types
 │   ├── use-voice-base.ts           # ~400 LOC shared logic
-│   ├── use-voice-conversation.ts   # ~130 LOC HR interview hook
 │   ├── use-coworker-voice.ts       # ~110 LOC coworker call hook
 │   ├── use-defense-call.ts         # ~120 LOC PR defense hook
-│   ├── use-manager-kickoff.ts      # ~110 LOC manager kickoff hook
 │   └── index.ts                    # Re-exports
 ├── use-screen-recording.ts         # Screen recording hook
 └── index.ts                        # Main re-exports
@@ -43,10 +41,8 @@ type VoiceConnectionState =
 
 | Hook | Token Endpoint | Session Recovery | Retry | Additional Data |
 |------|----------------|------------------|-------|-----------------|
-| `useVoiceConversation` | `/api/interview/token` | Yes | Yes | - |
 | `useCoworkerVoice` | `/api/call/token` | Yes | Yes | coworkerId |
 | `useDefenseCall` | `/api/defense/token` | No | Yes | managerName, managerRole, prUrl |
-| `useManagerKickoff` | `/api/kickoff/token` | No | Yes | managerName, managerRole |
 
 ## Usage
 
