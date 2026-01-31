@@ -218,7 +218,91 @@ When candidate enters chat view:
 ### Changes Needed
 - Remove checks for PROCESSING status (no longer exists)
 - Handle report generation inline when candidate arrives after defense call
-- No major UI changes needed
+- Display new simplified assessment data (see Assessment Simplification below)
+
+---
+
+## Assessment Simplification
+
+### Overview
+Simplify the assessment from multiple LLM calls to a single video evaluation. Remove HR information, code review, screenshot analysis, and other complexity. One video assessment evaluates 8 skills and provides hiring signals for recruiters.
+
+### Current Assessment System (TO BE REMOVED)
+The current system makes multiple LLM calls:
+- Code review analysis (`gemini-3-flash-preview`)
+- Screenshot analysis per segment (`gemini-3-flash-preview`)
+- Video evaluation (`gemini-3-pro-preview`)
+- Narrative feedback generation (`gemini-3-flash-preview`)
+- Recommendations generation (`gemini-3-flash-preview`)
+
+### New Assessment System
+**Single LLM call**: Video evaluation using `gemini-3-pro-preview`
+
+**8 Skills to Evaluate** (from video-evaluation.ts):
+1. Communication - Verbal & written clarity
+2. Problem Solving - Analytical approach
+3. Technical Knowledge - Domain expertise
+4. Collaboration - Working with others
+5. Adaptability - Response to changes
+6. Leadership - Initiative & direction
+7. Creativity - Novel approaches
+8. Time Management - Prioritization & efficiency
+
+**Output Per Skill:**
+- Score (1-5)
+- Rationale (why this score, with evidence)
+- Green flags (positive signals observed)
+- Red flags (concerns observed)
+
+**Overall Hiring Section:**
+- Overall green flags (top 3-5 strengths)
+- Overall red flags (top 3-5 concerns)
+- Hiring recommendation: `hire` | `maybe` | `no_hire`
+- Recommendation rationale
+
+### Files to Delete
+- `src/lib/analysis/code-review.ts`
+- `src/lib/analysis/recording-analysis.ts`
+- `src/lib/analysis/assessment-aggregation.ts`
+- `src/prompts/analysis/code-review.ts`
+- `src/prompts/analysis/recording.ts`
+- `src/prompts/analysis/assessment.ts`
+
+### Files to Modify
+- `src/lib/analysis/video-evaluation.ts` - Add hiring signals to output
+- `src/prompts/analysis/video-evaluation.ts` - Extend prompt for hiring signals
+- `src/app/api/assessment/report/route.ts` - Simplify to just call video evaluation
+- `src/app/assessment/[id]/results/client.tsx` - Display new data structure
+
+### New Output Schema
+```typescript
+interface AssessmentReport {
+  evaluationVersion: string;
+  overallScore: number; // 1.0-5.0
+  skills: {
+    dimension: string;
+    score: number;
+    rationale: string;
+    greenFlags: string[];
+    redFlags: string[];
+    timestamps: string[];
+  }[];
+  hiringSignals: {
+    overallGreenFlags: string[];
+    overallRedFlags: string[];
+    recommendation: 'hire' | 'maybe' | 'no_hire';
+    recommendationRationale: string;
+  };
+  evaluationConfidence: 'high' | 'medium' | 'low';
+  insufficientEvidenceNotes?: string;
+}
+```
+
+### Assessment Simplification Issue Order
+1. **RF-022: Delete unused analysis files** (#190) - Remove code-review.ts, recording-analysis.ts, assessment-aggregation.ts
+2. **RF-023: Update video evaluation prompt** (#191) - Add hiring signals output schema
+3. **RF-024: Simplify report API** (#192) - Remove multi-source aggregation, just call video evaluation
+4. **RF-025: Update results page** (#193) - Display new simplified data structure
 
 ---
 
