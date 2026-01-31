@@ -43,6 +43,7 @@ export function createMockAssessment(
     prSnapshot: null,
     ciStatus: null,
     codeReview: null,
+    managerMessagesStarted: false,
     report: null,
     supersededBy: null,
     createdAt: now,

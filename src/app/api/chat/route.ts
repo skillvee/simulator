@@ -18,7 +18,6 @@ import {
 import { success, error, validateRequest } from "@/lib/api";
 import { ChatRequestSchema } from "@/lib/schemas";
 import { isValidPrUrl } from "@/lib/external";
-import { generateManagerGreetings } from "@/lib/chat/greeting-generator";
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
@@ -426,6 +425,8 @@ export async function GET(request: Request) {
   }
 
   // Get existing conversation
+  // Note: Manager greeting messages are now handled by POST /api/chat/manager-start (RF-015)
+  // which is triggered after a 5-10 second delay for a more realistic feel
   const conversation = await db.conversation.findFirst({
     where: {
       assessmentId,
@@ -433,45 +434,6 @@ export async function GET(request: Request) {
       type: "text",
     },
   });
-
-  // If no conversation exists and this is a manager in WELCOME/WORKING status,
-  // generate greeting messages and save them as a new conversation
-  if (!conversation && isManager(coworker.role)) {
-    if (
-      assessment.status === AssessmentStatus.WELCOME ||
-      assessment.status === AssessmentStatus.WORKING
-    ) {
-      // Generate greeting messages
-      const greetingMessages = generateManagerGreetings({
-        userName: session.user.name || "there",
-        managerName: coworker.name,
-        managerRole: coworker.role,
-        companyName: assessment.scenario.companyName,
-        repoUrl: assessment.scenario.repoUrl,
-        taskDescription: assessment.scenario.taskDescription,
-      });
-
-      // Save greeting messages as a new conversation
-      await db.conversation.create({
-        data: {
-          assessmentId,
-          coworkerId,
-          type: "text",
-          transcript: greetingMessages as unknown as Prisma.InputJsonValue,
-        },
-      });
-
-      // Update assessment status to WORKING if currently WELCOME
-      if (assessment.status === AssessmentStatus.WELCOME) {
-        await db.assessment.update({
-          where: { id: assessmentId },
-          data: { status: AssessmentStatus.WORKING },
-        });
-      }
-
-      return success({ messages: greetingMessages });
-    }
-  }
 
   const messages = conversation
     ? (conversation.transcript as unknown as ChatMessage[])

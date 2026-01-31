@@ -155,6 +155,9 @@ model Assessment {
   // AI Analysis
   codeReview    Json?            // AI code review analysis (quality, patterns, security, maintainability)
 
+  // Manager auto-start messages (RF-015)
+  managerMessagesStarted Boolean @default(false) // True once manager initial messages have been sent
+
   // Results
   report        Json?            // Final assessment report
 

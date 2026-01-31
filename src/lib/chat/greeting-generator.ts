@@ -29,40 +29,38 @@ export function generateManagerGreetings(context: GreetingContext): ChatMessage[
   const { userName, managerName, managerRole, companyName, repoUrl, taskDescription } = context;
 
   const baseTimestamp = new Date();
-  const formatTime = (offset: number): string => {
-    const time = new Date(baseTimestamp.getTime() + offset * 60000);
-    return time.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+
+  // Generate ISO timestamp with offset in seconds for staggered messages
+  const getTimestamp = (offsetSeconds: number): string => {
+    const time = new Date(baseTimestamp.getTime() + offsetSeconds * 1000);
+    return time.toISOString();
   };
 
   return [
     {
       role: "model",
       text: `Hey ${userName}! Welcome to ${companyName}! I'm so glad to have you on the team.`,
-      timestamp: formatTime(0),
+      timestamp: getTimestamp(0),
     },
     {
       role: "model",
       text: `I'm ${managerName}, your ${managerRole}. I'll be helping you get up to speed and supporting you throughout your work here.`,
-      timestamp: formatTime(0),
+      timestamp: getTimestamp(2),
     },
     {
       role: "model",
       text: `Here's what you'll be working on:\n\n"${taskDescription.slice(0, 200)}${taskDescription.length > 200 ? "..." : ""}"`,
-      timestamp: formatTime(1),
+      timestamp: getTimestamp(5),
     },
     {
       role: "model",
       text: `You can check out the repo here: ${repoUrl}`,
-      timestamp: formatTime(1),
+      timestamp: getTimestamp(8),
     },
     {
       role: "model",
       text: `Feel free to ask me any questions you have, or reach out to the team. When you're done, submit your PR and give me a call to discuss!`,
-      timestamp: formatTime(2),
+      timestamp: getTimestamp(12),
     },
   ];
 }

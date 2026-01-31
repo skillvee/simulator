@@ -1,5 +1,95 @@
 # Ralph Progress Log
 
+## Issue #183: RF-015 - Add manager auto-start messages in Slack
+
+### What was implemented
+- Added `managerMessagesStarted` field to Assessment model to track first visit
+- Created `/src/app/api/chat/manager-start/route.ts` - API endpoint to trigger manager messages
+- Created `/src/hooks/chat/use-manager-auto-start.ts` - Hook for staggered message delivery
+- Modified `/src/components/chat/chat.tsx` - Integrated manager auto-start hook
+- Modified `/src/app/api/chat/route.ts` - Removed auto-greeting from GET (now handled by new API)
+- Fixed `/src/lib/chat/greeting-generator.ts` - Changed timestamps to ISO format
+
+### Database Changes
+- Added `managerMessagesStarted` boolean field to Assessment model (default: false)
+- Migration: `prisma/migrations/20250130000001_manager_messages_started/migration.sql`
+
+### Manager Auto-Start Flow
+1. When candidate lands on `/assessment/[id]/chat`, the `useManagerAutoStart` hook runs
+2. Hook checks if `managerMessagesStarted` is false via GET `/api/chat/manager-start`
+3. After 5-10 second random delay, POST `/api/chat/manager-start` triggers messages
+4. Messages are delivered one at a time with typing indicators for realistic feel
+5. Flag is set to prevent duplicate messages on refresh/revisit
+
+### Manager Initial Messages
+1. "Hey [userName]! Welcome to [companyName]! I'm so glad to have you on the team."
+2. "I'm [managerName], your [managerRole]. I'll be helping you get up to speed..."
+3. "Here's what you'll be working on: [taskDescription]"
+4. "You can check out the repo here: [repoUrl]"
+5. "Feel free to ask me any questions... When you're done, submit your PR and give me a call to discuss!"
+
+### Technical Implementation
+- **Option chosen:** API endpoint called from chat client on mount
+- Messages staggered with 0.8-1.5s typing indicator + 1.5-3s delay between messages
+- Assessment status updated from WELCOME to WORKING when messages are sent
+- Manager coworker found by role containing "manager" or first coworker as fallback
+
+### Files created
+- `src/app/api/chat/manager-start/route.ts` - POST triggers messages, GET checks status
+- `src/hooks/chat/use-manager-auto-start.ts` - Client hook for triggering and delivering messages
+- `prisma/migrations/20250130000001_manager_messages_started/migration.sql`
+
+### Files modified
+- `prisma/schema.prisma` - Added managerMessagesStarted field
+- `src/app/api/chat/route.ts` - Removed auto-greeting generation from GET
+- `src/components/chat/chat.tsx` - Added useManagerAutoStart hook integration
+- `src/hooks/index.ts` - Added export for useManagerAutoStart
+- `src/lib/chat/greeting-generator.ts` - Fixed timestamp format (ISO instead of locale string)
+- `src/test/factories/assessment.ts` - Added managerMessagesStarted field
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- Build succeeds: `npm run build` passes
+- E2E tested with agent-browser:
+  - Logged in as candidate@test.com
+  - Navigated to `/assessment/test-assessment-welcome/chat`
+  - After ~15 seconds, all 5 manager messages appear with correct timestamps
+  - Refreshed page - no duplicate messages (flag prevents re-send)
+- Screenshots captured:
+  - `screenshots/issue-183-initial-empty.png` - Initial loading state
+  - `screenshots/issue-183-final-v2.png` - All messages displayed
+  - `screenshots/issue-183-no-duplicates-v2.png` - After refresh, same messages
+
+### Learnings for future iterations
+- React's strict mode can cause hooks to run twice - use refs to prevent double execution
+- Timestamps must be ISO strings for `new Date()` parsing in formatTimestamp
+- The staggered message delivery gives a natural feel vs. all messages appearing at once
+- Tracking flags at the assessment level prevents race conditions better than conversation-level
+
+### Gotchas discovered
+- The greeting generator was returning locale time strings which caused "Invalid Date" in the UI
+- Need to reset the `historyLoadedRef` on error to allow retry
+- The manager auto-start should only deliver messages to the chat view if viewing the manager
+
+### Acceptance Criteria Status
+- [x] When candidate lands on `/assessment/[id]/chat`, detect if this is first visit
+- [x] After 5-10 second delay, trigger manager's first message
+- [x] Use existing chat/message system
+- [x] Message 1: Greeting and intro
+- [x] Message 2: Brief, vague task context (intentionally incomplete)
+- [x] Message 3: Suggest hopping on a call to discuss
+- [x] Stagger messages slightly for realistic feel
+- [x] Track whether manager has already sent initial messages for this assessment
+- [x] Store flag in assessment record (managerMessagesStarted)
+- [x] Don't re-send on page refresh or revisit
+- [x] Use the manager coworker from the scenario
+- [x] Default to first coworker if no explicit manager
+- [x] TypeScript compiles: `npm run typecheck`
+- [x] Navigate to chat for first time - manager messages appear after delay
+- [x] Refresh page - no duplicate messages
+
+---
+
 ## Issue #182: RF-014 - Create welcome page with consent
 
 ### What was implemented

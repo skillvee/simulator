@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Phone, Send } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api";
 import { useCallContext } from "./slack-layout";
@@ -8,6 +8,7 @@ import { CoworkerAvatar } from "./coworker-avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useManagerAutoStart } from "@/hooks";
 import type { ChatMessage } from "@/types";
 
 interface Coworker {
@@ -34,16 +35,45 @@ export function Chat({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isManagerTyping, setIsManagerTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const historyLoadedRef = useRef(false);
 
   // Check if currently in a call with this coworker
   const { activeCall } = useCallContext();
   const isInCall = activeCall?.coworkerId === coworker.id;
 
+  // Callbacks for manager auto-start messages
+  const handleManagerMessages = useCallback((newMessages: ChatMessage[]) => {
+    setMessages((prev) => [...prev, ...newMessages]);
+  }, []);
+
+  const handleTypingStart = useCallback(() => {
+    setIsManagerTyping(true);
+  }, []);
+
+  const handleTypingEnd = useCallback(() => {
+    setIsManagerTyping(false);
+  }, []);
+
+  // RF-015: Manager auto-start messages
+  // Triggers initial manager messages after 5-10 seconds on first visit
+  useManagerAutoStart({
+    assessmentId,
+    currentCoworkerId: coworker.id,
+    onMessagesReceived: handleManagerMessages,
+    onTypingStart: handleTypingStart,
+    onTypingEnd: handleTypingEnd,
+  });
+
   // Load chat history on mount
   useEffect(() => {
     async function loadHistory() {
+      // Prevent duplicate loads
+      if (historyLoadedRef.current) return;
+      historyLoadedRef.current = true;
+
       setIsLoading(true);
       try {
         const data = await api<{ messages: ChatMessage[] }>(
@@ -52,6 +82,7 @@ export function Chat({
         setMessages(data.messages || []);
       } catch (err) {
         console.error("Failed to load chat history:", err);
+        historyLoadedRef.current = false; // Allow retry on error
       } finally {
         setIsLoading(false);
       }
@@ -232,8 +263,8 @@ export function Chat({
               </div>
             ))}
 
-            {/* Typing indicator when sending */}
-            {isSending && (
+            {/* Typing indicator when sending or when manager is auto-typing */}
+            {(isSending || isManagerTyping) && (
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <CoworkerAvatar name={coworker.name} size="md" />
