@@ -41,11 +41,13 @@ interface FloatingCallBarProps {
   coworker: Coworker;
   callType: "coworker";
   onCallEnd: () => void;
+  onDefenseComplete?: () => void;
   onError?: (error: string) => void;
 }
 
-// Note: "defense" call type was removed in RF-006. Defense calls will be
-// reintegrated in RF-012 using a different flow within the Slack interface.
+// Defense calls are detected automatically when the token endpoint returns
+// isDefenseCall: true. When a defense call ends, onDefenseComplete is called
+// which triggers assessment finalization and navigation to results.
 
 /**
  * Slack huddles-style floating call bar that appears at the bottom of the sidebar.
@@ -57,6 +59,7 @@ export function FloatingCallBar({
   coworker,
   callType: _callType, // Currently only "coworker" type; kept for future extensibility
   onCallEnd,
+  onDefenseComplete,
   onError,
 }: FloatingCallBarProps) {
   const [callState, setCallState] = useState<CallState>("idle");
@@ -67,6 +70,7 @@ export function FloatingCallBar({
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAudioSupported] = useState(() => checkAudioSupport());
+  const [_isDefenseCall, setIsDefenseCall] = useState(false);
 
   const sessionRef = useRef<Session | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -80,6 +84,9 @@ export function FloatingCallBar({
 
   // Prevent concurrent connection attempts
   const isConnectingRef = useRef(false);
+
+  // Track defense call state for callback closure
+  const isDefenseCallRef = useRef(false);
 
   // API endpoints for coworker calls
   // Note: Defense call endpoints were removed in RF-006. Defense calls
@@ -254,7 +261,12 @@ export function FloatingCallBar({
       }
 
       const response = await tokenResponse.json();
-      const { token } = response.data;
+      const { token, isDefenseCall: defenseMode } = response.data;
+
+      // Track if this is a defense call for completion handling
+      const isDefense = defenseMode === true;
+      setIsDefenseCall(isDefense);
+      isDefenseCallRef.current = isDefense;
 
       // Connect to Gemini Live
       const ai = new GoogleGenAI({
@@ -388,13 +400,19 @@ export function FloatingCallBar({
       }
     }
 
-    onCallEnd();
+    // If this was a defense call, trigger the defense completion flow
+    if (isDefenseCallRef.current && onDefenseComplete) {
+      onDefenseComplete();
+    } else {
+      onCallEnd();
+    }
   }, [
     assessmentId,
     coworker.id,
     disconnect,
     getTranscriptEndpoint,
     onCallEnd,
+    onDefenseComplete,
   ]);
 
   // Toggle mute

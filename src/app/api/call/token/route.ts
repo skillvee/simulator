@@ -5,12 +5,18 @@ import {
   buildCoworkerMemory,
   formatMemoryForPrompt,
   buildCrossCoworkerContext,
+  formatConversationsForSummary,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
 import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
-import { buildVoicePrompt } from "@/prompts";
+import { buildVoicePrompt, buildDefensePrompt, type DefenseContext } from "@/prompts";
 import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
+
+// Check if a coworker is a manager based on role
+function isManager(role: string): boolean {
+  return role.toLowerCase().includes("manager");
+}
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -121,18 +127,60 @@ export async function POST(request: Request) {
       avatarUrl: coworker.avatarUrl,
     };
 
-    // Use centralized voice prompt with natural phone call guidelines
-    const systemInstruction = buildVoicePrompt(
-      persona,
-      {
+    // Determine if this is a defense call
+    // Defense mode is triggered when:
+    // 1. A PR has been submitted (assessment.prUrl is set)
+    // 2. The coworker being called is the manager
+    const isDefenseCall = Boolean(assessment.prUrl) && isManager(coworker.role);
+
+    let systemInstruction: string;
+
+    if (isDefenseCall) {
+      // Build defense prompt for PR review call
+      // Format all conversations for summary context
+      const allConvsMapped = allConversations.map((c) => ({
+        type: c.type as "text" | "voice",
+        coworkerId: c.coworkerId,
+        messages: (c.transcript as unknown as ChatMessage[]) || [],
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }));
+      const conversationSummary = formatConversationsForSummary(
+        allConvsMapped,
+        coworkerMap
+      );
+
+      const defenseContext: DefenseContext = {
+        managerName: coworker.name,
+        managerRole: coworker.role,
         companyName: assessment.scenario.companyName,
         candidateName: session.user.name || undefined,
         taskDescription: assessment.scenario.taskDescription,
         techStack: assessment.scenario.techStack,
-      },
-      memoryContext,
-      crossCoworkerContext
-    );
+        repoUrl: assessment.scenario.repoUrl || "",
+        prUrl: assessment.prUrl!,
+        conversationSummary,
+        // Screen analysis and code review may not be available yet
+        screenAnalysisSummary: "",
+        ciStatusSummary: "CI status will be checked after the call.",
+        codeReviewSummary: "",
+      };
+
+      systemInstruction = buildDefensePrompt(defenseContext);
+    } else {
+      // Use regular coworker voice prompt
+      systemInstruction = buildVoicePrompt(
+        persona,
+        {
+          companyName: assessment.scenario.companyName,
+          candidateName: session.user.name || undefined,
+          taskDescription: assessment.scenario.taskDescription,
+          techStack: assessment.scenario.techStack,
+        },
+        memoryContext,
+        crossCoworkerContext
+      );
+    }
 
     // Generate ephemeral token for client-side connection
     // Use coworker's configured voice, or fall back to default
@@ -147,6 +195,7 @@ export async function POST(request: Request) {
       coworkerId: coworker.id,
       coworkerName: coworker.name,
       coworkerRole: coworker.role,
+      isDefenseCall,
     });
   } catch (err) {
     console.error("Error generating call token:", err);

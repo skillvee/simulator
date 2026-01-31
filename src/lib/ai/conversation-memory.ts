@@ -212,3 +212,62 @@ ${otherInteractions.join("\n")}
 
 You can acknowledge these interactions if relevant (e.g., "I heard you were talking to Alex about..."), but don't pry into their conversations with others.`;
 }
+
+/**
+ * Format all conversations into a summary string for context
+ * Used for defense call to provide conversation history context
+ *
+ * @param allConversations - All conversations in the assessment
+ * @param coworkerMap - Map of coworker IDs to names
+ * @returns Formatted summary of all conversations
+ */
+export function formatConversationsForSummary(
+  allConversations: ConversationWithMeta[],
+  coworkerMap: Map<string, string>
+): string {
+  if (allConversations.length === 0) {
+    return "No conversations recorded.";
+  }
+
+  const summaries: string[] = [];
+
+  for (const conv of allConversations) {
+    if (conv.messages.length === 0) continue;
+
+    const coworkerName = conv.coworkerId
+      ? coworkerMap.get(conv.coworkerId) || "Coworker"
+      : "Unknown";
+    const convType = conv.type === "voice" ? "call" : "chat";
+
+    // Get key messages (first and last few)
+    const keyMessages: string[] = [];
+    const msgs = conv.messages;
+
+    // First 2 messages
+    for (let i = 0; i < Math.min(2, msgs.length); i++) {
+      const m = msgs[i];
+      const role = m.role === "user" ? "Candidate" : coworkerName;
+      keyMessages.push(`${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`);
+    }
+
+    // Last 2 messages (if different from first 2)
+    if (msgs.length > 4) {
+      keyMessages.push("...");
+      for (let i = Math.max(2, msgs.length - 2); i < msgs.length; i++) {
+        const m = msgs[i];
+        const role = m.role === "user" ? "Candidate" : coworkerName;
+        keyMessages.push(`${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`);
+      }
+    } else if (msgs.length > 2) {
+      for (let i = 2; i < msgs.length; i++) {
+        const m = msgs[i];
+        const role = m.role === "user" ? "Candidate" : coworkerName;
+        keyMessages.push(`${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`);
+      }
+    }
+
+    summaries.push(`\n### ${convType} with ${coworkerName} (${msgs.length} messages)\n${keyMessages.join("\n")}`);
+  }
+
+  return summaries.join("\n");
+}

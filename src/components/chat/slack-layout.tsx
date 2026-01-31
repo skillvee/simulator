@@ -44,6 +44,8 @@ interface SlackLayoutProps {
   children: React.ReactNode;
   /** Override the selected coworker (instead of getting from URL) */
   selectedCoworkerId?: string;
+  /** Callback when a defense call is completed (PR was submitted, call with manager ended) */
+  onDefenseComplete?: () => void;
 }
 
 /**
@@ -96,6 +98,7 @@ function SlackLayoutInner({
   coworkers,
   children,
   selectedCoworkerId: overrideSelectedId,
+  onDefenseComplete,
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -215,6 +218,7 @@ function SlackLayoutInner({
                 coworker={callingCoworker}
                 callType={activeCall.callType}
                 onCallEnd={endCall}
+                onDefenseComplete={onDefenseComplete}
               />
             )}
           </div>

@@ -51,6 +51,8 @@ const TEST_ASSESSMENT_IDS = {
   // Recruiter-focused flow test assessments (RF-001)
   welcome: "test-assessment-welcome", // Status: WELCOME - for welcome page testing
   workingRecruiter: "test-assessment-working-recruiter", // Status: WORKING - for recruiter flow testing
+  // Defense call testing (RF-017)
+  defense: "test-assessment-defense", // Status: WORKING with prUrl set - for defense call testing
 };
 
 // Fixed test scenario ID for recruiter-focused flow (RF-001)
@@ -515,6 +517,27 @@ Acceptance Criteria:
     });
     console.log(`  ✅ Working assessment: ${TEST_ASSESSMENT_IDS.workingRecruiter}`);
     console.log(`     URL: /assessment/${TEST_ASSESSMENT_IDS.workingRecruiter}/chat`);
+
+    // Create test assessment with prUrl set for defense call testing (RF-017)
+    await prisma.assessment.upsert({
+      where: { id: TEST_ASSESSMENT_IDS.defense },
+      update: {
+        status: "WORKING",
+        scenarioId: recruiterScenario.id,
+        prUrl: "https://github.com/skillvee/test-repo/pull/1",
+      },
+      create: {
+        id: TEST_ASSESSMENT_IDS.defense,
+        userId: testCandidate.id,
+        scenarioId: recruiterScenario.id,
+        status: "WORKING",
+        prUrl: "https://github.com/skillvee/test-repo/pull/1",
+      },
+    });
+    console.log(`  ✅ Defense assessment: ${TEST_ASSESSMENT_IDS.defense}`);
+    console.log(`     URL: /assessment/${TEST_ASSESSMENT_IDS.defense}/chat`);
+    console.log(`     PR URL: https://github.com/skillvee/test-repo/pull/1`);
+    console.log(`     Note: Calls to manager will use defense prompt`);
   } else {
     console.log("  ⚠️ Test candidate user not found, skipping recruiter flow assessments");
   }

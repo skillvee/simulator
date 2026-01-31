@@ -1,6 +1,9 @@
 "use client";
 
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SlackLayout, Chat } from "@/components/chat";
+import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 
 interface Coworker {
   id: string;
@@ -20,14 +23,64 @@ export function ChatPageClient({
   coworkers,
   selectedCoworkerId,
 }: ChatPageClientProps) {
+  const router = useRouter();
+  const { stopRecording } = useScreenRecordingContext();
+  const [isCompleting, setIsCompleting] = useState(false);
+
   const selectedCoworker = coworkers.find((c) => c.id === selectedCoworkerId);
 
-  // Note: PR submission handling and defense call are now handled within the
-  // Slack interface (RF-012). The candidate will call the manager from within
-  // Slack after submitting a PR, instead of navigating to a separate defense page.
+  // Handle defense call completion
+  // This is called when a candidate ends a call with the manager after submitting a PR
+  const handleDefenseComplete = useCallback(async () => {
+    if (isCompleting) return; // Prevent duplicate calls
+    setIsCompleting(true);
+
+    try {
+      // Stop screen recording
+      stopRecording();
+
+      // Finalize the assessment (marks as COMPLETED, cleans up PR, etc.)
+      const response = await fetch("/api/assessment/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId }),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to finalize assessment:", await response.text());
+      }
+
+      // Navigate to results page
+      router.push(`/assessment/${assessmentId}/results`);
+    } catch (error) {
+      console.error("Error completing defense:", error);
+      // Still navigate to results even if finalization fails
+      // The results page will handle generating the report if needed
+      router.push(`/assessment/${assessmentId}/results`);
+    }
+  }, [assessmentId, isCompleting, router, stopRecording]);
+
+  // Show loading overlay while completing
+  if (isCompleting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <h2 className="text-lg font-semibold">Wrapping up...</h2>
+          <p className="text-sm text-muted-foreground">
+            Finalizing your assessment
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <SlackLayout assessmentId={assessmentId} coworkers={coworkers}>
+    <SlackLayout
+      assessmentId={assessmentId}
+      coworkers={coworkers}
+      onDefenseComplete={handleDefenseComplete}
+    >
       {selectedCoworker ? (
         <Chat
           assessmentId={assessmentId}

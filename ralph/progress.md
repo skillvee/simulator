@@ -1,5 +1,96 @@
 # Ralph Progress Log
 
+## Issue #185: RF-017 - Implement defense call flow in Slack
+
+### What was implemented
+- Modified `/api/call/token` to detect defense mode when `assessment.prUrl` is set
+- When calling a manager after PR submission, uses defense prompt instead of regular coworker prompt
+- Added `isDefenseCall` flag to token response for client-side handling
+- Modified `FloatingCallBar` to track defense call state and trigger completion flow
+- Added `onDefenseComplete` callback prop to `SlackLayout` component
+- Updated chat page client to handle defense call completion:
+  - Stop screen recording
+  - Finalize assessment (marks as COMPLETED)
+  - Navigate to results page
+- Added helper function `formatConversationsForSummary` to build conversation context for defense prompt
+
+### Defense Call Detection Flow
+1. Candidate submits PR URL in chat → `assessment.prUrl` gets set
+2. Manager prompts candidate to call for code review discussion
+3. Candidate initiates call with manager using sidebar call button
+4. `/api/call/token` endpoint checks:
+   - Is `assessment.prUrl` set? (PR submitted)
+   - Is coworker a manager? (role contains "manager")
+5. If both true, returns `isDefenseCall: true` with defense system prompt
+6. Defense prompt includes:
+   - Manager persona and style
+   - Task context and tech stack
+   - PR URL
+   - Conversation history summary
+7. When call ends:
+   - Transcript is saved
+   - If defense call, triggers `onDefenseComplete` callback
+   - Stops screen recording
+   - Finalizes assessment via `/api/assessment/finalize`
+   - Redirects to `/assessment/[id]/results`
+
+### Files created
+- `prisma/seed.ts` - Added `test-assessment-defense` with prUrl for testing
+
+### Files modified
+- `src/app/api/call/token/route.ts` - Added defense mode detection, defense prompt building
+- `src/lib/ai/conversation-memory.ts` - Added `formatConversationsForSummary` helper
+- `src/components/chat/floating-call-bar.tsx` - Added defense call state tracking, `onDefenseComplete` callback
+- `src/components/chat/slack-layout.tsx` - Added `onDefenseComplete` prop passthrough
+- `src/app/assessment/[id]/chat/client.tsx` - Added defense completion handler with screen recording stop, finalize, and navigation
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- Build succeeds: `npm run build` passes
+- Database verification: Defense call detection logic correctly identifies defense calls
+- Test assessment created: `test-assessment-defense` with prUrl set
+- Screenshot captured: `screenshots/issue-185-defense-chat.png`
+- Note: Actual voice call testing not possible in headless browser (requires microphone access)
+
+### Defense Prompt Context
+The defense prompt includes:
+- Manager name and role
+- Company name
+- Candidate name
+- Task description and tech stack
+- Repository URL
+- PR URL
+- Conversation summary (from all chats with coworkers)
+- CI status summary (placeholder for now)
+- Code review summary (placeholder for now)
+
+### Learnings for future iterations
+- The `isManager()` helper function (role.toLowerCase().includes('manager')) is reused from chat route
+- Defense call state is tracked via ref for callback closure access, with redundant state for potential UI use
+- The screen recording context provides `stopRecording()` which must be called before finalization
+- Assessment finalization handles PR cleanup, CI status, code review analysis, and video assessment triggering
+
+### Gotchas discovered
+- Voice calls can't be fully E2E tested in headless browsers - only the detection logic can be verified
+- The `onDefenseComplete` callback must handle both the recording stop and the API finalization
+- The "Wrapping up..." loading state prevents duplicate completion calls
+
+### Acceptance Criteria Status
+- [x] Defense Call Detection: When candidate initiates a call AND `assessment.prUrl` is set, use defense prompt
+- [x] Regular coworker call prompt used if no PR URL set
+- [x] Defense Call Prompt: Reuses existing defense call prompt with context about PR
+- [x] Call Token Endpoint: Modified to check if PR is submitted, returns appropriate system prompt
+- [x] On Call End: Detect when candidate hangs up, if defense call:
+  - [x] Stop screen recording
+  - [x] Update assessment status to COMPLETED
+  - [x] Navigate to `/assessment/[id]/results`
+- [x] Navigation to Results: Client-side redirect to results page
+- [x] Brief "Wrapping up..." transition shown during finalization
+- [x] TypeScript compiles: `npm run typecheck`
+- [ ] E2E test with actual call (not possible in headless browser)
+
+---
+
 ## Issue #184: RF-016 - Add PR URL detection in Slack chat
 
 ### What was implemented
