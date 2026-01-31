@@ -1,5 +1,80 @@
 # Ralph Progress Log
 
+## Issue #190: RF-022 - Delete unused analysis files
+
+### What was implemented
+- Deleted analysis library files: `code-review.ts`, `recording-analysis.ts`, `assessment-aggregation.ts` and their tests
+- Deleted analysis prompt files: `code-review.ts`, `recording.ts`, `assessment.ts` from `src/prompts/analysis/`
+- Deleted API routes: `/api/code-review` and `/api/recording/analyze`
+- Moved `buildConversationSummaryPrompt` to `conversation-memory.ts` (still needed for Slack chat memory)
+- Updated barrel exports in `src/lib/analysis/index.ts` and `src/prompts/index.ts`
+- Added report types to `src/types/assessment.ts`: `AssessmentReport`, `SkillScore`, `SkillCategory`, `AssessmentMetrics`, etc.
+- Updated import statements across codebase to use `@/types` instead of deleted files
+- Provided placeholder implementation for report generation in `/api/assessment/report/route.ts`
+
+### Files deleted
+- `src/lib/analysis/code-review.ts` (and test)
+- `src/lib/analysis/recording-analysis.ts` (and test)
+- `src/lib/analysis/assessment-aggregation.ts` (and test)
+- `src/prompts/analysis/code-review.ts`
+- `src/prompts/analysis/recording.ts`
+- `src/prompts/analysis/assessment.ts`
+- `src/app/api/code-review/route.ts`
+- `src/app/api/recording/analyze/route.ts`
+
+### Files modified
+- `src/lib/analysis/index.ts` - Removed deleted exports
+- `src/prompts/index.ts` - Removed deleted exports
+- `src/lib/ai/conversation-memory.ts` - Inlined conversation summary prompt
+- `src/app/api/assessment/finalize/route.ts` - Removed code review functionality
+- `src/app/api/assessment/report/route.ts` - Simplified with placeholder implementation
+- `src/app/api/recording/session/route.ts` - Removed screenshot analysis trigger
+- `src/app/assessment/[id]/results/client.tsx` - Import from @/types
+- `src/app/assessment/[id]/results/page.tsx` - Import from @/types
+- `src/app/profile/page.tsx` - Import from @/types
+- `src/lib/external/email.ts` - Import from @/types
+- `src/types/assessment.ts` - Added report types
+- `src/types/index.ts` - Export new report types
+- Various test files updated for new APIs
+- CLAUDE.md files updated to reflect changes
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- Dev server starts without errors
+- Tests pass: finalize (14/14), email (27/27), recording session (20/20)
+
+### Learnings for future iterations
+- When deleting modules with shared types, check if types are used elsewhere and move to `@/types`
+- The `CONVERSATION_SUMMARY_PROMPT` was used by both assessment analysis and Slack memory - needed to preserve for memory
+- Screenshot analysis was removed from session recording route - video evaluation replaces it
+- Report generation needs placeholder to prevent breaking the results page
+
+### Gotchas discovered
+- The `MetricsGrid` component expected `report.metrics` but the type made it optional - needed null check
+- Test files had hardcoded `analysisTriggered` expectation that was removed with screenshot analysis
+- The `SkillCategory` type conflicted with CV types - exported as `ReportSkillCategory` for report context
+
+### Acceptance Criteria Status
+- [x] Delete `src/lib/analysis/code-review.ts`
+- [x] Delete `src/lib/analysis/recording-analysis.ts`
+- [x] Delete `src/lib/analysis/assessment-aggregation.ts`
+- [x] Delete `src/prompts/analysis/code-review.ts`
+- [x] Delete `src/prompts/analysis/recording.ts`
+- [x] Delete `src/prompts/analysis/assessment.ts`
+- [x] Search for imports from deleted files
+- [x] Update or remove import statements
+- [x] Check `/api/code-review/route.ts` - deleted
+- [x] Check `/api/recording/analyze/route.ts` - deleted
+- [x] TypeScript compiles: `npm run typecheck`
+- [x] No runtime errors when starting dev server
+- [x] Document any files that still need updating in subsequent issues
+
+### Files needing updates in subsequent issues
+- `/api/assessment/report/route.ts` - Currently uses placeholder implementation
+- Results page will need video evaluation integration once implemented
+
+---
+
 ## Issue #187: RF-019 - Update middleware for new routes
 
 ### What was implemented

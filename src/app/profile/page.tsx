@@ -8,7 +8,7 @@ import type {
   AssessmentStatus,
   VideoAssessmentStatus,
 } from "@prisma/client";
-import type { AssessmentReport } from "@/lib/analysis";
+import type { AssessmentReport } from "@/types";
 import { AdminNav, DataDeletionSection } from "@/components/admin";
 import { AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";

@@ -66,8 +66,7 @@ try {
 Use descriptive names for `promptType` that match the operation:
 
 - `cv-parsing` - CV/resume parsing
-- `hr-assessment` - HR interview transcript analysis
-- `code-review` - Code review generation
+- `video-evaluation` - Video assessment evaluation
 - `entity-extraction` - Search query entity extraction
 - `feedback-parsing` - Rejection feedback parsing
 - `chat-response` - Chat message generation

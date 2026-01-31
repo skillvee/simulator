@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { AssessmentReport, SkillCategory } from "@/lib/analysis";
+import type { AssessmentReport, ReportSkillCategory as SkillCategory } from "@/types";
 import type { SendReportEmailParams } from "./email";
 
 // ============================================================================
@@ -147,6 +147,7 @@ function createMockReport(): AssessmentReport {
       testsStatus: "passing",
       codeReviewScore: 4.3,
     },
+    version: "1.0.0",
   };
 }
 

@@ -1,30 +1,93 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import type { CodeReviewData } from "@/lib/analysis";
+import type { CodeReviewData, AssessmentReport, ChatMessage } from "@/types";
 import type { PrCiStatus } from "@/lib/external";
-import type { ChatMessage } from "@/types";
-import {
-  aggregateSegmentAnalyses,
-  type SegmentAnalysisResponse,
-} from "@/lib/analysis";
-import {
-  generateAssessmentReport,
-  reportToPrismaJson,
-  type AssessmentSignals,
-  type AssessmentReport,
-  type RecordingSignals,
-  type ConversationSignals,
-} from "@/lib/analysis";
 import { sendReportEmail, isEmailServiceConfigured } from "@/lib/external";
+import type { Prisma } from "@prisma/client";
+
+// Note: The old assessment aggregation was removed in RF-022.
+// Report generation will be reimplemented using video evaluation in subsequent issues.
+// For now, this route provides placeholder implementations.
 
 /**
- * Collects all assessment signals from the database
+ * Conversation signals from chat/voice interactions
+ */
+interface ConversationSignals {
+  coworkerChats: Array<{
+    coworkerName: string;
+    coworkerRole: string;
+    messages: ChatMessage[];
+    type: "text" | "voice";
+  }>;
+  defenseTranscript: ChatMessage[];
+  totalCoworkerInteractions: number;
+  uniqueCoworkersContacted: number;
+}
+
+/**
+ * All collected assessment signals (simplified)
+ */
+interface AssessmentSignals {
+  assessmentId: string;
+  userId: string;
+  scenarioName: string;
+  hrInterview: null;
+  conversations: ConversationSignals;
+  recording: null;
+  codeReview: CodeReviewData | null;
+  ciStatus: PrCiStatus | null;
+  prUrl: string | null;
+  timing: {
+    startedAt: Date;
+    completedAt: Date | null;
+    totalDurationSeconds: number | null;
+    workingPhaseSeconds: number | null;
+  };
+}
+
+/**
+ * Placeholder: Generate assessment report
+ * TODO: Implement using video evaluation in subsequent issues (RF-023+)
+ */
+async function generateAssessmentReport(
+  signals: AssessmentSignals,
+  candidateName?: string
+): Promise<AssessmentReport> {
+  // Placeholder implementation - returns a minimal report
+  // This will be replaced with video-based evaluation in subsequent issues
+  return {
+    generatedAt: new Date().toISOString(),
+    assessmentId: signals.assessmentId,
+    candidateName,
+    overallScore: 3,
+    overallLevel: "adequate",
+    skillScores: [],
+    narrative: {
+      overallSummary:
+        "Assessment report generation is being updated. Please check back later.",
+      strengths: [],
+      areasForImprovement: [],
+      notableObservations: [],
+    },
+    recommendations: [],
+    version: "2.0.0-placeholder",
+  };
+}
+
+/**
+ * Convert report to Prisma JSON format
+ */
+function reportToPrismaJson(report: AssessmentReport): Prisma.InputJsonValue {
+  return report as unknown as Prisma.InputJsonValue;
+}
+
+/**
+ * Collects assessment signals from the database (simplified)
  */
 async function collectAssessmentSignals(
   assessmentId: string
 ): Promise<AssessmentSignals | null> {
-  // Fetch assessment with all related data
   const assessment = await db.assessment.findUnique({
     where: { id: assessmentId },
     include: {
@@ -38,15 +101,6 @@ async function collectAssessmentSignals(
         include: {
           coworker: {
             select: { id: true, name: true, role: true },
-          },
-        },
-      },
-      recordings: {
-        include: {
-          segments: {
-            include: {
-              analysis: true,
-            },
           },
         },
       },
@@ -87,100 +141,6 @@ async function collectAssessmentSignals(
 
   conversationSignals.uniqueCoworkersContacted = uniqueCoworkerIds.size;
 
-  // Build recording signals
-  let recordingSignals: RecordingSignals | null = null;
-  if (assessment.recordings.length > 0) {
-    const allSegmentAnalyses: SegmentAnalysisResponse[] = [];
-
-    for (const recording of assessment.recordings) {
-      for (const segment of recording.segments) {
-        if (segment.analysis) {
-          // Reconstruct SegmentAnalysisResponse from database data
-          const analysis: SegmentAnalysisResponse = {
-            activityTimeline:
-              (segment.analysis.activityTimeline as Array<{
-                timestamp: string;
-                activity:
-                  | "coding"
-                  | "reading_docs"
-                  | "browsing"
-                  | "debugging"
-                  | "testing"
-                  | "searching"
-                  | "idle"
-                  | "planning"
-                  | "reviewing"
-                  | "communicating"
-                  | "other";
-                description: string;
-                applicationVisible?: string;
-              }>) || [],
-            toolUsage:
-              (segment.analysis.toolUsage as Array<{
-                tool: string;
-                usageCount: number;
-                contextNotes: string;
-              }>) || [],
-            stuckMoments:
-              (segment.analysis.stuckMoments as Array<{
-                startTime: string;
-                endTime: string;
-                description: string;
-                potentialCause:
-                  | "unclear_requirements"
-                  | "technical_difficulty"
-                  | "debugging"
-                  | "searching_for_solution"
-                  | "context_switching"
-                  | "environment_issues"
-                  | "unknown";
-                durationSeconds: number;
-              }>) || [],
-            summary: {
-              totalActiveTimeSeconds: segment.analysis.totalActiveTime || 0,
-              totalIdleTimeSeconds: segment.analysis.totalIdleTime || 0,
-              focusScore: segment.analysis.focusScore || 3,
-              dominantActivity: "unknown",
-              aiToolsUsed: false,
-              keyObservations: [],
-            },
-          };
-
-          // Extract additional summary data from aiAnalysis if available
-          const aiAnalysis = segment.analysis.aiAnalysis as Record<
-            string,
-            unknown
-          > | null;
-          if (aiAnalysis?.summary) {
-            const summary = aiAnalysis.summary as Record<string, unknown>;
-            analysis.summary.dominantActivity =
-              (summary.dominantActivity as string) || "unknown";
-            analysis.summary.aiToolsUsed =
-              (summary.aiToolsUsed as boolean) || false;
-            analysis.summary.keyObservations =
-              (summary.keyObservations as string[]) || [];
-          }
-
-          allSegmentAnalyses.push(analysis);
-        }
-      }
-    }
-
-    if (allSegmentAnalyses.length > 0) {
-      const aggregated = aggregateSegmentAnalyses(allSegmentAnalyses);
-      recordingSignals = {
-        activityTimeline: aggregated.activityTimeline,
-        toolUsage: aggregated.toolUsage,
-        stuckMoments: aggregated.stuckMoments,
-        totalActiveTime: aggregated.totalActiveTime,
-        totalIdleTime: aggregated.totalIdleTime,
-        focusScore: aggregated.overallFocusScore,
-        aiToolsUsed: aggregated.aiToolsUsed,
-        keyObservations: aggregated.keyObservations,
-      };
-    }
-  }
-
   // Parse code review and CI status from JSON fields
   const codeReview = assessment.codeReview
     ? (assessment.codeReview as unknown as CodeReviewData)
@@ -196,20 +156,16 @@ async function collectAssessmentSignals(
     (completedAt.getTime() - assessment.startedAt.getTime()) / 1000
   );
 
-  // Build the full signals object
-  const signals: AssessmentSignals = {
+  return {
     assessmentId: assessment.id,
     userId: assessment.userId,
     scenarioName: assessment.scenario.name,
-
     hrInterview: null,
     conversations: conversationSignals,
-    recording: recordingSignals,
-
+    recording: null, // Screenshot analysis removed in RF-022
     codeReview,
     ciStatus,
     prUrl: assessment.prUrl,
-
     timing: {
       startedAt: assessment.startedAt,
       completedAt: assessment.completedAt,
@@ -217,13 +173,11 @@ async function collectAssessmentSignals(
       workingPhaseSeconds: totalDurationSeconds,
     },
   };
-
-  return signals;
 }
 
 /**
  * POST /api/assessment/report
- * Generates the final assessment report by aggregating all signals
+ * Generates the final assessment report
  */
 export async function POST(request: Request) {
   try {
@@ -305,7 +259,6 @@ export async function POST(request: Request) {
     // Send email notification if email service is configured
     let emailResult: { success: boolean; error?: string } = { success: false };
     if (isEmailServiceConfigured() && assessment.user?.email) {
-      // Construct app base URL from request headers
       const host = request.headers.get("host") || "localhost:3000";
       const protocol = host.includes("localhost") ? "http" : "https";
       const appBaseUrl = `${protocol}://${host}`;
@@ -331,11 +284,7 @@ export async function POST(request: Request) {
           console.error("Error sending report email:", err);
         });
 
-      emailResult = { success: true }; // Mark as attempted
-    } else if (!isEmailServiceConfigured()) {
-      console.log("Email service not configured, skipping report email");
-    } else if (!assessment.user?.email) {
-      console.log("No user email available, skipping report email");
+      emailResult = { success: true };
     }
 
     return NextResponse.json({
@@ -374,7 +323,6 @@ export async function GET(request: Request) {
       );
     }
 
-    // Fetch assessment with report
     const assessment = await db.assessment.findUnique({
       where: { id: assessmentId },
       select: {

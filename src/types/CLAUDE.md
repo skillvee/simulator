@@ -120,6 +120,6 @@ await db.assessment.update({
 
 ## Gotchas
 
-- Zod schemas in lib files (cv-parser, code-review) define runtime validation
+- Zod schemas in lib files (cv-parser) define runtime validation
 - Types here are the interface equivalents for compile-time type checking
 - Both are kept in sync but Zod schemas are source of truth for validation

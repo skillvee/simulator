@@ -9,8 +9,8 @@ import { Resend } from "resend";
 import { env } from "@/lib/core";
 import type {
   AssessmentReport,
-  SkillCategory,
-} from "@/lib/analysis";
+  ReportSkillCategory as SkillCategory,
+} from "@/types";
 
 // ============================================================================
 // Resend Client

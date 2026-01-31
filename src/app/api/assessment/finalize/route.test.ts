@@ -28,16 +28,9 @@ vi.mock("@/lib/external", () => ({
   fetchPrCiStatus: (...args: unknown[]) => mockFetchPrCiStatus(...args),
 }));
 
-// Mock code review and video evaluation modules (now in @/lib/analysis)
-const mockAnalyzeCodeReview = vi.fn();
-const mockBuildCodeReviewData = vi.fn();
-const mockCodeReviewToPrismaJson = vi.fn();
+// Mock video evaluation module (now in @/lib/analysis)
 const mockTriggerVideoAssessment = vi.fn();
 vi.mock("@/lib/analysis", () => ({
-  analyzeCodeReview: (...args: unknown[]) => mockAnalyzeCodeReview(...args),
-  buildCodeReviewData: (...args: unknown[]) => mockBuildCodeReviewData(...args),
-  codeReviewToPrismaJson: (...args: unknown[]) =>
-    mockCodeReviewToPrismaJson(...args),
   triggerVideoAssessment: (...args: unknown[]) =>
     mockTriggerVideoAssessment(...args),
 }));

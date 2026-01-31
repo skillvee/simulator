@@ -206,3 +206,104 @@ export interface VideoAssessmentData {
   behavioralObservations?: string[];
   technicalObservations?: string[];
 }
+
+// ============================================================================
+// Assessment Report Data (for results display)
+// ============================================================================
+
+/**
+ * Skill category types for assessment scoring
+ */
+export type SkillCategory =
+  | "communication"
+  | "problem_decomposition"
+  | "ai_leverage"
+  | "code_quality"
+  | "xfn_collaboration"
+  | "time_management"
+  | "technical_decision_making"
+  | "presentation";
+
+/**
+ * Score level based on 1-5 scale
+ */
+export type ScoreLevel =
+  | "exceptional"
+  | "strong"
+  | "adequate"
+  | "developing"
+  | "needs_improvement";
+
+/**
+ * Individual skill score with evidence
+ */
+export interface SkillScore {
+  category: SkillCategory;
+  score: number;
+  level: ScoreLevel;
+  evidence: string[];
+  notes: string;
+}
+
+/**
+ * Narrative feedback section
+ */
+export interface NarrativeFeedback {
+  overallSummary: string;
+  strengths: string[];
+  areasForImprovement: string[];
+  notableObservations: string[];
+}
+
+/**
+ * Recommendation for improvement
+ */
+export interface Recommendation {
+  category: SkillCategory;
+  priority: "high" | "medium" | "low";
+  title: string;
+  description: string;
+  actionableSteps: string[];
+}
+
+/**
+ * Assessment metrics displayed on results page
+ */
+export interface AssessmentMetrics {
+  totalDurationMinutes: number | null;
+  workingPhaseMinutes: number | null;
+  coworkersContacted: number;
+  aiToolsUsed: boolean;
+  testsStatus: "passing" | "failing" | "none" | "unknown";
+  codeReviewScore: number | null;
+}
+
+/**
+ * Full assessment report data
+ * Used to display results to candidates and recruiters
+ */
+export interface AssessmentReport {
+  // Metadata
+  generatedAt: string;
+  assessmentId: string;
+  candidateName?: string;
+
+  // Overall scores
+  overallScore: number;
+  overallLevel: ScoreLevel;
+
+  // Skill breakdown
+  skillScores: SkillScore[];
+
+  // Narrative feedback
+  narrative: NarrativeFeedback;
+
+  // Recommendations
+  recommendations: Recommendation[];
+
+  // Metrics (timing, collaboration, etc.)
+  metrics?: AssessmentMetrics;
+
+  // Version tracking
+  version: string;
+}

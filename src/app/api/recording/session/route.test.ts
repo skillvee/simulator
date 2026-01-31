@@ -44,51 +44,8 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock @/lib/external (supabase + storage)
-vi.mock("@/lib/external", () => ({
-  supabaseAdmin: {
-    storage: {
-      from: () => ({
-        createSignedUrl: () =>
-          Promise.resolve({
-            data: { signedUrl: "https://test.com/screenshot.png" },
-          }),
-      }),
-    },
-  },
-  STORAGE_BUCKETS: {
-    SCREENSHOTS: "screenshots",
-    RECORDINGS: "recordings",
-  },
-}));
-
-// Mock recording-analysis module
-vi.mock("@/lib/recording-analysis", () => ({
-  analyzeSegmentScreenshots: vi.fn().mockResolvedValue({
-    activityTimeline: [],
-    toolUsage: [],
-    stuckMoments: [],
-    summary: {
-      totalActiveTimeSeconds: 300,
-      totalIdleTimeSeconds: 60,
-      focusScore: 4,
-      dominantActivity: "coding",
-      aiToolsUsed: false,
-      keyObservations: [],
-    },
-  }),
-  buildSegmentAnalysisData: vi.fn().mockReturnValue({
-    segmentId: "segment-1",
-    activityTimeline: [],
-    toolUsage: [],
-    stuckMoments: [],
-    totalActiveTime: 300,
-    totalIdleTime: 60,
-    focusScore: 4,
-    screenshotsAnalyzed: 1,
-    aiAnalysis: {},
-  }),
-}));
+// Note: @/lib/external and recording-analysis mocks removed (RF-022)
+// Screenshot analysis was removed as part of assessment simplification.
 
 // Mock isE2ETestMode and env
 const mockIsE2ETestMode = vi.fn();
@@ -343,7 +300,8 @@ describe("POST /api/recording/session", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.analysisTriggered).toBe(true);
+    // Note: analysisTriggered field was removed in RF-022 (screenshot analysis removed)
+    expect(data.success).toBe(true);
   });
 
   it("should return 400 for unknown action", async () => {

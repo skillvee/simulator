@@ -27,6 +27,14 @@ export type {
   HRAssessmentData,
   VideoDimensionScore,
   VideoAssessmentData,
+  // Report types
+  SkillCategory as ReportSkillCategory,
+  ScoreLevel,
+  SkillScore,
+  NarrativeFeedback,
+  Recommendation,
+  AssessmentMetrics,
+  AssessmentReport,
 } from "./assessment";
 
 // Conversation types

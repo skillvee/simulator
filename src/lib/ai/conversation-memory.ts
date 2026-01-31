@@ -80,8 +80,37 @@ export async function buildCoworkerMemory(
   };
 }
 
-// Conversation summary prompt is now centralized in src/prompts/analysis/assessment.ts
-import { buildConversationSummaryPrompt } from "@/prompts/analysis/assessment";
+/**
+ * Conversation summarization prompt
+ *
+ * Summarizes conversation history for memory injection.
+ */
+const CONVERSATION_SUMMARY_PROMPT = `Summarize the following conversation between a job candidate and {coworkerName} (a coworker).
+Focus on:
+- Key topics discussed
+- Important information shared
+- Any questions the candidate asked
+- Commitments or follow-ups mentioned
+
+Keep the summary concise (2-4 sentences). Write from {coworkerName}'s perspective (e.g., "We discussed...", "They asked about...").
+
+Conversation:
+{conversation}
+
+Summary:`;
+
+/**
+ * Build conversation summary prompt with context
+ */
+function buildConversationSummaryPrompt(
+  coworkerName: string,
+  conversationText: string
+): string {
+  return CONVERSATION_SUMMARY_PROMPT.replace(
+    /{coworkerName}/g,
+    coworkerName
+  ).replace("{conversation}", conversationText);
+}
 
 /**
  * Generate a summary of conversation messages using Gemini

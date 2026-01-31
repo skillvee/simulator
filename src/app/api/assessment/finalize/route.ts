@@ -9,12 +9,6 @@ import {
   type PrCiStatus,
 } from "@/lib/external";
 import {
-  analyzeCodeReview,
-  buildCodeReviewData,
-  codeReviewToPrismaJson,
-  type CodeReviewData,
-} from "@/lib/analysis";
-import {
   triggerVideoAssessment,
   type TriggerVideoAssessmentResult,
 } from "@/lib/analysis";
@@ -113,24 +107,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Run AI code review if not already done
-    // This ensures we have code review data for the final assessment even if defense call didn't complete
-    let codeReviewData: CodeReviewData | null = null;
-    if (assessment.prUrl && !assessment.codeReview) {
-      try {
-        const analysis = await analyzeCodeReview(assessment.prUrl);
-        codeReviewData = buildCodeReviewData(assessment.prUrl, analysis);
-      } catch (error) {
-        console.warn(
-          `Code review warning for assessment ${assessmentId}:`,
-          error
-        );
-        // Continue without code review - don't block finalization
-      }
-    } else if (assessment.codeReview) {
-      codeReviewData = assessment.codeReview as unknown as CodeReviewData;
-    }
-
     // Clean up PR after assessment (close it to prevent scenario leakage)
     // This is done gracefully - failure doesn't block finalization
     let prCleanupResult: PrCleanupResult | null = null;
@@ -152,7 +128,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Update assessment status to COMPLETED and store PR snapshot + CI status + code review
+    // Update assessment status to COMPLETED and store PR snapshot + CI status
     const updatedAssessment = await db.assessment.update({
       where: { id: assessmentId },
       data: {
@@ -167,11 +143,6 @@ export async function POST(request: Request) {
         ...(finalCiStatus && {
           ciStatus: finalCiStatus as unknown as Prisma.InputJsonValue,
         }),
-        // Store code review results (if newly generated)
-        ...(codeReviewData &&
-          !assessment.codeReview && {
-            codeReview: codeReviewToPrismaJson(codeReviewData),
-          }),
       },
       select: {
         id: true,
@@ -234,16 +205,6 @@ export async function POST(request: Request) {
             checksPassed: finalCiStatus.checksPassed,
             checksFailed: finalCiStatus.checksFailed,
             testResults: finalCiStatus.testResults,
-          }
-        : null,
-      codeReview: codeReviewData
-        ? {
-            overallScore: codeReviewData.overallScore,
-            codeQualityScore: codeReviewData.codeQualityScore,
-            patternScore: codeReviewData.patternScore,
-            securityScore: codeReviewData.securityScore,
-            maintainabilityScore: codeReviewData.maintainabilityScore,
-            summary: codeReviewData.summary,
           }
         : null,
       videoAssessment: videoAssessmentResult

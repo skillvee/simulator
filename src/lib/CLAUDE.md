@@ -10,7 +10,7 @@ src/lib/
 ├── ai/            # gemini, conversation-memory, coworker-persona
 ├── scenarios/     # scenario-builder
 ├── candidate/     # cv-parser, embeddings, candidate-search, archetypes, seniority
-├── analysis/      # ai-call-logging, assessment-aggregation, video-evaluation, code-review, recording-analysis
+├── analysis/      # ai-call-logging, assessment-logging, video-evaluation
 ├── schemas/       # Zod validation schemas
 └── api/           # API utilities (client, response, validation)
 ```

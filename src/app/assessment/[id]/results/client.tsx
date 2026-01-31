@@ -16,10 +16,7 @@ import {
   XCircle,
   AlertCircle,
 } from "lucide-react";
-import type {
-  AssessmentReport,
-  SkillScore,
-} from "@/lib/analysis";
+import type { AssessmentReport, SkillScore } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -175,6 +172,14 @@ function MetricsGrid({ metrics }: { metrics: AssessmentReport["metrics"] }) {
     none: <AlertCircle className="h-5 w-5 text-muted-foreground" />,
     unknown: <AlertCircle className="h-5 w-5 text-muted-foreground" />,
   };
+
+  if (!metrics) {
+    return (
+      <div className="text-muted-foreground">
+        Metrics are being calculated...
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3">

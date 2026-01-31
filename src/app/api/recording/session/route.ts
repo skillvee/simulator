@@ -1,85 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { supabaseAdmin } from "@/lib/external";
-import { STORAGE_BUCKETS } from "@/lib/external";
-import {
-  analyzeSegmentScreenshots,
-  buildSegmentAnalysisData,
-} from "@/lib/analysis";
 import { isE2ETestMode } from "@/lib/core";
 
-/**
- * Trigger incremental analysis for a completed segment
- * Runs asynchronously to not block the response
- */
-async function triggerIncrementalAnalysis(
-  segmentId: string,
-  screenshotPaths: string[],
-  startTime: Date,
-  endTime: Date
-): Promise<void> {
-  try {
-    if (screenshotPaths.length === 0) {
-      console.log(`Segment ${segmentId}: No screenshots to analyze`);
-      return;
-    }
-
-    // Generate signed URLs for screenshots
-    const screenshotUrls = await Promise.all(
-      screenshotPaths.map(async (path) => {
-        const { data } = await supabaseAdmin.storage
-          .from(STORAGE_BUCKETS.SCREENSHOTS)
-          .createSignedUrl(path, 60 * 60); // 1 hour expiry
-        return data?.signedUrl || null;
-      })
-    );
-
-    const validUrls = screenshotUrls.filter(
-      (url): url is string => url !== null
-    );
-
-    if (validUrls.length === 0) {
-      console.warn(`Segment ${segmentId}: No valid screenshot URLs`);
-      return;
-    }
-
-    // Calculate duration
-    const durationSeconds = Math.round(
-      (endTime.getTime() - startTime.getTime()) / 1000
-    );
-
-    // Analyze screenshots
-    const analysis = await analyzeSegmentScreenshots(
-      validUrls,
-      startTime,
-      durationSeconds
-    );
-
-    // Save to database
-    const analysisData = buildSegmentAnalysisData(
-      segmentId,
-      analysis,
-      validUrls.length
-    );
-
-    await db.segmentAnalysis.upsert({
-      where: { segmentId },
-      create: analysisData,
-      update: {
-        ...analysisData,
-        updatedAt: new Date(),
-      },
-    });
-
-    console.log(
-      `Segment ${segmentId}: Analysis complete (${validUrls.length} screenshots)`
-    );
-  } catch (error) {
-    console.error(`Failed to analyze segment ${segmentId}:`, error);
-    // Don't throw - this is a background task
-  }
-}
+// Note: Screenshot analysis was removed as part of assessment simplification (RF-022).
+// The new system uses only video evaluation instead of screenshot-by-screenshot analysis.
 
 // POST /api/recording/session - Start or update a recording segment
 export async function POST(request: NextRequest) {
@@ -307,20 +232,11 @@ export async function POST(request: NextRequest) {
           data: { endTime },
         });
 
-        // Trigger incremental analysis asynchronously (don't await)
-        // This allows the response to return immediately while analysis runs
-        triggerIncrementalAnalysis(
-          segmentId,
-          segmentToComplete.screenshotPaths,
-          segmentToComplete.startTime,
-          endTime
-        ).catch((error) => {
-          console.error("Background analysis failed:", error);
-        });
+        // Note: Incremental screenshot analysis was removed (RF-022).
+        // Video evaluation now happens after assessment completion.
 
         return NextResponse.json({
           success: true,
-          analysisTriggered: segmentToComplete.screenshotPaths.length > 0,
         });
       }
 
