@@ -1,5 +1,96 @@
 # Ralph Progress Log
 
+## Issue #191: RF-023 - Update video evaluation prompt with hiring signals
+
+### What was implemented
+- Extended the video evaluation prompt to include hiring signals output
+- Added `rationale`, `greenFlags`, and `redFlags` to each skill dimension
+- Added new `hiringSignals` object with overall green/red flags and hiring recommendation
+- Updated prompt version from 1.0.0 to 1.1.0
+- Updated TypeScript types to match the new output schema
+
+### Files modified
+- `src/prompts/analysis/video-evaluation.ts` - Extended prompt and types:
+  - Added `rationale: string` to dimension scores
+  - Added `greenFlags: string[]` to dimension scores
+  - Added `redFlags: string[]` to dimension scores
+  - Added `HiringSignals` interface with `overallGreenFlags`, `overallRedFlags`, `recommendation`, `recommendationRationale`
+  - Added `HiringRecommendation` type (`'hire' | 'maybe' | 'no_hire'`)
+  - Added `DimensionScoreOutput` interface for dimension scores
+  - Added "HIRING SIGNALS GUIDELINES" section to prompt
+- `src/types/assessment.ts` - Updated video assessment types:
+  - Added `HiringRecommendation` type
+  - Added `HiringSignals` interface
+  - Updated `VideoDimensionScore` to match new schema
+  - Added `VideoKeyHighlight` interface
+  - Updated `VideoAssessmentData` to match new output schema
+- `src/types/index.ts` - Added new type exports
+
+### New Output Schema (Full)
+```typescript
+interface VideoEvaluationResult {
+  evaluation_version: string;
+  overall_score: number; // 1.0-5.0
+  dimension_scores: {
+    dimension: string;
+    score: number;
+    rationale: string;           // NEW: Why this score
+    greenFlags: string[];        // NEW: Positive signals
+    redFlags: string[];          // NEW: Concerns
+    observable_behaviors: string;
+    timestamps: string[];
+    trainable_gap: boolean;
+  }[];
+  hiringSignals: {               // NEW: Entire section
+    overallGreenFlags: string[];
+    overallRedFlags: string[];
+    recommendation: 'hire' | 'maybe' | 'no_hire';
+    recommendationRationale: string;
+  };
+  key_highlights: { ... }[];
+  overall_summary: string;
+  evaluation_confidence: 'high' | 'medium' | 'low';
+  insufficient_evidence_notes?: string;
+}
+```
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- Prompt is syntactically valid
+- Output schema is well-defined JSON
+
+### Learnings for future iterations
+- The prompt uses template literals for version interpolation (`${EVALUATION_PROMPT_VERSION}`)
+- Hiring recommendation categories align with recruiter decision-making: `hire`, `maybe`, `no_hire`
+- Green/red flags should be specific, actionable, and based on observable evidence
+- The rationale field helps explain WHY a score was given, not just WHAT was observed
+
+### Gotchas discovered
+- The `VideoDimensionScore` type in `src/types/assessment.ts` was outdated and didn't match the prompt output schema
+- Types need to be exported from both the prompt file and the central `@/types` module
+
+### Acceptance Criteria Status
+- [x] Add `greenFlags: string[]` to each skill dimension
+- [x] Add `redFlags: string[]` to each skill dimension
+- [x] Add `rationale: string` to each skill dimension
+- [x] Add new `hiringSignals` object with `overallGreenFlags`, `overallRedFlags`, `recommendation`, `recommendationRationale`
+- [x] Add instructions to identify green flags (positive signals) per skill
+- [x] Add instructions to identify red flags (concerns) per skill
+- [x] Add instructions for overall hiring recommendation
+- [x] Ensure rationale is evidence-based with timestamps
+- [x] Keep the 8 skill dimensions unchanged
+- [x] Keep the 5-level scoring rubric
+- [x] Keep timestamp requirements for evidence
+- [x] Keep evaluation_confidence field
+- [x] Keep insufficient_evidence_notes field
+- [x] Update TypeScript types in `src/types/` for new output schema
+- [x] Ensure types match the prompt output schema
+- [x] TypeScript compiles: `npm run typecheck`
+- [x] Prompt is syntactically valid
+- [x] Output schema is well-defined JSON
+
+---
+
 ## Issue #190: RF-022 - Delete unused analysis files
 
 ### What was implemented

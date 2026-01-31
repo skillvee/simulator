@@ -3,8 +3,9 @@
  *
  * System prompt for Gemini to evaluate candidate video assessments.
  * Produces consistent, evidence-based evaluations with timestamps.
+ * Includes hiring signals (green/red flags) and recommendations for recruiters.
  *
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-16
  */
 
@@ -12,7 +13,7 @@
  * Current version of the evaluation prompt.
  * Increment this when making changes for audit trail.
  */
-export const EVALUATION_PROMPT_VERSION = "1.0.0";
+export const EVALUATION_PROMPT_VERSION = "1.1.0";
 
 /**
  * The 8 assessment dimensions aligned with the database schema.
@@ -154,52 +155,82 @@ You MUST respond with ONLY a valid JSON object matching this exact schema. No ad
   "dimension_scores": {
     "COMMUNICATION": {
       "score": <integer 1-5 or null if insufficient evidence>,
+      "rationale": "<why this score was given, with specific evidence>",
+      "greenFlags": ["<positive signal 1>", "<positive signal 2>", ...],
+      "redFlags": ["<concern 1>", "<concern 2>", ...],
       "observable_behaviors": "<description of specific behaviors observed>",
       "timestamps": ["MM:SS", "MM:SS", ...],
       "trainable_gap": <boolean - true if this is a skill that can be improved through training>
     },
     "PROBLEM_SOLVING": {
       "score": <integer 1-5 or null>,
+      "rationale": "<why this score>",
+      "greenFlags": ["..."],
+      "redFlags": ["..."],
       "observable_behaviors": "<description>",
       "timestamps": ["MM:SS", ...],
       "trainable_gap": <boolean>
     },
     "TECHNICAL_KNOWLEDGE": {
       "score": <integer 1-5 or null>,
+      "rationale": "<why this score>",
+      "greenFlags": ["..."],
+      "redFlags": ["..."],
       "observable_behaviors": "<description>",
       "timestamps": ["MM:SS", ...],
       "trainable_gap": <boolean>
     },
     "COLLABORATION": {
       "score": <integer 1-5 or null>,
+      "rationale": "<why this score>",
+      "greenFlags": ["..."],
+      "redFlags": ["..."],
       "observable_behaviors": "<description>",
       "timestamps": ["MM:SS", ...],
       "trainable_gap": <boolean>
     },
     "ADAPTABILITY": {
       "score": <integer 1-5 or null>,
+      "rationale": "<why this score>",
+      "greenFlags": ["..."],
+      "redFlags": ["..."],
       "observable_behaviors": "<description>",
       "timestamps": ["MM:SS", ...],
       "trainable_gap": <boolean>
     },
     "LEADERSHIP": {
       "score": <integer 1-5 or null>,
+      "rationale": "<why this score>",
+      "greenFlags": ["..."],
+      "redFlags": ["..."],
       "observable_behaviors": "<description>",
       "timestamps": ["MM:SS", ...],
       "trainable_gap": <boolean>
     },
     "CREATIVITY": {
       "score": <integer 1-5 or null>,
+      "rationale": "<why this score>",
+      "greenFlags": ["..."],
+      "redFlags": ["..."],
       "observable_behaviors": "<description>",
       "timestamps": ["MM:SS", ...],
       "trainable_gap": <boolean>
     },
     "TIME_MANAGEMENT": {
       "score": <integer 1-5 or null>,
+      "rationale": "<why this score>",
+      "greenFlags": ["..."],
+      "redFlags": ["..."],
       "observable_behaviors": "<description>",
       "timestamps": ["MM:SS", ...],
       "trainable_gap": <boolean>
     }
+  },
+  "hiringSignals": {
+    "overallGreenFlags": ["<top strength 1>", "<top strength 2>", "<top strength 3>", ...],
+    "overallRedFlags": ["<top concern 1>", "<top concern 2>", "<top concern 3>", ...],
+    "recommendation": "hire" | "maybe" | "no_hire",
+    "recommendationRationale": "<2-3 sentence explanation synthesizing all dimensions>"
   },
   "key_highlights": [
     {
@@ -216,6 +247,29 @@ You MUST respond with ONLY a valid JSON object matching this exact schema. No ad
 }
 \`\`\`
 
+## HIRING SIGNALS GUIDELINES
+
+### Green Flags (Positive Signals)
+Identify specific, observable behaviors that indicate the candidate would be a strong hire:
+- Per dimension: 0-3 green flags based on evidence observed
+- Overall: Synthesize the top 3-5 strongest signals across all dimensions
+
+### Red Flags (Concerns)
+Identify specific, observable behaviors that raise concerns:
+- Per dimension: 0-3 red flags based on evidence observed
+- Overall: Synthesize the top 3-5 most significant concerns across all dimensions
+
+### Hiring Recommendation
+- **hire**: Candidate demonstrates strong competency across most dimensions. Green flags significantly outweigh red flags. Recommend moving forward in the hiring process.
+- **maybe**: Mixed signals. Some strong areas but also notable concerns. Would benefit from additional evaluation or a targeted follow-up interview.
+- **no_hire**: Significant concerns that would impact job performance. Red flags outweigh green flags. Not recommended to proceed.
+
+### Recommendation Rationale
+Provide a 2-3 sentence synthesis that:
+1. Highlights the strongest positive signal(s)
+2. Notes the most significant concern(s) if any
+3. Explains why the recommendation was made
+
 ## VALIDATION CHECKLIST (Internal use)
 
 Before outputting your evaluation, verify:
@@ -230,19 +284,43 @@ Before outputting your evaluation, verify:
 IMPORTANT: Return ONLY valid JSON. No additional text, explanation, or markdown code blocks around the response.`;
 
 /**
+ * Hiring recommendation type
+ */
+export type HiringRecommendation = "hire" | "maybe" | "no_hire";
+
+/**
+ * Hiring signals output for recruiters
+ */
+export interface HiringSignals {
+  overallGreenFlags: string[];
+  overallRedFlags: string[];
+  recommendation: HiringRecommendation;
+  recommendationRationale: string;
+}
+
+/**
+ * Dimension score with rationale and flags
+ */
+export interface DimensionScoreOutput {
+  score: number | null;
+  rationale: string;
+  greenFlags: string[];
+  redFlags: string[];
+  observable_behaviors: string;
+  timestamps: string[];
+  trainable_gap: boolean;
+}
+
+/**
  * TypeScript interface for the evaluation output schema
  */
 export interface VideoEvaluationOutput {
   evaluation_version: string;
   overall_score: number;
   dimension_scores: {
-    [K in AssessmentDimensionType]: {
-      score: number | null;
-      observable_behaviors: string;
-      timestamps: string[];
-      trainable_gap: boolean;
-    };
+    [K in AssessmentDimensionType]: DimensionScoreOutput;
   };
+  hiringSignals: HiringSignals;
   key_highlights: Array<{
     timestamp: string;
     type: "positive" | "negative";

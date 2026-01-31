@@ -184,13 +184,42 @@ export interface HRAssessmentData {
 // ============================================================================
 
 /**
- * Video assessment dimension scores
+ * Hiring recommendation type
+ */
+export type HiringRecommendation = "hire" | "maybe" | "no_hire";
+
+/**
+ * Hiring signals for recruiters
+ */
+export interface HiringSignals {
+  overallGreenFlags: string[];
+  overallRedFlags: string[];
+  recommendation: HiringRecommendation;
+  recommendationRationale: string;
+}
+
+/**
+ * Video assessment dimension scores with hiring signals
  */
 export interface VideoDimensionScore {
   score: number;
-  confidence: number;
-  evidence: string[];
-  feedback: string;
+  rationale: string;
+  greenFlags: string[];
+  redFlags: string[];
+  observable_behaviors: string;
+  timestamps: string[];
+  trainable_gap: boolean;
+}
+
+/**
+ * Key highlight from video assessment
+ */
+export interface VideoKeyHighlight {
+  timestamp: string;
+  type: "positive" | "negative";
+  dimension: string;
+  description: string;
+  quote: string | null;
 }
 
 /**
@@ -198,13 +227,14 @@ export interface VideoDimensionScore {
  * Generated from screen recording analysis
  */
 export interface VideoAssessmentData {
-  overallScore: number;
-  dimensions: Record<string, VideoDimensionScore>;
-  summary: string;
-  strengths: string[];
-  areasForImprovement: string[];
-  behavioralObservations?: string[];
-  technicalObservations?: string[];
+  evaluation_version: string;
+  overall_score: number;
+  dimension_scores: Record<string, VideoDimensionScore>;
+  hiringSignals: HiringSignals;
+  key_highlights: VideoKeyHighlight[];
+  overall_summary: string;
+  evaluation_confidence: "high" | "medium" | "low";
+  insufficient_evidence_notes: string | null;
 }
 
 // ============================================================================

@@ -25,7 +25,11 @@ export type {
   CodeReviewData,
   DimensionFeedback,
   HRAssessmentData,
+  // Video assessment types
+  HiringRecommendation,
+  HiringSignals,
   VideoDimensionScore,
+  VideoKeyHighlight,
   VideoAssessmentData,
   // Report types
   SkillCategory as ReportSkillCategory,
