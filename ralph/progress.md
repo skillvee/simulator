@@ -1,5 +1,86 @@
 # Ralph Progress Log
 
+## Issue #177: RF-009 - Create recruiter scenarios list page
+
+### What was implemented
+- Created `/src/app/recruiter/scenarios/page.tsx` - Server component that fetches scenarios
+- Created `/src/app/recruiter/scenarios/client.tsx` - Client component with scenarios list UI
+
+### Files created
+- `src/app/recruiter/scenarios/page.tsx` - Server component that:
+  - Requires RECRUITER or ADMIN role via `requireRecruiter()`
+  - Fetches scenarios owned by current user (`createdById = user.id`)
+  - Orders by created date (newest first)
+  - Includes assessment count per scenario via `_count`
+- `src/app/recruiter/scenarios/client.tsx` - Client component with:
+  - Header with "Your Scenarios" title and "Create New Scenario" button
+  - Scenarios displayed as cards with:
+    - Scenario name with link to detail page
+    - Company name
+    - Tech stack as colored badge tags
+    - Assessment count
+    - Created date
+    - Shareable link with copy button
+  - Copy link functionality with visual feedback (button changes to "Copied!")
+  - Empty state with CTA when no scenarios exist
+
+### Page Features
+- **Header:**
+  - Title: "Your Scenarios"
+  - "Create New Scenario" button linking to `/recruiter/scenarios/new`
+- **Scenario Cards:**
+  - Scenario name with external link icon to detail page
+  - Company name
+  - Tech stack displayed as blue tags
+  - Meta info: assessment count and created date
+  - Shareable link format: `{baseUrl}/join/{scenarioId}`
+  - Copy link button with clipboard API support and fallback
+- **Empty State:**
+  - Icon, message, and CTA button for first scenario creation
+
+### Shareable Link Implementation
+- Format: `{baseUrl}/join/{scenarioId}`
+- Copy button with visual feedback:
+  - Default: "Copy Link" with copy icon
+  - On copy: "Copied!" with check icon, green styling
+  - Resets after 2 seconds
+- Uses Clipboard API with fallback for older browsers
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- Build succeeds: `npm run build` passes
+- Access control verified: `/recruiter/scenarios` redirects to `/sign-in?callbackUrl=/recruiter/dashboard` when unauthenticated
+- E2E testing limited by React controlled inputs with agent-browser (known limitation)
+
+### Learnings for future iterations
+- The recruiter layout already handles auth via `requireRecruiter()` in layout.tsx
+- Scenarios page uses same pattern as dashboard: server component for data fetching, client component for UI
+- Copy to clipboard with visual feedback improves UX - show "Copied!" state briefly
+- The `_count` Prisma feature efficiently gets related record counts without loading full records
+
+### Gotchas discovered
+- Headless browser (agent-browser) still cannot properly fill React controlled inputs - continues limitation from RF-007 and RF-008
+- The recruiter layout's auth check uses `/recruiter/dashboard` as callback URL regardless of which recruiter page is accessed
+
+### Acceptance Criteria Status
+- [x] Create `/src/app/recruiter/scenarios/page.tsx` - server component
+- [x] Create `/src/app/recruiter/scenarios/client.tsx` - client component
+- [x] Header with title "Your Scenarios"
+- [x] "Create New Scenario" button
+- [x] Scenarios displayed with: name, company name, tech stack tags, assessment count, created date
+- [x] Shareable link format: `{baseUrl}/join/{scenarioId}`
+- [x] Copy button next to each link
+- [x] Show feedback on copy (button changes to "Copied!")
+- [x] Fetch scenarios where `createdById = currentUser.id`
+- [x] Include assessment count per scenario
+- [x] Order by created date (newest first)
+- [x] Empty state with friendly message and CTA
+- [x] Access control - RECRUITER or ADMIN only
+- [x] TypeScript compiles: `npm run typecheck`
+- [ ] E2E verification (limited by headless browser + React controlled inputs)
+
+---
+
 ## Issue #176: RF-008 - Create recruiter dashboard page
 
 ### What was implemented
