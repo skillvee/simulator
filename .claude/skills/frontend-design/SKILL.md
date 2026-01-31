@@ -24,6 +24,23 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 ```
 
+### Component Discovery (MCP Tools)
+
+**Shadcn MCP** - Use to discover and learn about shadcn components:
+- `mcp__shadcn__search_items_in_registries` - Search for components by name/purpose
+- `mcp__shadcn__get_item_examples_from_registries` - Get usage examples
+- `mcp__shadcn__view_items_in_registries` - View component details
+
+**Magic UI MCP** - For tasteful animated accents (use sparingly):
+- `getLayout` - bento-grid, dock, file-tree
+- `getMotion` - blur-fade, scroll-progress, number-ticker
+- `getButtons` - shimmer-button, shiny-button
+- `getEffects` - animated-beam, border-beam, shine-border
+
+**Important:** Use Magic UI animations sparingly and only when they add value:
+- Good: number-ticker for stats, blur-fade for page entry, shimmer on primary CTA
+- Bad: animations on everything, distracting effects, gratuitous motion
+
 ### Core Principles
 
 | Rule           | Value                                | Rationale                                       |
