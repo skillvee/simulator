@@ -1,5 +1,96 @@
 # Ralph Progress Log
 
+## Issue #176: RF-008 - Create recruiter dashboard page
+
+### What was implemented
+- Created `/src/app/recruiter/page.tsx` - Redirects to dashboard
+- Created `/src/app/recruiter/dashboard/page.tsx` - Server component that fetches stats and recent activity
+- Created `/src/app/recruiter/dashboard/client.tsx` - Client component with dashboard UI
+- Created `/src/app/recruiter/layout.tsx` - Shared layout with navigation and auth protection
+- Created `/src/lib/core/recruiter.ts` - Auth helpers for recruiter role verification
+- Updated `/src/lib/core/index.ts` - Added recruiter exports
+- Updated `/src/middleware.ts` - Added `/api/recruiter/*` route protection
+
+### Files created
+- `src/app/recruiter/page.tsx` - Simple redirect to `/recruiter/dashboard`
+- `src/app/recruiter/dashboard/page.tsx` - Server component that:
+  - Requires RECRUITER or ADMIN role via `requireRecruiter()`
+  - Fetches scenarios owned by current user (`createdById = user.id`)
+  - Calculates stats: scenario count, candidate count, completed assessments, completion rate
+  - Fetches recent assessments (last 5) for recruiter's scenarios
+- `src/app/recruiter/dashboard/client.tsx` - Client component with:
+  - Stats cards showing: Total Scenarios, Total Candidates, Completed, Completion Rate
+  - Quick action buttons: Create Scenario, View All Scenarios, View All Candidates
+  - Recent activity table showing candidate assessments
+  - Empty state with CTA when no activity
+- `src/app/recruiter/layout.tsx` - Shared layout with:
+  - Header with logo and "Recruiter" badge
+  - Navigation links to Dashboard, Scenarios, Candidates
+  - Exit link and user email display
+  - Auth check via `requireRecruiter()` - redirects if not authenticated/authorized
+- `src/lib/core/recruiter.ts` - Auth utilities:
+  - `isRecruiter()` - Check if user has RECRUITER role
+  - `canAccessRecruiterFeatures()` - Check RECRUITER or ADMIN role
+  - `requireRecruiter()` - Require auth and role for pages
+  - `checkCanAccessRecruiter()` - Boolean check for conditional rendering
+
+### Files modified
+- `src/lib/core/index.ts` - Added `export * from "./recruiter"`
+- `src/middleware.ts` - Added:
+  - `isRecruiterRoute()` function to detect `/api/recruiter/*` routes
+  - Role check for recruiter API routes (RECRUITER or ADMIN required)
+  - Updated JSDoc to document recruiter route protection
+
+### Dashboard Features
+- **Stats Cards:**
+  - Total scenarios count (owned by this recruiter via `createdById`)
+  - Total candidates (unique users who took assessments for recruiter's scenarios)
+  - Completed assessments count
+  - Completion rate percentage
+- **Quick Actions:**
+  - "Create Scenario" button → `/recruiter/scenarios/new`
+  - "View All Scenarios" → `/recruiter/scenarios`
+  - "View All Candidates" → `/recruiter/candidates`
+- **Recent Activity:**
+  - Last 5 assessments with candidate name/email, scenario name, status, date
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- Build succeeds: `npm run build` passes
+- Access control verified: `/recruiter/dashboard` redirects to `/sign-in?callbackUrl=/recruiter/dashboard` when unauthenticated
+- Route protection works: Middleware returns 403 for non-recruiter access to `/api/recruiter/*`
+- E2E testing attempted but limited by React controlled inputs with agent-browser
+
+### Learnings for future iterations
+- The `getSessionWithRole()` function is shared between admin.ts and recruiter.ts - imported from admin.ts to avoid export conflicts
+- Recruiters can access their scenarios via `Scenario.createdById` field added in RF-002
+- The completion rate calculation handles edge case of 0 assessments (returns 0%)
+- Middleware only runs on API routes (`/api/*`) by config.matcher - page routes use layout-based auth
+
+### Gotchas discovered
+- TypeScript export conflict: Both admin.ts and recruiter.ts had `getSessionWithRole` - fixed by importing from admin.ts in recruiter.ts
+- Headless browser (agent-browser) doesn't properly trigger React onChange events for controlled inputs - known limitation from RF-007
+- The seed script creates `recruiter@test.com` user with RECRUITER role for testing
+- `/recruiter/scenarios` and `/recruiter/candidates` pages don't exist yet - will be created in subsequent issues
+
+### Acceptance Criteria Status
+- [x] Create `/src/app/recruiter/page.tsx` - redirects to `/recruiter/dashboard`
+- [x] Create `/src/app/recruiter/dashboard/page.tsx` - main dashboard
+- [x] Create client component for dashboard UI
+- [x] Stats Cards with scenario count, candidate count, completed count, completion rate
+- [x] Quick Actions with Create Scenario, View All Scenarios, View All Candidates buttons
+- [x] Recent Activity section (shows last 5 assessments)
+- [x] Server component fetches scenarios where `createdById = currentUser.id`
+- [x] Server component fetches assessments linked to those scenarios
+- [x] Server component calculates aggregate stats
+- [x] Route protected - only RECRUITER and ADMIN roles can access
+- [x] Redirects to `/sign-in` if not authenticated
+- [x] Middleware updated for `/api/recruiter/*` routes
+- [x] TypeScript compiles: `npm run typecheck`
+- [ ] E2E verification (limited by headless browser + React controlled inputs)
+
+---
+
 ## Issue #175: RF-007 - Add recruiter signup page
 
 ### What was implemented

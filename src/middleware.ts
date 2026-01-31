@@ -44,13 +44,21 @@ function isAdminRoute(pathname: string): boolean {
 }
 
 /**
+ * Check if a route is a recruiter API route
+ */
+function isRecruiterRoute(pathname: string): boolean {
+  return pathname.startsWith("/api/recruiter/");
+}
+
+/**
  * Centralized authentication middleware for API routes.
  *
  * This middleware:
  * - Protects all /api/* routes except /api/auth/* and PUBLIC_ROUTES
  * - Requires ADMIN role for /api/admin/* routes
+ * - Requires RECRUITER or ADMIN role for /api/recruiter/* routes
  * - Returns 401 for unauthenticated requests to protected routes
- * - Returns 403 for non-admin requests to admin routes
+ * - Returns 403 for non-admin/recruiter requests to protected routes
  *
  * @see Issue #160: SEC-001 - Security audit finding #5 (HIGH severity)
  */
@@ -87,6 +95,17 @@ export default auth((req) => {
     if (user.role !== "ADMIN") {
       return NextResponse.json(
         { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+  }
+
+  // Check recruiter role for recruiter routes (RECRUITER or ADMIN allowed)
+  if (isRecruiterRoute(pathname)) {
+    const user = session.user as ExtendedSessionUser;
+    if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, error: "Recruiter access required" },
         { status: 403 }
       );
     }
