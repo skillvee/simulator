@@ -5,7 +5,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, Calendar, Clock, Filter } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Users, Calendar, Clock, Filter } from "lucide-react";
 
 interface CandidateData {
   id: string;
@@ -66,32 +74,12 @@ export function RecruiterCandidatesClient({
     }).format(new Date(dateString));
   };
 
-  const getStatusBadgeStyles = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return "bg-green-100 text-green-700 hover:bg-green-100";
-      case "WORKING":
-        return "bg-blue-100 text-blue-700 hover:bg-blue-100";
-      case "WELCOME":
-        return "bg-yellow-100 text-yellow-700 hover:bg-yellow-100";
-      default:
-        return "bg-stone-100 text-stone-700 hover:bg-stone-100";
-    }
-  };
-
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="p-6">
       {/* Header */}
-      <div className="mb-8">
-        <Link
-          href="/recruiter/dashboard"
-          className="mb-4 inline-flex items-center text-sm text-stone-600 hover:text-stone-900 transition-colors"
-        >
-          <ArrowLeft className="mr-1.5 h-4 w-4" />
-          Back to Dashboard
-        </Link>
-        <h1 className="text-3xl font-semibold text-stone-900">Candidates</h1>
-        <p className="mt-2 text-stone-600">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-stone-900">Candidates</h1>
+        <p className="mt-1 text-sm text-stone-500">
           View all candidates who have taken your assessments
         </p>
       </div>
@@ -106,7 +94,7 @@ export function RecruiterCandidatesClient({
           <select
             value={scenarioFilter}
             onChange={(e) => setScenarioFilter(e.target.value)}
-            className="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="all">All scenarios</option>
             {scenarioOptions.map((scenario) => (
@@ -118,7 +106,7 @@ export function RecruiterCandidatesClient({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="all">All statuses</option>
             <option value="WELCOME">Welcome</option>
@@ -143,7 +131,7 @@ export function RecruiterCandidatesClient({
 
       {/* Candidates Table/List */}
       {candidates.length === 0 ? (
-        <Card className="border-stone-200 shadow-sm">
+        <Card className="border-stone-200 bg-white">
           <CardContent className="p-12 text-center">
             <Users className="mx-auto h-16 w-16 text-stone-300" />
             <h2 className="mt-6 text-xl font-semibold text-stone-900">
@@ -154,14 +142,14 @@ export function RecruiterCandidatesClient({
             </p>
             <Button
               asChild
-              className="mt-6 bg-blue-600 hover:bg-blue-700 shadow-sm"
+              className="mt-6 bg-blue-600 hover:bg-blue-700"
             >
               <Link href="/recruiter/scenarios">View Your Scenarios</Link>
             </Button>
           </CardContent>
         </Card>
       ) : filteredCandidates.length === 0 ? (
-        <Card className="border-stone-200 shadow-sm">
+        <Card className="border-stone-200 bg-white">
           <CardContent className="p-12 text-center">
             <Filter className="mx-auto h-16 w-16 text-stone-300" />
             <h2 className="mt-6 text-xl font-semibold text-stone-900">
@@ -183,78 +171,77 @@ export function RecruiterCandidatesClient({
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-stone-200 shadow-sm overflow-hidden">
+        <Card className="border-stone-200 bg-white overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-stone-200 bg-stone-50">
-                    <th className="p-4 text-left text-xs font-medium uppercase text-stone-500">
-                      Candidate
-                    </th>
-                    <th className="p-4 text-left text-xs font-medium uppercase text-stone-500">
-                      Scenario
-                    </th>
-                    <th className="p-4 text-left text-xs font-medium uppercase text-stone-500">
-                      Status
-                    </th>
-                    <th className="p-4 text-left text-xs font-medium uppercase text-stone-500">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5" />
-                        Started
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-stone-50 hover:bg-stone-50">
+                  <TableHead>Candidate</TableHead>
+                  <TableHead>Scenario</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Started
+                    </div>
+                  </TableHead>
+                  <TableHead>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      Completed
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCandidates.map((candidate) => (
+                  <TableRow key={candidate.id} className="hover:bg-stone-50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 font-medium">
+                          {candidate.user.name?.charAt(0) || "?"}
+                        </div>
+                        <div>
+                          <p className="font-medium text-stone-900">
+                            {candidate.user.name || "Anonymous"}
+                          </p>
+                          <p className="text-sm text-stone-500">
+                            {candidate.user.email || "No email"}
+                          </p>
+                        </div>
                       </div>
-                    </th>
-                    <th className="p-4 text-left text-xs font-medium uppercase text-stone-500">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" />
-                        Completed
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCandidates.map((candidate) => (
-                    <tr
-                      key={candidate.id}
-                      className="border-b border-stone-100 last:border-b-0 transition-colors hover:bg-stone-50"
-                    >
-                      <td className="p-4">
-                        <p className="font-medium text-stone-900">
-                          {candidate.user.name || "Anonymous"}
-                        </p>
-                        <p className="text-sm text-stone-500">
-                          {candidate.user.email || "No email"}
-                        </p>
-                      </td>
-                      <td className="p-4">
-                        <Link
-                          href={`/recruiter/scenarios/${candidate.scenario.id}`}
-                          className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
-                        >
-                          {candidate.scenario.name}
-                        </Link>
-                      </td>
-                      <td className="p-4">
-                        <Badge
-                          variant="secondary"
-                          className={getStatusBadgeStyles(candidate.status)}
-                        >
-                          {candidate.status}
-                        </Badge>
-                      </td>
-                      <td className="p-4 text-sm text-stone-500">
-                        {formatDateTime(candidate.createdAt)}
-                      </td>
-                      <td className="p-4 text-sm text-stone-500">
-                        {candidate.completedAt
-                          ? formatDate(candidate.completedAt)
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/recruiter/scenarios/${candidate.scenario.id}`}
+                        className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+                      >
+                        {candidate.scenario.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          candidate.status === "COMPLETED"
+                            ? "bg-blue-100 text-blue-700 border-0"
+                            : "bg-stone-100 text-stone-600 border-0"
+                        }
+                      >
+                        {candidate.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-stone-500">
+                      {formatDateTime(candidate.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-sm text-stone-500">
+                      {candidate.completedAt
+                        ? formatDate(candidate.completedAt)
+                        : "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
