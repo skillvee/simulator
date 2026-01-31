@@ -1,5 +1,77 @@
 # Ralph Progress Log
 
+## Issue #184: RF-016 - Add PR URL detection in Slack chat
+
+### What was implemented
+- Added duplicate PR URL detection to prevent overwriting and repeated "call me" prompts
+- Created `DUPLICATE_PR_PROMPT` for handling repeat PR submissions naturally
+- Modified `/src/app/api/chat/route.ts` to check `assessment.prUrl` before processing
+
+### PR URL Detection Flow
+1. Candidate sends message in chat
+2. Server-side `extractPrUrl()` checks message for PR URL patterns
+3. `isValidPrUrl()` validates URL matches GitHub/GitLab/Bitbucket PR patterns
+4. If PR URL detected and `assessment.prUrl` is NOT set:
+   - Save URL to `assessment.prUrl`
+   - Manager responds with call prompt (e.g., "I'll give you a shout to chat through it")
+5. If PR URL detected and `assessment.prUrl` IS already set:
+   - Don't overwrite existing URL
+   - Manager responds naturally without repeating call prompt (uses `DUPLICATE_PR_PROMPT`)
+
+### Supported PR URL Patterns
+- GitHub: `https://github.com/owner/repo/pull/123`
+- GitLab: `https://gitlab.com/owner/repo/-/merge_requests/123`
+- Bitbucket: `https://bitbucket.org/owner/repo/pull-requests/123`
+
+### Files modified
+- `src/app/api/chat/route.ts` - Added duplicate detection logic, imported DUPLICATE_PR_PROMPT
+- `src/prompts/manager/pr-submission.ts` - Added DUPLICATE_PR_PROMPT constant
+- `src/prompts/index.ts` - Exported DUPLICATE_PR_PROMPT
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- E2E tested with agent-browser:
+  - Logged in as candidate@test.com
+  - Navigated to `/assessment/test-assessment-working-recruiter/chat`
+  - Sent first PR URL: Manager responded with call prompt
+  - PR URL saved to assessment.prUrl
+  - Sent second PR URL: Manager responded naturally without repeating call prompt
+  - Original PR URL was NOT overwritten
+- Screenshots captured:
+  - `screenshots/issue-184-chat-initial.png` - Initial chat state
+  - `screenshots/issue-184-pr-submitted.png` - After first PR submission
+  - `screenshots/issue-184-duplicate-pr-response.png` - After duplicate PR submission
+
+### Learnings for future iterations
+- PR URL detection was already implemented in `/src/app/api/chat/route.ts`, just needed duplicate handling
+- The `isValidPrUrl()` function in `src/lib/external/pr-validation.ts` already supports multiple platforms
+- Manager detection uses `isManager()` helper which checks if role contains "manager"
+- The `prSubmitted` flag in the response can be used by the client for UI updates
+
+### Gotchas discovered
+- The existing implementation already saved PR URL and triggered manager response - just needed duplicate protection
+- The manager auto-start messages (RF-015) may include an initial "call me" message, so duplicate detection is important
+- Status stays WORKING when PR is submitted (no more FINAL_DEFENSE status)
+
+### Acceptance Criteria Status
+- [x] Monitor candidate messages for PR URL patterns
+- [x] Regex pattern: `https?:\/\/(github\.com|gitlab\.com)\/[^\s]+\/(pull|merge_requests)\/\d+`
+- [x] Detection happens server-side when processing message
+- [x] Extract and validate PR URL
+- [x] Save to `assessment.prUrl`
+- [x] Record timestamp of submission (via message timestamp)
+- [x] Trigger manager response with call prompt
+- [x] Manager responds naturally after PR detected
+- [x] Keep assessment in WORKING status
+- [x] If PR URL already saved, don't overwrite
+- [x] Manager should not repeat the "call me" message
+- [x] TypeScript compiles: `npm run typecheck`
+- [x] Post PR URL in chat - URL is saved to assessment record
+- [x] Manager responds with call prompt
+- [x] E2E tested with screenshots
+
+---
+
 ## Issue #183: RF-015 - Add manager auto-start messages in Slack
 
 ### What was implemented

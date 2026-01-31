@@ -14,6 +14,7 @@ import {
   buildChatPrompt,
   buildPRAcknowledgmentContext,
   INVALID_PR_PROMPT,
+  DUPLICATE_PR_PROMPT,
 } from "@/prompts";
 import { success, error, validateRequest } from "@/lib/api";
 import { ChatRequestSchema } from "@/lib/schemas";
@@ -184,62 +185,110 @@ export async function POST(request: Request) {
   let prSubmitted = false;
   let responseText: string;
 
+  // Check if a PR URL has already been saved for this assessment
+  const prAlreadySaved = !!assessment.prUrl;
+
   // If manager and PR link detected, validate and potentially process it
   if (isCoworkerManager && extractedPrUrl) {
     // Check if assessment is in WORKING status
     if (assessment.status === AssessmentStatus.WORKING) {
-      // Valid PR link - update assessment with PR URL (status stays WORKING)
-      await db.assessment.update({
-        where: { id: assessmentId },
-        data: {
-          prUrl: extractedPrUrl,
-        },
-      });
-      prSubmitted = true;
+      // Check if this is a duplicate PR submission
+      if (prAlreadySaved) {
+        // PR already saved - don't overwrite, respond naturally without "call me" prompt
+        const response = await gemini.models.generateContent({
+          model: CHAT_MODEL,
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
+                },
+              ],
+            },
+            {
+              role: "model",
+              parts: [
+                { text: "I understand. I'm ready to chat as this coworker." },
+              ],
+            },
+            ...history,
+            {
+              role: "user",
+              parts: [{ text: message }],
+            },
+            {
+              role: "model",
+              parts: [
+                {
+                  text: "Let me respond to this PR link they shared.",
+                },
+              ],
+            },
+            {
+              role: "user",
+              parts: [{ text: DUPLICATE_PR_PROMPT }],
+            },
+          ],
+        });
 
-      // Generate an acknowledgment response from the manager
-      const prAckPrompt = buildPRAcknowledgmentContext(extractedPrUrl);
+        responseText =
+          response.text ||
+          "Got it! I already have your PR - ready whenever you want to hop on a call!";
+      } else {
+        // First PR submission - save and trigger call prompt
+        await db.assessment.update({
+          where: { id: assessmentId },
+          data: {
+            prUrl: extractedPrUrl,
+          },
+        });
+        prSubmitted = true;
 
-      const response = await gemini.models.generateContent({
-        model: CHAT_MODEL,
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
-              },
-            ],
-          },
-          {
-            role: "model",
-            parts: [
-              { text: "I understand. I'm ready to chat as this coworker." },
-            ],
-          },
-          ...history,
-          {
-            role: "user",
-            parts: [{ text: message }],
-          },
-          {
-            role: "model",
-            parts: [
-              {
-                text: "Let me respond appropriately to this PR submission.",
-              },
-            ],
-          },
-          {
-            role: "user",
-            parts: [{ text: prAckPrompt }],
-          },
-        ],
-      });
+        // Generate an acknowledgment response from the manager
+        const prAckPrompt = buildPRAcknowledgmentContext(extractedPrUrl);
 
-      responseText =
-        response.text ||
-        "Awesome, thanks for submitting! Let me take a quick look at your PR and I'll call you in a moment to discuss.";
+        const response = await gemini.models.generateContent({
+          model: CHAT_MODEL,
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
+                },
+              ],
+            },
+            {
+              role: "model",
+              parts: [
+                { text: "I understand. I'm ready to chat as this coworker." },
+              ],
+            },
+            ...history,
+            {
+              role: "user",
+              parts: [{ text: message }],
+            },
+            {
+              role: "model",
+              parts: [
+                {
+                  text: "Let me respond appropriately to this PR submission.",
+                },
+              ],
+            },
+            {
+              role: "user",
+              parts: [{ text: prAckPrompt }],
+            },
+          ],
+        });
+
+        responseText =
+          response.text ||
+          "Awesome, thanks for submitting! Let me take a quick look at your PR and I'll call you in a moment to discuss.";
+      }
     } else {
       // Assessment not in WORKING status - can't accept PR
       const response = await gemini.models.generateContent({

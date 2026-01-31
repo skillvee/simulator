@@ -30,3 +30,11 @@ As their manager, acknowledge receipt of the PR and let them know you'll take a 
  * Generates a helpful response asking for the correct format.
  */
 export const INVALID_PR_PROMPT = `The candidate just sent a message that seems like they're trying to submit a PR, but the link doesn't appear to be a valid GitHub/GitLab/Bitbucket PR link. Ask them to share the actual pull request or merge request URL. Be helpful and friendly.`;
+
+/**
+ * Duplicate PR prompt
+ *
+ * Used when a candidate sends a PR link but one has already been recorded.
+ * The manager should acknowledge without repeating the "call me" message.
+ */
+export const DUPLICATE_PR_PROMPT = `The candidate just shared a PR link, but you've already received and acknowledged their PR submission earlier. Respond naturally to their message without repeating the "I'll call you" prompt. Just acknowledge casually, like "Got it, I already have your PR - ready when you are!" or similar. Keep it brief and friendly.`;
