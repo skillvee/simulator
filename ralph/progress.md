@@ -1,5 +1,97 @@
 # Ralph Progress Log
 
+## Issue #187: RF-019 - Update middleware for new routes
+
+### What was implemented
+- Updated middleware to handle both API routes and page routes
+- Added protection for `/recruiter/*` page routes requiring RECRUITER or ADMIN role
+- Added `/join/*` routes as public (no auth required)
+- Added `/assessment/*` routes requiring authentication
+- Removed handling for deprecated routes (they now 404 naturally since pages were deleted)
+
+### Middleware Changes
+- Renamed functions for clarity: `isPublicRoute` → `isPublicApiRoute`, etc.
+- Added new helper functions: `isPublicPageRoute`, `isRecruiterPageRoute`, `isAssessmentPageRoute`
+- Updated matcher config to include: `/api/:path*`, `/recruiter/:path*`, `/assessment/:path*`
+- `/join/*` routes are explicitly NOT matched - they remain public
+
+### Route Protection Summary
+| Route Pattern | Auth Required | Role Required |
+|--------------|---------------|---------------|
+| `/api/admin/*` | Yes | ADMIN |
+| `/api/recruiter/*` | Yes | RECRUITER or ADMIN |
+| `/api/*` (other) | Yes | None |
+| `/recruiter/*` | Yes | RECRUITER or ADMIN |
+| `/assessment/*` | Yes | None (ownership at page level) |
+| `/join/*` | No | None |
+| `/sign-in`, `/sign-up` | No | None |
+
+### Deprecated Routes (now 404)
+These routes were removed in previous RF issues and now return 404:
+- `/start`
+- `/assessment/[id]/cv-upload`
+- `/assessment/[id]/hr-interview`
+- `/assessment/[id]/congratulations`
+- `/assessment/[id]/kickoff`
+- `/assessment/[id]/defense`
+
+### Files modified
+- `src/middleware.ts` - Complete rewrite for new route structure
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- E2E tested with agent-browser:
+  1. Logged out → `/recruiter/dashboard` → redirects to `/sign-in?callbackUrl=/recruiter/dashboard`
+  2. Logged out → `/join/test-scenario-recruiter` → page loads (public)
+  3. Login as regular user → `/recruiter/dashboard` → redirects to `/?error=unauthorized`
+  4. Login as recruiter → `/recruiter/dashboard` → access granted
+  5. `/start` → 404
+  6. `/assessment/[id]/cv-upload` → 404
+  7. `/assessment/[id]/hr-interview` → 404
+  8. `/assessment/[id]/congratulations` → 404
+  9. `/assessment/[id]/kickoff` → 404
+  10. `/assessment/[id]/defense` → 404
+- Screenshots captured:
+  - `screenshots/issue-187-recruiter-redirect.png` - Unauthenticated redirect to sign-in
+  - `screenshots/issue-187-join-public.png` - Join page accessible publicly
+  - `screenshots/issue-187-wrong-role-redirect.png` - Regular user redirected from recruiter
+  - `screenshots/issue-187-recruiter-access-granted.png` - Recruiter can access dashboard
+  - `screenshots/issue-187-assessment-auth-required.png` - Assessment routes require auth
+
+### Learnings for future iterations
+- Middleware matcher config determines which routes run through middleware at all
+- Routes not matched by the middleware config pass through without any checks
+- Page routes need different response handling (redirect) vs API routes (JSON error)
+- Assessment ownership verification happens at the page level since middleware can't query DB
+
+### Gotchas discovered
+- The callback URL needs proper encoding when redirecting to sign-in
+- Regular users trying to access recruiter routes get redirected to home with error param, not 403
+
+### Acceptance Criteria Status
+- [x] `/recruiter/*` routes require authentication
+- [x] Only RECRUITER or ADMIN roles can access
+- [x] Redirect to `/sign-in` if not authenticated
+- [x] Redirect to `/` or show 403 if wrong role
+- [x] `/join/*` routes are public (no auth required)
+- [x] Anyone can view scenario info
+- [x] Auth happens on the page itself
+- [x] Remove any special handling for `/start`
+- [x] Remove handling for `/cv-upload`
+- [x] Remove handling for `/hr-interview`
+- [x] Remove handling for `/congratulations`
+- [x] Remove handling for `/kickoff`
+- [x] Remove handling for `/defense`
+- [x] `/assessment/[id]/*` routes require authentication
+- [x] User must own the assessment (or be admin) - verified at page level
+- [x] Keep existing assessment route protection
+- [x] TypeScript compiles: `npm run typecheck`
+- [x] Test recruiter routes require auth
+- [x] Test join routes are public
+- [x] Removed routes return 404
+
+---
+
 ## Issue #186: RF-018 - Update results page for new status flow
 
 ### What was implemented

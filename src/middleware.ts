@@ -17,16 +17,33 @@ interface ExtendedSessionUser {
  * Public API routes that don't require authentication.
  * These routes are accessible without a valid session.
  */
-const PUBLIC_ROUTES = [
+const PUBLIC_API_ROUTES = [
   "/api/search/extract",
   "/api/search/parse-feedback",
 ];
 
 /**
- * Check if a route matches the public routes allowlist
+ * Public page routes that don't require authentication.
+ * These routes are accessible without a valid session.
  */
-function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some((route) => pathname === route);
+const PUBLIC_PAGE_ROUTES = [
+  "/join",
+  "/sign-in",
+  "/sign-up",
+];
+
+/**
+ * Check if a route matches the public API routes allowlist
+ */
+function isPublicApiRoute(pathname: string): boolean {
+  return PUBLIC_API_ROUTES.some((route) => pathname === route);
+}
+
+/**
+ * Check if a route is a public page route
+ */
+function isPublicPageRoute(pathname: string): boolean {
+  return PUBLIC_PAGE_ROUTES.some((route) => pathname.startsWith(route));
 }
 
 /**
@@ -39,76 +56,132 @@ function isAuthRoute(pathname: string): boolean {
 /**
  * Check if a route is an admin API route
  */
-function isAdminRoute(pathname: string): boolean {
+function isAdminApiRoute(pathname: string): boolean {
   return pathname.startsWith("/api/admin/");
 }
 
 /**
  * Check if a route is a recruiter API route
  */
-function isRecruiterRoute(pathname: string): boolean {
+function isRecruiterApiRoute(pathname: string): boolean {
   return pathname.startsWith("/api/recruiter/");
 }
 
 /**
- * Centralized authentication middleware for API routes.
+ * Check if a route is a recruiter page route
+ */
+function isRecruiterPageRoute(pathname: string): boolean {
+  return pathname.startsWith("/recruiter");
+}
+
+/**
+ * Check if a route is an assessment page route
+ */
+function isAssessmentPageRoute(pathname: string): boolean {
+  return pathname.startsWith("/assessment/");
+}
+
+/**
+ * Centralized authentication middleware for API and page routes.
  *
  * This middleware:
- * - Protects all /api/* routes except /api/auth/* and PUBLIC_ROUTES
+ * - Protects all /api/* routes except /api/auth/* and PUBLIC_API_ROUTES
  * - Requires ADMIN role for /api/admin/* routes
  * - Requires RECRUITER or ADMIN role for /api/recruiter/* routes
- * - Returns 401 for unauthenticated requests to protected routes
- * - Returns 403 for non-admin/recruiter requests to protected routes
+ * - Protects /recruiter/* page routes (requires RECRUITER or ADMIN role)
+ * - Protects /assessment/* page routes (requires authentication)
+ * - Allows public access to /join/* routes
+ * - Returns 401/redirects for unauthenticated requests to protected routes
+ * - Returns 403/redirects for unauthorized role access
  *
  * @see Issue #160: SEC-001 - Security audit finding #5 (HIGH severity)
+ * @see Issue #187: RF-019 - Update middleware for new routes
  */
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-
-  // Only apply to API routes
-  if (!pathname.startsWith("/api/")) {
-    return NextResponse.next();
-  }
+  const session = req.auth;
+  const user = session?.user as ExtendedSessionUser | undefined;
 
   // Skip auth routes (handled by NextAuth)
   if (isAuthRoute(pathname)) {
     return NextResponse.next();
   }
 
-  // Allow public routes without authentication
-  if (isPublicRoute(pathname)) {
+  // Allow public page routes without authentication
+  if (isPublicPageRoute(pathname)) {
     return NextResponse.next();
   }
 
-  // Check authentication for protected routes
-  const session = req.auth;
-  if (!session?.user) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized" },
-      { status: 401 }
-    );
-  }
+  // Handle API routes
+  if (pathname.startsWith("/api/")) {
+    // Allow public API routes without authentication
+    if (isPublicApiRoute(pathname)) {
+      return NextResponse.next();
+    }
 
-  // Check admin role for admin routes
-  if (isAdminRoute(pathname)) {
-    const user = session.user as ExtendedSessionUser;
-    if (user.role !== "ADMIN") {
+    // Check authentication for protected API routes
+    if (!session?.user) {
       return NextResponse.json(
-        { success: false, error: "Admin access required" },
-        { status: 403 }
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
       );
     }
+
+    // Check admin role for admin API routes
+    if (isAdminApiRoute(pathname)) {
+      if (user?.role !== "ADMIN") {
+        return NextResponse.json(
+          { success: false, error: "Admin access required" },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Check recruiter role for recruiter API routes (RECRUITER or ADMIN allowed)
+    if (isRecruiterApiRoute(pathname)) {
+      if (user?.role !== "RECRUITER" && user?.role !== "ADMIN") {
+        return NextResponse.json(
+          { success: false, error: "Recruiter access required" },
+          { status: 403 }
+        );
+      }
+    }
+
+    return NextResponse.next();
   }
 
-  // Check recruiter role for recruiter routes (RECRUITER or ADMIN allowed)
-  if (isRecruiterRoute(pathname)) {
-    const user = session.user as ExtendedSessionUser;
-    if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
-      return NextResponse.json(
-        { success: false, error: "Recruiter access required" },
-        { status: 403 }
-      );
+  // Handle recruiter page routes
+  if (isRecruiterPageRoute(pathname)) {
+    // Redirect to sign-in if not authenticated
+    if (!session?.user) {
+      const signInUrl = new URL("/sign-in", req.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
     }
+
+    // Check recruiter role (RECRUITER or ADMIN allowed)
+    if (user?.role !== "RECRUITER" && user?.role !== "ADMIN") {
+      // Redirect to home with error for wrong role
+      const homeUrl = new URL("/", req.url);
+      homeUrl.searchParams.set("error", "unauthorized");
+      return NextResponse.redirect(homeUrl);
+    }
+
+    return NextResponse.next();
+  }
+
+  // Handle assessment page routes
+  if (isAssessmentPageRoute(pathname)) {
+    // Redirect to sign-in if not authenticated
+    if (!session?.user) {
+      const signInUrl = new URL("/sign-in", req.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    // Note: Assessment ownership is verified at the page level, not middleware
+    // This is because middleware doesn't have access to database queries
+    return NextResponse.next();
   }
 
   return NextResponse.next();
@@ -116,10 +189,19 @@ export default auth((req) => {
 
 /**
  * Middleware matcher configuration.
- * Only run middleware on API routes for efficiency.
+ * Run middleware on API routes and protected page routes.
+ *
+ * Note: /join/* routes are explicitly NOT matched - they are public.
+ * Deprecated routes (/start, /cv-upload, /hr-interview, /congratulations,
+ * /kickoff, /defense) are not matched and will 404 naturally since pages
+ * have been removed.
  */
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: [
+    "/api/:path*",
+    "/recruiter/:path*",
+    "/assessment/:path*",
+  ],
 };
 
 export const runtime = "nodejs";
