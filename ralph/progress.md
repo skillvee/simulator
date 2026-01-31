@@ -1,5 +1,87 @@
 # Ralph Progress Log
 
+## Issue #180: RF-012 - Create recruiter candidates list page
+
+### What was implemented
+- Created `/src/app/recruiter/candidates/page.tsx` - Server component with recruiter auth
+- Created `/src/app/recruiter/candidates/client.tsx` - Client component with candidates table and filters
+
+### Files created
+- `src/app/recruiter/candidates/page.tsx` - Server component that:
+  - Requires RECRUITER or ADMIN role via `requireRecruiter()`
+  - Fetches all assessments for recruiter's scenarios
+  - Joins with user data for candidate info
+  - Gets scenario options for filtering
+  - Orders by most recent first
+- `src/app/recruiter/candidates/client.tsx` - Client component with:
+  - Header with title "Candidates" and back to dashboard link
+  - Filter dropdowns for scenario and status
+  - Candidates table with columns: Candidate, Scenario, Status, Started, Completed
+  - Status badges with color coding (green=COMPLETED, blue=WORKING, yellow=WELCOME)
+  - Links to scenario detail pages
+  - Empty state with CTA to view scenarios
+  - Results count showing filtered/total
+
+### Page Features
+- **Header:**
+  - Back to Dashboard link
+  - Title: "Candidates"
+  - Subtitle: "View all candidates who have taken your assessments"
+- **Filters:**
+  - Scenario dropdown with all recruiter's scenarios
+  - Status dropdown (All, Welcome, Working, Completed)
+  - Clear filters button when filters are active
+- **Candidates Table:**
+  - Candidate name and email
+  - Scenario name (clickable link to scenario detail)
+  - Status badge with color coding
+  - Started date/time
+  - Completed date (or dash if not completed)
+- **Empty States:**
+  - No candidates: "Share your scenario link to get started"
+  - No matching filters: "Try adjusting your filters"
+
+### Data Fetching
+- Gets all scenarios owned by recruiter (`createdById = user.id`)
+- Gets all assessments for those scenarios with user and scenario info
+- Ordered by `createdAt` descending (most recent first)
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- E2E tested with agent-browser:
+  - Logged in as recruiter@test.com
+  - Navigated to `/recruiter/candidates`
+  - Verified page displays with title, filters, and table
+  - Verified candidates show with correct columns
+- Screenshot captured: `screenshots/issue-180-candidates-list.png`
+
+### Learnings for future iterations
+- Native `<select>` elements work well for simple filters - no need for custom Select component
+- The `useMemo` hook efficiently handles client-side filtering
+- Existing patterns from dashboard and scenarios pages provide consistent UI styling
+- Status badge colors follow the pattern established in dashboard client
+
+### Gotchas discovered
+- The project doesn't have a shadcn Select component - used native `<select>` with Tailwind styling instead
+- Filtering is done client-side since all candidates are fetched at once (suitable for typical recruiter data volumes)
+
+### Acceptance Criteria Status
+- [x] Create `/src/app/recruiter/candidates/page.tsx` - server component
+- [x] Create `/src/app/recruiter/candidates/client.tsx` - client component
+- [x] Header: Title "Candidates", back to dashboard link
+- [x] Candidates Table/List: Candidate email/name, scenario, status, started date, completed date
+- [x] Data Fetching: Get scenarios owned by recruiter, get assessments for those scenarios
+- [x] Join with user data for candidate info
+- [x] Order by most recent first
+- [x] Filter by scenario (optional)
+- [x] Filter by status (optional)
+- [x] Empty state: "No candidates yet. Share your scenario link to get started."
+- [x] TypeScript compiles: `npm run typecheck`
+- [x] E2E test with agent-browser
+- [x] Screenshot captured
+
+---
+
 ## Issue #179: RF-011 - Create recruiter scenario detail page
 
 ### What was implemented
