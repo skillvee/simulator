@@ -11,8 +11,8 @@ interface SessionUser {
 }
 
 /**
- * POST /api/recruiter/scenarios
- * Create a new scenario (recruiter or admin only)
+ * POST /api/recruiter/simulations
+ * Create a new simulation (recruiter or admin only)
  * Auto-sets createdById to current user and isPublished to true
  */
 export async function POST(request: Request) {

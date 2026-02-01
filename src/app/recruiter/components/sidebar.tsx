@@ -27,7 +27,7 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
 
   const navItems = [
     { href: "/recruiter/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/recruiter/scenarios", label: "Scenarios", icon: FolderOpen },
+    { href: "/recruiter/simulations", label: "Simulations", icon: FolderOpen },
     { href: "/recruiter/candidates", label: "Candidates", icon: Users },
   ];
 
@@ -72,9 +72,9 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
       {sidebarOpen && (
         <div className="p-3">
           <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
-            <Link href="/recruiter/scenarios/new">
+            <Link href="/recruiter/simulations/new">
               <Plus className="mr-2 h-4 w-4" />
-              Create Scenario
+              Create Simulation
             </Link>
           </Button>
         </div>

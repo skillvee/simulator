@@ -29,7 +29,7 @@ export function RecruiterScenarioBuilderClient() {
   useEffect(() => {
     async function loadGreeting() {
       try {
-        const response = await fetch("/api/recruiter/scenarios/builder");
+        const response = await fetch("/api/recruiter/simulations/builder");
         if (response.ok) {
           const data = await response.json();
           setMessages([
@@ -40,11 +40,11 @@ export function RecruiterScenarioBuilderClient() {
             },
           ]);
         } else {
-          setError("Failed to start the scenario builder");
+          setError("Failed to start the simulation builder");
         }
       } catch (err) {
         console.error("Failed to load greeting:", err);
-        setError("Failed to connect to the scenario builder");
+        setError("Failed to connect to the simulation builder");
       } finally {
         setIsLoading(false);
       }
@@ -80,7 +80,7 @@ export function RecruiterScenarioBuilderClient() {
     setError(null);
 
     try {
-      const response = await fetch("/api/recruiter/scenarios/builder", {
+      const response = await fetch("/api/recruiter/simulations/builder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -153,8 +153,8 @@ export function RecruiterScenarioBuilderClient() {
     setError(null);
 
     try {
-      // Create the scenario using recruiter API (auto-sets createdById and isPublished)
-      const scenarioResponse = await fetch("/api/recruiter/scenarios", {
+      // Create the simulation using recruiter API (auto-sets createdById and isPublished)
+      const scenarioResponse = await fetch("/api/recruiter/simulations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -170,7 +170,7 @@ export function RecruiterScenarioBuilderClient() {
 
       if (!scenarioResponse.ok) {
         const errData = await scenarioResponse.json();
-        throw new Error(errData.error || "Failed to create scenario");
+        throw new Error(errData.error || "Failed to create simulation");
       }
 
       const { data } = await scenarioResponse.json();
@@ -180,7 +180,7 @@ export function RecruiterScenarioBuilderClient() {
       if (scenarioData.coworkers) {
         for (const coworker of scenarioData.coworkers) {
           const coworkerResponse = await fetch(
-            `/api/recruiter/scenarios/${scenario.id}/coworkers`,
+            `/api/recruiter/simulations/${scenario.id}/coworkers`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -210,11 +210,11 @@ export function RecruiterScenarioBuilderClient() {
         console.error("Avatar generation trigger failed:", err);
       });
 
-      // Navigate to the recruiter scenarios list
-      router.push(`/recruiter/scenarios`);
+      // Navigate to the recruiter simulations list
+      router.push(`/recruiter/simulations`);
     } catch (err) {
-      console.error("Failed to save scenario:", err);
-      setError(err instanceof Error ? err.message : "Failed to save scenario");
+      console.error("Failed to save simulation:", err);
+      setError(err instanceof Error ? err.message : "Failed to save simulation");
     } finally {
       setIsSaving(false);
     }
@@ -245,13 +245,13 @@ export function RecruiterScenarioBuilderClient() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-lg font-semibold">Scenario Builder</h1>
+            <h1 className="text-lg font-semibold">Simulation Builder</h1>
             <p className="text-sm text-muted-foreground">
-              Chat with AI to create your scenario
+              Chat with AI to create your simulation
             </p>
           </div>
           <Button variant="ghost" asChild className="ml-auto text-muted-foreground">
-            <Link href="/recruiter/scenarios">Cancel</Link>
+            <Link href="/recruiter/simulations">Cancel</Link>
           </Button>
         </header>
 
@@ -282,7 +282,7 @@ export function RecruiterScenarioBuilderClient() {
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-baseline gap-2">
                       <span className="font-semibold">
-                        {message.role === "user" ? "You" : "Scenario Builder"}
+                        {message.role === "user" ? "You" : "Simulation Builder"}
                       </span>
                       <span className="text-sm text-muted-foreground">
                         {formatTimestamp(message.timestamp)}
@@ -305,7 +305,7 @@ export function RecruiterScenarioBuilderClient() {
                   </Avatar>
                   <div className="flex-1">
                     <div className="mb-1 flex items-baseline gap-2">
-                      <span className="font-semibold">Scenario Builder</span>
+                      <span className="font-semibold">Simulation Builder</span>
                     </div>
                     <TypingIndicator />
                   </div>
@@ -333,7 +333,7 @@ export function RecruiterScenarioBuilderClient() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Describe your scenario..."
+              placeholder="Describe your simulation..."
               disabled={isSending || isLoading}
               className="flex-1"
             />
@@ -354,7 +354,7 @@ export function RecruiterScenarioBuilderClient() {
         <header className="flex h-[72px] flex-col justify-center border-b border-border bg-background px-4">
           <h2 className="text-lg font-semibold">Preview</h2>
           <p className="text-sm text-muted-foreground">
-            Scenario data collected so far
+            Simulation data collected so far
           </p>
         </header>
 
@@ -368,7 +368,7 @@ export function RecruiterScenarioBuilderClient() {
             disabled={!isReadyToSave || isSaving}
             className="w-full"
           >
-            {isSaving ? "Saving..." : "Save Scenario"}
+            {isSaving ? "Saving..." : "Save Simulation"}
           </Button>
           {!isReadyToSave && (
             <p className="mt-2 text-center text-xs text-muted-foreground">
@@ -424,7 +424,7 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
           <FileQuestion className="h-8 w-8 text-primary" />
         </div>
         <p className="text-sm text-muted-foreground">
-          Start chatting to build your scenario. Information will appear here as
+          Start chatting to build your simulation. Information will appear here as
           it&apos;s collected.
         </p>
       </div>

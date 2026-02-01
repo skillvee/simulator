@@ -26,8 +26,8 @@ interface ChatMessage {
 const CHAT_MODEL = "gemini-3-flash-preview";
 
 /**
- * POST /api/recruiter/scenarios/builder
- * Send a message to the scenario builder AI and get a response
+ * POST /api/recruiter/simulations/builder
+ * Send a message to the simulation builder AI and get a response
  * Available to RECRUITER and ADMIN roles
  */
 export async function POST(request: Request) {
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
 }
 
 /**
- * GET /api/recruiter/scenarios/builder
+ * GET /api/recruiter/simulations/builder
  * Get the initial greeting message from the builder
  * Available to RECRUITER and ADMIN roles
  */

@@ -14,9 +14,9 @@ interface RouteContext {
 }
 
 /**
- * POST /api/recruiter/scenarios/[id]/coworkers
- * Create a new coworker for a scenario (recruiter or admin only)
- * Only allows creating coworkers for scenarios owned by the current user
+ * POST /api/recruiter/simulations/[id]/coworkers
+ * Create a new coworker for a simulation (recruiter or admin only)
+ * Only allows creating coworkers for simulations owned by the current user
  */
 export async function POST(request: Request, context: RouteContext) {
   const session = await auth();

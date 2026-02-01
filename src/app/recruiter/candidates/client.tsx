@@ -259,7 +259,7 @@ export function RecruiterCandidatesClient({
             onChange={(e) => setScenarioFilter(e.target.value)}
             className="rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="all">All scenarios</option>
+            <option value="all">All simulations</option>
             {scenarioOptions.map((scenario) => (
               <option key={scenario.id} value={scenario.id}>
                 {scenario.name}
@@ -340,13 +340,13 @@ export function RecruiterCandidatesClient({
               No candidates yet
             </h2>
             <p className="mt-2 text-stone-500">
-              Share your scenario link to get started.
+              Share your simulation link to get started.
             </p>
             <Button
               asChild
               className="mt-6 bg-blue-600 hover:bg-blue-700"
             >
-              <Link href="/recruiter/scenarios">View Your Scenarios</Link>
+              <Link href="/recruiter/simulations">View Your Simulations</Link>
             </Button>
           </CardContent>
         </Card>
@@ -380,7 +380,7 @@ export function RecruiterCandidatesClient({
                 <TableRow className="bg-stone-50 hover:bg-stone-50">
                   {compareMode && <TableHead className="w-[50px]"></TableHead>}
                   <TableHead>Candidate</TableHead>
-                  <TableHead>Scenario</TableHead>
+                  <TableHead>Simulation</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Score</TableHead>
                   <TableHead>Percentile</TableHead>
@@ -487,7 +487,7 @@ export function RecruiterCandidatesClient({
                     </TableCell>
                     <TableCell>
                       <Link
-                        href={`/recruiter/scenarios/${candidate.scenario.id}`}
+                        href={`/recruiter/simulations/${candidate.scenario.id}`}
                         className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
                         onClick={(e) => e.stopPropagation()}
                       >

@@ -83,11 +83,11 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
       {/* Header */}
       <div className="mb-8">
         <Link
-          href="/recruiter/scenarios"
+          href="/recruiter/simulations"
           className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Scenarios
+          Back to Simulations
         </Link>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -142,10 +142,10 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
         </CardContent>
       </Card>
 
-      {/* Scenario Details */}
+      {/* Simulation Details */}
       <Card className="mb-6 border-stone-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Scenario Details</CardTitle>
+          <CardTitle className="text-lg">Simulation Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Task Description */}

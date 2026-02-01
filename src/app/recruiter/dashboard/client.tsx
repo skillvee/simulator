@@ -57,13 +57,13 @@ export function RecruiterDashboardClient({
         <div>
           <h1 className="text-2xl font-semibold text-stone-900">Dashboard</h1>
           <p className="mt-1 text-sm text-stone-500">
-            Overview of your scenarios and candidate activity
+            Overview of your simulations and candidate activity
           </p>
         </div>
         <Button asChild className="bg-blue-600 hover:bg-blue-700">
-          <Link href="/recruiter/scenarios/new">
+          <Link href="/recruiter/simulations/new">
             <Plus className="mr-2 h-4 w-4" />
-            Create Scenario
+            Create Simulation
           </Link>
         </Button>
       </div>
@@ -72,10 +72,10 @@ export function RecruiterDashboardClient({
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
-            title: "Scenarios",
+            title: "Simulations",
             value: stats.scenarioCount,
             icon: FileText,
-            subtitle: "Active scenarios",
+            subtitle: "Active simulations",
           },
           {
             title: "Candidates",
@@ -139,16 +139,16 @@ export function RecruiterDashboardClient({
                 No activity yet
               </h3>
               <p className="mt-2 text-sm text-stone-500">
-                Create a scenario and share it with candidates to see activity
+                Create a simulation and share it with candidates to see activity
                 here.
               </p>
               <Button
                 asChild
                 className="mt-4 bg-blue-600 hover:bg-blue-700"
               >
-                <Link href="/recruiter/scenarios/new">
+                <Link href="/recruiter/simulations/new">
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Scenario
+                  Create Your First Simulation
                 </Link>
               </Button>
             </div>
@@ -157,7 +157,7 @@ export function RecruiterDashboardClient({
               <TableHeader>
                 <TableRow className="bg-stone-50 hover:bg-stone-50">
                   <TableHead>Candidate</TableHead>
-                  <TableHead>Scenario</TableHead>
+                  <TableHead>Simulation</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>

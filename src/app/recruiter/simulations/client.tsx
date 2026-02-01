@@ -70,15 +70,15 @@ export function RecruiterScenariosClient({
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-stone-900">Scenarios</h1>
+          <h1 className="text-2xl font-semibold text-stone-900">Simulations</h1>
           <p className="mt-1 text-sm text-stone-500">
-            Manage your assessment scenarios and share them with candidates
+            Manage your work simulations and share them with candidates
           </p>
         </div>
         <Button asChild className="bg-blue-600 hover:bg-blue-700">
-          <Link href="/recruiter/scenarios/new">
+          <Link href="/recruiter/simulations/new">
             <Plus className="mr-2 h-4 w-4" />
-            Create Scenario
+            Create Simulation
           </Link>
         </Button>
       </div>
@@ -89,19 +89,19 @@ export function RecruiterScenariosClient({
           <CardContent className="p-12 text-center">
             <FileText className="mx-auto h-16 w-16 text-stone-300" />
             <h2 className="mt-6 text-xl font-semibold text-stone-900">
-              No scenarios yet
+              No simulations yet
             </h2>
             <p className="mt-2 text-stone-500">
-              Create your first scenario to start assessing candidates with
-              AI-powered simulations.
+              Create your first simulation to start assessing candidates with
+              AI-powered work simulations.
             </p>
             <Button
               asChild
               className="mt-6 bg-blue-600 hover:bg-blue-700"
             >
-              <Link href="/recruiter/scenarios/new">
+              <Link href="/recruiter/simulations/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Your First Scenario
+                Create Your First Simulation
               </Link>
             </Button>
           </CardContent>
@@ -122,9 +122,9 @@ export function RecruiterScenariosClient({
                         {scenario.name}
                       </h3>
                       <Link
-                        href={`/recruiter/scenarios/${scenario.id}`}
+                        href={`/recruiter/simulations/${scenario.id}`}
                         className="text-blue-600 hover:text-blue-700 transition-colors"
-                        title="View scenario details"
+                        title="View simulation details"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Link>
