@@ -1,5 +1,32 @@
 # Ralph Progress Log
 
+## Issue #197: BUG: Join page stuck in loading after signup/signin
+
+### What was implemented
+- Added `setIsLoading(false)` before `router.refresh()` in both signup and signin flows in `src/app/join/[scenarioId]/client.tsx`
+
+### Root Cause
+After successful signup or signin, `router.refresh()` was called but `isLoading` remained `true`. The `router.refresh()` triggers a server component re-render which passes the new `user` prop, but the client component's `isLoading` state was never reset, causing the button to stay in "Creating account..." or "Signing in..." state.
+
+### Files modified
+- `src/app/join/[scenarioId]/client.tsx` - Added 2 lines (`setIsLoading(false)` in two places)
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- ESLint passes for modified file
+
+### Learnings for future iterations
+- When using `router.refresh()` to trigger server component re-renders, remember that client-side state (like `isLoading`) persists independently
+- Always reset loading states before triggering navigation/refresh, not after - the refresh may not reset component state
+
+### Acceptance Criteria Status
+- [x] Add `setIsLoading(false)` before `router.refresh()` in signup flow (line ~147)
+- [x] Add `setIsLoading(false)` before `router.refresh()` in signin flow (line ~164)
+- [x] TypeScript compiles: `npm run typecheck`
+- [x] Lint passes: `npm run lint` (for modified file - pre-existing error in different file)
+
+---
+
 ## Issue #194: BUG: Post-login/signup redirects to landing page instead of intended destination
 
 ### What was implemented
