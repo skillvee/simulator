@@ -1,5 +1,73 @@
 # Ralph Progress Log
 
+## Issue #203: US-005 - Dimension score card with evidence timeline
+
+### What was implemented
+- Created `src/components/recruiter/DimensionScoreCard.tsx` (pure UI component)
+- Component displays:
+  - Dimension name (human-readable: "Problem Solving" not "PROBLEM_SOLVING")
+  - Score as filled circles (1-5 scale, e.g., ●●●●○)
+  - Percentile badge ("Top 15%" for high percentiles, "85th percentile" for others)
+  - Trainable gap indicator (coaching icon with "Trainable" label)
+  - Observable behaviors as bullet points
+  - Timestamp links as clickable chips (blue text, hover underline, blue-50 background)
+- Card has subtle color coding via left border:
+  - Green border if score >= 4
+  - Yellow border if score = 3
+  - Red border if score <= 2
+
+### Props interface
+```typescript
+interface DimensionScoreCardProps {
+  dimension: string;           // e.g., "PROBLEM_SOLVING"
+  score: number;               // 1-5 scale
+  percentile: number;          // 0-100
+  observableBehaviors: string[]; // Bullet points
+  timestamps: string[];        // e.g., ["2:34", "5:12"]
+  trainableGap: boolean;
+  onTimestampClick: (seconds: number) => void;
+}
+```
+
+### Files created
+- `src/components/recruiter/DimensionScoreCard.tsx`
+
+### Helper functions included
+- `formatDimensionName()` - Converts SNAKE_CASE to Title Case
+- `timestampToSeconds()` - Converts "2:34" to 154 seconds for video seeking
+- `getScoreBorderColor()` - Returns appropriate border color class
+- `formatPercentile()` - Shows "Top 15%" for high performers, "85th percentile" for others
+- `ScoreCircles` - Renders filled/empty circles based on score
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+
+### Learnings for future iterations
+- The `observableBehaviors` prop is an array of strings (different from the existing detail page which uses a single string)
+- Timestamp chips use a clickable button pattern with hover states for better accessibility
+- Left border color coding is subtle but effective for quick visual scanning
+- Percentile display uses context-dependent formatting (Top X% vs Xth percentile)
+
+### Gotchas discovered
+- The shadcn Card component uses data slots for styling, need to be careful with className overrides
+- GraduationCap icon from lucide-react works well for the "Trainable" concept
+- Score circles use ● (filled) and ○ (empty) unicode characters for consistent appearance
+
+### Acceptance Criteria Status
+- [x] Create `src/components/recruiter/DimensionScoreCard.tsx`
+- [x] Component props: `{ dimension, score, percentile, observableBehaviors, timestamps, trainableGap, onTimestampClick }`
+- [x] Card displays dimension name (human-readable)
+- [x] Score as filled circles (1-5 scale)
+- [x] Percentile badge ("Top 15%" or "85th percentile")
+- [x] Trainable gap indicator (coaching icon with "Trainable" label)
+- [x] Observable behaviors as bullet points
+- [x] Timestamp links as clickable chips
+- [x] Clicking timestamp chip calls `onTimestampClick(seconds)`
+- [x] Card has subtle color coding (green >= 4, yellow = 3, red <= 2)
+- [x] Typecheck passes
+
+---
+
 ## Issue #202: US-004 - Recruiter candidate detail page with scorecard
 
 ### What was implemented
