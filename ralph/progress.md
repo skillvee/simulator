@@ -2702,3 +2702,57 @@ interface QuickDecisionPanelProps {
 - [x] Timestamps in "Jump to evidence" link to video player (via onTimestampClick callback)
 - [x] Typecheck passes
 
+---
+
+## Issue #195: BUG - Duplicate coworkers in scenario builder UI
+
+### What was implemented
+- Fixed `applyExtraction()` function in `src/lib/scenarios/scenario-builder.ts` to deduplicate coworkers by name
+- When adding a new coworker, the function now checks if a coworker with the same name already exists
+- If exists: updates the existing coworker with new data
+- If not exists: appends as a new coworker
+
+### Files changed
+- `src/lib/scenarios/scenario-builder.ts` - Updated `applyExtraction()` function (lines 324-336)
+- `src/lib/scenarios/scenario-builder.test.ts` - Added test for deduplication behavior
+
+### Root Cause
+The original code at lines 324-326 simply appended every new coworker without checking for duplicates:
+```typescript
+if (extraction.newCoworker) {
+  updated.coworkers = [...(updated.coworkers || []), extraction.newCoworker];
+}
+```
+
+### Fix Applied
+Added deduplication logic using `findIndex` to check if a coworker with the same name exists:
+```typescript
+if (extraction.newCoworker) {
+  const existingIndex = (updated.coworkers || []).findIndex(
+    (c) => c.name === extraction.newCoworker!.name
+  );
+
+  if (existingIndex >= 0) {
+    updated.coworkers = [...(updated.coworkers || [])];
+    updated.coworkers[existingIndex] = extraction.newCoworker;
+  } else {
+    updated.coworkers = [...(updated.coworkers || []), extraction.newCoworker];
+  }
+}
+```
+
+### Learnings for future iterations
+- When dealing with extraction/append patterns, always consider deduplication
+- Name-based matching is sufficient for coworker identity in this context
+- The AI may mention the same coworker multiple times during conversation refinement
+
+### Gotchas discovered
+- TypeScript requires the non-null assertion (`!`) on `extraction.newCoworker` inside the callback even though we're inside an `if` check
+- The pattern of checking `existingIndex >= 0` is clearer than `!== -1` for array operations
+
+### Acceptance Criteria Status
+- [x] Modify `applyExtraction()` in `src/lib/scenarios/scenario-builder.ts` to deduplicate by coworker name
+- [x] If a coworker with the same name exists, update it instead of appending
+- [x] Existing tests pass: `npm test -- scenario-builder`
+- [x] TypeScript compiles: `npm run typecheck`
+

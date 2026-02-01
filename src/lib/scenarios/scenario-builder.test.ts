@@ -404,6 +404,53 @@ describe("applyExtraction", () => {
     expect(result.coworkers).toHaveLength(1);
     expect(result.coworkers?.[0].name).toBe("First Coworker");
   });
+
+  it("updates existing coworker instead of duplicating when name matches", () => {
+    const current: ScenarioBuilderData = {
+      coworkers: [
+        {
+          name: "Sarah Jenkins",
+          role: "Developer",
+          personaStyle: "Friendly",
+          knowledge: [],
+        },
+        {
+          name: "Marcus Thorne",
+          role: "Manager",
+          personaStyle: "Professional",
+          knowledge: [],
+        },
+      ],
+    };
+    const extraction = {
+      newCoworker: {
+        name: "Sarah Jenkins",
+        role: "Senior Developer",
+        personaStyle: "Technical and detail-oriented",
+        knowledge: [
+          {
+            topic: "architecture",
+            triggerKeywords: ["design", "patterns"],
+            response: "We use microservices",
+            isCritical: true,
+          },
+        ],
+      },
+    };
+
+    const result = applyExtraction(current, extraction);
+
+    // Should still have 2 coworkers, not 3
+    expect(result.coworkers).toHaveLength(2);
+    // Sarah should be updated with new data
+    const sarah = result.coworkers?.find((c) => c.name === "Sarah Jenkins");
+    expect(sarah?.role).toBe("Senior Developer");
+    expect(sarah?.personaStyle).toBe("Technical and detail-oriented");
+    expect(sarah?.knowledge).toHaveLength(1);
+    // Marcus should be unchanged
+    const marcus = result.coworkers?.find((c) => c.name === "Marcus Thorne");
+    expect(marcus?.role).toBe("Manager");
+  });
 });
 
 describe("formatCurrentStateForPrompt", () => {

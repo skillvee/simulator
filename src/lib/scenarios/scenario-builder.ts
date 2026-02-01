@@ -322,7 +322,18 @@ export function applyExtraction(
   if (extraction.techStack) updated.techStack = extraction.techStack;
 
   if (extraction.newCoworker) {
-    updated.coworkers = [...(updated.coworkers || []), extraction.newCoworker];
+    const existingIndex = (updated.coworkers || []).findIndex(
+      (c) => c.name === extraction.newCoworker!.name
+    );
+
+    if (existingIndex >= 0) {
+      // Update existing coworker
+      updated.coworkers = [...(updated.coworkers || [])];
+      updated.coworkers[existingIndex] = extraction.newCoworker;
+    } else {
+      // Add new coworker
+      updated.coworkers = [...(updated.coworkers || []), extraction.newCoworker];
+    }
   }
 
   if (extraction.newKnowledgeForCoworker) {
