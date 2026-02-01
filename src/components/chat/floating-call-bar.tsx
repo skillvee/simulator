@@ -441,125 +441,143 @@ export function FloatingCallBar({
     }
   }, [callState, isAudioSupported, connect]);
 
-  // Error state (matches chat footer height)
+  // Error state
   if (callState === "error") {
     return (
-      <div className="flex h-[78px] items-center rounded-xl border border-red-200 bg-red-50 px-4 py-3 shadow-lg dark:border-red-800 dark:bg-red-950">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500">
-              <PhoneOff size={16} className="text-white" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-red-700 dark:text-red-300">
-                Call Failed
-              </p>
-              <p className="max-w-[150px] truncate text-xs text-red-600 dark:text-red-400">
-                {error || "Connection error"}
-              </p>
+      <div className="relative">
+        <div className="bg-background rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-destructive/30 overflow-hidden">
+          <div className="h-1 bg-destructive" />
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive">
+                  <PhoneOff size={16} className="text-destructive-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-destructive">Call Failed</p>
+                  <p className="max-w-[150px] truncate text-xs text-muted-foreground">
+                    {error || "Connection error"}
+                  </p>
+                </div>
+              </div>
+              <Button onClick={onCallEnd} variant="outline" size="sm" className="rounded-full">
+                Dismiss
+              </Button>
             </div>
           </div>
-          <Button
-            onClick={onCallEnd}
-            variant="outline"
-            size="sm"
-          >
-            Dismiss
-          </Button>
         </div>
       </div>
     );
   }
 
-  // Connecting state (matches chat footer height)
+  // Connecting state
   if (callState === "requesting-permission" || callState === "connecting") {
     return (
-      <div className="flex h-[78px] items-center rounded-xl border border-border bg-primary/10 px-4 py-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold">{coworker.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {callState === "requesting-permission"
-                ? "Requesting mic..."
-                : "Connecting..."}
-            </p>
+      <div className="relative">
+        <div className="absolute inset-x-0 bottom-0 top-0 bg-primary/5 blur-xl rounded-full" />
+        <div className="relative bg-background rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-primary to-primary/60 animate-pulse" />
+          <div className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <span className="absolute -inset-1 rounded-full bg-primary/20 animate-pulse" />
+                <CoworkerAvatar
+                  name={coworker.name}
+                  avatarUrl={coworker.avatarUrl}
+                  size="md"
+                  className="ring-2 ring-background"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-bold">{coworker.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {callState === "requesting-permission"
+                    ? "Requesting microphone..."
+                    : "Connecting..."}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Connected state - the main call bar UI (matches chat footer height)
+  // Connected state - the main call bar UI
   if (callState === "connected") {
     return (
-      <div className="flex h-[78px] items-center rounded-xl border border-border bg-primary/10 px-4 py-3 shadow-lg">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* Avatar with speaking indicator */}
-            <div className="relative">
-              <div className={isSpeaking ? "rounded-full ring-2 ring-primary ring-offset-2" : ""}>
-                <CoworkerAvatar name={coworker.name} size="md" />
+      <div className="relative">
+        <div className="absolute inset-x-0 bottom-0 top-0 bg-primary/5 blur-xl rounded-full" />
+        <div className="relative bg-background rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border overflow-hidden">
+          <div className="p-4">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <span className="absolute -inset-1 rounded-full bg-green-500/20 animate-pulse" />
+                  <CoworkerAvatar
+                    name={coworker.name}
+                    avatarUrl={coworker.avatarUrl}
+                    size="md"
+                    className={`ring-2 ring-background ${isSpeaking ? "ring-primary ring-offset-2" : ""}`}
+                  />
+                </div>
+                <div>
+                  <div className="text-sm font-bold">On Call</div>
+                  <div className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    Connected
+                  </div>
+                </div>
               </div>
-              {/* Speaking indicator - sound wave icon */}
-              {isSpeaking && (
-                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
-                  <Volume2 size={10} className="text-primary-foreground" />
-                </div>
-              )}
-              {/* Listening indicator - mic icon (when not speaking and not muted) */}
-              {!isSpeaking && isListening && !isMuted && (
-                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-foreground">
-                  <Mic size={10} className="text-background" />
-                </div>
-              )}
             </div>
 
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{coworker.name}</p>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between gap-2">
+              <Button
+                onClick={toggleMute}
+                variant={isMuted ? "secondary" : "outline"}
+                size="icon"
+                className="h-10 w-10 rounded-full border-border"
+                aria-label={isMuted ? "Unmute" : "Mute"}
+              >
+                {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+
+              {/* Waveform Visualization */}
+              <div className="flex-1 flex justify-center items-center h-10 gap-0.5">
                 {isSpeaking ? (
-                  <>
-                    <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-                    Speaking...
-                  </>
+                  [...Array(12)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-primary/40 rounded-full animate-pulse"
+                      style={{
+                        height: Math.random() * 20 + 4 + "px",
+                        animationDelay: i * 0.1 + "s",
+                      }}
+                    />
+                  ))
                 ) : isListening && !isMuted ? (
-                  <Badge className="bg-green-500 px-1.5 py-0 text-[10px] text-white hover:bg-green-500">
-                    In call
-                  </Badge>
+                  [...Array(12)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-muted-foreground/30 rounded-full"
+                      style={{ height: "4px" }}
+                    />
+                  ))
                 ) : (
-                  <>
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                    Muted
-                  </>
+                  <div className="h-1 w-full bg-muted rounded-full" />
                 )}
               </div>
+
+              <Button
+                onClick={endCall}
+                variant="destructive"
+                size="icon"
+                className="h-10 w-10 rounded-full shadow-lg shadow-destructive/20"
+                aria-label="End call"
+              >
+                <PhoneOff className="h-4 w-4" />
+              </Button>
             </div>
-          </div>
-
-          {/* Call controls */}
-          <div className="flex items-center gap-2">
-            {/* Mute button */}
-            <Button
-              onClick={toggleMute}
-              variant={isMuted ? "default" : "outline"}
-              size="icon"
-              aria-label={isMuted ? "Unmute" : "Mute"}
-            >
-              {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
-            </Button>
-
-            {/* End call button */}
-            <Button
-              onClick={endCall}
-              variant="destructive"
-              size="icon"
-              aria-label="End call"
-            >
-              <PhoneOff size={16} />
-            </Button>
           </div>
         </div>
       </div>

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Phone, Send } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Headphones } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api";
 import { useCallContext } from "./slack-layout";
 import { CoworkerAvatar } from "./coworker-avatar";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useManagerAutoStart } from "@/hooks";
@@ -41,7 +40,7 @@ export function Chat({
   const historyLoadedRef = useRef(false);
 
   // Check if currently in a call with this coworker
-  const { activeCall } = useCallContext();
+  const { activeCall, startCall } = useCallContext();
   const isInCall = activeCall?.coworkerId === coworker.id;
 
   // Callbacks for manager auto-start messages
@@ -162,174 +161,183 @@ export function Chat({
   };
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header */}
-      <header className="flex items-center gap-3 border-b border-border bg-background px-4 py-3">
-        {/* Coworker avatar */}
-        <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
-        <div>
-          <h1 className="text-lg font-semibold">{coworker.name}</h1>
-          <p className="text-sm text-muted-foreground">{coworker.role}</p>
-        </div>
-        {/* Status indicator */}
-        <div className="ml-auto flex items-center gap-2">
-          {isInCall ? (
-            <>
-              {/* In-call indicator - green bar with phone icon */}
-              <div className="flex items-center gap-2 rounded-lg bg-green-500 px-3 py-1.5">
-                <Phone size={14} className="text-white" />
-                <span className="text-sm font-medium text-white">
-                  In call
-                </span>
+    <div className="flex flex-col min-h-0 h-full">
+      <div className="flex-1 min-h-0 bg-background rounded-2xl shadow-sm border border-border flex flex-col">
+        {/* Header */}
+        <header className="shrink-0 h-16 flex items-center justify-between px-6 border-b border-border">
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col">
+              <h2 className="text-lg font-bold">{coworker.name}</h2>
+              <span className="text-xs text-muted-foreground">{coworker.role}</span>
+            </div>
+          </div>
+
+          {/* Call Controls */}
+          <div className="flex items-center gap-2">
+            {isInCall ? (
+              <div className="flex items-center gap-2 rounded-full bg-green-500 px-3 py-1.5 shadow-sm">
+                <Headphones size={14} className="text-white" />
+                <span className="text-sm font-medium text-white">In Call</span>
               </div>
-            </>
-          ) : (
-            <>
-              {/* Online indicator */}
-              <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
-              <span className="text-sm text-muted-foreground">
-                online
-              </span>
-            </>
-          )}
-        </div>
-      </header>
-
-      {/* Messages area */}
-      <main className="flex-1 overflow-auto px-4 py-6">
-        {isLoading ? (
-          <div className="flex h-full items-center justify-center">
-            <div className="font-mono text-muted-foreground">Loading...</div>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="shadow-sm rounded-full"
+                onClick={() => startCall(coworker.id, "coworker")}
+              >
+                <Headphones className="h-4 w-4 mr-2" /> Start Call
+              </Button>
+            )}
           </div>
-        ) : messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="mb-4">
-              <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="lg" />
-            </div>
-            <h2 className="mb-2 text-lg font-semibold">
-              Start a conversation with {coworker.name}
-            </h2>
-            <p className="max-w-md text-sm text-muted-foreground">
-              {coworker.name} is a {coworker.role}. Ask questions about the
-              project, codebase, or anything else you need help with.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Date divider */}
-            <div className="mb-6 flex items-center gap-4">
-              <div className="h-px flex-1 bg-border" />
-              <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-                Today
-              </span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
+        </header>
 
-            {messages.map((message, index) => (
-              <div key={index} className="flex gap-3">
-                {/* Avatar */}
-                {message.role === "user" ? (
-                  <Avatar className="h-10 w-10 flex-shrink-0">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                      You
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <div className="flex-shrink-0">
-                    <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
+        {/* Messages area */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-6">
+          <div className="py-6 space-y-6">
+            {isLoading ? (
+              <div className="flex h-full items-center justify-center py-20">
+                <div className="text-muted-foreground">Loading...</div>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center text-center py-20">
+                <div className="mb-4">
+                  <CoworkerAvatar
+                    name={coworker.name}
+                    avatarUrl={coworker.avatarUrl}
+                    size="lg"
+                    className="shadow-md border border-border"
+                  />
+                </div>
+                <h2 className="mb-2 text-lg font-semibold">
+                  Start a conversation with {coworker.name}
+                </h2>
+                <p className="max-w-md text-sm text-muted-foreground">
+                  {coworker.name} is a {coworker.role}. Ask questions about the
+                  project, codebase, or anything else you need help with.
+                </p>
+              </div>
+            ) : (
+              <>
+                {messages.map((message, index) => {
+                  const isMe = message.role === "user";
+                  return (
+                    <div key={index} className={`flex gap-4 ${isMe ? "flex-row-reverse" : ""}`}>
+                      {/* Avatar */}
+                      {isMe ? (
+                        <Avatar className="h-10 w-10 mt-1 shadow-sm border border-border">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                            You
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <CoworkerAvatar
+                          name={coworker.name}
+                          avatarUrl={coworker.avatarUrl}
+                          size="md"
+                          className="mt-1 shadow-sm border border-border"
+                        />
+                      )}
+
+                      {/* Message content */}
+                      <div className={`flex flex-col max-w-[60%] ${isMe ? "items-end" : "items-start"}`}>
+                        <div
+                          className={`px-5 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
+                            isMe
+                              ? "bg-primary text-primary-foreground rounded-br-sm"
+                              : "bg-muted text-foreground rounded-bl-sm"
+                          }`}
+                        >
+                          {message.text}
+                        </div>
+                        <span className="text-xs text-muted-foreground mt-1.5 font-medium px-1">
+                          {formatTimestamp(message.timestamp)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Call Started Indicator */}
+                {isInCall && (
+                  <div className="flex justify-center my-6">
+                    <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-full px-4 py-1.5 shadow-sm">
+                      <div className="bg-green-100 dark:bg-green-900 p-1 rounded-full">
+                        <Headphones className="h-3 w-3 text-green-600 dark:text-green-400" />
+                      </div>
+                      <span className="text-xs font-medium">Call started</span>
+                      <span className="text-[10px] text-muted-foreground">• Now</span>
+                    </div>
                   </div>
                 )}
 
-                {/* Message content */}
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex items-baseline gap-2">
-                    <span className="font-semibold">
-                      {message.role === "user" ? "You" : coworker.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatTimestamp(message.timestamp)}
-                    </span>
+                {/* Typing indicator */}
+                {(isSending || isManagerTyping) && (
+                  <div className="flex gap-4">
+                    <CoworkerAvatar
+                      name={coworker.name}
+                      avatarUrl={coworker.avatarUrl}
+                      size="md"
+                      className="mt-1 shadow-sm border border-border"
+                    />
+                    <div className="flex flex-col items-start">
+                      <TypingIndicator />
+                    </div>
                   </div>
-                  <div
-                    className={`inline-block max-w-[85%] whitespace-pre-wrap rounded-lg px-4 py-2 ${
-                      message.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground"
-                    }`}
-                  >
-                    {message.text}
-                  </div>
-                </div>
-              </div>
-            ))}
+                )}
 
-            {/* Typing indicator when sending or when manager is auto-typing */}
-            {(isSending || isManagerTyping) && (
-              <div className="flex gap-3">
-                <div className="flex-shrink-0">
-                  <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
-                </div>
-                <div className="flex-1">
-                  <div className="mb-1 flex items-baseline gap-2">
-                    <span className="font-semibold">{coworker.name}</span>
-                  </div>
-                  <TypingIndicator />
-                </div>
-              </div>
+                <div ref={messagesEndRef} />
+              </>
             )}
-
-            <div ref={messagesEndRef} />
           </div>
-        )}
-      </main>
-
-      {/* Input area */}
-      <footer className="border-t border-border bg-background px-4 py-3">
-        <div className="flex gap-2">
-          <Input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={`Message ${coworker.name}...`}
-            disabled={isSending}
-            className="flex-1"
-          />
-          <Button
-            onClick={sendMessage}
-            disabled={!input.trim() || isSending}
-          >
-            <Send className="mr-2 h-4 w-4" />
-            Send
-          </Button>
         </div>
-      </footer>
+
+        {/* Input area */}
+        <div className="shrink-0 p-4 border-t border-border">
+          <div className="flex items-center gap-2 bg-muted p-2 pl-4 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              disabled={isSending}
+              className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-muted-foreground"
+            />
+            <Button
+              size="icon"
+              onClick={sendMessage}
+              disabled={!input.trim() || isSending}
+              className="h-9 w-9 rounded-full shadow-sm"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Typing indicator component - modern design
+// Typing indicator component - matches bubble style
 function TypingIndicator() {
   return (
-    <div className="inline-flex items-center gap-2 rounded-lg bg-muted px-4 py-2">
+    <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl rounded-bl-sm bg-muted shadow-sm">
       <div className="flex gap-1">
         <span
-          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60"
           style={{ animationDelay: "0ms" }}
         />
         <span
-          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60"
           style={{ animationDelay: "150ms" }}
         />
         <span
-          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground"
+          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60"
           style={{ animationDelay: "300ms" }}
         />
       </div>
-      <span className="text-sm text-muted-foreground">
-        typing...
-      </span>
     </div>
   );
 }

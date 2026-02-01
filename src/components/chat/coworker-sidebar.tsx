@@ -22,45 +22,44 @@ export function CoworkerSidebar({
   onSelectCoworker,
   selectedCoworkerId,
 }: CoworkerSidebarProps) {
-  const totalTeamSize = coworkers.length + DECORATIVE_TEAM_MEMBERS.length;
-
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-border bg-background shadow-sm">
-      {/* Header */}
-      <div className="border-b border-border p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-          Team Directory
-        </h2>
+    <aside className="flex h-full w-[280px] flex-col border-r border-border bg-background shrink-0">
+      {/* Header with Skillvee logo */}
+      <div className="h-16 flex items-center px-6 border-b border-border">
+        <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-lg mr-3">
+          S
+        </div>
+        <span className="font-bold text-lg tracking-tight">Skillvee</span>
       </div>
 
       {/* Coworker List */}
-      <div className="flex-1 overflow-auto">
-        {/* Online/Interactive coworkers */}
-        {coworkers.map((coworker) => (
-          <CoworkerItem
-            key={coworker.id}
-            coworker={coworker}
-            isSelected={selectedCoworkerId === coworker.id}
-            onChat={() => onSelectCoworker(coworker.id, "chat")}
-            onCall={() => onSelectCoworker(coworker.id, "call")}
-          />
-        ))}
+      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+        <div>
+          <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            Team
+          </h3>
+          <div className="space-y-1">
+            {/* Online/Interactive coworkers */}
+            {coworkers.map((coworker) => (
+              <CoworkerItem
+                key={coworker.id}
+                coworker={coworker}
+                isSelected={selectedCoworkerId === coworker.id}
+                onChat={() => onSelectCoworker(coworker.id, "chat")}
+                onCall={() => onSelectCoworker(coworker.id, "call")}
+              />
+            ))}
 
-        {/* Offline/Decorative team members */}
-        {DECORATIVE_TEAM_MEMBERS.map((member) => (
-          <OfflineTeamMember
-            key={member.name}
-            name={member.name}
-            role={member.role}
-          />
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="border-t border-border p-3">
-        <p className="text-xs text-muted-foreground">
-          {coworkers.length} online · {totalTeamSize} total
-        </p>
+            {/* Offline/Decorative team members */}
+            {DECORATIVE_TEAM_MEMBERS.map((member) => (
+              <OfflineTeamMember
+                key={member.name}
+                name={member.name}
+                role={member.role}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </aside>
   );
@@ -82,40 +81,37 @@ function CoworkerItem({
   return (
     <div
       onClick={onChat}
-      className={`cursor-pointer border-b border-border p-3 transition-all duration-200 ease-in-out ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-all ${
         isSelected
-          ? "border-l-4 border-l-primary bg-primary/10"
-          : "mx-2 my-1 rounded-lg hover:bg-accent/80"
+          ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
+          : "text-foreground hover:bg-muted"
       }`}
     >
-      <div className="flex items-start gap-3">
-        {/* Avatar with online indicator */}
-        <div className="relative flex-shrink-0">
-          <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
-          {/* Online status indicator - green dot */}
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-green-500" />
-        </div>
-
-        {/* Info */}
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{coworker.name}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {coworker.role}
-          </p>
-        </div>
-
-        {/* Call button - top right, headphones icon (Slack style) */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onCall();
-          }}
-          className="flex-shrink-0 rounded-lg bg-background p-1.5 shadow-sm transition-all duration-200 ease-in-out hover:bg-primary hover:text-primary-foreground hover:shadow-md"
-          aria-label={`Call ${coworker.name}`}
-        >
-          <Headphones size={16} />
-        </button>
+      <div className="relative">
+        <CoworkerAvatar
+          name={coworker.name}
+          avatarUrl={coworker.avatarUrl}
+          size="sm"
+          className="border-2 border-background shadow-sm"
+        />
+        {/* Online status indicator - green dot */}
+        <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500" />
       </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold truncate">{coworker.name}</div>
+        <div className="text-[10px] text-muted-foreground truncate">{coworker.role}</div>
+      </div>
+      {/* Call button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onCall();
+        }}
+        className="flex-shrink-0 rounded-lg p-1.5 transition-all text-muted-foreground hover:bg-primary hover:text-primary-foreground"
+        aria-label={`Call ${coworker.name}`}
+      >
+        <Headphones size={14} />
+      </button>
     </div>
   );
 }
@@ -130,28 +126,21 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
 
   return (
     <div
-      className="mx-2 my-1 cursor-default rounded-lg border-b border-border p-3 opacity-60 transition-all duration-200 ease-in-out"
+      className="flex items-center gap-3 px-3 py-2 rounded-xl cursor-default opacity-50"
       title="Unavailable"
     >
-      <div className="flex items-start gap-3">
-        {/* Avatar with offline indicator */}
-        <div className="relative flex-shrink-0">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-            <span className="text-sm font-semibold text-muted-foreground">
-              {initials}
-            </span>
-          </div>
-          {/* Offline status indicator - red dot */}
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-red-500" />
+      <div className="relative">
+        <div className="h-8 w-8 rounded-full bg-muted border-2 border-background shadow-sm flex items-center justify-center">
+          <span className="text-xs font-medium text-muted-foreground">
+            {initials}
+          </span>
         </div>
-
-        {/* Info */}
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-muted-foreground">
-            {name}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">{role}</p>
-        </div>
+        {/* Offline status indicator - gray dot */}
+        <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground/40" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-muted-foreground truncate">{name}</div>
+        <div className="text-[10px] text-muted-foreground/70 truncate">{role}</div>
       </div>
     </div>
   );

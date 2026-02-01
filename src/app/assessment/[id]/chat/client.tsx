@@ -87,12 +87,14 @@ export function ChatPageClient({
           coworker={selectedCoworker}
         />
       ) : (
-        <div className="flex flex-1 items-center justify-center">
-          <div className="text-center">
-            <h2 className="mb-2 text-xl font-semibold">No Coworkers Available</h2>
-            <p className="text-muted-foreground">
-              There are no coworkers configured for this scenario.
-            </p>
+        <div className="flex flex-col min-h-0 h-full">
+          <div className="flex-1 min-h-0 bg-background rounded-2xl shadow-sm border border-border flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="mb-2 text-xl font-semibold">No Coworkers Available</h2>
+              <p className="text-muted-foreground">
+                There are no coworkers configured for this scenario.
+              </p>
+            </div>
           </div>
         </div>
       )}
