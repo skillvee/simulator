@@ -1,5 +1,45 @@
 # Ralph Progress Log
 
+## Issue #205: US-007 - Hiring signals summary component
+
+### What was implemented
+- Created `src/components/recruiter/HiringSignalsSummary.tsx` (pure UI component)
+- Component features:
+  - Two-column layout for green flags and red flags
+  - Green flags section: "Where they shined" with green background and checkmark icons
+  - Red flags section: "Areas to probe" with amber background and warning icons
+  - Empty state for either column: "No significant signals identified"
+  - Summary section with large strength badge and overall summary text
+  - Strength badge styling varies by level (Exceptional/Strong/Proficient/Developing)
+
+### Props interface
+```typescript
+interface HiringSignalsSummaryProps {
+  greenFlags: string[];
+  redFlags: string[];
+  strengthLevel: "Exceptional" | "Strong" | "Proficient" | "Developing";
+  overallSummary: string;
+}
+```
+
+### Files created
+- `src/components/recruiter/HiringSignalsSummary.tsx`
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+
+### Learnings for future iterations
+- Used amber (not red) for "Areas to probe" section per design notes - less judgmental framing
+- Reused `getStrengthBadgeStyles` pattern from existing `client.tsx` but with larger sizing for the summary badge
+- The existing candidate detail page has inline hiring signals display - this component can be used to replace it for consistency
+
+### Gotchas discovered
+- The existing `CandidateDetailClient` already displays hiring signals inline, but uses "Red Flags" title with red styling
+- This new component uses recruiter-friendly language ("Areas to probe" instead of "Red Flags")
+- When integrating, the parent page may need to decide which framing to use
+
+---
+
 ## Issue #204: US-006 - Video evidence player with timestamp seeking
 
 ### What was implemented
