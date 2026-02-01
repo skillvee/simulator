@@ -1,5 +1,52 @@
 # Ralph Progress Log
 
+## Issue #208: US-010 - Percentile badge component
+
+### What was implemented
+- Created `src/components/recruiter/PercentileBadge.tsx` component
+- Created `src/components/recruiter/PercentileBadge.test.tsx` with 36 tests
+
+### Features
+- **Display formats by percentile tier**:
+  - Top 10% (≥90): "Top 10%" with gold/amber gradient styling
+  - Top 25% (≥75, <90): "Top 25%" with green styling
+  - Top 50% (≥50, <75): "Top 50%" with blue styling
+  - Below 50% (<50): "XXth percentile" with neutral/stone styling
+- **Size variants**: `sm` (inline text), `md` (default badge), `lg` (prominent card element)
+- **Tooltip on hover**: "Scored higher than XX% of all candidates"
+- **Ordinal suffixes**: Correctly handles 1st, 2nd, 3rd, 11th, 21st, etc.
+- **Accessibility**: Includes `aria-label` for screen readers
+
+### Files changed
+- `src/components/recruiter/PercentileBadge.tsx` - New component
+- `src/components/recruiter/PercentileBadge.test.tsx` - Unit tests (36 tests)
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- All 36 tests pass
+
+### Learnings for future iterations
+- Radix Tooltip renders content in multiple places for accessibility (visible + aria-live region)
+- Use `findAllByText` instead of `findByText` when testing Radix tooltips
+- The ordinal suffix algorithm needs special handling for 11th, 12th, 13th (they use "th" not "st", "nd", "rd")
+
+### Gotchas discovered
+- Badge component from shadcn/ui can be extended with custom styling via className
+- Gold/premium styling uses gradient: `bg-gradient-to-r from-amber-400 to-yellow-500`
+
+### Acceptance Criteria Status
+- [x] Create `src/components/recruiter/PercentileBadge.tsx`
+- [x] Component props: `{ percentile: number, size?: "sm" | "md" | "lg" }`
+- [x] Top 10%: "Top 10%" with gold/premium styling
+- [x] Top 25%: "Top 25%" with green styling
+- [x] Top 50%: "Top 50%" with blue styling
+- [x] Below 50%: "XX percentile" with neutral styling
+- [x] Tooltip on hover explains: "Scored higher than XX% of all candidates"
+- [x] Sizes: sm (inline text), md (badge), lg (prominent card element)
+- [x] Typecheck passes
+
+---
+
 ## Issue #210: US-012 - Add scores and ranking to recruiter candidates list
 
 ### What was implemented
