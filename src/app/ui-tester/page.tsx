@@ -20,7 +20,8 @@ export default function UITester() {
     );
   }
 
-  const Component = versions[idx];
+  const current = versions[idx];
+  const Component = current.component;
   const goPrev = () => setIdx((i) => (i > 0 ? i - 1 : versions.length - 1));
   const goNext = () => setIdx((i) => (i < versions.length - 1 ? i + 1 : 0));
 
@@ -29,26 +30,35 @@ export default function UITester() {
       <Component />
 
       {/* Floating navigator */}
-      <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-1 rounded-full border bg-white/90 px-2 py-1.5 shadow-lg backdrop-blur-sm">
-        <button
-          type="button"
-          onClick={goPrev}
-          className="flex h-7 w-7 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-900"
-          aria-label="Previous version"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <span className="min-w-[80px] text-center text-xs font-medium text-stone-700">
-          {idx + 1} / {versions.length}
-        </span>
-        <button
-          type="button"
-          onClick={goNext}
-          className="flex h-7 w-7 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-900"
-          aria-label="Next version"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
+      <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end gap-2">
+        {/* Version info */}
+        <div className="rounded-lg border bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+          <p className="text-sm font-medium text-stone-800">{current.name}</p>
+          <p className="text-xs text-stone-500">{current.description}</p>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex items-center gap-1 rounded-full border bg-white/95 px-2 py-1.5 shadow-lg backdrop-blur-sm">
+          <button
+            type="button"
+            onClick={goPrev}
+            className="flex h-7 w-7 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-900"
+            aria-label="Previous version"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="min-w-[80px] text-center text-xs font-medium text-stone-700">
+            {idx + 1} / {versions.length}
+          </span>
+          <button
+            type="button"
+            onClick={goNext}
+            className="flex h-7 w-7 items-center justify-center rounded-full text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-900"
+            aria-label="Next version"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
