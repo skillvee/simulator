@@ -173,7 +173,8 @@ export function RecruiterScenarioBuilderClient() {
         throw new Error(errData.error || "Failed to create scenario");
       }
 
-      const { scenario } = await scenarioResponse.json();
+      const { data } = await scenarioResponse.json();
+      const { scenario } = data;
 
       // Create each coworker using recruiter API
       if (scenarioData.coworkers) {

@@ -2132,3 +2132,35 @@ The following files have TypeScript errors that will be resolved when pages are 
 - ✅ TypeScript compiles: `npm run typecheck`
 - ✅ Tests pass: `npm test src/lib/avatar`
 
+---
+
+## Issue #196: BUG: Save scenario fails with TypeError - scenario.id undefined
+
+### What was implemented
+- Fixed response extraction in `src/app/recruiter/scenarios/new/client.tsx` line 176
+- Changed from `const { scenario } = await scenarioResponse.json()` to correctly extract from nested data structure
+
+### Root Cause
+The API endpoint `POST /api/recruiter/scenarios` uses the `success()` helper which wraps responses in:
+```json
+{ "success": true, "data": { "scenario": { ... } } }
+```
+
+The client code was incorrectly destructuring `scenario` directly from the JSON response instead of first extracting it from the `data` property.
+
+### Files modified
+- `src/app/recruiter/scenarios/new/client.tsx` - Fixed response extraction (~2 lines)
+
+### Verification
+- ✅ TypeScript compiles: `npm run typecheck`
+- ✅ ESLint passes for modified file
+- ✅ E2E verified: Created scenario successfully saved and redirected to `/recruiter/scenarios`
+
+### Learnings for future iterations
+- API endpoints in this codebase use the `success()` helper from `@/lib/api` which wraps data in `{ success: true, data: { ... } }`
+- Always check API response structure when debugging client-side extraction errors
+
+### Gotchas discovered
+- The `success()` helper wraps all successful responses - need to destructure from `data` property first
+- TypeScript doesn't catch this error because `json()` returns `Promise<any>`
+
