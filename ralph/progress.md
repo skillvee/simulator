@@ -1,5 +1,45 @@
 # Ralph Progress Log
 
+## Issue #209: US-011 - Update terminology from 'Scenario' to 'Simulation'
+
+### What was implemented
+- Updated all recruiter UI pages to use "Simulation" instead of "Scenario"
+- Renamed URL routes from `/recruiter/scenarios/*` to `/recruiter/simulations/*`
+- Renamed API routes from `/api/recruiter/scenarios/*` to `/api/recruiter/simulations/*`
+- Added redirects in next.config.js for backwards compatibility
+
+### Files changed
+- `src/app/recruiter/dashboard/client.tsx` - Stats cards, buttons, headers
+- `src/app/recruiter/components/sidebar.tsx` - Navigation link, create button
+- `src/app/recruiter/simulations/client.tsx` - Page title, empty states, buttons (renamed from scenarios)
+- `src/app/recruiter/simulations/[id]/client.tsx` - Detail headers, back link (renamed)
+- `src/app/recruiter/simulations/new/client.tsx` - Builder prompts, save button (renamed)
+- `src/app/recruiter/candidates/client.tsx` - Filter labels, links, table headers
+- `src/app/api/recruiter/simulations/*` - All API routes renamed and comments updated
+- `next.config.js` - Added redirects for old URLs
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+
+### Learnings for future iterations
+- Database model `Scenario` stays the same - only UI terminology changed
+- Using permanent redirects (301) for old URLs ensures SEO and bookmark preservation
+- Variable names in code can stay as `scenario` internally - only user-facing text changed
+
+### Gotchas discovered
+- Git detects renames automatically when content similarity is high
+- Next.js redirects in next.config.js support dynamic route parameters like `:id`
+
+### Acceptance Criteria Status
+- [x] Update all recruiter pages to use "Simulation" instead of "Scenario"
+- [x] Update URL routes: `/recruiter/scenarios` → `/recruiter/simulations`
+- [x] Add redirects from old URLs to new URLs (next.config.js)
+- [x] Update API routes that reference "scenario" in recruiter context
+- [x] Typecheck passes
+- [x] Existing navigation and links work correctly
+
+---
+
 ## Issue #208: US-010 - Percentile badge component
 
 ### What was implemented
