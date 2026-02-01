@@ -1,5 +1,68 @@
 # Ralph Progress Log
 
+## Issue #202: US-004 - Recruiter candidate detail page with scorecard
+
+### What was implemented
+- Created `src/app/recruiter/candidates/[assessmentId]/page.tsx` (server component)
+- Created `src/app/recruiter/candidates/[assessmentId]/client.tsx` (client component)
+- Page layout includes:
+  - Header: Candidate name with strength level badge (Strong/Exceptional/Proficient/Developing)
+  - Overall score with summary text
+  - 8 dimension cards showing score, observable behaviors, and trainable gap badges
+  - Hiring signals section with green flags and red flags
+  - "Compare with others" button linking to comparison view
+  - "Back to Candidates" navigation
+- Uses recruiter layout with sidebar (inherits from parent layout)
+- Added "View" link to candidates list table for completed assessments
+- Updated seed file to create VideoAssessment with dimension scores for test data
+
+### Strength Level Badge Colors
+- **Exceptional**: Gold/premium gradient (bg-gradient-to-r from-amber-400 to-yellow-500)
+- **Strong**: Green (bg-green-100 text-green-700)
+- **Proficient**: Blue (bg-blue-100 text-blue-700)
+- **Developing**: Gray/neutral (bg-stone-100 text-stone-600)
+
+### Files created
+- `src/app/recruiter/candidates/[assessmentId]/page.tsx` - Server component wrapper
+- `src/app/recruiter/candidates/[assessmentId]/client.tsx` - Main client component with scorecard UI
+
+### Files modified
+- `src/app/recruiter/candidates/client.tsx` - Added "View" link column for completed assessments
+- `prisma/seed.ts` - Added VideoAssessment with dimension scores for test-assessment-completed
+
+### API Integration
+- Fetches data from `/api/recruiter/candidate/[assessmentId]` (US-002)
+- Handles loading state with skeleton UI
+- Shows 403 error state with "Access Denied" message if unauthorized
+- Shows generic error state for other failures
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- Visual testing: Screenshots captured showing full scorecard UI
+
+### Learnings for future iterations
+- The recruiter layout already handles authentication via `requireRecruiter()`
+- Percentiles are displayed as "Top X%" badges (100 - percentile value)
+- Dimension names need formatting (COMMUNICATION → Communication, PROBLEM_SOLVING → Problem Solving)
+- The `overflow-y-auto` class on the page wrapper enables scrolling within the fixed layout
+
+### Gotchas discovered
+- VideoAssessment must be linked to Assessment via `assessmentId` field for the API to return dimension scores
+- The seed file needed to be updated to create VideoAssessment for completed assessment
+- Colors for dimension scores follow the same thresholds as strength levels (4.5+, 3.5+, 2.5+)
+
+### Acceptance Criteria Status
+- [x] Create `src/app/recruiter/candidates/[assessmentId]/page.tsx` (server component)
+- [x] Create `src/app/recruiter/candidates/[assessmentId]/client.tsx` (client component)
+- [x] Page layout includes: Header (candidate name, strength badge), Overall score, 8 dimension cards, Hiring signals, Compare button
+- [x] Uses recruiter layout with sidebar
+- [x] Fetches data from `/api/recruiter/candidate/[assessmentId]` (US-002)
+- [x] Shows loading skeleton while fetching
+- [x] Shows 403 error state if not authorized
+- [x] Typecheck passes
+
+---
+
 ## Issue #197: BUG: Join page stuck in loading after signup/signin
 
 ### What was implemented

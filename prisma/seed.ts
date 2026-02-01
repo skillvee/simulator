@@ -800,6 +800,135 @@ Acceptance Criteria:
     });
     console.log(`  ✅ Completed assessment: ${TEST_ASSESSMENT_IDS.completed}`);
     console.log(`     URL: /assessment/${TEST_ASSESSMENT_IDS.completed}/results`);
+
+    // Create VideoAssessment with dimension scores for the completed assessment (US-004)
+    const completedVideoAssessmentId = "test-video-assessment-completed";
+    const completedDimensionScores = [
+      {
+        dimension: AssessmentDimension.COMMUNICATION,
+        score: 4,
+        observableBehaviors: "Clear and professional communication throughout. Asked clarifying questions when needed and explained technical decisions effectively.",
+        trainableGap: false,
+        timestamps: ["02:15", "08:42", "15:30", "32:10"],
+      },
+      {
+        dimension: AssessmentDimension.PROBLEM_SOLVING,
+        score: 5,
+        observableBehaviors: "Excellent systematic approach to breaking down the task. Formed clear hypotheses when debugging and adapted approach when initial solutions didn't work.",
+        trainableGap: false,
+        timestamps: ["10:45", "22:30", "45:20"],
+      },
+      {
+        dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE,
+        score: 4,
+        observableBehaviors: "Strong technical foundation in React and TypeScript. Efficiently navigated the codebase and applied best practices.",
+        trainableGap: false,
+        timestamps: ["08:15", "18:00", "25:40", "35:20"],
+      },
+      {
+        dimension: AssessmentDimension.COLLABORATION,
+        score: 3,
+        observableBehaviors: "Good collaboration instincts - reached out to coworkers when stuck. Could improve on proactive communication and sharing progress updates.",
+        trainableGap: true,
+        timestamps: ["12:00", "28:15"],
+      },
+      {
+        dimension: AssessmentDimension.ADAPTABILITY,
+        score: 4,
+        observableBehaviors: "Adapted well when requirements were clarified mid-task. Recovered gracefully from initial misunderstanding.",
+        trainableGap: false,
+        timestamps: ["30:45", "42:00"],
+      },
+      {
+        dimension: AssessmentDimension.LEADERSHIP,
+        score: 3,
+        observableBehaviors: "Showed initiative in some areas but tended to wait for direction on others. Could take more ownership of decisions.",
+        trainableGap: true,
+        timestamps: ["55:00"],
+      },
+      {
+        dimension: AssessmentDimension.CREATIVITY,
+        score: 4,
+        observableBehaviors: "Proposed creative solutions to technical challenges. Explored multiple approaches before settling on implementation.",
+        trainableGap: false,
+        timestamps: ["1:05:30", "1:15:00"],
+      },
+      {
+        dimension: AssessmentDimension.TIME_MANAGEMENT,
+        score: 5,
+        observableBehaviors: "Excellent time awareness and prioritization. Balanced speed and quality effectively and met key milestones ahead of schedule.",
+        trainableGap: false,
+        timestamps: ["05:00", "20:00", "45:00", "1:10:00"],
+      },
+    ];
+
+    // Delete existing video assessment for this assessment if any
+    const existingCompletedVideoAssessment = await prisma.videoAssessment.findUnique({
+      where: { assessmentId: TEST_ASSESSMENT_IDS.completed },
+    });
+
+    if (existingCompletedVideoAssessment) {
+      await prisma.dimensionScore.deleteMany({
+        where: { assessmentId: existingCompletedVideoAssessment.id },
+      });
+      await prisma.videoAssessmentSummary.deleteMany({
+        where: { assessmentId: existingCompletedVideoAssessment.id },
+      });
+      await prisma.videoAssessment.delete({
+        where: { id: existingCompletedVideoAssessment.id },
+      });
+    }
+
+    const completedVideoAssessment = await prisma.videoAssessment.create({
+      data: {
+        id: completedVideoAssessmentId,
+        candidateId: testCandidate.id,
+        assessmentId: TEST_ASSESSMENT_IDS.completed,
+        videoUrl: "https://example.com/test-video-completed.mp4",
+        status: VideoAssessmentStatus.COMPLETED,
+        completedAt: new Date(),
+        isSearchable: true,
+      },
+    });
+
+    for (const score of completedDimensionScores) {
+      await prisma.dimensionScore.create({
+        data: {
+          assessmentId: completedVideoAssessment.id,
+          dimension: score.dimension,
+          score: score.score,
+          observableBehaviors: score.observableBehaviors,
+          timestamps: score.timestamps,
+          trainableGap: score.trainableGap,
+        },
+      });
+    }
+
+    await prisma.videoAssessmentSummary.create({
+      data: {
+        assessmentId: completedVideoAssessment.id,
+        overallSummary: "The candidate showed strong performance across most dimensions, with exceptional problem-solving and time management skills. They communicated clearly, adapted well to feedback, and delivered quality work. Areas for growth include proactive collaboration and taking more ownership in leadership situations.",
+        rawAiResponse: {
+          hiringSignals: {
+            overallGreenFlags: [
+              "Strong problem-solving and systematic approach",
+              "Excellent time management and prioritization",
+              "Clear communication and professionalism",
+              "Solid technical knowledge in React/TypeScript",
+              "Creative solutions to technical challenges",
+            ],
+            overallRedFlags: [
+              "Could be more proactive in collaboration",
+              "May benefit from more leadership development",
+            ],
+            recommendation: "hire",
+          },
+          overall_summary: "The candidate showed strong performance across most dimensions, with exceptional problem-solving and time management skills.",
+        } as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    console.log(`  ✅ Video assessment for completed: ${completedVideoAssessmentId}`);
   } else {
     console.log("  ⚠️ Test candidate user not found, skipping recruiter flow assessments");
   }

@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Calendar, Clock, Filter } from "lucide-react";
+import { Users, Calendar, Clock, Filter, ExternalLink } from "lucide-react";
 
 interface CandidateData {
   id: string;
@@ -191,6 +191,7 @@ export function RecruiterCandidatesClient({
                       Completed
                     </div>
                   </TableHead>
+                  <TableHead className="w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -237,6 +238,17 @@ export function RecruiterCandidatesClient({
                       {candidate.completedAt
                         ? formatDate(candidate.completedAt)
                         : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {candidate.status === "COMPLETED" && (
+                        <Link
+                          href={`/recruiter/candidates/${candidate.id}`}
+                          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                        >
+                          View
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Link>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
