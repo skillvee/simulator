@@ -1,5 +1,46 @@
 # Ralph Progress Log
 
+## Issue #207: US-009 - Side-by-side candidate comparison page
+
+### What was implemented
+- Created `src/app/recruiter/candidates/compare/page.tsx` (server component)
+- Created `src/app/recruiter/candidates/compare/client.tsx` (client component)
+- Updated `src/app/api/recruiter/candidates/compare/route.ts` to return `assessmentId` instead of `candidateId`
+
+### Features
+- **Horizontal card layout**: Responsive grid with 2-4 columns based on candidate count
+- **Per-candidate card includes**:
+  - Name, avatar (with color coding), and strength level badge
+  - Overall score with percentile
+  - Radar chart showing all 8 dimensions
+  - "Top strength" and "Biggest gap" callouts in colored boxes
+  - Dimension rows aligned across all cards
+  - "View full scorecard" link to detail page
+- **Winner highlighting**: Trophy icon and blue highlight on dimension with highest percentile
+- **Sticky header**: Shows candidate name/color legend for long scroll
+- **Back button**: Preserves selection state via `?compare=ids` query param
+
+### Files changed
+- `src/app/recruiter/candidates/compare/page.tsx` - New server component
+- `src/app/recruiter/candidates/compare/client.tsx` - New client component
+- `src/app/api/recruiter/candidates/compare/route.ts` - Changed `candidateId` to `assessmentId`
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- ESLint passes for new files
+- Unit tests pass
+
+### Learnings for future iterations
+- The compare API was returning `candidateId` (user ID) but detail page uses `assessmentId` - fixed to return `assessmentId`
+- Recharts RadarChart works well with shadcn ChartContainer for consistent styling
+- For aligned dimension rows across cards, use a consistent `dimensionOrder` array from first candidate
+
+### Gotchas discovered
+- Mobile design calls for vertical stacking with accordion - not implemented yet (deferred)
+- API response structure uses `{ success: true, data: [...] }` wrapper
+
+---
+
 ## Issue #206: US-008 - Candidate comparison selector on candidates list
 
 ### What was implemented
