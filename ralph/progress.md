@@ -1,5 +1,50 @@
 # Ralph Progress Log
 
+## Issue #206: US-008 - Candidate comparison selector on candidates list
+
+### What was implemented
+- Updated `src/app/recruiter/candidates/client.tsx` to add comparison mode
+- Added shadcn checkbox component via `npx shadcn@latest add checkbox`
+- Fixed checkbox import to use `@radix-ui/react-checkbox` package
+
+### Features added
+- **Compare toggle button** in header (next to filters)
+- **Compare mode** when active:
+  - Shows checkbox on each candidate row
+  - Completed assessments can be selected (enabled checkbox)
+  - Non-completed assessments show disabled checkbox with tooltip explaining why
+  - Selected rows get blue highlight (`bg-blue-50`)
+- **Floating compare bar** appears when 2-4 candidates selected:
+  - Shows count of selected candidates
+  - "Compare X candidates" button
+  - Cancel button to exit compare mode
+- **4 candidate maximum** - after 4 selected, additional checkboxes disabled with tooltip "Maximum 4 candidates"
+- **URL persistence** - selection stored in `?compare=id1,id2` param for back button support
+- **Navigation** - clicking compare navigates to `/recruiter/candidates/compare?ids=id1,id2,id3`
+
+### Files changed
+- `src/app/recruiter/candidates/client.tsx` - Added comparison mode logic and UI
+- `src/components/ui/checkbox.tsx` - Created via shadcn (fixed import)
+
+### Dependencies added
+- `@radix-ui/react-checkbox`
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- ESLint passes for modified file
+- Visual testing confirmed with screenshots
+
+### Learnings for future iterations
+- shadcn CLI may generate components with incorrect imports (used `radix-ui` instead of `@radix-ui/react-checkbox`)
+- URL params should use `router.replace()` with `{ scroll: false }` to avoid page jumps
+- Tooltip component requires wrapping disabled elements in a div for proper trigger behavior
+
+### Gotchas discovered
+- The compare page `/recruiter/candidates/compare` doesn't exist yet - this issue only implements the selector
+- Using `useSearchParams` hook requires the component to be wrapped in Suspense boundary (already handled by Next.js app router)
+
+---
+
 ## Issue #205: US-007 - Hiring signals summary component
 
 ### What was implemented

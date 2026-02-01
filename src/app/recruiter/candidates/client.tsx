@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -13,7 +20,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Calendar, Clock, Filter, ExternalLink } from "lucide-react";
+import {
+  Users,
+  Calendar,
+  Clock,
+  Filter,
+  ExternalLink,
+  GitCompare,
+  X,
+} from "lucide-react";
 
 interface CandidateData {
   id: string;
@@ -40,12 +55,78 @@ interface RecruiterCandidatesClientProps {
   scenarioOptions: ScenarioOption[];
 }
 
+const MAX_COMPARE_CANDIDATES = 4;
+
 export function RecruiterCandidatesClient({
   candidates,
   scenarioOptions,
 }: RecruiterCandidatesClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [scenarioFilter, setScenarioFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(
+    new Set()
+  );
+
+  // Restore selection from URL params on mount
+  useEffect(() => {
+    const compareIds = searchParams.get("compare");
+    if (compareIds) {
+      const ids = compareIds.split(",").filter(Boolean);
+      if (ids.length > 0) {
+        setSelectedCandidates(new Set(ids));
+        setCompareMode(true);
+      }
+    }
+  }, [searchParams]);
+
+  // Persist selection to URL params
+  const updateUrlParams = useCallback(
+    (selected: Set<string>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (selected.size > 0) {
+        params.set("compare", Array.from(selected).join(","));
+      } else {
+        params.delete("compare");
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams]
+  );
+
+  const handleToggleCandidate = useCallback(
+    (candidateId: string) => {
+      setSelectedCandidates((prev) => {
+        const next = new Set(prev);
+        if (next.has(candidateId)) {
+          next.delete(candidateId);
+        } else if (next.size < MAX_COMPARE_CANDIDATES) {
+          next.add(candidateId);
+        }
+        updateUrlParams(next);
+        return next;
+      });
+    },
+    [updateUrlParams]
+  );
+
+  const handleExitCompareMode = useCallback(() => {
+    setCompareMode(false);
+    setSelectedCandidates(new Set());
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("compare");
+    router.replace(`?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
+
+  const handleCompare = useCallback(() => {
+    const ids = Array.from(selectedCandidates).join(",");
+    router.push(`/recruiter/candidates/compare?ids=${ids}`);
+  }, [router, selectedCandidates]);
+
+  const canSelectMore = selectedCandidates.size < MAX_COMPARE_CANDIDATES;
 
   const filteredCandidates = useMemo(() => {
     return candidates.filter((candidate) => {
@@ -126,6 +207,30 @@ export function RecruiterCandidatesClient({
               Clear filters
             </Button>
           )}
+
+          <div className="ml-auto flex items-center gap-2">
+            {compareMode ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExitCompareMode}
+                className="border-stone-300 text-stone-600 hover:bg-stone-100"
+              >
+                <X className="mr-1.5 h-4 w-4" />
+                Cancel
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCompareMode(true)}
+                className="border-blue-200 text-blue-600 hover:bg-blue-50"
+              >
+                <GitCompare className="mr-1.5 h-4 w-4" />
+                Compare
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
@@ -176,6 +281,7 @@ export function RecruiterCandidatesClient({
             <Table>
               <TableHeader>
                 <TableRow className="bg-stone-50 hover:bg-stone-50">
+                  {compareMode && <TableHead className="w-[50px]"></TableHead>}
                   <TableHead>Candidate</TableHead>
                   <TableHead>Scenario</TableHead>
                   <TableHead>Status</TableHead>
@@ -195,9 +301,66 @@ export function RecruiterCandidatesClient({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCandidates.map((candidate) => (
-                  <TableRow key={candidate.id} className="hover:bg-stone-50">
-                    <TableCell>
+                {filteredCandidates.map((candidate) => {
+                  const isCompleted = candidate.status === "COMPLETED";
+                  const isSelected = selectedCandidates.has(candidate.id);
+                  const canSelect = isCompleted && (isSelected || canSelectMore);
+
+                  return (
+                    <TableRow
+                      key={candidate.id}
+                      className={`hover:bg-stone-50 ${
+                        compareMode && isSelected
+                          ? "bg-blue-50 hover:bg-blue-50"
+                          : ""
+                      }`}
+                    >
+                      {compareMode && (
+                        <TableCell className="w-[50px]">
+                          {isCompleted ? (
+                            canSelect ? (
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() =>
+                                  handleToggleCandidate(candidate.id)
+                                }
+                                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                              />
+                            ) : (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div>
+                                    <Checkbox
+                                      checked={false}
+                                      disabled
+                                      className="opacity-50 cursor-not-allowed"
+                                    />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Maximum 4 candidates
+                                </TooltipContent>
+                              </Tooltip>
+                            )
+                          ) : (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div>
+                                  <Checkbox
+                                    checked={false}
+                                    disabled
+                                    className="opacity-30 cursor-not-allowed"
+                                  />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Only completed assessments can be compared
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </TableCell>
+                      )}
+                      <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-full bg-stone-100 flex items-center justify-center text-stone-600 font-medium">
                           {candidate.user.name?.charAt(0) || "?"}
@@ -250,8 +413,9 @@ export function RecruiterCandidatesClient({
                         </Link>
                       )}
                     </TableCell>
-                  </TableRow>
-                ))}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
@@ -262,6 +426,33 @@ export function RecruiterCandidatesClient({
       {candidates.length > 0 && (
         <div className="mt-4 text-sm text-stone-500">
           Showing {filteredCandidates.length} of {candidates.length} candidates
+        </div>
+      )}
+
+      {/* Floating Compare Bar */}
+      {compareMode && selectedCandidates.size >= 2 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="flex items-center gap-4 rounded-lg border border-blue-200 bg-white px-6 py-3 shadow-lg">
+            <span className="text-sm font-medium text-stone-700">
+              {selectedCandidates.size} candidate
+              {selectedCandidates.size !== 1 ? "s" : ""} selected
+            </span>
+            <Button
+              onClick={handleCompare}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <GitCompare className="mr-2 h-4 w-4" />
+              Compare {selectedCandidates.size} candidates
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExitCompareMode}
+              className="text-stone-500 hover:text-stone-700"
+            >
+              Cancel
+            </Button>
+          </div>
         </div>
       )}
     </div>
