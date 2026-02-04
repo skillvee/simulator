@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
+import { hash } from "bcryptjs";
 import { db } from "@/server/db";
 import { Prisma } from "@prisma/client";
 import { validateRequest } from "@/lib/api";
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   try {
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await hash(password, 12);
 
     // Create user directly - use error handling for duplicate email
     // This avoids the race condition where two concurrent registrations
