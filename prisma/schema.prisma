@@ -460,6 +460,146 @@ model VideoAssessmentApiCall {
 }
 
 // ============================================================================
+// ASSESSMENT RUBRIC MODELS
+// Data-driven rubric system with role families, dimensions, archetypes
+// ============================================================================
+
+/// Role family grouping (e.g., Engineering, Product, Sales)
+/// Each family has its own set of role-specific dimensions and archetypes
+model RoleFamily {
+  id          String   @id @default(cuid())
+  slug        String   @unique // e.g., "engineering", "sales"
+  name        String   // e.g., "Software Engineering", "Sales"
+  description String   @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  dimensions  RoleFamilyDimension[] // Links to dimensions for this family
+  archetypes  Archetype[]
+  redFlags    RedFlag[]
+}
+
+/// Assessment dimension definition (e.g., "Technical Execution", "Communication")
+/// Dimensions can be universal (isUniversal=true) or role-family-specific
+model Dimension {
+  id          String   @id @default(cuid())
+  slug        String   @unique // e.g., "communication", "technical_execution"
+  name        String   // e.g., "Communication"
+  description String   @db.Text // What this dimension measures
+  isUniversal Boolean  @default(false) // Universal dimensions apply to all role families
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  rubricLevels    RubricLevel[]
+  roleFamilies    RoleFamilyDimension[] // Which families use this dimension
+  archetypeWeights ArchetypeWeight[]
+  seniorityGates  SeniorityGate[]
+}
+
+/// Join table linking role families to dimensions with ordering
+model RoleFamilyDimension {
+  id           String @id @default(cuid())
+  roleFamilyId String
+  dimensionId  String
+  sortOrder    Int    @default(0) // Display order within the role family
+
+  roleFamily   RoleFamily @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
+  dimension    Dimension  @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleFamilyId, dimensionId])
+}
+
+/// Rubric level definition with behavioral anchors
+/// Each dimension has 4 levels (1-4), with optional role-family-specific overrides
+/// When roleFamilyId is null, this is the default rubric for the dimension.
+/// When roleFamilyId is set, this overrides the default for that role family.
+model RubricLevel {
+  id           String  @id @default(cuid())
+  dimensionId  String
+  roleFamilyId String? // null = default for this dimension; set = override for a specific role family
+  level        Int     // 1=Foundational, 2=Competent, 3=Advanced, 4=Expert
+  label        String  // "Foundational", "Competent", "Advanced", "Expert"
+  pattern      String  @db.Text // Pattern description (the bold sentence)
+  evidence     Json    // String[] — "Evidence may include" bullets
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  dimension    Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+
+  // Note: Postgres treats NULL as distinct in unique constraints, so
+  // the unique constraint only prevents duplicates when roleFamilyId is set.
+  // Default rubric levels (roleFamilyId=null) are managed by the seed script.
+  @@unique([dimensionId, roleFamilyId, level])
+  @@index([dimensionId])
+  @@index([dimensionId, level])
+}
+
+/// Role archetype within a role family (e.g., "Frontend Engineer" within Engineering)
+model Archetype {
+  id           String @id @default(cuid())
+  roleFamilyId String
+  slug         String @unique // e.g., "frontend_engineer"
+  name         String // e.g., "Frontend Engineer"
+  description  String @db.Text
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  roleFamily   RoleFamily       @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
+  weights      ArchetypeWeight[]
+  seniorityGates SeniorityGate[]
+}
+
+/// Weight for a dimension within an archetype
+model ArchetypeWeight {
+  id          String @id @default(cuid())
+  archetypeId String
+  dimensionId String
+  weight      Float  // Numeric multiplier (e.g., 1.0, 1.2, 1.5)
+
+  archetype   Archetype @relation(fields: [archetypeId], references: [id], onDelete: Cascade)
+  dimension   Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+
+  @@unique([archetypeId, dimensionId])
+}
+
+/// Seniority gate: minimum score per dimension per seniority level for an archetype
+model SeniorityGate {
+  id             String @id @default(cuid())
+  archetypeId    String
+  dimensionId    String
+  seniorityLevel String // "JUNIOR", "MID", "SENIOR"
+  minScore       Int    // Minimum required score (1-4)
+
+  archetype      Archetype @relation(fields: [archetypeId], references: [id], onDelete: Cascade)
+  dimension      Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+
+  @@unique([archetypeId, dimensionId, seniorityLevel])
+}
+
+/// Red flag definitions per role family
+/// Binary indicators that are always surfaced regardless of scores
+model RedFlag {
+  id           String @id @default(cuid())
+  roleFamilyId String
+  slug         String // e.g., "misrepresentation", "unverified_ai_usage"
+  name         String // e.g., "Misrepresentation"
+  description  String @db.Text // What this red flag means
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  roleFamily   RoleFamily @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
+
+  @@unique([roleFamilyId, slug])
+}
+
+// ============================================================================
 // CANDIDATE EMBEDDINGS MODEL (US-011)
 // For semantic search on candidate data using pgvector
 // ============================================================================

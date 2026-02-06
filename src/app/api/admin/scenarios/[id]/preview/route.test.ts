@@ -128,7 +128,7 @@ describe("POST /api/admin/scenarios/[id]/preview", () => {
     expect(response.status).toBe(200);
     expect(data.assessment).toBeDefined();
     expect(data.assessment.id).toBe("preview-assessment-123");
-    expect(data.previewUrl).toContain("/assessment/preview-assessment-123");
+    expect(data.previewUrl).toContain("/assessments/preview-assessment-123");
     expect(mockAssessmentCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: "admin-123",

@@ -65,32 +65,32 @@ export function SlackLayout(props: SlackLayoutProps) {
 
 function SlackLayoutSkeleton({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-muted/30 overflow-hidden">
-      <aside className="hidden h-screen w-[280px] flex-col border-r border-border bg-background md:flex shrink-0">
+    <div className="slack-theme flex h-screen overflow-hidden">
+      <aside className="hidden h-screen w-[280px] flex-col md:flex shrink-0" style={{background: "hsl(var(--slack-bg-sidebar))", borderRight: "1px solid hsl(var(--slack-border))"}}>
         {/* Header skeleton */}
-        <div className="h-16 flex items-center px-6 border-b border-border">
+        <div className="h-16 flex items-center px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
           <div className="h-8 w-8 bg-primary rounded-lg mr-3" />
-          <div className="h-5 w-20 bg-muted rounded" />
+          <div className="h-5 w-20 rounded" style={{background: "hsl(var(--slack-bg-surface))"}} />
         </div>
 
         <div className="flex-1 overflow-y-auto py-4 px-3">
           <div className="px-3 mb-3">
-            <div className="h-3 w-12 bg-muted rounded" />
+            <div className="h-3 w-12 rounded" style={{background: "hsl(var(--slack-bg-surface))"}} />
           </div>
           <div className="space-y-1 animate-pulse">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-xl">
-                <div className="h-9 w-9 rounded-full bg-muted" />
+              <div key={i} className="flex items-center gap-3 px-3 py-2">
+                <div className="h-9 w-9 rounded-full" style={{background: "hsl(var(--slack-bg-surface))"}} />
                 <div className="flex-1">
-                  <div className="h-4 w-24 rounded bg-muted mb-1" />
-                  <div className="h-2.5 w-16 rounded bg-muted" />
+                  <div className="h-4 w-24 rounded mb-1" style={{background: "hsl(var(--slack-bg-surface))"}} />
+                  <div className="h-2.5 w-16 rounded" style={{background: "hsl(var(--slack-bg-surface))"}} />
                 </div>
               </div>
             ))}
           </div>
         </div>
       </aside>
-      <main className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden">
+      <main className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden" style={{background: "hsl(var(--slack-bg-main))"}}>
         {children}
       </main>
     </div>
@@ -135,7 +135,7 @@ function SlackLayoutInner({
     setIsSidebarOpen(false);
 
     if (action === "chat") {
-      router.push(`/assessment/${assessmentId}/chat?coworkerId=${coworkerId}`);
+      router.push(`/assessments/${assessmentId}/work?coworkerId=${coworkerId}`);
     } else {
       // Start call in-place instead of navigating to a separate page
       startCall(coworkerId, "coworker");
@@ -155,11 +155,22 @@ function SlackLayoutInner({
 
   return (
     <CallContext.Provider value={callContextValue}>
-      <div className="relative flex h-screen bg-muted/30 overflow-hidden">
+      <div className="slack-theme relative flex h-screen overflow-hidden" style={{background: "hsl(var(--slack-bg-main))"}}>
         {/* Mobile menu button */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="fixed left-4 top-4 z-50 rounded-xl border border-border bg-background p-2 shadow-sm transition-colors hover:bg-accent md:hidden"
+          className="fixed left-4 top-4 z-50 rounded-xl p-2 shadow-sm transition-colors md:hidden"
+          style={{
+            background: "hsl(var(--slack-bg-surface))",
+            border: "1px solid hsl(var(--slack-border))",
+            color: "hsl(var(--slack-text))"
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "hsl(var(--slack-bg-hover))";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "hsl(var(--slack-bg-surface))";
+          }}
           aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
         >
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
@@ -175,20 +186,21 @@ function SlackLayoutInner({
 
         {/* Sidebar */}
         <aside
-          className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[280px] transform flex-col border-r border-border bg-background transition-transform duration-200 ease-in-out md:static shrink-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+          className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[280px] transform flex-col transition-transform duration-200 ease-in-out md:static shrink-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+          style={{background: "hsl(var(--slack-bg-sidebar))", borderRight: "1px solid hsl(var(--slack-border))"}}
         >
           {/* Header with Skillvee logo */}
-          <div className="h-16 flex items-center px-6 border-b border-border">
+          <div className="h-16 flex items-center px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
             <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-lg mr-3">
               S
             </div>
-            <span className="font-bold text-lg tracking-tight">Skillvee</span>
+            <span className="font-bold text-lg tracking-tight" style={{color: "hsl(var(--slack-text))"}}>Skillvee</span>
           </div>
 
           {/* Coworker List - scrollable, shrinks when call widget appears */}
           <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
             <div>
-              <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
                 Team
               </h3>
               <div className="space-y-1">
@@ -231,7 +243,7 @@ function SlackLayoutInner({
         </aside>
 
         {/* Main content area */}
-        <main className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden">
+        <main className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden" style={{background: "hsl(var(--slack-bg-main))"}}>
           {children}
         </main>
       </div>
@@ -257,29 +269,46 @@ function CoworkerItem({
   return (
     <div
       onClick={onChat}
-      className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-all ${
+      className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-all ${
         isSelected
-          ? "bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20"
-          : "text-foreground hover:bg-muted"
+          ? "border-l-2 border-primary"
+          : "hover:opacity-100 border-l-2 border-transparent"
       }`}
+      style={{
+        background: isSelected ? "hsl(var(--slack-bg-hover))" : "transparent",
+        color: "hsl(var(--slack-text))"
+      }}
+      onMouseEnter={(e) => {
+        if (!isSelected) {
+          e.currentTarget.style.background = "hsl(var(--slack-bg-hover))";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isSelected) {
+          e.currentTarget.style.background = "transparent";
+        }
+      }}
     >
       <div className="relative">
-        <CoworkerAvatar
-          name={coworker.name}
-          avatarUrl={coworker.avatarUrl}
-          size="sm"
-          className={`border-2 border-background shadow-sm ${isInCall ? "ring-2 ring-green-500 ring-offset-2" : ""}`}
-        />
+        <div className={`inline-block rounded-full ${isInCall ? "ring-2 ring-green-500 ring-offset-2" : ""}`} style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}}>
+          <CoworkerAvatar
+            name={coworker.name}
+            avatarUrl={coworker.avatarUrl}
+            size="sm"
+            className="shadow-sm"
+          />
+        </div>
         {/* Status indicator - green dot (in call = pulsing) */}
         <div
-          className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500 ${
+          className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 ${
             isInCall ? "animate-pulse" : ""
           }`}
+          style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}}
         />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold truncate">{coworker.name}</div>
-        <div className="text-[10px] text-muted-foreground truncate">
+        <div className="text-sm font-semibold truncate" style={{color: "hsl(var(--slack-text))"}}>{coworker.name}</div>
+        <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>
           {isInCall ? (
             <span className="text-green-600 dark:text-green-400 font-medium">In call</span>
           ) : (
@@ -296,9 +325,10 @@ function CoworkerItem({
         disabled={isInCall}
         className={`flex-shrink-0 rounded-lg p-1.5 transition-all ${
           isInCall
-            ? "cursor-not-allowed text-muted-foreground"
-            : "text-muted-foreground hover:bg-primary hover:text-primary-foreground"
+            ? "cursor-not-allowed opacity-50"
+            : "hover:bg-primary hover:text-primary-foreground"
         }`}
+        style={{color: "hsl(var(--slack-text-muted))"}}
         aria-label={isInCall ? "In call" : `Call ${coworker.name}`}
       >
         <Headphones size={14} />
@@ -317,21 +347,21 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
 
   return (
     <div
-      className="flex items-center gap-3 px-3 py-2 rounded-xl cursor-default opacity-50"
+      className="flex items-center gap-3 px-3 py-2 cursor-default opacity-50 border-l-2 border-transparent"
       title="Unavailable"
     >
       <div className="relative">
-        <div className="h-8 w-8 rounded-full bg-muted border-2 border-background shadow-sm flex items-center justify-center">
-          <span className="text-xs font-medium text-muted-foreground">
+        <div className="h-8 w-8 rounded-full shadow-sm flex items-center justify-center" style={{background: "hsl(var(--slack-bg-surface))", border: "2px solid hsl(var(--slack-border))"}}>
+          <span className="text-xs font-medium" style={{color: "hsl(var(--slack-text-muted))"}}>
             {initials}
           </span>
         </div>
         {/* Offline status indicator - gray dot */}
-        <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground/40" />
+        <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" style={{background: "hsl(var(--slack-text-muted))", border: "2px solid hsl(var(--slack-bg-sidebar))"}} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-muted-foreground truncate">{name}</div>
-        <div className="text-[10px] text-muted-foreground/70 truncate">{role}</div>
+        <div className="text-sm font-semibold truncate" style={{color: "hsl(var(--slack-text-muted))"}}>{name}</div>
+        <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>{role}</div>
       </div>
     </div>
   );

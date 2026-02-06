@@ -12,17 +12,17 @@ interface Coworker {
   avatarUrl: string | null;
 }
 
-interface ChatPageClientProps {
+interface WorkPageClientProps {
   assessmentId: string;
   coworkers: Coworker[];
   selectedCoworkerId: string | null;
 }
 
-export function ChatPageClient({
+export function WorkPageClient({
   assessmentId,
   coworkers,
   selectedCoworkerId,
-}: ChatPageClientProps) {
+}: WorkPageClientProps) {
   const router = useRouter();
   const { stopRecording } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
@@ -51,12 +51,12 @@ export function ChatPageClient({
       }
 
       // Navigate to results page
-      router.push(`/assessment/${assessmentId}/results`);
+      router.push(`/assessments/${assessmentId}/results`);
     } catch (error) {
       console.error("Error completing defense:", error);
       // Still navigate to results even if finalization fails
       // The results page will handle generating the report if needed
-      router.push(`/assessment/${assessmentId}/results`);
+      router.push(`/assessments/${assessmentId}/results`);
     }
   }, [assessmentId, isCompleting, router, stopRecording]);
 

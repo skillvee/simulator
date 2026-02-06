@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, MessageSquare, BookOpen, Users, Shield } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare, BookOpen, Users, Shield, ArrowRight } from "lucide-react";
 import Navigation from "@/components/landing/Navigation";
 import Footer from "@/components/landing/Footer";
 
@@ -24,29 +24,34 @@ function FAQAccordion({ item }: { item: FAQItem; index: number }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="bg-white border-2 border-stone-100 hover:border-blue-200 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="bg-slate-50 border border-slate-200 hover:border-primary/30 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg"
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-blue-50/50 transition-colors"
+        className="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-slate-100/50 transition-colors"
       >
         <div className="flex items-start space-x-4 flex-1">
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
             <span className="text-primary font-bold text-sm">Q</span>
           </div>
-          <h3 className="font-semibold text-stone-900 text-lg pr-4">{item.question}</h3>
+          <h3 className="font-semibold text-slate-900 text-lg pr-4">{item.question}</h3>
         </div>
         {isOpen ? (
-          <ChevronUp className="w-5 h-5 text-stone-400 flex-shrink-0 transition-transform duration-300" />
+          <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-300" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-stone-400 flex-shrink-0 transition-transform duration-300" />
+          <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-300" />
         )}
       </button>
       {isOpen && (
-        <div className="px-6 pb-5 animate-fade-in">
-          <div className="pl-12 text-stone-600 leading-relaxed">{item.answer}</div>
+        <div className="px-6 pb-5 animate-in fade-in duration-200">
+          <div className="pl-12 text-slate-600 leading-relaxed">{item.answer}</div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -54,7 +59,7 @@ export default function FAQPageContent() {
   const faqSections: FAQSection[] = [
     {
       title: "Getting Started",
-      icon: <BookOpen className="w-6 h-6 text-blue-600" />,
+      icon: <BookOpen className="w-6 h-6 text-primary" />,
       color: "blue",
       items: [
         {
@@ -77,7 +82,7 @@ export default function FAQPageContent() {
     },
     {
       title: "How Assessments Work",
-      icon: <MessageSquare className="w-6 h-6 text-blue-600" />,
+      icon: <MessageSquare className="w-6 h-6 text-primary" />,
       color: "blue",
       items: [
         {
@@ -104,7 +109,7 @@ export default function FAQPageContent() {
     },
     {
       title: "Results & Evaluation",
-      icon: <Users className="w-6 h-6 text-blue-600" />,
+      icon: <Users className="w-6 h-6 text-primary" />,
       color: "blue",
       items: [
         {
@@ -127,7 +132,7 @@ export default function FAQPageContent() {
     },
     {
       title: "Integration & Technical",
-      icon: <Shield className="w-6 h-6 text-blue-600" />,
+      icon: <Shield className="w-6 h-6 text-primary" />,
       color: "blue",
       items: [
         {
@@ -152,35 +157,56 @@ export default function FAQPageContent() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navigation currentPage="faq" />
+      {/* Dark Hero Section */}
+      <div className="bg-[#020617] relative overflow-hidden">
+        <Navigation variant="dark" currentPage="faq" />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-white">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6 py-16 sm:py-20 relative z-10">
-          <div className="text-center">
-            <Badge className="bg-blue-50 text-blue-700 border-blue-200 w-fit mx-auto mb-6 hover:scale-105 transition-transform duration-300">
-              📚 Frequently Asked Questions
-            </Badge>
+        {/* Subtle animated background */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.2, 0.1],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/30 rounded-full blur-[200px] pointer-events-none"
+        />
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-6">
-              <span className="text-stone-900">Questions about </span>
-              <span className="text-primary bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">work simulations?</span>
-            </h1>
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-20">
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center"
+            >
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
+                Got Questions?
+              </p>
 
-            <p className="text-lg sm:text-xl text-stone-600 leading-relaxed max-w-2xl mx-auto">
-              Everything you need to know about using Skillvee to hire better
-            </p>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
+                Frequently Asked Questions
+              </h1>
+
+              <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+                Everything you need to know about using Skillvee to hire better
+              </p>
+            </motion.div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* FAQ Content */}
-      <section className="py-16 sm:py-20 bg-stone-50">
-        <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-6">
+      <section className="py-20 bg-slate-50">
+        <div className="max-w-3xl mx-auto px-6">
           <div className="space-y-16">
             {faqSections.map((section, sectionIndex) => (
-              <div
+              <motion.div
                 key={sectionIndex}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: sectionIndex * 0.1 }}
                 id={
                   section.title === "Getting Started" ? "getting-started" :
                   section.title === "Pricing & Plans" ? "pricing" :
@@ -189,10 +215,10 @@ export default function FAQPageContent() {
                 }
               >
                 <div className="flex items-center mb-8">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4">
                     {section.icon}
                   </div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-stone-900">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
                     {section.title}
                   </h2>
                 </div>
@@ -206,55 +232,52 @@ export default function FAQPageContent() {
                     />
                   ))}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10">
-          <div className="absolute top-10 left-10 w-20 h-20 border border-white rounded-full"></div>
-          <div className="absolute top-32 right-20 w-16 h-16 bg-white rounded-full"></div>
-          <div className="absolute bottom-20 left-1/4 w-12 h-12 border-2 border-white rounded-full"></div>
-          <div className="absolute bottom-10 right-10 w-24 h-24 border border-white rounded-full"></div>
-        </div>
+      {/* CTA Section - Dark theme matching homepage */}
+      <section className="py-32 bg-[#020617] relative overflow-hidden">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/20 rounded-full blur-[200px] pointer-events-none"
+        />
 
-        <div className="max-w-5xl mx-auto px-6 sm:px-8 lg:px-6 text-center relative z-10">
-          <Badge className="bg-yellow-400 text-yellow-900 mb-6 sm:mb-8 text-sm font-semibold">
-            💡 Still have questions?
-          </Badge>
-
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
-            Let&apos;s <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">talk</span>
-          </h2>
-
-          <p className="text-lg sm:text-xl lg:text-2xl text-blue-100 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed">
-            Can&apos;t find what you&apos;re looking for? We&apos;ll answer your questions and show you how it works.
-          </p>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button
-              size="lg"
-              variant="outline"
-              asChild
-              className="bg-white/10 border-2 border-white text-white hover:bg-white hover:text-blue-600 transition-all duration-300 hover:scale-105"
-            >
-              <Link href="mailto:hi@skillvee.com">
-                Email Us
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              asChild
-              className="bg-white text-blue-600 hover:bg-stone-50 shadow-xl font-semibold transform hover:scale-105 transition-all duration-300"
-            >
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
+              Still Have Questions?
+            </p>
+            <h2 className="text-4xl lg:text-6xl font-black text-white mb-6">
+              LET&apos;S TALK.
+            </h2>
+            <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+              Can&apos;t find what you&apos;re looking for? We&apos;ll answer your questions and show you how it works.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/demo">
-                Request Demo
+                <Button className="h-14 px-10 rounded-full bg-white text-slate-900 font-bold text-lg shadow-xl hover:bg-slate-100 group">
+                  Request Demo
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
               </Link>
-            </Button>
-          </div>
+              <Link href="mailto:hi@skillvee.com">
+                <Button variant="ghost" className="h-14 px-6 rounded-full text-white hover:bg-white/10 font-semibold">
+                  Email Us
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
 

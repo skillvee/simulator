@@ -6,6 +6,19 @@ import { Scene4SlackCollab } from "./scenes/Scene4SlackCollab";
 import { Scene5SubmitPR } from "./scenes/Scene5SubmitPR";
 import { Scene6Results } from "./scenes/Scene6Results";
 
+// How It Works sections for homepage
+import { HowItWorksStep1 } from "./scenes/HowItWorksStep1";
+import { HowItWorksStep2 } from "./scenes/HowItWorksStep2";
+import { HowItWorksStep3 } from "./scenes/HowItWorksStep3";
+
+// Zoomed versions for better visibility
+import { HowItWorksStep1Zoomed } from "./scenes/HowItWorksStep1Zoomed";
+import { HowItWorksStep2Zoomed } from "./scenes/HowItWorksStep2Zoomed";
+import { HowItWorksStep3Zoomed } from "./scenes/HowItWorksStep3Zoomed";
+
+// Hero video for homepage
+import { HeroVideo } from "./scenes/HeroVideo";
+
 // Video configuration
 const FPS = 30;
 const WIDTH = 1920;
@@ -108,6 +121,82 @@ export const RemotionRoot: React.FC = () => {
         id="Scene6Results"
         component={Scene6Results}
         durationInFrames={SCENE_DURATIONS.scene6Results}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* How It Works - Step 1: Create Your Simulation (10 seconds) */}
+      <Composition
+        id="HowItWorksStep1"
+        component={HowItWorksStep1}
+        durationInFrames={10 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* How It Works - Step 2: Candidates Do Real Work (15 seconds) */}
+      <Composition
+        id="HowItWorksStep2"
+        component={HowItWorksStep2}
+        durationInFrames={15 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* How It Works - Step 3: Review Standardized Evidence (12 seconds) */}
+      <Composition
+        id="HowItWorksStep3"
+        component={HowItWorksStep3}
+        durationInFrames={12 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* ============================================
+          ZOOMED VERSIONS - Better visibility for homepage
+          ============================================ */}
+
+      {/* How It Works Step 1 - Zoomed (10 seconds) */}
+      <Composition
+        id="HowItWorksStep1Zoomed"
+        component={HowItWorksStep1Zoomed}
+        durationInFrames={10 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* How It Works Step 2 - Zoomed (15 seconds) */}
+      <Composition
+        id="HowItWorksStep2Zoomed"
+        component={HowItWorksStep2Zoomed}
+        durationInFrames={15 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* How It Works Step 3 - Zoomed (12 seconds) */}
+      <Composition
+        id="HowItWorksStep3Zoomed"
+        component={HowItWorksStep3Zoomed}
+        durationInFrames={12 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* ============================================
+          HERO VIDEO - 30 second loop for homepage hero
+          ============================================ */}
+      <Composition
+        id="HeroVideo"
+        component={HeroVideo}
+        durationInFrames={30 * FPS}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}

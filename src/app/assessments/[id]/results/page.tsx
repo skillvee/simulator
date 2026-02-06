@@ -44,7 +44,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
   // Only COMPLETED assessments can view results
   if (assessment.status !== "COMPLETED") {
-    redirect(`/assessment/${id}/chat`);
+    redirect(`/assessments/${id}/work`);
   }
 
   // If no report exists yet, try to generate one

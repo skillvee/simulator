@@ -11,7 +11,7 @@ import {
   AssessmentDimension,
   VideoAssessmentStatus,
 } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { hash } from "bcryptjs";
 import { EXAMPLE_COWORKERS } from "../src/lib/ai/coworker-persona";
 
 const prisma = new PrismaClient();
@@ -67,7 +67,7 @@ async function main() {
 
   // Create test users for E2E testing
   console.log("👤 Creating test users...");
-  const hashedPassword = await bcrypt.hash(TEST_USERS.admin.password, 12);
+  const hashedPassword = await hash(TEST_USERS.admin.password, 12);
 
   for (const [key, userData] of Object.entries(TEST_USERS)) {
     const user = await prisma.user.upsert({

@@ -78,7 +78,7 @@ export const TEST_URLS = {
   signIn: "/sign-in",
   signUp: "/sign-up",
   dashboard: "/dashboard",
-  assessmentWelcome: `/assessment/${TEST_ASSESSMENT_IDS.welcome}`,
-  assessmentWorking: `/assessment/${TEST_ASSESSMENT_IDS.working}/chat`,
-  assessmentChat: `/assessment/${TEST_ASSESSMENT_IDS.chat}/chat`,
+  assessmentWelcome: `/assessments/${TEST_ASSESSMENT_IDS.welcome}/welcome`,
+  assessmentWorking: `/assessments/${TEST_ASSESSMENT_IDS.working}/work`,
+  assessmentChat: `/assessments/${TEST_ASSESSMENT_IDS.chat}/work`,
 } as const;

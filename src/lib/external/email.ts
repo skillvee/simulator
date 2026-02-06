@@ -118,7 +118,7 @@ function generateScoreBar(score: number): string {
  */
 export function generateReportEmailHtml(params: SendReportEmailParams): string {
   const { candidateName, report, assessmentId, appBaseUrl } = params;
-  const reportUrl = `${appBaseUrl}/assessment/${assessmentId}/results`;
+  const reportUrl = `${appBaseUrl}/assessments/${assessmentId}/results`;
   const levelInfo = formatLevel(report.overallLevel);
 
   // Get top 3 skill scores sorted by score descending
@@ -357,7 +357,7 @@ export function generateReportEmailHtml(params: SendReportEmailParams): string {
  */
 export function generateReportEmailText(params: SendReportEmailParams): string {
   const { candidateName, report, assessmentId, appBaseUrl } = params;
-  const reportUrl = `${appBaseUrl}/assessment/${assessmentId}/results`;
+  const reportUrl = `${appBaseUrl}/assessments/${assessmentId}/results`;
   const levelInfo = formatLevel(report.overallLevel);
 
   // Get top 3 skill scores

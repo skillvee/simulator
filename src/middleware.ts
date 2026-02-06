@@ -27,7 +27,7 @@ const PUBLIC_API_ROUTES = [
  * These routes are accessible without a valid session.
  */
 const PUBLIC_PAGE_ROUTES = [
-  "/join",
+  "/invite",
   "/sign-in",
   "/sign-up",
 ];
@@ -78,7 +78,7 @@ function isRecruiterPageRoute(pathname: string): boolean {
  * Check if a route is an assessment page route
  */
 function isAssessmentPageRoute(pathname: string): boolean {
-  return pathname.startsWith("/assessment/");
+  return pathname.startsWith("/assessments/");
 }
 
 /**
@@ -89,8 +89,8 @@ function isAssessmentPageRoute(pathname: string): boolean {
  * - Requires ADMIN role for /api/admin/* routes
  * - Requires RECRUITER or ADMIN role for /api/recruiter/* routes
  * - Protects /recruiter/* page routes (requires RECRUITER or ADMIN role)
- * - Protects /assessment/* page routes (requires authentication)
- * - Allows public access to /join/* routes
+ * - Protects /assessments/* page routes (requires authentication)
+ * - Allows public access to /invite/* routes
  * - Returns 401/redirects for unauthenticated requests to protected routes
  * - Returns 403/redirects for unauthorized role access
  *
@@ -184,6 +184,13 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // Redirect authenticated recruiters from home page to dashboard
+  if (pathname === "/") {
+    if (session?.user && (user?.role === "RECRUITER" || user?.role === "ADMIN")) {
+      return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
+    }
+  }
+
   return NextResponse.next();
 });
 
@@ -191,16 +198,14 @@ export default auth((req) => {
  * Middleware matcher configuration.
  * Run middleware on API routes and protected page routes.
  *
- * Note: /join/* routes are explicitly NOT matched - they are public.
- * Deprecated routes (/start, /cv-upload, /hr-interview, /congratulations,
- * /kickoff, /defense) are not matched and will 404 naturally since pages
- * have been removed.
+ * Note: /invite/* routes are explicitly public.
  */
 export const config = {
   matcher: [
+    "/",
     "/api/:path*",
     "/recruiter/:path*",
-    "/assessment/:path*",
+    "/assessments/:path*",
   ],
 };
 

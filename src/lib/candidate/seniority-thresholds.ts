@@ -1,6 +1,13 @@
 /**
  * Seniority Thresholds for Candidate Filtering
  *
+ * @deprecated This file uses the legacy hardcoded 8-dimension system.
+ * For the new data-driven rubric system with per-dimension seniority gates, use:
+ *   import { calculateArchetypeFit } from "@/lib/rubric"
+ *
+ * The legacy system is kept for backward compatibility with existing
+ * assessments scored on the old 1-5 / 8-dimension scale.
+ *
  * Defines minimum score requirements per seniority level for key dimensions.
  * Applied at search time to filter candidates who don't meet role requirements.
  *

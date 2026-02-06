@@ -910,7 +910,7 @@ function CandidateProfileInner({ data }: { data: CandidateProfileData }) {
               </h2>
               <Button asChild>
                 <Link
-                  href={`/assessment/${assessment.id}/results`}
+                  href={`/assessments/${assessment.id}/results`}
                   className="inline-flex items-center gap-2"
                 >
                   <Video size={16} />

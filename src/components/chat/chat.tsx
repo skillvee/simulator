@@ -162,13 +162,13 @@ export function Chat({
 
   return (
     <div className="flex flex-col min-h-0 h-full">
-      <div className="flex-1 min-h-0 bg-background rounded-2xl shadow-sm border border-border flex flex-col">
+      <div className="flex-1 min-h-0 shadow-sm flex flex-col" style={{background: "hsl(var(--slack-bg-main))", border: "1px solid hsl(var(--slack-border))"}}>
         {/* Header */}
-        <header className="shrink-0 h-16 flex items-center justify-between px-6 border-b border-border">
+        <header className="shrink-0 h-16 flex items-center justify-between px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
-              <h2 className="text-lg font-bold">{coworker.name}</h2>
-              <span className="text-xs text-muted-foreground">{coworker.role}</span>
+              <h2 className="text-lg font-bold" style={{color: "hsl(var(--slack-text))"}}>{coworker.name}</h2>
+              <span className="text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>{coworker.role}</span>
             </div>
           </div>
 
@@ -197,7 +197,7 @@ export function Chat({
           <div className="py-6 space-y-6">
             {isLoading ? (
               <div className="flex h-full items-center justify-center py-20">
-                <div className="text-muted-foreground">Loading...</div>
+                <div style={{color: "hsl(var(--slack-text-muted))"}}>Loading...</div>
               </div>
             ) : messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center py-20">
@@ -209,10 +209,10 @@ export function Chat({
                     className="shadow-md border border-border"
                   />
                 </div>
-                <h2 className="mb-2 text-lg font-semibold">
+                <h2 className="mb-2 text-lg font-semibold" style={{color: "hsl(var(--slack-text))"}}>
                   Start a conversation with {coworker.name}
                 </h2>
-                <p className="max-w-md text-sm text-muted-foreground">
+                <p className="max-w-md text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
                   {coworker.name} is a {coworker.role}. Ask questions about the
                   project, codebase, or anything else you need help with.
                 </p>
@@ -245,12 +245,13 @@ export function Chat({
                           className={`px-5 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
                             isMe
                               ? "bg-primary text-primary-foreground rounded-br-sm"
-                              : "bg-muted text-foreground rounded-bl-sm"
+                              : "rounded-bl-sm"
                           }`}
+                          style={isMe ? {} : {background: "hsl(var(--slack-bg-surface))", color: "hsl(var(--slack-text))"}}
                         >
                           {message.text}
                         </div>
-                        <span className="text-xs text-muted-foreground mt-1.5 font-medium px-1">
+                        <span className="text-xs mt-1.5 font-medium px-1" style={{color: "hsl(var(--slack-text-muted))"}}>
                           {formatTimestamp(message.timestamp)}
                         </span>
                       </div>
@@ -261,12 +262,12 @@ export function Chat({
                 {/* Call Started Indicator */}
                 {isInCall && (
                   <div className="flex justify-center my-6">
-                    <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-full px-4 py-1.5 shadow-sm">
-                      <div className="bg-green-100 dark:bg-green-900 p-1 rounded-full">
-                        <Headphones className="h-3 w-3 text-green-600 dark:text-green-400" />
+                    <div className="flex items-center gap-2 rounded-full px-4 py-1.5 shadow-sm" style={{background: "hsla(var(--slack-bg-surface), 0.5)", border: "1px solid hsl(var(--slack-border))"}}>
+                      <div className="bg-green-900 p-1 rounded-full">
+                        <Headphones className="h-3 w-3 text-green-400" />
                       </div>
-                      <span className="text-xs font-medium">Call started</span>
-                      <span className="text-[10px] text-muted-foreground">• Now</span>
+                      <span className="text-xs font-medium" style={{color: "hsl(var(--slack-text))"}}>Call started</span>
+                      <span className="text-[10px]" style={{color: "hsl(var(--slack-text-muted))"}}>• Now</span>
                     </div>
                   </div>
                 )}
@@ -278,7 +279,7 @@ export function Chat({
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
                       size="md"
-                      className="mt-1 shadow-sm border border-border"
+                      className="mt-1 shadow-sm border [border-color:hsl(var(--slack-border))]"
                     />
                     <div className="flex flex-col items-start">
                       <TypingIndicator />
@@ -293,8 +294,8 @@ export function Chat({
         </div>
 
         {/* Input area */}
-        <div className="shrink-0 p-4 border-t border-border">
-          <div className="flex items-center gap-2 bg-muted p-2 pl-4 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all">
+        <div className="shrink-0 p-4" style={{borderTop: "1px solid hsl(var(--slack-border))"}}>
+          <div className="flex items-center gap-2 p-2 pl-4 rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all" style={{background: "hsl(var(--slack-bg-input))", border: "1px solid hsl(var(--slack-border))"}}>
             <input
               ref={inputRef}
               type="text"
@@ -303,7 +304,8 @@ export function Chat({
               onKeyDown={handleKeyDown}
               placeholder="Type a message..."
               disabled={isSending}
-              className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-muted-foreground"
+              className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-slate-500"
+              style={{color: "hsl(var(--slack-text))"}}
             />
             <Button
               size="icon"
@@ -323,19 +325,19 @@ export function Chat({
 // Typing indicator component - matches bubble style
 function TypingIndicator() {
   return (
-    <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl rounded-bl-sm bg-muted shadow-sm">
+    <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl rounded-bl-sm shadow-sm" style={{background: "hsl(var(--slack-bg-surface))"}}>
       <div className="flex gap-1">
         <span
-          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60"
-          style={{ animationDelay: "0ms" }}
+          className="h-2 w-2 animate-pulse rounded-full"
+          style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "0ms"}}
         />
         <span
-          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60"
-          style={{ animationDelay: "150ms" }}
+          className="h-2 w-2 animate-pulse rounded-full"
+          style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "150ms"}}
         />
         <span
-          className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60"
-          style={{ animationDelay: "300ms" }}
+          className="h-2 w-2 animate-pulse rounded-full"
+          style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "300ms"}}
         />
       </div>
     </div>

@@ -67,6 +67,43 @@
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
+
+  /* Slack-inspired dark theme for chat interface */
+  .slack-theme {
+    --slack-bg-sidebar: 217 25% 12%; /* Darkest - sidebar background */
+    --slack-bg-main: 217 20% 16%; /* Main chat panel background */
+    --slack-bg-hover: 217 20% 20%; /* Hover state background */
+    --slack-bg-surface: 217 20% 22%; /* Message bubbles, cards */
+    --slack-bg-input: 217 20% 14%; /* Input fields background */
+    --slack-border: 217 15% 25%; /* Borders */
+    --slack-text: 210 10% 93%; /* Primary text color */
+    --slack-text-muted: 210 10% 60%; /* Secondary/muted text */
+  }
+
+  /* Dark theme scrollbar styling */
+  .slack-theme ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .slack-theme ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .slack-theme ::-webkit-scrollbar-thumb {
+    background: hsl(217 15% 25%);
+    border-radius: 4px;
+  }
+
+  .slack-theme ::-webkit-scrollbar-thumb:hover {
+    background: hsl(217 15% 30%);
+  }
+
+  /* Firefox scrollbar styling */
+  .slack-theme * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(217 15% 25%) transparent;
+  }
 }
 
 @layer base {

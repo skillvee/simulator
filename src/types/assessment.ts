@@ -342,6 +342,103 @@ export interface AssessmentReport {
 }
 
 // ============================================================================
+// Rubric System Types (data-driven assessment)
+// ============================================================================
+
+/**
+ * Rubric level labels (1-4 scale)
+ */
+export type RubricLevelLabel =
+  | "Foundational"
+  | "Competent"
+  | "Advanced"
+  | "Expert";
+
+/**
+ * Seniority level for archetype gates
+ */
+export type ArchetypeSeniorityLevel = "JUNIOR" | "MID" | "SENIOR";
+
+/**
+ * Confidence level for dimension scores
+ */
+export type DimensionConfidence = "high" | "medium" | "low";
+
+/**
+ * A single dimension score from the new rubric system
+ */
+export interface RubricDimensionScore {
+  dimensionSlug: string;
+  dimensionName: string;
+  score: number | null; // 1-4 or null if insufficient evidence
+  confidence: DimensionConfidence;
+  rationale: string;
+  observableBehaviors: string[];
+  timestamps: string[]; // MM:SS format
+  trainableGap: boolean;
+  greenFlags: string[];
+  redFlags: string[];
+}
+
+/**
+ * A red flag detected during assessment
+ */
+export interface DetectedRedFlag {
+  slug: string;
+  name: string;
+  description: string;
+  evidence: string;
+  timestamps: string[];
+}
+
+/**
+ * Complete assessment output from the new rubric system
+ */
+export interface RubricAssessmentOutput {
+  evaluationVersion: string;
+  roleFamilySlug: string;
+  overallScore: number; // Weighted average on 1-4 scale
+  dimensionScores: RubricDimensionScore[];
+  detectedRedFlags: DetectedRedFlag[];
+  overallSummary: string;
+  evaluationConfidence: DimensionConfidence;
+  insufficientEvidenceNotes: string | null;
+}
+
+/**
+ * Archetype fit result (computed at query time)
+ */
+export interface ArchetypeFitResult {
+  archetypeSlug: string;
+  archetypeName: string;
+  fitScore: number; // 0-100 weighted score
+  seniorityMatch: ArchetypeSeniorityLevel | null; // Highest passing seniority
+  roleRelevantStrengths: string[]; // Top 2-3 dimension names
+  roleRelevantGaps: string[]; // Dimensions below expectations for this archetype
+  weightBreakdown: Array<{
+    dimensionSlug: string;
+    dimensionName: string;
+    rawScore: number;
+    weight: number;
+    weightedScore: number;
+  }>;
+  gateBreakdown: Array<{
+    seniorityLevel: ArchetypeSeniorityLevel;
+    passes: boolean;
+    failingDimensions: string[];
+  }>;
+}
+
+/**
+ * Full hiring manager output (assessment + archetype interpretation)
+ */
+export interface HiringManagerOutput {
+  assessment: RubricAssessmentOutput;
+  archetypeFit: ArchetypeFitResult;
+  evidence: RubricDimensionScore[]; // Filtered to most relevant for this archetype
+}
+
+// ============================================================================
 // Video Evaluation Result (NEW - for results page display)
 // ============================================================================
 

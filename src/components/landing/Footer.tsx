@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="relative bg-stone-900 text-stone-300 py-12 sm:py-16">
+    <footer className="relative bg-slate-900 text-slate-300 py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           <div>
@@ -85,8 +85,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-stone-800/50 pt-8 text-center">
-          <p className="text-stone-400/60">
+        <div className="border-t border-slate-800/50 pt-8 text-center">
+          <p className="text-slate-400/60">
             © {new Date().getFullYear()} Skillvee. All rights reserved.
           </p>
         </div>

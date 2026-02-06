@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getAssessmentForChat } from "@/server/queries/assessment";
-import { ChatPageClient } from "./client";
+import { WorkPageClient } from "./client";
 import { AssessmentScreenWrapper } from "@/components/assessment";
 
-interface ChatPageProps {
+interface WorkPageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ coworkerId?: string }>;
 }
 
-export default async function ChatPage({
+export default async function WorkPage({
   params,
   searchParams,
-}: ChatPageProps) {
+}: WorkPageProps) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/sign-in");
@@ -38,7 +38,7 @@ export default async function ChatPage({
 
   return (
     <AssessmentScreenWrapper assessmentId={id}>
-      <ChatPageClient
+      <WorkPageClient
         assessmentId={id}
         coworkers={coworkers}
         selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
