@@ -279,7 +279,7 @@ export function Chat({
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
                       size="md"
-                      className="mt-1 shadow-sm border border-border"
+                      className="mt-1 shadow-sm border [border-color:hsl(var(--slack-border))]"
                     />
                     <div className="flex flex-col items-start">
                       <TypingIndicator />
