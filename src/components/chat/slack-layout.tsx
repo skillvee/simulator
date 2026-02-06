@@ -79,7 +79,7 @@ function SlackLayoutSkeleton({ children }: { children: React.ReactNode }) {
           </div>
           <div className="space-y-1 animate-pulse">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-xl">
+              <div key={i} className="flex items-center gap-3 px-3 py-2">
                 <div className="h-9 w-9 rounded-full" style={{background: "hsl(var(--slack-bg-surface))"}} />
                 <div className="flex-1">
                   <div className="h-4 w-24 rounded mb-1" style={{background: "hsl(var(--slack-bg-surface))"}} />
@@ -325,10 +325,10 @@ function CoworkerItem({
         disabled={isInCall}
         className={`flex-shrink-0 rounded-lg p-1.5 transition-all ${
           isInCall
-            ? "cursor-not-allowed"
+            ? "cursor-not-allowed opacity-50"
             : "hover:bg-primary hover:text-primary-foreground"
         }`}
-        style={{color: isInCall ? "hsl(var(--slack-text-muted))" : "hsl(var(--slack-text-muted))"}}
+        style={{color: "hsl(var(--slack-text-muted))"}}
         aria-label={isInCall ? "In call" : `Call ${coworker.name}`}
       >
         <Headphones size={14} />

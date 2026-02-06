@@ -1,6 +1,13 @@
 /**
  * Archetype Weight Configurations for Candidate Matching
  *
+ * @deprecated This file uses the legacy hardcoded 8-dimension system.
+ * For the new data-driven rubric system with role families, use:
+ *   import { calculateArchetypeFit } from "@/lib/rubric"
+ *
+ * The legacy system is kept for backward compatibility with existing
+ * assessments scored on the old 1-5 / 8-dimension scale.
+ *
  * Defines role-specific dimension weights for calculating fit scores.
  * Weights are applied dynamically at query time, never stored with assessment.
  *

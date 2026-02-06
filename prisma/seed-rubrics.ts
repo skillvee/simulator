@@ -2807,7 +2807,9 @@ interface ArchetypeData {
   name: string;
   description: string;
   weights: Record<string, number>;
-  seniorityGates: Record<string, Record<string, number>>;
+  // Some seniority levels intentionally omit dimensions (no gate = no minimum)
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  seniorityGates: Record<string, Record<string, number | undefined>>;
 }
 
 interface RedFlagData {
@@ -3043,6 +3045,7 @@ async function seedRubrics() {
       // Create seniority gates
       for (const [senLevel, gates] of Object.entries(arch.seniorityGates)) {
         for (const [dimSlug, minScore] of Object.entries(gates)) {
+          if (minScore === undefined) continue;
           const dimId = dimensionMap.get(dimSlug);
           if (!dimId) continue;
           await prisma.seniorityGate.upsert({

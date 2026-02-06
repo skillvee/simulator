@@ -43,6 +43,15 @@ export type {
   VideoDimension,
   VideoSkillEvaluation,
   VideoEvaluationResult,
+  // Rubric system types (data-driven assessment)
+  RubricLevelLabel,
+  ArchetypeSeniorityLevel,
+  DimensionConfidence,
+  RubricDimensionScore,
+  DetectedRedFlag,
+  RubricAssessmentOutput,
+  ArchetypeFitResult,
+  HiringManagerOutput,
 } from "./assessment";
 
 // Conversation types
