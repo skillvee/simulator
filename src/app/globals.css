@@ -79,6 +79,31 @@
     --slack-text: 210 10% 93%; /* Primary text color */
     --slack-text-muted: 210 10% 60%; /* Secondary/muted text */
   }
+
+  /* Dark theme scrollbar styling */
+  .slack-theme ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .slack-theme ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .slack-theme ::-webkit-scrollbar-thumb {
+    background: hsl(217 15% 25%);
+    border-radius: 4px;
+  }
+
+  .slack-theme ::-webkit-scrollbar-thumb:hover {
+    background: hsl(217 15% 30%);
+  }
+
+  /* Firefox scrollbar styling */
+  .slack-theme * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(217 15% 25%) transparent;
+  }
 }
 
 @layer base {
