@@ -3028,3 +3028,20 @@ if (extraction.newCoworker) {
 - TypeScript compilation passes without errors
 - The agent-browser skill successfully captures screenshots for UI verification
 - Screenshots should be committed and pushed before commenting on GitHub issues to ensure raw.githubusercontent.com URLs work
+
+## Issue #213: US-301: Redesign chat interface with dark Slack-inspired theme using our dark blue
+
+- **What was implemented**: Applied dark Slack-inspired theme to chat interface using scoped CSS variables
+- **Files changed**:
+  - `src/app/globals.css` - Already had `.slack-theme` CSS variables defined (lines 71-106)
+  - `src/components/chat/slack-layout.tsx` - Updated to use CSS variables for all colors
+  - `src/components/chat/chat.tsx` - Updated message bubbles, input, and text colors
+  - `src/components/chat/floating-call-bar.tsx` - Updated call bar states for dark theme
+- **Learnings for future iterations**:
+  - CSS variables were already defined in globals.css, just needed to be applied
+  - CoworkerAvatar component doesn't accept style prop - use className with Tailwind arbitrary values instead
+  - Scoped theming with `.slack-theme` class ensures changes don't affect other parts of the app
+  - TypeScript compilation helps catch prop type errors early
+- **Gotchas discovered**:
+  - Must use `[property:value]` Tailwind syntax for arbitrary CSS properties in className
+  - HSL values in CSS variables should not include the hsl() wrapper in the variable definition
