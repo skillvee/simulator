@@ -54,15 +54,11 @@ export async function POST(request: Request, context: RouteContext) {
     // No body or invalid JSON is fine - default behavior
   }
 
-  // Determine starting status and URL based on skipTo
-  // Default: start at chat page (consolidated flow - no separate welcome page)
-  const status = "WORKING" as const;
-  const urlSuffix = "/chat";
-
-  // Note: skipTo parameter is now unused since welcome page was removed
+  // Note: skipTo parameter is now unused
   void skipTo;
 
   // Create a preview assessment for this admin
+  const status = "WORKING" as const;
   const assessment = await db.assessment.create({
     data: {
       userId: user.id,
@@ -71,7 +67,7 @@ export async function POST(request: Request, context: RouteContext) {
     },
   });
 
-  const previewUrl = `/assessment/${assessment.id}${urlSuffix}`;
+  const previewUrl = `/assessments/${assessment.id}/work`;
 
   return NextResponse.json({
     assessment,

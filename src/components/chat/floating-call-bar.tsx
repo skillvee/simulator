@@ -444,7 +444,7 @@ export function FloatingCallBar({
   if (callState === "error") {
     return (
       <div className="relative">
-        <div className="bg-background rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-destructive/30 overflow-hidden">
+        <div className="bg-[hsl(var(--slack-bg-surface))] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-destructive/30 overflow-hidden">
           <div className="h-1 bg-destructive" />
           <div className="p-4">
             <div className="flex items-center justify-between">
@@ -454,7 +454,7 @@ export function FloatingCallBar({
                 </div>
                 <div>
                   <p className="text-sm font-bold text-destructive">Call Failed</p>
-                  <p className="max-w-[150px] truncate text-xs text-muted-foreground">
+                  <p className="max-w-[150px] truncate text-xs text-[hsl(var(--slack-text-muted))]">
                     {error || "Connection error"}
                   </p>
                 </div>
@@ -474,7 +474,7 @@ export function FloatingCallBar({
     return (
       <div className="relative">
         <div className="absolute inset-x-0 bottom-0 top-0 bg-primary/5 blur-xl rounded-full" />
-        <div className="relative bg-background rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border overflow-hidden">
+        <div className="relative bg-[hsl(var(--slack-bg-surface))] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-[hsl(var(--slack-border))] overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-primary to-primary/60 animate-pulse" />
           <div className="p-4">
             <div className="flex items-center gap-3">
@@ -488,8 +488,8 @@ export function FloatingCallBar({
                 />
               </div>
               <div>
-                <p className="text-sm font-bold">{coworker.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm font-bold text-[hsl(var(--slack-text))]">{coworker.name}</p>
+                <p className="text-xs text-[hsl(var(--slack-text-muted))]">
                   {callState === "requesting-permission"
                     ? "Requesting microphone..."
                     : "Connecting..."}
@@ -507,7 +507,7 @@ export function FloatingCallBar({
     return (
       <div className="relative">
         <div className="absolute inset-x-0 bottom-0 top-0 bg-primary/5 blur-xl rounded-full" />
-        <div className="relative bg-background rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border overflow-hidden">
+        <div className="relative bg-[hsl(var(--slack-bg-surface))] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-[hsl(var(--slack-border))] overflow-hidden">
           <div className="p-4">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -521,7 +521,7 @@ export function FloatingCallBar({
                   />
                 </div>
                 <div>
-                  <div className="text-sm font-bold">On Call</div>
+                  <div className="text-sm font-bold text-[hsl(var(--slack-text))]">On Call</div>
                   <div className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                     Connected
@@ -535,7 +535,7 @@ export function FloatingCallBar({
                 onClick={toggleMute}
                 variant={isMuted ? "secondary" : "outline"}
                 size="icon"
-                className="h-10 w-10 rounded-full border-border"
+                className="h-10 w-10 rounded-full border-[hsl(var(--slack-border))]"
                 aria-label={isMuted ? "Unmute" : "Mute"}
               >
                 {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -563,7 +563,7 @@ export function FloatingCallBar({
                     />
                   ))
                 ) : (
-                  <div className="h-1 w-full bg-muted rounded-full" />
+                  <div className="h-1 w-full bg-[hsl(var(--slack-bg-hover))] rounded-full" />
                 )}
               </div>
 

@@ -1,6 +1,6 @@
 // remotion/src/scenes/HowItWorksStep1Zoomed.tsx
 // "How It Works" Step 1: Create Your Simulation - ZOOMED VERSION
-// Focuses on just the chat conversation + preview panel (no browser chrome)
+// Extra-large fonts and elements for small-screen viewing
 
 import {
   AbsoluteFill,
@@ -109,7 +109,7 @@ const SimulationBuilderZoomed: React.FC = () => {
     <AbsoluteFill
       style={{
         opacity: uiOpacity,
-        padding: 24,
+        padding: 16,
       }}
     >
       {/* Main container - no browser chrome, just content */}
@@ -118,8 +118,8 @@ const SimulationBuilderZoomed: React.FC = () => {
           width: '100%',
           height: '100%',
           backgroundColor: colors.background,
-          borderRadius: 20,
-          border: `2px solid ${colors.border}`,
+          borderRadius: 24,
+          border: `3px solid ${colors.border}`,
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
           overflow: 'hidden',
           display: 'flex',
@@ -131,24 +131,24 @@ const SimulationBuilderZoomed: React.FC = () => {
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            borderRight: `2px solid ${colors.border}`,
+            borderRight: `3px solid ${colors.border}`,
           }}
         >
           {/* Chat header */}
           <div
             style={{
-              height: 100,
-              borderBottom: `2px solid ${colors.border}`,
+              height: 120,
+              borderBottom: `3px solid ${colors.border}`,
               display: 'flex',
               alignItems: 'center',
-              padding: '0 32px',
-              gap: 16,
+              padding: '0 40px',
+              gap: 20,
             }}
           >
             <div
               style={{
-                width: 56,
-                height: 56,
+                width: 72,
+                height: 72,
                 borderRadius: '50%',
                 backgroundColor: colors.accent,
                 display: 'flex',
@@ -157,23 +157,23 @@ const SimulationBuilderZoomed: React.FC = () => {
                 color: colors.background,
                 fontFamily: fonts.heading,
                 fontWeight: 700,
-                fontSize: 20,
+                fontSize: 28,
               }}
             >
               AI
             </div>
             <div>
-              <div style={{ fontFamily: fonts.heading, fontWeight: 700, fontSize: 24 }}>
+              <div style={{ fontFamily: fonts.heading, fontWeight: 700, fontSize: 34 }}>
                 Simulation Builder
               </div>
-              <div style={{ fontFamily: fonts.heading, fontSize: 16, color: '#64748b' }}>
+              <div style={{ fontFamily: fonts.heading, fontSize: 22, color: '#64748b' }}>
                 Chat with AI to create your simulation
               </div>
             </div>
           </div>
 
           {/* Messages area - Larger text */}
-          <div style={{ flex: 1, padding: 32, overflowY: 'hidden' }}>
+          <div style={{ flex: 1, padding: 40, overflowY: 'hidden' }}>
             {conversationMessages.map((msg, i) => (
               <ChatMessage
                 key={i}
@@ -188,26 +188,26 @@ const SimulationBuilderZoomed: React.FC = () => {
           {/* Input area */}
           <div
             style={{
-              height: 90,
-              borderTop: `2px solid ${colors.border}`,
+              height: 110,
+              borderTop: `3px solid ${colors.border}`,
               display: 'flex',
               alignItems: 'center',
-              padding: '0 32px',
-              gap: 16,
+              padding: '0 40px',
+              gap: 20,
             }}
           >
             <div
               style={{
                 flex: 1,
-                height: 56,
+                height: 68,
                 backgroundColor: '#f8fafc',
-                borderRadius: 12,
-                border: `2px solid ${colors.border}`,
+                borderRadius: 16,
+                border: `3px solid ${colors.border}`,
                 display: 'flex',
                 alignItems: 'center',
-                padding: '0 20px',
+                padding: '0 28px',
                 fontFamily: fonts.heading,
-                fontSize: 18,
+                fontSize: 24,
                 color: '#94a3b8',
               }}
             >
@@ -215,16 +215,16 @@ const SimulationBuilderZoomed: React.FC = () => {
             </div>
             <div
               style={{
-                height: 56,
-                padding: '0 28px',
+                height: 68,
+                padding: '0 36px',
                 backgroundColor: colors.accent,
-                borderRadius: 12,
+                borderRadius: 16,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
+                gap: 12,
                 fontFamily: fonts.heading,
                 fontWeight: 600,
-                fontSize: 18,
+                fontSize: 24,
                 color: colors.background,
               }}
             >
@@ -236,7 +236,7 @@ const SimulationBuilderZoomed: React.FC = () => {
         {/* Preview Panel - Enlarged */}
         <div
           style={{
-            width: 480,
+            width: 560,
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#fafafa',
@@ -245,36 +245,36 @@ const SimulationBuilderZoomed: React.FC = () => {
           {/* Preview header */}
           <div
             style={{
-              height: 100,
-              borderBottom: `2px solid ${colors.border}`,
+              height: 120,
+              borderBottom: `3px solid ${colors.border}`,
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              padding: '0 32px',
+              padding: '0 40px',
             }}
           >
-            <div style={{ fontFamily: fonts.heading, fontWeight: 700, fontSize: 22 }}>
+            <div style={{ fontFamily: fonts.heading, fontWeight: 700, fontSize: 30 }}>
               Preview
             </div>
-            <div style={{ fontFamily: fonts.heading, fontSize: 15, color: '#64748b' }}>
+            <div style={{ fontFamily: fonts.heading, fontSize: 20, color: '#64748b' }}>
               Simulation data collected so far
             </div>
           </div>
 
           {/* Preview content */}
-          <div style={{ flex: 1, padding: 28, overflowY: 'hidden' }}>
+          <div style={{ flex: 1, padding: 36, overflowY: 'hidden' }}>
             <PreviewPanel data={previewData} />
           </div>
 
           {/* Save button */}
           <div
             style={{
-              height: 90,
-              borderTop: `2px solid ${colors.border}`,
+              height: 110,
+              borderTop: `3px solid ${colors.border}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '0 28px',
+              padding: '0 36px',
             }}
           >
             <SaveButton isReady={previewData?.coworkers !== undefined} />
@@ -317,8 +317,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, text, delay }) => {
     <div
       style={{
         display: 'flex',
-        gap: 16,
-        marginBottom: 28,
+        gap: 20,
+        marginBottom: 32,
         opacity,
         transform: `translateY(${translateY}px)`,
       }}
@@ -326,8 +326,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, text, delay }) => {
       {/* Avatar */}
       <div
         style={{
-          width: 48,
-          height: 48,
+          width: 60,
+          height: 60,
           borderRadius: '50%',
           backgroundColor: role === 'user' ? '#1e293b' : colors.accent,
           display: 'flex',
@@ -336,7 +336,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, text, delay }) => {
           color: colors.background,
           fontFamily: fonts.heading,
           fontWeight: 700,
-          fontSize: 14,
+          fontSize: 20,
           flexShrink: 0,
         }}
       >
@@ -349,8 +349,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, text, delay }) => {
           style={{
             fontFamily: fonts.heading,
             fontWeight: 600,
-            fontSize: 18,
-            marginBottom: 6,
+            fontSize: 24,
+            marginBottom: 8,
           }}
         >
           {role === 'user' ? 'You' : 'Simulation Builder'}
@@ -358,7 +358,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ role, text, delay }) => {
         <div
           style={{
             fontFamily: fonts.heading,
-            fontSize: 20,
+            fontSize: 26,
             lineHeight: 1.5,
             color: '#334155',
           }}
@@ -388,15 +388,15 @@ const TypingIndicator: React.FC = () => {
     <div
       style={{
         display: 'flex',
-        gap: 16,
-        marginBottom: 28,
+        gap: 20,
+        marginBottom: 32,
         opacity: entrance,
       }}
     >
       <div
         style={{
-          width: 48,
-          height: 48,
+          width: 60,
+          height: 60,
           borderRadius: '50%',
           backgroundColor: colors.accent,
           display: 'flex',
@@ -405,7 +405,7 @@ const TypingIndicator: React.FC = () => {
           color: colors.background,
           fontFamily: fonts.heading,
           fontWeight: 700,
-          fontSize: 14,
+          fontSize: 20,
         }}
       >
         AI
@@ -415,20 +415,20 @@ const TypingIndicator: React.FC = () => {
           style={{
             fontFamily: fonts.heading,
             fontWeight: 600,
-            fontSize: 18,
-            marginBottom: 6,
+            fontSize: 24,
+            marginBottom: 8,
           }}
         >
           Simulation Builder
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
                 style={{
-                  width: 10,
-                  height: 10,
+                  width: 14,
+                  height: 14,
                   borderRadius: '50%',
                   backgroundColor: colors.accent,
                   opacity: 0.4 + 0.3 * Math.sin((frame + i * 5) * 0.15),
@@ -436,7 +436,7 @@ const TypingIndicator: React.FC = () => {
               />
             ))}
           </div>
-          <span style={{ fontFamily: fonts.heading, fontSize: 16, color: '#64748b' }}>
+          <span style={{ fontFamily: fonts.heading, fontSize: 22, color: '#64748b' }}>
             thinking...
           </span>
         </div>
@@ -466,24 +466,24 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data }) => {
           justifyContent: 'center',
           height: '100%',
           textAlign: 'center',
-          padding: 24,
+          padding: 32,
         }}
       >
         <div
           style={{
-            width: 80,
-            height: 80,
-            borderRadius: 20,
+            width: 100,
+            height: 100,
+            borderRadius: 24,
             backgroundColor: `${colors.accent}15`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: 20,
+            marginBottom: 24,
           }}
         >
-          <span style={{ fontSize: 36 }}>📝</span>
+          <span style={{ fontSize: 48 }}>📝</span>
         </div>
-        <p style={{ fontFamily: fonts.heading, fontSize: 18, color: '#64748b' }}>
+        <p style={{ fontFamily: fonts.heading, fontSize: 24, color: '#64748b' }}>
           Start chatting to build your simulation
         </p>
       </div>
@@ -491,32 +491,32 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data }) => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
       {/* Basic Info Section */}
       <div>
         <div
           style={{
             fontFamily: fonts.heading,
-            fontSize: 14,
+            fontSize: 18,
             fontWeight: 600,
             color: '#64748b',
-            marginBottom: 16,
+            marginBottom: 20,
             textTransform: 'uppercase',
-            letterSpacing: 1,
+            letterSpacing: 1.5,
           }}
         >
           Basic Info
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <PreviewField label="Name" value={data.name} />
           <PreviewField label="Company" value={data.company} />
           {data.task && <PreviewField label="Task" value={data.task} truncate />}
           {data.techStack && (
             <div>
-              <span style={{ fontFamily: fonts.heading, fontSize: 16, color: '#64748b' }}>
+              <span style={{ fontFamily: fonts.heading, fontSize: 22, color: '#64748b' }}>
                 Tech Stack:
               </span>
-              <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 12, marginTop: 14, flexWrap: 'wrap' }}>
                 {data.techStack.map((tech, i) => (
                   <TechBadge key={i} tech={tech} delay={i * 3} />
                 ))}
@@ -532,17 +532,17 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ data }) => {
           <div
             style={{
               fontFamily: fonts.heading,
-              fontSize: 14,
+              fontSize: 18,
               fontWeight: 600,
               color: '#64748b',
-              marginBottom: 16,
+              marginBottom: 20,
               textTransform: 'uppercase',
-              letterSpacing: 1,
+              letterSpacing: 1.5,
             }}
           >
             Coworkers ({data.coworkers.length})
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {data.coworkers.map((coworker, i) => (
               <CoworkerCard key={i} coworker={coworker} delay={i * 10} />
             ))}
@@ -568,14 +568,14 @@ const PreviewField: React.FC<{ label: string; value?: string; truncate?: boolean
   });
 
   const displayValue =
-    truncate && value && value.length > 40 ? value.slice(0, 40) + '...' : value;
+    truncate && value && value.length > 35 ? value.slice(0, 35) + '...' : value;
 
   return (
     <div style={{ opacity: entrance }}>
-      <span style={{ fontFamily: fonts.heading, fontSize: 16, color: '#64748b' }}>
+      <span style={{ fontFamily: fonts.heading, fontSize: 22, color: '#64748b' }}>
         {label}:
       </span>
-      <span style={{ fontFamily: fonts.heading, fontSize: 16, marginLeft: 8, fontWeight: 500 }}>
+      <span style={{ fontFamily: fonts.heading, fontSize: 22, marginLeft: 10, fontWeight: 500 }}>
         {displayValue || 'Not set'}
       </span>
     </div>
@@ -595,11 +595,11 @@ const TechBadge: React.FC<{ tech: string; delay: number }> = ({ tech, delay }) =
   return (
     <div
       style={{
-        padding: '8px 16px',
+        padding: '12px 22px',
         backgroundColor: `${colors.accent}15`,
-        borderRadius: 8,
+        borderRadius: 10,
         fontFamily: fonts.heading,
-        fontSize: 15,
+        fontSize: 20,
         color: colors.accent,
         fontWeight: 600,
         transform: `scale(${entrance})`,
@@ -627,27 +627,27 @@ const CoworkerCard: React.FC<{
     <div
       style={{
         backgroundColor: colors.background,
-        borderRadius: 16,
-        border: `2px solid ${colors.border}`,
-        padding: 16,
+        borderRadius: 20,
+        border: `3px solid ${colors.border}`,
+        padding: 20,
         display: 'flex',
         alignItems: 'center',
-        gap: 14,
+        gap: 18,
         opacity: entrance,
         transform: `translateX(${(1 - entrance) * 20}px)`,
       }}
     >
       <div
         style={{
-          width: 44,
-          height: 44,
+          width: 56,
+          height: 56,
           borderRadius: '50%',
           backgroundColor: `${colors.accent}15`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: fonts.heading,
-          fontSize: 14,
+          fontSize: 20,
           fontWeight: 600,
           color: colors.accent,
         }}
@@ -655,10 +655,10 @@ const CoworkerCard: React.FC<{
         {coworker.initials}
       </div>
       <div>
-        <div style={{ fontFamily: fonts.heading, fontSize: 17, fontWeight: 600 }}>
+        <div style={{ fontFamily: fonts.heading, fontSize: 22, fontWeight: 600 }}>
           {coworker.name}
         </div>
-        <div style={{ fontFamily: fonts.heading, fontSize: 14, color: '#64748b' }}>
+        <div style={{ fontFamily: fonts.heading, fontSize: 18, color: '#64748b' }}>
           {coworker.role}
         </div>
       </div>
@@ -675,15 +675,15 @@ const SaveButton: React.FC<{ isReady: boolean }> = ({ isReady }) => {
     <div
       style={{
         width: '100%',
-        height: 56,
+        height: 68,
         backgroundColor: isReady ? colors.accent : '#e2e8f0',
-        borderRadius: 12,
+        borderRadius: 16,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontFamily: fonts.heading,
         fontWeight: 600,
-        fontSize: 18,
+        fontSize: 24,
         color: isReady ? colors.background : '#94a3b8',
         transform: `scale(${pulse})`,
         transition: 'background-color 0.3s',

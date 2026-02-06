@@ -10,9 +10,9 @@ export default async function RecruiterLayout({
   const user = await requireRecruiter();
 
   return (
-    <div className="flex h-screen bg-stone-50">
+    <div className="flex h-screen bg-white">
       <RecruiterSidebar user={{ name: user.name ?? null, email: user.email ?? null }} />
-      <main className="flex h-full flex-1 flex-col overflow-hidden">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-white">{children}</main>
     </div>
   );
 }

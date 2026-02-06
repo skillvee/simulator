@@ -1,6 +1,6 @@
 // remotion/src/scenes/HowItWorksStep2Zoomed.tsx
 // "How It Works" Step 2: Candidates Do Real Work - ZOOMED VERSION
-// Focuses on the voice call modal and a compact chat view
+// Extra-large fonts and elements for small-screen viewing
 
 import {
   AbsoluteFill,
@@ -73,15 +73,15 @@ const SlackInterfaceZoomed: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={{ opacity: uiOpacity, padding: 32 }}>
+    <AbsoluteFill style={{ opacity: uiOpacity, padding: 20 }}>
       {/* Main container - dark themed, no browser chrome */}
       <div
         style={{
           width: '100%',
           height: '100%',
           backgroundColor: '#1e293b',
-          borderRadius: 24,
-          border: '2px solid #334155',
+          borderRadius: 28,
+          border: '3px solid #334155',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
           overflow: 'hidden',
           display: 'flex',
@@ -90,8 +90,8 @@ const SlackInterfaceZoomed: React.FC = () => {
         {/* Sidebar - Compact team list */}
         <div
           style={{
-            width: 320,
-            borderRight: '2px solid #334155',
+            width: 380,
+            borderRight: '3px solid #334155',
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#0f172a',
@@ -100,19 +100,19 @@ const SlackInterfaceZoomed: React.FC = () => {
           {/* Header */}
           <div
             style={{
-              height: 80,
-              borderBottom: '2px solid #334155',
+              height: 100,
+              borderBottom: '3px solid #334155',
               display: 'flex',
               alignItems: 'center',
-              padding: '0 24px',
-              gap: 14,
+              padding: '0 32px',
+              gap: 18,
             }}
           >
             <div
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 12,
+                width: 56,
+                height: 56,
+                borderRadius: 14,
                 backgroundColor: colors.accent,
                 display: 'flex',
                 alignItems: 'center',
@@ -120,33 +120,33 @@ const SlackInterfaceZoomed: React.FC = () => {
                 color: colors.background,
                 fontFamily: fonts.heading,
                 fontWeight: 700,
-                fontSize: 20,
+                fontSize: 26,
               }}
             >
               S
             </div>
-            <span style={{ fontFamily: fonts.heading, fontWeight: 700, fontSize: 22, color: 'white' }}>
+            <span style={{ fontFamily: fonts.heading, fontWeight: 700, fontSize: 30, color: 'white' }}>
               Skillvee
             </span>
           </div>
 
           {/* Team list */}
-          <div style={{ flex: 1, padding: 16, overflowY: 'hidden' }}>
+          <div style={{ flex: 1, padding: 20, overflowY: 'hidden' }}>
             <div
               style={{
                 fontFamily: fonts.heading,
-                fontSize: 13,
+                fontSize: 16,
                 fontWeight: 600,
                 color: '#64748b',
                 textTransform: 'uppercase',
-                letterSpacing: 1.5,
-                marginBottom: 16,
-                paddingLeft: 12,
+                letterSpacing: 2,
+                marginBottom: 20,
+                paddingLeft: 16,
               }}
             >
               Your Team
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {coworkers.map((coworker, i) => (
                 <CoworkerListItem
                   key={coworker.id}
@@ -161,12 +161,12 @@ const SlackInterfaceZoomed: React.FC = () => {
           {/* Recording indicator */}
           <div
             style={{
-              height: 70,
-              borderTop: '2px solid #334155',
+              height: 90,
+              borderTop: '3px solid #334155',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '0 20px',
+              padding: '0 24px',
             }}
           >
             <RecordingBadge />
@@ -178,18 +178,18 @@ const SlackInterfaceZoomed: React.FC = () => {
           {/* Chat header */}
           <div
             style={{
-              height: 90,
-              borderBottom: '2px solid #334155',
+              height: 110,
+              borderBottom: '3px solid #334155',
               display: 'flex',
               alignItems: 'center',
-              padding: '0 28px',
-              gap: 16,
+              padding: '0 36px',
+              gap: 20,
             }}
           >
             <div
               style={{
-                width: 52,
-                height: 52,
+                width: 64,
+                height: 64,
                 borderRadius: '50%',
                 backgroundColor: '#ec4899',
                 display: 'flex',
@@ -198,17 +198,17 @@ const SlackInterfaceZoomed: React.FC = () => {
                 color: colors.background,
                 fontFamily: fonts.heading,
                 fontWeight: 600,
-                fontSize: 18,
+                fontSize: 24,
               }}
             >
               SC
             </div>
             <div>
-              <div style={{ fontFamily: fonts.heading, fontWeight: 600, fontSize: 22, color: 'white' }}>
+              <div style={{ fontFamily: fonts.heading, fontWeight: 600, fontSize: 30, color: 'white' }}>
                 Sarah Chen
               </div>
-              <div style={{ fontFamily: fonts.heading, fontSize: 14, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+              <div style={{ fontFamily: fonts.heading, fontSize: 18, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#22c55e' }} />
                 Online
               </div>
             </div>
@@ -216,21 +216,21 @@ const SlackInterfaceZoomed: React.FC = () => {
             <div
               style={{
                 marginLeft: 'auto',
-                width: 48,
-                height: 48,
-                borderRadius: 12,
+                width: 60,
+                height: 60,
+                borderRadius: 16,
                 backgroundColor: colors.accent,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <span style={{ fontSize: 22 }}>📞</span>
+              <span style={{ fontSize: 28 }}>📞</span>
             </div>
           </div>
 
           {/* Messages - Larger text */}
-          <div style={{ flex: 1, padding: 28, overflowY: 'hidden' }}>
+          <div style={{ flex: 1, padding: 36, overflowY: 'hidden' }}>
             {chatMessages.map((msg, i) => (
               <SlackMessage
                 key={i}
@@ -244,25 +244,25 @@ const SlackInterfaceZoomed: React.FC = () => {
           {/* Input */}
           <div
             style={{
-              height: 80,
-              borderTop: '2px solid #334155',
+              height: 100,
+              borderTop: '3px solid #334155',
               display: 'flex',
               alignItems: 'center',
-              padding: '0 28px',
+              padding: '0 36px',
             }}
           >
             <div
               style={{
                 flex: 1,
-                height: 52,
+                height: 64,
                 backgroundColor: '#0f172a',
-                borderRadius: 12,
-                border: '2px solid #334155',
+                borderRadius: 16,
+                border: '3px solid #334155',
                 display: 'flex',
                 alignItems: 'center',
-                padding: '0 20px',
+                padding: '0 24px',
                 fontFamily: fonts.heading,
-                fontSize: 17,
+                fontSize: 22,
                 color: '#64748b',
               }}
             >
@@ -286,22 +286,22 @@ const RecordingBadge: React.FC = () => {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 10,
+        gap: 14,
         backgroundColor: 'rgba(239, 68, 68, 0.15)',
-        padding: '10px 18px',
-        borderRadius: 10,
+        padding: '14px 24px',
+        borderRadius: 14,
       }}
     >
       <div
         style={{
-          width: 10,
-          height: 10,
+          width: 14,
+          height: 14,
           borderRadius: '50%',
           backgroundColor: '#ef4444',
           opacity: pulse,
         }}
       />
-      <span style={{ fontFamily: fonts.heading, fontSize: 15, color: '#ef4444', fontWeight: 600 }}>
+      <span style={{ fontFamily: fonts.heading, fontSize: 20, color: '#ef4444', fontWeight: 600 }}>
         Screen Recording Active
       </span>
     </div>
@@ -329,11 +329,11 @@ const CoworkerListItem: React.FC<CoworkerListItemProps> = ({ coworker, isSelecte
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 14,
-        padding: '12px 16px',
-        borderRadius: 14,
+        gap: 18,
+        padding: '16px 20px',
+        borderRadius: 18,
         backgroundColor: isSelected ? `${colors.accent}20` : 'transparent',
-        border: isSelected ? `2px solid ${colors.accent}40` : '2px solid transparent',
+        border: isSelected ? `3px solid ${colors.accent}40` : '3px solid transparent',
         opacity: entrance,
         transform: `translateX(${(1 - entrance) * -30}px)`,
       }}
@@ -341,8 +341,8 @@ const CoworkerListItem: React.FC<CoworkerListItemProps> = ({ coworker, isSelecte
       <div style={{ position: 'relative' }}>
         <div
           style={{
-            width: 44,
-            height: 44,
+            width: 56,
+            height: 56,
             borderRadius: '50%',
             backgroundColor: coworker.color,
             display: 'flex',
@@ -351,7 +351,7 @@ const CoworkerListItem: React.FC<CoworkerListItemProps> = ({ coworker, isSelecte
             color: colors.background,
             fontFamily: fonts.heading,
             fontWeight: 600,
-            fontSize: 14,
+            fontSize: 20,
           }}
         >
           {coworker.initials}
@@ -362,8 +362,8 @@ const CoworkerListItem: React.FC<CoworkerListItemProps> = ({ coworker, isSelecte
             position: 'absolute',
             bottom: -2,
             right: -2,
-            width: 14,
-            height: 14,
+            width: 18,
+            height: 18,
             borderRadius: '50%',
             backgroundColor: coworker.online ? '#22c55e' : '#64748b',
             border: '3px solid #0f172a',
@@ -375,13 +375,13 @@ const CoworkerListItem: React.FC<CoworkerListItemProps> = ({ coworker, isSelecte
           style={{
             fontFamily: fonts.heading,
             fontWeight: 600,
-            fontSize: 16,
+            fontSize: 22,
             color: isSelected ? colors.accent : 'white',
           }}
         >
           {coworker.name}
         </div>
-        <div style={{ fontFamily: fonts.heading, fontSize: 13, color: '#64748b' }}>
+        <div style={{ fontFamily: fonts.heading, fontSize: 17, color: '#64748b' }}>
           {coworker.role}
         </div>
       </div>
@@ -414,8 +414,8 @@ const SlackMessage: React.FC<SlackMessageProps> = ({ sender, text, delay }) => {
     <div
       style={{
         display: 'flex',
-        gap: 16,
-        marginBottom: 24,
+        gap: 20,
+        marginBottom: 32,
         opacity: entrance,
         transform: `translateY(${(1 - entrance) * 20}px)`,
       }}
@@ -423,8 +423,8 @@ const SlackMessage: React.FC<SlackMessageProps> = ({ sender, text, delay }) => {
       {/* Avatar */}
       <div
         style={{
-          width: 48,
-          height: 48,
+          width: 60,
+          height: 60,
           borderRadius: '50%',
           backgroundColor: isUser ? '#475569' : avatar?.color || '#64748b',
           display: 'flex',
@@ -433,7 +433,7 @@ const SlackMessage: React.FC<SlackMessageProps> = ({ sender, text, delay }) => {
           color: colors.background,
           fontFamily: fonts.heading,
           fontWeight: 600,
-          fontSize: 14,
+          fontSize: 20,
           flexShrink: 0,
         }}
       >
@@ -442,15 +442,15 @@ const SlackMessage: React.FC<SlackMessageProps> = ({ sender, text, delay }) => {
 
       {/* Message */}
       <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
-          <span style={{ fontFamily: fonts.heading, fontWeight: 600, fontSize: 18, color: 'white' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 8 }}>
+          <span style={{ fontFamily: fonts.heading, fontWeight: 600, fontSize: 24, color: 'white' }}>
             {sender}
           </span>
-          <span style={{ fontFamily: fonts.heading, fontSize: 13, color: '#64748b' }}>
+          <span style={{ fontFamily: fonts.heading, fontSize: 16, color: '#64748b' }}>
             now
           </span>
         </div>
-        <div style={{ fontFamily: fonts.heading, fontSize: 18, lineHeight: 1.6, color: '#cbd5e1' }}>
+        <div style={{ fontFamily: fonts.heading, fontSize: 24, lineHeight: 1.6, color: '#cbd5e1' }}>
           {text}
         </div>
       </div>
@@ -495,15 +495,15 @@ const VoiceCallOverlay: React.FC = () => {
       <div
         style={{
           backgroundColor: '#1e293b',
-          borderRadius: 28,
-          padding: 56,
+          borderRadius: 32,
+          padding: 72,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          minWidth: 500,
+          minWidth: 600,
           transform: `scale(${overlayEntrance})`,
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
-          border: '2px solid #334155',
+          border: '3px solid #334155',
         }}
       >
         {!showComplete ? (
@@ -512,12 +512,12 @@ const VoiceCallOverlay: React.FC = () => {
             <div
               style={{
                 fontFamily: fonts.heading,
-                fontSize: 14,
+                fontSize: 20,
                 fontWeight: 700,
                 color: '#64748b',
                 textTransform: 'uppercase',
-                letterSpacing: 3,
-                marginBottom: 32,
+                letterSpacing: 4,
+                marginBottom: 40,
               }}
             >
               Voice Call
@@ -526,8 +526,8 @@ const VoiceCallOverlay: React.FC = () => {
             {/* Tech Lead avatar */}
             <div
               style={{
-                width: 120,
-                height: 120,
+                width: 160,
+                height: 160,
                 borderRadius: '50%',
                 backgroundColor: '#3b82f6',
                 display: 'flex',
@@ -536,23 +536,23 @@ const VoiceCallOverlay: React.FC = () => {
                 color: colors.background,
                 fontFamily: fonts.heading,
                 fontWeight: 700,
-                fontSize: 40,
-                marginBottom: 20,
-                boxShadow: '0 0 60px rgba(59, 130, 246, 0.5)',
+                fontSize: 56,
+                marginBottom: 28,
+                boxShadow: '0 0 80px rgba(59, 130, 246, 0.5)',
               }}
             >
               MJ
             </div>
 
-            <div style={{ fontFamily: fonts.heading, fontWeight: 700, fontSize: 28, color: 'white', marginBottom: 6 }}>
+            <div style={{ fontFamily: fonts.heading, fontWeight: 700, fontSize: 38, color: 'white', marginBottom: 8 }}>
               Marcus Johnson
             </div>
-            <div style={{ fontFamily: fonts.heading, fontSize: 18, color: '#64748b', marginBottom: 32 }}>
+            <div style={{ fontFamily: fonts.heading, fontSize: 24, color: '#64748b', marginBottom: 40 }}>
               Tech Lead
             </div>
 
             {/* Waveform */}
-            <div style={{ marginBottom: 32 }}>
+            <div style={{ marginBottom: 40 }}>
               <Waveform active={waveformActive} />
             </div>
 
@@ -561,19 +561,19 @@ const VoiceCallOverlay: React.FC = () => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
+                gap: 14,
                 fontFamily: fonts.mono,
-                fontSize: 15,
+                fontSize: 20,
                 color: colors.success,
-                padding: '10px 20px',
+                padding: '14px 28px',
                 backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                borderRadius: 10,
+                borderRadius: 14,
               }}
             >
               <div
                 style={{
-                  width: 10,
-                  height: 10,
+                  width: 14,
+                  height: 14,
                   borderRadius: '50%',
                   backgroundColor: colors.success,
                 }}
@@ -582,17 +582,17 @@ const VoiceCallOverlay: React.FC = () => {
             </div>
 
             {/* Call controls */}
-            <div style={{ display: 'flex', gap: 20, marginTop: 40 }}>
+            <div style={{ display: 'flex', gap: 24, marginTop: 48 }}>
               <div
                 style={{
-                  width: 64,
-                  height: 64,
+                  width: 80,
+                  height: 80,
                   borderRadius: '50%',
                   backgroundColor: '#ef4444',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 28,
+                  fontSize: 36,
                   color: 'white',
                 }}
               >
@@ -600,14 +600,14 @@ const VoiceCallOverlay: React.FC = () => {
               </div>
               <div
                 style={{
-                  width: 64,
-                  height: 64,
+                  width: 80,
+                  height: 80,
                   borderRadius: '50%',
                   backgroundColor: colors.accent,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 24,
+                  fontSize: 32,
                 }}
               >
                 🎤
@@ -626,23 +626,23 @@ const VoiceCallOverlay: React.FC = () => {
           >
             <div
               style={{
-                width: 120,
-                height: 120,
+                width: 160,
+                height: 160,
                 borderRadius: '50%',
                 backgroundColor: colors.success,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: 32,
-                boxShadow: '0 0 60px rgba(34, 197, 94, 0.5)',
+                marginBottom: 40,
+                boxShadow: '0 0 80px rgba(34, 197, 94, 0.5)',
               }}
             >
-              <span style={{ fontSize: 60, color: colors.background }}>✓</span>
+              <span style={{ fontSize: 80, color: colors.background }}>✓</span>
             </div>
-            <div style={{ fontFamily: fonts.heading, fontSize: 32, fontWeight: 700, color: 'white', marginBottom: 12 }}>
+            <div style={{ fontFamily: fonts.heading, fontSize: 42, fontWeight: 700, color: 'white', marginBottom: 16 }}>
               Call Complete
             </div>
-            <div style={{ fontFamily: fonts.heading, fontSize: 20, color: '#94a3b8' }}>
+            <div style={{ fontFamily: fonts.heading, fontSize: 26, color: '#94a3b8' }}>
               API architecture aligned. Ready to code!
             </div>
           </div>
@@ -656,9 +656,9 @@ const Waveform: React.FC<{ active: boolean }> = ({ active }) => {
   const frame = useCurrentFrame();
 
   const bars = 9;
-  const barWidth = 8;
-  const maxHeight = 60;
-  const gap = 10;
+  const barWidth = 12;
+  const maxHeight = 80;
+  const gap = 14;
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap, height: maxHeight }}>

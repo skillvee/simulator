@@ -48,7 +48,7 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
 
   const getShareableLink = () => {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    return `${baseUrl}/join/${scenario.id}`;
+    return `${baseUrl}/invite/${scenario.id}`;
   };
 
   const handleCopyLink = async () => {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +11,6 @@ import {
   Users,
   PanelLeftClose,
   PanelLeft,
-  FileText,
   Plus,
 } from "lucide-react";
 
@@ -42,23 +42,26 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
     <aside
       className={`${
         sidebarOpen ? "w-64" : "w-16"
-      } flex flex-col border-r border-stone-200 bg-white transition-all duration-300`}
+      } flex flex-col bg-[#0B1437] transition-all duration-300`}
     >
       {/* Logo */}
-      <div className="flex h-[72px] items-center justify-between px-4 border-b border-stone-200">
+      <div className="flex h-[72px] items-center justify-between px-4 border-b border-white/10">
         {sidebarOpen && (
           <Link href="/recruiter/dashboard" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <FileText className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-semibold text-stone-900">Skillvee</span>
+            <Image
+              src="/skillvee-logo.png"
+              alt="SkillVee"
+              width={140}
+              height={36}
+              className="brightness-0 invert"
+            />
           </Link>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="h-8 w-8"
+          className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
         >
           {sidebarOpen ? (
             <PanelLeftClose className="h-4 w-4" />
@@ -89,11 +92,11 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
               <Button
                 key={item.href}
                 asChild
-                variant={active ? "secondary" : "ghost"}
+                variant="ghost"
                 className={`w-full justify-start gap-2 ${
                   active
-                    ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
-                    : "text-stone-600"
+                    ? "bg-white/10 text-white hover:bg-white/15"
+                    : "text-white/60 hover:text-white hover:bg-white/10"
                 } ${!sidebarOpen && "justify-center px-2"}`}
               >
                 <Link href={item.href}>
@@ -107,25 +110,25 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="flex h-[72px] items-center border-t border-stone-200 px-3">
+      <div className="flex h-[72px] items-center border-t border-white/10 px-3">
         {sidebarOpen ? (
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-stone-50 w-full">
-            <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium text-blue-700">
+          <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 w-full">
+            <div className="h-9 w-9 rounded-full bg-blue-600/30 flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium text-blue-300">
                 {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-stone-900 truncate">
+              <p className="text-sm font-medium text-white truncate">
                 {user.name || "Recruiter"}
               </p>
-              <p className="text-xs text-stone-500 truncate">{user.email}</p>
+              <p className="text-xs text-white/50 truncate">{user.email}</p>
             </div>
           </div>
         ) : (
           <div className="flex w-full justify-center">
-            <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-sm font-medium text-blue-700">
+            <div className="h-9 w-9 rounded-full bg-blue-600/30 flex items-center justify-center">
+              <span className="text-sm font-medium text-blue-300">
                 {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
               </span>
             </div>

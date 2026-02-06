@@ -256,7 +256,7 @@ describe("Email Module", () => {
       const html = generateReportEmailHtml(params);
 
       expect(html).toContain(
-        "https://skillvee.com/assessment/test-assessment-123/results"
+        "https://skillvee.com/assessments/test-assessment-123/results"
       );
       expect(html).toContain("View Full Report");
     });
@@ -312,7 +312,7 @@ describe("Email Module", () => {
       const text = generateReportEmailText(params);
 
       expect(text).toContain(
-        "https://skillvee.com/assessment/test-assessment-123/results"
+        "https://skillvee.com/assessments/test-assessment-123/results"
       );
     });
 

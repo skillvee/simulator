@@ -152,48 +152,82 @@ export default function ProductPage() {
     const [activeStep, setActiveStep] = useState(0);
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      <Navigation variant="dark" currentPage="product" />
+      {/* Dark Hero Section */}
+      <div className="bg-[#020617] relative overflow-hidden">
+        <Navigation variant="dark" currentPage="product" />
 
-      {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-28 lg:pt-32 pb-28 sm:pb-32 overflow-hidden bg-white">
-        <div className="absolute inset-0 overflow-hidden">
-          <motion.div
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.15, 0.3, 0.15],
-            }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-0 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[200px] pointer-events-none"
-          />
-        </div>
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6 relative z-10">
-          <SectionReveal className="text-center max-w-4xl mx-auto mb-12">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-slate-900">
-              Watch a candidate complete a real simulation
-            </h1>
-            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto">
-              This is what your hiring team sees after a candidate finishes. Real
-              conversations. Real work. Real signal.
-            </p>
-          </SectionReveal>
-          <SectionReveal delay="delay-200" className="max-w-5xl mx-auto">
-            <div className="bg-slate-100 border border-slate-200 rounded-2xl p-3 sm:p-4">
-              <div className="aspect-video bg-slate-200/50 rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer">
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-                <div className="relative z-10 flex flex-col items-center">
-                  <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <Play className="w-8 h-8 text-primary ml-1" />
+        {/* Animated background glows */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.2, 0.1],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/30 rounded-full blur-[200px] pointer-events-none"
+        />
+        <motion.div
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.08, 0.15, 0.08],
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[200px] pointer-events-none"
+        />
+
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-20">
+          <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-6 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                <span className="text-slate-400 text-sm">See it in action</span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-6">
+                Watch a candidate complete
+                <br />
+                <span className="text-primary">a real simulation.</span>
+              </h1>
+
+              <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-12">
+                This is what your hiring team sees after a candidate finishes. Real
+                conversations. Real work. Real signal.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="max-w-5xl mx-auto"
+            >
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 ring-1 ring-white/15">
+                {/* Ambient glow effect */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-primary/30 via-primary/10 to-primary/30 blur-2xl opacity-60" />
+
+                <div className="relative aspect-video bg-slate-900 flex items-center justify-center group cursor-pointer">
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Play className="w-8 h-8 text-primary ml-1" />
+                    </div>
+                    <p className="text-slate-300 mt-4 font-medium">
+                      Watch 2-minute product demo
+                    </p>
                   </div>
-                  <p className="text-slate-700 mt-4 font-medium">
-                    Watch 2-minute product demo
-                  </p>
+
+                  {/* Subtle edge vignette to lift video from background */}
+                  <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none" />
                 </div>
               </div>
-            </div>
-          </SectionReveal>
-        </div>
-        <CurveDivider fillColor="fill-slate-50" />
-      </section>
+            </motion.div>
+          </div>
+        </section>
+      </div>
 
       {/* Interactive Timeline Section */}
       <section className="relative py-20 sm:py-24 bg-slate-50">

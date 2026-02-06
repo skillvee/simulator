@@ -508,7 +508,7 @@ export default async function ProfilePage() {
                         {assessment.status === "COMPLETED" &&
                           assessment.report && (
                             <Link
-                              href={`/assessment/${assessment.id}/results`}
+                              href={`/assessments/${assessment.id}/results`}
                               className="text-sm text-primary transition-colors hover:text-primary/80"
                             >
                               View Full Report
@@ -518,7 +518,7 @@ export default async function ProfilePage() {
                         {assessment.status !== "COMPLETED" && (
                           <Button size="sm" asChild>
                             <Link
-                              href={`/assessment/${assessment.id}/chat`}
+                              href={`/assessments/${assessment.id}/work`}
                             >
                               Continue Assessment
                             </Link>

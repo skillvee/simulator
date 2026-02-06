@@ -154,7 +154,7 @@ agent-browser screenshot ./tests/login-success.png
 
 ## E2E Test Mode for Assessment Pages
 
-Assessment pages (`/assessment/[id]/welcome`, `/chat`, `/defense`) require screen recording, which doesn't work in headless browsers.
+Assessment pages (`/assessments/[id]/welcome`, `/work`, `/results`) require screen recording, which doesn't work in headless browsers.
 
 To bypass screen recording for E2E tests, start the dev server with:
 
@@ -172,7 +172,7 @@ After running `npx tsx prisma/seed.ts`, these test assessments are available:
 
 | ID                   | Status  | Page URL                                         |
 | -------------------- | ------- | ------------------------------------------------ |
-| test-assessment-chat | WORKING | /assessment/test-assessment-chat/chat            |
+| test-assessment-chat | WORKING | /assessments/test-assessment-chat/work           |
 
 **Note:** The test assessment is owned by `user@test.com`, so you must login as that user first.
 
@@ -195,8 +195,8 @@ agent-browser fill "#password" "testpassword123" --session "visual-test"
 agent-browser click "button[type='submit']" --session "visual-test"
 agent-browser wait 3000 --session "visual-test"
 
-# 4. Navigate to chat page (uses fixed test assessment ID)
-agent-browser open "http://localhost:3000/assessment/test-assessment-chat/chat" --session "visual-test"
+# 4. Navigate to work page (uses fixed test assessment ID)
+agent-browser open "http://localhost:3000/assessments/test-assessment-chat/work" --session "visual-test"
 agent-browser wait 2000 --session "visual-test"
 
 # 5. Take screenshot

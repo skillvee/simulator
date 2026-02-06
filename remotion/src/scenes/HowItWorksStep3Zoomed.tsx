@@ -1,6 +1,6 @@
 // remotion/src/scenes/HowItWorksStep3Zoomed.tsx
 // "How It Works" Step 3: Review Standardized Evidence - ZOOMED VERSION
-// Focuses on the scorecard and hiring recommendation (no browser chrome or header)
+// Extra-large fonts and elements for small-screen viewing
 
 import {
   AbsoluteFill,
@@ -14,20 +14,20 @@ import { fonts } from '../lib/fonts';
 
 // Dimension scores
 const dimensionScores = [
-  { dimension: 'Communication', score: 4.5, percentile: 92, observableBehaviors: 'Clear requirement clarification, concise updates' },
-  { dimension: 'Problem Solving', score: 4.8, percentile: 96, observableBehaviors: 'Systematic debugging, creative solutions' },
+  { dimension: 'Communication', score: 4.5, percentile: 92, observableBehaviors: 'Clear requirement clarification' },
+  { dimension: 'Problem Solving', score: 4.8, percentile: 96, observableBehaviors: 'Systematic debugging approach' },
   { dimension: 'Technical Skills', score: 4.2, percentile: 85, observableBehaviors: 'Clean code, proper abstractions' },
-  { dimension: 'Collaboration', score: 4.6, percentile: 90, observableBehaviors: 'Active listening, constructive feedback' },
-  { dimension: 'AI Leverage', score: 3.9, percentile: 78, observableBehaviors: 'Effective prompting, code validation' },
-  { dimension: 'Time Management', score: 4.1, percentile: 82, observableBehaviors: 'Prioritized tasks, met deadlines' },
+  { dimension: 'Collaboration', score: 4.6, percentile: 90, observableBehaviors: 'Active listening, feedback' },
+  { dimension: 'AI Leverage', score: 3.9, percentile: 78, observableBehaviors: 'Effective prompting' },
+  { dimension: 'Time Management', score: 4.1, percentile: 82, observableBehaviors: 'Prioritized tasks well' },
 ];
 
 // Hiring signals
 const greenFlags = [
-  'Proactively clarified requirements before coding',
-  'Excellent communication with stakeholders',
-  'Used AI tools effectively to accelerate work',
-  'Clean, well-documented code submission',
+  'Proactively clarified requirements',
+  'Excellent stakeholder communication',
+  'Effective AI tool usage',
+  'Clean, documented code',
 ];
 
 const redFlags = [
@@ -52,15 +52,15 @@ const ResultsDashboardZoomed: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={{ opacity: uiOpacity, padding: 32 }}>
+    <AbsoluteFill style={{ opacity: uiOpacity, padding: 20 }}>
       {/* Main container - clean white card */}
       <div
         style={{
           width: '100%',
           height: '100%',
           backgroundColor: colors.background,
-          borderRadius: 24,
-          border: `2px solid ${colors.border}`,
+          borderRadius: 28,
+          border: `3px solid ${colors.border}`,
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
           overflow: 'hidden',
           display: 'flex',
@@ -71,7 +71,7 @@ const ResultsDashboardZoomed: React.FC = () => {
         <CandidateHeader />
 
         {/* Scrollable content area */}
-        <div style={{ flex: 1, padding: 32, overflowY: 'hidden', display: 'flex', flexDirection: 'column', gap: 28 }}>
+        <div style={{ flex: 1, padding: 36, overflowY: 'hidden', display: 'flex', flexDirection: 'column', gap: 28 }}>
           {/* Overall Score Card */}
           <OverallScoreCard />
 
@@ -99,11 +99,11 @@ const CandidateHeader: React.FC = () => {
   return (
     <div
       style={{
-        height: 100,
-        borderBottom: `2px solid ${colors.border}`,
+        height: 120,
+        borderBottom: `3px solid ${colors.border}`,
         display: 'flex',
         alignItems: 'center',
-        padding: '0 32px',
+        padding: '0 40px',
         backgroundColor: '#fafafa',
         opacity: entrance,
       }}
@@ -111,8 +111,8 @@ const CandidateHeader: React.FC = () => {
       {/* Avatar */}
       <div
         style={{
-          width: 56,
-          height: 56,
+          width: 72,
+          height: 72,
           borderRadius: '50%',
           backgroundColor: colors.accent,
           display: 'flex',
@@ -121,8 +121,8 @@ const CandidateHeader: React.FC = () => {
           color: colors.background,
           fontFamily: fonts.heading,
           fontWeight: 700,
-          fontSize: 20,
-          marginRight: 16,
+          fontSize: 28,
+          marginRight: 20,
         }}
       >
         AM
@@ -130,18 +130,18 @@ const CandidateHeader: React.FC = () => {
 
       {/* Name and role */}
       <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <h1 style={{ fontFamily: fonts.heading, fontSize: 26, fontWeight: 700, margin: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+          <h1 style={{ fontFamily: fonts.heading, fontSize: 34, fontWeight: 700, margin: 0 }}>
             Alex Mitchell
           </h1>
           {/* Strength badge */}
           <div
             style={{
-              padding: '6px 16px',
-              borderRadius: 8,
+              padding: '8px 22px',
+              borderRadius: 10,
               background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
               fontFamily: fonts.heading,
-              fontSize: 14,
+              fontSize: 18,
               fontWeight: 700,
               color: '#78350f',
             }}
@@ -149,28 +149,28 @@ const CandidateHeader: React.FC = () => {
             Exceptional
           </div>
         </div>
-        <p style={{ fontFamily: fonts.heading, fontSize: 15, color: '#64748b', marginTop: 4 }}>
-          Senior Frontend Engineer Simulation • Completed Jan 15, 2025
+        <p style={{ fontFamily: fonts.heading, fontSize: 20, color: '#64748b', marginTop: 6 }}>
+          Senior Frontend Engineer Simulation
         </p>
       </div>
 
       {/* Compare button */}
       <div
         style={{
-          padding: '12px 24px',
-          borderRadius: 12,
-          border: `2px solid ${colors.border}`,
+          padding: '14px 28px',
+          borderRadius: 14,
+          border: `3px solid ${colors.border}`,
           fontFamily: fonts.heading,
-          fontSize: 15,
+          fontSize: 20,
           fontWeight: 600,
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          gap: 12,
           backgroundColor: 'white',
         }}
       >
-        <span>👥</span>
-        Compare Candidates
+        <span style={{ fontSize: 22 }}>👥</span>
+        Compare
       </div>
     </div>
   );
@@ -196,54 +196,54 @@ const OverallScoreCard: React.FC = () => {
     <div
       style={{
         backgroundColor: '#f0fdf4',
-        borderRadius: 20,
-        border: '2px solid #bbf7d0',
-        padding: 28,
+        borderRadius: 24,
+        border: '3px solid #bbf7d0',
+        padding: 32,
         opacity: entrance,
         transform: `translateY(${(1 - entrance) * 20}px)`,
         display: 'flex',
         alignItems: 'center',
-        gap: 32,
+        gap: 36,
       }}
     >
       {/* Score */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
         <span
           style={{
             fontFamily: fonts.heading,
-            fontSize: 72,
+            fontSize: 88,
             fontWeight: 700,
             color: '#16a34a',
           }}
         >
           {displayScore.toFixed(1)}
         </span>
-        <span style={{ fontFamily: fonts.heading, fontSize: 28, color: '#86efac', fontWeight: 600 }}>
+        <span style={{ fontFamily: fonts.heading, fontSize: 36, color: '#86efac', fontWeight: 600 }}>
           / 5.0
         </span>
       </div>
 
       {/* Divider */}
-      <div style={{ width: 2, height: 80, backgroundColor: '#bbf7d0' }} />
+      <div style={{ width: 3, height: 90, backgroundColor: '#bbf7d0' }} />
 
       {/* Description */}
       <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <p style={{ fontFamily: fonts.heading, fontSize: 18, fontWeight: 600, color: '#166534', margin: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10 }}>
+          <p style={{ fontFamily: fonts.heading, fontSize: 24, fontWeight: 600, color: '#166534', margin: 0 }}>
             Overall Score
           </p>
           <div
             style={{
-              padding: '6px 14px',
-              borderRadius: 8,
+              padding: '8px 18px',
+              borderRadius: 10,
               backgroundColor: '#dcfce7',
               fontFamily: fonts.heading,
-              fontSize: 14,
+              fontSize: 18,
               fontWeight: 600,
               color: '#166534',
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
+              gap: 8,
             }}
           >
             📈 Top 8%
@@ -252,13 +252,13 @@ const OverallScoreCard: React.FC = () => {
         <p
           style={{
             fontFamily: fonts.heading,
-            fontSize: 16,
+            fontSize: 20,
             color: '#15803d',
             lineHeight: 1.6,
             margin: 0,
           }}
         >
-          Exceptional communication and problem-solving. Delivered clean, well-documented code ahead of schedule.
+          Exceptional communication and problem-solving. Clean, documented code ahead of schedule.
         </p>
       </div>
     </div>
@@ -271,9 +271,9 @@ const DimensionScoresGrid: React.FC = () => {
       <h2
         style={{
           fontFamily: fonts.heading,
-          fontSize: 20,
+          fontSize: 26,
           fontWeight: 700,
-          marginBottom: 16,
+          marginBottom: 20,
         }}
       >
         Dimension Scores
@@ -282,7 +282,7 @@ const DimensionScoresGrid: React.FC = () => {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 16,
+          gap: 20,
         }}
       >
         {dimensionScores.map((dim, i) => (
@@ -339,23 +339,23 @@ const DimensionCard: React.FC<DimensionCardProps> = ({ dimension, index }) => {
     <div
       style={{
         backgroundColor: colors.background,
-        borderRadius: 16,
-        border: `2px solid ${colors.border}`,
-        padding: 18,
+        borderRadius: 20,
+        border: `3px solid ${colors.border}`,
+        padding: 22,
         opacity: entrance,
         transform: `translateY(${(1 - entrance) * 20}px)`,
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <span style={{ fontFamily: fonts.heading, fontSize: 16, fontWeight: 600 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <span style={{ fontFamily: fonts.heading, fontSize: 20, fontWeight: 600 }}>
           {dimension.dimension}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span
             style={{
               fontFamily: fonts.heading,
-              fontSize: 24,
+              fontSize: 30,
               fontWeight: 700,
               color: getScoreColor(dimension.score),
             }}
@@ -364,11 +364,11 @@ const DimensionCard: React.FC<DimensionCardProps> = ({ dimension, index }) => {
           </span>
           <div
             style={{
-              padding: '4px 10px',
-              borderRadius: 6,
+              padding: '6px 14px',
+              borderRadius: 8,
               backgroundColor: getBgColor(dimension.percentile),
               fontFamily: fonts.heading,
-              fontSize: 12,
+              fontSize: 16,
               fontWeight: 600,
               color: getTextColor(dimension.percentile),
             }}
@@ -381,10 +381,10 @@ const DimensionCard: React.FC<DimensionCardProps> = ({ dimension, index }) => {
       {/* Score bar */}
       <div
         style={{
-          height: 8,
+          height: 12,
           backgroundColor: '#f1f5f9',
-          borderRadius: 4,
-          marginBottom: 12,
+          borderRadius: 6,
+          marginBottom: 14,
           overflow: 'hidden',
         }}
       >
@@ -393,12 +393,12 @@ const DimensionCard: React.FC<DimensionCardProps> = ({ dimension, index }) => {
             height: '100%',
             width: `${barWidth}%`,
             backgroundColor: getScoreColor(dimension.score),
-            borderRadius: 4,
+            borderRadius: 6,
           }}
         />
       </div>
 
-      <p style={{ fontFamily: fonts.heading, fontSize: 14, color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+      <p style={{ fontFamily: fonts.heading, fontSize: 18, color: '#64748b', lineHeight: 1.5, margin: 0 }}>
         {dimension.observableBehaviors}
       </p>
     </div>
@@ -425,39 +425,39 @@ const HiringSignals: React.FC = () => {
       <h2
         style={{
           fontFamily: fonts.heading,
-          fontSize: 20,
+          fontSize: 26,
           fontWeight: 700,
-          marginBottom: 16,
+          marginBottom: 20,
         }}
       >
         Hiring Signals
       </h2>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24 }}>
         {/* Green Flags */}
         <div
           style={{
             backgroundColor: '#f0fdf4',
-            borderRadius: 16,
-            border: '2px solid #bbf7d0',
-            padding: 20,
+            borderRadius: 20,
+            border: '3px solid #bbf7d0',
+            padding: 24,
           }}
         >
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: 12,
               fontFamily: fonts.heading,
-              fontSize: 17,
+              fontSize: 22,
               fontWeight: 700,
               color: '#166534',
-              marginBottom: 16,
+              marginBottom: 20,
             }}
           >
-            <span style={{ fontSize: 20 }}>✓</span>
+            <span style={{ fontSize: 24 }}>✓</span>
             Green Flags ({greenFlags.length})
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {greenFlags.map((flag, i) => (
               <GreenFlagItem key={i} flag={flag} index={i} />
             ))}
@@ -468,27 +468,27 @@ const HiringSignals: React.FC = () => {
         <div
           style={{
             backgroundColor: '#fef2f2',
-            borderRadius: 16,
-            border: '2px solid #fecaca',
-            padding: 20,
+            borderRadius: 20,
+            border: '3px solid #fecaca',
+            padding: 24,
           }}
         >
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: 12,
               fontFamily: fonts.heading,
-              fontSize: 17,
+              fontSize: 22,
               fontWeight: 700,
               color: '#991b1b',
-              marginBottom: 16,
+              marginBottom: 20,
             }}
           >
-            <span style={{ fontSize: 20 }}>⚠</span>
+            <span style={{ fontSize: 24 }}>⚠</span>
             Red Flags ({redFlags.length})
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {redFlags.map((flag, i) => (
               <RedFlagItem key={i} flag={flag} index={i} />
             ))}
@@ -517,13 +517,13 @@ const GreenFlagItem: React.FC<{ flag: string; index: number }> = ({ flag, index 
       style={{
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 10,
+        gap: 12,
         opacity: entrance,
         transform: `translateX(${(1 - entrance) * 20}px)`,
       }}
     >
-      <span style={{ color: '#16a34a', fontWeight: 700, fontSize: 16 }}>↑</span>
-      <span style={{ fontFamily: fonts.heading, fontSize: 14, color: '#166534', lineHeight: 1.5 }}>
+      <span style={{ color: '#16a34a', fontWeight: 700, fontSize: 20 }}>↑</span>
+      <span style={{ fontFamily: fonts.heading, fontSize: 18, color: '#166534', lineHeight: 1.5 }}>
         {flag}
       </span>
     </div>
@@ -545,13 +545,13 @@ const RedFlagItem: React.FC<{ flag: string; index: number }> = ({ flag, index })
       style={{
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 10,
+        gap: 12,
         opacity: entrance,
         transform: `translateX(${(1 - entrance) * 20}px)`,
       }}
     >
-      <span style={{ color: '#dc2626', fontWeight: 700, fontSize: 16 }}>↓</span>
-      <span style={{ fontFamily: fonts.heading, fontSize: 14, color: '#991b1b', lineHeight: 1.5 }}>
+      <span style={{ color: '#dc2626', fontWeight: 700, fontSize: 20 }}>↓</span>
+      <span style={{ fontFamily: fonts.heading, fontSize: 18, color: '#991b1b', lineHeight: 1.5 }}>
         {flag}
       </span>
     </div>
@@ -575,9 +575,9 @@ const HireRecommendation: React.FC = () => {
     <div
       style={{
         backgroundColor: '#f0fdf4',
-        borderRadius: 16,
-        border: '3px solid #22c55e',
-        padding: 20,
+        borderRadius: 20,
+        border: '4px solid #22c55e',
+        padding: 24,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -592,18 +592,18 @@ const HireRecommendation: React.FC = () => {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
-          padding: '14px 28px',
+          gap: 14,
+          padding: '18px 36px',
           backgroundColor: '#22c55e',
-          borderRadius: 14,
-          marginBottom: 16,
+          borderRadius: 18,
+          marginBottom: 20,
         }}
       >
-        <span style={{ fontSize: 28 }}>✓</span>
+        <span style={{ fontSize: 36 }}>✓</span>
         <span
           style={{
             fontFamily: fonts.heading,
-            fontSize: 22,
+            fontSize: 28,
             fontWeight: 700,
             color: colors.background,
           }}
@@ -614,7 +614,7 @@ const HireRecommendation: React.FC = () => {
       <p
         style={{
           fontFamily: fonts.heading,
-          fontSize: 14,
+          fontSize: 18,
           color: '#166534',
           lineHeight: 1.6,
           margin: 0,

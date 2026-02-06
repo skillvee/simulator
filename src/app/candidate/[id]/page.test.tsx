@@ -514,7 +514,7 @@ describe("CandidateProfileClient", () => {
       const data = createClientData({ assessment: { id: "assessment-123" } });
       const { container } = render(<CandidateProfileClient data={data} />);
       const recordingLink = container.querySelector(
-        'a[href*="/assessment/assessment-123"]'
+        'a[href*="/assessments/assessment-123"]'
       );
       expect(recordingLink).toBeInTheDocument();
       expect(recordingLink).toHaveTextContent(/View.*Recording/i);

@@ -63,7 +63,7 @@ ESLint will warn when importing from implementation files. See `src/types/CLAUDE
 Run `npx tsx prisma/seed.ts` to create test users and a fixed assessment:
 
 - **Login:** `user@test.com` / `testpassword123`
-- **Chat page:** `/assessment/test-assessment-chat/chat`
+- **Work page:** `/assessments/test-assessment-chat/work`
 
 See `src/test/CLAUDE.md` and `.claude/skills/agent-browser/SKILL.md` for full E2E testing docs.
 

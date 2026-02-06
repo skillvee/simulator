@@ -30,7 +30,7 @@ export default function PricingContent() {
       description: "Try before you commit",
       highlight: false,
       features: [
-        { text: isAnnual ? "36 assessments" : "3 assessments", bold: true, suffix: ` per ${isAnnual ? "year" : "month"}` },
+        { text: "3 assessments", bold: true, suffix: " per month" },
         { text: "Role-specific work simulations" },
         { text: "AI-powered evaluation" },
         { text: "Shareable assessment links" },

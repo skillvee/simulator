@@ -91,12 +91,13 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
           <div className="flex items-center gap-4">
             {isSignedIn ? (
               <>
-                <Link href="/dashboard">
+                <Link href="/recruiter/dashboard">
                   <Button variant={isDark ? "ghost" : "outline"} className={isDark ? "text-slate-400 hover:text-white hover:bg-white/10" : ""}>
                     Dashboard
                   </Button>
                 </Link>
                 <AuthButton
+                  variant={variant}
                   appearance={{
                     elements: {
                       avatarBox: "w-8 h-8",
@@ -201,6 +202,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
                     </Button>
                   </Link>
                   <AuthButton
+                    variant={variant}
                     appearance={{
                       elements: {
                         avatarBox: "w-8 h-8",

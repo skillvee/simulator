@@ -75,15 +75,15 @@ function HeroProductDemo() {
       transition={{ delay: 0.3, duration: 0.8 }}
       className="relative w-full"
     >
-      {/* Video container with subtle glow */}
-      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/50 ring-1 ring-white/10">
+      {/* Video container with contrast-enhancing frame */}
+      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-primary/20 ring-1 ring-white/15">
         {/* Ambient glow effect */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 blur-xl opacity-50" />
+        <div className="absolute -inset-2 bg-gradient-to-r from-primary/30 via-primary/10 to-primary/30 blur-2xl opacity-60" />
 
-        {/* Video - autoplays, loops, muted */}
-        <div className="relative aspect-video bg-[#020617]">
+        {/* Video - autoplays, loops, muted - brightness boosted for dark content */}
+        <div className="relative aspect-video bg-slate-900">
           <video
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover brightness-125 contrast-110"
             autoPlay
             loop
             muted
@@ -91,6 +91,9 @@ function HeroProductDemo() {
           >
             <source src="/videos/hero-video.mp4" type="video/mp4" />
           </video>
+
+          {/* Subtle edge vignette to lift video from background */}
+          <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none" />
         </div>
       </div>
     </motion.div>
@@ -256,7 +259,7 @@ export default function HomePage() {
 
           <div className="grid lg:grid-cols-3 gap-12 mt-20">
             {[
-              { stat: "72%", text: "of resumes are now AI-written. You can't tell who's qualified." },
+              { stat: "72%", text: "of resumes are now AI-written and look alike. You can't tell who's qualified." },
               { stat: "46%", text: "of new hires fail within 18 months. Expensive mistake." },
               { stat: "<1%", text: "of applicants are truly qualified. Needle in a haystack." },
             ].map((item, i) => (
@@ -299,7 +302,7 @@ export default function HomePage() {
           </motion.div>
 
           {/* Step 1 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-20 sm:mb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr,2fr] gap-12 lg:gap-16 items-center mb-20 sm:mb-28">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -346,9 +349,9 @@ export default function HomePage() {
               transition={{ delay: 0.2 }}
             >
               <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-2 lg:p-3 hover:shadow-2xl transition-shadow duration-500 overflow-hidden">
-                <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+                <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-100">
                   <video
-                    className="absolute inset-0 w-full h-full object-cover scale-[1.8] origin-[70%_40%]"
+                    className="absolute inset-0 w-full h-full object-cover"
                     autoPlay
                     loop
                     muted
@@ -362,7 +365,7 @@ export default function HomePage() {
           </div>
 
           {/* Step 2 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-20 sm:mb-28">
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-12 lg:gap-16 items-center mb-20 sm:mb-28">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -371,9 +374,9 @@ export default function HomePage() {
               className="order-2 lg:order-1"
             >
               <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-2 lg:p-3 hover:shadow-2xl transition-shadow duration-500 overflow-hidden">
-                <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+                <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-100">
                   <video
-                    className="absolute inset-0 w-full h-full object-cover scale-[1.5] origin-[50%_50%]"
+                    className="absolute inset-0 w-full h-full object-cover"
                     autoPlay
                     loop
                     muted
@@ -431,7 +434,7 @@ export default function HomePage() {
           </div>
 
           {/* Step 3 */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr,2fr] gap-12 lg:gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -481,9 +484,9 @@ export default function HomePage() {
               transition={{ delay: 0.2 }}
             >
               <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-2 lg:p-3 hover:shadow-2xl transition-shadow duration-500 overflow-hidden">
-                <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+                <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-100">
                   <video
-                    className="absolute inset-0 w-full h-full object-cover scale-[1.5] origin-[50%_50%]"
+                    className="absolute inset-0 w-full h-full object-cover"
                     autoPlay
                     loop
                     muted
@@ -652,13 +655,32 @@ export default function HomePage() {
           CTA SECTION
           ============================================ */}
       <section className="py-32 bg-[#020617] relative overflow-hidden">
+        {/* Ambient blue glow - top right */}
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
-            opacity: [0.2, 0.4, 0.2],
+            opacity: [0.1, 0.2, 0.1],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/30 rounded-full blur-[200px] pointer-events-none"
+        />
+        {/* Ambient blue glow - bottom left */}
+        <motion.div
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.08, 0.15, 0.08],
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[200px] pointer-events-none"
+        />
+        {/* Central glow behind CTA */}
+        <motion.div
+          animate={{
+            scale: [1, 1.15, 1],
+            opacity: [0.15, 0.3, 0.15],
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/20 rounded-full blur-[200px] pointer-events-none"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-primary/20 rounded-full blur-[150px] pointer-events-none"
         />
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">

@@ -395,7 +395,7 @@ simulator/
 
 Run `npx tsx prisma/seed.ts` to create test users:
 - **Login:** `user@test.com` / `testpassword123`
-- **Chat page:** `/assessment/test-assessment-chat/chat`
+- **Work page:** `/assessments/test-assessment-chat/work`
 
 ### Testing Patterns
 

@@ -1,17 +1,17 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { JoinPageClient } from "./client";
+import { InvitePageClient } from "./client";
 
 interface PageProps {
   params: Promise<{ scenarioId: string }>;
 }
 
 /**
- * Fetch scenario for join page (public access)
+ * Fetch scenario for invite page (public access)
  * Returns scenario info for candidates to view before signing up
  */
-async function getScenarioForJoin(scenarioId: string) {
+async function getScenarioForInvite(scenarioId: string) {
   const scenario = await db.scenario.findUnique({
     where: { id: scenarioId },
     select: {
@@ -61,14 +61,16 @@ async function getExistingAssessment(userId: string, scenarioId: string) {
 }
 
 /**
- * Join page for candidates to enter a simulation
- * This is the main entry point shared by recruiters via /join/[scenarioId]
+ * Invite page - public entry point for candidates
+ * Recruiters share /invite/[scenarioId] links with candidates.
+ *
+ * If the candidate is already authenticated and has an assessment,
+ * they're redirected to the appropriate page in the assessment flow.
  */
-export default async function JoinPage({ params }: PageProps) {
+export default async function InvitePage({ params }: PageProps) {
   const { scenarioId } = await params;
 
-  // Get scenario data (public)
-  const scenario = await getScenarioForJoin(scenarioId);
+  const scenario = await getScenarioForInvite(scenarioId);
 
   if (!scenario) {
     notFound();
@@ -78,17 +80,23 @@ export default async function JoinPage({ params }: PageProps) {
   const session = await auth();
   const user = session?.user;
 
-  // If logged in, check for existing assessment
-  let existingAssessment = null;
+  // If logged in, check for existing assessment and redirect
   if (user?.id) {
-    existingAssessment = await getExistingAssessment(user.id, scenarioId);
+    const existingAssessment = await getExistingAssessment(user.id, scenarioId);
+
+    if (existingAssessment) {
+      if (existingAssessment.status === "COMPLETED") {
+        redirect(`/assessments/${existingAssessment.id}/results`);
+      } else {
+        redirect(`/assessments/${existingAssessment.id}/welcome`);
+      }
+    }
   }
 
   return (
-    <JoinPageClient
+    <InvitePageClient
       scenario={scenario}
       user={user?.id ? { id: user.id, email: user.email ?? undefined } : null}
-      existingAssessment={existingAssessment}
     />
   );
 }

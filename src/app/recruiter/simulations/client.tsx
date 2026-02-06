@@ -35,7 +35,7 @@ export function RecruiterScenariosClient({
 
   const getShareableLink = (scenarioId: string) => {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    return `${baseUrl}/join/${scenarioId}`;
+    return `${baseUrl}/invite/${scenarioId}`;
   };
 
   const handleCopyLink = async (scenarioId: string) => {
@@ -171,7 +171,7 @@ export function RecruiterScenariosClient({
                     <div className="flex items-center gap-2">
                       <div className="flex items-center rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
                         <code className="text-xs text-stone-600 max-w-[200px] truncate">
-                          /join/{scenario.id.slice(0, 8)}...
+                          /invite/{scenario.id.slice(0, 8)}...
                         </code>
                       </div>
                       <Button

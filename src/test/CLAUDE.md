@@ -247,9 +247,9 @@ These IDs are created by the seed script and can be used for predictable E2E tes
 
 | ID                                 | Status     | Owner              | URL                                                 |
 | ---------------------------------- | ---------- | ------------------ | --------------------------------------------------- |
-| `test-assessment-chat`             | WORKING    | user@test.com      | `/assessment/test-assessment-chat/chat`             |
-| `test-assessment-welcome`          | ONBOARDING | candidate@test.com | `/assessment/test-assessment-welcome`               |
-| `test-assessment-working-recruiter`| WORKING    | candidate@test.com | `/assessment/test-assessment-working-recruiter/chat`|
+| `test-assessment-chat`             | WORKING    | user@test.com      | `/assessments/test-assessment-chat/work`             |
+| `test-assessment-welcome`          | ONBOARDING | candidate@test.com | `/assessments/test-assessment-welcome/welcome`       |
+| `test-assessment-working-recruiter`| WORKING    | candidate@test.com | `/assessments/test-assessment-working-recruiter/work`|
 
 ### Test Scenarios
 
@@ -268,8 +268,8 @@ agent-browser fill "#password" "testpassword123" --session "e2e"
 agent-browser click "button[type='submit']" --session "e2e"
 agent-browser wait 3000 --session "e2e"
 
-# Navigate to chat page (fixed assessment ID)
-agent-browser open "http://localhost:3000/assessment/test-assessment-chat/chat" --session "e2e"
+# Navigate to work page (fixed assessment ID)
+agent-browser open "http://localhost:3000/assessments/test-assessment-chat/work" --session "e2e"
 agent-browser wait 2000 --session "e2e"
 agent-browser screenshot ./screenshots/chat-page.png --session "e2e"
 ```

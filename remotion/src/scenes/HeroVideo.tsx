@@ -69,7 +69,7 @@ const BrowserChrome: React.FC<{ children: React.ReactNode; phase: string }> = ({
   return (
     <AbsoluteFill
       style={{
-        padding: 40,
+        padding: 32,
         justifyContent: 'center',
         alignItems: 'center',
         opacity: fadeIn * fadeOut,
@@ -78,11 +78,11 @@ const BrowserChrome: React.FC<{ children: React.ReactNode; phase: string }> = ({
       <div
         style={{
           width: '100%',
-          maxWidth: 1600,
+          maxWidth: 1700,
           height: '100%',
           backgroundColor: '#0f172a',
           borderRadius: 20,
-          border: '1px solid rgba(255,255,255,0.15)',
+          border: '2px solid rgba(255,255,255,0.15)',
           overflow: 'hidden',
           transform: `scale(${scaleValue})`,
           boxShadow: '0 25px 80px -12px rgba(0,0,0,0.7), 0 0 60px rgba(35, 124, 241, 0.1)',
@@ -91,30 +91,30 @@ const BrowserChrome: React.FC<{ children: React.ReactNode; phase: string }> = ({
         {/* Browser header */}
         <div
           style={{
-            height: 52,
+            height: 64,
             backgroundColor: '#1e293b',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            borderBottom: '2px solid rgba(255,255,255,0.1)',
             display: 'flex',
             alignItems: 'center',
-            padding: '0 20px',
-            gap: 16,
+            padding: '0 24px',
+            gap: 18,
           }}
         >
-          <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#ef4444' }} />
-            <div style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#eab308' }} />
-            <div style={{ width: 14, height: 14, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: '#ef4444' }} />
+            <div style={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: '#eab308' }} />
+            <div style={{ width: 18, height: 18, borderRadius: '50%', backgroundColor: '#22c55e' }} />
           </div>
           <div
             style={{
               flex: 1,
               backgroundColor: '#0f172a',
-              borderRadius: 8,
-              padding: '10px 20px',
+              borderRadius: 10,
+              padding: '12px 24px',
               marginLeft: 16,
             }}
           >
-            <span style={{ fontFamily: fonts.mono, fontSize: 15, color: '#64748b' }}>
+            <span style={{ fontFamily: fonts.mono, fontSize: 22, color: '#64748b' }}>
               app.skillvee.com/simulation
             </span>
           </div>
@@ -123,7 +123,7 @@ const BrowserChrome: React.FC<{ children: React.ReactNode; phase: string }> = ({
         </div>
 
         {/* Content area */}
-        <div style={{ flex: 1, height: 'calc(100% - 52px)', position: 'relative' }}>
+        <div style={{ flex: 1, height: 'calc(100% - 64px)', position: 'relative' }}>
           {children}
         </div>
       </div>
@@ -140,24 +140,24 @@ const RecordingIndicator: React.FC<{ frame: number }> = ({ frame }) => {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 10,
+        gap: 12,
         backgroundColor: 'rgba(239, 68, 68, 0.15)',
-        padding: '8px 16px',
+        padding: '10px 20px',
         borderRadius: 24,
         border: '1px solid rgba(239, 68, 68, 0.3)',
       }}
     >
       <div
         style={{
-          width: 10,
-          height: 10,
+          width: 14,
+          height: 14,
           borderRadius: '50%',
           backgroundColor: '#ef4444',
           opacity: pulse,
           boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)',
         }}
       />
-      <span style={{ fontFamily: fonts.mono, fontSize: 13, color: '#ef4444', fontWeight: 600 }}>
+      <span style={{ fontFamily: fonts.mono, fontSize: 18, color: '#ef4444', fontWeight: 600 }}>
         REC
       </span>
     </div>
@@ -184,11 +184,11 @@ const VoiceCallPhase: React.FC = () => {
         {/* Avatar with glow */}
         <div
           style={{
-            width: 140,
-            height: 140,
+            width: 180,
+            height: 180,
             borderRadius: '50%',
             background: `linear-gradient(135deg, ${colors.accent} 0%, #1e40af 100%)`,
-            margin: '0 auto 28px',
+            margin: '0 auto 32px',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -203,12 +203,12 @@ const VoiceCallPhase: React.FC = () => {
               width: '100%',
               height: '100%',
               borderRadius: '50%',
-              border: `2px solid ${colors.accent}`,
+              border: `3px solid ${colors.accent}`,
               opacity: 0.3 + Math.sin(frame * 0.1) * 0.2,
               transform: `scale(${1.1 + Math.sin(frame * 0.1) * 0.1})`,
             }}
           />
-          <span style={{ fontSize: 56, color: '#fff', fontFamily: fonts.heading, fontWeight: 700 }}>
+          <span style={{ fontSize: 72, color: '#fff', fontFamily: fonts.heading, fontWeight: 700 }}>
             SM
           </span>
         </div>
@@ -217,10 +217,10 @@ const VoiceCallPhase: React.FC = () => {
         <div
           style={{
             fontFamily: fonts.heading,
-            fontSize: 36,
+            fontSize: 48,
             fontWeight: 700,
             color: '#fff',
-            marginBottom: 8,
+            marginBottom: 10,
           }}
         >
           Sarah Mitchell
@@ -228,27 +228,27 @@ const VoiceCallPhase: React.FC = () => {
         <div
           style={{
             fontFamily: fonts.heading,
-            fontSize: 20,
+            fontSize: 28,
             color: '#64748b',
-            marginBottom: 40,
+            marginBottom: 44,
           }}
         >
           Engineering Manager
         </div>
 
         {/* Waveform - more bars, smoother animation */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 3, height: 80 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, height: 100 }}>
           {Array.from({ length: 32 }).map((_, i) => {
             const offset = i * 0.3;
-            const height = Math.abs(Math.sin(waveTime + offset) * Math.cos(waveTime * 0.5 + offset)) * 50 + 15;
+            const height = Math.abs(Math.sin(waveTime + offset) * Math.cos(waveTime * 0.5 + offset)) * 65 + 20;
             return (
               <div
                 key={i}
                 style={{
-                  width: 4,
+                  width: 6,
                   height,
                   backgroundColor: colors.accent,
-                  borderRadius: 2,
+                  borderRadius: 3,
                   opacity: 0.4 + Math.abs(Math.sin(waveTime + i * 0.2)) * 0.4,
                 }}
               />
@@ -260,19 +260,19 @@ const VoiceCallPhase: React.FC = () => {
         <div
           style={{
             fontFamily: fonts.mono,
-            fontSize: 16,
+            fontSize: 22,
             color: '#22c55e',
-            marginTop: 32,
+            marginTop: 36,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 10,
+            gap: 12,
           }}
         >
           <div
             style={{
-              width: 10,
-              height: 10,
+              width: 14,
+              height: 14,
               borderRadius: '50%',
               backgroundColor: '#22c55e',
               boxShadow: '0 0 8px rgba(34, 197, 94, 0.5)',
@@ -302,8 +302,8 @@ const ChatPhase: React.FC = () => {
     { from: 'user', text: "Hi Alex! Sarah mentioned you have context on the dashboard requirements?", delay: 0.5 },
     { from: 'pm', text: "Hey! Yes - the key priorities are:", delay: 2 },
     { from: 'pm', text: "1. Real-time data updates (WebSocket)\n2. Filter by date range\n3. Export to CSV", delay: 3.5 },
-    { from: 'user', text: "Got it. Any specific libraries we should use for the real-time updates?", delay: 5.5 },
-    { from: 'pm', text: "We're using SWR already - just add the subscription option. Check useRealTimeData hook.", delay: 7 },
+    { from: 'user', text: "Got it. Any specific libraries for real-time updates?", delay: 5.5 },
+    { from: 'pm', text: "We're using SWR - just add the subscription option. Check useRealTimeData hook.", delay: 7 },
   ];
 
   return (
@@ -312,13 +312,13 @@ const ChatPhase: React.FC = () => {
         {/* Sidebar */}
         <div
           style={{
-            width: 300,
-            borderRight: '1px solid rgba(255,255,255,0.1)',
-            padding: 20,
+            width: 360,
+            borderRight: '2px solid rgba(255,255,255,0.1)',
+            padding: 24,
             backgroundColor: '#0c1222',
           }}
         >
-          <div style={{ fontFamily: fonts.heading, fontSize: 12, color: '#64748b', marginBottom: 20, letterSpacing: 1 }}>
+          <div style={{ fontFamily: fonts.heading, fontSize: 16, color: '#64748b', marginBottom: 24, letterSpacing: 1 }}>
             TEAM MEMBERS
           </div>
           {[
@@ -331,19 +331,19 @@ const ChatPhase: React.FC = () => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 14,
-                padding: 14,
-                borderRadius: 12,
+                gap: 16,
+                padding: 16,
+                borderRadius: 14,
                 backgroundColor: person.active ? 'rgba(35, 124, 241, 0.15)' : 'transparent',
-                marginBottom: 8,
-                border: person.active ? '1px solid rgba(35, 124, 241, 0.3)' : '1px solid transparent',
+                marginBottom: 10,
+                border: person.active ? '2px solid rgba(35, 124, 241, 0.3)' : '2px solid transparent',
               }}
             >
               <div style={{ position: 'relative' }}>
                 <div
                   style={{
-                    width: 44,
-                    height: 44,
+                    width: 56,
+                    height: 56,
                     borderRadius: '50%',
                     backgroundColor: person.active ? colors.accent : '#334155',
                     display: 'flex',
@@ -351,7 +351,7 @@ const ChatPhase: React.FC = () => {
                     alignItems: 'center',
                   }}
                 >
-                  <span style={{ fontSize: 16, color: '#fff', fontFamily: fonts.heading, fontWeight: 700 }}>
+                  <span style={{ fontSize: 22, color: '#fff', fontFamily: fonts.heading, fontWeight: 700 }}>
                     {person.name.split(' ').map(n => n[0]).join('')}
                   </span>
                 </div>
@@ -361,19 +361,19 @@ const ChatPhase: React.FC = () => {
                     position: 'absolute',
                     bottom: 0,
                     right: 0,
-                    width: 12,
-                    height: 12,
+                    width: 16,
+                    height: 16,
                     borderRadius: '50%',
                     backgroundColor: person.status === 'online' ? '#22c55e' : '#eab308',
-                    border: '2px solid #0c1222',
+                    border: '3px solid #0c1222',
                   }}
                 />
               </div>
               <div>
-                <div style={{ fontFamily: fonts.heading, fontSize: 15, fontWeight: 600, color: '#fff' }}>
+                <div style={{ fontFamily: fonts.heading, fontSize: 20, fontWeight: 600, color: '#fff' }}>
                   {person.name}
                 </div>
-                <div style={{ fontFamily: fonts.heading, fontSize: 13, color: '#64748b' }}>
+                <div style={{ fontFamily: fonts.heading, fontSize: 16, color: '#64748b' }}>
                   {person.role}
                 </div>
               </div>
@@ -386,40 +386,40 @@ const ChatPhase: React.FC = () => {
           {/* Chat header */}
           <div
             style={{
-              height: 72,
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              height: 84,
+              borderBottom: '2px solid rgba(255,255,255,0.1)',
               display: 'flex',
               alignItems: 'center',
-              padding: '0 28px',
+              padding: '0 32px',
               backgroundColor: '#0f172a',
             }}
           >
             <div
               style={{
-                width: 40,
-                height: 40,
+                width: 52,
+                height: 52,
                 borderRadius: '50%',
                 backgroundColor: colors.accent,
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginRight: 14,
+                marginRight: 16,
               }}
             >
-              <span style={{ fontSize: 14, color: '#fff', fontFamily: fonts.heading, fontWeight: 700 }}>AC</span>
+              <span style={{ fontSize: 20, color: '#fff', fontFamily: fonts.heading, fontWeight: 700 }}>AC</span>
             </div>
             <div>
-              <div style={{ fontFamily: fonts.heading, fontSize: 18, fontWeight: 600, color: '#fff' }}>
+              <div style={{ fontFamily: fonts.heading, fontSize: 24, fontWeight: 600, color: '#fff' }}>
                 Alex Chen
               </div>
-              <div style={{ fontFamily: fonts.heading, fontSize: 13, color: '#22c55e' }}>
+              <div style={{ fontFamily: fonts.heading, fontSize: 17, color: '#22c55e' }}>
                 Online
               </div>
             </div>
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, padding: 28, overflow: 'hidden' }}>
+          <div style={{ flex: 1, padding: 32, overflow: 'hidden' }}>
             {messages.map((msg, i) => {
               const msgFrame = frame - msg.delay * fps;
               const isVisible = msgFrame > 0;
@@ -444,19 +444,19 @@ const ChatPhase: React.FC = () => {
                   style={{
                     display: 'flex',
                     justifyContent: msg.from === 'user' ? 'flex-end' : 'flex-start',
-                    marginBottom: 16,
+                    marginBottom: 18,
                     opacity: messageOpacity,
                     transform: `translateY(${messageY}px)`,
                   }}
                 >
                   <div
                     style={{
-                      maxWidth: 480,
-                      padding: '14px 18px',
-                      borderRadius: 16,
+                      maxWidth: 560,
+                      padding: '16px 22px',
+                      borderRadius: 18,
                       backgroundColor: msg.from === 'user' ? colors.accent : '#1e293b',
                       fontFamily: fonts.heading,
-                      fontSize: 16,
+                      fontSize: 22,
                       color: '#fff',
                       lineHeight: 1.6,
                       whiteSpace: 'pre-wrap',
@@ -521,13 +521,13 @@ const CodingPhase: React.FC = () => {
         {/* File tree */}
         <div
           style={{
-            width: 280,
-            borderRight: '1px solid rgba(255,255,255,0.1)',
-            padding: 20,
+            width: 320,
+            borderRight: '2px solid rgba(255,255,255,0.1)',
+            padding: 24,
             backgroundColor: '#0c1222',
           }}
         >
-          <div style={{ fontFamily: fonts.mono, fontSize: 12, color: '#64748b', marginBottom: 20, letterSpacing: 1 }}>
+          <div style={{ fontFamily: fonts.mono, fontSize: 16, color: '#64748b', marginBottom: 24, letterSpacing: 1 }}>
             EXPLORER
           </div>
           {[
@@ -544,22 +544,22 @@ const CodingPhase: React.FC = () => {
             <div
               key={i}
               style={{
-                paddingLeft: file.indent * 18 + 10,
-                paddingTop: 7,
-                paddingBottom: 7,
-                paddingRight: 10,
+                paddingLeft: file.indent * 22 + 12,
+                paddingTop: 9,
+                paddingBottom: 9,
+                paddingRight: 12,
                 fontFamily: fonts.mono,
-                fontSize: 14,
+                fontSize: 18,
                 color: file.active ? '#fff' : '#94a3b8',
                 backgroundColor: file.active ? 'rgba(35, 124, 241, 0.15)' : 'transparent',
-                borderRadius: 6,
+                borderRadius: 8,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
-                borderLeft: file.active ? `2px solid ${colors.accent}` : '2px solid transparent',
+                gap: 12,
+                borderLeft: file.active ? `3px solid ${colors.accent}` : '3px solid transparent',
               }}
             >
-              <span style={{ color: file.isFolder ? '#eab308' : file.active ? colors.accent : '#64748b', fontSize: 14 }}>
+              <span style={{ color: file.isFolder ? '#eab308' : file.active ? colors.accent : '#64748b', fontSize: 18 }}>
                 {file.isFolder ? (file.expanded ? '📂' : '📁') : '📄'}
               </span>
               {file.name}
@@ -574,23 +574,23 @@ const CodingPhase: React.FC = () => {
             style={{
               display: 'flex',
               gap: 2,
-              padding: '12px 20px 0',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              padding: '14px 24px 0',
+              borderBottom: '2px solid rgba(255,255,255,0.1)',
               backgroundColor: '#0c1222',
             }}
           >
             <div
               style={{
-                padding: '10px 18px',
+                padding: '12px 22px',
                 backgroundColor: '#0f172a',
-                borderTop: `2px solid ${colors.accent}`,
+                borderTop: `3px solid ${colors.accent}`,
                 fontFamily: fonts.mono,
-                fontSize: 14,
+                fontSize: 18,
                 color: '#fff',
-                borderRadius: '6px 6px 0 0',
+                borderRadius: '8px 8px 0 0',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
+                gap: 10,
               }}
             >
               <span style={{ color: '#3b82f6' }}>⚛</span>
@@ -599,11 +599,11 @@ const CodingPhase: React.FC = () => {
           </div>
 
           {/* Code content */}
-          <div style={{ flex: 1, padding: '20px 28px', overflow: 'hidden' }}>
+          <div style={{ flex: 1, padding: '24px 32px', overflow: 'hidden' }}>
             <pre
               style={{
                 fontFamily: fonts.mono,
-                fontSize: 15,
+                fontSize: 20,
                 lineHeight: 1.7,
                 color: '#e2e8f0',
                 margin: 0,
@@ -611,7 +611,7 @@ const CodingPhase: React.FC = () => {
             >
               {displayedCode.split('\n').map((line, i) => (
                 <div key={i} style={{ display: 'flex' }}>
-                  <span style={{ color: '#475569', width: 40, flexShrink: 0, textAlign: 'right', marginRight: 20 }}>
+                  <span style={{ color: '#475569', width: 48, flexShrink: 0, textAlign: 'right', marginRight: 24 }}>
                     {i + 1}
                   </span>
                   <span style={{ flex: 1 }}>
@@ -620,8 +620,8 @@ const CodingPhase: React.FC = () => {
                       <span
                         style={{
                           display: 'inline-block',
-                          width: 2,
-                          height: 18,
+                          width: 3,
+                          height: 24,
                           backgroundColor: '#fff',
                           marginLeft: 1,
                           opacity: cursorOpacity,
@@ -639,19 +639,19 @@ const CodingPhase: React.FC = () => {
           <div
             style={{
               position: 'absolute',
-              bottom: 24,
-              right: 24,
+              bottom: 28,
+              right: 28,
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: 12,
               backgroundColor: 'rgba(139, 92, 246, 0.15)',
-              padding: '10px 18px',
-              borderRadius: 10,
-              border: '1px solid rgba(139, 92, 246, 0.3)',
+              padding: '12px 22px',
+              borderRadius: 12,
+              border: '2px solid rgba(139, 92, 246, 0.3)',
             }}
           >
-            <span style={{ fontSize: 16 }}>✨</span>
-            <span style={{ fontFamily: fonts.mono, fontSize: 13, color: '#a78bfa', fontWeight: 500 }}>
+            <span style={{ fontSize: 20 }}>✨</span>
+            <span style={{ fontFamily: fonts.mono, fontSize: 18, color: '#a78bfa', fontWeight: 500 }}>
               AI Copilot Active
             </span>
           </div>
@@ -751,10 +751,10 @@ const ScorecardScene: React.FC = () => {
         <div
           style={{
             backgroundColor: '#1e293b',
-            borderRadius: 24,
-            padding: 48,
-            minWidth: 600,
-            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 28,
+            padding: 56,
+            minWidth: 720,
+            border: '2px solid rgba(255,255,255,0.1)',
             boxShadow: '0 25px 80px -12px rgba(0,0,0,0.6), 0 0 40px rgba(35, 124, 241, 0.1)',
           }}
         >
@@ -763,16 +763,16 @@ const ScorecardScene: React.FC = () => {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 20,
-              marginBottom: 36,
-              paddingBottom: 24,
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
+              gap: 24,
+              marginBottom: 40,
+              paddingBottom: 28,
+              borderBottom: '2px solid rgba(255,255,255,0.1)',
             }}
           >
             <div
               style={{
-                width: 64,
-                height: 64,
+                width: 80,
+                height: 80,
                 borderRadius: '50%',
                 background: `linear-gradient(135deg, ${colors.accent} 0%, #1e40af 100%)`,
                 display: 'flex',
@@ -781,34 +781,34 @@ const ScorecardScene: React.FC = () => {
                 boxShadow: `0 0 30px ${colors.accent}40`,
               }}
             >
-              <span style={{ fontSize: 24, color: '#fff', fontFamily: fonts.heading, fontWeight: 700 }}>
+              <span style={{ fontSize: 32, color: '#fff', fontFamily: fonts.heading, fontWeight: 700 }}>
                 JD
               </span>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: fonts.heading, fontSize: 22, fontWeight: 700, color: '#fff' }}>
+              <div style={{ fontFamily: fonts.heading, fontSize: 30, fontWeight: 700, color: '#fff' }}>
                 Jane Doe
               </div>
-              <div style={{ fontFamily: fonts.heading, fontSize: 15, color: '#64748b' }}>
+              <div style={{ fontFamily: fonts.heading, fontSize: 20, color: '#64748b' }}>
                 Senior Frontend Engineer
               </div>
             </div>
             <div
               style={{
                 backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                padding: '10px 24px',
-                borderRadius: 24,
-                border: '1px solid rgba(34, 197, 94, 0.3)',
+                padding: '12px 28px',
+                borderRadius: 28,
+                border: '2px solid rgba(34, 197, 94, 0.3)',
               }}
             >
-              <span style={{ fontFamily: fonts.heading, fontSize: 22, fontWeight: 700, color: '#22c55e' }}>
+              <span style={{ fontFamily: fonts.heading, fontSize: 30, fontWeight: 700, color: '#22c55e' }}>
                 89/100
               </span>
             </div>
           </div>
 
           {/* Skills */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
             {skills.map((skill, i) => {
               const delay = i * 6;
               const progress = spring({
@@ -824,21 +824,21 @@ const ScorecardScene: React.FC = () => {
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      marginBottom: 8,
+                      marginBottom: 10,
                     }}
                   >
-                    <span style={{ fontFamily: fonts.heading, fontSize: 15, color: '#94a3b8' }}>
+                    <span style={{ fontFamily: fonts.heading, fontSize: 20, color: '#94a3b8' }}>
                       {skill.label}
                     </span>
-                    <span style={{ fontFamily: fonts.mono, fontSize: 15, color: '#22c55e', fontWeight: 700 }}>
+                    <span style={{ fontFamily: fonts.mono, fontSize: 20, color: '#22c55e', fontWeight: 700 }}>
                       {Math.round(barWidth)}%
                     </span>
                   </div>
                   <div
                     style={{
-                      height: 8,
+                      height: 12,
                       backgroundColor: '#334155',
-                      borderRadius: 4,
+                      borderRadius: 6,
                       overflow: 'hidden',
                     }}
                   >
@@ -847,7 +847,7 @@ const ScorecardScene: React.FC = () => {
                         height: '100%',
                         width: `${barWidth}%`,
                         background: 'linear-gradient(90deg, #22c55e 0%, #10b981 100%)',
-                        borderRadius: 4,
+                        borderRadius: 6,
                         boxShadow: '0 0 10px rgba(34, 197, 94, 0.4)',
                       }}
                     />
