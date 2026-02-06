@@ -75,15 +75,15 @@ function SlackLayoutSkeleton({ children }: { children: React.ReactNode }) {
 
         <div className="flex-1 overflow-y-auto py-4 px-3">
           <div className="px-3 mb-3">
-            <div className="h-3 w-12 bg-muted rounded" />
+            <div className="h-3 w-12 rounded" style={{background: "hsl(217, 20%, 22%)"}} />
           </div>
           <div className="space-y-1 animate-pulse">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center gap-3 px-3 py-2 rounded-xl">
-                <div className="h-9 w-9 rounded-full bg-muted" />
+                <div className="h-9 w-9 rounded-full" style={{background: "hsl(217, 20%, 22%)"}} />
                 <div className="flex-1">
-                  <div className="h-4 w-24 rounded bg-muted mb-1" />
-                  <div className="h-2.5 w-16 rounded bg-muted" />
+                  <div className="h-4 w-24 rounded mb-1" style={{background: "hsl(217, 20%, 22%)"}} />
+                  <div className="h-2.5 w-16 rounded" style={{background: "hsl(217, 20%, 22%)"}} />
                 </div>
               </div>
             ))}
@@ -159,7 +159,18 @@ function SlackLayoutInner({
         {/* Mobile menu button */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="fixed left-4 top-4 z-50 rounded-xl border border-border bg-background p-2 shadow-sm transition-colors hover:bg-accent md:hidden"
+          className="fixed left-4 top-4 z-50 rounded-xl p-2 shadow-sm transition-colors md:hidden"
+          style={{
+            background: "hsl(217, 20%, 22%)",
+            border: "1px solid hsl(217, 15%, 25%)",
+            color: "hsl(210, 10%, 93%)"
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "hsl(217, 20%, 20%)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "hsl(217, 20%, 22%)";
+          }}
           aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
         >
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
@@ -279,17 +290,20 @@ function CoworkerItem({
       }}
     >
       <div className="relative">
-        <CoworkerAvatar
-          name={coworker.name}
-          avatarUrl={coworker.avatarUrl}
-          size="sm"
-          className={`border-2 border-background shadow-sm ${isInCall ? "ring-2 ring-green-500 ring-offset-2" : ""}`}
-        />
+        <div className={`inline-block rounded-full ${isInCall ? "ring-2 ring-green-500 ring-offset-2" : ""}`} style={{border: "2px solid hsl(217, 25%, 12%)"}}>
+          <CoworkerAvatar
+            name={coworker.name}
+            avatarUrl={coworker.avatarUrl}
+            size="sm"
+            className="shadow-sm"
+          />
+        </div>
         {/* Status indicator - green dot (in call = pulsing) */}
         <div
-          className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500 ${
+          className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-green-500 ${
             isInCall ? "animate-pulse" : ""
           }`}
+          style={{border: "2px solid hsl(217, 25%, 12%)"}}
         />
       </div>
       <div className="flex-1 min-w-0">
@@ -337,13 +351,13 @@ function OfflineTeamMember({ name, role }: OfflineTeamMemberProps) {
       title="Unavailable"
     >
       <div className="relative">
-        <div className="h-8 w-8 rounded-full bg-muted border-2 border-background shadow-sm flex items-center justify-center">
-          <span className="text-xs font-medium text-muted-foreground">
+        <div className="h-8 w-8 rounded-full shadow-sm flex items-center justify-center" style={{background: "hsl(217, 20%, 22%)", border: "2px solid hsl(217, 15%, 25%)"}}>
+          <span className="text-xs font-medium" style={{color: "hsl(210, 10%, 50%)"}}>
             {initials}
           </span>
         </div>
         {/* Offline status indicator - gray dot */}
-        <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground/40" />
+        <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" style={{background: "hsl(210, 10%, 40%)", border: "2px solid hsl(217, 25%, 12%)"}} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold truncate" style={{color: "hsl(210, 10%, 60%)"}}>{name}</div>
