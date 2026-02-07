@@ -10,10 +10,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { FileText, ArrowRight, Loader2, X } from "lucide-react";
+import { FileText, ArrowRight, Loader2, X, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import type { ParseJDResponse, InferredSeniorityLevel, ConfidentField } from "@/types";
+import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
+import type { TaskOption } from "@/lib/scenarios/task-generator";
 
 type Step = "entry" | "guided" | "generating" | "preview";
+
+// Task option with "write my own" flag
+type TaskChoice = {
+  type: "generated" | "custom";
+  option?: TaskOption;
+  customDescription?: string;
+};
+
+// Preview data state
+type PreviewData = {
+  simulationName: string;
+  companyName: string;
+  companyDescription: string;
+  techStack: string[];
+  taskOptions: TaskOption[];
+  selectedTask: TaskChoice | null;
+  coworkers: CoworkerBuilderData[];
+};
 
 // Common tech stacks for multi-select
 const COMMON_TECH_STACKS = [
@@ -63,6 +83,13 @@ export function RecruiterScenarioBuilderClient() {
   const [seniorityLevel, setSeniorityLevel] = useState<InferredSeniorityLevel | "">("");
   const [showRoleSuggestions, setShowRoleSuggestions] = useState(false);
 
+  // Preview state
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [parsedJDData, setParsedJDData] = useState<ParseJDResponse | null>(null);
+  const [expandedCoworker, setExpandedCoworker] = useState<number | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [customTaskInput, setCustomTaskInput] = useState("");
+
   const handleContinue = async () => {
     if (!jobDescription.trim() || isLoading) return;
 
@@ -70,30 +97,30 @@ export function RecruiterScenarioBuilderClient() {
     setError(null);
 
     try {
-      const response = await fetch("/api/recruiter/simulations/parse-jd", {
+      // Step 1: Parse the job description
+      const parseResponse = await fetch("/api/recruiter/simulations/parse-jd", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobDescription: jobDescription.trim() }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!parseResponse.ok) {
+        const errorData = await parseResponse.json();
         throw new Error(errorData.error || "Failed to analyze job description");
       }
 
-      const data = await response.json();
+      const parsedData = await parseResponse.json() as ParseJDResponse;
+      setParsedJDData(parsedData);
 
-      // TODO: Navigate to preview step with parsed data (US-004)
-      // For now, just log success
-      console.log("Parsed data:", data);
+      // Step 2: Transition to generating step
+      setStep("generating");
 
-      // Placeholder: would navigate to preview with data
-      // router.push(`/recruiter/simulations/new/preview?data=${encodeURIComponent(JSON.stringify(data))}`);
+      // Step 3: Generate preview content in parallel
+      await generatePreviewContent(parsedData);
 
     } catch (err) {
       console.error("Failed to parse job description:", err);
       setError(err instanceof Error ? err.message : "Failed to analyze job description");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -169,17 +196,99 @@ export function RecruiterScenarioBuilderClient() {
         },
       };
 
-      // TODO: Navigate to preview step with guided data (US-004)
-      // For now, just log success
-      console.log("Guided data:", guidedData);
+      setParsedJDData(guidedData);
 
-      // Placeholder: would navigate to preview with data
-      // router.push(`/recruiter/simulations/new/preview?data=${encodeURIComponent(JSON.stringify(guidedData))}`);
+      // Transition to generating step
+      setStep("generating");
+
+      // Generate preview content
+      await generatePreviewContent(guidedData);
 
     } catch (err) {
       console.error("Failed to process guided form:", err);
       setError(err instanceof Error ? err.message : "Failed to process your input");
-    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Generate preview content (tasks and coworkers) from parsed data
+  const generatePreviewContent = async (parsedData: ParseJDResponse) => {
+    try {
+      // Extract values with fallbacks
+      const roleName = parsedData.roleName.value || "Software Engineer";
+      const companyNameValue = parsedData.companyName.value || "Acme Inc";
+      const companyDesc = parsedData.companyDescription.value || "";
+      const techStack = parsedData.techStack.value || [];
+      const seniority = parsedData.seniorityLevel.value || "mid";
+      const responsibilities = parsedData.keyResponsibilities.value || [];
+      const domain = parsedData.domainContext.value || companyDesc;
+
+      // Call both APIs in parallel
+      const [taskResponse, coworkersResponse] = await Promise.all([
+        fetch("/api/recruiter/simulations/generate-task", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            roleName,
+            seniorityLevel: seniority,
+            techStack,
+            keyResponsibilities: responsibilities.length > 0 ? responsibilities : ["Build and maintain features"],
+            domainContext: domain || "a technology company",
+            companyName: companyNameValue,
+          }),
+        }),
+        // We need a task description first, so let's use a placeholder
+        Promise.resolve(null), // Will generate coworkers after task
+      ]);
+
+      if (!taskResponse.ok) {
+        throw new Error("Failed to generate tasks");
+      }
+
+      const taskData = await taskResponse.json();
+      const taskOptions = taskData.taskOptions || [];
+
+      // Now generate coworkers with the first task option
+      const taskDescription = taskOptions[0]?.description || "Complete a coding task";
+
+      const coworkersResponse2 = await fetch("/api/recruiter/simulations/generate-coworkers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roleName,
+          seniorityLevel: seniority,
+          companyName: companyNameValue,
+          companyDescription: companyDesc || `${companyNameValue} is a technology company.`,
+          techStack,
+          taskDescription,
+          keyResponsibilities: responsibilities.length > 0 ? responsibilities : ["Build and maintain features"],
+        }),
+      });
+
+      if (!coworkersResponse2.ok) {
+        throw new Error("Failed to generate coworkers");
+      }
+
+      const coworkersData = await coworkersResponse2.json();
+
+      // Set up preview data
+      setPreviewData({
+        simulationName: `${roleName} @ ${companyNameValue}`,
+        companyName: companyNameValue,
+        companyDescription: companyDesc || `${companyNameValue} is a technology company.`,
+        techStack,
+        taskOptions,
+        selectedTask: null, // User must select
+        coworkers: coworkersData.coworkers || [],
+      });
+
+      // Transition to preview
+      setStep("preview");
+      setIsLoading(false);
+    } catch (err) {
+      console.error("Failed to generate preview content:", err);
+      setError(err instanceof Error ? err.message : "Failed to generate simulation content");
+      setStep("entry");
       setIsLoading(false);
     }
   };
@@ -563,6 +672,333 @@ We're looking for an experienced frontend developer to join our team. You'll be 
     );
   }
 
-  // Placeholder for other steps
+  // Generating step - loading state
+  if (step === "generating") {
+    return (
+      <div className="flex h-full flex-col items-center justify-center bg-background px-4">
+        <div className="w-full max-w-2xl space-y-6 text-center">
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Building your simulation...</h2>
+            <p className="text-muted-foreground">
+              Generating coding tasks and team members based on your requirements
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Preview step
+  if (step === "preview" && previewData) {
+    const isReadyToCreate = previewData.selectedTask !== null && previewData.coworkers.length > 0;
+
+    return (
+      <div className="h-full overflow-y-auto bg-background px-4 py-8">
+        <div className="mx-auto w-full max-w-4xl space-y-6">
+          {/* Header */}
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold">Preview Your Simulation</h1>
+            <p className="text-lg text-muted-foreground">
+              Review and customize the auto-generated content before creating
+            </p>
+          </div>
+
+          {/* Section 1: Simulation Name */}
+          <Card className="p-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">Simulation Name</Label>
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {editingField === "name" ? (
+                <Input
+                  value={previewData.simulationName}
+                  onChange={(e) =>
+                    setPreviewData({ ...previewData, simulationName: e.target.value })
+                  }
+                  onBlur={() => setEditingField(null)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setEditingField(null);
+                    if (e.key === "Escape") setEditingField(null);
+                  }}
+                  autoFocus
+                  className="text-xl font-semibold"
+                />
+              ) : (
+                <h2
+                  className="cursor-pointer text-xl font-semibold hover:text-primary"
+                  onClick={() => setEditingField("name")}
+                >
+                  {previewData.simulationName}
+                </h2>
+              )}
+            </div>
+          </Card>
+
+          {/* Section 2: Company */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">Company</Label>
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {editingField === "company" ? (
+                <div className="space-y-2">
+                  <Input
+                    value={previewData.companyName}
+                    onChange={(e) =>
+                      setPreviewData({ ...previewData, companyName: e.target.value })
+                    }
+                    placeholder="Company name"
+                    className="font-semibold"
+                  />
+                  <Textarea
+                    value={previewData.companyDescription}
+                    onChange={(e) =>
+                      setPreviewData({ ...previewData, companyDescription: e.target.value })
+                    }
+                    placeholder="Company description"
+                    rows={3}
+                  />
+                  <Button size="sm" onClick={() => setEditingField(null)}>
+                    Done
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="cursor-pointer space-y-2 hover:text-primary"
+                  onClick={() => setEditingField("company")}
+                >
+                  <p className="font-semibold">{previewData.companyName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {previewData.companyDescription}
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Section 3: Coding Task */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">Coding Task</Label>
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <RadioGroup
+                value={
+                  previewData.selectedTask?.type === "custom"
+                    ? "custom"
+                    : previewData.selectedTask?.option?.summary || ""
+                }
+                onValueChange={(value) => {
+                  if (value === "custom") {
+                    setPreviewData({
+                      ...previewData,
+                      selectedTask: { type: "custom", customDescription: customTaskInput },
+                    });
+                  } else {
+                    const option = previewData.taskOptions.find((t) => t.summary === value);
+                    if (option) {
+                      setPreviewData({
+                        ...previewData,
+                        selectedTask: { type: "generated", option },
+                      });
+                    }
+                  }
+                }}
+                className="space-y-3"
+              >
+                {previewData.taskOptions.map((task) => (
+                  <div key={task.summary} className="space-y-2">
+                    <div className="flex items-start space-x-2">
+                      <RadioGroupItem value={task.summary} id={task.summary} className="mt-1" />
+                      <Label htmlFor={task.summary} className="cursor-pointer flex-1">
+                        <div className="font-medium">{task.summary}</div>
+                      </Label>
+                    </div>
+                    {previewData.selectedTask?.option?.summary === task.summary && (
+                      <div className="ml-6 rounded-lg bg-muted p-4 text-sm">
+                        {task.description}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div className="space-y-2">
+                  <div className="flex items-start space-x-2">
+                    <RadioGroupItem value="custom" id="custom" className="mt-1" />
+                    <Label htmlFor="custom" className="cursor-pointer flex-1 font-medium">
+                      Write my own
+                    </Label>
+                  </div>
+                  {previewData.selectedTask?.type === "custom" && (
+                    <div className="ml-6">
+                      <Textarea
+                        value={customTaskInput}
+                        onChange={(e) => {
+                          setCustomTaskInput(e.target.value);
+                          setPreviewData({
+                            ...previewData,
+                            selectedTask: { type: "custom", customDescription: e.target.value },
+                          });
+                        }}
+                        placeholder="Describe the coding task..."
+                        rows={5}
+                        className="text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
+              </RadioGroup>
+            </div>
+          </Card>
+
+          {/* Section 4: Team Members */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">Team Members</Label>
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="space-y-3">
+                {previewData.coworkers.map((coworker, index) => (
+                  <Card key={index} className="p-4">
+                    <div
+                      className="flex cursor-pointer items-center justify-between"
+                      onClick={() =>
+                        setExpandedCoworker(expandedCoworker === index ? null : index)
+                      }
+                    >
+                      <div>
+                        <p className="font-semibold">{coworker.name}</p>
+                        <p className="text-sm text-muted-foreground">{coworker.role}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {coworker.knowledge.length} knowledge item(s)
+                        </p>
+                      </div>
+                      {expandedCoworker === index ? (
+                        <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    {expandedCoworker === index && (
+                      <div className="mt-4 space-y-3 border-t pt-4">
+                        <div>
+                          <Label className="text-xs font-semibold">Persona Style</Label>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {coworker.personaStyle}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-xs font-semibold">Knowledge Items</Label>
+                          <ul className="mt-2 space-y-2">
+                            {coworker.knowledge.map((k, kIndex) => (
+                              <li key={kIndex} className="text-sm">
+                                <span className="font-medium">{k.topic}</span>
+                                {k.isCritical && (
+                                  <Badge variant="destructive" className="ml-2 text-xs">
+                                    Critical
+                                  </Badge>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          {/* Section 5: Tech Stack */}
+          <Card className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">Tech Stack</Label>
+                <Sparkles className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {previewData.techStack.map((tech) => (
+                  <Badge key={tech} variant="outline" className="px-3 py-1.5 text-sm">
+                    {tech}
+                    <X
+                      className="ml-2 h-3 w-3 cursor-pointer hover:text-destructive"
+                      onClick={() =>
+                        setPreviewData({
+                          ...previewData,
+                          techStack: previewData.techStack.filter((t) => t !== tech),
+                        })
+                      }
+                    />
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Add technology..."
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const value = e.currentTarget.value.trim();
+                      if (value && !previewData.techStack.includes(value)) {
+                        setPreviewData({
+                          ...previewData,
+                          techStack: [...previewData.techStack, value],
+                        });
+                        e.currentTarget.value = "";
+                      }
+                    }
+                  }}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between border-t pt-6">
+            <Button variant="ghost" onClick={() => setStep("entry")} disabled={isLoading}>
+              Back
+            </Button>
+            <Button
+              size="lg"
+              disabled={!isReadyToCreate || isLoading}
+              onClick={() => {
+                // TODO: Implement save flow (US-011)
+                console.log("Create simulation:", previewData);
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Simulation"
+              )}
+            </Button>
+          </div>
+
+          {!isReadyToCreate && (
+            <p className="text-center text-sm text-muted-foreground">
+              Please select a coding task to continue
+            </p>
+          )}
+
+          {/* Cancel Link */}
+          <div className="text-center">
+            <Button variant="ghost" asChild className="text-muted-foreground">
+              <Link href="/recruiter/simulations">Cancel</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback
   return null;
 }
