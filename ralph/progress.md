@@ -1,5 +1,43 @@
 # Ralph Progress Log
 
+## Issue #222: US-310 - Add emoji reactions from coworkers on user messages
+
+### What was implemented
+- Added Slack-style emoji reactions that coworkers can add to user messages
+- Extended `ChatMessage` type with optional `reactions` array of `MessageReaction` objects
+- Created `detectReactions()` function to identify when reactions should be triggered:
+  - First user message → 👋 wave reaction
+  - PR/GitHub/GitLab/Bitbucket URLs → 👀 eyes reaction
+  - "Thanks"/"thank you"/"thx" → 👍 thumbs up reaction
+- Reactions appear 2-5 seconds after the coworker's response (random delay)
+- Reaction pills render below message bubbles with emoji + count ("1")
+- Hover tooltip shows which coworker reacted
+- Dark theme compatible using Slack CSS variables
+
+### Files created/modified
+- **Modified:** `src/types/conversation.ts` - Added MessageReaction interface, extended ChatMessage with reactions field
+- **Modified:** `src/components/chat/chat.tsx` - Added detectReactions() function, reaction detection logic in sendMessage(), reaction pill rendering in message UI
+
+### Acceptance criteria verified
+- ✅ Emoji reactions appear below message bubbles as small pills (like Slack)
+- ✅ Reactions show emoji + count (e.g., "👀 1" or "👍 1")
+- ✅ Hovering reaction pill shows tooltip with who reacted
+- ✅ Coworker automatically reacts to PR/GitHub/GitLab/Bitbucket URLs with 👀
+- ✅ Coworker automatically reacts to "thanks"/"thank you"/"thx" with 👍
+- ✅ First message from user gets 👋 reaction from coworker
+- ✅ Reactions appear with 2-5 second delay after coworker's response
+- ✅ Reactions are read-only (user cannot add their own)
+- ✅ Reactions look correct on dark theme using Slack surface/border variables
+- ✅ Typecheck passes (no new errors, only pre-existing codebase issues)
+
+### Learnings for future iterations
+- **First message detection:** Used `messages.filter(m => m.role === "user").length === 0` to detect first user message. This works correctly because we count before adding the new message.
+- **Reaction timing:** Reactions are added via setTimeout with 2-5s random delay. The delay starts AFTER the model response is received and displayed, making it feel more natural.
+- **Message indexing:** When adding reactions, we find the user message by looking for the second-to-last message (index `prev.length - 2`) since the model message was just added. We verify it's a user message before applying reactions.
+- **First message exclusivity:** When first message triggers 👋, we skip checking for other reactions (PR URLs, thanks) to keep the first interaction simple and focused on the welcome.
+- **Slack-style design:** Used `hsl(var(--slack-bg-surface))` for pill background and `hsl(var(--slack-border))` for border to match the existing dark theme. Added subtle hover effect with `hover:bg-opacity-80`.
+- **Type safety:** Imported MessageReaction from @/types alongside ChatMessage to maintain type import best practices per CLAUDE.md.
+
 ## Issue #221: US-309 - Add proactive coworker messages during the simulation
 
 ### What was implemented
