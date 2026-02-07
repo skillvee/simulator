@@ -4,124 +4,94 @@ import { VideoAssessmentStatus } from "@prisma/client";
 import { RecruiterCandidatesClient } from "./client";
 
 /**
- * Calculate strength level from overall score (1-5 scale)
+ * Fetch simulation stats for the recruiter's scenarios
  */
-function getStrengthLevel(
-  overallScore: number
-): "Exceptional" | "Strong" | "Proficient" | "Developing" {
-  if (overallScore >= 4.5) return "Exceptional";
-  if (overallScore >= 3.5) return "Strong";
-  if (overallScore >= 2.5) return "Proficient";
-  return "Developing";
-}
-
-/**
- * Fetch all candidates who have taken assessments for the recruiter's scenarios
- */
-async function getRecruiterCandidates(recruiterId: string) {
-  // Get scenarios owned by this recruiter
+async function getRecruiterSimulationStats(recruiterId: string) {
+  // Get scenarios owned by this recruiter with their assessments
   const scenarios = await db.scenario.findMany({
     where: { createdById: recruiterId },
-    select: { id: true },
-  });
-
-  const scenarioIds = scenarios.map((s) => s.id);
-
-  if (scenarioIds.length === 0) {
-    return [];
-  }
-
-  // Get all assessments for recruiter's scenarios with user, scenario, and video assessment info
-  const assessments = await db.assessment.findMany({
-    where: { scenarioId: { in: scenarioIds } },
-    orderBy: { createdAt: "desc" },
     include: {
-      user: { select: { name: true, email: true } },
-      scenario: { select: { id: true, name: true } },
-      videoAssessment: {
+      assessments: {
         include: {
-          scores: {
-            select: { score: true },
+          user: { select: { name: true } },
+          videoAssessment: {
+            include: {
+              scores: {
+                select: { score: true },
+              },
+            },
           },
         },
       },
     },
   });
 
-  return assessments.map((assessment) => {
-    // Calculate score data only for completed assessments with video assessments
-    const hasCompletedVideoAssessment =
-      assessment.status === "COMPLETED" &&
-      assessment.videoAssessment?.status === VideoAssessmentStatus.COMPLETED &&
-      assessment.videoAssessment.scores.length > 0;
+  return scenarios.map((scenario) => {
+    const assessments = scenario.assessments;
+    const totalCount = assessments.length;
+    const completedCount = assessments.filter((a) => a.status === "COMPLETED").length;
+    const inProgressCount = assessments.filter((a) => a.status === "WORKING").length;
 
-    let overallScore: number | null = null;
-    let strengthLevel: "Exceptional" | "Strong" | "Proficient" | "Developing" | null = null;
+    // Calculate score range for completed video-assessed candidates
+    const completedWithScores = assessments.filter(
+      (a) =>
+        a.status === "COMPLETED" &&
+        a.videoAssessment?.status === VideoAssessmentStatus.COMPLETED &&
+        a.videoAssessment.scores.length > 0
+    );
 
-    if (hasCompletedVideoAssessment && assessment.videoAssessment) {
-      const scores = assessment.videoAssessment.scores;
-      overallScore = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
-      strengthLevel = getStrengthLevel(overallScore);
+    let minScore: number | null = null;
+    let maxScore: number | null = null;
+    let topCandidate: { name: string; score: number } | null = null;
+
+    if (completedWithScores.length > 0) {
+      const scoresWithNames = completedWithScores.map((a) => {
+        const scores = a.videoAssessment!.scores;
+        const avgScore = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
+        return {
+          name: a.user.name ?? "Anonymous",
+          score: avgScore,
+        };
+      });
+
+      const allScores = scoresWithNames.map((s) => s.score);
+      minScore = Math.min(...allScores);
+      maxScore = Math.max(...allScores);
+
+      // Find top candidate
+      const topEntry = scoresWithNames.reduce((max, current) =>
+        current.score > max.score ? current : max
+      );
+      topCandidate = topEntry;
     }
 
-    // Get percentile from stored report if available
-    let overallPercentile: number | null = null;
-    if (hasCompletedVideoAssessment && assessment.report) {
-      const report = assessment.report as Record<string, unknown>;
-      const percentiles = report.percentiles as
-        | { overall: number }
-        | undefined;
-      if (percentiles?.overall !== undefined) {
-        overallPercentile = percentiles.overall;
+    // Find last activity date (latest completedAt or createdAt)
+    let lastActivityDate: Date | null = null;
+    assessments.forEach((a) => {
+      const activityDate = a.completedAt ?? a.createdAt;
+      if (!lastActivityDate || activityDate > lastActivityDate) {
+        lastActivityDate = activityDate;
       }
-    }
+    });
 
     return {
-      id: assessment.id,
-      status: assessment.status,
-      createdAt: assessment.createdAt.toISOString(),
-      completedAt: assessment.completedAt?.toISOString() ?? null,
-      user: {
-        name: assessment.user.name,
-        email: assessment.user.email,
-      },
-      scenario: {
-        id: assessment.scenario.id,
-        name: assessment.scenario.name,
-      },
-      // Score data for completed assessments
-      overallScore,
-      overallPercentile,
-      strengthLevel,
+      id: scenario.id,
+      name: scenario.name,
+      totalCount,
+      completedCount,
+      inProgressCount,
+      minScore,
+      maxScore,
+      topCandidate,
+      lastActivityDate: lastActivityDate?.toISOString() ?? null,
     };
   });
-}
-
-/**
- * Get unique scenarios for filtering
- */
-async function getRecruiterScenarioOptions(recruiterId: string) {
-  const scenarios = await db.scenario.findMany({
-    where: { createdById: recruiterId },
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  });
-
-  return scenarios;
 }
 
 export default async function RecruiterCandidatesPage() {
   const user = await requireRecruiter();
 
-  const [candidates, scenarioOptions] = await Promise.all([
-    getRecruiterCandidates(user.id),
-    getRecruiterScenarioOptions(user.id),
-  ]);
+  const simulationStats = await getRecruiterSimulationStats(user.id);
 
-  return (
-    <RecruiterCandidatesClient
-      candidates={candidates}
-      scenarioOptions={scenarioOptions}
-    />
-  );
+  return <RecruiterCandidatesClient simulationStats={simulationStats} />;
 }
