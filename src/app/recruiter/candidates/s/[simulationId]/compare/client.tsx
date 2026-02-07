@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, AlertCircle, ShieldAlert, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ChevronLeft, AlertCircle, ShieldAlert, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -56,6 +57,39 @@ interface CandidateCompareClientProps {
 // ============================================================================
 // Helper Functions
 // ============================================================================
+
+/**
+ * Parse timestamp string (MM:SS or HH:MM:SS) to seconds
+ */
+function parseTimestampToSeconds(timestamp: string): number | null {
+  const parts = timestamp.split(":").map((p) => parseInt(p, 10));
+  if (parts.some((p) => isNaN(p))) return null;
+
+  if (parts.length === 2) {
+    // MM:SS format
+    const [minutes, seconds] = parts;
+    return minutes * 60 + seconds;
+  } else if (parts.length === 3) {
+    // HH:MM:SS format
+    const [hours, minutes, seconds] = parts;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+  return null;
+}
+
+/**
+ * Format seconds to MM:SS or HH:MM:SS format
+ */
+function formatTime(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
+}
 
 /**
  * Get initials from name
@@ -117,6 +151,142 @@ function ScoreBar({ score }: { score: number }) {
         {score.toFixed(1)}
       </span>
     </div>
+  );
+}
+
+// ============================================================================
+// Video Modal Component
+// ============================================================================
+
+const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+interface VideoModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  videoUrl: string | null;
+  initialTime: number;
+  candidateName: string | null;
+  dimensionName?: string;
+}
+
+function VideoModal({
+  isOpen,
+  onClose,
+  videoUrl,
+  initialTime,
+  candidateName,
+  dimensionName,
+}: VideoModalProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [currentTime, setCurrentTime] = useState(initialTime);
+  const [duration, setDuration] = useState(0);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
+  // Set initial time when video loads
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = initialTime;
+      setDuration(videoRef.current.duration);
+      videoRef.current.play().catch(() => {
+        // Autoplay might be blocked, that's okay
+      });
+    }
+  };
+
+  // Update current time as video plays
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
+
+  // Change playback speed
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackSpeed(speed);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+    }
+  };
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentTime(0);
+      setDuration(0);
+      setPlaybackSpeed(1);
+    }
+  }, [isOpen]);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-0">
+          <DialogTitle className="flex items-center gap-2">
+            <span>{candidateName || "Candidate"}</span>
+            {dimensionName && (
+              <>
+                <span className="text-stone-400">•</span>
+                <span className="text-stone-600 font-normal">{dimensionName}</span>
+              </>
+            )}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="p-6 pt-4">
+          {!videoUrl ? (
+            <div className="bg-stone-100 rounded-lg p-12 text-center">
+              <p className="text-stone-600">No recording available</p>
+            </div>
+          ) : (
+            <>
+              {/* Video Player */}
+              <div className="overflow-hidden rounded-lg bg-black">
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onTimeUpdate={handleTimeUpdate}
+                  className="w-full"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+
+              {/* Timestamp and Controls Bar */}
+              <div className="mt-4 flex items-center justify-between text-sm">
+                {/* Current time / Duration */}
+                <div className="font-mono text-stone-600">
+                  <span>{formatTime(currentTime)}</span>
+                  <span className="text-stone-400"> / </span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+
+                {/* Playback Speed Controls */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-stone-500">Speed:</span>
+                  {PLAYBACK_SPEEDS.map((speed) => (
+                    <button
+                      key={speed}
+                      type="button"
+                      onClick={() => handleSpeedChange(speed)}
+                      className={cn(
+                        "rounded px-2 py-1 text-xs transition-colors",
+                        playbackSpeed === speed
+                          ? "bg-blue-600 text-white"
+                          : "border border-stone-300 hover:border-blue-600 hover:text-blue-600"
+                      )}
+                    >
+                      {speed}x
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -340,6 +510,12 @@ function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionProps) {
 
 interface KeyEvidenceSectionProps {
   candidates: CandidateComparison[];
+  onTimestampClick: (
+    timestamp: string,
+    candidateName: string | null,
+    videoUrl: string,
+    dimensionName?: string
+  ) => void;
 }
 
 interface EvidenceMoment {
@@ -387,7 +563,7 @@ function deriveKeyEvidence(candidate: CandidateComparison): EvidenceMoment[] {
   return moments;
 }
 
-function KeyEvidenceSection({ candidates }: KeyEvidenceSectionProps) {
+function KeyEvidenceSection({ candidates, onTimestampClick }: KeyEvidenceSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -431,10 +607,11 @@ function KeyEvidenceSection({ candidates }: KeyEvidenceSectionProps) {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log(
-                              `Timestamp clicked: ${moment.timestamp} for ${candidate.candidateName}`
+                            onTimestampClick(
+                              moment.timestamp,
+                              candidate.candidateName,
+                              candidate.videoUrl
                             );
-                            // Video modal will be wired in separate issue (US-014)
                           }}
                           className="inline-flex items-center gap-2 text-left w-full hover:bg-stone-50 p-2 rounded transition-colors"
                         >
@@ -590,9 +767,15 @@ function WorkStyleSection({ candidates }: WorkStyleSectionProps) {
 
 interface CoreDimensionsSectionProps {
   candidates: CandidateComparison[];
+  onTimestampClick: (
+    timestamp: string,
+    candidateName: string | null,
+    videoUrl: string,
+    dimensionName?: string
+  ) => void;
 }
 
-function CoreDimensionsSection({ candidates }: CoreDimensionsSectionProps) {
+function CoreDimensionsSection({ candidates, onTimestampClick }: CoreDimensionsSectionProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   // Get union of all dimensions across candidates, sorted alphabetically
@@ -817,10 +1000,12 @@ function CoreDimensionsSection({ candidates }: CoreDimensionsSectionProps) {
                                       key={idx}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        console.log(
-                                          `Timestamp clicked: ${timestamp} for ${candidate.candidateName}`
+                                        onTimestampClick(
+                                          timestamp,
+                                          candidate.candidateName,
+                                          candidate.videoUrl,
+                                          dimension
                                         );
-                                        // Video modal will be wired in separate issue (US-014)
                                       }}
                                       className="px-2 py-1 text-xs font-mono bg-blue-100 text-blue-800 hover:bg-blue-200 rounded border border-blue-200 transition-colors"
                                     >
@@ -863,6 +1048,20 @@ export function CandidateCompareClient({
   const [error, setError] = useState<{ code: number; message: string } | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>("0");
 
+  // Video modal state
+  const [videoModal, setVideoModal] = useState<{
+    isOpen: boolean;
+    videoUrl: string | null;
+    initialTime: number;
+    candidateName: string | null;
+    dimensionName?: string;
+  }>({
+    isOpen: false,
+    videoUrl: null,
+    initialTime: 0,
+    candidateName: null,
+  });
+
   // Fetch comparison data
   useEffect(() => {
     async function fetchData() {
@@ -902,6 +1101,35 @@ export function CandidateCompareClient({
       candidates.filter((c) => c.overallScore === maxScore).map((c) => c.assessmentId)
     );
   }, [candidates]);
+
+  // Handle timestamp click - opens video modal
+  const handleTimestampClick = (
+    timestamp: string,
+    candidateName: string | null,
+    videoUrl: string,
+    dimensionName?: string
+  ) => {
+    const seconds = parseTimestampToSeconds(timestamp);
+    if (seconds === null) return;
+
+    setVideoModal({
+      isOpen: true,
+      videoUrl,
+      initialTime: seconds,
+      candidateName,
+      dimensionName,
+    });
+  };
+
+  // Close video modal
+  const handleCloseModal = () => {
+    setVideoModal({
+      isOpen: false,
+      videoUrl: null,
+      initialTime: 0,
+      candidateName: null,
+    });
+  };
 
   // Loading state
   if (loading) {
@@ -1109,7 +1337,7 @@ export function CandidateCompareClient({
       {renderMobileLayout()}
 
       {/* Core Dimensions Section */}
-      <CoreDimensionsSection candidates={candidates} />
+      <CoreDimensionsSection candidates={candidates} onTimestampClick={handleTimestampClick} />
 
       {/* Work Style Section */}
       <WorkStyleSection candidates={candidates} />
@@ -1118,7 +1346,17 @@ export function CandidateCompareClient({
       <StrengthsGrowthSection candidates={candidates} />
 
       {/* Key Evidence Section */}
-      <KeyEvidenceSection candidates={candidates} />
+      <KeyEvidenceSection candidates={candidates} onTimestampClick={handleTimestampClick} />
+
+      {/* Video Modal */}
+      <VideoModal
+        isOpen={videoModal.isOpen}
+        onClose={handleCloseModal}
+        videoUrl={videoModal.videoUrl}
+        initialTime={videoModal.initialTime}
+        candidateName={videoModal.candidateName}
+        dimensionName={videoModal.dimensionName}
+      />
     </div>
   );
 }
