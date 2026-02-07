@@ -14,6 +14,7 @@ import { FileText, ArrowRight, Loader2, X, Sparkles, ChevronDown, ChevronUp } fr
 import type { ParseJDResponse, InferredSeniorityLevel, ConfidentField } from "@/types";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
 import type { TaskOption } from "@/lib/scenarios/task-generator";
+import { CandidateExperienceSummary } from "@/components/recruiter/CandidateExperienceSummary";
 
 type Step = "entry" | "guided" | "generating" | "preview";
 
@@ -693,6 +694,14 @@ We're looking for an experienced frontend developer to join our team. You'll be 
   if (step === "preview" && previewData) {
     const isReadyToCreate = previewData.selectedTask !== null && previewData.coworkers.length > 0;
 
+    // Get role name from simulation name (e.g., "Senior Backend Engineer @ Acme" -> "Senior Backend Engineer")
+    const roleName = previewData.simulationName.split(" @ ")[0] || "Software Engineer";
+
+    // Get task summary for the candidate experience card
+    const taskSummary = previewData.selectedTask?.type === "custom"
+      ? previewData.selectedTask.customDescription || "complete a coding task"
+      : previewData.selectedTask?.option?.summary || "complete a coding task";
+
     return (
       <div className="h-full overflow-y-auto bg-background px-4 py-8">
         <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -703,6 +712,14 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               Review and customize the auto-generated content before creating
             </p>
           </div>
+
+          {/* Candidate Experience Summary Card */}
+          <CandidateExperienceSummary
+            roleName={roleName}
+            companyName={previewData.companyName}
+            coworkers={previewData.coworkers}
+            taskSummary={taskSummary}
+          />
 
           {/* Section 1: Simulation Name */}
           <Card className="p-6">
