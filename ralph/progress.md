@@ -6865,3 +6865,67 @@ agent-browser screenshot ./screenshots/general-channel.png --session "test"
 - Optional: Add retry mechanism for failed provisioning (could use a job queue like BullMQ)
 - Optional: Add webhook to notify when provisioning completes (for real-time UI updates)
 
+
+## Issue #233: US-004 - Simulation preview page with auto-generated content
+
+### What was implemented
+- Added preview step to simulation builder client (`src/app/recruiter/simulations/new/client.tsx`)
+- Three-step flow: entry → generating → preview (with ability to go back to entry)
+- Parallel content generation: Tasks API first, then Coworkers API using first task description
+- Full preview page with 5 editable sections:
+  1. **Simulation Name** - Auto-generated as "[Role] @ [Company]", click-to-edit inline
+  2. **Company** - Name + description with inline editing (dedicated edit mode with Done button)
+  3. **Coding Task** - Radio selection with 2-3 generated options + "Write my own" custom option
+  4. **Team Members** - Expandable cards showing persona style, knowledge items (with Critical badges)
+  5. **Tech Stack** - Badge chips with remove (X) buttons + inline add via Enter key
+- Loading state: Full-screen centered loader with "Building your simulation..." message
+- Validation: "Create Simulation" button disabled until task selected AND ≥1 coworker exists
+- AI-generated indicator: Sparkles icon on all auto-generated sections
+- Back button preserves all form data when returning to entry/guided steps
+
+### Files changed
+- Modified `src/app/recruiter/simulations/new/client.tsx` - Added preview step, state management, and UI
+
+### Key patterns and gotchas
+1. **Sequential API calls for coworkers:** Coworker generation needs a task description, so we must fetch tasks first, then use `taskOptions[0]?.description` for the coworker API call. Cannot be fully parallelized.
+
+2. **Task selection state:** Used a `TaskChoice` discriminated union type with `type: "generated" | "custom"` to handle both AI-generated tasks and custom user input. This makes the radio group value handling cleaner.
+
+3. **Inline editing patterns:** Two approaches used:
+   - Simple fields (name): Track editing field with `editingField` state, render Input when editing, text when not
+   - Complex fields (company): Use dedicated edit mode with multiple inputs and a "Done" button
+   - Both support Enter/Escape keys for quick editing
+
+4. **Expandable coworker cards:** Used `expandedCoworker` state (number | null) to track which coworker is expanded. Clicking the card header toggles expansion. Shows full persona style and knowledge items when expanded.
+
+5. **Tech stack editing:** Combined read-only badges with X buttons + an always-visible Input field. Enter key adds tech, X icon removes. Filter to prevent duplicates.
+
+6. **Validation messaging:** Show helpful "Please select a coding task to continue" message when button is disabled. User knows exactly what's blocking them.
+
+7. **State preservation on Back:** When user clicks Back to entry/guided, all `previewData` is preserved in component state. If they come forward again, they won't lose edits. However, they'll need to re-generate if they change the JD/form inputs (which triggers a new `generatePreviewContent` call).
+
+8. **Error handling:** If generation fails, we `setStep("entry")` to return to start and show error message. User can try again without losing their original input.
+
+9. **Create button placeholder:** The "Create Simulation" button currently logs to console (marked with TODO for US-011). This is expected - US-011 will wire up the actual save flow.
+
+10. **No new type errors:** Verified with `npm run typecheck` that no new TypeScript errors were introduced. Pre-existing errors in other files are acceptable per project conventions.
+
+11. **Existing API endpoints:** The task and coworker generation APIs already existed from issues #227 and #228. This issue focused purely on the preview UI and orchestration logic.
+
+### Dependencies used
+- All existing dependencies from previous work
+- Leveraged existing API routes: `/api/recruiter/simulations/parse-jd`, `/api/recruiter/simulations/generate-task`, `/api/recruiter/simulations/generate-coworkers`
+- Used existing shadcn/ui components: Card, Input, Textarea, Button, Badge, RadioGroup, Label
+- Icons from lucide-react: Sparkles (AI indicator), ChevronDown/ChevronUp (expand), X (remove), Loader2 (loading)
+
+### Testing notes
+- No new tests added (this is UI-heavy work, will be tested with agent-browser in a follow-up issue)
+- Existing tests still pass (checked with `npm test`)
+- Typecheck passes with no new errors
+- Manual testing plan: Start dev server, navigate to `/recruiter/simulations/new`, test both JD paste and guided paths, verify all editing works, check validation
+
+### Next steps (US-011)
+The preview page is complete but the "Create Simulation" button is not wired up. US-011 will:
+- Implement the save flow: create scenario, create coworkers, trigger avatar generation, trigger repo provisioning
+- Handle success/error states
+- Redirect to simulation detail page on success
