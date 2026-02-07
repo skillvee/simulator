@@ -7556,3 +7556,87 @@ Remaining items from PRD for future issues:
 ### Dependencies completed
 - Depends on: #238 (route migration - COMPLETED - the `/s/[simulationId]/` directory structure exists)
 - Blocks: #242 (dimension mini-scores), #243 (summary/flags/confidence), #244 (sorting/filtering), #245 (compare mode selection)
+
+
+## Issue #242: US-005 - Add dimension mini-scores to candidate table rows
+
+### What was implemented
+- Added "Dimensions" column to scoped candidate table (`src/app/recruiter/candidates/s/[simulationId]/client.tsx`)
+- Created `DimensionMiniScore` component with:
+  - Abbreviated dimension names (Comm, Problem, Tech, Collab, Adapt, Lead, Creative, Time)
+  - Color-coded badges based on score thresholds (green ≥3.5, blue 2.5-3.4, orange <2.5)
+  - Tooltips showing full dimension names on hover
+  - Compact pill/badge design that fits 3 side-by-side
+- Display top, mid, and bottom dimension scores for each completed candidate
+- Show "—" dash for non-completed candidates
+- Handles candidates with fewer than 3 dimensions gracefully
+- Fixed Prisma schema mismatch: `DimensionScore.dimension` changed from `String` to `AssessmentDimension` enum
+
+### Files changed
+- **Modified:** `src/app/recruiter/candidates/s/[simulationId]/client.tsx` - Added Dimensions column, DimensionMiniScore component, helper functions
+- **Modified:** `prisma/schema.prisma` - Fixed dimension field type to match database (enum instead of string)
+- **Added:** `screenshots/issue-242.png` - Visual evidence of implementation
+
+### Acceptance criteria verified
+- ✅ Added "Dimensions" column to scoped candidate table
+- ✅ Each completed candidate shows 3 mini indicators (top, mid, bottom)
+- ✅ Mini indicators show abbreviated name + numeric score
+- ✅ Color-coded: green (≥3.5), blue (2.5-3.4), orange (<2.5)
+- ✅ Handles fewer than 3 dimensions
+- ✅ Tooltips show full dimension names
+- ✅ Non-completed candidates show "—"
+- ✅ Uses dimension data already computed in server page
+- ✅ Typecheck passes (no new errors)
+- ✅ App builds successfully (no new errors)
+
+### Learnings for future iterations
+
+**Prisma schema vs database mismatch detection:**
+- When seeing error "found incompatible value of 'COMMUNICATION'" for a field expected to be String, this indicates the database column is an enum type but Prisma schema defines it as String
+- Use raw SQL query to inspect actual column values: `db.$queryRaw`SELECT dimension::text FROM "DimensionScore"``
+- Fix by updating Prisma schema to match database (change `dimension String` to `dimension AssessmentDimension`)
+- Always run `npx prisma generate` after schema changes to regenerate client
+- Dev server must be restarted to pick up new Prisma client (hot reload doesn't work for Prisma client changes)
+
+**Dimension enum values format:**
+- Database stores dimensions as uppercase underscore-separated enum values (COMMUNICATION, PROBLEM_SOLVING, TECHNICAL_KNOWLEDGE, etc.)
+- NOT lowercase kebab-case like schema comments suggested ("communication", "problem-solving")
+- Abbreviation/display logic must match actual enum values exactly
+- Use uppercase keys in abbreviation mappings: `{ COMMUNICATION: "Comm", PROBLEM_SOLVING: "Problem" }`
+
+**Color coding thresholds for mini-scores:**
+- Green: ≥3.5 (Exceptional/strong performance)
+- Blue: 2.5-3.4 (Strong/proficient performance)
+- Orange: <2.5 (Developing/needs improvement)
+- These align with the 1-4 scale strength level thresholds used in the overall score
+
+**Tooltip implementation with shadcn:**
+- Wrap Badge component in TooltipProvider → Tooltip → TooltipTrigger/TooltipContent
+- Each mini-score badge gets its own TooltipProvider (not shared across all 3 badges)
+- Use `asChild` prop on TooltipTrigger to avoid extra wrapper elements
+- Tooltips show full dimension name for clarity without cluttering the compact badge
+
+**Compact badge layout:**
+- Use small text (`text-xs`) and minimal gap (`gap-1.5`) to fit 3 badges side-by-side
+- Badge component works well for this use case (rounded, colored backgrounds, compact)
+- Abbreviations keep badges small: max 12 characters (e.g., "Problem 3.0", "Creative 4.0")
+
+**Handling missing dimension data:**
+- Server already computes top/mid/bottom dimensions (from Issue #241)
+- Conditional rendering: check if all 3 exist, else check if at least top exists, else show "—"
+- This pattern handles 1, 2, or 3 dimensions gracefully without errors
+
+**Table column additions:**
+- When adding new column, update header (TableHead), row cells (TableCell), AND empty state colSpan
+- Forgot to update colSpan initially (was 6, should be 7 after adding Dimensions column)
+- New column placed after Overall Score, before Percentile (logical grouping: score → details → rank)
+
+### Gotchas discovered
+- Prisma schema comments said dimension values were kebab-case ("communication", "problem-solving") but database has uppercase enums (COMMUNICATION, PROBLEM_SOLVING)
+- Dev server hot reload doesn't detect Prisma client regeneration - must restart server manually
+- Port conflicts caused dev server to start on different ports (3005, 3006) during testing
+- Screenshot tool (agent-browser) requires login + session flag to maintain auth across commands
+- Pre-existing enum `AssessmentDimension` in schema was not being used by `DimensionScore` model
+
+### Dependencies completed
+- Depends on: #241 (scoped candidate table - COMPLETED - topDimension/midDimension/bottomDimension computed in server page)
