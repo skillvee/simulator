@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, AlertTriangle, Circle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -41,6 +41,7 @@ interface CandidateData {
   bottomDimension: { name: string; score: number } | null;
   redFlagCount: number;
   evaluationConfidence: string | null;
+  summary: string | null;
   completedAt: string | null;
 }
 
@@ -207,6 +208,64 @@ function DimensionMiniScore({ name, score }: { name: string; score: number }) {
   );
 }
 
+/**
+ * Confidence indicator icon with tooltip
+ */
+function ConfidenceIndicator({ confidence }: { confidence: string | null }) {
+  if (!confidence) return null;
+
+  // Normalize confidence to lowercase for comparison
+  const normalizedConfidence = confidence.toLowerCase();
+
+  let icon: React.ReactNode;
+  let label: string;
+
+  if (normalizedConfidence === "high") {
+    icon = <Circle className="h-3 w-3 fill-current text-green-600" />;
+    label = "High";
+  } else if (normalizedConfidence === "medium") {
+    icon = (
+      <div className="relative h-3 w-3">
+        <Circle className="h-3 w-3 text-yellow-600" />
+        <div className="absolute inset-0 overflow-hidden w-1/2">
+          <Circle className="h-3 w-3 fill-current text-yellow-600" />
+        </div>
+      </div>
+    );
+    label = "Medium";
+  } else {
+    icon = <Circle className="h-3 w-3 text-gray-400" />;
+    label = "Low";
+  }
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="cursor-help inline-flex">{icon}</div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Evaluation confidence: {label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+/**
+ * Red flag count badge (hidden when count is 0)
+ */
+function RedFlagBadge({ count }: { count: number }) {
+  if (count === 0) return null;
+
+  return (
+    <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-xs font-medium gap-1">
+      <AlertTriangle className="h-3 w-3" />
+      {count} {count === 1 ? "flag" : "flags"}
+    </Badge>
+  );
+}
+
 export function ScopedCandidatesClient({
   simulationId,
   simulationName,
@@ -263,17 +322,26 @@ export function ScopedCandidatesClient({
                   onClick={() => handleRowClick(candidate.assessmentId)}
                   className="cursor-pointer hover:bg-gray-50"
                 >
-                  {/* Avatar + Name + Email */}
+                  {/* Avatar + Name + Email + Summary + Flags + Confidence */}
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 bg-blue-100 text-blue-700 flex items-center justify-center font-semibold">
                         {getInitials(candidate.name)}
                       </Avatar>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {candidate.name ?? "Anonymous"}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">
+                            {candidate.name ?? "Anonymous"}
+                          </span>
+                          <RedFlagBadge count={candidate.redFlagCount} />
+                          <ConfidenceIndicator confidence={candidate.evaluationConfidence} />
                         </div>
                         <div className="text-sm text-gray-500">{candidate.email}</div>
+                        {candidate.summary && (
+                          <div className="text-xs text-gray-500 mt-1 max-w-md">
+                            {candidate.summary}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </TableCell>

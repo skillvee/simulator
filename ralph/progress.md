@@ -7640,3 +7640,72 @@ Remaining items from PRD for future issues:
 
 ### Dependencies completed
 - Depends on: #241 (scoped candidate table - COMPLETED - topDimension/midDimension/bottomDimension computed in server page)
+
+## Issue #243: US-006 - Add summary, red flag count, and confidence to table rows
+
+### What was implemented
+- Added summary, red flag count, and confidence indicator to candidate table rows in `src/app/recruiter/candidates/s/[simulationId]/client.tsx`
+- **Server page updates** (`page.tsx`):
+  - Added `summary` field to `CandidateData` interface
+  - Computed truncated summary (first 120 chars with ellipsis) from `videoAssessment.summary.overallSummary`
+  - Already had `redFlagCount` and `evaluationConfidence` from Issue #241
+- **Client component updates** (`client.tsx`):
+  - Added `summary` field to `CandidateData` interface
+  - Imported `AlertTriangle` and `Circle` icons from lucide-react
+  - Created `RedFlagBadge` component: displays red badge with count and icon, hidden when count is 0
+  - Created `ConfidenceIndicator` component: displays filled/half-filled/empty circle based on confidence level (High/Medium/Low) with tooltip
+  - Updated candidate cell to display:
+    - Name with red flag badge and confidence indicator inline
+    - Email on second line
+    - Summary text (truncated 120 chars) on third line in muted text
+- All three elements only render for completed candidates with video assessments
+- TypeCheck passes (no new errors)
+- Build compiles successfully (no new errors in modified files)
+
+### Files changed
+- `src/app/recruiter/candidates/s/[simulationId]/page.tsx` - Added summary computation and field to interface
+- `src/app/recruiter/candidates/s/[simulationId]/client.tsx` - Added UI components for summary, red flags, confidence
+
+### Learnings for future iterations
+
+**Summary truncation on server side:**
+- Summary is truncated to 120 characters on the server (not client) to keep props lean
+- This reduces data sent over the wire and keeps client components simpler
+- Ellipsis added server-side: `summary.slice(0, 120) + "..."`
+
+**Red flag badge design:**
+- Used `AlertTriangle` icon from lucide-react for visual prominence
+- Badge color: `bg-red-100 text-red-800` (red tint, not full red) for subtle-but-noticeable warning
+- Conditional rendering: `if (count === 0) return null` - don't show "0 flags"
+- Text: pluralization handled inline: `{count} {count === 1 ? "flag" : "flags"}`
+
+**Confidence indicator icon design:**
+- Used `Circle` icon from lucide-react in three states:
+  - High: filled circle (`fill-current`) in green (`text-green-600`)
+  - Medium: half-filled circle (div with `overflow-hidden w-1/2` trick) in yellow (`text-yellow-600`)
+  - Low: empty circle (outline only) in gray (`text-gray-400`)
+- Tooltip shows "Evaluation confidence: [High/Medium/Low]" for clarity
+- Normalized confidence string to lowercase before comparison to handle case variations
+- Icon size: `h-3 w-3` for subtlety - doesn't dominate the row
+
+**Layout in candidate cell:**
+- Summary, red flags, and confidence all inline with name on first line
+- Email on second line
+- Summary on third line with `max-w-md` to prevent overly wide text blocks
+- Summary styling: `text-xs text-gray-500 mt-1` - subtle, secondary information
+- Red flag badge and confidence indicator placed after name, before email break
+
+**Half-filled circle implementation:**
+- Used nested div with `overflow-hidden` and `w-1/2` to clip the filled circle
+- Parent div is `relative`, child is `absolute inset-0` with overflow clipped
+- This creates a "half-filled" visual effect without custom SVG or images
+
+### Gotchas discovered
+- Confidence values from database are case-sensitive strings ("High", "Medium", "Low") - normalized to lowercase for comparison
+- Lucide-react `Circle` icon doesn't have built-in "half-filled" variant - had to use CSS overflow trick
+- Summary field was already being fetched in server page (line 83-85) but wasn't being passed to client - just needed to add to interface and return statement
+- Red flag count and confidence were already computed in Issue #241 - no new computation needed
+
+### Dependencies completed
+- Depends on: #241 (scoped candidate table - COMPLETED - redFlagCount, evaluationConfidence, and summary already fetched/computed)
+- Blocks: nothing

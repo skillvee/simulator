@@ -36,6 +36,7 @@ interface CandidateData {
   bottomDimension: { name: string; score: number } | null;
   redFlagCount: number;
   evaluationConfidence: string | null;
+  summary: string | null;
   completedAt: string | null;
 }
 
@@ -110,6 +111,7 @@ export default async function ScopedCandidatesPage({
         bottomDimension: null,
         redFlagCount: 0,
         evaluationConfidence: null,
+        summary: null,
         completedAt: assessment.completedAt?.toISOString() ?? null,
       };
     }
@@ -139,6 +141,14 @@ export default async function ScopedCandidatesPage({
 
     // Get evaluation confidence
     const evaluationConfidence = report?.videoEvaluation?.evaluationConfidence ?? null;
+
+    // Get summary (first 120 chars with ellipsis)
+    const overallSummary = videoAssessment.summary?.overallSummary ?? null;
+    const summary = overallSummary
+      ? overallSummary.length > 120
+        ? overallSummary.slice(0, 120) + "..."
+        : overallSummary
+      : null;
 
     // Get top, mid, and bottom dimension scores for mini-scores
     const sortedDimensions = [...dimensionScores].sort((a, b) => b.score - a.score);
@@ -173,6 +183,7 @@ export default async function ScopedCandidatesPage({
       bottomDimension,
       redFlagCount,
       evaluationConfidence,
+      summary,
       completedAt: assessment.completedAt?.toISOString() ?? null,
     };
   });
