@@ -95,3 +95,12 @@ export {
   isApiSuccess,
   isApiError,
 } from "./api";
+
+// Job Description Parser types
+export type {
+  ConfidenceLevel,
+  InferredSeniorityLevel,
+  ConfidentField,
+  ParseJDRequest,
+  ParseJDResponse,
+} from "./jd-parser";
