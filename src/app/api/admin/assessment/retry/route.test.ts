@@ -58,7 +58,7 @@ const mockNewAssessment = {
   id: "assess-2",
   userId: "user-1",
   scenarioId: "scenario-1",
-  status: "PROCESSING",
+  status: "WORKING",
 };
 
 describe("POST /api/admin/assessment/retry", () => {
@@ -145,7 +145,7 @@ describe("POST /api/admin/assessment/retry", () => {
     expect(data.success).toBe(true);
   });
 
-  it("creates new assessment with PROCESSING status", async () => {
+  it("creates new assessment with WORKING status", async () => {
     (db.assessment.findUnique as Mock).mockResolvedValue(
       mockOriginalAssessment
     );
@@ -157,8 +157,7 @@ describe("POST /api/admin/assessment/retry", () => {
       data: expect.objectContaining({
         userId: "user-1",
         scenarioId: "scenario-1",
-        status: "PROCESSING",
-        cvUrl: "https://storage.example.com/cv.pdf",
+        status: "WORKING",
         prUrl: "https://github.com/user/repo/pull/1",
       }),
     });

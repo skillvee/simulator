@@ -120,7 +120,6 @@ describe("data-deletion", () => {
     it("deletes storage files from all buckets AFTER successful DB transaction", async () => {
       mockFindMany.mockResolvedValueOnce([
         {
-          cvUrl: "https://storage.example.com/resumes/user-123/cv.pdf",
           recordings: [
             {
               storageUrl: "recordings/user-123/video.webm",
@@ -160,9 +159,11 @@ describe("data-deletion", () => {
 
       expect(result.success).toBe(true);
       // Verify transaction happens before storage deletion
-      expect(callOrder).toEqual(["transaction", "storage", "storage", "storage"]);
-      // Should have called storage remove for each bucket
-      expect(mockStorageRemove).toHaveBeenCalledTimes(3);
+      // Resume bucket has no paths so deleteStorageFiles returns early without calling remove
+      // Only recordings and screenshots buckets have paths
+      expect(callOrder).toEqual(["transaction", "storage", "storage"]);
+      // Should have called storage remove for recordings and screenshots buckets
+      expect(mockStorageRemove).toHaveBeenCalledTimes(2);
       expect(result.deletedItems.storageFiles).toBeGreaterThan(0);
     });
 
@@ -220,8 +221,12 @@ describe("data-deletion", () => {
     it("continues deletion even if storage fails (after successful DB transaction)", async () => {
       mockFindMany.mockResolvedValueOnce([
         {
-          cvUrl: "cv.pdf",
-          recordings: [],
+          recordings: [
+            {
+              storageUrl: "recordings/user-123/video.webm",
+              segments: [],
+            },
+          ],
         },
       ]);
 

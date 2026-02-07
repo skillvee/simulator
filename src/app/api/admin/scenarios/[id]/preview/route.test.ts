@@ -113,7 +113,7 @@ describe("POST /api/admin/scenarios/[id]/preview", () => {
       id: "preview-assessment-123",
       userId: "admin-123",
       scenarioId: "scenario-1",
-      status: "HR_INTERVIEW",
+      status: "WORKING",
     });
 
     const request = new Request(
@@ -133,7 +133,7 @@ describe("POST /api/admin/scenarios/[id]/preview", () => {
       data: expect.objectContaining({
         userId: "admin-123",
         scenarioId: "scenario-1",
-        status: "HR_INTERVIEW",
+        status: "WORKING",
       }),
     });
   });
@@ -155,7 +155,7 @@ describe("POST /api/admin/scenarios/[id]/preview", () => {
       id: "preview-assessment-456",
       userId: "admin-123",
       scenarioId: "scenario-1",
-      status: "HR_INTERVIEW",
+      status: "WORKING",
     });
 
     const request = new Request(
@@ -203,6 +203,7 @@ describe("POST /api/admin/scenarios/[id]/preview", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.previewUrl).toContain("/chat");
+    // skipTo is now unused, always goes to /work
+    expect(data.previewUrl).toContain("/work");
   });
 });

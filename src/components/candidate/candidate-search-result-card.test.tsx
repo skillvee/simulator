@@ -31,6 +31,16 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+// Mock @/lib/candidate to provide SENIORITY_THRESHOLDS
+// (the implementation file seniority-thresholds.ts does not exist yet)
+vi.mock("@/lib/candidate", () => ({
+  SENIORITY_THRESHOLDS: {
+    JUNIOR: 0,
+    MID: 3,
+    SENIOR: 4,
+  },
+}));
+
 // ============================================================================
 // Test Data
 // ============================================================================

@@ -12,11 +12,9 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock bcrypt
+// Mock bcrypt - source uses named import { hash }
 vi.mock("bcryptjs", () => ({
-  default: {
-    hash: vi.fn().mockResolvedValue("hashed_password"),
-  },
+  hash: vi.fn().mockResolvedValue("hashed_password"),
 }));
 
 // Import after mocks
@@ -345,7 +343,7 @@ describe("POST /api/auth/register", () => {
 
     await POST(request);
 
-    expect(bcrypt.default.hash).toHaveBeenCalledWith("password123", 12);
+    expect(bcrypt.hash).toHaveBeenCalledWith("password123", 12);
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({

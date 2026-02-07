@@ -8,21 +8,27 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { Chat } from "./chat";
 
-// Mock the API client
-vi.mock("@/lib/api-client", () => ({
+// Mock the API client - source imports from @/lib/api
+vi.mock("@/lib/api", () => ({
   api: vi.fn().mockResolvedValue({ messages: [] }),
   ApiClientError: class ApiClientError extends Error {},
 }));
 
+// Mock the useManagerAutoStart hook - source imports from @/hooks
+vi.mock("@/hooks", () => ({
+  useManagerAutoStart: vi.fn(),
+}));
+
 // Mock the useCallContext hook
 const mockActiveCall = { coworkerId: "", callType: "coworker" as const };
+const mockStartCall = vi.fn();
 vi.mock("./slack-layout", () => ({
   useCallContext: vi.fn(() => ({
     activeCall: mockActiveCall.coworkerId ? mockActiveCall : null,
-    startCall: vi.fn(),
+    startCall: mockStartCall,
     endCall: vi.fn(),
   })),
 }));
@@ -61,6 +67,7 @@ describe("Chat", () => {
   beforeEach(() => {
     // Reset mock state
     mockActiveCall.coworkerId = "";
+    mockStartCall.mockClear();
   });
 
   describe("rendering", () => {
@@ -76,42 +83,42 @@ describe("Chat", () => {
       expect(screen.getByText("Engineering Manager")).toBeInTheDocument();
     });
 
-    it("renders coworker avatar with DiceBear identicon", () => {
+    it("renders coworker avatar with initials fallback in empty state", async () => {
       render(<Chat {...defaultProps} />);
 
-      // Should show DiceBear identicon image
-      const avatar = screen.getByAltText("Alex Chen's avatar");
-      expect(avatar).toBeInTheDocument();
-      expect(avatar).toHaveAttribute(
-        "src",
-        expect.stringContaining("api.dicebear.com")
-      );
+      // Wait for the async history load to complete (shows Loading... first)
+      // then the empty state renders with a CoworkerAvatar.
+      // In jsdom, AvatarImage doesn't fire load events so the
+      // AvatarFallback renders instead, showing initials "AC"
+      await waitFor(() => {
+        expect(screen.getByText("AC")).toBeInTheDocument();
+      });
     });
   });
 
   describe("in-call indicator", () => {
-    it("shows online indicator when not in a call", () => {
+    it("shows Start Call button when not in a call", () => {
       mockActiveCall.coworkerId = "";
       render(<Chat {...defaultProps} />);
 
-      expect(screen.getByText("online")).toBeInTheDocument();
-      expect(screen.queryByText("In call")).not.toBeInTheDocument();
+      expect(screen.getByText("Start Call")).toBeInTheDocument();
+      expect(screen.queryByText("In Call")).not.toBeInTheDocument();
     });
 
-    it("shows in-call indicator when in a call with this coworker", () => {
+    it("shows In Call badge when in a call with this coworker", () => {
       mockActiveCall.coworkerId = "coworker-1";
       render(<Chat {...defaultProps} />);
 
-      expect(screen.getByText("In call")).toBeInTheDocument();
-      expect(screen.queryByText("online")).not.toBeInTheDocument();
+      expect(screen.getByText("In Call")).toBeInTheDocument();
+      expect(screen.queryByText("Start Call")).not.toBeInTheDocument();
     });
 
-    it("shows online indicator when in a call with different coworker", () => {
+    it("shows Start Call button when in a call with different coworker", () => {
       mockActiveCall.coworkerId = "coworker-other";
       render(<Chat {...defaultProps} />);
 
-      expect(screen.getByText("online")).toBeInTheDocument();
-      expect(screen.queryByText("In call")).not.toBeInTheDocument();
+      expect(screen.getByText("Start Call")).toBeInTheDocument();
+      expect(screen.queryByText("In Call")).not.toBeInTheDocument();
     });
 
     it("in-call indicator has green background styling", () => {
@@ -128,14 +135,19 @@ describe("Chat", () => {
       render(<Chat {...defaultProps} />);
 
       expect(
-        screen.getByPlaceholderText("Message Alex Chen...")
+        screen.getByPlaceholderText("Type a message...")
       ).toBeInTheDocument();
     });
 
     it("renders send button", () => {
-      render(<Chat {...defaultProps} />);
+      const { container } = render(<Chat {...defaultProps} />);
 
-      expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
+      // The send button is an icon-only button (no accessible name).
+      // It is disabled by default because the input is empty.
+      const sendButton = container.querySelector(
+        "button.rounded-full[disabled]"
+      );
+      expect(sendButton).toBeInTheDocument();
     });
   });
 
