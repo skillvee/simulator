@@ -1,14 +1,18 @@
 "use client";
 
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Users,
   TrendingUp,
   Clock,
   Plus,
+  Search,
 } from "lucide-react";
+import type { CandidateSearchItem } from "./page";
 
 interface SimulationStats {
   id: string;
@@ -24,6 +28,7 @@ interface SimulationStats {
 
 interface RecruiterCandidatesClientProps {
   simulationStats: SimulationStats[];
+  allCandidates: CandidateSearchItem[];
 }
 
 /**
@@ -43,15 +48,66 @@ function formatRelativeTime(dateString: string) {
   return `${Math.floor(diffDays / 365)} years ago`;
 }
 
+/**
+ * Get status badge color
+ */
+function getStatusBadgeColor(status: "COMPLETED" | "WORKING" | "WELCOME") {
+  switch (status) {
+    case "COMPLETED":
+      return "bg-green-100 text-green-700 border-green-200";
+    case "WORKING":
+      return "bg-blue-100 text-blue-700 border-blue-200";
+    case "WELCOME":
+      return "bg-stone-100 text-stone-600 border-stone-200";
+  }
+}
+
+/**
+ * Use debounced search query
+ */
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export function RecruiterCandidatesClient({
   simulationStats,
+  allCandidates,
 }: RecruiterCandidatesClientProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
   // Sort simulations by last activity (most recent first)
   const sortedSimulations = [...simulationStats].sort((a, b) => {
     if (!a.lastActivityDate) return 1;
     if (!b.lastActivityDate) return -1;
     return new Date(b.lastActivityDate).getTime() - new Date(a.lastActivityDate).getTime();
   });
+
+  // Filter candidates by search query (case-insensitive partial match)
+  const filteredCandidates = useMemo(() => {
+    if (!debouncedSearchQuery.trim()) return [];
+
+    const query = debouncedSearchQuery.toLowerCase();
+    return allCandidates.filter(
+      (candidate) =>
+        candidate.candidateName.toLowerCase().includes(query) ||
+        candidate.candidateEmail.toLowerCase().includes(query)
+    );
+  }, [debouncedSearchQuery, allCandidates]);
+
+  const showDropdown = searchQuery.trim().length > 0;
 
   return (
     <div className="p-6">
@@ -61,6 +117,74 @@ export function RecruiterCandidatesClient({
         <p className="mt-1 text-sm text-stone-500">
           Select a simulation to review candidates
         </p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-6 relative">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+          <Input
+            type="text"
+            placeholder="Search candidates by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-11"
+          />
+        </div>
+
+        {/* Search Results Dropdown */}
+        {showDropdown && (
+          <div className="absolute top-full mt-2 w-full bg-white border border-stone-200 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
+            {filteredCandidates.length === 0 ? (
+              <div className="p-4 text-center text-sm text-stone-500">
+                No candidates found
+              </div>
+            ) : (
+              <div className="divide-y divide-stone-100">
+                {filteredCandidates.map((candidate) => (
+                  <Link
+                    key={candidate.assessmentId}
+                    href={`/recruiter/candidates/s/${candidate.simulationId}`}
+                    className="block px-4 py-3 hover:bg-stone-50 transition-colors"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-stone-900 truncate">
+                          {candidate.candidateName}
+                        </div>
+                        <div className="text-sm text-stone-500 truncate">
+                          {candidate.candidateEmail}
+                        </div>
+                        <div className="text-xs text-stone-400 mt-1 truncate">
+                          {candidate.simulationName}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getStatusBadgeColor(
+                            candidate.status
+                          )}`}
+                        >
+                          {candidate.status === "COMPLETED"
+                            ? "Completed"
+                            : candidate.status === "WORKING"
+                            ? "Working"
+                            : "Welcome"}
+                        </span>
+                        {candidate.score !== null && (
+                          <span className="text-sm font-medium text-stone-700">
+                            {candidate.score.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Simulations Grid */}

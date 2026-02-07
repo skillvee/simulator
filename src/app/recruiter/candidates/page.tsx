@@ -3,6 +3,16 @@ import { db } from "@/server/db";
 import { VideoAssessmentStatus } from "@prisma/client";
 import { RecruiterCandidatesClient } from "./client";
 
+export interface CandidateSearchItem {
+  assessmentId: string;
+  candidateName: string;
+  candidateEmail: string;
+  simulationId: string;
+  simulationName: string;
+  status: "COMPLETED" | "WORKING" | "WELCOME";
+  score: number | null;
+}
+
 /**
  * Fetch simulation stats for the recruiter's scenarios
  */
@@ -13,7 +23,7 @@ async function getRecruiterSimulationStats(recruiterId: string) {
     include: {
       assessments: {
         include: {
-          user: { select: { name: true } },
+          user: { select: { name: true, email: true } },
           videoAssessment: {
             include: {
               scores: {
@@ -93,5 +103,66 @@ export default async function RecruiterCandidatesPage() {
 
   const simulationStats = await getRecruiterSimulationStats(user.id);
 
-  return <RecruiterCandidatesClient simulationStats={simulationStats} />;
+  // Build flat list of all candidates for cross-simulation search
+  const allCandidates: CandidateSearchItem[] = [];
+
+  const scenarios = await db.scenario.findMany({
+    where: { createdById: user.id },
+    select: {
+      id: true,
+      name: true,
+      assessments: {
+        select: {
+          id: true,
+          status: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
+          },
+          videoAssessment: {
+            select: {
+              status: true,
+              scores: {
+                select: { score: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  for (const scenario of scenarios) {
+    for (const assessment of scenario.assessments) {
+      // Calculate overall score if completed
+      let overallScore: number | null = null;
+      if (
+        assessment.status === "COMPLETED" &&
+        assessment.videoAssessment?.status === VideoAssessmentStatus.COMPLETED &&
+        assessment.videoAssessment.scores.length > 0
+      ) {
+        const scores = assessment.videoAssessment.scores;
+        overallScore = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
+      }
+
+      allCandidates.push({
+        assessmentId: assessment.id,
+        candidateName: assessment.user.name ?? "Anonymous",
+        candidateEmail: assessment.user.email ?? "",
+        simulationId: scenario.id,
+        simulationName: scenario.name,
+        status: assessment.status,
+        score: overallScore,
+      });
+    }
+  }
+
+  return (
+    <RecruiterCandidatesClient
+      simulationStats={simulationStats}
+      allCandidates={allCandidates}
+    />
+  );
 }
