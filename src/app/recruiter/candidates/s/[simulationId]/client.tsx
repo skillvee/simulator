@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, AlertTriangle, Circle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 import {
   Table,
@@ -285,6 +287,7 @@ export function ScopedCandidatesClient({
   candidates,
 }: ScopedCandidatesClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Filter and sort state
   const [sortBy, setSortBy] = useState<SortOption>("score");
@@ -292,9 +295,76 @@ export function ScopedCandidatesClient({
   const [strengthFilter, setStrengthFilter] = useState<StrengthFilter>("all");
   const [minScoreFilter, setMinScoreFilter] = useState<MinScoreFilter>("none");
 
+  // Compare mode state
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Initialize compare mode from URL params
+  useEffect(() => {
+    const compareModeParam = searchParams.get("compareMode");
+    const selectedIdsParam = searchParams.get("selectedIds");
+
+    if (compareModeParam === "true") {
+      setCompareMode(true);
+      if (selectedIdsParam) {
+        setSelectedIds(new Set(selectedIdsParam.split(",")));
+      }
+    }
+  }, [searchParams]);
+
+  // Update URL when compare mode or selection changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (compareMode) {
+      params.set("compareMode", "true");
+      if (selectedIds.size > 0) {
+        params.set("selectedIds", Array.from(selectedIds).join(","));
+      } else {
+        params.delete("selectedIds");
+      }
+    } else {
+      params.delete("compareMode");
+      params.delete("selectedIds");
+    }
+
+    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
+  }, [compareMode, selectedIds, searchParams]);
+
   const handleRowClick = (assessmentId: string) => {
+    // Don't navigate if in compare mode - let checkbox handle it
+    if (compareMode) return;
     router.push(`/recruiter/candidates/s/${simulationId}/${assessmentId}`);
   };
+
+  const toggleCompareMode = () => {
+    setCompareMode(!compareMode);
+    if (compareMode) {
+      // Exiting compare mode - clear selections
+      setSelectedIds(new Set());
+    }
+  };
+
+  const toggleSelection = (assessmentId: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(assessmentId)) {
+        newSet.delete(assessmentId);
+      } else if (newSet.size < 4) {
+        // Max 4 selections
+        newSet.add(assessmentId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCompare = () => {
+    const ids = Array.from(selectedIds).join(",");
+    router.push(`/recruiter/candidates/s/${simulationId}/compare?ids=${ids}`);
+  };
+
+  const canCompare = selectedIds.size >= 2 && selectedIds.size <= 4;
 
   // Filter and sort candidates
   const filteredAndSortedCandidates = useMemo(() => {
@@ -400,10 +470,21 @@ export function ScopedCandidatesClient({
           <ChevronLeft className="h-4 w-4 mr-1" />
           All Simulations
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">{simulationName}</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Showing {filteredAndSortedCandidates.length} of {candidates.length} candidate{candidates.length !== 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{simulationName}</h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Showing {filteredAndSortedCandidates.length} of {candidates.length} candidate{candidates.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <Button
+            onClick={toggleCompareMode}
+            variant={compareMode ? "default" : "outline"}
+            className={compareMode ? "bg-blue-600 hover:bg-blue-700" : ""}
+          >
+            {compareMode ? "Exit Compare Mode" : "Compare"}
+          </Button>
+        </div>
       </div>
 
       {/* Filter and Sort Controls */}
@@ -501,6 +582,7 @@ export function ScopedCandidatesClient({
         <Table>
           <TableHeader>
             <TableRow>
+              {compareMode && <TableHead className="w-[50px]"></TableHead>}
               <TableHead className="w-[300px]">Candidate</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Overall Score</TableHead>
@@ -513,21 +595,39 @@ export function ScopedCandidatesClient({
           <TableBody>
             {filteredAndSortedCandidates.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-gray-500 py-12">
+                <TableCell colSpan={compareMode ? 8 : 7} className="text-center text-gray-500 py-12">
                   {candidates.length === 0
                     ? "No candidates found for this simulation"
                     : "No candidates match the selected filters"}
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAndSortedCandidates.map((candidate) => (
-                <TableRow
-                  key={candidate.assessmentId}
-                  onClick={() => handleRowClick(candidate.assessmentId)}
-                  className="cursor-pointer hover:bg-gray-50"
-                >
-                  {/* Avatar + Name + Email + Summary + Flags + Confidence */}
-                  <TableCell>
+              filteredAndSortedCandidates.map((candidate) => {
+                // Determine if candidate can be selected (completed with video scores)
+                const canSelect = candidate.status === "COMPLETED" && candidate.overallScore !== null;
+                const isSelected = selectedIds.has(candidate.assessmentId);
+
+                return (
+                  <TableRow
+                    key={candidate.assessmentId}
+                    onClick={() => handleRowClick(candidate.assessmentId)}
+                    className={compareMode ? (canSelect ? "hover:bg-gray-50" : "") : "cursor-pointer hover:bg-gray-50"}
+                  >
+                    {/* Checkbox (compare mode only) */}
+                    {compareMode && (
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        {canSelect ? (
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelection(candidate.assessmentId)}
+                            disabled={!isSelected && selectedIds.size >= 4}
+                          />
+                        ) : null}
+                      </TableCell>
+                    )}
+
+                    {/* Avatar + Name + Email + Summary + Flags + Confidence */}
+                    <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 bg-blue-100 text-blue-700 flex items-center justify-center font-semibold">
                         {getInitials(candidate.name)}
@@ -640,16 +740,49 @@ export function ScopedCandidatesClient({
                     )}
                   </TableCell>
 
-                  {/* Completed Date */}
-                  <TableCell className="text-sm text-gray-600">
-                    {formatDate(candidate.completedAt)}
-                  </TableCell>
-                </TableRow>
-              ))
+                    {/* Completed Date */}
+                    <TableCell className="text-sm text-gray-600">
+                      {formatDate(candidate.completedAt)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </div>
+
+      {/* Floating Action Bar (compare mode only) */}
+      {compareMode && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg py-4 px-6 z-50">
+          <div className="container mx-auto max-w-7xl flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              {selectedIds.size === 0 && "Select 2-4 candidates to compare"}
+              {selectedIds.size === 1 && "Select at least 1 more candidate"}
+              {selectedIds.size >= 2 && (
+                <span className="font-medium">
+                  {selectedIds.size} candidate{selectedIds.size !== 1 ? "s" : ""} selected
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                onClick={toggleCompareMode}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCompare}
+                disabled={!canCompare}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+              >
+                Compare {selectedIds.size >= 2 ? selectedIds.size : ""} candidate{selectedIds.size !== 1 && selectedIds.size >= 2 ? "s" : ""}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
