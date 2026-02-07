@@ -2,7 +2,7 @@
 
 import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Menu, X, Headphones } from "lucide-react";
+import { Menu, X, Headphones, Hash } from "lucide-react";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
@@ -51,6 +51,8 @@ interface SlackLayoutProps {
   onDefenseComplete?: () => void;
   /** Callback to expose incrementUnread function to parent */
   onIncrementUnreadRef?: (incrementUnread: (coworkerId: string) => void) => void;
+  /** Callback to expose incrementGeneralUnread function to parent */
+  onIncrementGeneralUnreadRef?: (incrementGeneralUnread: () => void) => void;
 }
 
 /**
@@ -108,6 +110,7 @@ function SlackLayoutInner({
   selectedCoworkerId: overrideSelectedId,
   onDefenseComplete,
   onIncrementUnreadRef,
+  onIncrementGeneralUnreadRef,
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -117,10 +120,12 @@ function SlackLayoutInner({
     callType: "coworker";
   } | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [generalUnread, setGeneralUnread] = useState<number>(0);
 
-  // Determine selected coworker from prop override or URL
+  // Determine selected view from URL - can be coworkerId or "general" for channel
   const selectedCoworkerId =
     overrideSelectedId ?? searchParams.get("coworkerId") ?? null;
+  const selectedView = selectedCoworkerId === "general" ? "general" : selectedCoworkerId;
 
   const startCall = (
     coworkerId: string,
@@ -147,12 +152,30 @@ function SlackLayoutInner({
     playMessageSound();
   }, [selectedCoworkerId]);
 
+  // Increment unread count for #general channel
+  const incrementGeneralUnread = useCallback(() => {
+    // Don't increment if #general is currently selected
+    if (selectedView === "general") return;
+
+    setGeneralUnread((prev) => prev + 1);
+
+    // Play notification sound
+    playMessageSound();
+  }, [selectedView]);
+
   // Expose incrementUnread to parent via callback ref
   useEffect(() => {
     if (onIncrementUnreadRef) {
       onIncrementUnreadRef(incrementUnread);
     }
   }, [onIncrementUnreadRef, incrementUnread]);
+
+  // Expose incrementGeneralUnread to parent via callback ref
+  useEffect(() => {
+    if (onIncrementGeneralUnreadRef) {
+      onIncrementGeneralUnreadRef(incrementGeneralUnread);
+    }
+  }, [onIncrementGeneralUnreadRef, incrementGeneralUnread]);
 
   // Clear unread count for a coworker
   const clearUnread = (coworkerId: string) => {
@@ -178,6 +201,15 @@ function SlackLayoutInner({
       // Start call in-place instead of navigating to a separate page
       startCall(coworkerId, "coworker");
     }
+  };
+
+  const handleSelectChannel = (channel: "general") => {
+    // Close sidebar on mobile after selection
+    setIsSidebarOpen(false);
+
+    // Clear unread count when selecting #general
+    setGeneralUnread(0);
+    router.push(`/assessments/${assessmentId}/work?coworkerId=general`);
   };
 
   // Find the coworker being called
@@ -241,6 +273,46 @@ function SlackLayoutInner({
 
           {/* Coworker List - scrollable, shrinks when call widget appears */}
           <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+            {/* Channels Section */}
+            <div>
+              <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
+                Channels
+              </h3>
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => handleSelectChannel("general")}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md w-full text-left transition-all border-l-2 ${
+                    selectedView === "general"
+                      ? "border-primary"
+                      : "border-transparent hover:opacity-100"
+                  }`}
+                  style={{
+                    background: selectedView === "general" ? "hsl(var(--slack-bg-hover))" : "transparent",
+                    color: "hsl(var(--slack-text))"
+                  }}
+                  onMouseEnter={(e) => {
+                    if (selectedView !== "general") {
+                      e.currentTarget.style.background = "hsl(var(--slack-bg-hover))";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (selectedView !== "general") {
+                      e.currentTarget.style.background = "transparent";
+                    }
+                  }}
+                >
+                  <Hash size={14} style={{color: "hsl(var(--slack-text-muted))"}} />
+                  <span className={`text-sm flex-1 ${generalUnread > 0 ? "font-bold" : "font-medium"}`}>general</span>
+                  {generalUnread > 0 && (
+                    <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                      {generalUnread > 9 ? "9+" : generalUnread}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Team Section */}
             <div>
               <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
                 Team

@@ -256,6 +256,138 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
 ];
 
 /**
+ * Channel message configuration for #general ambient chatter
+ */
+export interface ChannelMessage {
+  senderName: string;
+  senderRole: string;
+  senderAvatarUrl?: string;
+  text: string;
+  timestamp: string;
+  reactions?: Array<{ emoji: string; count: number }>;
+}
+
+/**
+ * Pre-scripted messages that appear in #general at the start of the assessment
+ * These simulate team activity from earlier that morning
+ */
+export const GENERAL_CHANNEL_MESSAGES: ChannelMessage[] = [
+  {
+    senderName: "Nina Volkov",
+    senderRole: "Engineering Manager",
+    senderAvatarUrl: "/avatars/nina-volkov.jpg",
+    text: "Good morning team! Standup in 15 min 🙂",
+    timestamp: "9:00 AM",
+  },
+  {
+    senderName: "Marcus Lee",
+    senderRole: "Frontend Engineer",
+    senderAvatarUrl: "/avatars/marcus-lee.jpg",
+    text: "Morning! Just pushed a fix for the flaky test on main",
+    timestamp: "9:02 AM",
+    reactions: [{ emoji: "👍", count: 3 }],
+  },
+  {
+    senderName: "Derek Washington",
+    senderRole: "Data Scientist",
+    senderAvatarUrl: "/avatars/derek-washington.jpg",
+    text: "Nice, that was annoying 😅",
+    timestamp: "9:03 AM",
+  },
+  {
+    senderName: "Priya Sharma",
+    senderRole: "DevOps Engineer",
+    senderAvatarUrl: "/avatars/priya-sharma.jpg",
+    text: "Heads up - deploying config changes to staging in 10 min. Should be quick.",
+    timestamp: "9:08 AM",
+  },
+  {
+    senderName: "Sofia Andersson",
+    senderRole: "UX Researcher",
+    senderAvatarUrl: "/avatars/sofia-andersson.jpg",
+    text: "Shared the new user flow wireframes in #design, would love feedback when you get a chance",
+    timestamp: "9:15 AM",
+    reactions: [{ emoji: "👀", count: 2 }],
+  },
+  {
+    senderName: "James O'Brien",
+    senderRole: "Backend Engineer",
+    senderAvatarUrl: "/avatars/james-obrien.jpg",
+    text: "Quick heads up - the staging DB will be down for maintenance at 11 AM, ~15 min window",
+    timestamp: "9:22 AM",
+  },
+  {
+    senderName: "Carlos Mendez",
+    senderRole: "ML Engineer",
+    senderAvatarUrl: "/avatars/carlos-mendez.jpg",
+    text: "New model benchmark results are in. TL;DR: 12% improvement on the recommendation engine 🎉",
+    timestamp: "9:30 AM",
+    reactions: [{ emoji: "🎉", count: 4 }],
+  },
+  {
+    senderName: "Nina Volkov",
+    senderRole: "Engineering Manager",
+    senderAvatarUrl: "/avatars/nina-volkov.jpg",
+    text: "Great work Carlos! Can you share the full report in #ml-eng?",
+    timestamp: "9:31 AM",
+  },
+  {
+    senderName: "Maya Torres",
+    senderRole: "Product Designer",
+    senderAvatarUrl: "/avatars/maya-torres.jpg",
+    text: "Reminder: design review at 10:30. I'll share the Figma link in #design beforehand",
+    timestamp: "9:40 AM",
+  },
+];
+
+/**
+ * Ambient messages that appear periodically during the assessment
+ * to make the team feel alive
+ */
+export const AMBIENT_MESSAGES: Array<ChannelMessage & { delayMinutes: number }> = [
+  {
+    senderName: "Priya Sharma",
+    senderRole: "DevOps Engineer",
+    senderAvatarUrl: "/avatars/priya-sharma.jpg",
+    text: "Staging deploy complete ✅",
+    timestamp: "", // Will be set dynamically
+    delayMinutes: 10,
+  },
+  {
+    senderName: "Marcus Lee",
+    senderRole: "Frontend Engineer",
+    senderAvatarUrl: "/avatars/marcus-lee.jpg",
+    text: "Anyone else seeing the new ESLint rule flagging optional chaining? Is that intentional?",
+    timestamp: "",
+    delayMinutes: 20,
+  },
+  {
+    senderName: "Derek Washington",
+    senderRole: "Data Scientist",
+    senderAvatarUrl: "/avatars/derek-washington.jpg",
+    text: "Yeah I think that was in the latest config update. @nina should we revert?",
+    timestamp: "",
+    delayMinutes: 22,
+  },
+  {
+    senderName: "Nina Volkov",
+    senderRole: "Engineering Manager",
+    senderAvatarUrl: "/avatars/nina-volkov.jpg",
+    text: "Let's keep it for now, we can discuss in standup tomorrow",
+    timestamp: "",
+    delayMinutes: 24,
+  },
+  {
+    senderName: "James O'Brien",
+    senderRole: "Backend Engineer",
+    senderAvatarUrl: "/avatars/james-obrien.jpg",
+    text: "Staging DB is back up 👍",
+    timestamp: "",
+    delayMinutes: 35,
+  },
+];
+
+/**
  * Get initials from a name for avatar display
  */
 export function getInitials(name: string): string {

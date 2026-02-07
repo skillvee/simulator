@@ -3,12 +3,16 @@
 import { useCallback, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { SlackLayout, Chat } from "@/components/chat";
+import { GeneralChannel } from "@/components/chat/general-channel";
+import { GENERAL_CHANNEL_MESSAGES } from "@/lib/ai/coworker-persona";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { DecorativeChat } from "@/components/chat/decorative-chat";
 import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
+import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
 import { playMessageSound } from "@/lib/sounds";
 import type { ChatMessage } from "@/types";
+import type { ChannelMessage } from "@/lib/ai/coworker-persona";
 
 interface Coworker {
   id: string;
@@ -34,8 +38,12 @@ export function WorkPageClient({
   const { stopRecording } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
 
-  // Ref to store the incrementUnread function from SlackLayout
+  // Refs to store the increment functions from SlackLayout
   const incrementUnreadRef = useRef<((coworkerId: string) => void) | null>(null);
+  const incrementGeneralUnreadRef = useRef<(() => void) | null>(null);
+
+  // State to store ambient messages that arrive while user is viewing the channel
+  const [ambientMessages, setAmbientMessages] = useState<ChannelMessage[]>([]);
 
   // Handle proactive messages from coworkers
   const handleProactiveMessage = useCallback((coworkerId: string, message: ChatMessage) => {
@@ -50,6 +58,22 @@ export function WorkPageClient({
     console.log(`[WorkPage] Proactive message from ${coworkerId}: ${message.text.slice(0, 50)}...`);
   }, []);
 
+  // Handle ambient messages in #general channel
+  const handleAmbientMessage = useCallback((message: ChannelMessage) => {
+    console.log(`[WorkPage] Ambient message in #general: ${message.text.slice(0, 50)}...`);
+
+    // Add to ambient messages state
+    setAmbientMessages((prev) => [...prev, message]);
+
+    // Increment unread count if not viewing #general
+    if (incrementGeneralUnreadRef.current) {
+      incrementGeneralUnreadRef.current();
+    }
+
+    // Play notification sound
+    playMessageSound();
+  }, []);
+
   // Initialize proactive messages hook
   useProactiveMessages({
     assessmentId,
@@ -58,6 +82,17 @@ export function WorkPageClient({
     assessmentStartTime,
     onProactiveMessage: handleProactiveMessage,
   });
+
+  // Initialize ambient messages hook for #general channel
+  useAmbientMessages({
+    assessmentId,
+    assessmentStartTime,
+    onAmbientMessage: handleAmbientMessage,
+    enabled: true,
+  });
+
+  // Check if viewing the #general channel
+  const isGeneralChannel = selectedCoworkerId === "general";
 
   // Check if selected coworker is a decorative member
   const isDecorativeCoworker = selectedCoworkerId?.startsWith("decorative-");
@@ -126,8 +161,16 @@ export function WorkPageClient({
       onIncrementUnreadRef={(fn) => {
         incrementUnreadRef.current = fn;
       }}
+      onIncrementGeneralUnreadRef={(fn) => {
+        incrementGeneralUnreadRef.current = fn;
+      }}
     >
-      {decorativeMember ? (
+      {isGeneralChannel ? (
+        <GeneralChannel
+          assessmentId={assessmentId}
+          initialMessages={[...GENERAL_CHANNEL_MESSAGES, ...ambientMessages]}
+        />
+      ) : decorativeMember ? (
         <DecorativeChat
           member={decorativeMember}
           managerName={managerName}
