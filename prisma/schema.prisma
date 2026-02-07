@@ -266,6 +266,20 @@ model SegmentAnalysis {
 // For video-based candidate assessments with dimension scoring
 // ============================================================================
 
+// Assessment dimension enum - used by embeddings, candidate search, and percentile calculator
+// Note: DimensionScore.dimension is stored as String for flexibility with the Dimension table,
+// but this enum is still used in code for type-safe dimension references.
+enum AssessmentDimension {
+  COMMUNICATION
+  PROBLEM_SOLVING
+  TECHNICAL_KNOWLEDGE
+  COLLABORATION
+  ADAPTABILITY
+  LEADERSHIP
+  CREATIVITY
+  TIME_MANAGEMENT
+}
+
 enum VideoAssessmentStatus {
   PENDING
   PROCESSING

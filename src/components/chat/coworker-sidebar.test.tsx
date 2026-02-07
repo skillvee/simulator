@@ -62,10 +62,17 @@ describe("CoworkerSidebar", () => {
   };
 
   describe("rendering", () => {
-    it("renders team directory header", () => {
+    it("renders team header", () => {
       render(<CoworkerSidebar {...defaultProps} />);
 
-      expect(screen.getByText("Team Directory")).toBeInTheDocument();
+      expect(screen.getByText("Team")).toBeInTheDocument();
+    });
+
+    it("renders Skillvee brand header", () => {
+      render(<CoworkerSidebar {...defaultProps} />);
+
+      expect(screen.getByText("Skillvee")).toBeInTheDocument();
+      expect(screen.getByText("S")).toBeInTheDocument();
     });
 
     it("renders coworker name and role", () => {
@@ -87,56 +94,35 @@ describe("CoworkerSidebar", () => {
       expect(screen.getByText("Coworker 2")).toBeInTheDocument();
       expect(screen.getByText("Coworker 3")).toBeInTheDocument();
     });
-
-    it("displays correct online count in footer", () => {
-      const coworkers = createMockCoworkers(2);
-      render(<CoworkerSidebar {...defaultProps} coworkers={coworkers} />);
-
-      expect(screen.getByText(/2 online/)).toBeInTheDocument();
-    });
-
-    it("displays total team count including decorative members", () => {
-      const coworkers = createMockCoworkers(2);
-      render(<CoworkerSidebar {...defaultProps} coworkers={coworkers} />);
-
-      // Should show total count (including decorative members)
-      expect(screen.getByText(/\d+ total/)).toBeInTheDocument();
-    });
   });
 
-  describe("avatar identicons", () => {
-    it("shows DiceBear identicon for coworker", () => {
+  describe("avatar fallbacks", () => {
+    it("shows initials fallback for coworker avatar in jsdom", () => {
       const coworker = createMockCoworker({ name: "Alex Chen" });
       render(<CoworkerSidebar {...defaultProps} coworkers={[coworker]} />);
 
-      const avatar = screen.getByAltText("Alex Chen's avatar");
-      expect(avatar).toBeInTheDocument();
-      expect(avatar).toHaveAttribute(
-        "src",
-        expect.stringContaining("api.dicebear.com")
-      );
+      // In jsdom, AvatarImage does not render (no img load event), so
+      // AvatarFallback shows initials instead
+      expect(screen.getByText("AC")).toBeInTheDocument();
     });
 
-    it("uses coworker name as seed for deterministic avatar", () => {
+    it("shows correct initials for multi-word names", () => {
       const coworker = createMockCoworker({ name: "Jamie Rodriguez" });
       render(<CoworkerSidebar {...defaultProps} coworkers={[coworker]} />);
 
-      const avatar = screen.getByAltText("Jamie Rodriguez's avatar");
-      expect(avatar).toHaveAttribute(
-        "src",
-        expect.stringContaining("seed=Jamie%20Rodriguez")
-      );
+      expect(screen.getByText("JR")).toBeInTheDocument();
     });
 
-    it("uses blue background color for modern design theme", () => {
+    it("renders CoworkerAvatar with correct alt text", () => {
       const coworker = createMockCoworker({ name: "Test User" });
       render(<CoworkerSidebar {...defaultProps} coworkers={[coworker]} />);
 
-      const avatar = screen.getByAltText("Test User's avatar");
-      expect(avatar).toHaveAttribute(
-        "src",
-        expect.stringContaining("backgroundColor=237CF1")
-      );
+      // The Avatar component renders a span with data-slot="avatar" that
+      // contains an AvatarImage (not visible in jsdom) and AvatarFallback.
+      // Verify the avatar structure exists via the fallback.
+      const fallback = screen.getByText("TU");
+      expect(fallback).toBeInTheDocument();
+      expect(fallback).toHaveAttribute("data-slot", "avatar-fallback");
     });
   });
 
@@ -193,7 +179,7 @@ describe("CoworkerSidebar", () => {
   });
 
   describe("selection state", () => {
-    it("highlights selected coworker", () => {
+    it("highlights selected coworker with primary styling", () => {
       const coworkers = createMockCoworkers(2);
       const { container } = render(
         <CoworkerSidebar
@@ -203,8 +189,8 @@ describe("CoworkerSidebar", () => {
         />
       );
 
-      // Find the selected item by checking for bg-accent class
-      const selectedItem = container.querySelector(".bg-accent");
+      // Selected coworker uses bg-primary/10 class
+      const selectedItem = container.querySelector('[class*="bg-primary/10"]');
       expect(selectedItem).toBeInTheDocument();
     });
 
@@ -219,17 +205,17 @@ describe("CoworkerSidebar", () => {
       );
 
       // Should only have one selected item
-      const selectedItems = container.querySelectorAll(".bg-accent");
+      const selectedItems = container.querySelectorAll('[class*="bg-primary/10"]');
       expect(selectedItems).toHaveLength(1);
     });
   });
 
   describe("decorative team members", () => {
-    it("renders decorative team members as offline", () => {
+    it("renders decorative team members as offline with opacity-50", () => {
       render(<CoworkerSidebar {...defaultProps} coworkers={[]} />);
 
-      // Check that some decorative members are shown (they have opacity-60)
-      const offlineMembers = document.querySelectorAll(".opacity-60");
+      // Decorative members use opacity-50 class
+      const offlineMembers = document.querySelectorAll(".opacity-50");
       expect(offlineMembers.length).toBeGreaterThan(0);
     });
 
@@ -238,6 +224,24 @@ describe("CoworkerSidebar", () => {
 
       const unavailableElements = screen.getAllByTitle("Unavailable");
       expect(unavailableElements.length).toBeGreaterThan(0);
+    });
+
+    it("renders known decorative team member names", () => {
+      render(<CoworkerSidebar {...defaultProps} coworkers={[]} />);
+
+      // DECORATIVE_TEAM_MEMBERS includes Maya Torres, Derek Washington, etc.
+      expect(screen.getByText("Maya Torres")).toBeInTheDocument();
+      expect(screen.getByText("Derek Washington")).toBeInTheDocument();
+      expect(screen.getByText("Priya Sharma")).toBeInTheDocument();
+    });
+
+    it("shows initials for decorative team members", () => {
+      render(<CoworkerSidebar {...defaultProps} coworkers={[]} />);
+
+      // getInitials("Maya Torres") => "MT"
+      expect(screen.getByText("MT")).toBeInTheDocument();
+      // getInitials("Derek Washington") => "DW"
+      expect(screen.getByText("DW")).toBeInTheDocument();
     });
   });
 

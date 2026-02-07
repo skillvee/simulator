@@ -37,6 +37,7 @@ export function Chat({
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isManagerTyping, setIsManagerTyping] = useState(false);
+  const [userHasSentMessage, setUserHasSentMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const historyLoadedRef = useRef(false);
@@ -72,6 +73,7 @@ export function Chat({
     onMessagesReceived: handleManagerMessages,
     onTypingStart: handleTypingStart,
     onTypingEnd: handleTypingEnd,
+    userHasSentMessage,
   });
 
   // Load chat history on mount
@@ -109,6 +111,11 @@ export function Chat({
 
   const sendMessage = async () => {
     if (!input.trim() || isSending) return;
+
+    // Mark that user has sent their first message
+    if (!userHasSentMessage) {
+      setUserHasSentMessage(true);
+    }
 
     const userMessage: ChatMessage = {
       role: "user",

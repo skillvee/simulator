@@ -34,6 +34,7 @@ interface UseManagerAutoStartOptions {
   onMessagesReceived: (messages: ChatMessage[]) => void;
   onTypingStart: () => void;
   onTypingEnd: () => void;
+  userHasSentMessage?: boolean;
 }
 
 interface UseManagerAutoStartReturn {
@@ -43,17 +44,16 @@ interface UseManagerAutoStartReturn {
   error: Error | null;
 }
 
-// Delay before starting manager messages (5-10 seconds)
-const AUTO_START_DELAY_MIN = 5000;
-const AUTO_START_DELAY_MAX = 10000;
+// Delay before starting manager messages (5 seconds)
+const AUTO_START_DELAY = 5000;
 
-// Delay between messages (1.5-3 seconds for typing simulation)
-const MESSAGE_DELAY_MIN = 1500;
-const MESSAGE_DELAY_MAX = 3000;
+// Delay between messages (15-45 seconds for realistic feel)
+const MESSAGE_DELAY_MIN = 15000;
+const MESSAGE_DELAY_MAX = 45000;
 
-// Typing indicator duration before each message
-const TYPING_DURATION_MIN = 800;
-const TYPING_DURATION_MAX = 1500;
+// Typing indicator duration before each message (2-3 seconds)
+const TYPING_DURATION_MIN = 2000;
+const TYPING_DURATION_MAX = 3000;
 
 function randomDelay(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -65,6 +65,7 @@ export function useManagerAutoStart({
   onMessagesReceived,
   onTypingStart,
   onTypingEnd,
+  userHasSentMessage = false,
 }: UseManagerAutoStartOptions): UseManagerAutoStartReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
@@ -75,31 +76,45 @@ export function useManagerAutoStart({
   const hasTriggeredRef = useRef(false);
   // Track if component is mounted
   const isMountedRef = useRef(true);
+  // Track if message delivery is cancelled
+  const cancelledRef = useRef(false);
 
   const deliverMessagesWithStagger = useCallback(
     async (messages: ChatMessage[]) => {
       for (let i = 0; i < messages.length; i++) {
-        if (!isMountedRef.current) return;
+        // Check if cancelled or unmounted
+        if (!isMountedRef.current || cancelledRef.current) return;
 
         // Show typing indicator
         setIsTyping(true);
         onTypingStart();
 
-        // Wait for typing duration
+        // Wait for typing duration (2-3 seconds)
         await new Promise((resolve) =>
           setTimeout(resolve, randomDelay(TYPING_DURATION_MIN, TYPING_DURATION_MAX))
         );
 
-        if (!isMountedRef.current) return;
+        // Check again after typing delay
+        if (!isMountedRef.current || cancelledRef.current) {
+          setIsTyping(false);
+          onTypingEnd();
+          return;
+        }
 
-        // Hide typing, deliver message
+        // Hide typing, deliver message with current timestamp
         setIsTyping(false);
         onTypingEnd();
 
-        // Deliver this message
-        onMessagesReceived([messages[i]]);
+        // Override timestamp with current time for realistic feel
+        const messageWithCurrentTimestamp: ChatMessage = {
+          ...messages[i],
+          timestamp: new Date().toISOString(),
+        };
 
-        // Wait before next message (except for last one)
+        // Deliver this message
+        onMessagesReceived([messageWithCurrentTimestamp]);
+
+        // Wait before next message (15-45 seconds, except for last one)
         if (i < messages.length - 1) {
           await new Promise((resolve) =>
             setTimeout(resolve, randomDelay(MESSAGE_DELAY_MIN, MESSAGE_DELAY_MAX))
@@ -109,6 +124,13 @@ export function useManagerAutoStart({
     },
     [onMessagesReceived, onTypingStart, onTypingEnd]
   );
+
+  // Cancel message delivery when user sends their first message
+  useEffect(() => {
+    if (userHasSentMessage) {
+      cancelledRef.current = true;
+    }
+  }, [userHasSentMessage]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -134,9 +156,8 @@ export function useManagerAutoStart({
           return;
         }
 
-        // Wait 5-10 seconds before triggering messages
-        const delay = randomDelay(AUTO_START_DELAY_MIN, AUTO_START_DELAY_MAX);
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        // Wait 5 seconds before triggering messages
+        await new Promise((resolve) => setTimeout(resolve, AUTO_START_DELAY));
 
         if (!isMountedRef.current) return;
 

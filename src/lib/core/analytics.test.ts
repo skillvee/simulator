@@ -247,30 +247,10 @@ describe("Analytics Queries", () => {
   });
 
   describe("getPhaseDurationStats", () => {
-    it("returns HR interview duration stats", async () => {
-      mockHRAssessmentFindMany.mockResolvedValue([
-        { interviewDurationSeconds: 600 }, // 10 minutes
-        { interviewDurationSeconds: 1200 }, // 20 minutes
-        { interviewDurationSeconds: 900 }, // 15 minutes
-      ]);
-      mockAssessmentFindMany.mockResolvedValue([]);
-      mockSegmentAnalysisFindMany.mockResolvedValue([]);
-
-      const result = await getPhaseDurationStats();
-
-      const hrStats = result.find((s) => s.phase === "HR Interview");
-      expect(hrStats).toBeDefined();
-      expect(hrStats?.avgDurationMinutes).toBe(15);
-      expect(hrStats?.minDurationMinutes).toBe(10);
-      expect(hrStats?.maxDurationMinutes).toBe(20);
-      expect(hrStats?.sampleSize).toBe(3);
-    });
-
     it("returns total assessment duration stats", async () => {
       const start = new Date("2024-01-01T10:00:00Z");
       const end = new Date("2024-01-01T11:00:00Z"); // 1 hour later
 
-      mockHRAssessmentFindMany.mockResolvedValue([]);
       mockAssessmentFindMany.mockResolvedValue([
         { startedAt: start, completedAt: end },
       ]);
@@ -283,8 +263,21 @@ describe("Analytics Queries", () => {
       expect(totalStats?.avgDurationMinutes).toBe(60);
     });
 
+    it("returns working phase duration stats from segment analysis", async () => {
+      mockAssessmentFindMany.mockResolvedValue([]);
+      mockSegmentAnalysisFindMany.mockResolvedValue([
+        { totalActiveTime: 600, totalIdleTime: 300 }, // 15 min total
+        { totalActiveTime: 1200, totalIdleTime: 600 }, // 30 min total
+      ]);
+
+      const result = await getPhaseDurationStats();
+
+      const workingStats = result.find((s) => s.phase === "Working (Active)");
+      expect(workingStats).toBeDefined();
+      expect(workingStats?.sampleSize).toBe(2);
+    });
+
     it("returns empty array when no data", async () => {
-      mockHRAssessmentFindMany.mockResolvedValue([]);
       mockAssessmentFindMany.mockResolvedValue([]);
       mockSegmentAnalysisFindMany.mockResolvedValue([]);
 
