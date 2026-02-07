@@ -16,6 +16,7 @@ import {
   createAudioWorkletBlobUrl,
   type AudioPermissionState,
 } from "@/lib/media";
+import { playCallRingSound } from "@/lib/sounds";
 import type { TranscriptMessage } from "@/lib/ai";
 import { CoworkerAvatar } from "./coworker-avatar";
 import { Button } from "@/components/ui/button";
@@ -234,6 +235,8 @@ export function FloatingCallBar({
     setError(null);
     setCallState("requesting-permission");
 
+    let ringSound: { stop: () => void } | null = null;
+
     try {
       // Check and request microphone permission
       const permState = await checkMicrophonePermission();
@@ -245,6 +248,9 @@ export function FloatingCallBar({
       setPermissionState("granted");
 
       setCallState("connecting");
+
+      // Start playing ring sound
+      ringSound = playCallRingSound();
 
       // Get ephemeral token from server
       const tokenEndpoint = getTokenEndpoint();
@@ -288,12 +294,16 @@ export function FloatingCallBar({
           onopen: () => {
             sessionConnected = true;
             setCallState("connected");
+            // Stop ring sound when connected
+            if (ringSound) ringSound.stop();
           },
           onmessage: handleServerMessage,
           onerror: (e: ErrorEvent) => {
             console.error("Gemini Live error:", e);
             setError(e.message || "Connection error");
             setCallState("error");
+            // Stop ring sound on error
+            if (ringSound) ringSound.stop();
             onError?.(e.message || "Connection error");
           },
           onclose: () => {
@@ -328,6 +338,11 @@ export function FloatingCallBar({
       const errorMessage =
         err instanceof Error ? err.message : "Connection failed";
       setError(errorMessage);
+
+      // Stop ring sound on error (if it was started)
+      if (ringSound) {
+        ringSound.stop();
+      }
 
       if (
         errorMessage.includes("permission") ||

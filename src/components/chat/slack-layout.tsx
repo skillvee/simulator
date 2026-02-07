@@ -4,6 +4,7 @@ import { useState, Suspense, createContext, useContext, cloneElement, isValidEle
 import { useRouter, useSearchParams } from "next/navigation";
 import { Menu, X, Headphones } from "lucide-react";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
+import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
 import { CoworkerAvatar } from "./coworker-avatar";
 
@@ -137,6 +138,9 @@ function SlackLayoutInner({
       ...prev,
       [coworkerId]: (prev[coworkerId] || 0) + 1,
     }));
+
+    // Play notification sound for messages in non-selected chats
+    playMessageSound();
   };
 
   // Clear unread count for a coworker
@@ -178,7 +182,11 @@ function SlackLayoutInner({
 
   return (
     <CallContext.Provider value={callContextValue}>
-      <div className="slack-theme relative flex h-screen overflow-hidden" style={{background: "hsl(var(--slack-bg-main))"}}>
+      <div
+        className="slack-theme relative flex h-screen overflow-hidden"
+        style={{background: "hsl(var(--slack-bg-main))"}}
+        onClick={() => markUserInteraction()}
+      >
         {/* Mobile menu button */}
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}

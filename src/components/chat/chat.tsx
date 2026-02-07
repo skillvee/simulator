@@ -8,6 +8,7 @@ import { CoworkerAvatar } from "./coworker-avatar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useManagerAutoStart } from "@/hooks";
+import { playMessageSound, markUserInteraction } from "@/lib/sounds";
 import type { ChatMessage } from "@/types";
 
 interface Coworker {
@@ -53,7 +54,11 @@ export function Chat({
     if (onNewMessage && newMessages.length > 0) {
       // Only count model messages (from the coworker)
       const modelMessages = newMessages.filter(msg => msg.role === 'model');
-      modelMessages.forEach(() => onNewMessage(coworker.id));
+      modelMessages.forEach(() => {
+        onNewMessage(coworker.id);
+        // Play sound for each model message
+        playMessageSound();
+      });
     }
   }, [coworker.id, onNewMessage]);
 
@@ -163,6 +168,9 @@ export function Chat({
       };
       setMessages((prev) => [...prev, modelMessage]);
 
+      // Play notification sound for model message
+      playMessageSound();
+
       // Notify parent component about new message for unread count
       if (onNewMessage) {
         onNewMessage(coworker.id);
@@ -184,6 +192,8 @@ export function Chat({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Mark user interaction for autoplay policy compliance
+    markUserInteraction();
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -336,6 +346,7 @@ export function Chat({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onClick={() => markUserInteraction()}
               onKeyDown={handleKeyDown}
               placeholder="Type a message..."
               disabled={isSending}
