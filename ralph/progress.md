@@ -1,4 +1,70 @@
-# Ralph Progress Log
+
+## Issue #244: US-008 - Add sorting and filtering to scoped candidate table
+
+### What was implemented
+- Added comprehensive sort and filter controls to the scoped candidate table at `src/app/recruiter/candidates/s/[simulationId]/client.tsx`
+- **Sort options** (dropdown): "Highest score" (default), "Most recent" (by completedAt), "Name A-Z" (alphabetical)
+- **Default sort behavior**: Highest overall score descending, with most recent completion date as tiebreaker. Non-scored candidates (WORKING/WELCOME status) always appear at bottom
+- **Filter by status**: All (default) / Completed / Working / Welcome
+- **Filter by strength level**: All (default) / Exceptional / Strong / Proficient / Developing
+- **Filter by minimum score**: None (default), 1.0+, 2.0+, 2.5+, 3.0+, 3.5+
+- **Active filters display**: Dismissable chips below filter bar showing active filters with X button to remove
+- **Candidate count**: Updated dynamically to show "Showing X of Y candidates" based on filters
+- All filtering and sorting is client-side using React hooks (useState, useMemo)
+- Clean horizontal filter bar layout above the table using shadcn Select components
+
+### Files modified
+- **Modified:** `src/app/recruiter/candidates/s/[simulationId]/client.tsx` - Added sort/filter state management, filtering logic, filter UI components (452 lines → 583 lines)
+
+### Acceptance criteria verified
+- ✅ Add sort and filter controls to scoped candidate table header
+- ✅ Default sort: Highest overall score (descending), tiebreaker: most recent completion date, non-scored at bottom
+- ✅ Sort options dropdown: "Highest score" (default), "Most recent", "Name A-Z"
+- ✅ Filter by status dropdown: All / Completed / Working / Welcome
+- ✅ Filter by strength level dropdown: All / Exceptional / Strong / Proficient / Developing
+- ✅ Filter by minimum score dropdown: None, 1.0+, 2.0+, 2.5+, 3.0+, 3.5+
+- ✅ Active filters shown as dismissable chips below filter bar
+- ✅ Candidate count updates to reflect filtered results ("Showing X of Y candidates")
+- ✅ Filters and sort are client-side (data already loaded from server)
+- ✅ Sort/filter state does NOT persist in URL params (acceptable per AC)
+- ✅ Typecheck passes (no new type errors introduced - existing errors are pre-existing)
+- ✅ App builds successfully (compiled successfully with pre-existing warnings only)
+
+### Learnings for future iterations
+
+**Client-side filtering and sorting patterns:**
+- Used `useMemo` to compute filtered/sorted candidates - only recalculates when dependencies change (candidates, sortBy, filters)
+- Separate filter state variables for each filter type (statusFilter, strengthFilter, minScoreFilter) - cleaner than single filter object
+- Sort logic handles edge cases: null scores always go to bottom, tiebreaker logic for equal scores
+- Filter application order: status → strength → min score → sort (order doesn't matter since filters are independent)
+
+**Default sort implementation:**
+- Default sort is score descending with completion date tiebreaker
+- Non-scored candidates (overallScore === null) always appear at bottom regardless of status
+- Tiebreaker uses `new Date(completedAt).getTime()` for numeric comparison (handles null with fallback to 0)
+- Sort function mutates filtered array - safe because we spread `[...candidates]` first
+
+**Filter chips UI pattern:**
+- Active filters computed in separate `useMemo` for performance
+- Each chip stores its label and a `clear` function (closure over setState)
+- Chips rendered conditionally: only show chip row when `activeFilters.length > 0`
+- Used shadcn Badge with `variant="secondary"` and hover state for chips
+- X icon from lucide-react positioned inline with gap
+
+**shadcn Select component usage:**
+- Select is controlled component: `value={sortBy}` + `onValueChange={(value) => setSortBy(value as SortOption)}`
+- Type assertion needed: `onValueChange` passes string, we need typed enum
+- SelectTrigger width set explicitly (w-[180px], w-[160px], etc.) for consistent layout
+- SelectContent/SelectItem pattern is straightforward - just list the options
+- Labels are human-readable, values match enum types
+
+**Performance considerations:**
+- `useMemo` prevents unnecessary re-filtering/re-sorting on unrelated re-renders
+- Client-side filtering is fast for typical candidate counts (< 100 per simulation)
+- No debouncing needed - filters are dropdowns not text inputs
+
+
+ Ralph Progress Log
 
 ## Issue #231: US-001 - Job description entry point UI for simulation builder
 

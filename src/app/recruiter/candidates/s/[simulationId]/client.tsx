@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, AlertTriangle, Circle } from "lucide-react";
+import { ChevronLeft, AlertTriangle, Circle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import {
@@ -19,6 +20,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /**
  * Candidate strength levels based on overall score (1-4 scale)
@@ -266,6 +274,11 @@ function RedFlagBadge({ count }: { count: number }) {
   );
 }
 
+type SortOption = "score" | "recent" | "name";
+type StatusFilter = "all" | "COMPLETED" | "WORKING" | "WELCOME";
+type StrengthFilter = "all" | "Exceptional" | "Strong" | "Proficient" | "Developing";
+type MinScoreFilter = "none" | "1.0" | "2.0" | "2.5" | "3.0" | "3.5";
+
 export function ScopedCandidatesClient({
   simulationId,
   simulationName,
@@ -273,9 +286,108 @@ export function ScopedCandidatesClient({
 }: ScopedCandidatesClientProps) {
   const router = useRouter();
 
+  // Filter and sort state
+  const [sortBy, setSortBy] = useState<SortOption>("score");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [strengthFilter, setStrengthFilter] = useState<StrengthFilter>("all");
+  const [minScoreFilter, setMinScoreFilter] = useState<MinScoreFilter>("none");
+
   const handleRowClick = (assessmentId: string) => {
     router.push(`/recruiter/candidates/s/${simulationId}/${assessmentId}`);
   };
+
+  // Filter and sort candidates
+  const filteredAndSortedCandidates = useMemo(() => {
+    let filtered = [...candidates];
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((c) => c.status === statusFilter);
+    }
+
+    // Apply strength filter
+    if (strengthFilter !== "all") {
+      filtered = filtered.filter((c) => c.strengthLevel === strengthFilter);
+    }
+
+    // Apply minimum score filter
+    if (minScoreFilter !== "none") {
+      const minScore = parseFloat(minScoreFilter);
+      filtered = filtered.filter((c) => c.overallScore !== null && c.overallScore >= minScore);
+    }
+
+    // Sort candidates
+    filtered.sort((a, b) => {
+      if (sortBy === "score") {
+        // Default: Highest score (descending), tiebreaker: most recent completion
+        // Non-scored candidates always at bottom
+        const aHasScore = a.overallScore !== null;
+        const bHasScore = b.overallScore !== null;
+
+        if (!aHasScore && !bHasScore) {
+          // Both non-scored: sort by completed date (most recent first)
+          const aDate = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+          const bDate = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+          return bDate - aDate;
+        }
+        if (!aHasScore) return 1; // a goes to bottom
+        if (!bHasScore) return -1; // b goes to bottom
+
+        // Both have scores: sort by score descending
+        if (b.overallScore !== a.overallScore) {
+          return b.overallScore! - a.overallScore!;
+        }
+
+        // Tiebreaker: most recent completion
+        const aDate = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+        const bDate = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+        return bDate - aDate;
+      } else if (sortBy === "recent") {
+        // Most recent by completedAt descending
+        const aDate = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+        const bDate = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+        return bDate - aDate;
+      } else {
+        // Name A-Z (alphabetical)
+        const aName = a.name?.toLowerCase() || "";
+        const bName = b.name?.toLowerCase() || "";
+        return aName.localeCompare(bName);
+      }
+    });
+
+    return filtered;
+  }, [candidates, sortBy, statusFilter, strengthFilter, minScoreFilter]);
+
+  // Active filters count
+  const activeFilters = useMemo(() => {
+    const filters: Array<{ key: string; label: string; clear: () => void }> = [];
+
+    if (statusFilter !== "all") {
+      filters.push({
+        key: "status",
+        label: `Status: ${statusFilter === "COMPLETED" ? "Completed" : statusFilter === "WORKING" ? "Working" : "Welcome"}`,
+        clear: () => setStatusFilter("all"),
+      });
+    }
+
+    if (strengthFilter !== "all") {
+      filters.push({
+        key: "strength",
+        label: `Strength: ${strengthFilter}`,
+        clear: () => setStrengthFilter("all"),
+      });
+    }
+
+    if (minScoreFilter !== "none") {
+      filters.push({
+        key: "minScore",
+        label: `Min Score: ${minScoreFilter}+`,
+        clear: () => setMinScoreFilter("none"),
+      });
+    }
+
+    return filters;
+  }, [statusFilter, strengthFilter, minScoreFilter]);
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
@@ -290,8 +402,98 @@ export function ScopedCandidatesClient({
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">{simulationName}</h1>
         <p className="text-sm text-gray-600 mt-1">
-          Showing {candidates.length} candidate{candidates.length !== 1 ? "s" : ""}
+          Showing {filteredAndSortedCandidates.length} of {candidates.length} candidate{candidates.length !== 1 ? "s" : ""}
         </p>
+      </div>
+
+      {/* Filter and Sort Controls */}
+      <div className="mb-4 space-y-3">
+        {/* Controls Row */}
+        <div className="flex flex-wrap gap-3 items-center">
+          {/* Sort By */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Sort by:</label>
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="score">Highest score</SelectItem>
+                <SelectItem value="recent">Most recent</SelectItem>
+                <SelectItem value="name">Name A-Z</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Status:</label>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="COMPLETED">Completed</SelectItem>
+                <SelectItem value="WORKING">Working</SelectItem>
+                <SelectItem value="WELCOME">Welcome</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Strength Filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Strength:</label>
+            <Select value={strengthFilter} onValueChange={(value) => setStrengthFilter(value as StrengthFilter)}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="Exceptional">Exceptional</SelectItem>
+                <SelectItem value="Strong">Strong</SelectItem>
+                <SelectItem value="Proficient">Proficient</SelectItem>
+                <SelectItem value="Developing">Developing</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Min Score Filter */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Min Score:</label>
+            <Select value={minScoreFilter} onValueChange={(value) => setMinScoreFilter(value as MinScoreFilter)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="1.0">1.0+</SelectItem>
+                <SelectItem value="2.0">2.0+</SelectItem>
+                <SelectItem value="2.5">2.5+</SelectItem>
+                <SelectItem value="3.0">3.0+</SelectItem>
+                <SelectItem value="3.5">3.5+</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Active Filters Chips */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-gray-600">Active filters:</span>
+            {activeFilters.map((filter) => (
+              <Badge
+                key={filter.key}
+                variant="secondary"
+                className="gap-1.5 cursor-pointer hover:bg-gray-200"
+                onClick={filter.clear}
+              >
+                {filter.label}
+                <X className="h-3 w-3" />
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -309,14 +511,16 @@ export function ScopedCandidatesClient({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {candidates.length === 0 ? (
+            {filteredAndSortedCandidates.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-gray-500 py-12">
-                  No candidates found for this simulation
+                  {candidates.length === 0
+                    ? "No candidates found for this simulation"
+                    : "No candidates match the selected filters"}
                 </TableCell>
               </TableRow>
             ) : (
-              candidates.map((candidate) => (
+              filteredAndSortedCandidates.map((candidate) => (
                 <TableRow
                   key={candidate.assessmentId}
                   onClick={() => handleRowClick(candidate.assessmentId)}
