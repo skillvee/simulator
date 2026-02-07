@@ -6143,3 +6143,57 @@ agent-browser screenshot ./screenshots/general-channel.png --session "test"
 - **Initial status:** The first entry in statusSchedule (startMinutes: 0) defines the initial state. This ensures consistency between the initial `availability` field and the schedule.
 - **Integration potential:** The status schedule system is compatible with US-309 (proactive messages). Future enhancement: when a member transitions to "online" from "in-meeting" or "away", could trigger a proactive message.
 
+
+## Issue #225: US-009 - Make repoUrl optional — system-managed instead of user-provided
+
+### What was implemented
+- Made `repoUrl` column in Scenario model nullable in Prisma schema
+- Created migration `20250206000000_make_repo_url_optional` to ALTER TABLE without breaking existing rows
+- Updated `ScenarioBuilderData` type to remove `repoUrl` from user-facing fields
+- Updated `getCompletionStatus()` to remove `repoUrl` from required fields list
+- Updated `ScenarioCreateSchema` and `ScenarioUpdateSchema` validation to make `repoUrl` optional
+- Updated builder system prompt to stop asking for repo URL and note that it's system-managed
+- Updated simulation detail page to show "Setting up..." spinner when `repoUrl` is null
+- Updated manager greeting generator to handle null `repoUrl` with fallback message
+- Removed `repoUrl` from builder preview panels (both recruiter and admin)
+- Updated admin scenario interfaces to accept nullable `repoUrl`
+- Fixed all test files that referenced `repoUrl` in builder data
+
+### Files created/modified
+- **Modified:** `prisma/schema.prisma` - Made `repoUrl` nullable (`String?`)
+- **Created:** `prisma/migrations/20250206000000_make_repo_url_optional/migration.sql` - Migration to alter column
+- **Modified:** `src/lib/scenarios/scenario-builder.ts` - Removed repoUrl from schema, completion status, formatting, extraction
+- **Modified:** `src/lib/schemas/api.ts` - Made repoUrl optional in ScenarioCreateSchema and ScenarioUpdateSchema
+- **Modified:** `src/app/recruiter/simulations/[id]/client.tsx` - Added conditional rendering for null repoUrl with spinner
+- **Modified:** `src/app/recruiter/simulations/new/client.tsx` - Removed repoUrl from validation, save logic, preview panel
+- **Modified:** `src/lib/chat/greeting-generator.ts` - Handle null repoUrl with fallback message
+- **Modified:** `src/app/admin/scenarios/[id]/client.tsx` - Updated Scenario interface to accept nullable repoUrl
+- **Modified:** `src/app/admin/scenarios/builder/client.tsx` - Removed repoUrl from validation, save logic, preview panel
+- **Modified:** `src/lib/scenarios/scenario-builder.test.ts` - Removed repoUrl from all test fixtures
+
+### Acceptance criteria verified
+- ✅ Updated ScenarioBuilderData type: removed repoUrl from user-facing fields
+- ✅ Updated getCompletionStatus(): removed repoUrl from required fields list
+- ✅ Updated ScenarioCreateSchema validation: made repoUrl optional
+- ✅ Created Prisma migration: repoUrl nullable with backward compatibility
+- ✅ Updated simulation detail page: shows "Setting up..." with spinner while repoUrl is null
+- ✅ Updated candidate invite flow: manager greeting handles null repoUrl gracefully
+- ✅ Existing simulations with repoUrl work unchanged
+- ✅ Updated builder system prompt: stops asking for repo URL
+- ✅ Removed repo URL from preview panel in builder UI
+- ✅ Tests pass (no repoUrl-related errors)
+- ✅ Typecheck passes (no repoUrl-related errors)
+
+### Learnings for future iterations
+1. **Supabase shadow database limitation:** `prisma migrate dev` fails due to shadow database issue with Supabase. Workaround: Create migration file manually, apply with `prisma db execute`, then mark as applied with `prisma migrate resolve --applied`
+2. **Backward-compatible migrations:** Use `ALTER COLUMN DROP NOT NULL` to make columns nullable without data loss
+3. **Type propagation:** When changing database schema, need to update:
+   - Prisma schema
+   - Zod validation schemas
+   - TypeScript interfaces in client components
+   - Test fixtures
+   - Both recruiter AND admin UIs (they share the same builder pattern)
+4. **Greeting generator pattern:** AI conversation starters need conditional logic for optional fields - provide helpful fallback messages instead of showing null/undefined
+5. **UI feedback for async operations:** Spinner with "Setting up..." message provides clear user feedback for system-managed provisioning
+6. **Test-driven updates:** Fix type errors systematically by searching for all references (`grep repoUrl`) before running typecheck
+

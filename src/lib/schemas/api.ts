@@ -49,13 +49,14 @@ export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 
 /**
  * POST /api/admin/scenarios - Create a new scenario
+ * Note: repoUrl is now optional - it will be provisioned by the system
  */
 export const ScenarioCreateSchema = z.object({
   name: z.string().min(1, "Name is required"),
   companyName: z.string().min(1, "Company name is required"),
   companyDescription: z.string().min(1, "Company description is required"),
   taskDescription: z.string().min(1, "Task description is required"),
-  repoUrl: z.string().min(1, "Repository URL is required"),
+  repoUrl: z.string().optional(),
   techStack: z.array(z.string()).optional().default([]),
   isPublished: z.boolean().optional().default(false),
 });
@@ -69,7 +70,7 @@ export const ScenarioUpdateSchema = z.object({
   companyName: z.string().min(1, "Company name is required").optional(),
   companyDescription: z.string().min(1, "Company description is required").optional(),
   taskDescription: z.string().min(1, "Task description is required").optional(),
-  repoUrl: z.string().min(1, "Repository URL is required").optional(),
+  repoUrl: z.string().optional(),
   techStack: z.array(z.string()).optional(),
   isPublished: z.boolean().optional(),
 });

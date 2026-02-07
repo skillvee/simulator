@@ -26,13 +26,13 @@ export const coworkerBuilderSchema = z.object({
 
 /**
  * Schema for the full scenario being built
+ * Note: repoUrl is excluded from the builder as it's system-managed, not user-provided
  */
 export const scenarioBuilderSchema = z.object({
   name: z.string().optional(),
   companyName: z.string().optional(),
   companyDescription: z.string().optional(),
   taskDescription: z.string().optional(),
-  repoUrl: z.string().optional(),
   techStack: z.array(z.string()).optional(),
   coworkers: z.array(coworkerBuilderSchema).optional(),
 });
@@ -42,6 +42,7 @@ export type CoworkerBuilderData = z.infer<typeof coworkerBuilderSchema>;
 
 /**
  * Check which fields are complete in the scenario data
+ * Note: repoUrl is no longer required as it's system-managed
  */
 export function getCompletionStatus(data: ScenarioBuilderData): {
   complete: string[];
@@ -53,7 +54,6 @@ export function getCompletionStatus(data: ScenarioBuilderData): {
     "companyName",
     "companyDescription",
     "taskDescription",
-    "repoUrl",
   ] as const;
 
   const complete: string[] = [];
@@ -106,9 +106,6 @@ export function formatScenarioForPrompt(data: ScenarioBuilderData): string {
   if (data.taskDescription) {
     sections.push(`**Task Description:** ${data.taskDescription}`);
   }
-  if (data.repoUrl) {
-    sections.push(`**Repository URL:** ${data.repoUrl}`);
-  }
   if (data.techStack && data.techStack.length > 0) {
     sections.push(`**Tech Stack:** ${data.techStack.join(", ")}`);
   }
@@ -143,8 +140,9 @@ export const SCENARIO_BUILDER_SYSTEM_PROMPT = `You are a friendly assistant help
 - **Company Name**: The fictional company name for the scenario (e.g., "TechFlow Inc.", "DataVault")
 - **Company Description**: 2-3 sentences describing the company, its culture, and what it does
 - **Task Description**: What the candidate will be asked to build/fix/implement
-- **Repository URL**: A public GitHub repository with the starter code
 - **Tech Stack**: Technologies used (e.g., TypeScript, React, Node.js, PostgreSQL)
+
+Note: Repository setup is handled automatically by the system - you don't need to ask for or collect a repository URL.
 
 ### 2. Coworker Personas (Need at least 1, ideally 3-4)
 For each coworker, collect:
@@ -162,7 +160,7 @@ For each coworker, collect:
 1. **Start**: Greet and ask about the scenario they want to create
 2. **Company Setup**: Collect company name, description, and scenario name
 3. **Task Definition**: Get details about what candidates will do
-4. **Tech Stack & Repo**: Collect technical details
+4. **Tech Stack**: Collect technical details
 5. **Coworkers**: Help them create coworker personas one by one
 6. **Knowledge Items**: For each coworker, gather their knowledge
 7. **Review**: Summarize everything and confirm readiness to save
@@ -238,7 +236,6 @@ After each message where you learn new information, include a JSON block at the 
     "companyName": "string or null",
     "companyDescription": "string or null",
     "taskDescription": "string or null",
-    "repoUrl": "string or null",
     "techStack": ["array", "of", "strings"] or null,
     "newCoworker": {
       "name": "string",
@@ -269,7 +266,6 @@ export function parseExtractionFromResponse(response: string): Partial<{
   companyName: string;
   companyDescription: string;
   taskDescription: string;
-  repoUrl: string;
   techStack: string[];
   newCoworker: CoworkerBuilderData;
   newKnowledgeForCoworker: {
@@ -318,7 +314,6 @@ export function applyExtraction(
     updated.companyDescription = extraction.companyDescription;
   if (extraction.taskDescription)
     updated.taskDescription = extraction.taskDescription;
-  if (extraction.repoUrl) updated.repoUrl = extraction.repoUrl;
   if (extraction.techStack) updated.techStack = extraction.techStack;
 
   if (extraction.newCoworker) {

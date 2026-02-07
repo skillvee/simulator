@@ -95,7 +95,7 @@ model Scenario {
   companyName     String
   companyDescription String @db.Text
   taskDescription String   @db.Text
-  repoUrl         String
+  repoUrl         String?  // Nullable - system-managed, provisioned asynchronously
   techStack       String[] // e.g., ["typescript", "react", "node"]
   isPublished     Boolean  @default(false)
 

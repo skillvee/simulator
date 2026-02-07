@@ -139,7 +139,6 @@ export function RecruiterScenarioBuilderClient() {
     if (!scenarioData.companyName) missing.push("company name");
     if (!scenarioData.companyDescription) missing.push("company description");
     if (!scenarioData.taskDescription) missing.push("task description");
-    if (!scenarioData.repoUrl) missing.push("repository URL");
     if (!scenarioData.coworkers || scenarioData.coworkers.length === 0) {
       missing.push("at least one coworker");
     }
@@ -162,9 +161,9 @@ export function RecruiterScenarioBuilderClient() {
           companyName: scenarioData.companyName,
           companyDescription: scenarioData.companyDescription,
           taskDescription: scenarioData.taskDescription,
-          repoUrl: scenarioData.repoUrl,
           techStack: scenarioData.techStack || [],
           // Note: isPublished is auto-set to true by the recruiter API
+          // Note: repoUrl is omitted - it will be provisioned by the system
         }),
       });
 
@@ -226,7 +225,6 @@ export function RecruiterScenarioBuilderClient() {
     scenarioData.companyName &&
     scenarioData.companyDescription &&
     scenarioData.taskDescription &&
-    scenarioData.repoUrl &&
     scenarioData.coworkers &&
     scenarioData.coworkers.length > 0 &&
     scenarioData.coworkers.some(
@@ -413,7 +411,6 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
     data.companyName ||
     data.companyDescription ||
     data.taskDescription ||
-    data.repoUrl ||
     (data.techStack && data.techStack.length > 0) ||
     (data.coworkers && data.coworkers.length > 0);
 
@@ -453,7 +450,6 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
             truncate
             markdown
           />
-          <PreviewField label="Repo" value={data.repoUrl} />
           {data.techStack && data.techStack.length > 0 && (
             <div>
               <span className="text-sm text-muted-foreground">

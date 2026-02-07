@@ -15,7 +15,7 @@ export interface GreetingContext {
   managerName: string;
   managerRole: string;
   companyName: string;
-  repoUrl: string;
+  repoUrl: string | null;
   taskDescription: string;
 }
 
@@ -36,7 +36,7 @@ export function generateManagerGreetings(context: GreetingContext): ChatMessage[
     return time.toISOString();
   };
 
-  return [
+  const messages: ChatMessage[] = [
     {
       role: "model",
       text: `Hey ${userName}! Welcome to ${companyName}! I'm so glad to have you on the team.`,
@@ -52,15 +52,28 @@ export function generateManagerGreetings(context: GreetingContext): ChatMessage[
       text: `Here's what you'll be working on:\n\n"${taskDescription.slice(0, 200)}${taskDescription.length > 200 ? "..." : ""}"`,
       timestamp: getTimestamp(5),
     },
-    {
+  ];
+
+  // Only include repo URL message if repo is provisioned
+  if (repoUrl) {
+    messages.push({
       role: "model",
       text: `You can check out the repo here: ${repoUrl}`,
       timestamp: getTimestamp(8),
-    },
-    {
+    });
+  } else {
+    messages.push({
       role: "model",
-      text: `Feel free to ask me any questions you have, or reach out to the team. When you're done, submit your PR and give me a call to discuss!`,
-      timestamp: getTimestamp(12),
-    },
-  ];
+      text: `Your repository is being prepared. I'll share the link with you as soon as it's ready!`,
+      timestamp: getTimestamp(8),
+    });
+  }
+
+  messages.push({
+    role: "model",
+    text: `Feel free to ask me any questions you have, or reach out to the team. When you're done, submit your PR and give me a call to discuss!`,
+    timestamp: getTimestamp(12),
+  });
+
+  return messages;
 }

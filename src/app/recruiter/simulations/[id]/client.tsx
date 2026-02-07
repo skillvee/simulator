@@ -32,7 +32,7 @@ interface ScenarioData {
   companyName: string;
   companyDescription: string;
   taskDescription: string;
-  repoUrl: string;
+  repoUrl: string | null;
   techStack: string[];
   createdAt: string;
   coworkers: Coworker[];
@@ -182,17 +182,24 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
           {/* Repository URL */}
           <div>
             <h3 className="text-sm font-medium text-stone-500 mb-2">
-              Repository URL
+              Repository
             </h3>
-            <a
-              href={scenario.repoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              {scenario.repoUrl}
-              <ExternalLink className="h-4 w-4" />
-            </a>
+            {scenario.repoUrl ? (
+              <a
+                href={scenario.repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                {scenario.repoUrl}
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            ) : (
+              <div className="flex items-center gap-2 text-stone-500">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-blue-600" />
+                <span className="text-sm">Setting up...</span>
+              </div>
+            )}
           </div>
 
           {/* Created Date */}

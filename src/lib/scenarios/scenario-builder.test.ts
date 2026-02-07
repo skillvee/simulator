@@ -30,7 +30,6 @@ describe("getCompletionStatus", () => {
       companyName: "Test Company",
       companyDescription: "A test company",
       taskDescription: "Build something",
-      repoUrl: "https://github.com/test/repo",
     };
     const status = getCompletionStatus(data);
 
@@ -38,7 +37,6 @@ describe("getCompletionStatus", () => {
     expect(status.complete).toContain("companyName");
     expect(status.complete).toContain("companyDescription");
     expect(status.complete).toContain("taskDescription");
-    expect(status.complete).toContain("repoUrl");
     expect(status.missing).toContain("coworkers");
     expect(status.isReadyToSave).toBe(false);
   });
@@ -49,7 +47,6 @@ describe("getCompletionStatus", () => {
       companyName: "Test Company",
       companyDescription: "A test company",
       taskDescription: "Build something",
-      repoUrl: "https://github.com/test/repo",
       coworkers: [
         {
           name: "Alex",
@@ -79,7 +76,6 @@ describe("getCompletionStatus", () => {
       companyName: "Test Company",
       companyDescription: "A test company",
       taskDescription: "Build something",
-      repoUrl: "https://github.com/test/repo",
       coworkers: [
         {
           name: "Alex",
@@ -121,7 +117,6 @@ describe("formatScenarioForPrompt", () => {
       companyName: "Test Company",
       companyDescription: "A test company description",
       taskDescription: "Build a feature",
-      repoUrl: "https://github.com/test/repo",
       techStack: ["TypeScript", "React"],
       coworkers: [
         {
@@ -474,7 +469,6 @@ describe("formatCurrentStateForPrompt", () => {
       companyName: "Test Company",
       companyDescription: "A test company",
       taskDescription: "Build something",
-      repoUrl: "https://github.com/test/repo",
       coworkers: [
         {
           name: "Alex",

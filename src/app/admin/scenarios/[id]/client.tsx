@@ -24,7 +24,7 @@ interface Scenario {
   companyName: string;
   companyDescription: string;
   taskDescription: string;
-  repoUrl: string;
+  repoUrl: string | null;
   techStack: string[];
   isPublished: boolean;
   coworkers: Coworker[];
