@@ -1,3 +1,80 @@
+## Issue #245: US-009 - Compare mode selection in scoped candidate table
+
+### What was implemented
+- Added compare mode functionality to the scoped candidate table at `src/app/recruiter/candidates/s/[simulationId]/client.tsx`
+- **Compare button** in header toggles between "Compare" and "Exit Compare Mode" states
+- **Checkbox column** appears in compare mode (only for completed candidates with video scores - WORKING/WELCOME rows show no checkbox)
+- **Selection state management** using React useState with Set for O(1) lookups
+- **Min/max enforcement**: 2 minimum, 4 maximum selections enforced in toggleSelection logic
+- **Floating action bar** fixed at bottom with:
+  - Dynamic messaging: "Select 2-4 candidates to compare" (0 selected), "Select at least 1 more candidate" (1 selected), "N candidates selected" (2-4 selected)
+  - "Cancel" button clears selections and exits compare mode
+  - "Compare N candidates" button disabled until 2-4 are selected, navigates to `/recruiter/candidates/s/[simulationId]/compare?ids=A,B,C`
+- **URL persistence** using useSearchParams and window.history.replaceState - compare mode and selected IDs stored in URL params for page refresh persistence
+- **Row click behavior** - disabled in compare mode to prevent accidental navigation while selecting
+
+### Files modified
+- **Modified:** `src/app/recruiter/candidates/s/[simulationId]/client.tsx` - Added compare mode state, checkbox UI, floating action bar, URL persistence (656 lines → 788 lines)
+- **Added:** `screenshots/issue-245-initial-state.png` - Screenshot showing Compare button in header
+- **Added:** `screenshots/issue-245-compare-mode.png` - Screenshot showing active compare mode with floating action bar
+
+### Acceptance criteria verified
+- ✅ Add "Compare" button in the table header area
+- ✅ Clicking "Compare" toggles compare mode on the table
+- ✅ In compare mode: checkboxes appear next to each row. Only completed candidates with video assessment scores can be selected
+- ✅ Minimum 2, maximum 4 candidates can be selected. "Compare" action button is disabled until 2 are selected
+- ✅ Floating action bar appears at bottom of screen when in compare mode
+- ✅ Clicking "Compare N candidates" navigates to `/recruiter/candidates/s/[simulationId]/compare?ids=assessmentId1,assessmentId2,assessmentId3`
+- ✅ Selection state persisted in URL search params (page refresh preserves selection)
+- ✅ "Cancel" button exits compare mode and clears all selections
+- ✅ Adapted interaction pattern for new route structure (includes simulationId in URL)
+- ✅ Typecheck passes (no new errors introduced)
+- ✅ App builds successfully (pre-existing lint warnings only)
+
+### Learnings for future iterations
+
+**Compare mode state management:**
+- Used `Set<string>` for selectedIds instead of array - O(1) lookups for checking if ID is selected
+- Separate boolean `compareMode` state controls UI visibility - cleaner than deriving from selectedIds.size
+- Clear selections when exiting compare mode to prevent stale state
+
+**URL persistence pattern:**
+- Used two useEffect hooks: one to initialize state from URL params on mount, another to sync state changes to URL
+- `window.history.replaceState` prevents cluttering browser history while updating URL params
+- URLSearchParams makes param manipulation clean: `params.set()`, `params.delete()`, `params.toString()`
+- Initialize from URL on mount to support page refresh and direct URL access
+
+**Checkbox column dynamic rendering:**
+- Conditional column header: `{compareMode && <TableHead className="w-[50px]"></TableHead>}`
+- Update colspan in empty state: `colSpan={compareMode ? 8 : 7}` to account for checkbox column
+- Stop event propagation on checkbox cell: `onClick={(e) => e.stopPropagation()}` prevents row navigation
+
+**Floating action bar UI pattern:**
+- Fixed positioning: `position: fixed; bottom: 0; left: 0; right: 0; z-index: 50` ensures always visible
+- Container max-width matches table: `max-w-7xl` for visual alignment
+- Dynamic button text: "Compare N candidates" only shows count when 2+ selected
+- Disable button state: `disabled={!canCompare}` where `canCompare = selectedIds.size >= 2 && selectedIds.size <= 4`
+
+**Selection logic:**
+- Only completed candidates with overallScore !== null can be selected (enforced in UI with `canSelect` flag)
+- Max 4 selection check in toggleSelection: `if (newSet.size < 4) newSet.add()`
+- Checkbox disabled when limit reached: `disabled={!isSelected && selectedIds.size >= 4}`
+
+**Row click behavior in compare mode:**
+- Disable row navigation when in compare mode: `if (compareMode) return;`
+- Remove cursor-pointer class in compare mode for non-selectable rows
+- Allows users to click on row without triggering navigation (checkbox handles selection)
+
+**Button state transitions:**
+- "Compare" button switches to "Exit Compare Mode" using variant and className
+- Primary blue styling when active: `variant={compareMode ? "default" : "outline"}`
+- Clear visual feedback that compare mode is active
+
+**Testing with empty table:**
+- Compare mode UI works even with 0 candidates (floating bar, button state, URL params)
+- Empty state message is friendly: "No candidates found for this simulation"
+- Feature is testable without needing to seed database with candidate data
+
 
 ## Issue #244: US-008 - Add sorting and filtering to scoped candidate table
 
