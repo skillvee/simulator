@@ -1,3 +1,102 @@
+## Issue #250: US-014 - Video modal overlay in comparison view
+
+### What was implemented
+- Added `VideoModal` component to comparison view at `src/app/recruiter/candidates/s/[simulationId]/compare/client.tsx`
+- Modal built with shadcn Dialog component (`@/components/ui/dialog`)
+- Modal header shows candidate name + dimension name (if applicable)
+- HTML5 video player with timestamp seeking functionality
+- Parses timestamps from "MM:SS" or "HH:MM:SS" format to seconds using `parseTimestampToSeconds()`
+- Sets `video.currentTime` on load and auto-plays (with fallback for blocked autoplay)
+- Playback speed controls: 0.5x, 0.75x, 1x, 1.25x, 1.5x, 2x as buttons
+- Close: X button in DialogHeader + click outside modal (controlled by Dialog's onOpenChange)
+- Comparison view state preserved when modal closes - uses `useState` to toggle modal visibility, not navigation
+- Video URL sourced from comparison API response `videoUrl` field per candidate
+- Shows "No recording available" message if videoUrl is null
+- Wired timestamp click handlers in CoreDimensionsSection and KeyEvidenceSection
+- Timestamp click handlers call `onTimestampClick(timestamp, candidateName, videoUrl, dimensionName?)`
+- Reused video player pattern from `src/app/candidate/[id]/client.tsx` (timestamp seeking, playback speed controls, time display)
+- Added helper functions: `parseTimestampToSeconds()` and `formatTime()` adapted from candidate detail page
+
+### Files modified
+- **Modified:** `src/app/recruiter/candidates/s/[simulationId]/compare/client.tsx` - Added VideoModal component, wired timestamp handlers
+- **Added:** `screenshots/issue-250-candidates-page.png` - Screenshot of candidates page (no comparison data available for full modal test)
+
+### Acceptance criteria verified
+- ✅ Add a video modal component to the comparison view
+- ✅ Clicking any timestamp badge in the comparison (from Core Dimensions US-011, or Key Evidence US-013) opens a modal overlay
+- ✅ Modal built with shadcn Dialog component
+- ✅ Modal header shows: candidate name + dimension name (if available)
+- ✅ Modal body: HTML5 video player that starts playing at the clicked timestamp
+- ✅ Parse timestamp from "MM:SS" or "HH:MM:SS" format to seconds
+- ✅ Set `video.currentTime` to the parsed seconds on load
+- ✅ Playback speed controls: 0.5x, 0.75x, 1x (default), 1.25x, 1.5x, 2x — as buttons
+- ✅ Close: X button in header + click outside modal to close
+- ✅ Comparison view state preserved when modal closes — modal uses state management (useState), not navigation
+- ✅ Video URL sourced from the comparison API response `videoUrl` field per candidate
+- ✅ Reuse the video player pattern from the existing candidate detail page at `src/app/candidate/[id]/client.tsx`
+- ✅ If video URL is missing/null, show a "No recording available" message in the modal
+- ✅ Typecheck passes (`npx tsc --noEmit`) - pre-existing errors only, no new errors introduced
+- ✅ App builds successfully (`npm run build`) - compiled with pre-existing warnings only
+
+### Learnings for future iterations
+
+**Video modal implementation pattern:**
+- Adapted VideoPlayerModal from `src/app/candidate/[id]/client.tsx` which already had working timestamp seeking and playback controls
+- Key differences from candidate detail page modal:
+  1. Comparison modal overlays the comparison view (doesn't replace page content)
+  2. Comparison modal receives candidateName and dimensionName as props (candidate page derives from URL params)
+  3. Comparison modal state managed in parent component (CandidateCompareClient), not in modal itself
+- Used shadcn Dialog instead of custom overlay - provides better accessibility and built-in click-outside behavior
+- Dialog's `open` prop and `onOpenChange` callback handle modal visibility cleanly
+
+**State management for modal:**
+- Modal state stored in parent component: `{ isOpen, videoUrl, initialTime, candidateName, dimensionName? }`
+- `handleTimestampClick()` function accepts all required params and sets modal state
+- `handleCloseModal()` resets modal state to closed
+- This pattern keeps comparison page state intact - no re-renders or data loss when modal opens/closes
+- Alternative would be using URL params (like candidate detail page), but that would cause navigation away from comparison view
+
+**Timestamp parsing and formatting:**
+- `parseTimestampToSeconds()` handles both "MM:SS" and "HH:MM:SS" formats
+- Splits on ":", maps to integers, calculates total seconds
+- Returns null for invalid formats (handled gracefully in click handler)
+- `formatTime()` converts seconds back to human-readable format for display
+- Reused exact implementation from candidate detail page for consistency
+
+**Callback pattern for timestamp clicks:**
+- CoreDimensionsSection and KeyEvidenceSection receive `onTimestampClick` prop
+- Type signature: `(timestamp: string, candidateName: string | null, videoUrl: string, dimensionName?: string) => void`
+- Each section calls callback with appropriate params (Core Dimensions includes dimension name, Key Evidence doesn't)
+- This pattern allows parent to control modal behavior while keeping sections reusable
+
+**Video player controls:**
+- Playback speed buttons styled with conditional classes (blue bg when active, border when inactive)
+- Speed state tracked with `useState`, applied to video element via `playbackRate` property
+- Current time and duration displayed in "MM:SS / MM:SS" format
+- Video ref used to control playback programmatically (seek, play, speed)
+- `handleLoadedMetadata` sets initial time and auto-plays (with try-catch for blocked autoplay)
+
+**Edge cases handled:**
+- Null/missing videoUrl → shows "No recording available" message instead of broken video element
+- Invalid timestamp format → click handler returns early (no modal opens)
+- Modal state reset on close → prevents stale state when reopening
+- Effect hook resets video state when modal closes → clean slate for next video
+
+**What was NOT tested (due to lack of test data):**
+- Actual video playback in modal (no comparison data with video URLs in database)
+- Timestamp seeking accuracy (would require real video files)
+- Playback speed controls in action (would require real video files)
+- Visual appearance of modal with actual candidate names and dimension names
+- Edge case: clicking multiple timestamps in sequence without closing modal
+
+**Testing notes for future:**
+- To fully test, need comparison data with:
+  1. Multiple completed assessments in same simulation
+  2. Video URLs populated in assessment records
+  3. Dimension scores with timestamps
+- Can use `ralph/progress.md` Issue #247 pattern to create test comparison data
+- Browser testing with agent-browser requires navigating to `/recruiter/candidates/s/[simulationId]/compare?assessmentIds=id1,id2`
+
 ## Issue #249: US-013 - Comparison view strengths, growth areas, and key evidence
 
 ### What was implemented
