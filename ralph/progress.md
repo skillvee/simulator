@@ -7466,3 +7466,93 @@ Remaining items from PRD for future issues:
 - Acceptance criteria "App builds successfully" means no NEW errors introduced, not zero total errors
 - Document verification approach: "✅ Typecheck passes (no new errors in compare route)"
 
+
+
+## Issue #241: US-004+007 - Scoped candidate table with server data fetching
+
+### What was implemented
+- Created new server page at `src/app/recruiter/candidates/s/[simulationId]/page.tsx`
+  - Uses `requireRecruiter()` for auth
+  - Verifies recruiter owns simulation (checks `createdById` matches user.id)
+  - Returns 404 if simulation not found or not owned by recruiter (unless ADMIN)
+  - Fetches all assessments for simulation with user (name, email) and videoAssessment (status, scores, summary)
+  - Computes per completed candidate: overall score (avg of dimension scores), percentile (from stored `report.percentiles.overall`), strength level (matches existing `getStrengthLevel` pattern with 1-4 scale), top/mid/bottom dimension scores, red flag count (sum of `report.videoEvaluation.skills[].redFlags.length`), evaluation confidence
+  - Passes simulation name + computed candidates array to client component
+- Created new client component at `src/app/recruiter/candidates/s/[simulationId]/client.tsx`
+  - Page header: simulation name (large) with back link (chevron + "All Simulations") to `/recruiter/candidates`
+  - Data table with columns: Avatar circle (initials) + Name + Email, Status badge (COMPLETED green / WORKING blue / WELCOME gray), Overall Score as **4-segment visual bar** (1-4 scale, filled segments proportional to score), Percentile badge ("Top X%"), Strength badge (Exceptional=green, Strong=blue, Proficient=yellow, Developing=gray), Completed Date
+  - For non-completed candidates: show status badge and "—" dash placeholders for all score columns
+  - Row click navigates to `/recruiter/candidates/s/${simulationId}/${assessmentId}` (candidate detail)
+  - Shows candidate count: "Showing X candidate(s)"
+- **Acceptance criteria verification:**
+  - ✅ Server page: uses `requireRecruiter()`, verifies ownership, returns 404 appropriately
+  - ✅ Server page: fetches assessments with all required includes
+  - ✅ Server page: reads `assessment.report` JSON for red flags, confidence, percentile
+  - ✅ Server page: computes overall score, percentile, strength level, top/mid/bottom dimensions, red flag count, evaluation confidence
+  - ✅ Server page: passes simulation name + candidates array to client
+  - ✅ Client: page header with simulation name and back link
+  - ✅ Client: 4-segment visual bar for overall score (matches 1-4 scale)
+  - ✅ Client: non-completed candidates show status and dashes
+  - ✅ Client: row click navigates to correct route
+  - ✅ Client: shows candidate count
+  - ✅ Typecheck passes (no new errors)
+  - ✅ App builds successfully (no new errors)
+
+### Files changed
+- Created: `src/app/recruiter/candidates/s/[simulationId]/page.tsx` (174 lines)
+- Created: `src/app/recruiter/candidates/s/[simulationId]/client.tsx` (235 lines)
+
+### Learnings for future iterations
+
+**The 4-segment score bar (critical UI pattern):**
+- The 1-4 scale maps to 4 visual segments (NOT 5 dots as in old implementation)
+- A score of 3.2 fills 3 full segments + ~20% of the 4th segment
+- Implementation: `Math.floor(score)` for filled segments, `(score % 1) * 100` for partial fill percentage
+- This is more accurate than the old 5-dot system which didn't match the actual scoring scale
+- Reuse this pattern for all future score visualizations
+
+**Strength level thresholds (1-4 scale):**
+- Exceptional: >= 3.5
+- Strong: >= 2.5
+- Proficient: >= 1.5
+- Developing: < 1.5
+- These differ from the 1-5 scale thresholds used in the comparison API (which incorrectly uses >= 4.5 for Exceptional)
+- The 1-4 scale thresholds here are correct per the PRD
+- Future work: audit and update the comparison API thresholds to match
+
+**Data aggregation pattern for dimension mini-scores:**
+- Sort dimensions by score descending
+- Top dimension: first item (highest score)
+- Mid dimension: item at `Math.floor(sortedDimensions.length / 2)` (median)
+- Bottom dimension: last item (lowest score)
+- Only show mid dimension if there are 3+ dimensions (`sortedDimensions.length > 2`)
+- This provides a representative "shape" of the candidate's profile at a glance
+
+**Red flag counting:**
+- Iterate over `report.videoEvaluation.skills` array (NOT `dimensionScores`)
+- Sum up the length of each skill's `redFlags` array
+- Handle missing data gracefully: `?? 0` for count, `?? []` for array
+
+**Percentile data location:**
+- Stored in `assessment.report.percentiles.overall` (NOT in VideoAssessment table)
+- This is computed and stored after video evaluation completes
+- Per-dimension percentiles also available in same object: `report.percentiles[dimensionSlug]`
+
+**UI decisions:**
+- Avatar shows initials (first + last name initials, or first letter if single name)
+- Status badges use shadcn variants: `default` (green) for COMPLETED, `secondary` (blue) for WORKING, `outline` (gray) for WELCOME
+- Strength badges use custom colors (not shadcn variants) to match design: green/blue/yellow/gray
+- Date formatting: "Jan 15, 2026" format (month short, day, year)
+- Dash "—" character (not hyphen "-") for null values
+
+### Gotchas discovered
+- `getStrengthLevel()` exists in the comparison API with 1-5 scale thresholds, but this table uses 1-4 scale
+- Needed to redefine the function in the server page with correct 1-4 thresholds
+- The existing comparison API uses incorrect thresholds (>= 4.5 for Exceptional on a 1-4 scale is impossible)
+- Avatar component from shadcn doesn't include initials logic - had to build custom `getInitials()` helper
+- Build output shows "Compiled successfully" even when ESLint errors exist (they're treated as warnings during build)
+- Pre-existing errors in other files don't block this issue - verified no NEW errors in new files
+
+### Dependencies completed
+- Depends on: #238 (route migration - COMPLETED - the `/s/[simulationId]/` directory structure exists)
+- Blocks: #242 (dimension mini-scores), #243 (summary/flags/confidence), #244 (sorting/filtering), #245 (compare mode selection)
