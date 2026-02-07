@@ -1,5 +1,92 @@
 # Ralph Progress Log
 
+## Issue #226: US-002 - Job description parsing API with Gemini Flash
+
+### What was implemented
+- Created `POST /api/recruiter/simulations/parse-jd` endpoint for parsing job descriptions into structured simulation data
+- Endpoint uses Gemini Flash (`gemini-3-flash-preview`) to extract 7 fields: roleName, companyName, companyDescription, techStack, seniorityLevel, keyResponsibilities, domainContext
+- Each extracted field returns a confidence level ("high", "medium", "low") to help UI highlight uncertain extractions
+- Versioned extraction prompt stored in `src/prompts/recruiter/jd-parser.ts` (v1.0)
+- Comprehensive prompt with edge case handling: very short JDs (just a title), very long JDs (5+ pages), ambiguous JDs
+- TypeScript types created in `src/types/jd-parser.ts` and exported from `src/types/index.ts`
+- Zod schema validation for request body
+- Role-based access control (RECRUITER or ADMIN only)
+- 15 comprehensive tests covering auth, validation, parsing success/failure, edge cases
+
+### Files created/modified
+- **New:** `src/types/jd-parser.ts` - TypeScript types for JD parsing API
+- **Modified:** `src/types/index.ts` - Added JD parser type exports
+- **New:** `src/prompts/recruiter/jd-parser.ts` - Versioned extraction prompt (v1.0)
+- **New:** `src/app/api/recruiter/simulations/parse-jd/route.ts` - API endpoint implementation
+- **New:** `src/app/api/recruiter/simulations/parse-jd/route.test.ts` - Test suite (15 tests)
+
+### Acceptance criteria verified
+- ✅ Created API endpoint `POST /api/recruiter/simulations/parse-jd` accepting `{ jobDescription: string }`
+- ✅ Endpoint requires RECRUITER or ADMIN role (uses existing auth pattern)
+- ✅ Uses Gemini Flash (`gemini-3-flash-preview`) for extraction
+- ✅ Extracts all 7 required fields with correct types
+- ✅ Returns structured JSON with `null` for missing fields
+- ✅ Includes confidence field per extraction ("high" | "medium" | "low")
+- ✅ Extraction prompt stored as versioned constant (`JD_PARSER_PROMPT_V1`, version "1.0")
+- ✅ Handles edge cases: very short JDs, very long JDs, partial results
+- ✅ TypeScript types created in `src/types/` and exported from `src/types/index.ts`
+- ✅ Request body validated with Zod schema
+- ✅ Tests pass (15/15 tests passing)
+- ✅ Typecheck passes (no new type errors introduced)
+
+### Learnings for future iterations
+
+**Pattern consistency:**
+- Followed the exact auth pattern from `builder/route.ts` for RECRUITER/ADMIN access checks
+- Used the same Gemini integration pattern: `gemini.models.generateContent({ model, contents })`
+- Maintained the type import convention: import types from `@/types`, not from implementation files
+
+**Prompt engineering:**
+- The prompt is extremely detailed (150+ lines) with explicit instructions for each field, confidence guidelines, and edge cases
+- Included seniority level inference guidelines (junior: 0-2 years, mid: 2-5, senior: 5-8, staff: 8+)
+- Explicit JSON-only response format with "IMPORTANT: Return ONLY the JSON object, no markdown code fences"
+- However, still added fallback handling to strip markdown fences since LLMs sometimes add them anyway
+
+**JSON parsing resilience:**
+- Response cleaning removes both `json` and plain `` ` `` markdown fences (line 90-92)
+- Validates all 7 expected fields are present before returning success
+- Returns detailed error messages with the raw AI response for debugging
+
+**Confidence levels:**
+- Confidence is returned per-field, not per-value, using the `ConfidentField<T>` type
+- This allows the UI to highlight uncertain fields (e.g., yellow border for "medium" confidence)
+- Example: `roleName: { value: "Senior Engineer", confidence: "high" }`
+
+**Testing approach:**
+- Mocked `auth()` and `gemini.models.generateContent()` functions before importing the route
+- Tested auth failures (401, 403), validation failures (400), parsing success, edge cases, and error handling
+- Used a realistic mock JD response structure for all success tests
+
+**Type safety:**
+- Created dedicated `jd-parser.ts` types file instead of inline types
+- Used TypeScript `type` keyword (not `interface`) for consistency with codebase patterns
+- Exported all types from `src/types/index.ts` for centralized imports
+
+**Versioning:**
+- Prompt is versioned (`JD_PARSER_PROMPT_V1`) with a constant (`JD_PARSER_PROMPT_VERSION = "1.0"`)
+- Response includes `_meta` field with `promptVersion` and `parsedAt` timestamp
+- This allows tracking which prompt version was used for each parsing, important for future prompt iterations
+
+**Edge case handling:**
+- Very short JDs: Prompt instructs to extract what's available and return null with LOW confidence for missing fields
+- Very long JDs: Prompt instructs to focus on first 2-3 sections (title, company, responsibilities, requirements)
+- Ambiguous JDs: Prompt encourages reasonable inferences with MEDIUM/LOW confidence instead of hallucinating
+
+**Testing note:**
+- All 15 tests passed on first run
+- The stderr output during tests (console.error logs) is expected behavior from error handling paths
+- No new TypeScript errors introduced (pre-existing errors in codebase are unrelated to this PR)
+
+### PRD Reference
+`tasks/prd-simulation-builder-redesign.md` — US-002
+
+---
+
 ## Issue #222: US-310 - Add emoji reactions from coworkers on user messages
 
 ### What was implemented
