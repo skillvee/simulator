@@ -6,12 +6,21 @@
  */
 
 /**
+ * Emoji reaction on a chat message (like Slack reactions)
+ */
+export interface MessageReaction {
+  emoji: string;      // "👀", "👍", "👋"
+  reactorName: string; // coworker name who reacted
+}
+
+/**
  * Chat message type used in text-based coworker conversations
  */
 export interface ChatMessage {
   role: "user" | "model";
   text: string;
   timestamp: string;
+  reactions?: MessageReaction[];  // Optional reactions on this message
 }
 
 /**

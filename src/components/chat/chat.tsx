@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useManagerAutoStart } from "@/hooks";
 import { playMessageSound, markUserInteraction } from "@/lib/sounds";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, MessageReaction } from "@/types";
 
 interface Coworker {
   id: string;
@@ -27,6 +27,33 @@ interface ChatProps {
 // Note: PR submission handling and defense call flow will be implemented
 // in RF-012 (Slack modifications). Defense now happens within the Slack
 // interface - the candidate will call the manager after submitting a PR.
+
+/**
+ * Detect reactions based on user message content
+ * Returns array of reactions that should be added to the user's message
+ */
+function detectReactions(userMessage: string, coworkerName: string, isFirstMessage: boolean): MessageReaction[] {
+  const reactions: MessageReaction[] = [];
+  const lowerMsg = userMessage.toLowerCase();
+
+  // First message gets a wave
+  if (isFirstMessage) {
+    reactions.push({ emoji: "👋", reactorName: coworkerName });
+    return reactions; // Only wave on first message, skip other reactions
+  }
+
+  // PR URL detection
+  if (lowerMsg.includes("github.com") || lowerMsg.includes("gitlab.com") || lowerMsg.includes("bitbucket.org")) {
+    reactions.push({ emoji: "👀", reactorName: coworkerName });
+  }
+
+  // Thank you detection
+  if (lowerMsg.includes("thank") || lowerMsg.includes("thx") || lowerMsg.includes("thanks")) {
+    reactions.push({ emoji: "👍", reactorName: coworkerName });
+  }
+
+  return reactions;
+}
 
 export function Chat({
   assessmentId,
@@ -237,6 +264,29 @@ export function Chat({
         onNewMessage(coworker.id);
       }
 
+      // Detect if reactions should be added to the user's message
+      // Count user messages before this one to detect first message
+      const userMessageCountBefore = messages.filter(m => m.role === "user").length;
+      const isFirstUserMessage = userMessageCountBefore === 0;
+      const reactions = detectReactions(userMessage.text, coworker.name, isFirstUserMessage);
+
+      // Add reactions with a delay (2-5 seconds) if any were detected
+      if (reactions.length > 0) {
+        const delay = 2000 + Math.random() * 3000;
+        setTimeout(() => {
+          setMessages(prev => {
+            // Find the user message we just added (should be second to last now)
+            const userMsgIndex = prev.length - 2;
+            if (userMsgIndex >= 0 && prev[userMsgIndex].role === "user") {
+              return prev.map((msg, idx) =>
+                idx === userMsgIndex ? { ...msg, reactions } : msg
+              );
+            }
+            return prev;
+          });
+        }, delay);
+      }
+
       // Note: PR detection and defense call flow will be handled in RF-012.
       // The manager will prompt the candidate to call them after PR submission.
     } catch (err) {
@@ -359,6 +409,27 @@ export function Chat({
                         >
                           {message.text}
                         </div>
+
+                        {/* Reactions */}
+                        {message.reactions && message.reactions.length > 0 && (
+                          <div className="flex gap-1 mt-1 px-1">
+                            {message.reactions.map((reaction, i) => (
+                              <span
+                                key={i}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full cursor-default hover:bg-opacity-80 transition-colors"
+                                style={{
+                                  background: "hsl(var(--slack-bg-surface))",
+                                  border: "1px solid hsl(var(--slack-border))"
+                                }}
+                                title={`${reaction.reactorName} reacted`}
+                              >
+                                <span>{reaction.emoji}</span>
+                                <span className="text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>1</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
                         <span className="text-xs mt-1.5 font-medium px-1" style={{color: "hsl(var(--slack-text-muted))"}}>
                           {formatTimestamp(message.timestamp)}
                         </span>
