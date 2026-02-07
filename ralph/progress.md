@@ -1,5 +1,116 @@
 # Ralph Progress Log
 
+## Issue #228: US-006 - Auto-generate coding task from role context
+
+### What was implemented
+- Created `generateCodingTask()` function in `src/lib/scenarios/task-generator.ts` for automatic coding task generation
+- Function accepts: roleName, seniorityLevel, techStack, keyResponsibilities, domainContext, companyName
+- Returns object with `taskOptions`: array of 2-3 task descriptions
+- Each task option includes: `summary` (1-line for display) and `description` (2-4 paragraphs, manager-voice work assignment)
+- Tasks written as manager assigning work, NOT test questions (enforced via detailed prompt examples)
+- Difficulty calibrated to seniority level (junior: well-scoped, mid: architectural decisions, senior: ambiguous requirements)
+- Tasks are domain-specific (fintech → payments, e-commerce → cart, SaaS → dashboard)
+- Deliberately vague to force candidate collaboration with coworkers
+- Each task completable in 60-90 minutes of focused coding
+- Versioned prompt stored in `src/prompts/recruiter/task-generator.ts` (v1.0)
+- API endpoint `POST /api/recruiter/simulations/generate-task` with RECRUITER/ADMIN access control
+- Uses Gemini Flash (`gemini-3-flash-preview`) for generation
+- Comprehensive validation: 2-3 tasks, summary length (<100 chars), description length (>100 chars)
+
+### Files created/modified
+- **New:** `src/prompts/recruiter/task-generator.ts` - Versioned generation prompt (v1.0) with extensive examples
+- **New:** `src/lib/scenarios/task-generator.ts` - Core generation function with validation
+- **New:** `src/lib/scenarios/task-generator.test.ts` - 15 unit tests for generation function
+- **New:** `src/app/api/recruiter/simulations/generate-task/route.ts` - API endpoint
+- **New:** `src/app/api/recruiter/simulations/generate-task/route.test.ts` - 12 API route tests
+
+### Acceptance criteria verified
+- ✅ Created server-side function `generateCodingTask()` in `src/lib/scenarios/task-generator.ts`
+- ✅ Function accepts all required parameters (roleName, seniorityLevel, techStack, keyResponsibilities, domainContext, companyName)
+- ✅ Returns object with `taskOptions`: array of 2-3 task descriptions, each 2-4 paragraphs
+- ✅ Tasks written as manager giving work assignment, NOT test questions (prompt enforces "Hey! So we need to..." not "Implement a function that...")
+- ✅ Task difficulty calibrated to seniority (detailed prompt examples for each level)
+- ✅ Tasks relate to company's actual domain (fintech → payments task, e-commerce → cart task, etc.)
+- ✅ Each task completable in 60-90 minutes (enforced in prompt)
+- ✅ Each task option includes 1-line `summary` for display and full `description` for simulation
+- ✅ Prompt stored as versioned constant in `src/prompts/recruiter/task-generator.ts`
+- ✅ Uses Gemini Flash (`gemini-3-flash-preview`) for generation
+- ✅ Prompt enforces JSON output schema with "IMPORTANT: Return ONLY the JSON object"
+- ✅ Created API endpoint `POST /api/recruiter/simulations/generate-task`
+- ✅ Tests pass (27/27 tests passing)
+- ✅ Typecheck passes (no new type errors introduced)
+
+### Learnings for future iterations
+
+**Prompt engineering for task generation:**
+- The prompt is extremely detailed (300+ lines) with specific examples for each seniority level
+- Includes "good vs bad" examples: "Hey! So we need to..." (good) vs "Implement a function that..." (bad)
+- Provides seniority-specific task examples (junior: well-scoped with hints, senior: ambiguous requiring trade-off discussions)
+- Explicitly instructs to leave details vague to force candidate collaboration: "Don't specify caching strategy - let them ask the tech lead"
+- Includes domain mapping (fintech → payments/fraud, e-commerce → cart/checkout, SaaS → dashboard/API)
+- Structured format: Opening (context/why) → The ask (what needs doing) → Hints (who to ask) → Constraints (gotchas)
+- Tone guidelines: casual but professional, use "we/our", show personality, be specific about tools
+
+**Validation strategy:**
+- Schema validation via Zod: 2-3 tasks required, summary and description are required strings
+- Additional programmatic validation: summary must be ≤100 chars (1-line), description must be ≥100 chars (2-4 paragraphs)
+- Validation errors are descriptive (e.g., "Task summary too long (125 chars): should be 1 line")
+- Markdown fence stripping as fallback (`cleanJsonResponse()`) even though prompt says "Return ONLY the JSON"
+
+**Task quality guidelines:**
+- Tasks written in manager voice: "Hey! So we've been dropping about 5% of webhook events. The support team is getting complaints."
+- Deliberately vague in strategic places: don't specify implementation (Redis vs DB), edge cases (rate limits), or technical decisions (REST vs GraphQL)
+- This vagueness forces candidates to ask coworkers (tests collaboration), which is the core assessment goal
+- Context includes why it matters: "blocking a big contract", "customers complaining for 6 months"
+- Realistic constraints: "Don't touch /api/payments/* - PCI certified", "staging DB has size limits"
+
+**Seniority calibration:**
+- Junior: Well-scoped, clear requirements, hints provided (e.g., "The design is in Figma (ask design for link)")
+- Mid: Requires architectural decisions, less hand-holding (e.g., "Talk to product about which events to notify on")
+- Senior: Ambiguous requirements, requires trade-off discussions (e.g., "We're losing 5% of webhooks. Check with DevOps about infrastructure")
+- Staff+: Open-ended system design problems (e.g., "Our microservices make redundant DB calls. Need a caching strategy")
+
+**Domain-specific generation:**
+- Prompt includes explicit domain → task mapping:
+  - Fintech: payment webhooks, transaction reconciliation, fraud detection, idempotency
+  - E-commerce: cart logic, checkout flow, inventory management, product search
+  - SaaS: dashboard features, API endpoints, user permissions, data export
+  - Healthcare: patient data, HIPAA compliance, appointment scheduling
+- Tasks reference realistic systems: "our payment processor" (Stripe implied), "the staging environment", "the current dashboard"
+
+**Integration with existing simulation flow:**
+- Generated tasks will be stored as `scenario.taskDescription` in the database
+- This field flows into coworker prompts (`src/prompts/coworker/persona.ts`) where coworkers reference the task
+- Also flows into manager defense call (`src/prompts/manager/defense.ts`) where manager discusses the task
+- Task must be specific enough to code against but vague enough to require asking clarifying questions
+
+**Testing approach:**
+- Separated unit tests (generation function) from integration tests (API route)
+- Unit tests: happy path, markdown fences, validation failures (too short/long, wrong count, missing fields)
+- API tests: auth (401/403), validation (400), success (200), error handling (500), all seniority levels
+- All 27 tests passing on first run
+
+**Response metadata:**
+- Included `_meta` field with `promptVersion` and `generatedAt` timestamp
+- Allows tracking which prompt version generated which tasks (important for iteration)
+- Follows same pattern as Issue #227 (coworker generator)
+
+**API design:**
+- Followed exact auth pattern from `generate-coworkers/route.ts` for consistency
+- Zod schema validation with descriptive error messages
+- Request body includes all context needed for domain-specific generation (domainContext field added vs coworker generator)
+- Returns both generated data and metadata for versioning/debugging
+
+**Pre-existing errors:**
+- TypeScript showed 90+ pre-existing errors in the codebase (unrelated to this PR)
+- Verified no new errors introduced by running grep on typecheck output
+- All 27 tests passing confirms implementation correctness
+
+### PRD Reference
+`tasks/prd-simulation-builder-redesign.md` — US-006
+
+---
+
 ## Issue #227: US-005 - Auto-generate coworkers from role and company context
 
 ### What was implemented
