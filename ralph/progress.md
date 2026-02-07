@@ -7305,3 +7305,72 @@ Remaining items from PRD for future issues:
 - Check for route-specific errors by grepping build output for the route path
 - Clean `.next` directory when testing route changes to clear cached types
 
+
+
+## Issue #239: US-001+002 - Simulation picker page with server data fetching
+
+### What was implemented
+- Refactored `/recruiter/candidates` from flat candidate table to simulation picker grid
+- Server page (`page.tsx`) now fetches simulation stats instead of individual candidates:
+  - Queries all scenarios owned by recruiter with their assessments
+  - Aggregates per-simulation: total count, completed count, in-progress count, score range (min/max), top candidate (name + score), last activity date
+  - Uses existing `requireRecruiter()` auth guard and DB query patterns
+- Client component (`client.tsx`) completely rewritten:
+  - Replaced 592-line table component with 174-line card grid
+  - Cards display: simulation name, candidate count breakdown, score range, top candidate preview, last activity date
+  - Cards sorted by last activity (most recent first)
+  - Clicking card navigates to `/recruiter/candidates/s/[simulationId]`
+  - Empty state links to `/recruiter/simulations/new` when no simulations exist
+  - Modern blue theme with shadcn Card component
+
+### Files modified
+- **Modified:** `src/app/recruiter/candidates/page.tsx` - Refactored to fetch simulation stats (128 lines → 97 lines)
+- **Modified:** `src/app/recruiter/candidates/client.tsx` - Complete rewrite from flat table to card grid (592 lines → 174 lines)
+
+### Acceptance criteria verified
+- ✅ Server: Fetches all simulations owned by authenticated recruiter (using `requireRecruiter()`)
+- ✅ Server: Aggregates total count, completed count, in-progress count, min/max score, top candidate, last activity date
+- ✅ Server: Passes simulation stats array to client component as props
+- ✅ Server: Reuses existing DB query patterns (scenario + assessments with includes)
+- ✅ Client: Replaced flat candidate table with grid of simulation cards
+- ✅ Client: Cards show simulation name, candidate count breakdown, score range, top candidate, last activity
+- ✅ Client: Cards sorted by last activity (most recent first)
+- ✅ Client: Clicking card navigates to `/recruiter/candidates/s/[simulationId]`
+- ✅ Client: Empty state with link to `/recruiter/simulations/new` ("Create Simulation")
+- ✅ Client: Uses shadcn Card component, consistent with blue theme
+- ✅ Client: Page title "Candidates" with subtitle "Select a simulation to review candidates"
+- ✅ Typecheck passes (no new errors - existing errors are pre-existing)
+- ✅ Build compiles successfully (no new ESLint errors in modified files - existing errors are in other files)
+
+### Learnings for future iterations
+
+**Why simulation-scoped view is critical:**
+- Comparing candidates across different simulations is meaningless (different assessments, rubrics, tasks)
+- This picker page enables meaningful candidate comparison by scoping to one simulation
+- Sets up architecture for simulation-scoped table (Issue #240) and percentile calculations
+
+**Data aggregation pattern:**
+- Server-side aggregation is essential for scalability: instead of sending all candidate data, we compute stats in the DB query
+- Used nested `.filter()` and `.reduce()` for score calculations on already-loaded assessments
+- Last activity date uses `completedAt ?? createdAt` to handle both completed and in-progress assessments
+
+**UI design decisions:**
+- Card grid (1 col mobile, 2 col tablet, 3 col desktop) is more scannable than table for this use case
+- Top candidate preview gives recruiters quick "is this simulation worth reviewing?" signal
+- Relative time formatting ("2 days ago") is more intuitive than absolute dates for recency
+- Score range shows distribution at a glance (e.g., "1.8 – 3.9" indicates weak pool vs. "3.2 – 4.5" indicates strong pool)
+
+**Code reduction wins:**
+- Removed 418 lines from client component by eliminating table, filters, sorting UI, compare mode
+- Those features will return in the simulation-scoped table (Issue #240), but don't belong on the picker page
+- Server page got simpler too: aggregation logic is more concise than mapping individual candidates
+
+### Gotchas discovered
+- VideoAssessment scores are stored as 1-4 scale, not 1-5 (despite UI showing 5 circles in old table)
+- Empty state should link to `/recruiter/simulations/new` not `/recruiter/simulations` (users need action, not list)
+- `formatRelativeTime()` needed for last activity - Next.js doesn't have built-in relative time formatter
+- Build has pre-existing ESLint errors in unrelated files - verified no new errors in modified files
+
+### Dependencies completed
+- No dependencies - this was foundational refactor
+- Blocks: simulation-scoped candidate table (Issue #240), cross-simulation search (Issue #241)
