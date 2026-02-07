@@ -13,6 +13,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /**
  * Candidate strength levels based on overall score (1-4 scale)
@@ -136,6 +142,71 @@ function formatDate(dateString: string | null): string {
   });
 }
 
+/**
+ * Abbreviate dimension names for compact display
+ */
+function abbreviateDimension(dimension: string): string {
+  const abbreviations: Record<string, string> = {
+    COMMUNICATION: "Comm",
+    PROBLEM_SOLVING: "Problem",
+    TECHNICAL_KNOWLEDGE: "Tech",
+    COLLABORATION: "Collab",
+    ADAPTABILITY: "Adapt",
+    LEADERSHIP: "Lead",
+    CREATIVITY: "Creative",
+    TIME_MANAGEMENT: "Time",
+  };
+
+  return abbreviations[dimension] ?? dimension;
+}
+
+/**
+ * Get full dimension name for tooltip
+ */
+function getFullDimensionName(dimension: string): string {
+  const fullNames: Record<string, string> = {
+    COMMUNICATION: "Communication",
+    PROBLEM_SOLVING: "Problem Solving",
+    TECHNICAL_KNOWLEDGE: "Technical Knowledge",
+    COLLABORATION: "Collaboration",
+    ADAPTABILITY: "Adaptability",
+    LEADERSHIP: "Leadership",
+    CREATIVITY: "Creativity",
+    TIME_MANAGEMENT: "Time Management",
+  };
+
+  return fullNames[dimension] ?? dimension;
+}
+
+/**
+ * Get color class for dimension score
+ */
+function getDimensionScoreColor(score: number): string {
+  if (score >= 3.5) return "bg-green-100 text-green-800 hover:bg-green-100";
+  if (score >= 2.5) return "bg-blue-100 text-blue-800 hover:bg-blue-100";
+  return "bg-orange-100 text-orange-800 hover:bg-orange-100";
+}
+
+/**
+ * Dimension mini score badge with tooltip
+ */
+function DimensionMiniScore({ name, score }: { name: string; score: number }) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge className={`text-xs font-medium ${getDimensionScoreColor(score)}`}>
+            {abbreviateDimension(name)} {score.toFixed(1)}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{getFullDimensionName(name)}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export function ScopedCandidatesClient({
   simulationId,
   simulationName,
@@ -172,6 +243,7 @@ export function ScopedCandidatesClient({
               <TableHead className="w-[300px]">Candidate</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Overall Score</TableHead>
+              <TableHead>Dimensions</TableHead>
               <TableHead>Percentile</TableHead>
               <TableHead>Strength</TableHead>
               <TableHead>Completed</TableHead>
@@ -180,7 +252,7 @@ export function ScopedCandidatesClient({
           <TableBody>
             {candidates.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-gray-500 py-12">
+                <TableCell colSpan={7} className="text-center text-gray-500 py-12">
                   No candidates found for this simulation
                 </TableCell>
               </TableRow>
@@ -225,6 +297,49 @@ export function ScopedCandidatesClient({
                         <span className="text-sm text-gray-600">
                           {candidate.overallScore.toFixed(1)}
                         </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </TableCell>
+
+                  {/* Dimension Mini-Scores */}
+                  <TableCell>
+                    {candidate.topDimension &&
+                    candidate.midDimension &&
+                    candidate.bottomDimension ? (
+                      <div className="flex gap-1.5">
+                        <DimensionMiniScore
+                          name={candidate.topDimension.name}
+                          score={candidate.topDimension.score}
+                        />
+                        <DimensionMiniScore
+                          name={candidate.midDimension.name}
+                          score={candidate.midDimension.score}
+                        />
+                        <DimensionMiniScore
+                          name={candidate.bottomDimension.name}
+                          score={candidate.bottomDimension.score}
+                        />
+                      </div>
+                    ) : candidate.topDimension ? (
+                      <div className="flex gap-1.5">
+                        <DimensionMiniScore
+                          name={candidate.topDimension.name}
+                          score={candidate.topDimension.score}
+                        />
+                        {candidate.midDimension && (
+                          <DimensionMiniScore
+                            name={candidate.midDimension.name}
+                            score={candidate.midDimension.score}
+                          />
+                        )}
+                        {candidate.bottomDimension && (
+                          <DimensionMiniScore
+                            name={candidate.bottomDimension.name}
+                            score={candidate.bottomDimension.score}
+                          />
+                        )}
                       </div>
                     ) : (
                       <span className="text-gray-400">—</span>

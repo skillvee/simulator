@@ -324,7 +324,7 @@ model VideoAssessment {
 model DimensionScore {
   id                  String              @id @default(cuid())
   assessmentId        String
-  dimension           String              // Dimension slug from Dimension table (e.g., "communication", "problem_solving")
+  dimension           AssessmentDimension // Dimension enum value
   score               Int                 // 1-4 scale (Foundational, Competent, Advanced, Expert)
   confidence          String              @default("medium") // "high" | "medium" | "low"
   observableBehaviors String              @db.Text // Description of observed behaviors
