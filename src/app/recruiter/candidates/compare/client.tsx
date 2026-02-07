@@ -22,7 +22,6 @@ import {
 import {
   ArrowLeft,
   TrendingUp,
-  TrendingDown,
   ExternalLink,
   AlertCircle,
   ShieldAlert,
@@ -54,7 +53,6 @@ interface CandidateComparison {
   strengthLevel: CandidateStrengthLevel;
   dimensionScores: DimensionScoreComparison[];
   topStrength: string | null;
-  biggestGap: string | null;
 }
 
 // ============================================================================
@@ -310,8 +308,8 @@ function CandidateCard({
           </ChartContainer>
         </div>
 
-        {/* Top Strength & Biggest Gap */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        {/* Top Strength */}
+        <div className="mb-4">
           <div className="p-3 rounded-lg bg-green-50 border border-green-100">
             <p className="text-xs font-medium text-green-700 mb-1 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
@@ -320,17 +318,6 @@ function CandidateCard({
             <p className="text-sm font-medium text-green-900">
               {candidate.topStrength
                 ? formatDimensionName(candidate.topStrength)
-                : "—"}
-            </p>
-          </div>
-          <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
-            <p className="text-xs font-medium text-amber-700 mb-1 flex items-center gap-1">
-              <TrendingDown className="h-3 w-3" />
-              Biggest Gap
-            </p>
-            <p className="text-sm font-medium text-amber-900">
-              {candidate.biggestGap
-                ? formatDimensionName(candidate.biggestGap)
                 : "—"}
             </p>
           </div>

@@ -10,13 +10,11 @@ import {
   ArrowLeft,
   Calendar,
   TrendingUp,
-  TrendingDown,
-  CheckCircle2,
   AlertCircle,
   Users,
   ShieldAlert,
 } from "lucide-react";
-import type { CodeReviewData, HiringSignals } from "@/types";
+import type { CodeReviewData } from "@/types";
 
 /**
  * Candidate strength levels
@@ -50,12 +48,9 @@ interface CandidateDetailData {
   dimensionScores: DimensionScoreData[];
   percentiles: Record<string, number> | null;
   videoUrl: string | null;
-  greenFlags: string[];
-  redFlags: string[];
   overallSummary: string;
   codeReview: CodeReviewData | null;
   prUrl: string | null;
-  hiringSignals: HiringSignals | null;
 }
 
 interface CandidateDetailClientProps {
@@ -137,11 +132,6 @@ function LoadingSkeleton() {
         ))}
       </div>
 
-      {/* Hiring signals skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Skeleton className="h-48" />
-        <Skeleton className="h-48" />
-      </div>
     </div>
   );
 }
@@ -344,11 +334,6 @@ export function CandidateDetailClient({ assessmentId }: CandidateDetailClientPro
                   <p className="text-sm text-stone-600">
                     {dim.observableBehaviors}
                   </p>
-                  {dim.trainableGap && (
-                    <Badge className="mt-3 bg-amber-100 text-amber-700 border-0">
-                      Trainable Gap
-                    </Badge>
-                  )}
                 </CardContent>
               </Card>
             );
@@ -356,69 +341,6 @@ export function CandidateDetailClient({ assessmentId }: CandidateDetailClientPro
         </div>
       </div>
 
-      {/* Hiring Signals */}
-      {(data.greenFlags.length > 0 || data.redFlags.length > 0) && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-stone-900 mb-4">
-            Hiring Signals
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Green Flags */}
-            <Card className="border-green-200 bg-green-50/50 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base font-medium text-green-800">
-                  <CheckCircle2 className="h-5 w-5" />
-                  Green Flags ({data.greenFlags.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {data.greenFlags.length > 0 ? (
-                  <ul className="space-y-2">
-                    {data.greenFlags.map((flag, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-2 text-sm text-green-700"
-                      >
-                        <TrendingUp className="h-4 w-4 mt-0.5 shrink-0" />
-                        <span>{flag}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-green-600">No green flags identified</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Red Flags */}
-            <Card className="border-red-200 bg-red-50/50 shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-base font-medium text-red-800">
-                  <AlertCircle className="h-5 w-5" />
-                  Red Flags ({data.redFlags.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {data.redFlags.length > 0 ? (
-                  <ul className="space-y-2">
-                    {data.redFlags.map((flag, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-2 text-sm text-red-700"
-                      >
-                        <TrendingDown className="h-4 w-4 mt-0.5 shrink-0" />
-                        <span>{flag}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-red-600">No red flags identified</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

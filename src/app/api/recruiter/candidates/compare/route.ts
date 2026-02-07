@@ -43,7 +43,6 @@ interface CandidateComparison {
   strengthLevel: CandidateStrengthLevel;
   dimensionScores: DimensionScoreComparison[];
   topStrength: string | null;
-  biggestGap: string | null;
 }
 
 // ============================================================================
@@ -79,28 +78,6 @@ function findTopStrength(dimensionScores: DimensionScoreComparison[]): string | 
   return topDimension;
 }
 
-/**
- * Find the dimension with lowest percentile that is marked as trainable gap
- */
-function findBiggestGap(
-  dimensionScores: DimensionScoreComparison[],
-  trainableGaps: Set<string>
-): string | null {
-  if (dimensionScores.length === 0) return null;
-
-  let minPercentile = Infinity;
-  let gapDimension: string | null = null;
-
-  for (const ds of dimensionScores) {
-    // Only consider dimensions that are marked as trainable gaps
-    if (trainableGaps.has(ds.dimension) && ds.percentile < minPercentile) {
-      minPercentile = ds.percentile;
-      gapDimension = ds.dimension;
-    }
-  }
-
-  return gapDimension;
-}
 
 // ============================================================================
 // Route Handler
@@ -120,7 +97,6 @@ function findBiggestGap(
  * - strengthLevel
  * - dimensionScores with percentiles
  * - topStrength (highest percentile dimension)
- * - biggestGap (lowest percentile dimension marked as trainableGap)
  */
 export async function GET(request: Request) {
   const session = await auth();
@@ -209,7 +185,6 @@ export async function GET(request: Request) {
 
       // Build dimension scores with percentiles
       const dimensionScores: DimensionScoreComparison[] = [];
-      const trainableGaps = new Set<string>();
 
       if (hasCompletedVideoAssessment && videoAssessment?.scores) {
         for (const score of videoAssessment.scores) {
@@ -220,10 +195,6 @@ export async function GET(request: Request) {
             score: score.score,
             percentile,
           });
-
-          if (score.trainableGap) {
-            trainableGaps.add(score.dimension);
-          }
         }
       }
 
@@ -233,9 +204,8 @@ export async function GET(request: Request) {
           ? dimensionScores.reduce((sum, s) => sum + s.score, 0) / dimensionScores.length
           : 0;
 
-      // Find top strength (highest percentile) and biggest gap (lowest percentile trainable gap)
+      // Find top strength (highest percentile)
       const topStrength = findTopStrength(dimensionScores);
-      const biggestGap = findBiggestGap(dimensionScores, trainableGaps);
 
       return {
         assessmentId: assessment.id,
@@ -245,7 +215,6 @@ export async function GET(request: Request) {
         strengthLevel: getStrengthLevel(overallScore),
         dimensionScores,
         topStrength,
-        biggestGap,
       };
     })
   );

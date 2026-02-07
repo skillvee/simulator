@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
-import type { CodeReviewData, HiringSignals } from "@/types";
+import type { CodeReviewData } from "@/types";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
 
 /**
@@ -55,12 +55,9 @@ interface CandidateDetailResponse {
   dimensionScores: DimensionScoreData[];
   percentiles: Record<string, number> | null;
   videoUrl: string | null;
-  greenFlags: string[];
-  redFlags: string[];
   overallSummary: string;
   codeReview: CodeReviewData | null;
   prUrl: string | null;
-  hiringSignals: HiringSignals | null;
 }
 
 /**
@@ -148,23 +145,10 @@ export async function GET(
   // Get percentiles from US-001
   const percentiles = await getStoredPercentiles(assessmentId);
 
-  // Extract hiring signals from video evaluation
-  let greenFlags: string[] = [];
-  let redFlags: string[] = [];
+  // Get overall summary
   let overallSummary = "";
-  let hiringSignals: HiringSignals | null = null;
-
   if (hasCompletedVideoAssessment && videoAssessment.summary?.rawAiResponse) {
     const rawResponse = videoAssessment.summary.rawAiResponse as Record<string, unknown>;
-
-    // Get hiring signals
-    if (rawResponse.hiringSignals) {
-      hiringSignals = rawResponse.hiringSignals as HiringSignals;
-      greenFlags = hiringSignals.overallGreenFlags ?? [];
-      redFlags = hiringSignals.overallRedFlags ?? [];
-    }
-
-    // Get overall summary
     if (typeof rawResponse.overall_summary === "string") {
       overallSummary = rawResponse.overall_summary;
     }
@@ -190,12 +174,9 @@ export async function GET(
     dimensionScores,
     percentiles,
     videoUrl: videoAssessment?.videoUrl ?? null,
-    greenFlags,
-    redFlags,
     overallSummary,
     codeReview,
     prUrl: assessment.prUrl,
-    hiringSignals,
   };
 
   return success(response);
