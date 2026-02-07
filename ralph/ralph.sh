@@ -10,6 +10,11 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$REPO_ROOT"
 
+# Ensure we're always on origin/main, not a fork
+git fetch origin
+git checkout main
+git reset --hard origin/main
+
 echo "Ralph starting (continuous mode, poll interval: ${POLL_INTERVAL}s)"
 echo "   Press Ctrl+C to stop"
 
@@ -36,6 +41,11 @@ while true; do
     sleep "$POLL_INTERVAL"
     continue
   fi
+
+  # Reset to origin/main before each iteration to avoid drift
+  git fetch origin
+  git checkout main
+  git reset --hard origin/main
 
   ITERATION=$((ITERATION + 1))
   ISSUE_NUM=$(echo "$ISSUE" | jq -r '.number')

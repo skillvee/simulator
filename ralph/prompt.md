@@ -105,10 +105,10 @@ Types: feat, fix, refactor, docs, test, chore
 2. **Push to Remote**:
 
    ```bash
-   git push
+   git push origin main
    ```
 
-   This syncs with GitHub and auto-closes the issue from the commit message.
+   **CRITICAL: Always push to `origin main` explicitly.** Never use bare `git push` — it may push to a fork instead of the upstream repo, which means the issue won't auto-close.
 
 ## Important Rules
 
