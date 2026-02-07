@@ -173,49 +173,73 @@ export function parseCoworkerKnowledge(
 }
 
 /**
- * Decorative offline team members to make the sidebar feel like a real company.
- * These are display-only and do not have full persona data or knowledge.
+ * Decorative team members to make the sidebar feel like a real company.
+ * These members appear "away" or "in-meeting" and respond with a single canned message.
  */
 export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
   {
     name: "Maya Torres",
     role: "Product Designer",
     avatarUrl: "/avatars/maya-torres.jpg",
+    statusMessage: "In a design review until 10:45 AM",
+    availability: "in-meeting",
+    cannedResponse: "Hey! I'm in a design review right now. I'll be free in about 30 min - ping me then! In the meantime, {managerName} should be able to help.",
   },
   {
     name: "Derek Washington",
     role: "Data Scientist",
     avatarUrl: "/avatars/derek-washington.jpg",
+    statusMessage: "Heads down on a data pipeline",
+    availability: "away",
+    cannedResponse: "Hey! I'm swamped right now working on a data pipeline, but {managerName} might be able to help with that. I'll ping you when I'm free!",
   },
   {
     name: "Priya Sharma",
     role: "DevOps Engineer",
     avatarUrl: "/avatars/priya-sharma.jpg",
+    statusMessage: "Deploying to staging - back in 20",
+    availability: "away",
+    cannedResponse: "Hey! I'm in the middle of a staging deployment right now. {managerName} should be able to help in the meantime. I'll reach out once this is done!",
   },
   {
     name: "Marcus Lee",
     role: "Frontend Engineer",
     avatarUrl: "/avatars/marcus-lee.jpg",
+    statusMessage: "In standup",
+    availability: "in-meeting",
+    cannedResponse: "Hey! I'm in our team standup at the moment. Should be done in about 15 minutes. Check with {managerName} if it's urgent, otherwise I'll catch up with you after!",
   },
   {
     name: "Sofia Andersson",
     role: "UX Researcher",
     avatarUrl: "/avatars/sofia-andersson.jpg",
+    statusMessage: "Running user interviews this morning",
+    availability: "in-meeting",
+    cannedResponse: "Hey! I'm running user interviews all morning. {managerName} can probably help you out. I'll be available this afternoon if you still need me!",
   },
   {
     name: "James O'Brien",
     role: "Backend Engineer",
     avatarUrl: "/avatars/james-obrien.jpg",
+    statusMessage: "Debugging a prod issue",
+    availability: "away",
+    cannedResponse: "Hey! I'm swamped debugging a production issue right now, but {managerName} might be able to help with that. I'll ping you when I'm free!",
   },
   {
     name: "Nina Volkov",
     role: "Engineering Manager",
     avatarUrl: "/avatars/nina-volkov.jpg",
+    statusMessage: "In a 1:1 meeting",
+    availability: "in-meeting",
+    cannedResponse: "Hey! I'm in a 1:1 right now. {managerName} should be able to help you out. I'll be free in about 20 minutes if you need me after!",
   },
   {
     name: "Carlos Mendez",
     role: "Machine Learning Engineer",
     avatarUrl: "/avatars/carlos-mendez.jpg",
+    statusMessage: "Training a model - AFK",
+    availability: "away",
+    cannedResponse: "Hey! I'm monitoring a model training run right now and pretty heads down. {managerName} might be able to help with that. I'll ping you when I'm free!",
   },
 ];
 

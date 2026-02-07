@@ -5855,3 +5855,54 @@ if (extraction.newCoworker) {
 - Pre-existing TypeScript errors in the codebase don't block new features from working
 - Must push to fork remote instead of origin for repositories with restricted permissions
 - Screenshots captured during testing are committed with the code changes for documentation
+---
+
+## Issue #220: US-308 - Make decorative team members semi-interactive with canned responses
+
+### What was implemented
+- Extended `DecorativeTeamMember` type with `statusMessage`, `availability`, and `cannedResponse` fields
+- Updated all 8 decorative team members with realistic status messages and canned responses
+- Made decorative team members clickable in sidebar (reduced opacity to 0.7 instead of 0.5)
+- Changed status indicator from gray (offline) to yellow (away) or red (in-meeting)
+- Created `DecorativeChat` component for handling decorative member conversations
+- Decorative members respond with a single canned response after 30-60 second delay
+- Manager name is dynamically substituted in canned responses using `{managerName}` placeholder
+
+### Files changed
+- `src/types/coworker.ts` - Extended DecorativeTeamMember interface with new fields
+- `src/lib/ai/coworker-persona.ts` - Updated DECORATIVE_TEAM_MEMBERS with status messages and canned responses
+- `src/components/chat/slack-layout.tsx` - Renamed `OfflineTeamMember` to `AwayTeamMember`, made clickable, updated status indicators
+- `src/components/chat/decorative-chat.tsx` - New component for decorative member chat views
+- `src/components/chat/index.ts` - Export DecorativeChat component
+- `src/app/assessment/[id]/chat/client.tsx` - Handle decorative coworker routing and rendering
+
+### Verification
+- TypeScript compiles: `npm run typecheck` passes
+- E2E tested with agent-browser:
+  - Decorative members appear in sidebar with away/in-meeting status dots
+  - Clicking navigates to `/assessment/{id}/chat?coworkerId=decorative-{name}`
+  - Chat view shows status banner with availability message
+  - User can send messages and receive canned response
+- Screenshots captured in `screenshots/issue-220-*.png`
+
+### Learnings for future iterations
+- Decorative members need pseudo-IDs like `decorative-maya-torres` for routing
+- Status banner styling differs by availability: red for "in-meeting", yellow for "away"
+- Canned response delay (30-60s) creates realistic feel of busy coworker
+- Manager name substitution uses `.find()` to locate coworker with "manager" in role
+
+### Gotchas discovered
+- DecorativeChat component is separate from regular Chat component (no AI calls needed)
+- `hasResponded` state prevents multiple canned responses
+- Typing indicator shows during delay period before canned response appears
+- After responding, decorative member shows "currently unavailable" message
+
+### Acceptance Criteria Status
+- [x] Decorative team members are clickable (navigate to their chat view)
+- [x] They appear at slightly reduced opacity (0.7) with yellow/orange "away" dot
+- [x] Their chat view shows a status banner at the top
+- [x] If user sends them a message, they get a single canned response after 30-60 second delay
+- [x] The canned response references the actual manager by name
+- [x] They only respond once - subsequent messages get no response
+- [x] Status indicator uses yellow/orange dot (away) or red dot (in-meeting)
+- [x] Typecheck passes

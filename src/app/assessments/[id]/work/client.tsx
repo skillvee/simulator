@@ -4,6 +4,8 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SlackLayout, Chat } from "@/components/chat";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
+import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
+import { DecorativeChat } from "@/components/chat/decorative-chat";
 
 interface Coworker {
   id: string;
@@ -27,7 +29,18 @@ export function WorkPageClient({
   const { stopRecording } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
 
+  // Check if selected coworker is a decorative member
+  const isDecorativeCoworker = selectedCoworkerId?.startsWith("decorative-");
+  const decorativeMember = isDecorativeCoworker
+    ? DECORATIVE_TEAM_MEMBERS.find(
+        (m) => `decorative-${m.name.toLowerCase().replace(/\s+/g, '-')}` === selectedCoworkerId
+      )
+    : null;
+
   const selectedCoworker = coworkers.find((c) => c.id === selectedCoworkerId);
+
+  // Get the manager name for canned response substitution
+  const managerName = coworkers.find((c) => c.role.toLowerCase().includes("manager"))?.name || "your manager";
 
   // Handle defense call completion
   // This is called when a candidate ends a call with the manager after submitting a PR
@@ -81,7 +94,12 @@ export function WorkPageClient({
       coworkers={coworkers}
       onDefenseComplete={handleDefenseComplete}
     >
-      {selectedCoworker ? (
+      {decorativeMember ? (
+        <DecorativeChat
+          member={decorativeMember}
+          managerName={managerName}
+        />
+      ) : selectedCoworker ? (
         <Chat
           assessmentId={assessmentId}
           coworker={selectedCoworker}

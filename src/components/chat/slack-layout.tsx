@@ -7,6 +7,7 @@ import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
 import { CoworkerAvatar } from "./coworker-avatar";
+import type { DecorativeTeamMember } from "@/types";
 
 interface Coworker {
   id: string;
@@ -248,13 +249,13 @@ function SlackLayoutInner({
                   />
                 ))}
 
-                {/* Offline/Decorative team members */}
+                {/* Away/Decorative team members */}
                 {DECORATIVE_TEAM_MEMBERS.map((member) => (
-                  <OfflineTeamMember
+                  <AwayTeamMember
                     key={member.name}
-                    name={member.name}
-                    role={member.role}
-                    avatarUrl={member.avatarUrl}
+                    member={member}
+                    assessmentId={assessmentId}
+                    isSelected={selectedCoworkerId === `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`}
                   />
                 ))}
               </div>
@@ -384,31 +385,60 @@ function CoworkerItem({
   );
 }
 
-interface OfflineTeamMemberProps {
-  name: string;
-  role: string;
-  avatarUrl?: string;
+interface AwayTeamMemberProps {
+  member: DecorativeTeamMember;
+  assessmentId: string;
+  isSelected: boolean;
 }
 
-function OfflineTeamMember({ name, role, avatarUrl }: OfflineTeamMemberProps) {
+function AwayTeamMember({ member, assessmentId, isSelected }: AwayTeamMemberProps) {
+  const router = useRouter();
+  const decorativeId = `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`;
+
+  // Determine status dot color based on availability
+  const statusDotColor = member.availability === "in-meeting"
+    ? "bg-red-400"
+    : "bg-yellow-500";
+
   return (
     <div
-      className="flex items-center gap-3 px-3 py-2 cursor-default opacity-50 border-l-2 border-transparent"
-      title="Unavailable"
+      onClick={() => router.push(`/assessments/${assessmentId}/work?coworkerId=${decorativeId}`)}
+      className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-all opacity-70 border-l-2 ${
+        isSelected
+          ? "border-primary"
+          : "border-transparent hover:opacity-100"
+      }`}
+      style={{
+        background: isSelected ? "hsl(var(--slack-bg-hover))" : "transparent",
+        color: "hsl(var(--slack-text))"
+      }}
+      onMouseEnter={(e) => {
+        if (!isSelected) {
+          e.currentTarget.style.background = "hsl(var(--slack-bg-hover))";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isSelected) {
+          e.currentTarget.style.background = "transparent";
+        }
+      }}
+      title={member.statusMessage || "Away"}
     >
       <div className="relative">
-        <CoworkerAvatar
-          name={name}
-          avatarUrl={avatarUrl}
-          size="sm"
-          className="border-2 border-background shadow-sm"
-        />
-        {/* Offline status indicator - gray dot */}
-        <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" style={{background: "hsl(var(--slack-text-muted))", border: "2px solid hsl(var(--slack-bg-sidebar))"}} />
+        <div className="inline-block rounded-full" style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}}>
+          <CoworkerAvatar
+            name={member.name}
+            avatarUrl={member.avatarUrl}
+            size="sm"
+            className="shadow-sm"
+          />
+        </div>
+        {/* Away/In-meeting status indicator - yellow/red dot */}
+        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${statusDotColor}`} style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold truncate" style={{color: "hsl(var(--slack-text-muted))"}}>{name}</div>
-        <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>{role}</div>
+        <div className="text-sm font-semibold truncate" style={{color: "hsl(var(--slack-text))"}}>{member.name}</div>
+        <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>{member.role}</div>
       </div>
     </div>
   );

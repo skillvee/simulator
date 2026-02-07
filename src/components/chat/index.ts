@@ -5,3 +5,4 @@ export { CoworkerVoiceCall } from "./coworker-voice-call";
 export { FloatingCallBar } from "./floating-call-bar";
 export type { CallState } from "./floating-call-bar";
 export { SlackLayout, useCallContext } from "./slack-layout";
+export { DecorativeChat } from "./decorative-chat";

@@ -48,7 +48,7 @@ export interface CoworkerPersona {
 
 /**
  * Decorative team member for sidebar display.
- * These members appear offline and are not interactive.
+ * These members appear as "away" or "in-meeting" and respond with a single canned message.
  */
 export interface DecorativeTeamMember {
   /** Display name */
@@ -59,4 +59,10 @@ export interface DecorativeTeamMember {
   initials?: string;
   /** Optional avatar URL */
   avatarUrl?: string;
+  /** Status message shown in chat banner (e.g., "In a meeting until 10:45 AM") */
+  statusMessage?: string;
+  /** Availability state - affects status indicator color */
+  availability?: "away" | "in-meeting" | "offline";
+  /** One-time auto-reply sent after user's first message. Use {managerName} placeholder. */
+  cannedResponse?: string;
 }
