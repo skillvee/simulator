@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
+import type { VideoEvaluationResult, AssessmentMetrics } from "@/types";
 
 // ============================================================================
 // Types
@@ -24,12 +25,27 @@ interface SessionUser {
 }
 
 /**
- * Dimension score with percentile for comparison
+ * Dimension score with percentile and evidence for comparison
  */
 interface DimensionScoreComparison {
   dimension: string;
   score: number;
   percentile: number;
+  greenFlags: string[];
+  redFlags: string[];
+  rationale: string;
+  timestamps: string[];
+}
+
+/**
+ * Work style metrics for comparison
+ */
+interface WorkStyleMetrics {
+  totalDurationMinutes: number | null;
+  workingPhaseMinutes: number | null;
+  coworkersContacted: number;
+  aiToolsUsed: boolean;
+  testsStatus: string;
 }
 
 /**
@@ -43,7 +59,10 @@ interface CandidateComparison {
   overallPercentile: number;
   strengthLevel: CandidateStrengthLevel;
   dimensionScores: DimensionScoreComparison[];
-  topStrength: string | null;
+  summary: string;
+  metrics: WorkStyleMetrics;
+  confidence: string;
+  videoUrl: string;
 }
 
 // ============================================================================
@@ -60,24 +79,6 @@ function getStrengthLevel(overallScore: number): CandidateStrengthLevel {
   return "Developing";
 }
 
-/**
- * Find the dimension with highest percentile (top strength)
- */
-function findTopStrength(dimensionScores: DimensionScoreComparison[]): string | null {
-  if (dimensionScores.length === 0) return null;
-
-  let maxPercentile = -1;
-  let topDimension: string | null = null;
-
-  for (const ds of dimensionScores) {
-    if (ds.percentile > maxPercentile) {
-      maxPercentile = ds.percentile;
-      topDimension = ds.dimension;
-    }
-  }
-
-  return topDimension;
-}
 
 
 // ============================================================================
@@ -91,13 +92,13 @@ function findTopStrength(dimensionScores: DimensionScoreComparison[]): string | 
  *
  * Query params:
  * - assessmentIds: comma-separated list of assessment IDs (max 4)
+ * - simulationId: simulation ID to validate all candidates belong to same simulation
  *
  * Returns array of candidate summaries with:
- * - candidateId, candidateName
- * - overallScore, overallPercentile
- * - strengthLevel
- * - dimensionScores with percentiles
- * - topStrength (highest percentile dimension)
+ * - assessmentId, candidateName, scenarioId
+ * - overallScore, overallPercentile, strengthLevel
+ * - dimensionScores with percentiles, flags, rationale, timestamps
+ * - summary, metrics, confidence, videoUrl
  */
 export async function GET(request: Request) {
   const session = await auth();
@@ -111,9 +112,10 @@ export async function GET(request: Request) {
     return error("Recruiter access required", 403);
   }
 
-  // Parse assessmentIds from query params
+  // Parse query params
   const url = new URL(request.url);
   const assessmentIdsParam = url.searchParams.get("assessmentIds");
+  const simulationId = url.searchParams.get("simulationId");
 
   if (!assessmentIdsParam) {
     return error("assessmentIds query parameter is required", 400);
@@ -150,6 +152,7 @@ export async function GET(request: Request) {
       videoAssessment: {
         include: {
           scores: true,
+          summary: true,
         },
       },
     },
@@ -160,6 +163,17 @@ export async function GET(request: Request) {
     const foundIds = new Set(assessments.map((a) => a.id));
     const missingIds = assessmentIds.filter((id) => !foundIds.has(id));
     return error(`Assessments not found: ${missingIds.join(", ")}`, 404);
+  }
+
+  // Validate all assessments belong to the same simulation if simulationId provided
+  if (simulationId) {
+    const differentSimulation = assessments.filter(
+      (a) => a.scenario.id !== simulationId
+    );
+
+    if (differentSimulation.length > 0) {
+      return error("All candidates must belong to the same simulation", 400);
+    }
   }
 
   // Verify recruiter owns all simulations (unless admin)
@@ -184,17 +198,36 @@ export async function GET(request: Request) {
       const percentiles = await getStoredPercentiles(assessment.id);
       const overallPercentile = percentiles?.overall ?? 0;
 
-      // Build dimension scores with percentiles
+      // Parse report JSON for video evaluation and metrics
+      const report = assessment.report as { videoEvaluation?: VideoEvaluationResult; metrics?: AssessmentMetrics } | null;
+      const videoEvaluation = report?.videoEvaluation;
+      const metrics = report?.metrics;
+
+      // Build dimension scores with percentiles, flags, rationale, timestamps
       const dimensionScores: DimensionScoreComparison[] = [];
 
       if (hasCompletedVideoAssessment && videoAssessment?.scores) {
         for (const score of videoAssessment.scores) {
           const percentile = percentiles?.[score.dimension] ?? 0;
 
+          // Find matching skill in videoEvaluation by dimension
+          const skillData = videoEvaluation?.skills?.find(
+            (s) => s.dimension === score.dimension
+          );
+
+          // Parse timestamps from DimensionScore.timestamps (stored as JSON array)
+          const timestamps = Array.isArray(score.timestamps)
+            ? score.timestamps
+            : [];
+
           dimensionScores.push({
             dimension: score.dimension,
             score: score.score,
             percentile,
+            greenFlags: skillData?.greenFlags ?? [],
+            redFlags: skillData?.redFlags ?? [],
+            rationale: skillData?.rationale ?? score.rationale ?? "",
+            timestamps: skillData?.timestamps ?? timestamps,
           });
         }
       }
@@ -205,8 +238,23 @@ export async function GET(request: Request) {
           ? dimensionScores.reduce((sum, s) => sum + s.score, 0) / dimensionScores.length
           : 0;
 
-      // Find top strength (highest percentile)
-      const topStrength = findTopStrength(dimensionScores);
+      // Extract summary from VideoAssessmentSummary
+      const summary = videoAssessment?.summary?.overallSummary ?? "";
+
+      // Extract metrics with sensible defaults
+      const workStyleMetrics: WorkStyleMetrics = {
+        totalDurationMinutes: metrics?.totalDurationMinutes ?? null,
+        workingPhaseMinutes: metrics?.workingPhaseMinutes ?? null,
+        coworkersContacted: metrics?.coworkersContacted ?? 0,
+        aiToolsUsed: metrics?.aiToolsUsed ?? false,
+        testsStatus: metrics?.testsStatus ?? "unknown",
+      };
+
+      // Extract confidence from video evaluation
+      const confidence = videoEvaluation?.evaluationConfidence ?? "medium";
+
+      // Get video URL
+      const videoUrl = videoAssessment?.videoUrl ?? "";
 
       return {
         assessmentId: assessment.id,
@@ -216,7 +264,10 @@ export async function GET(request: Request) {
         overallPercentile,
         strengthLevel: getStrengthLevel(overallScore),
         dimensionScores,
-        topStrength,
+        summary,
+        metrics: workStyleMetrics,
+        confidence,
+        videoUrl,
       };
     })
   );
