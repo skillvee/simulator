@@ -6568,3 +6568,83 @@ agent-browser screenshot ./screenshots/general-channel.png --session "test"
 10. **Type imports consistency:** Always import from `@/types` not from implementation files. The codebase has eslint rules enforcing this pattern. See `src/types/CLAUDE.md` for full docs.
 
 11. **Pre-existing typecheck errors:** The codebase has pre-existing typecheck errors (especially around gemini imports). As long as new code doesn't introduce NEW errors and tests pass, it's acceptable to commit. Run `npm test` not `npm run typecheck` as the final gate.
+
+## Issue #230: US-007 - Starter repo template system with auto-provisioning
+
+### What was implemented
+- Created template registry in `src/lib/scenarios/repo-templates.ts` with 4 initial templates:
+  - `nextjs-typescript` — React + TypeScript + Next.js starter
+  - `express-typescript` — Node.js + Express + TypeScript starter
+  - `python-fastapi` — Python + FastAPI starter
+  - `fullstack-monorepo` — React + Node.js full stack monorepo (fallback)
+- Implemented `selectTemplate(techStack)` function that picks best template based on keyword overlap
+- Implemented `provisionRepo(scenarioId, templateId)` function that creates GitHub repo from template via GitHub API
+- Created async API endpoint `POST /api/recruiter/simulations/[id]/provision-repo` following avatar generation pattern
+- Added `GITHUB_ORG_TOKEN` to `.env.example` with documentation about required scopes
+- Comprehensive unit tests for template selection (22 tests) and API route integration tests (12 tests)
+- All 34 tests passing
+
+### Files changed
+- Created `src/lib/scenarios/repo-templates.ts` - Template registry and provisioning logic
+- Created `src/app/api/recruiter/simulations/[id]/provision-repo/route.ts` - API endpoint
+- Created `src/lib/scenarios/__tests__/repo-templates.test.ts` - Unit tests for template selection
+- Created `src/app/api/recruiter/simulations/[id]/provision-repo/__tests__/route.test.ts` - API route tests
+- Modified `.env.example` - Added GITHUB_ORG_TOKEN documentation
+
+### Template selection algorithm
+- Case-insensitive keyword matching with substring support
+- Scores templates by counting matching keywords between template and tech stack
+- Selects template with highest score (most keyword matches)
+- Fallback to `fullstack-monorepo` if no matches or empty tech stack
+- Handles partial matches (e.g., "node" matches "nodejs", "node.js")
+
+### API design patterns followed
+- Async provisioning pattern (fire-and-forget from client, 202 Accepted response)
+- Followed exact auth pattern from `/api/avatar/generate/route.ts` for consistency
+- Security: Only scenario owner or admin can trigger provisioning
+- Idempotent: Returns existing repo URL if already provisioned (no re-provisioning)
+- Graceful failure: Returns 500 with details if GitHub API fails, doesn't update DB
+- Optional body parsing: Falls back to auto-selection if request body is malformed or empty
+
+### Testing approach
+- Separated unit tests (template selection) from integration tests (API route)
+- Unit tests cover: happy path, case insensitivity, partial matches, fallback behavior, registry validation, scoring algorithm, real-world scenarios
+- API tests cover: auth (401/403), scenario validation (404/403), already provisioned, successful provisioning (auto-select + explicit templateId), provisioning failures, request body parsing
+- Used Vitest mocking patterns consistent with existing tests (`vi.mock`, `vi.fn()`)
+- All tests use `describe`, `it`, `expect` imports from vitest (not jest globals)
+
+### GitHub API integration
+- Uses GitHub's "create repository from template" API endpoint
+- Endpoint: `POST /repos/{owner}/{repo}/generate`
+- Creates private repos under same org as template
+- Repo naming convention: `simulation-{scenarioId}`
+- Requires `GITHUB_ORG_TOKEN` with "repo" scope and write access to org
+
+### Learnings for future iterations
+- **Async provisioning pattern**: Following the avatar generation pattern (Issue #221) ensures consistency. Client fires POST request without awaiting, provisioning happens in background, DB updated when complete.
+- **Template selection scoring**: Keyword overlap counting is simple but effective. Future enhancement could use more sophisticated matching (e.g., weighted keywords, tech stack categories).
+- **Fallback template**: Always having a generic fallback (`fullstack-monorepo`) ensures provisioning never fails due to unknown tech stack.
+- **Idempotency**: Checking if `repoUrl` already exists before provisioning prevents accidental re-provisioning and makes endpoint safe to call multiple times.
+- **Error handling**: Returning `null` from `provisionRepo()` on failure allows API endpoint to decide response strategy (500 with details, vs retry, vs queue).
+- **Test organization**: Separating unit tests (fast, pure logic) from integration tests (mocking external dependencies) follows best practices and makes tests easier to maintain.
+- **Type safety with Vitest**: Must import `describe`, `it`, `expect` from "vitest" even though `vitest.config.ts` has `globals: true` — TypeScript needs explicit imports for type checking.
+- **Pre-existing errors**: Codebase had 90+ pre-existing TypeScript/ESLint errors unrelated to this PR. Verified new code adds no new errors by grepping typecheck output for new file paths.
+
+### Integration points
+- **Simulation builder** (`src/app/recruiter/simulations/new/client.tsx`): After saving scenario, trigger provisioning via `fetch('/api/recruiter/simulations/${id}/provision-repo')` (similar to avatar generation at line 203-210)
+- **Scenario model** (already updated in Issue #225): `repoUrl` is nullable, system-managed field
+- **Manager greeting generator**: Already handles null `repoUrl` with fallback message (Issue #225)
+- **UI feedback**: Simulation detail page shows "Setting up..." when `repoUrl` is null (Issue #225)
+
+### PRD Reference
+`tasks/prd-simulation-builder-redesign.md` — US-007
+
+### Dependencies
+- Depends on: Issue #225 (US-009: Make repoUrl optional) — completed
+
+### Next steps
+- Integration work: Update simulation builder client to call the provisioning endpoint
+- Create actual GitHub template repos in SkillVee org (currently using placeholder repo names)
+- Optional: Add retry mechanism for failed provisioning (could use a job queue like BullMQ)
+- Optional: Add webhook to notify when provisioning completes (for real-time UI updates)
+
