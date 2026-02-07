@@ -1,3 +1,90 @@
+## Issue #251: US-003 - Cross-simulation candidate search
+
+### What was implemented
+- Added search bar to recruiter candidates page at `src/app/recruiter/candidates/client.tsx`
+- Server page (`page.tsx`) fetches flat list of all candidates across all simulations for search
+- Search bar positioned above simulation cards grid with search icon (Lucide `Search`)
+- Client-side search with 300ms debounce using custom `useDebounce` hook
+- Case-insensitive partial match filtering on candidate name and email
+- Dropdown appears when search input has text, hides when empty
+- Search results displayed in dropdown with:
+  - Candidate name (truncated)
+  - Email (truncated)
+  - Simulation name (truncated)
+  - Status badge (color-coded: green=COMPLETED, blue=WORKING, gray=WELCOME)
+  - Overall score (if completed, formatted to 1 decimal)
+- Clicking result navigates to `/recruiter/candidates/s/[simulationId]` (simulation-scoped table)
+- Search input clears and dropdown closes on result click
+- Empty state: "No candidates found" centered in dropdown
+- Full-width search bar with prominent styling (h-11 input height, pl-10 for icon space)
+
+### Files modified
+- **Modified:** `src/app/recruiter/candidates/page.tsx` - Added `CandidateSearchItem` interface, fetched flat candidate list (98 lines → 168 lines)
+- **Modified:** `src/app/recruiter/candidates/client.tsx` - Added search UI, debounce hook, filtering logic (161 lines → 258 lines)
+- **Added:** `screenshots/issue-251-search-bar.png` - Screenshot of search bar in initial state
+- **Added:** `screenshots/issue-251-search-empty.png` - Screenshot of empty search results dropdown
+
+### Acceptance criteria verified
+- ✅ Add a search bar at the top of the simulation picker page
+- ✅ Search input with placeholder: "Search candidates by name or email..."
+- ✅ Search is client-side against all candidates, filtering by name and email (case-insensitive partial match)
+- ✅ Results appear in a dropdown below the search bar as the user types
+- ✅ Each result shows: candidate name, email, simulation name, status badge, overall score (if completed)
+- ✅ Clicking a result navigates to `/recruiter/candidates/s/[simulationId]`
+- ✅ Search is debounced (300ms)
+- ✅ Empty state in dropdown: "No candidates found"
+- ✅ If search input is empty, dropdown is hidden
+- ✅ Server page passes flat list of all candidates as props for client-side search
+- ✅ Typecheck passes (no new errors in modified files)
+- ✅ App builds successfully
+
+### Learnings for future iterations
+
+**Debouncing in React:**
+- Custom `useDebounce` hook pattern is cleaner than inline `setTimeout` in component
+- Use `useEffect` (not `useMemo`) to handle side effects like setTimeout
+- Pattern: state value → debounced value → filtered results (3-step pipeline)
+- 300ms is a good balance for search UX (not too laggy, not too chatty)
+
+**Client-side search architecture:**
+- Fetch all searchable data server-side, filter client-side for instant feedback
+- Works well for datasets under ~1000 items (typical recruiter has <100 candidates)
+- If scaling beyond that, consider server-side search API with pagination
+- Trade-off: initial page load includes all candidate data, but search is instant
+
+**Dropdown UI patterns:**
+- `absolute top-full mt-2` positions dropdown below search bar
+- `z-10` ensures dropdown appears above simulation cards
+- `max-h-96 overflow-y-auto` prevents dropdown from growing too tall
+- Click handler on result should clear search to avoid stale dropdown after navigation
+- Truncate long text with `truncate` class to prevent layout overflow
+
+**Search result navigation:**
+- Initially considered navigating to specific candidate detail page
+- Requirements specified simulation-scoped table instead (lets recruiter see candidate in context)
+- Could add query param `?highlight=assessmentId` in future to highlight specific row
+
+**Empty state messaging:**
+- "No candidates found" is more specific than generic "No results"
+- Could enhance with suggestions ("Try a different name or email") but kept simple for MVP
+
+**Type safety:**
+- Defined `CandidateSearchItem` interface in server page and exported for client import
+- Avoided duplication by using `type` import in client component
+- Status type explicitly typed as union: `"COMPLETED" | "WORKING" | "WELCOME"`
+
+### Gotchas discovered
+- `useDebounce` must use `useEffect` not `useMemo` - side effects require Effect hook
+- Search dropdown visibility should check `searchQuery.trim().length > 0` not just truthiness
+- Status badge color helper function reused same pattern as scoped table (consistency win)
+- Build warnings about missing exports in `@/lib/candidate` are pre-existing, not introduced by this issue
+
+### Dependencies completed
+- Depends on: #239 (simulation picker page) ✅
+- Blocks: nothing
+
+---
+
 ## Issue #250: US-014 - Video modal overlay in comparison view
 
 ### What was implemented
