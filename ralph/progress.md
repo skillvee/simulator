@@ -6929,3 +6929,90 @@ The preview page is complete but the "Create Simulation" button is not wired up.
 - Implement the save flow: create scenario, create coworkers, trigger avatar generation, trigger repo provisioning
 - Handle success/error states
 - Redirect to simulation detail page on success
+
+## Issue #234: US-010 - Candidate experience summary card on preview page
+
+### What was implemented
+- Created `CandidateExperienceSummary` component displaying narrative summary of candidate experience
+- Card positioned at TOP of simulation preview page (above all editable sections from #233)
+- Narrative paragraph dynamically renders: role, company, coworkers, manager, task summary
+- Visual timeline with 4 assessment stages: Welcome → Team Chat & Coding → PR Defense → Results
+- Timeline includes lucide-react icons (MessageSquare, Code, Video, BarChart) and time estimates
+- Distinct blue accent styling: `border-primary/30` and `bg-primary/5` for visual prominence
+- Component fully reactive to props changes (updates when hiring manager edits any field)
+- Comprehensive test suite (9 tests) covering edge cases and dynamic updates
+
+### Files changed
+- **New:** `src/components/recruiter/CandidateExperienceSummary.tsx` - Main component
+- **New:** `src/components/recruiter/CandidateExperienceSummary.test.tsx` - Test suite (9 tests)
+- **Modified:** `src/app/recruiter/simulations/new/client.tsx` - Integrated component into preview step
+- **New:** `screenshots/issue-234.png` - Visual verification screenshot
+
+### Key patterns and gotchas
+
+1. **React element rendering instead of string interpolation:** Initially tried building team member list as a string with markdown `**bold**` syntax, but this renders as literal text. Solution: Created `renderTeamIntro()` function that returns React elements (`<strong>` tags) for proper bold formatting.
+
+2. **Multiple text instances in tests:** The narrative mentions coworkers multiple times (in team intro and as manager). Tests failed when using `getByText()` because names appeared twice. Solution: Use `getAllByText()` for text that appears multiple times, or `getByRole()` for unique headings.
+
+3. **Task summary extraction:** The preview page has two types of task selections: generated tasks (with `summary` field) and custom tasks (with `customDescription`). Had to extract the task summary from `previewData.selectedTask` using a conditional to handle both cases.
+
+4. **Role name parsing:** Simulation name format is "[Role] @ [Company]", so we split on " @ " to extract just the role name for the narrative. Added fallback to "Software Engineer" if splitting fails.
+
+5. **Manager identification:** Logic finds manager by checking for "Engineering Manager" role or any role containing "manager". Fallback to first coworker if none found. This ensures narrative always has a manager name even if data is incomplete.
+
+6. **Team members filtering:** Filtered coworkers to exclude the manager (to avoid mentioning them twice), then sliced to max 3 team members. This keeps the narrative concise while showing key collaborators.
+
+7. **Spacing in narrative:** Used React's implicit string concatenation with `{" "}` to ensure proper spacing around dynamic content. Without this, words would run together (e.g., "companyAcme Corp").
+
+8. **Card positioning:** Placed component immediately after the "Preview Your Simulation" header and before Section 1 (Simulation Name). This makes it the first piece of content users see, fulfilling the "aha moment" requirement.
+
+### Testing approach
+- **Happy path:** Component renders with full props, displays all narrative elements and timeline stages
+- **Dynamic updates:** Props changes correctly update rendered content (tested with `rerender()`)
+- **Edge cases:** Empty coworkers array, single coworker (becomes manager), multiple coworkers (2-3)
+- **Text formatting:** Team member list formatting with correct commas and "and" conjunction
+- **Visual treatment:** CSS class assertions for blue accent border and background
+- **Timeline completeness:** All 4 stages present with correct labels and time estimates
+
+### Learnings for future iterations
+
+**Component design for narrative text:**
+- When building dynamic narrative paragraphs with variable content, prefer React element composition over string interpolation
+- Use `<strong>` tags directly instead of markdown syntax (which won't be parsed in JSX)
+- Break complex narrative logic into sub-functions (like `renderTeamIntro()`) for readability
+
+**Test resilience:**
+- For components with repeated text content, use `getAllByText()` or `getByRole()` instead of `getByText()`
+- Test edge cases: empty arrays, single items, maximum items (helps catch off-by-one errors)
+- Use `.textContent` for assertions about substring presence when exact matching fails
+
+**Integration with existing state:**
+- When integrating into an existing multi-step form, extract derived values (like role name from simulation name) at the component level, not in the parent
+- Pass primitive values as props rather than complex objects when possible (e.g., `taskSummary` string instead of entire `TaskOption` object)
+
+**Visual hierarchy:**
+- Blue accent styling (`border-primary/30`, `bg-primary/5`) effectively distinguishes "read-only summary" cards from "editable section" cards
+- Positioning at the top works well for "overview" components that set context for detailed editing below
+
+**Timeline/stepper patterns:**
+- Grid layout with `grid-cols-2 sm:grid-cols-4` works well for 4-item timelines (2x2 on mobile, 1x4 on desktop)
+- Icon + label + subtitle structure provides good information density without clutter
+- Using lucide-react icons maintains consistency with existing codebase
+
+### Dependencies used
+- lucide-react icons: MessageSquare, Code, Video, BarChart
+- shadcn/ui components: Card, Badge
+- React Testing Library for component tests
+- Existing types: `CoworkerBuilderData` from `@/lib/scenarios/scenario-builder`
+
+### PRD Reference
+`tasks/prd-simulation-builder-redesign.md` — US-010
+
+### Dependencies
+- Depends on: Issue #233 (US-004: Preview page structure) — completed
+
+### Next steps
+- US-011: Wire up "Create Simulation" button to save flow (currently logs to console)
+- Optional: Add animation/transition when summary updates (subtle highlight on change)
+- Optional: Make timeline stages clickable to show detailed descriptions of each phase
+
