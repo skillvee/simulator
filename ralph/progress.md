@@ -1,5 +1,46 @@
 # Ralph Progress Log
 
+## Issue #218: US-306 - Add notification sounds for new messages and calls
+
+### What was implemented
+- Created Web Audio API-based notification sounds for messages and calls
+- Message notification sound plays when coworker messages arrive
+- Ring tone plays during call connection and stops when connected
+- Sounds respect browser autoplay policies requiring user interaction
+- Sounds play for messages in non-selected chats (sidebar notifications)
+
+### Files changed
+- `src/lib/sounds.ts` - New sound utility library using Web Audio API for programmatic sound generation
+- `src/components/chat/chat.tsx` - Added message sounds for model responses and user interaction tracking
+- `src/components/chat/floating-call-bar.tsx` - Added ring tone during call connection with proper cleanup
+- `src/components/chat/slack-layout.tsx` - Added sounds for unread messages and global interaction tracking
+
+### Acceptance Criteria Met
+- ✅ A subtle "knock" or "pop" sound plays when a coworker message arrives
+- ✅ Sound only plays for model messages, not user's own messages
+- ✅ Sound plays even when viewing a different coworker's chat (sidebar notification scenario)
+- ✅ A brief ring tone plays when initiating a call (during "connecting" state), stops when connected
+- ✅ Sounds respect browser autoplay policies (only play after user has interacted with the page)
+- ✅ Sound volume is subtle and professional (volume 0.3-0.4)
+- ✅ Sound files are small (<50KB each) - using programmatic generation, no external files needed
+- ✅ Typecheck passes for modified files
+
+### Learnings for future iterations
+- Web Audio API provides programmatic sound generation without external audio files
+- Browser autoplay policies require tracking user interaction before playing any sounds
+- Sound effects need proper cleanup functions (especially for looping sounds like ring tones)
+- Ring tones must stop on both success (connected) and error states to avoid stuck sounds
+- Sound references in async try/catch blocks need proper scoping (declare outside try block)
+- TypeScript errors in unrelated parts of codebase don't block feature implementation
+- Sound volume should be kept subtle (0.3-0.4) for professional, non-intrusive experience
+- Using AudioContext requires lazy initialization after user interaction
+- Notification sounds enhance immersion in chat simulation significantly
+
+### Screenshots
+- `screenshots/issue-218.png` - Chat interface showing message interactions where sounds would trigger
+
+---
+
 ## Issue #216: US-304 - Stagger manager greeting message timestamps realistically
 
 ### What was implemented
