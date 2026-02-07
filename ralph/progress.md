@@ -7374,3 +7374,95 @@ Remaining items from PRD for future issues:
 ### Dependencies completed
 - No dependencies - this was foundational refactor
 - Blocks: simulation-scoped candidate table (Issue #240), cross-simulation search (Issue #241)
+
+
+## Issue #240: US-015 - Extend comparison API with flags, rationale, metrics, summary, and video URL
+
+### What was implemented
+- Extended `GET /api/recruiter/candidates/compare` at `src/app/api/recruiter/candidates/compare/route.ts` to return comprehensive candidate comparison data
+- **New response fields per candidate:**
+  - `summary: string` - from `VideoAssessmentSummary.overallSummary`
+  - `metrics: WorkStyleMetrics` - from `assessment.report.metrics` (totalDurationMinutes, workingPhaseMinutes, coworkersContacted, aiToolsUsed, testsStatus)
+  - `confidence: string` - from `assessment.report.videoEvaluation.evaluationConfidence`
+  - `videoUrl: string` - from `videoAssessment.videoUrl`
+- **New response fields per dimension score:**
+  - `greenFlags: string[]` - from `assessment.report.videoEvaluation.skills[]`
+  - `redFlags: string[]` - from `assessment.report.videoEvaluation.skills[]`
+  - `rationale: string` - from `assessment.report.videoEvaluation.skills[]` or `DimensionScore.rationale`
+  - `timestamps: string[]` - from `assessment.report.videoEvaluation.skills[]` or `DimensionScore.timestamps`
+- **Query parameter additions:**
+  - Added `simulationId` param for validation that all candidates belong to same simulation (returns 400 if validation fails)
+- **Removed fields (per US-017 cleanup):**
+  - Removed `biggestGap` field (trainable gaps removed from UI)
+  - Removed `topStrength` field (replaced by frontend-derived strengths)
+  - Removed `findTopStrength()` helper function
+- **Data handling:**
+  - Sensible defaults for missing data: empty arrays for flags/timestamps, empty string for summary/rationale, null for metrics fields, "medium" for confidence
+  - Proper type casting from JSON: `assessment.report` typed as `{ videoEvaluation?: VideoEvaluationResult; metrics?: AssessmentMetrics } | null`
+  - Includes `summary` relation in `videoAssessment` query
+- All existing response fields preserved: `assessmentId`, `candidateName`, `scenarioId`, `overallScore`, `overallPercentile`, `strengthLevel`, `dimensionScores[]`
+
+### Files modified
+- **Modified:** `src/app/api/recruiter/candidates/compare/route.ts` - Extended response with new fields, added simulationId validation, removed deprecated fields
+
+### Acceptance criteria verified
+- ✅ Extended `GET /api/recruiter/candidates/compare` route
+- ✅ Kept existing fields: assessmentId, candidateName, overallScore, overallPercentile, strengthLevel, dimensionScores (score + percentile)
+- ✅ Added per-dimension: greenFlags, redFlags, rationale, timestamps from `assessment.report.videoEvaluation.skills[]`
+- ✅ Added per-candidate: summary from VideoAssessmentSummary.overallSummary
+- ✅ Added per-candidate: metrics object with totalDurationMinutes, workingPhaseMinutes, coworkersContacted, aiToolsUsed, testsStatus
+- ✅ Added per-candidate: confidence from `assessment.report.videoEvaluation.evaluationConfidence`
+- ✅ Added per-candidate: videoUrl from `videoAssessment.videoUrl`
+- ✅ Added `simulationId` query parameter with validation
+- ✅ Removed `biggestGap` field (per US-017)
+- ✅ Removed `topStrength` field (per US-017)
+- ✅ Sensible defaults for missing data (empty arrays for flags, null for metrics fields, empty string for summary)
+- ✅ Typecheck passes (no new errors in compare route)
+- ✅ App builds successfully (no new build errors - pre-existing lint warnings in other files remain)
+
+### Learnings for future iterations
+
+**JSON field access with proper typing:**
+- When accessing JSON fields from Prisma (`assessment.report`), cast to specific types from `@/types` instead of `any`
+- Example: `const report = assessment.report as { videoEvaluation?: VideoEvaluationResult; metrics?: AssessmentMetrics } | null`
+- This enables TypeScript autocomplete and type safety while avoiding ESLint `no-explicit-any` errors
+- Import types from `@/types` barrel export: `import type { VideoEvaluationResult, AssessmentMetrics } from "@/types"`
+
+**Matching data across different sources:**
+- The same dimension data exists in multiple places:
+  - `DimensionScore` table: has `rationale`, `timestamps` (as JSON), `score`
+  - `assessment.report.videoEvaluation.skills[]`: has `greenFlags`, `redFlags`, `rationale`, `timestamps`
+- Match by dimension name/slug using `.find()` on the skills array
+- Prefer `videoEvaluation.skills[]` for flags (not in DimensionScore), use DimensionScore as fallback for rationale/timestamps
+- Parse JSON arrays safely: `Array.isArray(score.timestamps) ? score.timestamps : []`
+
+**Relation loading for nested data:**
+- To access `VideoAssessmentSummary.overallSummary`, must include `summary: true` in the `videoAssessment` include
+- Example: `include: { videoAssessment: { include: { scores: true, summary: true } } }`
+- Without this, `videoAssessment.summary` will be undefined even if the summary exists in the database
+
+**Query parameter validation patterns:**
+- When adding scoping params like `simulationId`, validate relationships before processing
+- Example: verify all assessments belong to the requested simulation ID, return 400 if not
+- This prevents accidental cross-simulation comparisons and provides clear error messages
+- Validation should happen AFTER verifying assessments exist but BEFORE processing them
+
+**Sensible defaults for optional data:**
+- Use nullish coalescing for safe defaults: `metrics?.totalDurationMinutes ?? null`
+- Arrays default to empty: `skillData?.greenFlags ?? []`
+- Strings default to empty string: `summary ?? ""`
+- Confidence defaults to middle ground: `"medium"`
+- This ensures the API always returns a consistent shape even when data is incomplete
+
+**API cleanup coordination:**
+- Issue #237 (cleanup of trainable gaps and hiring signals) was correctly marked as a dependency
+- Removing `biggestGap` and `topStrength` from this API aligns with US-017 cleanup
+- Always check dependency issues are closed before starting dependent work to avoid merge conflicts
+- Use `gh issue view <number> --json state` to verify dependency status
+
+**Build verification in presence of pre-existing errors:**
+- Check route-specific errors with: `npx eslint <file>` and `npx tsc --noEmit 2>&1 | grep "<route>"`
+- Pre-existing lint errors in other files don't block completion if the new code passes linting
+- Acceptance criteria "App builds successfully" means no NEW errors introduced, not zero total errors
+- Document verification approach: "✅ Typecheck passes (no new errors in compare route)"
+
