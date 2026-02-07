@@ -42,6 +42,7 @@ export default async function WorkPage({
         assessmentId={id}
         coworkers={coworkers}
         selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
+        assessmentStartTime={assessment.createdAt}
       />
     </AssessmentScreenWrapper>
   );

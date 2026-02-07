@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { SlackLayout, Chat } from "@/components/chat";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { DecorativeChat } from "@/components/chat/decorative-chat";
+import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
+import { playMessageSound } from "@/lib/sounds";
+import type { ChatMessage } from "@/types";
 
 interface Coworker {
   id: string;
@@ -18,16 +21,43 @@ interface WorkPageClientProps {
   assessmentId: string;
   coworkers: Coworker[];
   selectedCoworkerId: string | null;
+  assessmentStartTime: Date;
 }
 
 export function WorkPageClient({
   assessmentId,
   coworkers,
   selectedCoworkerId,
+  assessmentStartTime,
 }: WorkPageClientProps) {
   const router = useRouter();
   const { stopRecording } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
+
+  // Ref to store the incrementUnread function from SlackLayout
+  const incrementUnreadRef = useRef<((coworkerId: string) => void) | null>(null);
+
+  // Handle proactive messages from coworkers
+  const handleProactiveMessage = useCallback((coworkerId: string, message: ChatMessage) => {
+    // Increment unread count for this coworker
+    if (incrementUnreadRef.current) {
+      incrementUnreadRef.current(coworkerId);
+    }
+
+    // Play notification sound
+    playMessageSound();
+
+    console.log(`[WorkPage] Proactive message from ${coworkerId}: ${message.text.slice(0, 50)}...`);
+  }, []);
+
+  // Initialize proactive messages hook
+  useProactiveMessages({
+    assessmentId,
+    coworkers,
+    selectedCoworkerId,
+    assessmentStartTime,
+    onProactiveMessage: handleProactiveMessage,
+  });
 
   // Check if selected coworker is a decorative member
   const isDecorativeCoworker = selectedCoworkerId?.startsWith("decorative-");
@@ -93,6 +123,9 @@ export function WorkPageClient({
       assessmentId={assessmentId}
       coworkers={coworkers}
       onDefenseComplete={handleDefenseComplete}
+      onIncrementUnreadRef={(fn) => {
+        incrementUnreadRef.current = fn;
+      }}
     >
       {decorativeMember ? (
         <DecorativeChat

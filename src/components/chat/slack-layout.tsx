@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, createContext, useContext, cloneElement, isValidElement } from "react";
+import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Menu, X, Headphones } from "lucide-react";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
@@ -49,6 +49,8 @@ interface SlackLayoutProps {
   selectedCoworkerId?: string;
   /** Callback when a defense call is completed (PR was submitted, call with manager ended) */
   onDefenseComplete?: () => void;
+  /** Callback to expose incrementUnread function to parent */
+  onIncrementUnreadRef?: (incrementUnread: (coworkerId: string) => void) => void;
 }
 
 /**
@@ -105,6 +107,7 @@ function SlackLayoutInner({
   children,
   selectedCoworkerId: overrideSelectedId,
   onDefenseComplete,
+  onIncrementUnreadRef,
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -131,7 +134,7 @@ function SlackLayoutInner({
   };
 
   // Increment unread count for a coworker
-  const incrementUnread = (coworkerId: string) => {
+  const incrementUnread = useCallback((coworkerId: string) => {
     // Don't increment if the coworker is currently selected
     if (coworkerId === selectedCoworkerId) return;
 
@@ -142,7 +145,14 @@ function SlackLayoutInner({
 
     // Play notification sound for messages in non-selected chats
     playMessageSound();
-  };
+  }, [selectedCoworkerId]);
+
+  // Expose incrementUnread to parent via callback ref
+  useEffect(() => {
+    if (onIncrementUnreadRef) {
+      onIncrementUnreadRef(incrementUnread);
+    }
+  }, [onIncrementUnreadRef, incrementUnread]);
 
   // Clear unread count for a coworker
   const clearUnread = (coworkerId: string) => {

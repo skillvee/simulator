@@ -19,6 +19,18 @@ export type {
 } from "@/types";
 
 /**
+ * Proactive message configuration for coworkers
+ */
+export interface ProactiveMessage {
+  /** The message text to send */
+  message: string;
+  /** Minutes after assessment start to send this message */
+  delayMinutes: number;
+  /** Optional condition for when to send this message */
+  condition?: "always" | "after-first-manager-message";
+}
+
+/**
  * Build a system prompt for a coworker AI based on their persona
  *
  * @param coworker - The coworker persona data
@@ -253,6 +265,113 @@ export function getInitials(name: string): string {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+}
+
+/**
+ * Get proactive messages for a coworker based on their role
+ * These messages will be sent automatically during the assessment
+ * to make the team feel more alive and realistic.
+ *
+ * @param coworkerName - The name of the coworker
+ * @param coworkerRole - The role of the coworker
+ * @returns Array of proactive messages to schedule
+ */
+export function getProactiveMessages(
+  coworkerName: string,
+  coworkerRole: string
+): ProactiveMessage[] {
+  const role = coworkerRole.toLowerCase();
+
+  // Managers already auto-start conversations, so don't send proactive messages
+  if (role.includes("manager")) {
+    return [];
+  }
+
+  // DevOps/Infrastructure Engineers
+  if (role.includes("devops") || role.includes("infrastructure") || role.includes("sre")) {
+    return [
+      {
+        message: "Hey, just a heads up - CI is running a bit slow today, deploys are taking ~5 min extra. Nothing to worry about though!",
+        delayMinutes: 15,
+        condition: "always",
+      },
+    ];
+  }
+
+  // Frontend Engineers
+  if (role.includes("frontend") || role.includes("front-end")) {
+    return [
+      {
+        message: "Welcome to the team! If you need any help navigating the frontend codebase, feel free to ask. The component library docs are in /docs/components 👋",
+        delayMinutes: 20,
+        condition: "always",
+      },
+    ];
+  }
+
+  // Backend Engineers
+  if (role.includes("backend") || role.includes("back-end")) {
+    return [
+      {
+        message: "Hey! The auth module has some quirks - happy to walk you through it if you need. Just ping me!",
+        delayMinutes: 25,
+        condition: "always",
+      },
+    ];
+  }
+
+  // UX/UI Designers or Researchers
+  if (role.includes("ux") || role.includes("designer") || role.includes("research")) {
+    return [
+      {
+        message: "Hi! I shared some wireframes in Figma earlier this week - they might be relevant to your task. Let me know if you need the link!",
+        delayMinutes: 30,
+        condition: "always",
+      },
+    ];
+  }
+
+  // QA/Test Engineers
+  if (role.includes("qa") || role.includes("test") || role.includes("quality")) {
+    return [
+      {
+        message: "Hey, welcome aboard! Just a heads up - our staging environment refreshes every night at midnight, so any test data gets wiped. Let me know if you need help setting up test accounts!",
+        delayMinutes: 18,
+        condition: "always",
+      },
+    ];
+  }
+
+  // Product Managers
+  if (role.includes("product") && !role.includes("engineer")) {
+    return [
+      {
+        message: "Hey! Quick reminder that users have been asking for better error messages on this flow. Might be worth keeping that in mind for your task 🙂",
+        delayMinutes: 22,
+        condition: "always",
+      },
+    ];
+  }
+
+  // Data Scientists/Analysts
+  if (role.includes("data") || role.includes("analyst") || role.includes("ml") || role.includes("machine learning")) {
+    return [
+      {
+        message: "Welcome! If you need any user behavior data or analytics for your task, I can pull that for you. Just let me know!",
+        delayMinutes: 28,
+        condition: "always",
+      },
+    ];
+  }
+
+  // Generic software engineer or other roles - friendly welcome
+  return [
+    {
+      message: "Hey, welcome to the team! Let me know if you have any questions - happy to help! 😊",
+      delayMinutes: 20,
+      condition: "always",
+    },
+  ];
 }
 
 /**
