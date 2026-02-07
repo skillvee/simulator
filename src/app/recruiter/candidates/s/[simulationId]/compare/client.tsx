@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronLeft, AlertCircle, ShieldAlert } from "lucide-react";
+import { ChevronLeft, AlertCircle, ShieldAlert, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
@@ -99,6 +99,27 @@ function getConfidenceBadgeStyles(confidence: string): string {
   }
 }
 
+/**
+ * Render a 4-segment score bar (same as table)
+ */
+function ScoreBar({ score }: { score: number }) {
+  const percentage = (score / 5) * 100;
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden flex">
+        <div
+          className="bg-blue-600 rounded-full transition-all"
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+      <span className="text-sm font-medium text-stone-900 w-8 text-right">
+        {score.toFixed(1)}
+      </span>
+    </div>
+  );
+}
+
 // ============================================================================
 // Loading Skeleton
 // ============================================================================
@@ -165,6 +186,271 @@ function ErrorState({ error }: { error: string }) {
       <Button asChild variant="outline">
         <Link href="/recruiter/candidates">Back to Candidates</Link>
       </Button>
+    </div>
+  );
+}
+
+// ============================================================================
+// Core Dimensions Section
+// ============================================================================
+
+interface CoreDimensionsSectionProps {
+  candidates: CandidateComparison[];
+}
+
+function CoreDimensionsSection({ candidates }: CoreDimensionsSectionProps) {
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Get union of all dimensions across candidates, sorted alphabetically
+  const allDimensions = useMemo(() => {
+    const dimensionSet = new Set<string>();
+    candidates.forEach((candidate) => {
+      candidate.dimensionScores.forEach((score) => {
+        dimensionSet.add(score.dimension);
+      });
+    });
+    return Array.from(dimensionSet).sort();
+  }, [candidates]);
+
+  // Toggle individual row expansion
+  const toggleRow = (dimension: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(dimension)) {
+        next.delete(dimension);
+      } else {
+        next.add(dimension);
+      }
+      return next;
+    });
+  };
+
+  // Expand all rows
+  const expandAll = () => {
+    setExpandedRows(new Set(allDimensions));
+  };
+
+  // Collapse all rows
+  const collapseAll = () => {
+    setExpandedRows(new Set());
+  };
+
+  // For each dimension, find the highest score(s) to highlight winner(s)
+  const getDimensionWinners = (dimension: string): Set<string> => {
+    const scores = candidates
+      .map((c) => {
+        const dimScore = c.dimensionScores.find((s) => s.dimension === dimension);
+        return { assessmentId: c.assessmentId, score: dimScore?.score ?? null };
+      })
+      .filter((item) => item.score !== null);
+
+    if (scores.length === 0) return new Set();
+
+    const maxScore = Math.max(...scores.map((s) => s.score!));
+    return new Set(
+      scores.filter((s) => s.score === maxScore).map((s) => s.assessmentId)
+    );
+  };
+
+  return (
+    <div className="border-b border-stone-200 bg-white">
+      {/* Section Header */}
+      <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-stone-900">Core Dimensions</h2>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={expandAll}
+            className="text-sm text-stone-600 hover:text-stone-900"
+          >
+            <ChevronDown className="mr-1.5 h-4 w-4" />
+            Expand All
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={collapseAll}
+            className="text-sm text-stone-600 hover:text-stone-900"
+          >
+            <ChevronUp className="mr-1.5 h-4 w-4" />
+            Collapse All
+          </Button>
+        </div>
+      </div>
+
+      {/* Dimension Rows */}
+      <div>
+        {allDimensions.map((dimension) => {
+          const isExpanded = expandedRows.has(dimension);
+          const winners = getDimensionWinners(dimension);
+
+          return (
+            <div key={dimension} className="border-b border-stone-200 last:border-b-0">
+              {/* Collapsed Row */}
+              <div
+                className="grid hover:bg-stone-50 cursor-pointer transition-colors"
+                style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
+                onClick={() => toggleRow(dimension)}
+              >
+                {/* Dimension Label */}
+                <div className="p-4 border-r border-stone-200 flex items-center gap-2">
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4 text-stone-400 flex-shrink-0" />
+                  ) : (
+                    <ChevronUp className="h-4 w-4 text-stone-400 flex-shrink-0" />
+                  )}
+                  <span className="font-medium text-stone-900">{dimension}</span>
+                </div>
+
+                {/* Candidate Columns */}
+                {candidates.map((candidate) => {
+                  const dimScore = candidate.dimensionScores.find(
+                    (s) => s.dimension === dimension
+                  );
+                  const isWinner = dimScore && winners.has(candidate.assessmentId);
+
+                  return (
+                    <div
+                      key={candidate.assessmentId}
+                      className={cn(
+                        "p-4 border-r border-stone-200 last:border-r-0",
+                        isWinner && "bg-blue-50/50"
+                      )}
+                    >
+                      {dimScore ? (
+                        <div className="space-y-2">
+                          <ScoreBar score={dimScore.score} />
+                          <Badge variant="outline" className="text-xs">
+                            Top {Math.round(100 - dimScore.percentile)}%
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="text-sm text-stone-400">N/A</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Expanded Row Details */}
+              {isExpanded && (
+                <div
+                  className="grid bg-stone-50/50"
+                  style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
+                >
+                  {/* Empty cell for dimension label column */}
+                  <div className="border-r border-stone-200"></div>
+
+                  {/* Candidate Detail Columns */}
+                  {candidates.map((candidate) => {
+                    const dimScore = candidate.dimensionScores.find(
+                      (s) => s.dimension === dimension
+                    );
+                    const isWinner = dimScore && winners.has(candidate.assessmentId);
+
+                    return (
+                      <div
+                        key={candidate.assessmentId}
+                        className={cn(
+                          "p-4 border-r border-stone-200 last:border-r-0 space-y-3",
+                          isWinner && "bg-blue-50/50"
+                        )}
+                      >
+                        {dimScore ? (
+                          <>
+                            {/* Green Flags */}
+                            {dimScore.greenFlags.length > 0 && (
+                              <div>
+                                <h4 className="text-xs font-semibold text-green-700 mb-1.5 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Strengths
+                                </h4>
+                                <ul className="space-y-1">
+                                  {dimScore.greenFlags.map((flag, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="text-xs text-stone-600 flex items-start gap-1.5"
+                                    >
+                                      <CheckCircle2 className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
+                                      <span>{flag}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Red Flags */}
+                            {dimScore.redFlags.length > 0 && (
+                              <div>
+                                <h4 className="text-xs font-semibold text-orange-700 mb-1.5 flex items-center gap-1">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  Areas for Growth
+                                </h4>
+                                <ul className="space-y-1">
+                                  {dimScore.redFlags.map((flag, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="text-xs text-stone-600 flex items-start gap-1.5"
+                                    >
+                                      <AlertTriangle className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
+                                      <span>{flag}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Rationale */}
+                            {dimScore.rationale && (
+                              <div>
+                                <h4 className="text-xs font-semibold text-stone-700 mb-1">
+                                  Rationale
+                                </h4>
+                                <p className="text-xs text-stone-600">{dimScore.rationale}</p>
+                              </div>
+                            )}
+
+                            {/* Timestamps */}
+                            {dimScore.timestamps.length > 0 && (
+                              <div>
+                                <h4 className="text-xs font-semibold text-stone-700 mb-1.5">
+                                  Evidence
+                                </h4>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {dimScore.timestamps.map((timestamp, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        console.log(
+                                          `Timestamp clicked: ${timestamp} for ${candidate.candidateName}`
+                                        );
+                                        // Video modal will be wired in separate issue (US-014)
+                                      }}
+                                      className="px-2 py-1 text-xs font-mono bg-blue-100 text-blue-800 hover:bg-blue-200 rounded border border-blue-200 transition-colors"
+                                    >
+                                      [{timestamp}]
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-sm text-stone-400 italic">
+                            Not assessed on this dimension
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -428,9 +714,12 @@ export function CandidateCompareClient({
       {/* Mobile Layout */}
       {renderMobileLayout()}
 
+      {/* Core Dimensions Section */}
+      <CoreDimensionsSection candidates={candidates} />
+
       {/* Placeholder for future sections */}
       <div className="p-6 text-center text-stone-400 text-sm">
-        More comparison sections coming soon (dimensions, work style, strengths/growth, video)
+        More comparison sections coming soon (work style, strengths/growth, video)
       </div>
     </div>
   );
