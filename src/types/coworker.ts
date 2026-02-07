@@ -47,6 +47,18 @@ export interface CoworkerPersona {
 }
 
 /**
+ * Status schedule entry defining when a coworker's status changes
+ */
+export interface StatusScheduleEntry {
+  /** Availability status */
+  status: "online" | "away" | "in-meeting" | "offline";
+  /** Status message shown below role (e.g., "In a design review") */
+  statusMessage: string;
+  /** Minutes after assessment start when this status begins */
+  startMinutes: number;
+}
+
+/**
  * Decorative team member for sidebar display.
  * These members appear as "away" or "in-meeting" and respond with a single canned message.
  */
@@ -62,7 +74,9 @@ export interface DecorativeTeamMember {
   /** Status message shown in chat banner (e.g., "In a meeting until 10:45 AM") */
   statusMessage?: string;
   /** Availability state - affects status indicator color */
-  availability?: "away" | "in-meeting" | "offline";
+  availability?: "online" | "away" | "in-meeting" | "offline";
   /** One-time auto-reply sent after user's first message. Use {managerName} placeholder. */
   cannedResponse?: string;
+  /** Optional schedule of status changes over time during assessment */
+  statusSchedule?: StatusScheduleEntry[];
 }

@@ -7,7 +7,41 @@ import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
 import { CoworkerAvatar } from "./coworker-avatar";
-import type { DecorativeTeamMember } from "@/types";
+import type { DecorativeTeamMember, StatusScheduleEntry } from "@/types";
+
+/**
+ * Get the current status for a decorative member based on elapsed time
+ */
+function getCurrentStatus(
+  member: DecorativeTeamMember,
+  elapsedMinutes: number
+): { status: "online" | "away" | "in-meeting" | "offline"; statusMessage: string } {
+  if (!member.statusSchedule || member.statusSchedule.length === 0) {
+    return {
+      status: member.availability || "online",
+      statusMessage: member.statusMessage || "",
+    };
+  }
+
+  // Find the most recent schedule entry that has started
+  const applicableEntries = member.statusSchedule
+    .filter((entry) => entry.startMinutes <= elapsedMinutes)
+    .sort((a, b) => b.startMinutes - a.startMinutes);
+
+  if (applicableEntries.length === 0) {
+    // No schedule entry has started yet, use initial status
+    return {
+      status: member.availability || "online",
+      statusMessage: member.statusMessage || "",
+    };
+  }
+
+  const currentEntry = applicableEntries[0];
+  return {
+    status: currentEntry.status,
+    statusMessage: currentEntry.statusMessage,
+  };
+}
 
 interface Coworker {
   id: string;
@@ -121,6 +155,23 @@ function SlackLayoutInner({
   } | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [generalUnread, setGeneralUnread] = useState<number>(0);
+  const [elapsedMinutes, setElapsedMinutes] = useState(0);
+
+  // Track elapsed time for dynamic status changes
+  useEffect(() => {
+    const startTime = Date.now();
+
+    // Update immediately
+    setElapsedMinutes(0);
+
+    // Check every 30 seconds for status updates
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 60000);
+      setElapsedMinutes(elapsed);
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Determine selected view from URL - can be coworkerId or "general" for channel
   const selectedCoworkerId =
@@ -338,6 +389,7 @@ function SlackLayoutInner({
                     member={member}
                     assessmentId={assessmentId}
                     isSelected={selectedCoworkerId === `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    elapsedMinutes={elapsedMinutes}
                   />
                 ))}
               </div>
@@ -471,21 +523,30 @@ interface AwayTeamMemberProps {
   member: DecorativeTeamMember;
   assessmentId: string;
   isSelected: boolean;
+  elapsedMinutes: number;
 }
 
-function AwayTeamMember({ member, assessmentId, isSelected }: AwayTeamMemberProps) {
+function AwayTeamMember({ member, assessmentId, isSelected, elapsedMinutes }: AwayTeamMemberProps) {
   const router = useRouter();
   const decorativeId = `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`;
 
-  // Determine status dot color based on availability
-  const statusDotColor = member.availability === "in-meeting"
-    ? "bg-red-400"
-    : "bg-yellow-500";
+  // Get current status based on elapsed time
+  const currentStatus = getCurrentStatus(member, elapsedMinutes);
+
+  // Determine status dot color and opacity based on current availability
+  const statusConfig = {
+    online: { dotColor: "bg-green-500", opacity: "opacity-100" },
+    away: { dotColor: "bg-yellow-500", opacity: "opacity-80" },
+    "in-meeting": { dotColor: "bg-red-400", opacity: "opacity-80" },
+    offline: { dotColor: "bg-gray-400", opacity: "opacity-60" },
+  };
+
+  const config = statusConfig[currentStatus.status];
 
   return (
     <div
       onClick={() => router.push(`/assessments/${assessmentId}/work?coworkerId=${decorativeId}`)}
-      className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-all opacity-70 border-l-2 ${
+      className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-all ${config.opacity} border-l-2 ${
         isSelected
           ? "border-primary"
           : "border-transparent hover:opacity-100"
@@ -504,7 +565,7 @@ function AwayTeamMember({ member, assessmentId, isSelected }: AwayTeamMemberProp
           e.currentTarget.style.background = "transparent";
         }
       }}
-      title={member.statusMessage || "Away"}
+      title={currentStatus.statusMessage || currentStatus.status}
     >
       <div className="relative">
         <div className="inline-block rounded-full" style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}}>
@@ -515,12 +576,14 @@ function AwayTeamMember({ member, assessmentId, isSelected }: AwayTeamMemberProp
             className="shadow-sm"
           />
         </div>
-        {/* Away/In-meeting status indicator - yellow/red dot */}
-        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${statusDotColor}`} style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}} />
+        {/* Status indicator dot - changes color based on current status */}
+        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${config.dotColor}`} style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold truncate" style={{color: "hsl(var(--slack-text))"}}>{member.name}</div>
-        <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>{member.role}</div>
+        <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>
+          {currentStatus.statusMessage || member.role}
+        </div>
       </div>
     </div>
   );

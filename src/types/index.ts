@@ -68,6 +68,7 @@ export type {
   PersonalityStyle,
   CoworkerPersona,
   DecorativeTeamMember,
+  StatusScheduleEntry,
 } from "./coworker";
 
 // CV/Profile types

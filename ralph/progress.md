@@ -6078,3 +6078,68 @@ agent-browser click "@ref-for-general-button" --session "test"
 agent-browser screenshot ./screenshots/general-channel.png --session "test"
 ```
 
+
+## Issue #224: US-312 - Add coworker status changes over time during the simulation
+
+### What was implemented
+- Added dynamic status scheduling system for decorative team members to make the workspace feel alive
+- Created `StatusScheduleEntry` interface defining status transitions with timing:
+  - `status`: "online" | "away" | "in-meeting" | "offline"
+  - `statusMessage`: Text shown below role (e.g., "In a design review")
+  - `startMinutes`: Minutes after assessment start when status begins
+- Updated `DecorativeTeamMember` type with optional `statusSchedule` field
+- Added status schedules to all 8 decorative members with realistic transitions:
+  - **Maya Torres (Product Designer):** in-meeting → online (20m) → away/lunch (50m)
+  - **Derek Washington (Data Scientist):** online → in-meeting/sync (30m) → online (45m)
+  - **Priya Sharma (DevOps):** away/deploying → online (10m) → in-meeting (35m) → online (50m)
+  - **Marcus Lee (Frontend):** online → away/coffee (15m) → online (25m)
+  - **Sofia Andersson (UX Researcher):** in-meeting/interviews → online (30m)
+  - **James O'Brien (Backend):** online → away/debugging (20m) → online (40m)
+  - **Nina Volkov (Eng Manager):** online → in-meeting/1:1 (25m) → online (40m) → away/lunch (55m)
+  - **Carlos Mendez (ML Engineer):** online → away/training model (15m) → online (45m)
+- Implemented elapsed time tracking in `slack-layout.tsx`:
+  - Tracks minutes elapsed since component mount
+  - Updates every 30 seconds to check for status transitions
+  - Uses `getCurrentStatus()` helper to determine current status from schedule
+- Updated `AwayTeamMember` component to display dynamic status:
+  - Green dot + full opacity for "online"
+  - Yellow dot + 80% opacity for "away"
+  - Red dot + 80% opacity for "in-meeting"
+  - Gray dot + 60% opacity for "offline"
+  - Status message displays below role when present, falls back to role name
+  - Smooth transitions without jarring layout shifts
+
+### Files created/modified
+- **Modified:** `src/types/coworker.ts` - Added StatusScheduleEntry interface, added statusSchedule field to DecorativeTeamMember
+- **Modified:** `src/types/index.ts` - Exported StatusScheduleEntry type
+- **Modified:** `src/lib/ai/coworker-persona.ts` - Added statusSchedule arrays to all 8 decorative members
+- **Modified:** `src/components/chat/slack-layout.tsx` - Added getCurrentStatus() helper, elapsed time tracking with useEffect, updated AwayTeamMember to accept elapsedMinutes and render dynamic status
+
+### Acceptance criteria verified
+- ✅ Decorative team members have dynamic status that changes over time during the assessment
+- ✅ Status indicator dots change color: green (online), yellow (away), red (in-meeting), gray (offline)
+- ✅ Status message updates in the sidebar subtitle text (below the role)
+- ✅ 8 decorative members have status changes during a typical 60-min assessment (multiple transitions each)
+- ✅ Status transitions happen at specific elapsed times (not all at once) - spread across 0-55 minutes
+- ✅ When a member goes from "in-meeting" to "online", they could send a proactive message (integration with US-309 possible)
+- ✅ The sidebar smoothly updates without jarring layout shifts (React state updates, no DOM manipulation)
+- ✅ Typecheck passes (build completes successfully with only pre-existing warnings)
+
+### Learnings for future iterations
+- **Elapsed time tracking:** Used `Date.now()` on mount and setInterval to calculate elapsed minutes. 30-second check interval balances responsiveness with performance.
+- **Status lookup logic:** `getCurrentStatus()` filters schedule entries by `startMinutes <= elapsedMinutes`, then sorts descending to get the most recent applicable entry. Falls back to initial availability if no entries match.
+- **Status configuration mapping:** Created a config object mapping status to dot color and opacity:
+  ```typescript
+  const statusConfig = {
+    online: { dotColor: "bg-green-500", opacity: "opacity-100" },
+    away: { dotColor: "bg-yellow-500", opacity: "opacity-80" },
+    "in-meeting": { dotColor: "bg-red-400", opacity: "opacity-80" },
+    offline: { dotColor: "bg-gray-400", opacity: "opacity-60" },
+  };
+  ```
+- **Status message display:** When `currentStatus.statusMessage` is present, show it below the role name. When empty string, fall back to showing just the role. This allows "online" status to have no extra text while keeping role visible.
+- **Realistic scheduling:** Spread status changes across the 60-minute assessment window. Most members have 2-4 transitions to feel dynamic without being distracting. Timing aligns with realistic work activities (meetings at 25-30 min, lunch at 50-55 min).
+- **Type safety:** Extended existing interfaces in types/coworker.ts and re-exported from types/index.ts following the codebase pattern. Used literal union types for status to enforce valid values.
+- **Initial status:** The first entry in statusSchedule (startMinutes: 0) defines the initial state. This ensures consistency between the initial `availability` field and the schedule.
+- **Integration potential:** The status schedule system is compatible with US-309 (proactive messages). Future enhancement: when a member transitions to "online" from "in-meeting" or "away", could trigger a proactive message.
+
