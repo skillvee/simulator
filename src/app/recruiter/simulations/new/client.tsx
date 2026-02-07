@@ -11,10 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FileText, ArrowRight, Loader2, X, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
-import type { ParseJDResponse, InferredSeniorityLevel, ConfidentField } from "@/types";
+import type { ParseJDResponse, InferredSeniorityLevel } from "@/types";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
 import type { TaskOption } from "@/lib/scenarios/task-generator";
-import { CandidateExperienceSummary } from "@/components/recruiter/CandidateExperienceSummary";
+import { CandidateExperienceSummary } from "@/components/recruiter/CandidateExperienceSummary"; // eslint-disable-line no-restricted-imports -- Component import allowed for UI
 
 type Step = "entry" | "guided" | "generating" | "preview";
 
@@ -90,6 +90,8 @@ export function RecruiterScenarioBuilderClient() {
   const [expandedCoworker, setExpandedCoworker] = useState<number | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [customTaskInput, setCustomTaskInput] = useState("");
+  const [saveProgress, setSaveProgress] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleContinue = async () => {
     if (!jobDescription.trim() || isLoading) return;
@@ -212,6 +214,112 @@ export function RecruiterScenarioBuilderClient() {
     }
   };
 
+  // Save the complete simulation
+  const handleSaveSimulation = async () => {
+    if (!previewData || !previewData.selectedTask || isLoading) return;
+
+    setIsLoading(true);
+    setSaveError(null);
+    setSaveProgress("Creating simulation...");
+
+    try {
+      // Step 1: Auto-generate simulation name if not edited
+      const simulationName = previewData.simulationName ||
+        `${parsedJDData?.roleName.value || "Software Engineer"} @ ${previewData.companyName}`;
+
+      // Get task description based on selection
+      const taskDescription = previewData.selectedTask.type === "custom"
+        ? previewData.selectedTask.customDescription || "Complete a coding task"
+        : previewData.selectedTask.option?.description || "Complete a coding task";
+
+      // Step 2: Create scenario (repoUrl omitted - will be set by provisioning)
+      const scenarioResponse = await fetch("/api/recruiter/simulations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: simulationName,
+          companyName: previewData.companyName,
+          companyDescription: previewData.companyDescription,
+          taskDescription,
+          techStack: previewData.techStack,
+          // repoUrl is intentionally omitted - it will be set by repo provisioning
+        }),
+      });
+
+      if (!scenarioResponse.ok) {
+        const errorData = await scenarioResponse.json();
+        throw new Error(errorData.error || "Failed to create simulation");
+      }
+
+      const { data: { scenario } } = await scenarioResponse.json();
+
+      setSaveProgress("Setting up team members...");
+
+      // Step 3: Create coworkers
+      const coworkerPromises = previewData.coworkers.map(async (coworker) => {
+        const response = await fetch(`/api/recruiter/simulations/${scenario.id}/coworkers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: coworker.name,
+            role: coworker.role,
+            personaStyle: coworker.personaStyle,
+            knowledge: coworker.knowledge,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Failed to create coworker ${coworker.name}: ${errorData.error || "Unknown error"}`);
+        }
+
+        return response.json();
+      });
+
+      // Wait for all coworkers to be created
+      const coworkerResults = await Promise.allSettled(coworkerPromises);
+
+      // Check if any coworker creation failed
+      const failedCoworkers = coworkerResults.filter(r => r.status === "rejected");
+      if (failedCoworkers.length > 0 && failedCoworkers.length === coworkerResults.length) {
+        // All coworkers failed
+        throw new Error("Failed to create team members");
+      } else if (failedCoworkers.length > 0) {
+        // Partial success - show warning but continue
+        console.warn(`${failedCoworkers.length} coworker(s) failed to create:`, failedCoworkers);
+      }
+
+      setSaveProgress("Almost done...");
+
+      // Step 4: Trigger avatar generation (fire-and-forget)
+      fetch("/api/avatar/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scenarioId: scenario.id }),
+      }).catch((err) => {
+        console.error("Avatar generation failed (non-blocking):", err);
+      });
+
+      // Step 5: Trigger repo provisioning (fire-and-forget)
+      fetch(`/api/recruiter/simulations/${scenario.id}/provision-repo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }).catch((err) => {
+        console.error("Repo provisioning failed (non-blocking):", err);
+      });
+
+      // Step 6: Redirect to simulation detail page
+      setSaveProgress(null);
+      router.push(`/recruiter/simulations/${scenario.id}?success=true`);
+
+    } catch (err) {
+      console.error("Failed to save simulation:", err);
+      setSaveError(err instanceof Error ? err.message : "Failed to save simulation. Please try again.");
+      setSaveProgress(null);
+      setIsLoading(false);
+    }
+  };
+
   // Generate preview content (tasks and coworkers) from parsed data
   const generatePreviewContent = async (parsedData: ParseJDResponse) => {
     try {
@@ -225,7 +333,7 @@ export function RecruiterScenarioBuilderClient() {
       const domain = parsedData.domainContext.value || companyDesc;
 
       // Call both APIs in parallel
-      const [taskResponse, coworkersResponse] = await Promise.all([
+      const [taskResponse] = await Promise.all([
         fetch("/api/recruiter/simulations/generate-task", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -315,7 +423,7 @@ export function RecruiterScenarioBuilderClient() {
               <div>
                 <h2 className="text-xl font-semibold">Paste a Job Description</h2>
                 <p className="text-sm text-muted-foreground">
-                  Recommended — we'll extract everything automatically
+                  Recommended — we&apos;ll extract everything automatically
                 </p>
               </div>
             </div>
@@ -390,7 +498,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
           {/* Secondary Path: Guided */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have a job description?{" "}
+              Don&apos;t have a job description?{" "}
               <Button
                 variant="link"
                 className="h-auto p-0 text-sm"
@@ -440,7 +548,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Question 1: Role Title */}
               <div className="space-y-2">
                 <Label htmlFor="roleTitle" className="text-base font-semibold">
-                  What's the role title? <span className="text-destructive">*</span>
+                  What&apos;s the role title? <span className="text-destructive">*</span>
                 </Label>
                 <div className="relative">
                   <Input
@@ -480,7 +588,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Question 2: Company Name */}
               <div className="space-y-2">
                 <Label htmlFor="companyName" className="text-base font-semibold">
-                  What's the company name? <span className="text-destructive">*</span>
+                  What&apos;s the company name? <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="companyName"
@@ -503,7 +611,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   id="companyDescription"
                   value={companyDescription}
                   onChange={(e) => setCompanyDescription(e.target.value)}
-                  placeholder="e.g., We're a fintech startup building payment infrastructure for small businesses"
+                  placeholder="e.g., We&apos;re a fintech startup building payment infrastructure for small businesses"
                   disabled={isLoading}
                   className="min-h-[80px] text-base"
                   rows={3}
@@ -975,6 +1083,26 @@ We're looking for an experienced frontend developer to join our team. You'll be 
             </div>
           </Card>
 
+          {/* Error Message */}
+          {saveError && (
+            <div className="flex items-center justify-between rounded-lg border border-destructive bg-destructive/10 p-4">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-destructive">{saveError}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSaveError(null);
+                  handleSaveSimulation();
+                }}
+                className="text-destructive hover:text-destructive"
+              >
+                Try again
+              </Button>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex items-center justify-between border-t pt-6">
             <Button variant="ghost" onClick={() => setStep("entry")} disabled={isLoading}>
@@ -983,15 +1111,12 @@ We're looking for an experienced frontend developer to join our team. You'll be 
             <Button
               size="lg"
               disabled={!isReadyToCreate || isLoading}
-              onClick={() => {
-                // TODO: Implement save flow (US-011)
-                console.log("Create simulation:", previewData);
-              }}
+              onClick={handleSaveSimulation}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {saveProgress || "Creating..."}
                 </>
               ) : (
                 "Create Simulation"

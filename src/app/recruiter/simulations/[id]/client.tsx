@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,8 @@ import {
   Briefcase,
   Mic,
   ExternalLink,
+  CheckCircle2,
+  X,
 } from "lucide-react";
 
 interface Coworker {
@@ -45,6 +48,20 @@ interface ScenarioDetailClientProps {
 
 export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
   const [copied, setCopied] = useState(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      setShowSuccessBanner(true);
+      // Clear the query param from URL without refresh
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("success");
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+  }, [searchParams]);
 
   const getShareableLink = () => {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -80,6 +97,29 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
+      {/* Success Banner */}
+      {showSuccessBanner && (
+        <div className="mb-6 flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <div>
+              <p className="font-medium text-green-900">Simulation created!</p>
+              <p className="text-sm text-green-700">
+                Share the link below with candidates to get started
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSuccessBanner(false)}
+            className="text-green-700 hover:text-green-900"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <Link
