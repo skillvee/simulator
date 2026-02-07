@@ -1,3 +1,98 @@
+## Issue #249: US-013 - Comparison view strengths, growth areas, and key evidence
+
+### What was implemented
+- Added "Strengths & Growth Areas" collapsible section to comparison view at `src/app/recruiter/candidates/s/[simulationId]/compare/client.tsx`
+- **Positioned after Work Style section** as specified in requirements
+- **Collapsible section** with clickable header showing chevron icon (defaults to expanded)
+- **Two rows** displaying distilled insights side-by-side:
+  1. **Top 3 Strengths** - Derived from highest-scoring dimensions' first green flag each. Format: "**Dimension:** green flag text"
+  2. **Growth Areas** - Derived from lowest-scoring dimensions' first red flag each. Format: "**Dimension:** red flag text"
+- **Derivation logic**: Sort dimensions by score, iterate until 3 items found with flags. Skip dimensions without flags.
+- **Added "Key Evidence" collapsible section** after Strengths & Growth Areas
+- **Positioned after Strengths & Growth Areas** (defaults to collapsed)
+- **2-3 timestamped video moments** per candidate derived from highest and lowest scoring dimensions
+- **Each moment shows**: Clickable timestamp badge (e.g. "[12:34]") + brief description from rationale (~80 chars)
+- **Timestamp badges** use same click handler pattern as Core Dimensions (console.log placeholder for US-014 video modal)
+
+### Files modified
+- **Modified:** `src/app/recruiter/candidates/s/[simulationId]/compare/client.tsx` - Added StrengthsGrowthSection and KeyEvidenceSection components
+- **Added:** `screenshots/comparison-demo.html` - Standalone demo page for visual verification
+- **Added:** `screenshots/issue-249-strengths-growth.png` - Screenshot of Strengths & Growth Areas section
+- **Added:** `screenshots/issue-249-key-evidence.png` - Screenshot of Key Evidence section
+
+### Acceptance criteria verified
+- ✅ Add "Strengths & Growth Areas" collapsible section after Work Style
+- ✅ Top 3 Strengths row per candidate: bulleted list from highest-scoring dimensions' green flags
+- ✅ Each strength shows dimension name in bold + specific green flag text
+- ✅ Growth Areas row per candidate: bulleted list from lowest-scoring dimensions' red flags
+- ✅ Same format as strengths: dimension name + specific red flag text
+- ✅ If candidate has fewer than 3 dimensions with green flags, show as many as available
+- ✅ Section defaults to expanded
+- ✅ Add "Key Evidence" collapsible section after Strengths & Growth Areas
+- ✅ Per candidate: 2-3 timestamped video moments with 1-line descriptions
+- ✅ Select timestamps from highest and lowest scoring dimensions
+- ✅ Each moment shows timestamp badge + brief description from rationale
+- ✅ Timestamp badges are clickable with same callback pattern as Core Dimensions
+- ✅ Section defaults to collapsed
+- ✅ All data derived from comparison API response (dimensionScores, greenFlags, redFlags, rationale, timestamps)
+- ✅ Typecheck passes (pre-existing errors only, no new errors introduced)
+- ✅ App builds successfully (compiled with pre-existing warnings only)
+
+### Learnings for future iterations
+
+**Derivation functions for executive summary:**
+- Created `deriveTopStrengths()` and `deriveGrowthAreas()` helper functions that sort dimensions by score and extract first flag
+- Pattern allows easy adjustment if UX wants "top 5" or "all flags" instead of just top 3
+- Important to handle sparse data: not all dimensions have green/red flags, so iteration continues until target count reached
+- Used markdown bold syntax `**Dimension:**` in string, then `dangerouslySetInnerHTML` with regex replacement to render HTML `<strong>` tags
+- Alternative would be React fragments with `<strong>` elements, but inline markdown is more compact
+
+**Key evidence derivation logic:**
+- Created `deriveKeyEvidence()` function that selects timestamps from both high and low scoring dimensions
+- First pass: pick up to 2 timestamps from highest-scoring dimensions (sorted descending)
+- Second pass: pick remaining slots from lowest-scoring dimensions (sorted ascending)
+- De-duplication check prevents same timestamp appearing twice if dimension appears in both passes
+- Truncate rationale to ~80 chars for brevity: `rationale.split('.')[0].substring(0, 80) + '...'`
+- Returns `EvidenceMoment` interface with `{timestamp, description}` for clean separation of concerns
+
+**Collapsible section pattern reuse:**
+- Both new sections reuse same collapsible pattern as Work Style section (single boolean state, clickable header, chevron icon)
+- Consistent visual language: ChevronDown when expanded, ChevronUp when collapsed
+- Consistent grid layout: `200px repeat(${candidates.length}, 1fr)` matches Core Dimensions and Work Style
+- Strengths & Growth defaults to expanded (high value, recruiter wants to see immediately)
+- Key Evidence defaults to collapsed (supporting detail, recruiter expands when needed)
+
+**Markdown formatting in UI:**
+- Used `dangerouslySetInnerHTML` with regex replacement to render bold dimension names: `.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')`
+- This approach keeps derivation logic simple (string concatenation) while allowing rich formatting in UI
+- Pattern works for both strengths/growth bullets and key evidence descriptions
+- Trade-off: slightly less safe than JSX fragments, but markdown syntax is easier to read in code
+
+**Icon choices for visual hierarchy:**
+- Strengths use CheckCircle2 icon in green (`text-green-600`) - positive signal
+- Growth areas use AlertTriangle icon in orange (`text-orange-600`) - improvement opportunity (not red/failure)
+- Key Evidence uses timestamp Badge component with blue styling (`bg-blue-100 text-blue-800`) - neutral information
+- Icons from lucide-react library, already used in Core Dimensions section for consistency
+
+**Grid layout for Key Evidence:**
+- Unlike Strengths & Growth (which has row labels), Key Evidence has no left column label
+- Used empty `<div className="border-r border-stone-200"></div>` for label column to maintain grid alignment
+- Moments render as clickable buttons with hover state (`hover:bg-stone-50`) for better UX
+- Badge + text layout uses `inline-flex items-center gap-2` for proper alignment
+
+**Testing without live data:**
+- Created standalone HTML demo (`comparison-demo.html`) with Tailwind CDN for visual verification
+- Faster than seeding database + logging in + navigating to comparison page
+- Confirms visual design and layout before integration testing
+- agent-browser screenshots captured from demo page instead of live app
+- Demo includes both collapsed and expanded states of Key Evidence section for complete verification
+
+**Recruiter mindset in derivation:**
+- Top 3 strengths = "best things about this candidate" - derived from objective high scores, not subjective judgment
+- Growth areas = "where they could improve" - derived from objective low scores + specific evidence
+- Key Evidence = "show me the proof" - timestamps link abstract scores to concrete video moments
+- Distillation reduces cognitive load: recruiter sees 3 bullets instead of 6+ full dimension reports
+
 ## Issue #248: US-012 - Comparison view work style signals section
 
 ### What was implemented

@@ -191,6 +191,279 @@ function ErrorState({ error }: { error: string }) {
 }
 
 // ============================================================================
+// Strengths & Growth Areas Section
+// ============================================================================
+
+interface StrengthsGrowthSectionProps {
+  candidates: CandidateComparison[];
+}
+
+/**
+ * Derive top 3 strengths from highest-scoring dimensions' green flags
+ */
+function deriveTopStrengths(candidate: CandidateComparison): string[] {
+  // Sort dimensions by score descending
+  const sorted = [...candidate.dimensionScores].sort((a, b) => b.score - a.score);
+
+  const strengths: string[] = [];
+  for (const dim of sorted) {
+    if (strengths.length >= 3) break;
+    if (dim.greenFlags.length > 0) {
+      // Pick first green flag and format: "**Dimension:** green flag text"
+      strengths.push(`**${dim.dimension}:** ${dim.greenFlags[0]}`);
+    }
+  }
+
+  return strengths;
+}
+
+/**
+ * Derive growth areas from lowest-scoring dimensions' red flags
+ */
+function deriveGrowthAreas(candidate: CandidateComparison): string[] {
+  // Sort dimensions by score ascending (lowest first)
+  const sorted = [...candidate.dimensionScores].sort((a, b) => a.score - b.score);
+
+  const growthAreas: string[] = [];
+  for (const dim of sorted) {
+    if (growthAreas.length >= 3) break;
+    if (dim.redFlags.length > 0) {
+      // Pick first red flag and format: "**Dimension:** red flag text"
+      growthAreas.push(`**${dim.dimension}:** ${dim.redFlags[0]}`);
+    }
+  }
+
+  return growthAreas;
+}
+
+function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  return (
+    <div className="border-b border-stone-200 bg-white">
+      {/* Section Header */}
+      <div
+        className="px-6 py-4 border-b border-stone-200 flex items-center justify-between cursor-pointer hover:bg-stone-50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
+          {isExpanded ? (
+            <ChevronDown className="h-5 w-5 text-stone-400" />
+          ) : (
+            <ChevronUp className="h-5 w-5 text-stone-400" />
+          )}
+          Strengths & Growth Areas
+        </h2>
+      </div>
+
+      {/* Content Rows */}
+      {isExpanded && (
+        <div>
+          {/* Top 3 Strengths Row */}
+          <div
+            className="grid border-b border-stone-200"
+            style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
+          >
+            {/* Row Label */}
+            <div className="p-4 border-r border-stone-200 flex items-center">
+              <span className="font-medium text-stone-900">Top 3 Strengths</span>
+            </div>
+
+            {/* Candidate Columns */}
+            {candidates.map((candidate) => {
+              const strengths = deriveTopStrengths(candidate);
+              return (
+                <div
+                  key={candidate.assessmentId}
+                  className="p-4 border-r border-stone-200 last:border-r-0"
+                >
+                  {strengths.length > 0 ? (
+                    <ul className="space-y-2">
+                      {strengths.map((strength, idx) => (
+                        <li key={idx} className="text-sm text-stone-600 flex items-start gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span dangerouslySetInnerHTML={{ __html: strength.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-stone-400 italic">No strengths available</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Growth Areas Row */}
+          <div
+            className="grid"
+            style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
+          >
+            {/* Row Label */}
+            <div className="p-4 border-r border-stone-200 flex items-center">
+              <span className="font-medium text-stone-900">Growth Areas</span>
+            </div>
+
+            {/* Candidate Columns */}
+            {candidates.map((candidate) => {
+              const growthAreas = deriveGrowthAreas(candidate);
+              return (
+                <div
+                  key={candidate.assessmentId}
+                  className="p-4 border-r border-stone-200 last:border-r-0"
+                >
+                  {growthAreas.length > 0 ? (
+                    <ul className="space-y-2">
+                      {growthAreas.map((area, idx) => (
+                        <li key={idx} className="text-sm text-stone-600 flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                          <span dangerouslySetInnerHTML={{ __html: area.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-sm text-stone-400 italic">No growth areas available</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Key Evidence Section
+// ============================================================================
+
+interface KeyEvidenceSectionProps {
+  candidates: CandidateComparison[];
+}
+
+interface EvidenceMoment {
+  timestamp: string;
+  description: string;
+}
+
+/**
+ * Extract 2-3 key video moments from highest and lowest scoring dimensions
+ */
+function deriveKeyEvidence(candidate: CandidateComparison): EvidenceMoment[] {
+  const moments: EvidenceMoment[] = [];
+
+  // Sort dimensions by score
+  const sorted = [...candidate.dimensionScores].sort((a, b) => b.score - a.score);
+
+  // Get highest scoring dimension with timestamps
+  for (const dim of sorted) {
+    if (moments.length >= 2) break;
+    if (dim.timestamps.length > 0 && dim.rationale) {
+      // Extract first sentence or ~80 chars from rationale
+      const description = dim.rationale.split('.')[0].substring(0, 80) + (dim.rationale.length > 80 ? '...' : '');
+      moments.push({
+        timestamp: dim.timestamps[0],
+        description: `**${dim.dimension}:** ${description}`,
+      });
+    }
+  }
+
+  // Get lowest scoring dimension with timestamps
+  const reversed = [...sorted].reverse();
+  for (const dim of reversed) {
+    if (moments.length >= 3) break;
+    // Avoid duplicates
+    if (moments.some(m => m.timestamp === dim.timestamps[0])) continue;
+    if (dim.timestamps.length > 0 && dim.rationale) {
+      const description = dim.rationale.split('.')[0].substring(0, 80) + (dim.rationale.length > 80 ? '...' : '');
+      moments.push({
+        timestamp: dim.timestamps[0],
+        description: `**${dim.dimension}:** ${description}`,
+      });
+    }
+  }
+
+  return moments;
+}
+
+function KeyEvidenceSection({ candidates }: KeyEvidenceSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="border-b border-stone-200 bg-white">
+      {/* Section Header */}
+      <div
+        className="px-6 py-4 border-b border-stone-200 flex items-center justify-between cursor-pointer hover:bg-stone-50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
+          {isExpanded ? (
+            <ChevronDown className="h-5 w-5 text-stone-400" />
+          ) : (
+            <ChevronUp className="h-5 w-5 text-stone-400" />
+          )}
+          Key Evidence
+        </h2>
+      </div>
+
+      {/* Content */}
+      {isExpanded && (
+        <div
+          className="grid"
+          style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
+        >
+          {/* Empty label column */}
+          <div className="border-r border-stone-200"></div>
+
+          {/* Candidate Columns */}
+          {candidates.map((candidate) => {
+            const moments = deriveKeyEvidence(candidate);
+            return (
+              <div
+                key={candidate.assessmentId}
+                className="p-4 border-r border-stone-200 last:border-r-0"
+              >
+                {moments.length > 0 ? (
+                  <ul className="space-y-3">
+                    {moments.map((moment, idx) => (
+                      <li key={idx} className="text-sm text-stone-600">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log(
+                              `Timestamp clicked: ${moment.timestamp} for ${candidate.candidateName}`
+                            );
+                            // Video modal will be wired in separate issue (US-014)
+                          }}
+                          className="inline-flex items-center gap-2 text-left w-full hover:bg-stone-50 p-2 rounded transition-colors"
+                        >
+                          <Badge className="px-2 py-1 text-xs font-mono bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-200 flex-shrink-0">
+                            [{moment.timestamp}]
+                          </Badge>
+                          <span
+                            className="text-xs"
+                            dangerouslySetInnerHTML={{
+                              __html: moment.description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'),
+                            }}
+                          />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-sm text-stone-400 italic">No evidence available</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // Work Style Section
 // ============================================================================
 
@@ -841,10 +1114,11 @@ export function CandidateCompareClient({
       {/* Work Style Section */}
       <WorkStyleSection candidates={candidates} />
 
-      {/* Placeholder for future sections */}
-      <div className="p-6 text-center text-stone-400 text-sm">
-        More comparison sections coming soon (strengths/growth, video)
-      </div>
+      {/* Strengths & Growth Areas Section */}
+      <StrengthsGrowthSection candidates={candidates} />
+
+      {/* Key Evidence Section */}
+      <KeyEvidenceSection candidates={candidates} />
     </div>
   );
 }
