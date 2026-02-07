@@ -38,14 +38,57 @@ export function Chat({
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isManagerTyping, setIsManagerTyping] = useState(false);
+  const [isCoworkerTyping, setIsCoworkerTyping] = useState(false);
   const [userHasSentMessage, setUserHasSentMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const historyLoadedRef = useRef(false);
+  const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if currently in a call with this coworker
   const { activeCall, startCall } = useCallContext();
   const isInCall = activeCall?.coworkerId === coworker.id;
+
+  // Function to start realistic typing pattern
+  const startRealisticTyping = useCallback(() => {
+    // Clear any existing typing interval
+    if (typingIntervalRef.current) {
+      clearTimeout(typingIntervalRef.current);
+    }
+
+    setIsCoworkerTyping(true);
+    let cycle = 0;
+
+    const runCycle = () => {
+      // Show typing for 1-3 seconds
+      setIsCoworkerTyping(true);
+      const typingDuration = 1000 + Math.random() * 2000;
+
+      setTimeout(() => {
+        cycle++;
+        if (cycle < 3) {
+          // Pause for 0.5-1 seconds then restart
+          setIsCoworkerTyping(false);
+          const pauseDuration = 500 + Math.random() * 500;
+          typingIntervalRef.current = setTimeout(runCycle, pauseDuration);
+        } else {
+          // After 3 cycles, stay showing typing until response arrives
+          setIsCoworkerTyping(true);
+        }
+      }, typingDuration);
+    };
+
+    runCycle();
+  }, []);
+
+  // Function to stop realistic typing pattern
+  const stopRealisticTyping = useCallback(() => {
+    if (typingIntervalRef.current) {
+      clearTimeout(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    setIsCoworkerTyping(false);
+  }, []);
 
   // Callbacks for manager auto-start messages
   const handleManagerMessages = useCallback((newMessages: ChatMessage[]) => {
@@ -64,11 +107,13 @@ export function Chat({
 
   const handleTypingStart = useCallback(() => {
     setIsManagerTyping(true);
-  }, []);
+    startRealisticTyping();
+  }, [startRealisticTyping]);
 
   const handleTypingEnd = useCallback(() => {
     setIsManagerTyping(false);
-  }, []);
+    stopRealisticTyping();
+  }, [stopRealisticTyping]);
 
   // RF-015: Manager auto-start messages
   // Triggers initial manager messages after 5-10 seconds on first visit
@@ -114,6 +159,15 @@ export function Chat({
     inputRef.current?.focus();
   }, [coworker.id]);
 
+  // Cleanup typing interval on unmount
+  useEffect(() => {
+    return () => {
+      if (typingIntervalRef.current) {
+        clearTimeout(typingIntervalRef.current);
+      }
+    };
+  }, []);
+
   const sendMessage = async () => {
     if (!input.trim() || isSending) return;
 
@@ -132,6 +186,9 @@ export function Chat({
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsSending(true);
+
+    // Start the realistic typing pattern
+    startRealisticTyping();
 
     try {
       // Calculate delay based on coworker response speed
@@ -166,6 +223,10 @@ export function Chat({
         text: data.response,
         timestamp: data.timestamp,
       };
+
+      // Stop typing indicator before adding message
+      stopRealisticTyping();
+
       setMessages((prev) => [...prev, modelMessage]);
 
       // Play notification sound for model message
@@ -188,6 +249,8 @@ export function Chat({
       }
     } finally {
       setIsSending(false);
+      // Ensure typing is stopped even on error
+      stopRealisticTyping();
     }
   };
 
@@ -318,7 +381,7 @@ export function Chat({
                 )}
 
                 {/* Typing indicator */}
-                {(isSending || isManagerTyping) && (
+                {isCoworkerTyping && (
                   <div className="flex gap-4">
                     <CoworkerAvatar
                       name={coworker.name}
@@ -327,7 +390,7 @@ export function Chat({
                       className="mt-1 shadow-sm border [border-color:hsl(var(--slack-border))]"
                     />
                     <div className="flex flex-col items-start">
-                      <TypingIndicator />
+                      <TypingIndicator coworkerName={coworker.name} />
                     </div>
                   </div>
                 )}
@@ -369,23 +432,28 @@ export function Chat({
 }
 
 // Typing indicator component - matches bubble style
-function TypingIndicator() {
+function TypingIndicator({ coworkerName }: { coworkerName: string }) {
   return (
-    <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl rounded-bl-sm shadow-sm" style={{background: "hsl(var(--slack-bg-surface))"}}>
-      <div className="flex gap-1">
-        <span
-          className="h-2 w-2 animate-pulse rounded-full"
-          style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "0ms"}}
-        />
-        <span
-          className="h-2 w-2 animate-pulse rounded-full"
-          style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "150ms"}}
-        />
-        <span
-          className="h-2 w-2 animate-pulse rounded-full"
-          style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "300ms"}}
-        />
+    <div className="flex flex-col items-start gap-1">
+      <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl rounded-bl-sm shadow-sm" style={{background: "hsl(var(--slack-bg-surface))"}}>
+        <div className="flex gap-1">
+          <span
+            className="h-2 w-2 animate-pulse rounded-full"
+            style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "0ms"}}
+          />
+          <span
+            className="h-2 w-2 animate-pulse rounded-full"
+            style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "150ms"}}
+          />
+          <span
+            className="h-2 w-2 animate-pulse rounded-full"
+            style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "300ms"}}
+          />
+        </div>
       </div>
+      <span className="text-xs px-2" style={{color: "hsl(var(--slack-text-muted))"}}>
+        {coworkerName} is typing...
+      </span>
     </div>
   );
 }
