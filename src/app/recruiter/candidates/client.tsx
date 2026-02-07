@@ -407,7 +407,7 @@ export function RecruiterCandidatesClient({
 
                   const handleRowClick = () => {
                     if (!compareMode && isCompleted) {
-                      router.push(`/recruiter/candidates/${candidate.id}`);
+                      router.push(`/recruiter/candidates/s/${candidate.scenario.id}/${candidate.id}`);
                     }
                   };
 

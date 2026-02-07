@@ -48,6 +48,7 @@ interface DimensionScoreComparison {
 interface CandidateComparison {
   assessmentId: string;
   candidateName: string | null;
+  scenarioId: string;
   overallScore: number;
   overallPercentile: number;
   strengthLevel: CandidateStrengthLevel;
@@ -389,7 +390,7 @@ function CandidateCard({
         {/* View Full Scorecard Link */}
         <div className="mt-4 pt-4 border-t border-stone-100">
           <Button asChild variant="outline" className="w-full border-stone-200">
-            <Link href={`/recruiter/candidates/${candidate.assessmentId}`}>
+            <Link href={`/recruiter/candidates/s/${candidate.scenarioId}/${candidate.assessmentId}`}>
               View full scorecard
               <ExternalLink className="ml-2 h-4 w-4" />
             </Link>

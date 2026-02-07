@@ -39,6 +39,8 @@ export interface DimensionData {
 export interface QuickDecisionPanelProps {
   /** Assessment ID for comparison link */
   assessmentId: string;
+  /** Scenario ID (simulation ID) for routing */
+  scenarioId: string;
   /** Overall score (1-5 scale) */
   overallScore: number;
   /** Overall percentile (0-100) */
@@ -167,6 +169,7 @@ function getBriefQuote(behaviors: string): string {
  */
 export function QuickDecisionPanel({
   assessmentId,
+  scenarioId,
   overallScore,
   overallPercentile,
   strengthLevel,
@@ -342,7 +345,7 @@ export function QuickDecisionPanel({
               variant="outline"
               className="w-full border-stone-300 hover:bg-white"
             >
-              <Link href={`/recruiter/candidates/compare?ids=${assessmentId}`}>
+              <Link href={`/recruiter/candidates/s/${scenarioId}/compare?ids=${assessmentId}`}>
                 <Users className="mr-2 h-4 w-4" />
                 Compare
               </Link>

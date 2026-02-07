@@ -55,6 +55,7 @@ interface CandidateDetailData {
 
 interface CandidateDetailClientProps {
   assessmentId: string;
+  simulationId: string;
 }
 
 /**
@@ -160,7 +161,7 @@ function ForbiddenError() {
 /**
  * Main candidate detail client component
  */
-export function CandidateDetailClient({ assessmentId }: CandidateDetailClientProps) {
+export function CandidateDetailClient({ assessmentId, simulationId }: CandidateDetailClientProps) {
   const [data, setData] = useState<CandidateDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<number | null>(null);
@@ -227,7 +228,7 @@ export function CandidateDetailClient({ assessmentId }: CandidateDetailClientPro
       {/* Header */}
       <div className="mb-6">
         <Link
-          href="/recruiter/candidates"
+          href={`/recruiter/candidates/s/${simulationId}`}
           className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -256,7 +257,7 @@ export function CandidateDetailClient({ assessmentId }: CandidateDetailClientPro
           </div>
 
           <Button asChild variant="outline" className="border-stone-200">
-            <Link href={`/recruiter/candidates/compare?ids=${assessmentId}`}>
+            <Link href={`/recruiter/candidates/s/${simulationId}/compare?ids=${assessmentId}`}>
               <Users className="mr-2 h-4 w-4" />
               Compare with others
             </Link>

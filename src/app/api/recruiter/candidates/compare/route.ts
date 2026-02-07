@@ -38,6 +38,7 @@ interface DimensionScoreComparison {
 interface CandidateComparison {
   assessmentId: string;
   candidateName: string | null;
+  scenarioId: string;
   overallScore: number;
   overallPercentile: number;
   strengthLevel: CandidateStrengthLevel;
@@ -210,6 +211,7 @@ export async function GET(request: Request) {
       return {
         assessmentId: assessment.id,
         candidateName: assessment.user.name,
+        scenarioId: assessment.scenario.id,
         overallScore,
         overallPercentile,
         strengthLevel: getStrengthLevel(overallScore),
