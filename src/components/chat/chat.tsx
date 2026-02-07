@@ -129,7 +129,18 @@ export function Chat({
     setIsSending(true);
 
     try {
-      const data = await api<{
+      // Calculate delay based on coworker response speed
+      const getResponseDelay = (role: string): number => {
+        const isManager = role.toLowerCase().includes("manager");
+        if (isManager) return 2000 + Math.random() * 3000;  // 2-5s
+        return 5000 + Math.random() * 10000;  // 5-15s
+      };
+
+      const delay = getResponseDelay(coworker.role);
+      const delayPromise = new Promise(resolve => setTimeout(resolve, delay));
+
+      // Start API call and delay timer in parallel
+      const apiPromise = api<{
         response: string;
         timestamp: string;
         prSubmitted?: boolean;
@@ -141,6 +152,10 @@ export function Chat({
           message: userMessage.text,
         },
       });
+
+      // Wait for both API response and minimum delay
+      const [data] = await Promise.all([apiPromise, delayPromise]);
+
       const modelMessage: ChatMessage = {
         role: "model",
         text: data.response,
