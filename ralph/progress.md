@@ -6006,3 +6006,75 @@ if (extraction.newCoworker) {
 - [x] They only respond once - subsequent messages get no response
 - [x] Status indicator uses yellow/orange dot (away) or red dot (in-meeting)
 - [x] Typecheck passes
+
+## Issue #223: US-311: Add #general channel with ambient team chatter
+
+**Implemented:** #general channel with pre-scripted and ambient messages to create a living workplace atmosphere.
+
+**Files Changed:**
+- Created `src/components/chat/general-channel.tsx` - Channel component with left-aligned message layout
+- Created `src/hooks/chat/use-ambient-messages.ts` - Hook for scheduling ambient messages during assessment
+- Modified `src/lib/ai/coworker-persona.ts` - Added GENERAL_CHANNEL_MESSAGES (9 pre-scripted) and AMBIENT_MESSAGES (5 scheduled)
+- Modified `src/components/chat/slack-layout.tsx` - Added Channels section above Team with unread badge
+- Modified `src/app/assessments/[id]/work/client.tsx` - Added channel routing and ambient message integration
+- Added screenshots for visual verification
+
+**Key Learnings:**
+
+1. **Channel vs DM Visual Treatment**
+   - Channels use left-aligned messages for all senders (no right-aligned user bubbles)
+   - Header shows "# general" with description and message count
+   - No call button in channel view (only in DMs)
+   - Message format: avatar | name (bold) + timestamp (muted) | text
+
+2. **Ambient Message Scheduling**
+   - Created reusable `useAmbientMessages` hook with delay-based scheduling
+   - Timestamps are generated dynamically when messages appear
+   - Unread badge increments when messages arrive while viewing DMs
+   - Messages persist across component re-renders using state
+
+3. **Sidebar Organization**
+   - Channels section appears above Team section
+   - Both use same visual pattern: uppercase section header, list of items
+   - Hash icon distinguishes channels from team members (avatars)
+   - Unread badge logic is separate for channels vs DMs
+
+4. **Integration with Existing Systems**
+   - Reused SlackLayout's increment callback pattern for unread badges
+   - Maintained consistent theming with Slack CSS variables
+   - Used existing CoworkerAvatar component for message senders
+   - Followed same routing pattern as DMs (`?coworkerId=general`)
+
+5. **Testing Approach**
+   - Used agent-browser to verify all acceptance criteria
+   - E2E_TEST_MODE bypasses screen recording modal
+   - Screenshots captured for visual documentation
+   - Verified channel appears, messages display, typing works, navigation functions
+
+**Gotchas:**
+- Must use E2E_TEST_MODE=true for headless browser testing (bypasses recording modal)
+- Channel ID "general" is treated as a special case in routing logic
+- Ambient messages need explicit timestamp generation (not pre-set like initial messages)
+- Unread badge should NOT increment when viewing #general (same as DM behavior)
+
+**Testing:**
+```bash
+# Start dev server with E2E mode
+E2E_TEST_MODE=true NEXT_PUBLIC_E2E_TEST_MODE=true npm run dev
+
+# Login and navigate to work page
+agent-browser open "http://localhost:3003/sign-in" --session "test"
+agent-browser fill "#email" "user@test.com" --session "test"
+agent-browser fill "#password" "testpassword123" --session "test"
+agent-browser click "button[type='submit']" --session "test"
+agent-browser wait 3000 --session "test"
+agent-browser open "http://localhost:3003/assessments/test-assessment-chat/work" --session "test"
+
+# Verify Channels section and #general button appear in sidebar
+agent-browser snapshot --session "test" | grep -A10 "Channels"
+
+# Click #general and verify messages display
+agent-browser click "@ref-for-general-button" --session "test"
+agent-browser screenshot ./screenshots/general-channel.png --session "test"
+```
+
