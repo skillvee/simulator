@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { getPoolAvatarPath } from "@/lib/avatar/name-ethnicity";
 
 interface CoworkerAvatarProps {
   name: string;
@@ -11,11 +12,11 @@ interface CoworkerAvatarProps {
 }
 
 /**
- * CoworkerAvatar component that displays AI-generated avatars (RF-021).
+ * CoworkerAvatar component that displays coworker avatars.
  *
  * Priority:
- * 1. AI-generated avatar (avatarUrl from Imagen 3)
- * 2. DiceBear identicon fallback
+ * 1. Explicit avatarUrl (from DB, e.g. Supabase signed URL)
+ * 2. Static pool photo matched by name demographics (public/avatars/pool/)
  * 3. Initials fallback
  */
 export function CoworkerAvatar({
@@ -31,9 +32,8 @@ export function CoworkerAvatar({
     xl: "h-32 w-32",
   };
 
-  // Use AI-generated avatar if available, otherwise fall back to DiceBear identicon
-  const imageUrl = avatarUrl ||
-    `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(name)}&backgroundColor=237CF1&rowColor=ffffff`;
+  // Use explicit avatar URL if set, otherwise pick from the static pool by name
+  const imageUrl = avatarUrl || getPoolAvatarPath(name);
 
   // Get initials for fallback
   const initials = name

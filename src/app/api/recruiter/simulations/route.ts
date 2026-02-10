@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   // Validate request body using Zod schema
   const validated = await validateRequest(request, ScenarioCreateSchema);
   if ("error" in validated) return validated.error;
-  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack } = validated.data;
+  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, targetLevel, archetypeId } = validated.data;
 
   // Create scenario with createdById set to current user and isPublished true
   const scenario = await db.scenario.create({
@@ -41,6 +41,8 @@ export async function POST(request: Request) {
       taskDescription,
       repoUrl,
       techStack,
+      targetLevel,
+      archetypeId,
       isPublished: true, // Recruiter scenarios are always active
       createdById: user.id, // Set ownership to current user
     },

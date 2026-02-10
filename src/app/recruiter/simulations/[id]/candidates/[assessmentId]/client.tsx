@@ -152,7 +152,7 @@ function ForbiddenError() {
         This may be because the assessment belongs to a different recruiter.
       </p>
       <Button asChild className="bg-blue-600 hover:bg-blue-700">
-        <Link href="/recruiter/candidates">Back to Candidates</Link>
+        <Link href="/recruiter/simulations">Back to Candidates</Link>
       </Button>
     </div>
   );
@@ -207,7 +207,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           An error occurred while fetching the assessment details.
         </p>
         <Button asChild variant="outline">
-          <Link href="/recruiter/candidates">Back to Candidates</Link>
+          <Link href="/recruiter/simulations">Back to Candidates</Link>
         </Button>
       </div>
     );
@@ -228,7 +228,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
       {/* Header */}
       <div className="mb-6">
         <Link
-          href={`/recruiter/candidates/s/${simulationId}`}
+          href={`/recruiter/simulations/${simulationId}`}
           className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -257,7 +257,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           </div>
 
           <Button asChild variant="outline" className="border-stone-200">
-            <Link href={`/recruiter/candidates/s/${simulationId}/compare?ids=${assessmentId}`}>
+            <Link href={`/recruiter/simulations/${simulationId}/compare?ids=${assessmentId}`}>
               <Users className="mr-2 h-4 w-4" />
               Compare with others
             </Link>

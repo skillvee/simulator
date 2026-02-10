@@ -45,18 +45,19 @@ interface GenerationResult {
 
 /**
  * Build a prompt for generating a professional headshot avatar.
- * Uses coworker data to create a contextually appropriate image.
+ * Uses coworker data including name to create a contextually appropriate,
+ * ethnicity-coherent image (e.g. "Mei Lin" → East Asian appearance).
  */
 function buildAvatarPrompt(coworker: CoworkerData): string {
   // Extract persona style hints for appearance
   const styleHints = extractStyleHints(coworker.personaStyle);
 
-  // Build the prompt
-  const prompt = `Professional headshot photograph of a ${styleHints} ${coworker.role}.
+  // Build the prompt — include name so Imagen infers appropriate ethnicity/appearance
+  const prompt = `Professional headshot photograph of a person named ${coworker.name}, who is a ${styleHints} ${coworker.role}.
+The person's appearance should be consistent with their name's cultural background.
 Corporate style portrait, neutral gray background, professional lighting,
 high quality, photorealistic, head and shoulders only, facing camera,
-friendly expression, business casual attire.
-The person should look like a typical tech industry professional.`;
+friendly expression, business casual attire.`;
 
   return prompt;
 }

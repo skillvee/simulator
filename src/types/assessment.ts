@@ -365,19 +365,37 @@ export type ArchetypeSeniorityLevel = "JUNIOR" | "MID" | "SENIOR";
 export type DimensionConfidence = "high" | "medium" | "low";
 
 /**
+ * A timestamped observable behavior from the assessment
+ */
+export interface TimestampedBehavior {
+  timestamp: string; // MM:SS format
+  behavior: string;
+}
+
+/**
  * A single dimension score from the new rubric system
  */
 export interface RubricDimensionScore {
   dimensionSlug: string;
   dimensionName: string;
   score: number | null; // 1-4 or null if insufficient evidence
+  summary: string; // 1-sentence interpretation of this dimension's performance
   confidence: DimensionConfidence;
   rationale: string;
-  observableBehaviors: string[];
-  timestamps: string[]; // MM:SS format
+  observableBehaviors: TimestampedBehavior[];
+  timestamps: string[]; // MM:SS format (derived from observableBehaviors for backward compat)
   trainableGap: boolean;
   greenFlags: string[];
   redFlags: string[];
+}
+
+/**
+ * A strength or growth area identified in the assessment
+ */
+export interface AssessmentStrengthOrGap {
+  dimension: string;
+  score: number;
+  description: string;
 }
 
 /**
@@ -400,7 +418,9 @@ export interface RubricAssessmentOutput {
   overallScore: number; // Weighted average on 1-4 scale
   dimensionScores: RubricDimensionScore[];
   detectedRedFlags: DetectedRedFlag[];
-  overallSummary: string;
+  topStrengths: AssessmentStrengthOrGap[];
+  growthAreas: AssessmentStrengthOrGap[];
+  overallSummary: string; // Rich narrative paragraph
   evaluationConfidence: DimensionConfidence;
   insufficientEvidenceNotes: string | null;
 }

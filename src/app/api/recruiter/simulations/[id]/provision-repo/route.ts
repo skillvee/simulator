@@ -22,8 +22,9 @@ interface SessionUser {
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   // Authenticate user
   const session = await auth();
 
@@ -41,7 +42,7 @@ export async function POST(
     );
   }
 
-  const scenarioId = params.id;
+  const scenarioId = id;
 
   if (!scenarioId) {
     return NextResponse.json(

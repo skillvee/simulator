@@ -1,44 +1,13 @@
-import { notFound } from "next/navigation";
-import { requireRecruiter } from "@/lib/core";
-import { db } from "@/server/db";
-import { CandidateDetailClient } from "./client";
+import { redirect } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ simulationId: string; assessmentId: string }>;
 }
 
-export default async function CandidateDetailPage({ params }: PageProps) {
-  // Verify user is a recruiter (will redirect if not)
-  await requireRecruiter();
-
+/**
+ * Legacy candidate detail - redirects to new route
+ */
+export default async function LegacyCandidateDetailPage({ params }: PageProps) {
   const { simulationId, assessmentId } = await params;
-
-  if (!simulationId || !assessmentId) {
-    notFound();
-  }
-
-  // Security check: Verify the assessment belongs to the given simulation
-  const assessment = await db.assessment.findUnique({
-    where: { id: assessmentId },
-    select: {
-      id: true,
-      scenario: {
-        select: {
-          id: true,
-        },
-      },
-    },
-  });
-
-  if (!assessment) {
-    notFound();
-  }
-
-  // Verify the assessment's scenario matches the simulationId
-  if (assessment.scenario.id !== simulationId) {
-    notFound();
-  }
-
-  // Pass assessmentId and simulationId to client component
-  return <CandidateDetailClient assessmentId={assessmentId} simulationId={simulationId} />;
+  redirect(`/recruiter/simulations/${simulationId}/candidates/${assessmentId}`);
 }

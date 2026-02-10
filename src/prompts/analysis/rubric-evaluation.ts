@@ -8,7 +8,7 @@
  * @since 2026-02-06
  */
 
-export const RUBRIC_EVALUATION_PROMPT_VERSION = "2.0.0";
+export const RUBRIC_EVALUATION_PROMPT_VERSION = "3.0.0";
 
 // ============================================================================
 // Types for rubric data passed into prompt builder
@@ -108,10 +108,13 @@ function buildOutputSchema(
     .map(
       (d) => `    "${d.slug}": {
       "score": "<integer 1-4 or null if insufficient evidence>",
+      "summary": "<1 sentence summarizing this dimension's performance — e.g. 'Quickly breaks ambiguous problems into structured subcomponents.'>",
       "confidence": "high" | "medium" | "low",
       "rationale": "<why this score was given, with specific evidence>",
-      "observable_behaviors": ["<specific behavior 1>", "<specific behavior 2>"],
-      "timestamps": ["MM:SS", "MM:SS"],
+      "observable_behaviors": [
+        { "timestamp": "MM:SS", "behavior": "<specific observed behavior at this timestamp>" },
+        { "timestamp": "MM:SS", "behavior": "<specific observed behavior at this timestamp>" }
+      ],
       "trainable_gap": "<boolean - true if this is a skill that can be improved>",
       "green_flags": ["<positive signal 1>"],
       "red_flags": ["<concern 1>"]
@@ -138,7 +141,21 @@ function buildOutputSchema(
 ${dimScores}
   },
 ${redFlagSchema}
-  "overall_summary": "<3-5 sentence evidence-based summary of candidate performance>",
+  "top_strengths": [
+    {
+      "dimension": "<dimension name>",
+      "score": "<integer 1-4>",
+      "description": "<1-2 sentence explanation of why this is a strength, referencing specific evidence>"
+    }
+  ],
+  "growth_areas": [
+    {
+      "dimension": "<dimension name>",
+      "score": "<integer 1-4>",
+      "description": "<1-2 sentence explanation of the gap and what improvement looks like>"
+    }
+  ],
+  "overall_summary": "<A comprehensive narrative paragraph (5-8 sentences) that synthesizes the candidate's performance across all dimensions. Describe their overall approach, standout capabilities, how they handled challenges, their collaboration style, and an honest assessment of readiness. This should read like a hiring committee summary, not a list of scores.>",
   "evaluation_confidence": "high" | "medium" | "low",
   "insufficient_evidence_notes": "<explanation if any dimensions could not be fully evaluated, or null>"
 }
@@ -182,6 +199,7 @@ ${videoContext.expectedOutcomes?.length ? `- Expected Outcomes:\n${videoContext.
 
 ### Evidence Requirements
 - You MUST cite specific timestamps (MM:SS format) for EVERY behavior you score
+- Each observable behavior MUST be paired with its specific timestamp as a {timestamp, behavior} object
 - You MUST only evaluate behaviors that are DIRECTLY OBSERVABLE in the recording
 - You MUST NOT infer, assume, or hallucinate any behaviors not visible in the recording
 - If a dimension cannot be evaluated due to insufficient evidence, score it as null and set confidence to "low"
@@ -219,11 +237,16 @@ ${outputSchema}
 ## VALIDATION CHECKLIST
 
 Before outputting your evaluation, verify:
-- [ ] Every scored dimension has at least one timestamp
+- [ ] Every scored dimension has at least one observable_behavior with a timestamp
+- [ ] Each observable_behavior is a {timestamp, behavior} object, NOT a plain string
+- [ ] Every dimension has a concise 1-sentence summary
 - [ ] No behaviors are cited that weren't visible in the recording
 - [ ] Scores are independent (a score in one area doesn't influence another)
 - [ ] No assumptions about candidate seniority or background
 - [ ] overall_score is the weighted average of all non-null dimension scores
+- [ ] top_strengths contains 2-4 items from highest-scoring dimensions
+- [ ] growth_areas contains 1-3 items from lowest-scoring dimensions
+- [ ] overall_summary is a comprehensive narrative paragraph (5-8 sentences), not a list
 - [ ] JSON is valid and matches the schema exactly
 - [ ] Confidence is set to "low" for any dimension with limited evidence
 

@@ -3,14 +3,14 @@ import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
-import type { VideoEvaluationResult, AssessmentMetrics } from "@/types";
+import type { VideoEvaluationResult, AssessmentMetrics, TimestampedBehavior, RubricAssessmentOutput, AssessmentStrengthOrGap } from "@/types";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 /**
- * Candidate strength levels based on overall score (1-5 scale)
+ * Candidate strength levels based on overall score (1-4 scale)
  */
 type CandidateStrengthLevel = "Exceptional" | "Strong" | "Proficient" | "Developing";
 
@@ -30,11 +30,13 @@ interface SessionUser {
 interface DimensionScoreComparison {
   dimension: string;
   score: number;
+  summary: string;
   percentile: number;
   greenFlags: string[];
   redFlags: string[];
   rationale: string;
   timestamps: string[];
+  observableBehaviors: TimestampedBehavior[];
 }
 
 /**
@@ -59,6 +61,8 @@ interface CandidateComparison {
   overallPercentile: number;
   strengthLevel: CandidateStrengthLevel;
   dimensionScores: DimensionScoreComparison[];
+  topStrengths: AssessmentStrengthOrGap[];
+  growthAreas: AssessmentStrengthOrGap[];
   summary: string;
   metrics: WorkStyleMetrics;
   confidence: string;
@@ -73,9 +77,9 @@ interface CandidateComparison {
  * Get candidate strength level from overall score
  */
 function getStrengthLevel(overallScore: number): CandidateStrengthLevel {
-  if (overallScore >= 4.5) return "Exceptional";
-  if (overallScore >= 3.5) return "Strong";
-  if (overallScore >= 2.5) return "Proficient";
+  if (overallScore >= 3.5) return "Exceptional";
+  if (overallScore >= 2.8) return "Strong";
+  if (overallScore >= 2.0) return "Proficient";
   return "Developing";
 }
 
@@ -203,7 +207,10 @@ export async function GET(request: Request) {
       const videoEvaluation = report?.videoEvaluation;
       const metrics = report?.metrics;
 
-      // Build dimension scores with percentiles, flags, rationale, timestamps
+      // Parse rawAiResponse for v3 rubric data (top_strengths, growth_areas, dimension summaries)
+      const rawAiResponse = videoAssessment?.summary?.rawAiResponse as unknown as RubricAssessmentOutput | null;
+
+      // Build dimension scores with percentiles, flags, rationale, timestamps, behaviors
       const dimensionScores: DimensionScoreComparison[] = [];
 
       if (hasCompletedVideoAssessment && videoAssessment?.scores) {
@@ -215,19 +222,48 @@ export async function GET(request: Request) {
             (s) => s.dimension === score.dimension
           );
 
+          // Find matching dimension in rawAiResponse for v3 data (summary, structured behaviors)
+          const rubricDimData = rawAiResponse?.dimensionScores?.find(
+            (d) => d.dimensionSlug === score.dimension
+          );
+
           // Parse timestamps from DimensionScore.timestamps (stored as JSON array)
           const timestamps = Array.isArray(score.timestamps)
-            ? score.timestamps
+            ? (score.timestamps as string[])
             : [];
+
+          // Parse observable behaviors — try JSON first (v3), fall back to text (v2)
+          let observableBehaviors: TimestampedBehavior[] = [];
+          if (rubricDimData?.observableBehaviors && Array.isArray(rubricDimData.observableBehaviors)) {
+            observableBehaviors = rubricDimData.observableBehaviors;
+          } else if (score.observableBehaviors) {
+            // Try parsing as JSON (v3 storage format)
+            try {
+              const parsed = JSON.parse(score.observableBehaviors);
+              if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === "object" && "timestamp" in parsed[0]) {
+                observableBehaviors = parsed;
+              }
+            } catch {
+              // v2 text format — split into sentences and pair with timestamps
+              const sentences = score.observableBehaviors.split(/\.\s+/).filter(Boolean);
+              const ts = skillData?.timestamps ?? timestamps;
+              observableBehaviors = sentences.map((s, i) => ({
+                timestamp: (ts as string[])[i] ?? "",
+                behavior: s.endsWith(".") ? s : s + ".",
+              }));
+            }
+          }
 
           dimensionScores.push({
             dimension: score.dimension,
             score: score.score,
+            summary: rubricDimData?.summary ?? "",
             percentile,
-            greenFlags: skillData?.greenFlags ?? [],
-            redFlags: skillData?.redFlags ?? [],
-            rationale: skillData?.rationale ?? score.rationale ?? "",
+            greenFlags: skillData?.greenFlags ?? rubricDimData?.greenFlags ?? [],
+            redFlags: skillData?.redFlags ?? rubricDimData?.redFlags ?? [],
+            rationale: skillData?.rationale ?? rubricDimData?.rationale ?? score.rationale ?? "",
             timestamps: skillData?.timestamps ?? timestamps,
+            observableBehaviors,
           });
         }
       }
@@ -237,6 +273,29 @@ export async function GET(request: Request) {
         dimensionScores.length > 0
           ? dimensionScores.reduce((sum, s) => sum + s.score, 0) / dimensionScores.length
           : 0;
+
+      // Extract top strengths and growth areas from v3 rubric data, or derive from scores
+      let topStrengths: AssessmentStrengthOrGap[] = rawAiResponse?.topStrengths ?? [];
+      let growthAreas: AssessmentStrengthOrGap[] = rawAiResponse?.growthAreas ?? [];
+
+      // Fallback: derive from dimension scores if not stored
+      if (topStrengths.length === 0 && dimensionScores.length > 0) {
+        const sorted = [...dimensionScores].sort((a, b) => b.score - a.score);
+        topStrengths = sorted.slice(0, 3).filter(d => d.score >= 3).map(d => ({
+          dimension: d.dimension,
+          score: d.score,
+          description: d.greenFlags[0] ?? d.rationale.split(".")[0] ?? "",
+        }));
+      }
+
+      if (growthAreas.length === 0 && dimensionScores.length > 0) {
+        const sorted = [...dimensionScores].sort((a, b) => a.score - b.score);
+        growthAreas = sorted.slice(0, 3).filter(d => d.score <= 2).map(d => ({
+          dimension: d.dimension,
+          score: d.score,
+          description: d.redFlags[0] ?? d.rationale.split(".")[0] ?? "",
+        }));
+      }
 
       // Extract summary from VideoAssessmentSummary
       const summary = videoAssessment?.summary?.overallSummary ?? "";
@@ -264,6 +323,8 @@ export async function GET(request: Request) {
         overallPercentile,
         strengthLevel: getStrengthLevel(overallScore),
         dimensionScores,
+        topStrengths,
+        growthAreas,
         summary,
         metrics: workStyleMetrics,
         confidence,

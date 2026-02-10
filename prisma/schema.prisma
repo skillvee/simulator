@@ -97,6 +97,9 @@ model Scenario {
   taskDescription String   @db.Text
   repoUrl         String?  // Nullable - system-managed, provisioned asynchronously
   techStack       String[] // e.g., ["typescript", "react", "node"]
+  targetLevel     String   @default("mid") // "junior" | "mid" | "senior" | "staff" — seniority level being hired for
+  archetypeId     String?  // Optional link to role archetype for role-specific scoring expectations
+  archetype       Archetype? @relation(fields: [archetypeId], references: [id], onDelete: SetNull)
   isPublished     Boolean  @default(false)
 
   // Recruiter ownership (RF-002)
@@ -146,6 +149,7 @@ model Assessment {
   // Timing
   startedAt     DateTime         @default(now())
   completedAt   DateTime?
+  reviewedAt    DateTime?        // When recruiter first viewed the completed assessment
 
   // Deliverables
   prUrl         String?
@@ -558,6 +562,7 @@ model Archetype {
   roleFamily   RoleFamily       @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
   weights      ArchetypeWeight[]
   seniorityGates SeniorityGate[]
+  scenarios    Scenario[]
 }
 
 /// Weight for a dimension within an archetype

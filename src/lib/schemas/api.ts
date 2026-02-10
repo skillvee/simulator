@@ -58,6 +58,8 @@ export const ScenarioCreateSchema = z.object({
   taskDescription: z.string().min(1, "Task description is required"),
   repoUrl: z.string().optional(),
   techStack: z.array(z.string()).optional().default([]),
+  targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional().default("mid"),
+  archetypeId: z.string().min(1, "Role archetype is required"),
   isPublished: z.boolean().optional().default(false),
 });
 export type ScenarioCreate = z.infer<typeof ScenarioCreateSchema>;
@@ -72,6 +74,8 @@ export const ScenarioUpdateSchema = z.object({
   taskDescription: z.string().min(1, "Task description is required").optional(),
   repoUrl: z.string().optional(),
   techStack: z.array(z.string()).optional(),
+  targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional(),
+  archetypeId: z.string().nullable().optional(),
   isPublished: z.boolean().optional(),
 });
 export type ScenarioUpdate = z.infer<typeof ScenarioUpdateSchema>;

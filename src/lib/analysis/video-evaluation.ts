@@ -25,7 +25,7 @@ import {
   VideoAssessmentStatus,
 } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
-import type { RubricAssessmentOutput } from "@/types";
+import type { RubricAssessmentOutput, TimestampedBehavior, DimensionConfidence } from "@/types";
 
 // Model for video evaluation (Gemini 3 Pro)
 const VIDEO_EVALUATION_MODEL = "gemini-3-pro-preview";
@@ -101,19 +101,50 @@ function parseEvaluationResponse(responseText: string): RubricAssessmentOutput {
   }
 
   // Map the raw response to RubricAssessmentOutput
-  const dimensionScores = Object.entries(parsed.dimension_scores).map(
-    ([slug, data]: [string, Record<string, unknown>]) => ({
-      dimensionSlug: slug,
-      dimensionName: slug, // Will be enriched from rubric data
-      score: (data.score as number | null) ?? null,
-      confidence: (data.confidence as string) ?? "medium",
-      rationale: (data.rationale as string) ?? "",
-      observableBehaviors: (data.observable_behaviors as string[]) ?? [],
-      timestamps: (data.timestamps as string[]) ?? [],
-      trainableGap: (data.trainable_gap as boolean) ?? false,
-      greenFlags: (data.green_flags as string[]) ?? [],
-      redFlags: (data.red_flags as string[]) ?? [],
-    })
+  const dimensionScores = Object.entries(parsed.dimension_scores as Record<string, Record<string, unknown>>).map(
+    ([slug, data]) => {
+      // Handle both v3 (array of {timestamp, behavior}) and v2 (flat string array) formats
+      const rawBehaviors = data.observable_behaviors as
+        | TimestampedBehavior[]
+        | string[]
+        | undefined;
+      let observableBehaviors: TimestampedBehavior[];
+      let timestamps: string[];
+
+      if (
+        Array.isArray(rawBehaviors) &&
+        rawBehaviors.length > 0 &&
+        typeof rawBehaviors[0] === "object" &&
+        "timestamp" in (rawBehaviors[0] as object)
+      ) {
+        // v3 format: array of {timestamp, behavior}
+        observableBehaviors = rawBehaviors as TimestampedBehavior[];
+        timestamps = observableBehaviors.map((b) => b.timestamp);
+      } else {
+        // v2 format: flat string array — pair with timestamps array
+        const flatBehaviors = (rawBehaviors as string[]) ?? [];
+        const flatTimestamps = (data.timestamps as string[]) ?? [];
+        observableBehaviors = flatBehaviors.map((b, i) => ({
+          timestamp: flatTimestamps[i] ?? "",
+          behavior: b,
+        }));
+        timestamps = flatTimestamps;
+      }
+
+      return {
+        dimensionSlug: slug,
+        dimensionName: slug, // Will be enriched from rubric data
+        score: (data.score as number | null) ?? null,
+        summary: (data.summary as string) ?? "",
+        confidence: ((data.confidence as string) ?? "medium") as DimensionConfidence,
+        rationale: (data.rationale as string) ?? "",
+        observableBehaviors,
+        timestamps,
+        trainableGap: (data.trainable_gap as boolean) ?? false,
+        greenFlags: (data.green_flags as string[]) ?? [],
+        redFlags: (data.red_flags as string[]) ?? [],
+      };
+    }
   );
 
   const detectedRedFlags = (parsed.detected_red_flags ?? []).map(
@@ -126,14 +157,33 @@ function parseEvaluationResponse(responseText: string): RubricAssessmentOutput {
     })
   );
 
+  // Parse top_strengths and growth_areas (v3 fields)
+  const topStrengths = (parsed.top_strengths ?? []).map(
+    (s: Record<string, unknown>) => ({
+      dimension: (s.dimension as string) ?? "",
+      score: (s.score as number) ?? 0,
+      description: (s.description as string) ?? "",
+    })
+  );
+
+  const growthAreas = (parsed.growth_areas ?? []).map(
+    (g: Record<string, unknown>) => ({
+      dimension: (g.dimension as string) ?? "",
+      score: (g.score as number) ?? 0,
+      description: (g.description as string) ?? "",
+    })
+  );
+
   return {
     evaluationVersion: parsed.evaluation_version ?? RUBRIC_EVALUATION_PROMPT_VERSION,
     roleFamilySlug: parsed.role_family_slug ?? DEFAULT_ROLE_FAMILY_SLUG,
     overallScore: parsed.overall_score,
     dimensionScores,
     detectedRedFlags,
+    topStrengths,
+    growthAreas,
     overallSummary: parsed.overall_summary,
-    evaluationConfidence: parsed.evaluation_confidence ?? "medium",
+    evaluationConfidence: (parsed.evaluation_confidence ?? "medium") as DimensionConfidence,
     insufficientEvidenceNotes: parsed.insufficient_evidence_notes ?? null,
   };
 }
@@ -301,6 +351,8 @@ export async function evaluateVideo(
     await db.$transaction(async (tx) => {
       for (const dimScore of evaluation.dimensionScores) {
         if (dimScore.score !== null) {
+          // Serialize observable behaviors as JSON string for storage
+          const behaviorsText = JSON.stringify(dimScore.observableBehaviors);
           await tx.dimensionScore.upsert({
             where: {
               assessmentId_dimension: {
@@ -313,7 +365,7 @@ export async function evaluateVideo(
               dimension: dimScore.dimensionSlug,
               score: dimScore.score,
               confidence: dimScore.confidence,
-              observableBehaviors: dimScore.observableBehaviors.join("\n"),
+              observableBehaviors: behaviorsText,
               timestamps: formatTimestamps(dimScore.timestamps),
               trainableGap: dimScore.trainableGap,
               rationale: dimScore.rationale,
@@ -321,7 +373,7 @@ export async function evaluateVideo(
             update: {
               score: dimScore.score,
               confidence: dimScore.confidence,
-              observableBehaviors: dimScore.observableBehaviors.join("\n"),
+              observableBehaviors: behaviorsText,
               timestamps: formatTimestamps(dimScore.timestamps),
               trainableGap: dimScore.trainableGap,
               rationale: dimScore.rationale,

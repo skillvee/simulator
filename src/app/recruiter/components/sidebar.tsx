@@ -6,9 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard,
   FolderOpen,
-  Users,
   PanelLeftClose,
   PanelLeft,
   Plus,
@@ -26,15 +24,10 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/recruiter/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/recruiter/simulations", label: "Simulations", icon: FolderOpen },
-    { href: "/recruiter/candidates", label: "Candidates", icon: Users },
   ];
 
   const isActive = (href: string) => {
-    if (href === "/recruiter/dashboard") {
-      return pathname === "/recruiter/dashboard" || pathname === "/recruiter";
-    }
     return pathname.startsWith(href);
   };
 
@@ -47,7 +40,7 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
       {/* Logo */}
       <div className="flex h-[72px] items-center justify-between px-4 border-b border-white/10">
         {sidebarOpen && (
-          <Link href="/recruiter/dashboard" className="flex items-center gap-2">
+          <Link href="/recruiter/simulations" className="flex items-center gap-2">
             <Image
               src="/skillvee-logo.png"
               alt="SkillVee"
