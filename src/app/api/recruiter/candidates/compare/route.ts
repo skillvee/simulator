@@ -3,16 +3,14 @@ import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
-import type { VideoEvaluationResult, AssessmentMetrics, TimestampedBehavior, RubricAssessmentOutput, AssessmentStrengthOrGap } from "@/types";
+import { getRelativeStrength, type TargetLevel, type RelativeStrength } from "@/lib/rubric/level-expectations";
+import type { AssessmentMetrics, TimestampedBehavior, RubricAssessmentOutput, AssessmentStrengthOrGap } from "@/types";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-/**
- * Candidate strength levels based on overall score (1-4 scale)
- */
-type CandidateStrengthLevel = "Exceptional" | "Strong" | "Proficient" | "Developing";
+type CandidateStrengthLevel = RelativeStrength;
 
 /**
  * Session user interface for type safety
@@ -46,8 +44,9 @@ interface WorkStyleMetrics {
   totalDurationMinutes: number | null;
   workingPhaseMinutes: number | null;
   coworkersContacted: number;
-  aiToolsUsed: boolean;
-  testsStatus: string;
+  voiceCallMinutes: number;
+  messageWordCount: number;
+  aiUsage: { score: number; level: string; behaviors: string[] };
 }
 
 /**
@@ -68,22 +67,6 @@ interface CandidateComparison {
   confidence: string;
   videoUrl: string;
 }
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get candidate strength level from overall score
- */
-function getStrengthLevel(overallScore: number): CandidateStrengthLevel {
-  if (overallScore >= 3.5) return "Exceptional";
-  if (overallScore >= 2.8) return "Strong";
-  if (overallScore >= 2.0) return "Proficient";
-  return "Developing";
-}
-
-
 
 // ============================================================================
 // Route Handler
@@ -151,12 +134,19 @@ export async function GET(request: Request) {
         select: {
           id: true,
           createdById: true,
+          targetLevel: true,
         },
       },
       videoAssessment: {
         include: {
           scores: true,
           summary: true,
+        },
+      },
+      conversations: {
+        select: {
+          type: true,
+          transcript: true,
         },
       },
     },
@@ -202,10 +192,10 @@ export async function GET(request: Request) {
       const percentiles = await getStoredPercentiles(assessment.id);
       const overallPercentile = percentiles?.overall ?? 0;
 
-      // Parse report JSON for video evaluation and metrics
-      const report = assessment.report as { videoEvaluation?: VideoEvaluationResult; metrics?: AssessmentMetrics } | null;
-      const videoEvaluation = report?.videoEvaluation;
+      // Parse report JSON for metrics
+      const report = assessment.report as { metrics?: AssessmentMetrics } | null;
       const metrics = report?.metrics;
+      const targetLevel = (assessment.scenario.targetLevel || "mid") as TargetLevel;
 
       // Parse rawAiResponse for v3 rubric data (top_strengths, growth_areas, dimension summaries)
       const rawAiResponse = videoAssessment?.summary?.rawAiResponse as unknown as RubricAssessmentOutput | null;
@@ -217,12 +207,7 @@ export async function GET(request: Request) {
         for (const score of videoAssessment.scores) {
           const percentile = percentiles?.[score.dimension] ?? 0;
 
-          // Find matching skill in videoEvaluation by dimension
-          const skillData = videoEvaluation?.skills?.find(
-            (s) => s.dimension === score.dimension
-          );
-
-          // Find matching dimension in rawAiResponse for v3 data (summary, structured behaviors)
+          // score.dimension is now a rubric slug that matches rawAiResponse directly
           const rubricDimData = rawAiResponse?.dimensionScores?.find(
             (d) => d.dimensionSlug === score.dimension
           );
@@ -246,9 +231,8 @@ export async function GET(request: Request) {
             } catch {
               // v2 text format — split into sentences and pair with timestamps
               const sentences = score.observableBehaviors.split(/\.\s+/).filter(Boolean);
-              const ts = skillData?.timestamps ?? timestamps;
               observableBehaviors = sentences.map((s, i) => ({
-                timestamp: (ts as string[])[i] ?? "",
+                timestamp: timestamps[i] ?? "",
                 behavior: s.endsWith(".") ? s : s + ".",
               }));
             }
@@ -259,10 +243,10 @@ export async function GET(request: Request) {
             score: score.score,
             summary: rubricDimData?.summary ?? "",
             percentile,
-            greenFlags: skillData?.greenFlags ?? rubricDimData?.greenFlags ?? [],
-            redFlags: skillData?.redFlags ?? rubricDimData?.redFlags ?? [],
-            rationale: skillData?.rationale ?? rubricDimData?.rationale ?? score.rationale ?? "",
-            timestamps: skillData?.timestamps ?? timestamps,
+            greenFlags: rubricDimData?.greenFlags ?? [],
+            redFlags: rubricDimData?.redFlags ?? [],
+            rationale: rubricDimData?.rationale ?? score.rationale ?? "",
+            timestamps,
             observableBehaviors,
           });
         }
@@ -300,17 +284,79 @@ export async function GET(request: Request) {
       // Extract summary from VideoAssessmentSummary
       const summary = videoAssessment?.summary?.overallSummary ?? "";
 
+      // Derive AI usage from work_process dimension (which covers AI tool usage)
+      const creativityDim = dimensionScores.find(
+        (d) => d.dimension === "work_process"
+      );
+      const aiScore = creativityDim?.score ?? 0;
+      const aiLevel =
+        aiScore >= 3.5
+          ? "Expert"
+          : aiScore >= 2.5
+            ? "Strong"
+            : aiScore >= 1.5
+              ? "Basic"
+              : "None";
+      const aiBehaviors = creativityDim?.observableBehaviors
+        ?.map((ob) => ob.behavior)
+        .slice(0, 3) ?? [];
+
+      // Compute voice call minutes and message word count from conversations
+      let voiceCallMinutes = 0;
+      let messageWordCount = 0;
+
+      for (const convo of assessment.conversations) {
+        const messages = Array.isArray(convo.transcript) ? (convo.transcript as Array<{ role?: string; text?: string; timestamp?: string }>) : [];
+
+        if (convo.type === "voice") {
+          // Approximate duration from first and last message timestamps
+          const timestamps = messages
+            .map((m) => m.timestamp)
+            .filter((t): t is string => !!t);
+          if (timestamps.length >= 2) {
+            const first = timestamps[0];
+            const last = timestamps[timestamps.length - 1];
+            // Timestamps are ISO strings or "MM:SS" / "HH:MM:SS" format
+            const parseTs = (ts: string): number | null => {
+              // Try ISO date first
+              const d = new Date(ts);
+              if (!isNaN(d.getTime())) return d.getTime();
+              // Try MM:SS or HH:MM:SS
+              const parts = ts.split(":").map(Number);
+              if (parts.length === 2) return (parts[0] * 60 + parts[1]) * 1000;
+              if (parts.length === 3) return (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
+              return null;
+            };
+            const firstMs = parseTs(first);
+            const lastMs = parseTs(last);
+            if (firstMs !== null && lastMs !== null && lastMs > firstMs) {
+              voiceCallMinutes += Math.round((lastMs - firstMs) / 60000);
+            }
+          }
+        }
+
+        if (convo.type === "text") {
+          // Count words from user messages only
+          for (const msg of messages) {
+            if (msg.role === "user" && msg.text) {
+              messageWordCount += msg.text.split(/\s+/).filter(Boolean).length;
+            }
+          }
+        }
+      }
+
       // Extract metrics with sensible defaults
       const workStyleMetrics: WorkStyleMetrics = {
         totalDurationMinutes: metrics?.totalDurationMinutes ?? null,
         workingPhaseMinutes: metrics?.workingPhaseMinutes ?? null,
         coworkersContacted: metrics?.coworkersContacted ?? 0,
-        aiToolsUsed: metrics?.aiToolsUsed ?? false,
-        testsStatus: metrics?.testsStatus ?? "unknown",
+        voiceCallMinutes,
+        messageWordCount,
+        aiUsage: { score: aiScore, level: aiLevel, behaviors: aiBehaviors },
       };
 
-      // Extract confidence from video evaluation
-      const confidence = videoEvaluation?.evaluationConfidence ?? "medium";
+      // Extract confidence from v3 rubric data
+      const confidence = rawAiResponse?.evaluationConfidence ?? "medium";
 
       // Get video URL
       const videoUrl = videoAssessment?.videoUrl ?? "";
@@ -321,7 +367,7 @@ export async function GET(request: Request) {
         scenarioId: assessment.scenario.id,
         overallScore,
         overallPercentile,
-        strengthLevel: getStrengthLevel(overallScore),
+        strengthLevel: getRelativeStrength(overallScore, targetLevel),
         dimensionScores,
         topStrengths,
         growthAreas,
@@ -333,5 +379,21 @@ export async function GET(request: Request) {
     })
   );
 
-  return success(comparisons);
+  // Count total completed assessments in this simulation for percentile context
+  const resolvedSimulationId = simulationId || assessments[0]?.scenario.id;
+  const totalCandidatesInSimulation = resolvedSimulationId
+    ? await db.assessment.count({
+        where: {
+          scenarioId: resolvedSimulationId,
+          videoAssessment: {
+            status: VideoAssessmentStatus.COMPLETED,
+          },
+        },
+      })
+    : comparisons.length;
+
+  return success({
+    candidates: comparisons,
+    totalCandidatesInSimulation,
+  });
 }

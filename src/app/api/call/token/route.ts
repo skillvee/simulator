@@ -123,6 +123,7 @@ export async function POST(request: Request) {
       name: coworker.name,
       role: coworker.role,
       personaStyle: coworker.personaStyle,
+      personality: coworker.personality as CoworkerPersona["personality"],
       knowledge: parseCoworkerKnowledge(coworker.knowledge),
       avatarUrl: coworker.avatarUrl,
     };

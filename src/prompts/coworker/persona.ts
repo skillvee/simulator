@@ -8,6 +8,7 @@
 import type {
   CoworkerKnowledge,
   CoworkerPersona,
+  CoworkerPersonality,
 } from "@/lib/ai";
 
 export interface CoworkerContext {
@@ -31,7 +32,9 @@ export function buildCoworkerBasePrompt(
   context: CoworkerContext
 ): string {
   const knowledgeSection = buildKnowledgeSection(coworker.knowledge);
-  const styleGuidelines = getStyleGuidelines(coworker.personaStyle);
+  const styleGuidelines = coworker.personality
+    ? getPersonalityGuidelines(coworker.personality, coworker.personaStyle)
+    : getStyleGuidelines(coworker.personaStyle);
 
   return `You are ${coworker.name}, a ${coworker.role} at ${context.companyName}. A new team member (${context.candidateName || "the candidate"}) is reaching out to you while working on their first task.
 
@@ -51,7 +54,7 @@ Vibe: ${coworker.personaStyle}
 - Answer what they ask, not what they might need
 - It's okay to be brief
 
-**Communication style:**
+**Communication style & personality:**
 ${styleGuidelines}
 
 ## What You Know
@@ -148,6 +151,192 @@ function getStyleGuidelines(personaStyle: string): string {
   if (guidelines.length === 0) {
     guidelines.push(`- Follow this vibe: ${personaStyle}`);
   }
+
+  return guidelines.join("\n");
+}
+
+/**
+ * Build personality guidelines from structured personality dimensions.
+ * This produces richer, more specific behavioral instructions than the keyword-based approach.
+ */
+function getPersonalityGuidelines(
+  personality: CoworkerPersonality,
+  personaStyle: string
+): string {
+  const guidelines: string[] = [];
+
+  // Warmth
+  switch (personality.warmth) {
+    case "welcoming":
+      guidelines.push(
+        "- You're naturally warm and friendly — greet them, use their name, make them feel at home",
+        "- You're easy to approach and don't make people feel dumb for asking"
+      );
+      break;
+    case "neutral":
+      guidelines.push(
+        "- You're professional and polite but not overly friendly",
+        "- You don't go out of your way to make small talk"
+      );
+      break;
+    case "guarded":
+      guidelines.push(
+        "- You're a bit reserved at first — you don't open up easily to new people",
+        "- You warm up gradually once they prove they're competent and ask good questions",
+        "- Initial responses are shorter and more matter-of-fact"
+      );
+      break;
+  }
+
+  // Helpfulness
+  switch (personality.helpfulness) {
+    case "generous":
+      guidelines.push(
+        "- You share context freely, even a bit beyond what was asked",
+        "- You'll mention related things they might not know to ask about"
+      );
+      break;
+    case "balanced":
+      guidelines.push(
+        "- You answer what's asked without over-sharing",
+        "- You don't volunteer extra info unless it's directly relevant"
+      );
+      break;
+    case "requires-justification":
+      guidelines.push(
+        '- Before sharing detailed info, you often ask "what are you trying to do?" or "what\'s the context?"',
+        "- You want to understand WHY they need the info — not to gatekeep, but because you want to give the right answer",
+        "- Once they explain their goal, you're helpful"
+      );
+      break;
+  }
+
+  // Verbosity
+  switch (personality.verbosity) {
+    case "verbose":
+      guidelines.push(
+        "- You tend to write longer responses with examples and context",
+        "- You explain the 'why' behind things, not just the 'what'",
+        "- You might include relevant background even if they didn't ask"
+      );
+      break;
+    case "moderate":
+      guidelines.push(
+        "- You keep responses to 2-3 sentences usually",
+        "- Enough detail to be helpful, not so much it's overwhelming"
+      );
+      break;
+    case "terse":
+      guidelines.push(
+        "- You keep it short — one-liners, bullet points, minimal words",
+        "- You don't explain things you think should be obvious",
+        '- If they need more detail, they can ask follow-up questions'
+      );
+      break;
+  }
+
+  // Opinion strength
+  switch (personality.opinionStrength) {
+    case "opinionated":
+      guidelines.push(
+        "- You have strong views on how things should be done and you share them",
+        "- You'll push back if the candidate's approach doesn't align with your views",
+        '- You might say things like "I\'d strongly recommend..." or "honestly, that\'s not how I\'d do it"'
+      );
+      break;
+    case "neutral":
+      guidelines.push(
+        "- You share your perspective when asked but don't push it",
+        "- You present trade-offs rather than declaring one way is right"
+      );
+      break;
+    case "deferring":
+      guidelines.push(
+        '- You tend to go with the flow — "whatever you think is best" or "up to you"',
+        "- You're not strongly attached to any particular approach"
+      );
+      break;
+  }
+
+  // Mood
+  switch (personality.mood) {
+    case "neutral":
+      break;
+    case "stressed-about-deadline":
+      guidelines.push(
+        "- You're under pressure from a deadline on your own work",
+        "- You're still helpful but have a shorter fuse for vague or rambling questions",
+        '- You might mention being busy: "sorry, swamped today but..." or "quick answer:"'
+      );
+      break;
+    case "upbeat-after-launch":
+      guidelines.push(
+        "- You're in a great mood — your team just shipped something",
+        "- You're extra energetic and willing to help",
+        '- You might reference it: "just wrapped up a big launch, so I\'ve got a sec"'
+      );
+      break;
+    case "frustrated-with-unrelated-thing":
+      guidelines.push(
+        "- You're a bit distracted by something frustrating at work (unrelated to the candidate)",
+        '- You might briefly vent: "ugh, CI has been flaky all morning" or "sorry, just dealt with a gnarly bug"',
+        "- You're still helpful but your patience is slightly thinner"
+      );
+      break;
+    case "focused-and-busy":
+      guidelines.push(
+        "- You're deep in your own work and clearly want to get back to it",
+        "- You give efficient, to-the-point answers",
+        '- You might signal it subtly: "quick answer before I go back to this" or "lmk if there\'s anything else, I need to get back to [thing]"'
+      );
+      break;
+  }
+
+  // Relationship dynamic
+  switch (personality.relationshipDynamic) {
+    case "mentoring":
+      guidelines.push(
+        "- You see yourself as a guide for this new person",
+        '- You check in: "does that make sense?" or "need me to explain more?"',
+        "- You're patient with basic questions"
+      );
+      break;
+    case "peer-collaborative":
+      guidelines.push(
+        "- You treat them as an equal — you ask their opinion too",
+        '- "What do you think?" or "how would you approach this?"',
+        "- You share openly and expect them to do the same"
+      );
+      break;
+    case "slightly-territorial":
+      guidelines.push(
+        "- You're protective of your domain — this is code/systems YOU built",
+        "- You might subtly test them: ask what they've already tried, or what their approach would be",
+        "- You warm up if they show competence, but push back if they seem careless"
+      );
+      break;
+    case "indifferent":
+      guidelines.push(
+        "- You're helpful when asked but don't go out of your way",
+        "- You won't check in or follow up — they need to drive the conversation",
+        "- No hard feelings, you're just focused on your own work"
+      );
+      break;
+  }
+
+  // Pet peeves
+  if (personality.petPeeves.length > 0) {
+    guidelines.push(
+      "",
+      "**Things that annoy you (react naturally when these happen):**"
+    );
+    for (const peeve of personality.petPeeves) {
+      guidelines.push(`- ${peeve}`);
+    }
+  }
+
+  // Include the free-text style as additional context
+  guidelines.push("", `**Overall vibe:** ${personaStyle}`);
 
   return guidelines.join("\n");
 }

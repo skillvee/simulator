@@ -69,6 +69,7 @@ export type {
   CoworkerKnowledge,
   PersonalityStyle,
   CoworkerPersona,
+  CoworkerPersonality,
   DecorativeTeamMember,
   StatusScheduleEntry,
 } from "./coworker";

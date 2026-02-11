@@ -127,11 +127,11 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
       {/* Header */}
       <div className="mb-8">
         <Link
-          href={`/recruiter/simulations/${scenario.id}`}
+          href="/recruiter/simulations"
           className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Candidates
+          Back to Simulations
         </Link>
         <div className="flex items-start justify-between gap-4">
           <div>

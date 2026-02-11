@@ -15,7 +15,7 @@ export function ForbiddenError() {
         You don&apos;t have permission to view one or more of these candidates.
       </p>
       <Button asChild className="bg-blue-600 hover:bg-blue-700">
-        <Link href="/recruiter/simulations">Back to Candidates</Link>
+        <Link href="/recruiter/assessments">Back to Candidates</Link>
       </Button>
     </div>
   );
@@ -28,7 +28,7 @@ export function ErrorState({ error }: { error: string }) {
       <h1 className="text-xl font-semibold text-stone-900 mb-2">Unable to load comparison</h1>
       <p className="text-stone-500 mb-6 text-center max-w-md">{error}</p>
       <Button asChild variant="outline">
-        <Link href="/recruiter/simulations">Back to Candidates</Link>
+        <Link href="/recruiter/assessments">Back to Candidates</Link>
       </Button>
     </div>
   );

@@ -61,10 +61,10 @@ export function getStrengthBadgeStyles(level: CandidateStrengthLevel): string {
       return "bg-green-100 text-green-800 hover:bg-green-100";
     case "Strong":
       return "bg-blue-100 text-blue-800 hover:bg-blue-100";
-    case "Proficient":
-      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
-    case "Developing":
-      return "bg-stone-100 text-stone-600 hover:bg-stone-100";
+    case "Meets expectations":
+      return "bg-stone-100 text-stone-700 hover:bg-stone-100";
+    case "Below expectations":
+      return "bg-red-100 text-red-800 hover:bg-red-100";
   }
 }
 

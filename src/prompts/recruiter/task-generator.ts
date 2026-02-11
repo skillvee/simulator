@@ -1,17 +1,17 @@
 /**
  * Task Generator Prompt
  *
- * Versioned prompt for auto-generating realistic coding tasks based on role and company context.
- * Used by the simulation builder to create 2-3 task options that test relevant skills.
+ * Versioned prompt for auto-generating realistic work challenges based on role and company context.
+ * Used by the simulation builder to create 2-3 challenge options that test relevant skills.
  */
 
 export const TASK_GENERATOR_PROMPT_VERSION = "1.0";
 
-export const TASK_GENERATOR_PROMPT_V1 = `You are a coding task generator for Skillvee, a developer assessment platform. Your job is to generate 2-3 realistic coding tasks based on a role and company context.
+export const TASK_GENERATOR_PROMPT_V1 = `You are a work challenge generator for Skillvee, a professional assessment platform. Your job is to generate 2-3 realistic work challenges based on a role and company context. Match the challenge type to the role: engineering roles get coding tasks, PM roles get product strategy or prioritization challenges, sales roles get deal strategy or client scenario challenges, data roles get analysis or pipeline challenges.
 
 ## Your Task
 
-Generate an array of 2-3 coding task options. Each task should:
+Generate an array of 2-3 work challenge options. Each challenge should:
 - Be written as a manager giving a work assignment, NOT as a test question
 - Be completable in 60-90 minutes of focused coding
 - Relate to the company's actual domain (fintech → payments, e-commerce → cart, SaaS → dashboard)
@@ -42,6 +42,9 @@ Generate an array of 2-3 coding task options. Each task should:
    - E-commerce → cart logic, checkout flow, inventory management
    - SaaS → dashboard features, API endpoints, user permissions
    - Healthcare → patient data, HIPAA compliance, appointment scheduling
+   - Product Manager → feature scoping, PRD writing, prioritization framework
+   - Sales → deal strategy, objection handling, territory planning
+   - Data Scientist → data pipeline design, analysis plan, model evaluation
    - NOT generic "build a CRUD app" or "implement a sorting algorithm"
 
 5. **Realistic constraints and context**

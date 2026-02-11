@@ -30,6 +30,51 @@ export type PersonalityStyle =
   | "supportive" // Encouraging, offers help proactively
   | "busy"; // Brief responses, prefers async communication
 
+/** How warm and approachable the coworker is */
+export type WarmthLevel = "welcoming" | "neutral" | "guarded";
+
+/** How freely the coworker shares information */
+export type HelpfulnessLevel =
+  | "generous"
+  | "balanced"
+  | "requires-justification";
+
+/** How much the coworker writes per message */
+export type VerbosityLevel = "verbose" | "moderate" | "terse";
+
+/** How strongly the coworker pushes their own opinions */
+export type OpinionStrengthLevel = "opinionated" | "neutral" | "deferring";
+
+/** Current mood/context affecting behavior during the assessment */
+export type CoworkerMood =
+  | "neutral"
+  | "stressed-about-deadline"
+  | "upbeat-after-launch"
+  | "frustrated-with-unrelated-thing"
+  | "focused-and-busy";
+
+/** How the coworker relates to the candidate */
+export type RelationshipDynamic =
+  | "mentoring"
+  | "peer-collaborative"
+  | "slightly-territorial"
+  | "indifferent";
+
+/**
+ * Structured personality dimensions for a coworker.
+ * These replace the free-text personaStyle with concrete, prompt-actionable fields.
+ */
+export interface CoworkerPersonality {
+  warmth: WarmthLevel;
+  helpfulness: HelpfulnessLevel;
+  verbosity: VerbosityLevel;
+  opinionStrength: OpinionStrengthLevel;
+  mood: CoworkerMood;
+  relationshipDynamic: RelationshipDynamic;
+  /** 1-2 specific things that annoy this coworker */
+  petPeeves: string[];
+}
+
 /**
  * Full coworker persona data structure for system prompt generation
  */
@@ -38,6 +83,8 @@ export interface CoworkerPersona {
   role: string;
   /** Communication style description (stored in DB) */
   personaStyle: string;
+  /** Structured personality dimensions (stored as JSON in DB) */
+  personality?: CoworkerPersonality | null;
   /** Specific knowledge they hold (stored as JSON in DB) */
   knowledge: CoworkerKnowledge[];
   /** Optional avatar URL */

@@ -8,7 +8,6 @@
 import {
   PrismaClient,
   Prisma,
-  AssessmentDimension,
   VideoAssessmentStatus,
 } from "@prisma/client";
 import { hash } from "bcryptjs";
@@ -291,7 +290,7 @@ Acceptance Criteria:
 
     const dimensionScores = [
       {
-        dimension: AssessmentDimension.COMMUNICATION,
+        dimension: "communication",
         score: 3,
         observableBehaviors:
           "Clear and professional communication throughout. Asked clarifying questions when needed.",
@@ -299,7 +298,7 @@ Acceptance Criteria:
         timestamps: ["2:34", "5:12", "15:07"],
       },
       {
-        dimension: AssessmentDimension.PROBLEM_SOLVING,
+        dimension: "problem_decomposition_design",
         score: 4,
         observableBehaviors:
           "Excellent problem decomposition. Broke down complex tasks into manageable steps.",
@@ -307,7 +306,7 @@ Acceptance Criteria:
         timestamps: ["10:45", "22:30"],
       },
       {
-        dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE,
+        dimension: "technical_execution",
         score: 3,
         observableBehaviors:
           "Strong technical foundation demonstrated in code implementation.",
@@ -315,7 +314,7 @@ Acceptance Criteria:
         timestamps: ["8:15", "18:00", "25:40", "35:20"],
       },
       {
-        dimension: AssessmentDimension.COLLABORATION,
+        dimension: "collaboration_coachability",
         score: 3,
         observableBehaviors:
           "Good teamwork, sought help when stuck. Could improve on proactive communication.",
@@ -323,7 +322,7 @@ Acceptance Criteria:
         timestamps: ["12:00", "28:15"],
       },
       {
-        dimension: AssessmentDimension.ADAPTABILITY,
+        dimension: "practical_maturity",
         score: 3,
         observableBehaviors:
           "Adapted well to changing requirements and new information.",
@@ -331,7 +330,7 @@ Acceptance Criteria:
         timestamps: ["30:45"],
       },
       {
-        dimension: AssessmentDimension.LEADERSHIP,
+        dimension: "learning_velocity",
         score: 2,
         observableBehaviors:
           "Showed initiative but could take more ownership of decisions.",
@@ -339,20 +338,12 @@ Acceptance Criteria:
         timestamps: [],
       },
       {
-        dimension: AssessmentDimension.CREATIVITY,
+        dimension: "work_process",
         score: 3,
         observableBehaviors:
           "Proposed creative solutions to technical challenges.",
         trainableGap: false,
         timestamps: ["1:05:30", "1:15:00"],
-      },
-      {
-        dimension: AssessmentDimension.TIME_MANAGEMENT,
-        score: 4,
-        observableBehaviors:
-          "Excellent prioritization and efficient use of time.",
-        trainableGap: false,
-        timestamps: ["5:00", "20:00", "45:00"],
       },
     ];
 
@@ -907,60 +898,53 @@ Acceptance Criteria:
     const completedVideoAssessmentId = "test-video-assessment-completed";
     const completedDimensionScores = [
       {
-        dimension: AssessmentDimension.COMMUNICATION,
+        dimension: "communication",
         score: 3,
         observableBehaviors: "Clear and professional communication throughout. Asked clarifying questions when needed.",
         trainableGap: false,
         timestamps: ["02:15", "08:42", "15:30", "32:10"],
       },
       {
-        dimension: AssessmentDimension.PROBLEM_SOLVING,
+        dimension: "problem_decomposition_design",
         score: 4,
         observableBehaviors: "Excellent systematic approach to breaking down the task. Formed clear hypotheses when debugging.",
         trainableGap: false,
         timestamps: ["10:45", "22:30", "45:20"],
       },
       {
-        dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE,
+        dimension: "technical_execution",
         score: 3,
         observableBehaviors: "Good technical foundation in React and TypeScript. Applied standard best practices.",
         trainableGap: false,
         timestamps: ["08:15", "18:00", "25:40", "35:20"],
       },
       {
-        dimension: AssessmentDimension.COLLABORATION,
+        dimension: "collaboration_coachability",
         score: 3,
         observableBehaviors: "Good collaboration instincts - reached out when stuck. Could improve on proactive communication.",
         trainableGap: true,
         timestamps: ["12:00", "28:15"],
       },
       {
-        dimension: AssessmentDimension.ADAPTABILITY,
+        dimension: "practical_maturity",
         score: 3,
         observableBehaviors: "Adapted reasonably when requirements were clarified mid-task.",
         trainableGap: false,
         timestamps: ["30:45", "42:00"],
       },
       {
-        dimension: AssessmentDimension.LEADERSHIP,
+        dimension: "learning_velocity",
         score: 2,
         observableBehaviors: "Showed initiative in some areas but tended to wait for direction on others.",
         trainableGap: true,
         timestamps: ["55:00"],
       },
       {
-        dimension: AssessmentDimension.CREATIVITY,
+        dimension: "work_process",
         score: 3,
         observableBehaviors: "Proposed some creative solutions. Explored a couple of approaches before settling on implementation.",
         trainableGap: false,
         timestamps: ["1:05:30", "1:15:00"],
-      },
-      {
-        dimension: AssessmentDimension.TIME_MANAGEMENT,
-        score: 4,
-        observableBehaviors: "Good time awareness and prioritization. Met key milestones on schedule.",
-        trainableGap: false,
-        timestamps: ["05:00", "20:00", "45:00", "1:10:00"],
       },
     ];
 
@@ -1039,7 +1023,7 @@ Acceptance Criteria:
 
     // Helper: Build v3 rawAiResponse from seed data
     type SeedCandidate = {
-      scores: Array<{ dimension: AssessmentDimension; score: number; observableBehaviors: string; trainableGap: boolean; timestamps: string[] }>;
+      scores: Array<{ dimension: string; score: number; observableBehaviors: string; trainableGap: boolean; timestamps: string[] }>;
       report: {
         overallScore: number;
         videoEvaluation: {
@@ -1120,14 +1104,14 @@ Acceptance Criteria:
         assessmentId: TEST_ASSESSMENT_IDS.aliceCompleted,
         videoAssessmentId: "test-video-assessment-alice",
         scores: [
-          { dimension: AssessmentDimension.COMMUNICATION, score: 4, observableBehaviors: "Exceptional communicator. Clearly articulated decisions and actively sought feedback from team members.", trainableGap: false, timestamps: ["03:10", "09:20", "22:15"] },
-          { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 3, observableBehaviors: "Solid analytical approach. Methodically traced bugs and verified fixes.", trainableGap: false, timestamps: ["11:00", "25:45"] },
-          { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 4, observableBehaviors: "Deep understanding of React patterns and TypeScript. Applied advanced patterns confidently.", trainableGap: false, timestamps: ["07:30", "19:00", "33:10", "48:00"] },
-          { dimension: AssessmentDimension.COLLABORATION, score: 4, observableBehaviors: "Proactively reached out to multiple team members. Incorporated feedback quickly.", trainableGap: false, timestamps: ["14:00", "29:30", "40:15"] },
-          { dimension: AssessmentDimension.ADAPTABILITY, score: 3, observableBehaviors: "Pivoted smoothly when given additional constraints mid-task.", trainableGap: false, timestamps: ["35:00"] },
-          { dimension: AssessmentDimension.LEADERSHIP, score: 4, observableBehaviors: "Took ownership of decisions and confidently drove the implementation forward.", trainableGap: false, timestamps: ["20:00", "50:00"] },
-          { dimension: AssessmentDimension.CREATIVITY, score: 3, observableBehaviors: "Chose straightforward solutions. Effective but less creative in approach.", trainableGap: true, timestamps: ["1:00:00"] },
-          { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 3, observableBehaviors: "Good pacing. Completed all tasks with time to spare for review.", trainableGap: false, timestamps: ["05:00", "25:00", "50:00"] },
+          { dimension: "communication", score: 4, observableBehaviors: "Exceptional communicator. Clearly articulated decisions and actively sought feedback from team members.", trainableGap: false, timestamps: ["03:10", "09:20", "22:15"] },
+          { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Solid analytical approach. Methodically traced bugs and verified fixes.", trainableGap: false, timestamps: ["11:00", "25:45"] },
+          { dimension: "technical_execution", score: 4, observableBehaviors: "Deep understanding of React patterns and TypeScript. Applied advanced patterns confidently.", trainableGap: false, timestamps: ["07:30", "19:00", "33:10", "48:00"] },
+          { dimension: "collaboration_coachability", score: 4, observableBehaviors: "Proactively reached out to multiple team members. Incorporated feedback quickly.", trainableGap: false, timestamps: ["14:00", "29:30", "40:15"] },
+          { dimension: "practical_maturity", score: 3, observableBehaviors: "Pivoted smoothly when given additional constraints mid-task.", trainableGap: false, timestamps: ["35:00"] },
+          { dimension: "learning_velocity", score: 4, observableBehaviors: "Took ownership of decisions and confidently drove the implementation forward.", trainableGap: false, timestamps: ["20:00", "50:00"] },
+          { dimension: "work_process", score: 3, observableBehaviors: "Chose straightforward solutions. Effective but less creative in approach.", trainableGap: true, timestamps: ["1:00:00"] },
+
         ],
         report: {
           overallScore: 3.5,
@@ -1165,14 +1149,14 @@ Acceptance Criteria:
         assessmentId: TEST_ASSESSMENT_IDS.bobCompleted,
         videoAssessmentId: "test-video-assessment-bob",
         scores: [
-          { dimension: AssessmentDimension.COMMUNICATION, score: 2, observableBehaviors: "Basic communication. Answered questions but did not proactively share updates.", trainableGap: true, timestamps: ["04:00", "18:30"] },
-          { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 2, observableBehaviors: "Trial-and-error approach. Used brute force more than systematic analysis.", trainableGap: true, timestamps: ["13:00", "30:00"] },
-          { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 3, observableBehaviors: "Solid core knowledge. Good understanding of React but gaps in TypeScript generics.", trainableGap: false, timestamps: ["10:00", "24:00", "38:00"] },
-          { dimension: AssessmentDimension.COLLABORATION, score: 2, observableBehaviors: "Minimal collaboration. Worked independently and rarely reached out to team members.", trainableGap: true, timestamps: ["20:00"] },
-          { dimension: AssessmentDimension.ADAPTABILITY, score: 3, observableBehaviors: "Adapted eventually but took time to adjust when requirements changed.", trainableGap: true, timestamps: ["32:00", "45:00"] },
-          { dimension: AssessmentDimension.LEADERSHIP, score: 2, observableBehaviors: "Waited for direction. Did not take ownership of decisions independently.", trainableGap: true, timestamps: [] },
-          { dimension: AssessmentDimension.CREATIVITY, score: 3, observableBehaviors: "Some creative solutions. Found a nice approach to one tricky problem.", trainableGap: false, timestamps: ["55:00", "1:10:00"] },
-          { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 3, observableBehaviors: "Finished on time but rushed toward the end. Could have prioritized better.", trainableGap: true, timestamps: ["15:00", "40:00", "1:05:00"] },
+          { dimension: "communication", score: 2, observableBehaviors: "Basic communication. Answered questions but did not proactively share updates.", trainableGap: true, timestamps: ["04:00", "18:30"] },
+          { dimension: "problem_decomposition_design", score: 2, observableBehaviors: "Trial-and-error approach. Used brute force more than systematic analysis.", trainableGap: true, timestamps: ["13:00", "30:00"] },
+          { dimension: "technical_execution", score: 3, observableBehaviors: "Solid core knowledge. Good understanding of React but gaps in TypeScript generics.", trainableGap: false, timestamps: ["10:00", "24:00", "38:00"] },
+          { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Minimal collaboration. Worked independently and rarely reached out to team members.", trainableGap: true, timestamps: ["20:00"] },
+          { dimension: "practical_maturity", score: 3, observableBehaviors: "Adapted eventually but took time to adjust when requirements changed.", trainableGap: true, timestamps: ["32:00", "45:00"] },
+          { dimension: "learning_velocity", score: 2, observableBehaviors: "Waited for direction. Did not take ownership of decisions independently.", trainableGap: true, timestamps: [] },
+          { dimension: "work_process", score: 3, observableBehaviors: "Some creative solutions. Found a nice approach to one tricky problem.", trainableGap: false, timestamps: ["55:00", "1:10:00"] },
+
         ],
         report: {
           overallScore: 2.5,
@@ -1210,14 +1194,14 @@ Acceptance Criteria:
         assessmentId: TEST_ASSESSMENT_IDS.carlaCompleted,
         videoAssessmentId: "test-video-assessment-carla",
         scores: [
-          { dimension: AssessmentDimension.COMMUNICATION, score: 3, observableBehaviors: "Good communicator. Shared progress regularly and asked thoughtful questions.", trainableGap: false, timestamps: ["02:30", "12:00", "28:00", "42:00"] },
-          { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 3, observableBehaviors: "Structured approach to problems. Drew diagrams and outlined steps before coding.", trainableGap: false, timestamps: ["08:00", "20:00", "38:00"] },
-          { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 3, observableBehaviors: "Good fundamentals. Needed to look up some React hooks and TypeScript generics.", trainableGap: true, timestamps: ["06:00", "16:00", "30:00"] },
-          { dimension: AssessmentDimension.COLLABORATION, score: 4, observableBehaviors: "Outstanding collaborator. Proactively engaged every team member and integrated diverse perspectives.", trainableGap: false, timestamps: ["10:00", "22:00", "35:00", "50:00"] },
-          { dimension: AssessmentDimension.ADAPTABILITY, score: 4, observableBehaviors: "Thrived when requirements changed. Reframed changes as opportunities to improve.", trainableGap: false, timestamps: ["25:00", "40:00"] },
-          { dimension: AssessmentDimension.LEADERSHIP, score: 3, observableBehaviors: "Took initiative and made some decisions confidently while keeping the team aligned.", trainableGap: false, timestamps: ["15:00", "45:00"] },
-          { dimension: AssessmentDimension.CREATIVITY, score: 4, observableBehaviors: "Innovative solutions throughout. Proposed a novel component architecture that simplified the approach.", trainableGap: false, timestamps: ["18:00", "36:00", "52:00"] },
-          { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 2, observableBehaviors: "Spent too long on design phase. Delivered a polished result but barely made the deadline.", trainableGap: true, timestamps: ["10:00", "30:00", "1:10:00"] },
+          { dimension: "communication", score: 3, observableBehaviors: "Good communicator. Shared progress regularly and asked thoughtful questions.", trainableGap: false, timestamps: ["02:30", "12:00", "28:00", "42:00"] },
+          { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Structured approach to problems. Drew diagrams and outlined steps before coding.", trainableGap: false, timestamps: ["08:00", "20:00", "38:00"] },
+          { dimension: "technical_execution", score: 3, observableBehaviors: "Good fundamentals. Needed to look up some React hooks and TypeScript generics.", trainableGap: true, timestamps: ["06:00", "16:00", "30:00"] },
+          { dimension: "collaboration_coachability", score: 4, observableBehaviors: "Outstanding collaborator. Proactively engaged every team member and integrated diverse perspectives.", trainableGap: false, timestamps: ["10:00", "22:00", "35:00", "50:00"] },
+          { dimension: "practical_maturity", score: 4, observableBehaviors: "Thrived when requirements changed. Reframed changes as opportunities to improve.", trainableGap: false, timestamps: ["25:00", "40:00"] },
+          { dimension: "learning_velocity", score: 3, observableBehaviors: "Took initiative and made some decisions confidently while keeping the team aligned.", trainableGap: false, timestamps: ["15:00", "45:00"] },
+          { dimension: "work_process", score: 4, observableBehaviors: "Innovative solutions throughout. Proposed a novel component architecture that simplified the approach.", trainableGap: false, timestamps: ["18:00", "36:00", "52:00"] },
+
         ],
         report: {
           overallScore: 3.25,
@@ -1255,14 +1239,14 @@ Acceptance Criteria:
         assessmentId: TEST_ASSESSMENT_IDS.sarahCompleted,
         videoAssessmentId: "test-video-assessment-sarah",
         scores: [
-          { dimension: AssessmentDimension.COMMUNICATION, score: 4, observableBehaviors: "Exceptional communicator. Proactively shared updates and explained trade-offs clearly.", trainableGap: false, timestamps: ["01:30", "10:00", "25:00", "45:00"] },
-          { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 4, observableBehaviors: "Expert-level problem decomposition. Identified root causes quickly and proposed elegant solutions.", trainableGap: false, timestamps: ["08:00", "18:00", "35:00"] },
-          { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 4, observableBehaviors: "Deep mastery of React, TypeScript, and system design. Applied patterns from first principles.", trainableGap: false, timestamps: ["05:00", "15:00", "30:00", "50:00"] },
-          { dimension: AssessmentDimension.COLLABORATION, score: 3, observableBehaviors: "Engaged team effectively. Built on others' ideas and elevated the conversation.", trainableGap: false, timestamps: ["12:00", "28:00", "42:00"] },
-          { dimension: AssessmentDimension.ADAPTABILITY, score: 4, observableBehaviors: "Thrived under ambiguity. Treated requirement changes as design opportunities.", trainableGap: false, timestamps: ["22:00", "38:00"] },
-          { dimension: AssessmentDimension.LEADERSHIP, score: 4, observableBehaviors: "Natural leader. Made decisive calls and brought the team along.", trainableGap: false, timestamps: ["20:00", "40:00", "55:00"] },
-          { dimension: AssessmentDimension.CREATIVITY, score: 4, observableBehaviors: "Innovative thinker. Proposed a component abstraction that reduced code complexity by 40%.", trainableGap: false, timestamps: ["14:00", "32:00"] },
-          { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 3, observableBehaviors: "Excellent pacing and prioritization. Delivered ahead of schedule with room for polish.", trainableGap: false, timestamps: ["03:00", "20:00", "45:00", "1:05:00"] },
+          { dimension: "communication", score: 4, observableBehaviors: "Exceptional communicator. Proactively shared updates and explained trade-offs clearly.", trainableGap: false, timestamps: ["01:30", "10:00", "25:00", "45:00"] },
+          { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Expert-level problem decomposition. Identified root causes quickly and proposed elegant solutions.", trainableGap: false, timestamps: ["08:00", "18:00", "35:00"] },
+          { dimension: "technical_execution", score: 4, observableBehaviors: "Deep mastery of React, TypeScript, and system design. Applied patterns from first principles.", trainableGap: false, timestamps: ["05:00", "15:00", "30:00", "50:00"] },
+          { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Engaged team effectively. Built on others' ideas and elevated the conversation.", trainableGap: false, timestamps: ["12:00", "28:00", "42:00"] },
+          { dimension: "practical_maturity", score: 4, observableBehaviors: "Thrived under ambiguity. Treated requirement changes as design opportunities.", trainableGap: false, timestamps: ["22:00", "38:00"] },
+          { dimension: "learning_velocity", score: 4, observableBehaviors: "Natural leader. Made decisive calls and brought the team along.", trainableGap: false, timestamps: ["20:00", "40:00", "55:00"] },
+          { dimension: "work_process", score: 4, observableBehaviors: "Innovative thinker. Proposed a component abstraction that reduced code complexity by 40%.", trainableGap: false, timestamps: ["14:00", "32:00"] },
+
         ],
         report: {
           overallScore: 3.75,
@@ -1300,14 +1284,14 @@ Acceptance Criteria:
         assessmentId: TEST_ASSESSMENT_IDS.marcusCompleted,
         videoAssessmentId: "test-video-assessment-marcus",
         scores: [
-          { dimension: AssessmentDimension.COMMUNICATION, score: 2, observableBehaviors: "Communicated when prompted but rarely initiated. Answers were clear but brief.", trainableGap: true, timestamps: ["05:00", "20:00"] },
-          { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 3, observableBehaviors: "Decent problem-solving. Followed a logical approach but missed some optimizations.", trainableGap: false, timestamps: ["10:00", "28:00"] },
-          { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 3, observableBehaviors: "Good working knowledge of React. Comfortable with standard patterns but less confident with advanced TypeScript.", trainableGap: false, timestamps: ["08:00", "22:00", "40:00"] },
-          { dimension: AssessmentDimension.COLLABORATION, score: 2, observableBehaviors: "Limited collaboration. Contacted only one team member and only when explicitly stuck.", trainableGap: true, timestamps: ["25:00"] },
-          { dimension: AssessmentDimension.ADAPTABILITY, score: 3, observableBehaviors: "Handled requirement changes without complaint but didn't leverage them creatively.", trainableGap: false, timestamps: ["30:00"] },
-          { dimension: AssessmentDimension.LEADERSHIP, score: 2, observableBehaviors: "Followed the task description closely. Did not propose alternatives or take ownership beyond requirements.", trainableGap: true, timestamps: [] },
-          { dimension: AssessmentDimension.CREATIVITY, score: 3, observableBehaviors: "Standard solutions. Functional but no novel approaches.", trainableGap: false, timestamps: ["35:00"] },
-          { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 3, observableBehaviors: "Completed on time with reasonable pacing. No major rushes or idle periods.", trainableGap: false, timestamps: ["05:00", "25:00", "50:00"] },
+          { dimension: "communication", score: 2, observableBehaviors: "Communicated when prompted but rarely initiated. Answers were clear but brief.", trainableGap: true, timestamps: ["05:00", "20:00"] },
+          { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Decent problem-solving. Followed a logical approach but missed some optimizations.", trainableGap: false, timestamps: ["10:00", "28:00"] },
+          { dimension: "technical_execution", score: 3, observableBehaviors: "Good working knowledge of React. Comfortable with standard patterns but less confident with advanced TypeScript.", trainableGap: false, timestamps: ["08:00", "22:00", "40:00"] },
+          { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Limited collaboration. Contacted only one team member and only when explicitly stuck.", trainableGap: true, timestamps: ["25:00"] },
+          { dimension: "practical_maturity", score: 3, observableBehaviors: "Handled requirement changes without complaint but didn't leverage them creatively.", trainableGap: false, timestamps: ["30:00"] },
+          { dimension: "learning_velocity", score: 2, observableBehaviors: "Followed the task description closely. Did not propose alternatives or take ownership beyond requirements.", trainableGap: true, timestamps: [] },
+          { dimension: "work_process", score: 3, observableBehaviors: "Standard solutions. Functional but no novel approaches.", trainableGap: false, timestamps: ["35:00"] },
+
         ],
         report: {
           overallScore: 2.6,
@@ -1345,14 +1329,14 @@ Acceptance Criteria:
         assessmentId: TEST_ASSESSMENT_IDS.alexCompleted,
         videoAssessmentId: "test-video-assessment-alex",
         scores: [
-          { dimension: AssessmentDimension.COMMUNICATION, score: 2, observableBehaviors: "Minimal communication. Short replies, no proactive updates, unclear explanations.", trainableGap: true, timestamps: ["10:00"] },
-          { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 2, observableBehaviors: "Struggled to break down the task. Got stuck multiple times without forming hypotheses.", trainableGap: true, timestamps: ["15:00", "35:00"] },
-          { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 2, observableBehaviors: "Basic React knowledge. Struggled with TypeScript types and component patterns.", trainableGap: true, timestamps: ["08:00", "25:00", "45:00"] },
-          { dimension: AssessmentDimension.COLLABORATION, score: 2, observableBehaviors: "Asked for help once but didn't act on the feedback received.", trainableGap: true, timestamps: ["30:00"] },
-          { dimension: AssessmentDimension.ADAPTABILITY, score: 2, observableBehaviors: "Frustrated by requirement changes. Complained about scope and resisted pivoting.", trainableGap: true, timestamps: ["32:00", "48:00"] },
-          { dimension: AssessmentDimension.LEADERSHIP, score: 1, observableBehaviors: "No ownership. Waited for direction on every decision and questioned the task design.", trainableGap: true, timestamps: [] },
-          { dimension: AssessmentDimension.CREATIVITY, score: 2, observableBehaviors: "Copy-pasted patterns without understanding. No original problem-solving.", trainableGap: true, timestamps: ["40:00"] },
-          { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 3, observableBehaviors: "Ran out of time. Delivered incomplete work and missed key acceptance criteria.", trainableGap: true, timestamps: ["20:00", "50:00", "1:15:00"] },
+          { dimension: "communication", score: 2, observableBehaviors: "Minimal communication. Short replies, no proactive updates, unclear explanations.", trainableGap: true, timestamps: ["10:00"] },
+          { dimension: "problem_decomposition_design", score: 2, observableBehaviors: "Struggled to break down the task. Got stuck multiple times without forming hypotheses.", trainableGap: true, timestamps: ["15:00", "35:00"] },
+          { dimension: "technical_execution", score: 2, observableBehaviors: "Basic React knowledge. Struggled with TypeScript types and component patterns.", trainableGap: true, timestamps: ["08:00", "25:00", "45:00"] },
+          { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Asked for help once but didn't act on the feedback received.", trainableGap: true, timestamps: ["30:00"] },
+          { dimension: "practical_maturity", score: 2, observableBehaviors: "Frustrated by requirement changes. Complained about scope and resisted pivoting.", trainableGap: true, timestamps: ["32:00", "48:00"] },
+          { dimension: "learning_velocity", score: 1, observableBehaviors: "No ownership. Waited for direction on every decision and questioned the task design.", trainableGap: true, timestamps: [] },
+          { dimension: "work_process", score: 2, observableBehaviors: "Copy-pasted patterns without understanding. No original problem-solving.", trainableGap: true, timestamps: ["40:00"] },
+
         ],
         report: {
           overallScore: 2.0,
@@ -1390,14 +1374,14 @@ Acceptance Criteria:
         assessmentId: TEST_ASSESSMENT_IDS.matiasCompleted,
         videoAssessmentId: "test-video-assessment-matias",
         scores: [
-          { dimension: AssessmentDimension.COMMUNICATION, score: 1, observableBehaviors: "Almost no communication. Single-word responses, no questions asked.", trainableGap: true, timestamps: ["20:00"] },
-          { dimension: AssessmentDimension.PROBLEM_SOLVING, score: 1, observableBehaviors: "Could not break down the task. Stared at the screen for extended periods without progress.", trainableGap: true, timestamps: ["10:00", "30:00"] },
-          { dimension: AssessmentDimension.TECHNICAL_KNOWLEDGE, score: 1, observableBehaviors: "Fundamental gaps in React and JavaScript. Could not write basic component logic.", trainableGap: true, timestamps: ["05:00", "15:00", "35:00"] },
-          { dimension: AssessmentDimension.COLLABORATION, score: 1, observableBehaviors: "Did not reach out to any team member. Worked in complete isolation.", trainableGap: true, timestamps: [] },
-          { dimension: AssessmentDimension.ADAPTABILITY, score: 1, observableBehaviors: "Could not handle the initial requirements, let alone changes.", trainableGap: true, timestamps: [] },
-          { dimension: AssessmentDimension.LEADERSHIP, score: 1, observableBehaviors: "No decisions made. Appeared overwhelmed and disengaged.", trainableGap: true, timestamps: [] },
-          { dimension: AssessmentDimension.CREATIVITY, score: 1, observableBehaviors: "No meaningful code produced. Could not get past initial setup.", trainableGap: true, timestamps: [] },
-          { dimension: AssessmentDimension.TIME_MANAGEMENT, score: 1, observableBehaviors: "Spent entire time on setup. No deliverable produced.", trainableGap: true, timestamps: ["05:00", "40:00"] },
+          { dimension: "communication", score: 1, observableBehaviors: "Almost no communication. Single-word responses, no questions asked.", trainableGap: true, timestamps: ["20:00"] },
+          { dimension: "problem_decomposition_design", score: 1, observableBehaviors: "Could not break down the task. Stared at the screen for extended periods without progress.", trainableGap: true, timestamps: ["10:00", "30:00"] },
+          { dimension: "technical_execution", score: 1, observableBehaviors: "Fundamental gaps in React and JavaScript. Could not write basic component logic.", trainableGap: true, timestamps: ["05:00", "15:00", "35:00"] },
+          { dimension: "collaboration_coachability", score: 1, observableBehaviors: "Did not reach out to any team member. Worked in complete isolation.", trainableGap: true, timestamps: [] },
+          { dimension: "practical_maturity", score: 1, observableBehaviors: "Could not handle the initial requirements, let alone changes.", trainableGap: true, timestamps: [] },
+          { dimension: "learning_velocity", score: 1, observableBehaviors: "No decisions made. Appeared overwhelmed and disengaged.", trainableGap: true, timestamps: [] },
+          { dimension: "work_process", score: 1, observableBehaviors: "No meaningful code produced. Could not get past initial setup.", trainableGap: true, timestamps: [] },
+
         ],
         report: {
           overallScore: 1.0,

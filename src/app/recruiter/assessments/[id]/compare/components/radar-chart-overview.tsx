@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   RadarChart,
   PolarGrid,
@@ -21,10 +21,42 @@ import { cn } from "@/lib/utils";
 import {
   getInitials,
   getStrengthBadgeStyles,
-  getConfidenceBadgeStyles,
   formatDimensionName,
 } from "./helpers";
 import type { CandidateComparison } from "./types";
+
+// Custom tick renderer that wraps long labels onto multiple lines
+function CustomAngleTick({
+  payload,
+  x,
+  y,
+  textAnchor,
+  ...rest
+}: {
+  payload: { value: string };
+  x: number;
+  y: number;
+  textAnchor: "start" | "end" | "inherit" | "middle" | undefined;
+  [key: string]: unknown;
+}) {
+  const words = payload.value.split(" ");
+  return (
+    <text
+      {...rest}
+      x={x}
+      y={y}
+      textAnchor={textAnchor}
+      fontSize={11}
+      fill="hsl(var(--muted-foreground))"
+    >
+      {words.map((word, i) => (
+        <tspan key={i} x={x} dy={i === 0 ? 0 : 14}>
+          {word}
+        </tspan>
+      ))}
+    </text>
+  );
+}
 
 // Chart colors matching the CSS variables from globals.css
 const CHART_COLORS = [
@@ -34,6 +66,39 @@ const CHART_COLORS = [
   "hsl(43, 74%, 66%)", // chart-4: Yellow
   "hsl(27, 87%, 67%)", // chart-5: Orange-warm
 ];
+
+function SummaryRow({ candidates }: { candidates: CandidateComparison[] }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div
+      className="grid border-t border-stone-200 cursor-pointer hover:bg-stone-50/50 transition-colors"
+      style={{
+        gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
+      }}
+      onClick={() => setExpanded(!expanded)}
+    >
+      <div className="p-4 border-r border-stone-200 flex items-center">
+        <span className="font-medium text-stone-700">Summary</span>
+      </div>
+      {candidates.map((candidate) => (
+        <div
+          key={candidate.assessmentId}
+          className="p-4 border-r border-stone-200 last:border-r-0"
+        >
+          <p
+            className={cn(
+              "text-sm text-stone-600 leading-relaxed",
+              !expanded && "line-clamp-3"
+            )}
+          >
+            {candidate.summary || "No summary available"}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface RadarChartOverviewProps {
   candidates: CandidateComparison[];
@@ -90,13 +155,13 @@ export function RadarChartOverview({
       <div className="px-6 pt-6 pb-2">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[350px]"
+          className="mx-auto aspect-square max-h-[400px]"
         >
-          <RadarChart data={radarData}>
+          <RadarChart data={radarData} outerRadius="65%">
             <PolarGrid stroke="hsl(var(--border))" />
             <PolarAngleAxis
               dataKey="dimension"
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              tick={<CustomAngleTick payload={{ value: "" }} x={0} y={0} textAnchor="middle" />}
             />
             <PolarRadiusAxis
               angle={90}
@@ -124,13 +189,16 @@ export function RadarChartOverview({
         </ChartContainer>
       </div>
 
-      {/* Candidate Overview Cards */}
+      {/* Candidates Row — identity + score + badges */}
       <div
         className="grid border-t border-stone-200"
         style={{
-          gridTemplateColumns: `repeat(${candidates.length}, 1fr)`,
+          gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
         }}
       >
+        <div className="p-4 border-r border-stone-200 flex items-center">
+          <span className="font-medium text-stone-700">Candidates</span>
+        </div>
         {candidates.map((candidate, idx) => {
           const isWinner = winnerIds.has(candidate.assessmentId);
           return (
@@ -198,25 +266,14 @@ export function RadarChartOverview({
                     </span>
                   </Badge>
                 )}
-
-                <Badge
-                  className={cn(
-                    "text-xs",
-                    getConfidenceBadgeStyles(candidate.confidence)
-                  )}
-                >
-                  {candidate.confidence} confidence
-                </Badge>
               </div>
-
-              {/* Summary */}
-              <p className="text-sm text-stone-600 text-center leading-relaxed line-clamp-3">
-                {candidate.summary || "No summary available"}
-              </p>
             </div>
           );
         })}
       </div>
+
+      {/* Summary Row */}
+      <SummaryRow candidates={candidates} />
     </div>
   );
 }

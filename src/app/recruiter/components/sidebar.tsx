@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   FolderOpen,
+  ClipboardCheck,
   PanelLeftClose,
   PanelLeft,
   Plus,
@@ -25,6 +26,7 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
 
   const navItems = [
     { href: "/recruiter/simulations", label: "Simulations", icon: FolderOpen },
+    { href: "/recruiter/assessments", label: "Assessments", icon: ClipboardCheck },
   ];
 
   const isActive = (href: string) => {

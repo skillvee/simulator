@@ -11,7 +11,7 @@
  */
 
 import { db } from "@/server/db";
-import { AssessmentDimension, VideoAssessmentStatus } from "@prisma/client";
+import { VideoAssessmentStatus } from "@prisma/client";
 
 // ============================================================================
 // Types
@@ -21,7 +21,7 @@ import { AssessmentDimension, VideoAssessmentStatus } from "@prisma/client";
  * Percentile result for a single dimension
  */
 export interface DimensionPercentile {
-  dimension: AssessmentDimension;
+  dimension: string;
   score: number;
   percentile: number;
   rank: number; // 1 = highest, n = lowest
@@ -32,8 +32,8 @@ export interface DimensionPercentile {
  * Complete percentile results including all dimensions and overall
  */
 export interface PercentileResult {
-  /** Percentile for each dimension */
-  dimensions: Record<AssessmentDimension, number>;
+  /** Percentile for each dimension (keyed by rubric dimension slug) */
+  dimensions: Record<string, number>;
   /** Overall score percentile */
   overall: number;
   /** Metadata about the calculation */
@@ -117,13 +117,13 @@ export async function calculatePercentiles(
   }
 
   // Build score maps for efficient lookup
-  const targetScoreMap = new Map<AssessmentDimension, number>();
+  const targetScoreMap = new Map<string, number>();
   for (const score of videoAssessment.scores) {
     targetScoreMap.set(score.dimension, score.score);
   }
 
   // Build maps of all scores by dimension
-  const dimensionScoreLists = new Map<AssessmentDimension, number[]>();
+  const dimensionScoreLists = new Map<string, number[]>();
   const overallScores: { assessmentId: string; average: number }[] = [];
 
   for (const assessment of assessmentsWithScores) {
@@ -148,18 +148,13 @@ export async function calculatePercentiles(
     }
   }
 
-  // Calculate percentiles for each dimension
-  const dimensionPercentiles: Record<AssessmentDimension, number> = {} as Record<
-    AssessmentDimension,
-    number
-  >;
+  // Calculate percentiles for each dimension the target assessment was scored on
+  const dimensionPercentiles: Record<string, number> = {};
 
-  for (const dimension of Object.values(AssessmentDimension)) {
-    const targetScore = targetScoreMap.get(dimension);
+  for (const [dimension, targetScore] of targetScoreMap.entries()) {
     const allScores = dimensionScoreLists.get(dimension) ?? [];
 
-    if (targetScore === undefined || allScores.length === 0) {
-      // No score for this dimension - default to 50th percentile
+    if (allScores.length === 0) {
       dimensionPercentiles[dimension] = 50;
       continue;
     }

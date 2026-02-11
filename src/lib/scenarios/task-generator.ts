@@ -1,7 +1,7 @@
 /**
  * Task Generator
  *
- * Auto-generates 2-3 realistic coding task options based on role and company context.
+ * Auto-generates 2-3 realistic work challenge options based on role and company context.
  */
 
 import { gemini } from "@/lib/ai/gemini";
@@ -57,7 +57,7 @@ export type GenerateCodingTaskResponse = {
 };
 
 /**
- * Generate 2-3 realistic coding task options based on role and company context
+ * Generate 2-3 realistic work challenge options based on role and company context
  *
  * Each task option includes:
  * - summary: 1-line description for display
@@ -160,7 +160,7 @@ function buildContextPrompt(input: GenerateCodingTaskInput): string {
 **Key Responsibilities:**
 ${input.keyResponsibilities.map((r) => `- ${r}`).join("\n")}
 
-Now generate 2-3 coding task options for this context.`;
+Now generate 2-3 work challenge options appropriate for this role and context.`;
 }
 
 /**

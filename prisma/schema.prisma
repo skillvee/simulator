@@ -119,6 +119,7 @@ model Coworker {
   name          String
   role          String   // e.g., "Product Manager", "Senior Developer"
   personaStyle  String   @db.Text // Communication style description
+  personality   Json?    // Structured personality dimensions (warmth, helpfulness, etc.)
   knowledge     Json     // Specific knowledge they hold
   avatarUrl     String?
   voiceName     String?  // Gemini Live voice name (e.g., "Orus", "Aoede")
@@ -328,7 +329,7 @@ model VideoAssessment {
 model DimensionScore {
   id                  String              @id @default(cuid())
   assessmentId        String
-  dimension           AssessmentDimension // Dimension enum value
+  dimension           String              // Rubric dimension slug (e.g. "technical_execution", "communication")
   score               Int                 // 1-4 scale (Foundational, Competent, Advanced, Expert)
   confidence          String              @default("medium") // "high" | "medium" | "low"
   observableBehaviors String              @db.Text // Description of observed behaviors

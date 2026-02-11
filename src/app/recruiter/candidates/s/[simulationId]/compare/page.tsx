@@ -12,5 +12,5 @@ export default async function LegacyComparePage({ params, searchParams }: PagePr
   const { simulationId } = await params;
   const { ids } = await searchParams;
   const query = ids ? `?ids=${ids}` : "";
-  redirect(`/recruiter/simulations/${simulationId}/compare${query}`);
+  redirect(`/recruiter/assessments/${simulationId}/compare${query}`);
 }

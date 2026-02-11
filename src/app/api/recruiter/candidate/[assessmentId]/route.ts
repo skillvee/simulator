@@ -4,21 +4,9 @@ import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import type { CodeReviewData } from "@/types";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
+import { getRelativeStrength, type TargetLevel, type RelativeStrength } from "@/lib/rubric/level-expectations";
 
-/**
- * Candidate strength levels based on overall score (1-5 scale)
- */
-type CandidateStrengthLevel = "Exceptional" | "Strong" | "Proficient" | "Developing";
-
-/**
- * Get candidate strength level from overall score
- */
-function getStrengthLevel(overallScore: number): CandidateStrengthLevel {
-  if (overallScore >= 4.5) return "Exceptional";
-  if (overallScore >= 3.5) return "Strong";
-  if (overallScore >= 2.5) return "Proficient";
-  return "Developing";
-}
+type CandidateStrengthLevel = RelativeStrength;
 
 /**
  * Session user interface for type safety
@@ -95,6 +83,7 @@ export async function GET(
         select: {
           id: true,
           createdById: true,
+          targetLevel: true,
         },
       },
       videoAssessment: {
@@ -170,7 +159,7 @@ export async function GET(
       email: assessment.user.email,
     },
     overallScore,
-    strengthLevel: getStrengthLevel(overallScore),
+    strengthLevel: getRelativeStrength(overallScore, (assessment.scenario.targetLevel || "mid") as TargetLevel),
     dimensionScores,
     percentiles,
     videoUrl: videoAssessment?.videoUrl ?? null,

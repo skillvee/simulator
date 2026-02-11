@@ -2,7 +2,7 @@
 // Types for the candidate comparison view
 // ============================================================================
 
-export type CandidateStrengthLevel = "Exceptional" | "Strong" | "Proficient" | "Developing";
+export type CandidateStrengthLevel = "Exceptional" | "Strong" | "Meets expectations" | "Below expectations";
 
 export interface TimestampedBehavior {
   timestamp: string;
@@ -27,12 +27,21 @@ export interface DimensionScoreComparison {
   observableBehaviors: TimestampedBehavior[];
 }
 
+export type AiUsageLevel = "Expert" | "Strong" | "Basic" | "None";
+
+export interface AiUsage {
+  score: number; // 1-4
+  level: AiUsageLevel;
+  behaviors: string[]; // observable behaviors
+}
+
 export interface WorkStyleMetrics {
   totalDurationMinutes: number | null;
   workingPhaseMinutes: number | null;
   coworkersContacted: number;
-  aiToolsUsed: boolean;
-  testsStatus: string;
+  voiceCallMinutes: number;
+  messageWordCount: number;
+  aiUsage: AiUsage;
 }
 
 export interface CandidateComparison {

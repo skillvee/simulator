@@ -1,7 +1,7 @@
 /**
  * POST /api/recruiter/simulations/generate-task
  *
- * Auto-generate 2-3 realistic coding task options based on role and company context.
+ * Auto-generate 2-3 realistic work challenge options based on role and company context.
  * Available to RECRUITER and ADMIN roles only.
  */
 

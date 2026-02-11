@@ -11,7 +11,6 @@ import {
   parseTimestampToSeconds,
   getInitials,
   getStrengthBadgeStyles,
-  getConfidenceBadgeStyles,
 } from "./components/helpers";
 import type {
   CandidateComparison,
@@ -20,7 +19,6 @@ import type {
 import { RadarChartOverview } from "./components/radar-chart-overview";
 import { StrengthsGrowthSection } from "./components/strengths-growth-section";
 import { CoreDimensionsSection } from "./components/core-dimensions-section";
-import { KeyEvidenceSection } from "./components/key-evidence-section";
 import { WorkStyleSection } from "./components/work-style-section";
 import { VideoModal } from "./components/video-modal";
 import { LoadingSkeleton } from "./components/loading-skeleton";
@@ -215,13 +213,6 @@ export function CandidateCompareClient({
                         </span>
                       </Badge>
                     )}
-                    <Badge
-                      className={getConfidenceBadgeStyles(
-                        candidate.confidence
-                      )}
-                    >
-                      {candidate.confidence} confidence
-                    </Badge>
                   </div>
 
                   <p className="text-sm text-stone-600 text-center">
@@ -246,7 +237,7 @@ export function CandidateCompareClient({
           size="sm"
           className="text-stone-600 hover:text-stone-900 -ml-2"
         >
-          <Link href={`/recruiter/simulations/${simulationId}`}>
+          <Link href={`/recruiter/assessments/${simulationId}`}>
             <ChevronLeft className="mr-1.5 h-4 w-4" />
             Back to {simulationName}
           </Link>
@@ -266,11 +257,8 @@ export function CandidateCompareClient({
       {/* Mobile: Tab-based layout */}
       {renderMobileLayout()}
 
-      {/* Strengths & Growth Areas (expanded by default) */}
-      <StrengthsGrowthSection
-        candidates={candidates}
-        defaultExpanded={true}
-      />
+      {/* Strengths & Growth Areas */}
+      <StrengthsGrowthSection candidates={candidates} />
 
       {/* Core Dimensions (collapsed by default) */}
       <CoreDimensionsSection
@@ -278,15 +266,8 @@ export function CandidateCompareClient({
         onTimestampClick={handleTimestampClick}
       />
 
-      {/* Key Evidence (expanded by default) */}
-      <KeyEvidenceSection
-        candidates={candidates}
-        onTimestampClick={handleTimestampClick}
-        defaultExpanded={true}
-      />
-
-      {/* Work Style (collapsed by default) */}
-      <WorkStyleSection candidates={candidates} defaultExpanded={false} />
+      {/* Work Style */}
+      <WorkStyleSection candidates={candidates} />
 
       {/* Video Modal */}
       <VideoModal

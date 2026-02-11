@@ -19,7 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, ArrowRight, Loader2, X, Sparkles, Check, Pencil, Users, Eye, AlertTriangle, GraduationCap } from "lucide-react";
+import { FileText, ArrowRight, Loader2, X, Sparkles, Check, Pencil, Users, Eye, AlertTriangle, GraduationCap, ChevronDown } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
 import type { ParseJDResponse, InferredSeniorityLevel } from "@/types";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
@@ -73,7 +78,7 @@ const GENERATING_STEPS = [
   "Extracting key job description insights...",
   "Identifying required technical skills...",
   "Analyzing seniority expectations...",
-  "Crafting realistic coding challenges...",
+  "Crafting realistic work challenges...",
   "Designing team dynamics and personalities...",
   "Calibrating difficulty to match role level...",
   "Building authentic work scenarios...",
@@ -222,6 +227,7 @@ export function RecruiterScenarioBuilderClient() {
   const [customTaskInput, setCustomTaskInput] = useState("");
   const [saveProgress, setSaveProgress] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [expandedTaskIndex, setExpandedTaskIndex] = useState<number | null>(null);
 
   // Check if parsed JD data has enough usable info to proceed directly to generation.
   // Only require a role name — everything else has robust fallbacks in generatePreviewContent.
@@ -401,8 +407,8 @@ export function RecruiterScenarioBuilderClient() {
 
       // Get task description based on selection
       const taskDescription = previewData.selectedTask.type === "custom"
-        ? previewData.selectedTask.customDescription || "Complete a coding task"
-        : previewData.selectedTask.option?.description || "Complete a coding task";
+        ? previewData.selectedTask.customDescription || "Complete a work challenge"
+        : previewData.selectedTask.option?.description || "Complete a work challenge";
 
       // Step 2: Create scenario (repoUrl omitted - will be set by provisioning)
       const scenarioResponse = await fetch("/api/recruiter/simulations", {
@@ -438,6 +444,7 @@ export function RecruiterScenarioBuilderClient() {
             name: coworker.name,
             role: coworker.role,
             personaStyle: coworker.personaStyle,
+            personality: coworker.personality,
             knowledge: coworker.knowledge,
           }),
         });
@@ -532,7 +539,7 @@ export function RecruiterScenarioBuilderClient() {
       const taskOptions = taskData.taskOptions || [];
 
       // Now generate coworkers with the first task option
-      const taskDescription = taskOptions[0]?.description || "Complete a coding task";
+      const taskDescription = taskOptions[0]?.description || "Complete a work challenge";
 
       const coworkersResponse2 = await fetch("/api/recruiter/simulations/generate-coworkers", {
         method: "POST",
@@ -549,7 +556,8 @@ export function RecruiterScenarioBuilderClient() {
       });
 
       if (!coworkersResponse2.ok) {
-        throw new Error("Failed to generate coworkers");
+        const errorBody = await coworkersResponse2.json().catch(() => ({}));
+        throw new Error(errorBody.message || errorBody.error || "Failed to generate coworkers");
       }
 
       const coworkersData = await coworkersResponse2.json();
@@ -1044,8 +1052,8 @@ We're looking for an experienced frontend developer to join our team. You'll be 
 
     // Get task summary for the candidate experience card
     const taskSummary = previewData.selectedTask?.type === "custom"
-      ? previewData.selectedTask.customDescription || "complete a coding task"
-      : previewData.selectedTask?.option?.summary || "complete a coding task";
+      ? previewData.selectedTask.customDescription || "complete a work challenge"
+      : previewData.selectedTask?.option?.summary || "complete a work challenge";
 
     return (
       <div className="flex h-full flex-col bg-background">
@@ -1054,7 +1062,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
           <div className="mx-auto max-w-6xl">
             <h1 className="text-2xl font-bold">Confirm Your Simulation</h1>
             <p className="text-sm text-muted-foreground">
-              Pick a coding task, then review the auto-generated details
+              Pick a challenge, then review the auto-generated details
             </p>
           </div>
         </div>
@@ -1263,6 +1271,16 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                           <p className="text-xs font-semibold text-muted-foreground">Persona Style</p>
                           <p className="mt-0.5 text-sm">{coworker.personaStyle}</p>
                         </div>
+                        {coworker.personality && (
+                          <div className="flex flex-wrap gap-1.5">
+                            <Badge variant="outline" className="text-[10px]">{coworker.personality.warmth}</Badge>
+                            <Badge variant="outline" className="text-[10px]">{coworker.personality.helpfulness}</Badge>
+                            <Badge variant="outline" className="text-[10px]">{coworker.personality.verbosity}</Badge>
+                            <Badge variant="outline" className="text-[10px]">{coworker.personality.opinionStrength}</Badge>
+                            <Badge variant="outline" className="text-[10px]">{coworker.personality.mood}</Badge>
+                            <Badge variant="outline" className="text-[10px]">{coworker.personality.relationshipDynamic}</Badge>
+                          </div>
+                        )}
                         <div>
                           <p className="text-xs font-semibold text-muted-foreground">Knowledge Items</p>
                           <ul className="mt-1 space-y-1">
@@ -1362,7 +1380,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               <Card className="flex flex-1 flex-col border-primary/30 p-6">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold">Choose a Coding Task</h2>
+                    <h2 className="text-lg font-semibold">Choose a Challenge</h2>
                     {!previewData.selectedTask && (
                       <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 text-[10px]">
                         Required
@@ -1375,7 +1393,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Select the task candidates will work on during the assessment
+                    Select the challenge candidates will work on during the assessment
                   </p>
                 </div>
 
@@ -1403,26 +1421,54 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   }}
                   className="mt-5 space-y-3"
                 >
-                  {previewData.taskOptions.map((task) => (
-                    <div key={task.summary}>
-                      <label
-                        htmlFor={task.summary}
-                        className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors hover:border-primary/40 ${
-                          previewData.selectedTask?.option?.summary === task.summary
-                            ? "border-primary bg-primary/5"
-                            : ""
-                        }`}
-                      >
-                        <RadioGroupItem value={task.summary} id={task.summary} className="mt-0.5" />
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium leading-tight">{task.summary}</p>
-                          <p className="text-xs leading-relaxed text-muted-foreground">
-                            {task.description}
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  ))}
+                  {previewData.taskOptions.map((task, index) => {
+                    const isSelected = previewData.selectedTask?.option?.summary === task.summary;
+                    const isExpanded = expandedTaskIndex === index;
+                    const excerpt = task.description.length > 200
+                      ? task.description.slice(0, 200).replace(/\s+\S*$/, "") + "..."
+                      : task.description;
+
+                    return (
+                      <div key={task.summary}>
+                        <label
+                          htmlFor={task.summary}
+                          className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors hover:border-primary/40 ${
+                            isSelected ? "border-primary bg-primary/5" : ""
+                          }`}
+                        >
+                          <RadioGroupItem value={task.summary} id={task.summary} className="mt-0.5" />
+                          <div className="flex-1 space-y-1.5">
+                            <p className="text-sm font-medium leading-tight">{task.summary}</p>
+                            <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                              {excerpt}
+                            </p>
+                            <Collapsible
+                              open={isExpanded}
+                              onOpenChange={(open) => setExpandedTaskIndex(open ? index : null)}
+                            >
+                              <CollapsibleTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
+                                >
+                                  {isExpanded ? "Hide details" : "Show details"}
+                                  <ChevronDown
+                                    className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                  />
+                                </button>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <div className="mt-2 rounded-md bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground whitespace-pre-line">
+                                  {task.description}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          </div>
+                        </label>
+                      </div>
+                    );
+                  })}
 
                   {/* Write my own */}
                   <div>
@@ -1448,7 +1494,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                               });
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            placeholder="Describe the coding task..."
+                            placeholder="Describe the challenge..."
                             rows={4}
                             className="text-sm"
                           />
@@ -1488,9 +1534,9 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {!isReadyToCreate && !saveError && (
                 <p className="text-sm text-muted-foreground">
                   {!previewData.selectedTask && !hasArchetype
-                    ? "Select a coding task and role archetype to continue"
+                    ? "Select a challenge and role archetype to continue"
                     : !previewData.selectedTask
-                      ? "Select a coding task to continue"
+                      ? "Select a challenge to continue"
                       : "Select a role archetype to continue"}
                 </p>
               )}

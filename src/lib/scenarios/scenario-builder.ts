@@ -8,12 +8,37 @@
 import { z } from "zod";
 
 /**
+ * Schema for structured personality dimensions
+ */
+export const coworkerPersonalitySchema = z.object({
+  warmth: z.enum(["welcoming", "neutral", "guarded"]),
+  helpfulness: z.enum(["generous", "balanced", "requires-justification"]),
+  verbosity: z.enum(["verbose", "moderate", "terse"]),
+  opinionStrength: z.enum(["opinionated", "neutral", "deferring"]),
+  mood: z.enum([
+    "neutral",
+    "stressed-about-deadline",
+    "upbeat-after-launch",
+    "frustrated-with-unrelated-thing",
+    "focused-and-busy",
+  ]),
+  relationshipDynamic: z.enum([
+    "mentoring",
+    "peer-collaborative",
+    "slightly-territorial",
+    "indifferent",
+  ]),
+  petPeeves: z.array(z.string()).min(1).max(2),
+});
+
+/**
  * Schema for a single coworker in the builder
  */
 export const coworkerBuilderSchema = z.object({
   name: z.string().min(1),
   role: z.string().min(1),
   personaStyle: z.string().min(1),
+  personality: coworkerPersonalitySchema.optional(),
   knowledge: z.array(
     z.object({
       topic: z.string(),

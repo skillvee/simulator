@@ -342,7 +342,7 @@ export async function evaluateVideo(
       parsed_dimension_count: dimensionCount,
     });
 
-    // Store results
+    // Store results — use rubric dimension slugs directly as the dimension key
     const dimensionScores = new Map<string, number | null>();
     for (const dimScore of evaluation.dimensionScores) {
       dimensionScores.set(dimScore.dimensionSlug, dimScore.score);
@@ -351,7 +351,6 @@ export async function evaluateVideo(
     await db.$transaction(async (tx) => {
       for (const dimScore of evaluation.dimensionScores) {
         if (dimScore.score !== null) {
-          // Serialize observable behaviors as JSON string for storage
           const behaviorsText = JSON.stringify(dimScore.observableBehaviors);
           await tx.dimensionScore.upsert({
             where: {

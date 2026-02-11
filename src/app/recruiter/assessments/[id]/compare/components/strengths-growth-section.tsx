@@ -1,36 +1,22 @@
-"use client";
-
-import { useState } from "react";
-import { ChevronDown, ChevronRight, CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { formatDimensionName } from "./helpers";
 import type { CandidateComparison } from "./types";
 
 interface StrengthsGrowthSectionProps {
   candidates: CandidateComparison[];
-  defaultExpanded?: boolean;
 }
 
-export function StrengthsGrowthSection({ candidates, defaultExpanded = true }: StrengthsGrowthSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+export function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionProps) {
 
   return (
     <div className="border-b border-stone-200 bg-white">
-      <div
-        className="px-6 py-4 border-b border-stone-200 flex items-center justify-between cursor-pointer hover:bg-stone-50 transition-colors"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
-          {isExpanded ? (
-            <ChevronDown className="h-5 w-5 text-stone-400" />
-          ) : (
-            <ChevronRight className="h-5 w-5 text-stone-400" />
-          )}
+      <div className="px-6 py-4 border-b border-stone-200">
+        <h2 className="text-lg font-semibold text-stone-900">
           Strengths & Growth Areas
         </h2>
       </div>
 
-      {isExpanded && (
-        <div>
+      <div>
           {/* Top Strengths Row */}
           <div
             className="grid border-b border-stone-200"
@@ -107,7 +93,6 @@ export function StrengthsGrowthSection({ candidates, defaultExpanded = true }: S
             ))}
           </div>
         </div>
-      )}
     </div>
   );
 }

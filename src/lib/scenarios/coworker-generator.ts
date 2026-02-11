@@ -168,6 +168,12 @@ Now generate 2-3 coworkers for this context.`;
 function cleanJsonResponse(text: string): string {
   // Remove markdown fences (both ```json and ``` variants)
   let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  // Extract the JSON array — find the outermost [ ... ] to discard trailing text
+  const start = cleaned.indexOf("[");
+  const end = cleaned.lastIndexOf("]");
+  if (start !== -1 && end !== -1 && end > start) {
+    cleaned = cleaned.slice(start, end + 1);
+  }
   // Trim whitespace
   return cleaned.trim();
 }

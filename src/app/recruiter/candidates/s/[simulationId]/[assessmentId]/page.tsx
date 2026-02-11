@@ -9,5 +9,5 @@ interface PageProps {
  */
 export default async function LegacyCandidateDetailPage({ params }: PageProps) {
   const { simulationId, assessmentId } = await params;
-  redirect(`/recruiter/simulations/${simulationId}/candidates/${assessmentId}`);
+  redirect(`/recruiter/assessments/${simulationId}/candidates/${assessmentId}`);
 }

@@ -147,7 +147,7 @@ function ScreenRecordingGuardInner({
                   <div>
                     <span className="font-semibold">Screen Recording</span>
                     <p className="text-sm text-muted-foreground">
-                      Your screen will be recorded during the coding task
+                      Your screen will be recorded during the work session
                     </p>
                   </div>
                 </li>

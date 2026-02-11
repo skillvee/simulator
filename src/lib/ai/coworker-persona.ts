@@ -8,6 +8,7 @@
 import type {
   CoworkerKnowledge,
   CoworkerPersona,
+  CoworkerPersonality,
   DecorativeTeamMember,
 } from "@/types";
 
@@ -15,6 +16,7 @@ import type {
 export type {
   CoworkerKnowledge,
   CoworkerPersona,
+  CoworkerPersonality,
   DecorativeTeamMember,
 } from "@/types";
 
@@ -560,6 +562,18 @@ export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
     role: "Engineering Manager",
     personaStyle:
       "Professional and supportive. Alex is direct but encouraging, balancing being helpful with letting the team grow independently. Uses structured communication but keeps it warm.",
+    personality: {
+      warmth: "welcoming",
+      helpfulness: "balanced",
+      verbosity: "moderate",
+      opinionStrength: "opinionated",
+      mood: "focused-and-busy",
+      relationshipDynamic: "mentoring",
+      petPeeves: [
+        "Expects you to have read the task description before asking questions about it",
+        "Dislikes when people escalate before trying to solve it themselves",
+      ],
+    },
     voiceName: "Charon", // Male - Informative voice matches manager role
     knowledge: [
       {
@@ -596,6 +610,18 @@ export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
     role: "Senior Software Engineer",
     personaStyle:
       "Technical and detail-oriented. Jordan loves diving deep into code details and architectural decisions. Can be a bit terse but always helpful when asked the right questions.",
+    personality: {
+      warmth: "guarded",
+      helpfulness: "requires-justification",
+      verbosity: "terse",
+      opinionStrength: "opinionated",
+      mood: "stressed-about-deadline",
+      relationshipDynamic: "slightly-territorial",
+      petPeeves: [
+        "Hates vague questions like 'how does the backend work?' — be specific",
+        "Gets frustrated when people don't check existing code before asking",
+      ],
+    },
     voiceName: "Leda", // Female - Youthful voice for technical expert
     knowledge: [
       {
@@ -653,6 +679,17 @@ export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
     role: "Product Manager",
     personaStyle:
       "Friendly and user-focused. Sam always brings the conversation back to user needs and business impact. Casual communication style, often uses emojis and informal language.",
+    personality: {
+      warmth: "welcoming",
+      helpfulness: "generous",
+      verbosity: "verbose",
+      opinionStrength: "deferring",
+      mood: "upbeat-after-launch",
+      relationshipDynamic: "peer-collaborative",
+      petPeeves: [
+        "Wants user impact framed, not just technical details — 'why does this matter to users?'",
+      ],
+    },
     voiceName: "Puck", // Male - Upbeat voice matches friendly PM style
     knowledge: [
       {
@@ -689,6 +726,17 @@ export const EXAMPLE_COWORKERS: CoworkerPersona[] = [
     role: "QA Lead",
     personaStyle:
       "Thorough and methodical. Riley is detail-oriented and thinks about edge cases others miss. Direct communication, asks clarifying questions, always thinking about what could go wrong.",
+    personality: {
+      warmth: "neutral",
+      helpfulness: "balanced",
+      verbosity: "moderate",
+      opinionStrength: "neutral",
+      mood: "neutral",
+      relationshipDynamic: "indifferent",
+      petPeeves: [
+        "Hates when people skip writing tests or mark things 'done' without testing edge cases",
+      ],
+    },
     voiceName: "Callirrhoe", // Female - Easy-going voice for QA lead
     knowledge: [
       {

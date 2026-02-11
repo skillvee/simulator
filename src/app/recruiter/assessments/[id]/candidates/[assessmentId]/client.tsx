@@ -19,7 +19,7 @@ import type { CodeReviewData } from "@/types";
 /**
  * Candidate strength levels
  */
-type CandidateStrengthLevel = "Exceptional" | "Strong" | "Proficient" | "Developing";
+type CandidateStrengthLevel = "Exceptional" | "Strong" | "Meets expectations" | "Below expectations";
 
 /**
  * Dimension score data from API
@@ -67,10 +67,10 @@ function getStrengthBadgeStyles(level: CandidateStrengthLevel): string {
       return "bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 border-0";
     case "Strong":
       return "bg-green-100 text-green-700 border-0";
-    case "Proficient":
-      return "bg-blue-100 text-blue-700 border-0";
-    case "Developing":
-      return "bg-stone-100 text-stone-600 border-0";
+    case "Meets expectations":
+      return "bg-stone-100 text-stone-700 border-0";
+    case "Below expectations":
+      return "bg-red-100 text-red-800 border-0";
   }
 }
 
@@ -152,7 +152,7 @@ function ForbiddenError() {
         This may be because the assessment belongs to a different recruiter.
       </p>
       <Button asChild className="bg-blue-600 hover:bg-blue-700">
-        <Link href="/recruiter/simulations">Back to Candidates</Link>
+        <Link href="/recruiter/assessments">Back to Candidates</Link>
       </Button>
     </div>
   );
@@ -207,7 +207,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           An error occurred while fetching the assessment details.
         </p>
         <Button asChild variant="outline">
-          <Link href="/recruiter/simulations">Back to Candidates</Link>
+          <Link href="/recruiter/assessments">Back to Candidates</Link>
         </Button>
       </div>
     );
@@ -228,7 +228,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
       {/* Header */}
       <div className="mb-6">
         <Link
-          href={`/recruiter/simulations/${simulationId}`}
+          href={`/recruiter/assessments/${simulationId}`}
           className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -257,7 +257,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           </div>
 
           <Button asChild variant="outline" className="border-stone-200">
-            <Link href={`/recruiter/simulations/${simulationId}/compare?ids=${assessmentId}`}>
+            <Link href={`/recruiter/assessments/${simulationId}/compare?ids=${assessmentId}`}>
               <Users className="mr-2 h-4 w-4" />
               Compare with others
             </Link>
