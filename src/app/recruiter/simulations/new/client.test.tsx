@@ -51,6 +51,7 @@ describe("Simulation Save Flow (US-011)", () => {
           type: "generated" as const,
           option: {
             summary: "Build a REST API",
+            recruiterSummary: "The candidate builds a REST API with authentication and authorization.",
             description: "Create a REST API with authentication",
           },
         },
@@ -291,6 +292,7 @@ describe("Simulation Save Flow (US-011)", () => {
           type: "generated" as const,
           option: {
             summary: "Implement caching",
+            recruiterSummary: "The candidate implements Redis caching for API performance optimization.",
             description: "Add Redis caching to the API endpoints",
           },
         },

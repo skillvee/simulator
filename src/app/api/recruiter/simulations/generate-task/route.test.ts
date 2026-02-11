@@ -25,11 +25,15 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
   const mockTaskOptions: TaskOption[] = [
     {
       summary: "Build a transaction webhook handler with retry logic",
+      recruiterSummary:
+        "The candidate investigates a 5% webhook event drop rate, designs retry logic with idempotency, and collaborates with DevOps and product stakeholders.",
       description:
         "Hey! So we need to handle incoming webhooks from our payment processor. When a transaction completes, fails, or is refunded, we get a POST to our endpoint. Right now we're dropping about 5% of these — the team's been complaining. We need a reliable handler with proper retry logic, idempotency, and status tracking. Check with DevOps about our current infrastructure and ask the product team about which transaction states matter most.",
     },
     {
       summary: "Add real-time notifications for payment failures",
+      recruiterSummary:
+        "The candidate builds an email and in-app notification system for failed payments, coordinating with product on event triggers and DevOps on email service constraints.",
       description:
         "We've had a few enterprise customers complain that they don't know when payments fail until they check the dashboard manually. Not great. Can you add a notification system that alerts users in real-time when a payment fails? We're thinking email + in-app notifications, but talk to the product manager about exactly which events to notify on. The design team has some mockups for the in-app UI.",
     },
@@ -38,7 +42,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
   const mockResponse: GenerateCodingTaskResponse = {
     taskOptions: mockTaskOptions,
     _meta: {
-      promptVersion: "1.0",
+      promptVersion: "1.1",
       generatedAt: "2026-02-06T00:00:00.000Z",
     },
   };
@@ -120,7 +124,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
 
     expect(response.status).toBe(200);
     expect(data.taskOptions).toHaveLength(2);
-    expect(data._meta.promptVersion).toBe("1.0");
+    expect(data._meta.promptVersion).toBe("1.1");
   });
 
   it("allows ADMIN role", async () => {
@@ -324,7 +328,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
       "Build a transaction webhook handler with retry logic"
     );
     expect(data.taskOptions[0].description).toContain("webhook");
-    expect(data._meta.promptVersion).toBe("1.0");
+    expect(data._meta.promptVersion).toBe("1.1");
     expect(data._meta.generatedAt).toBeDefined();
 
     // Verify generateCodingTask was called with correct input

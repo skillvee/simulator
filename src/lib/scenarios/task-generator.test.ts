@@ -36,16 +36,22 @@ describe("generateCodingTask", () => {
   const mockTaskOptions: TaskOption[] = [
     {
       summary: "Build a transaction webhook handler with retry logic",
+      recruiterSummary:
+        "The candidate investigates a 5% webhook event drop rate, designs retry logic with idempotency, and collaborates with DevOps and product stakeholders.",
       description:
         "Hey! So we need to handle incoming webhooks from our payment processor. When a transaction completes, fails, or is refunded, we get a POST to our endpoint. Right now we're dropping about 5% of these — the team's been complaining. We need a reliable handler with proper retry logic, idempotency, and status tracking. Check with DevOps about our current infrastructure and ask the product team about which transaction states matter most.",
     },
     {
       summary: "Add real-time notifications for payment failures",
+      recruiterSummary:
+        "The candidate builds an email and in-app notification system for failed payments, coordinating with product on event triggers and DevOps on email service constraints.",
       description:
         "We've had a few enterprise customers complain that they don't know when payments fail until they check the dashboard manually. Not great. Can you add a notification system that alerts users in real-time when a payment fails? We're thinking email + in-app notifications, but talk to the product manager about exactly which events to notify on. The design team has some mockups for the in-app UI. Also check with the DevOps engineer about our email service setup.",
     },
     {
       summary: "Implement idempotency for payment API endpoints",
+      recruiterSummary:
+        "The candidate solves a duplicate payment charging issue by implementing request idempotency, requiring architectural decisions around caching strategy.",
       description:
         "So we've got an issue where if a user's connection drops mid-payment, they sometimes retry and we charge them twice. Yikes. We need to add idempotency to the payment endpoints so duplicate requests get deduplicated. The backend is Node.js + Postgres. Talk to the senior engineer about how we're currently handling request IDs and whether we should use Redis or just database-level checks. This is blocking a big customer, so timeline matters.",
     },
@@ -67,7 +73,7 @@ describe("generateCodingTask", () => {
       "Build a transaction webhook handler with retry logic"
     );
     expect(result.taskOptions[0].description).toContain("webhook");
-    expect(result._meta.promptVersion).toBe("1.0");
+    expect(result._meta.promptVersion).toBe("1.1");
     expect(result._meta.generatedAt).toBeDefined();
   });
 
@@ -160,6 +166,7 @@ describe("generateCodingTask", () => {
         ...mockTaskOptions,
         {
           summary: "Extra task",
+          recruiterSummary: "An extra task for testing purposes.",
           description: "This is a fourth task that shouldn't be here.",
         },
       ],
@@ -179,11 +186,12 @@ describe("generateCodingTask", () => {
       taskOptions: [
         {
           summary: "Valid task",
+          recruiterSummary: "A valid recruiter summary for testing.",
           description: "This is a valid task description that is long enough.",
         },
         {
           summary: "Invalid task",
-          // Missing description
+          // Missing description and recruiterSummary
         },
       ],
     };
@@ -202,6 +210,7 @@ describe("generateCodingTask", () => {
       taskOptions: [
         {
           summary: "Task with short description",
+          recruiterSummary: "A task with a short description for testing.",
           description: "Too short",
         },
         mockTaskOptions[0],
@@ -223,6 +232,7 @@ describe("generateCodingTask", () => {
         {
           summary:
             "This is an extremely long summary that goes way beyond the reasonable one-line limit and should be rejected by validation",
+          recruiterSummary: "A task with a long summary for testing validation.",
           description:
             "This is a valid description that is long enough to pass validation checks and provides meaningful context.",
         },

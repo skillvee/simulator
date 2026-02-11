@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   parseTimestampToSeconds,
@@ -99,7 +99,7 @@ export function CandidateCompareClient({
 
   // Find winner(s) for overall score
   const winnerIds = useMemo(() => {
-    if (!candidates || candidates.length === 0) return new Set<string>();
+    if (!candidates || candidates.length <= 1) return new Set<string>();
     const maxScore = Math.max(...candidates.map((c) => c.overallScore));
     return new Set(
       candidates
@@ -141,96 +141,100 @@ export function CandidateCompareClient({
     return <ErrorState error={error?.message ?? "Unknown error"} />;
   }
 
+  const isSingle = candidates.length === 1;
   const showPercentiles = totalCandidatesInSimulation >= 10;
 
-  // Mobile layout — tabs for each candidate
-  const renderMobileLayout = () => (
-    <div className="md:hidden">
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <div className="sticky top-0 z-50 bg-white border-b border-stone-200">
-          <TabsList
-            className="w-full grid"
-            style={{
-              gridTemplateColumns: `repeat(${candidates.length}, 1fr)`,
-            }}
-          >
-            {candidates.map((candidate, index) => (
-              <TabsTrigger
-                key={candidate.assessmentId}
-                value={String(index)}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
-                    {getInitials(candidate.candidateName)}
-                  </div>
-                  <span className="text-xs truncate max-w-[80px]">
-                    {candidate.candidateName || "Anonymous"}
-                  </span>
-                </div>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-
-        {candidates.map((candidate, index) => {
-          const isWinner = winnerIds.has(candidate.assessmentId);
-          return (
-            <TabsContent key={candidate.assessmentId} value={String(index)}>
-              <div className={cn("p-6", isWinner && "bg-blue-50/50")}>
-                <div className="flex flex-col items-center gap-4">
-                  <div
-                    className={cn(
-                      "h-32 w-32 rounded-full flex items-center justify-center border-4",
-                      isWinner
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-stone-200 bg-stone-50"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "text-4xl font-bold",
-                        isWinner ? "text-blue-600" : "text-stone-900"
-                      )}
-                    >
-                      {candidate.overallScore.toFixed(1)}
+  // Mobile layout — tabs for each candidate (multi-candidate only)
+  const renderMobileLayout = () => {
+    if (isSingle) return null;
+    return (
+      <div className="md:hidden">
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <div className="sticky top-0 z-50 bg-white border-b border-stone-200">
+            <TabsList
+              className="w-full grid"
+              style={{
+                gridTemplateColumns: `repeat(${candidates.length}, 1fr)`,
+              }}
+            >
+              {candidates.map((candidate, index) => (
+                <TabsTrigger
+                  key={candidate.assessmentId}
+                  value={String(index)}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                      {getInitials(candidate.candidateName)}
+                    </div>
+                    <span className="text-xs truncate max-w-[80px]">
+                      {candidate.candidateName || "Anonymous"}
                     </span>
                   </div>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-                  <div className="flex flex-col items-center gap-2 w-full">
-                    <Badge
-                      className={getStrengthBadgeStyles(
-                        candidate.strengthLevel
+          {candidates.map((candidate, index) => {
+            const isWinner = winnerIds.has(candidate.assessmentId);
+            return (
+              <TabsContent key={candidate.assessmentId} value={String(index)}>
+                <div className={cn("p-6", isWinner && "bg-blue-50/50")}>
+                  <div className="flex flex-col items-center gap-4">
+                    <div
+                      className={cn(
+                        "h-32 w-32 rounded-full flex items-center justify-center border-4",
+                        isWinner
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-stone-200 bg-stone-50"
                       )}
                     >
-                      {candidate.strengthLevel}
-                    </Badge>
-                    {showPercentiles && (
-                      <Badge variant="outline" className="text-xs">
-                        Top{" "}
-                        {Math.round(100 - candidate.overallPercentile)}%
-                        <span className="text-stone-400 ml-1">
-                          of {totalCandidatesInSimulation}
-                        </span>
-                      </Badge>
-                    )}
-                  </div>
+                      <span
+                        className={cn(
+                          "text-4xl font-bold",
+                          isWinner ? "text-blue-600" : "text-stone-900"
+                        )}
+                      >
+                        {candidate.overallScore.toFixed(1)}
+                      </span>
+                    </div>
 
-                  <p className="text-sm text-stone-600 text-center">
-                    {candidate.summary || "No summary available"}
-                  </p>
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      <Badge
+                        className={getStrengthBadgeStyles(
+                          candidate.strengthLevel
+                        )}
+                      >
+                        {candidate.strengthLevel}
+                      </Badge>
+                      {showPercentiles && (
+                        <Badge variant="outline" className="text-xs">
+                          Top{" "}
+                          {Math.round(100 - candidate.overallPercentile)}%
+                          <span className="text-stone-400 ml-1">
+                            of {totalCandidatesInSimulation}
+                          </span>
+                        </Badge>
+                      )}
+                    </div>
+
+                    <p className="text-sm text-stone-600 text-center">
+                      {candidate.summary || "No summary available"}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </TabsContent>
-          );
-        })}
-      </Tabs>
-    </div>
-  );
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white">
       {/* Back Link */}
-      <div className="px-6 py-4 border-b border-stone-200">
+      <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
         <Button
           asChild
           variant="ghost"
@@ -242,19 +246,37 @@ export function CandidateCompareClient({
             Back to {simulationName}
           </Link>
         </Button>
+
+        {isSingle && (
+          <Button asChild variant="outline" size="sm" className="border-stone-200">
+            <Link href={`/recruiter/assessments/${simulationId}`}>
+              <Users className="mr-1.5 h-4 w-4" />
+              Compare with others
+            </Link>
+          </Button>
+        )}
       </div>
 
-      {/* Desktop: Radar Chart + Overview */}
-      <div className="hidden md:block">
+      {/* Radar Chart + Overview — always visible for single, desktop-only for multi */}
+      {isSingle ? (
         <RadarChartOverview
           candidates={candidates}
           winnerIds={winnerIds}
           showPercentiles={showPercentiles}
           totalCandidatesInSimulation={totalCandidatesInSimulation}
         />
-      </div>
+      ) : (
+        <div className="hidden md:block">
+          <RadarChartOverview
+            candidates={candidates}
+            winnerIds={winnerIds}
+            showPercentiles={showPercentiles}
+            totalCandidatesInSimulation={totalCandidatesInSimulation}
+          />
+        </div>
+      )}
 
-      {/* Mobile: Tab-based layout */}
+      {/* Mobile: Tab-based layout (multi-candidate only) */}
       {renderMobileLayout()}
 
       {/* Strengths & Growth Areas */}

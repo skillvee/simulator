@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  Play,
   MessageSquare,
   Brain,
   Users,
@@ -31,21 +30,21 @@ const timelineSteps = [
         title: "Gather Requirements",
         description: "Candidate joins a kickoff call with their AI manager, then chats with stakeholders to clarify the task. Great candidates ask smart questions. Others dive in blind. You'll see the difference.",
         tags: ["Manager kickoff", "Stakeholder chat"],
-        image: "manager_call"
+        video: "/videos/product-step1.mp4"
     },
     {
         icon: Code,
         title: "Do the Actual Work",
         description: "Build the feature, analyze the data, create the roadmap—whatever the role requires. Screen is recorded. AI tools are encouraged. We want to see how they really work.",
         tags: ["Screen recorded", "AI tools allowed", "~20-30 minutes"],
-        image: "coding"
+        video: "/videos/product-step2.mp4"
     },
     {
         icon: MessageSquare,
         title: "Present and Defend",
         description: "Submit the work and face questions. The AI pushes back on decisions. Do they defend good ideas? Accept valid criticism? Fold at the first sign of disagreement?",
         tags: ["Voice call", "Challenging questions"],
-        image: "pr_defense"
+        video: "/videos/product-step3.mp4"
     }
 ];
 
@@ -209,16 +208,16 @@ export default function ProductPage() {
                 {/* Ambient glow effect */}
                 <div className="absolute -inset-2 bg-gradient-to-r from-primary/30 via-primary/10 to-primary/30 blur-2xl opacity-60" />
 
-                <div className="relative aspect-video bg-slate-900 flex items-center justify-center group cursor-pointer">
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div className="w-20 h-20 bg-white/90 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      <Play className="w-8 h-8 text-primary ml-1" />
-                    </div>
-                    <p className="text-slate-300 mt-4 font-medium">
-                      Watch 2-minute product demo
-                    </p>
-                  </div>
+                <div className="relative aspect-video bg-slate-900 overflow-hidden">
+                  <video
+                    className="absolute inset-0 w-full h-full object-cover"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                  >
+                    <source src="/videos/product-demo.mp4" type="video/mp4" />
+                  </video>
 
                   {/* Subtle edge vignette to lift video from background */}
                   <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none" />
@@ -266,8 +265,17 @@ export default function ProductPage() {
                             transition={{ duration: 0.3 }}
                             className="bg-white rounded-2xl border border-slate-200 p-8"
                         >
-                            <div className="aspect-[16/9] bg-gradient-to-br from-primary/5 to-white rounded-lg flex items-center justify-center mb-6">
-                                <p className="text-slate-400 text-sm">Image: {timelineSteps[activeStep].image}</p>
+                            <div className="aspect-[16/9] rounded-lg overflow-hidden mb-6 bg-slate-900">
+                                <video
+                                    key={timelineSteps[activeStep].video}
+                                    className="w-full h-full object-cover"
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                >
+                                    <source src={timelineSteps[activeStep].video} type="video/mp4" />
+                                </video>
                             </div>
                             <h3 className="text-2xl font-bold text-slate-900 mb-4">{timelineSteps[activeStep].title}</h3>
                             <p className="text-slate-600 mb-6">{timelineSteps[activeStep].description}</p>

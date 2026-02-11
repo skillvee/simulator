@@ -6,6 +6,7 @@ interface WorkStyleSectionProps {
 }
 
 export function WorkStyleSection({ candidates }: WorkStyleSectionProps) {
+  const isSingle = candidates.length === 1;
 
   const formatDuration = (minutes: number | null): string => {
     if (minutes === null) return "\u2014";
@@ -53,6 +54,52 @@ export function WorkStyleSection({ candidates }: WorkStyleSectionProps) {
     },
   ];
 
+  // Single candidate: horizontal key-value layout
+  if (isSingle) {
+    const candidate = candidates[0];
+    const { aiUsage } = candidate.metrics;
+
+    return (
+      <div className="border-b border-stone-200 bg-white">
+        <div className="px-6 py-4 border-b border-stone-200">
+          <h2 className="text-lg font-semibold text-stone-900">Work Style</h2>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4">
+            {metricRows.map((row) => (
+              <div key={row.label}>
+                <p className="text-xs font-medium text-stone-500 mb-0.5">{row.label}</p>
+                <p className="text-sm font-medium text-stone-900">{row.getValue(candidate)}</p>
+              </div>
+            ))}
+
+            {/* AI Usage */}
+            <div className="col-span-2 md:col-span-3 pt-2 border-t border-stone-100">
+              <p className="text-xs font-medium text-stone-500 mb-1">AI Usage</p>
+              <div className="flex items-center gap-2 mb-1">
+                <span className={cn("text-sm font-semibold", getAiUsageColor(aiUsage.level))}>
+                  {aiUsage.level}
+                </span>
+                <span className="text-xs text-stone-400">({aiUsage.score}/4)</span>
+              </div>
+              {aiUsage.behaviors.length > 0 && (
+                <ul className="space-y-1 mt-1">
+                  {aiUsage.behaviors.map((behavior, idx) => (
+                    <li key={idx} className="text-xs text-stone-500 leading-snug">
+                      {behavior}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Multi-candidate grid layout (original)
   return (
     <div className="border-b border-stone-200 bg-white">
       <div className="px-6 py-4 border-b border-stone-200">

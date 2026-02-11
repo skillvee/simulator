@@ -69,6 +69,17 @@ const CHART_COLORS = [
 
 function SummaryRow({ candidates }: { candidates: CandidateComparison[] }) {
   const [expanded, setExpanded] = useState(false);
+  const isSingle = candidates.length === 1;
+
+  if (isSingle) {
+    return (
+      <div className="border-t border-stone-200 px-6 py-4">
+        <p className="text-sm text-stone-600 leading-relaxed">
+          {candidates[0].summary || "No summary available"}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -113,6 +124,8 @@ export function RadarChartOverview({
   showPercentiles,
   totalCandidatesInSimulation,
 }: RadarChartOverviewProps) {
+  const isSingle = candidates.length === 1;
+
   // Transform data for radar chart
   const radarData = useMemo(() => {
     const allDimensions = new Set<string>();
@@ -143,12 +156,95 @@ export function RadarChartOverview({
     candidates.forEach((c, idx) => {
       config[`candidate${idx}`] = {
         label: c.candidateName || `Candidate ${idx + 1}`,
-        color: CHART_COLORS[idx % CHART_COLORS.length],
+        color: isSingle ? "hsl(221, 83%, 53%)" : CHART_COLORS[idx % CHART_COLORS.length],
       };
     });
     return config;
-  }, [candidates]);
+  }, [candidates, isSingle]);
 
+  // Single candidate: side-by-side layout with radar + info
+  if (isSingle) {
+    const candidate = candidates[0];
+    return (
+      <div className="border-b border-stone-200 bg-white">
+        <div className="flex flex-col md:flex-row">
+          {/* Radar Chart */}
+          <div className="flex-1 px-6 pt-6 pb-2">
+            <ChartContainer
+              config={chartConfig}
+              className="mx-auto aspect-square max-h-[350px]"
+            >
+              <RadarChart data={radarData} outerRadius="65%">
+                <PolarGrid stroke="hsl(var(--border))" />
+                <PolarAngleAxis
+                  dataKey="dimension"
+                  tick={<CustomAngleTick payload={{ value: "" }} x={0} y={0} textAnchor="middle" />}
+                />
+                <PolarRadiusAxis
+                  angle={90}
+                  domain={[0, 4]}
+                  tickCount={5}
+                  tick={{ fontSize: 10 }}
+                />
+                <Radar
+                  name={candidate.candidateName || "Candidate"}
+                  dataKey="candidate0"
+                  stroke="var(--color-candidate0)"
+                  fill="var(--color-candidate0)"
+                  fillOpacity={0.15}
+                  strokeWidth={2}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+              </RadarChart>
+            </ChartContainer>
+          </div>
+
+          {/* Candidate Info */}
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 md:border-l md:border-stone-200">
+            {/* Avatar + Name */}
+            <div className="flex items-center gap-3">
+              <div
+                className="h-12 w-12 rounded-full flex items-center justify-center text-white font-semibold text-base"
+                style={{ backgroundColor: "hsl(221, 83%, 53%)" }}
+              >
+                {getInitials(candidate.candidateName)}
+              </div>
+              <span className="text-xl font-semibold text-stone-900">
+                {candidate.candidateName || "Anonymous"}
+              </span>
+            </div>
+
+            {/* Score Circle */}
+            <div className="h-24 w-24 rounded-full flex items-center justify-center border-4 border-blue-600 bg-blue-50">
+              <span className="text-3xl font-bold text-blue-600">
+                {candidate.overallScore.toFixed(1)}
+              </span>
+            </div>
+
+            {/* Badges */}
+            <div className="flex flex-col items-center gap-2">
+              <Badge className={getStrengthBadgeStyles(candidate.strengthLevel)}>
+                {candidate.strengthLevel}
+              </Badge>
+              {showPercentiles && (
+                <Badge variant="outline" className="text-xs">
+                  Top {Math.round(100 - candidate.overallPercentile)}%
+                  <span className="text-stone-400 ml-1">
+                    of {totalCandidatesInSimulation}
+                  </span>
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <SummaryRow candidates={candidates} />
+      </div>
+    );
+  }
+
+  // Multi-candidate layout (original)
   return (
     <div className="border-b border-stone-200 bg-white">
       {/* Radar Chart */}

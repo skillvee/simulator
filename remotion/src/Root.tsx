@@ -19,6 +19,12 @@ import { HowItWorksStep3Zoomed } from "./scenes/HowItWorksStep3Zoomed";
 // Hero video for homepage
 import { HeroVideo } from "./scenes/HeroVideo";
 
+// Product page videos
+import { ProductDemoVideo } from "./scenes/ProductDemoVideo";
+import { ProductStep1 } from "./scenes/ProductStep1";
+import { ProductStep2 } from "./scenes/ProductStep2";
+import { ProductStep3 } from "./scenes/ProductStep3";
+
 // Video configuration
 const FPS = 30;
 const WIDTH = 1920;
@@ -197,6 +203,50 @@ export const RemotionRoot: React.FC = () => {
         id="HeroVideo"
         component={HeroVideo}
         durationInFrames={30 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* ============================================
+          PRODUCT PAGE VIDEOS
+          ============================================ */}
+
+      {/* Product Demo - 30 second overview for product hero */}
+      <Composition
+        id="ProductDemoVideo"
+        component={ProductDemoVideo}
+        durationInFrames={30 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* Product Step 1: Gather Requirements (10 seconds) */}
+      <Composition
+        id="ProductStep1"
+        component={ProductStep1}
+        durationInFrames={10 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* Product Step 2: Do the Actual Work (12 seconds) */}
+      <Composition
+        id="ProductStep2"
+        component={ProductStep2}
+        durationInFrames={12 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* Product Step 3: Present and Defend (10 seconds) */}
+      <Composition
+        id="ProductStep3"
+        component={ProductStep3}
+        durationInFrames={10 * FPS}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}

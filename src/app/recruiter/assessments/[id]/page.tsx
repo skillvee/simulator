@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireRecruiter } from "@/lib/core";
 import { db } from "@/server/db";
 import { VideoAssessmentStatus } from "@prisma/client";
-import { SimulationCandidatesClient } from "./client";
+import { SimulationCandidatesClientV3 } from "./client";
 import type { RubricAssessmentOutput } from "@/types";
 import {
   getRelativeStrength,
@@ -10,6 +10,7 @@ import {
   type TargetLevel,
   type RelativeStrength,
 } from "@/lib/rubric/level-expectations";
+import { computeExpectedScores } from "@/lib/rubric/dimension-mapping";
 
 export interface CandidateData {
   assessmentId: string;
@@ -48,7 +49,7 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
           id: true,
           name: true,
           roleFamily: { select: { name: true } },
-          weights: { select: { dimension: { select: { slug: true, name: true, description: true } }, weight: true } },
+          weights: { select: { dimension: { select: { slug: true } }, weight: true } },
           seniorityGates: { select: { dimension: { select: { slug: true } }, seniorityLevel: true, minScore: true } },
         },
       },
@@ -64,26 +65,18 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
   let dimensionExpectations: Record<string, number> | null = null;
   let archetypeName: string | null = null;
   let roleFamilyName: string | null = null;
-  // Dimension metadata: slug → { name, description } from archetype weights
-  let dimensionMeta: Record<string, { name: string; description: string }> | null = null;
 
   if (simulation.archetype) {
     archetypeName = simulation.archetype.name;
     roleFamilyName = simulation.archetype.roleFamily.name;
     const gateLevel = targetLevel === "junior" ? "JUNIOR" : targetLevel === "mid" ? "MID" : "SENIOR";
-    // Build expected scores keyed by rubric dimension slug directly
     const gates: Record<string, number> = {};
     for (const gate of simulation.archetype.seniorityGates) {
       if (gate.seniorityLevel === gateLevel) gates[gate.dimension.slug] = gate.minScore;
     }
-    dimensionExpectations = Object.keys(gates).length > 0 ? gates : null;
-
-    // Build dimension metadata from archetype weights
-    const meta: Record<string, { name: string; description: string }> = {};
-    for (const w of simulation.archetype.weights) {
-      meta[w.dimension.slug] = { name: w.dimension.name, description: w.dimension.description };
-    }
-    dimensionMeta = Object.keys(meta).length > 0 ? meta : null;
+    const weights: Record<string, number> = {};
+    for (const w of simulation.archetype.weights) weights[w.dimension.slug] = w.weight;
+    dimensionExpectations = computeExpectedScores(gates, weights);
   }
 
   const assessments = await db.assessment.findMany({
@@ -130,7 +123,6 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
 
     const percentile = report?.percentiles?.overall ?? null;
 
-    // Source red flags and confidence from rawAiResponse (v3 rubric data)
     const rawAiResponse = videoAssessment.summary?.rawAiResponse as unknown as RubricAssessmentOutput | null;
 
     let redFlagCount = 0;
@@ -168,13 +160,12 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
   });
 
   return (
-    <SimulationCandidatesClient
+    <SimulationCandidatesClientV3
       simulationId={id}
       simulationName={simulation.name}
       targetLevel={targetLevel}
       expectedScore={expectedScore}
       dimensionExpectations={dimensionExpectations}
-      dimensionMeta={dimensionMeta}
       archetypeName={archetypeName}
       roleFamilyName={roleFamilyName}
       candidates={candidatesData}

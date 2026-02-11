@@ -1303,6 +1303,75 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                 </SheetContent>
               </Sheet>
 
+              {/* Seniority Level */}
+              {editingField === "seniority" ? (
+                <div className="rounded-lg border bg-background p-3 space-y-3">
+                  <Label className="text-xs font-medium text-muted-foreground">Seniority Level</Label>
+                  <RadioGroup
+                    value={parsedJDData?.seniorityLevel.value || "mid"}
+                    onValueChange={(value: string) => {
+                      if (parsedJDData) {
+                        setParsedJDData({
+                          ...parsedJDData,
+                          seniorityLevel: { value: value as InferredSeniorityLevel, confidence: "high" },
+                        });
+                      }
+                    }}
+                    className="space-y-2"
+                  >
+                    {([
+                      { value: "junior", label: "Junior", desc: "0-2 years — can do the work with guidance, learning-focused" },
+                      { value: "mid", label: "Mid-Level", desc: "2-5 years — independent contributor, solid fundamentals" },
+                      { value: "senior", label: "Senior", desc: "5-8 years — works independently, mentors others, owns systems" },
+                      { value: "staff", label: "Staff+", desc: "8+ years — sets technical direction, cross-team impact" },
+                    ] as const).map((level) => (
+                      <label
+                        key={level.value}
+                        htmlFor={`preview-${level.value}`}
+                        className={`flex cursor-pointer items-start gap-2.5 rounded-md border p-2.5 transition-colors hover:border-primary/40 ${
+                          (parsedJDData?.seniorityLevel.value || "mid") === level.value
+                            ? "border-primary bg-primary/5"
+                            : ""
+                        }`}
+                      >
+                        <RadioGroupItem value={level.value} id={`preview-${level.value}`} className="mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">{level.label}</p>
+                          <p className="text-[11px] text-muted-foreground">{level.desc}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                  <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
+                    Done
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="group flex w-full items-start gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:border-primary/40"
+                  onClick={() => setEditingField("seniority")}
+                >
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <Check className="h-3 w-3" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Seniority Level</p>
+                    <p className="text-sm font-semibold">
+                      {({ junior: "Junior", mid: "Mid-Level", senior: "Senior", staff: "Staff+" } as const)[
+                        (parsedJDData?.seniorityLevel.value || "mid") as InferredSeniorityLevel
+                      ]}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {({ junior: "0-2 years experience", mid: "2-5 years experience", senior: "5-8 years experience", staff: "8+ years experience" } as const)[
+                        (parsedJDData?.seniorityLevel.value || "mid") as InferredSeniorityLevel
+                      ]}
+                    </p>
+                  </div>
+                  <Pencil className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </button>
+              )}
+
               {/* Role Archetype (required) */}
               {roleFamilies.length > 0 && (
                 <div className={`rounded-lg border bg-background p-3 space-y-2 ${!hasArchetype ? "border-amber-300" : ""}`}>
@@ -1424,9 +1493,6 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   {previewData.taskOptions.map((task, index) => {
                     const isSelected = previewData.selectedTask?.option?.summary === task.summary;
                     const isExpanded = expandedTaskIndex === index;
-                    const excerpt = task.description.length > 200
-                      ? task.description.slice(0, 200).replace(/\s+\S*$/, "") + "..."
-                      : task.description;
 
                     return (
                       <div key={task.summary}>
@@ -1439,8 +1505,8 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                           <RadioGroupItem value={task.summary} id={task.summary} className="mt-0.5" />
                           <div className="flex-1 space-y-1.5">
                             <p className="text-sm font-medium leading-tight">{task.summary}</p>
-                            <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
-                              {excerpt}
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                              {task.recruiterSummary}
                             </p>
                             <Collapsible
                               open={isExpanded}
@@ -1452,7 +1518,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                                   onClick={(e) => e.stopPropagation()}
                                   className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
                                 >
-                                  {isExpanded ? "Hide details" : "Show details"}
+                                  {isExpanded ? "Hide candidate brief" : "Show candidate brief"}
                                   <ChevronDown
                                     className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                                   />

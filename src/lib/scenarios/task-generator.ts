@@ -18,6 +18,7 @@ const GENERATION_MODEL = "gemini-3-flash-preview";
  */
 export const taskOptionSchema = z.object({
   summary: z.string().min(1),
+  recruiterSummary: z.string().min(1),
   description: z.string().min(1),
 });
 

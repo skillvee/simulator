@@ -29,7 +29,7 @@ export default async function CandidateComparePage({ params, searchParams }: Pag
 
   const assessmentIds = ids.split(",").map((id) => id.trim()).filter(Boolean);
 
-  if (assessmentIds.length < 2 || assessmentIds.length > 4) {
+  if (assessmentIds.length === 0 || assessmentIds.length > 4) {
     redirect(`/recruiter/assessments/${simulationId}`);
   }
 
@@ -63,6 +63,12 @@ export default async function CandidateComparePage({ params, searchParams }: Pag
   if (assessments.length !== assessmentIds.length) {
     redirect(`/recruiter/assessments/${simulationId}`);
   }
+
+  // Mark assessments as reviewed (fire-and-forget)
+  db.assessment.updateMany({
+    where: { id: { in: assessmentIds }, reviewedAt: null },
+    data: { reviewedAt: new Date() },
+  }).catch(() => {});
 
   return (
     <CandidateCompareClient

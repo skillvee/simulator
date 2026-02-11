@@ -7,7 +7,74 @@ interface StrengthsGrowthSectionProps {
 }
 
 export function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionProps) {
+  const isSingle = candidates.length === 1;
 
+  if (isSingle) {
+    const candidate = candidates[0];
+    return (
+      <div className="border-b border-stone-200 bg-white">
+        <div className="px-6 py-4 border-b border-stone-200">
+          <h2 className="text-lg font-semibold text-stone-900">
+            Strengths & Growth Areas
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-stone-200">
+          {/* Top Strengths */}
+          <div className="p-6">
+            <h3 className="text-sm font-semibold text-stone-700 mb-3">Top Strengths</h3>
+            {candidate.topStrengths.length > 0 ? (
+              <ul className="space-y-3">
+                {candidate.topStrengths.map((strength, idx) => (
+                  <li key={idx} className="text-sm text-stone-600">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="font-medium text-stone-900">
+                          {formatDimensionName(strength.dimension)}
+                        </span>
+                        <span className="text-stone-400 ml-1">({strength.score}/4)</span>
+                        <p className="text-xs text-stone-500 mt-0.5">{strength.description}</p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span className="text-sm text-stone-400 italic">No strengths available</span>
+            )}
+          </div>
+
+          {/* Growth Areas */}
+          <div className="p-6">
+            <h3 className="text-sm font-semibold text-stone-700 mb-3">Growth Areas</h3>
+            {candidate.growthAreas.length > 0 ? (
+              <ul className="space-y-3">
+                {candidate.growthAreas.map((area, idx) => (
+                  <li key={idx} className="text-sm text-stone-600">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="font-medium text-stone-900">
+                          {formatDimensionName(area.dimension)}
+                        </span>
+                        <span className="text-stone-400 ml-1">({area.score}/4)</span>
+                        <p className="text-xs text-stone-500 mt-0.5">{area.description}</p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <span className="text-sm text-stone-400 italic">No growth areas identified</span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Multi-candidate grid layout (original)
   return (
     <div className="border-b border-stone-200 bg-white">
       <div className="px-6 py-4 border-b border-stone-200">

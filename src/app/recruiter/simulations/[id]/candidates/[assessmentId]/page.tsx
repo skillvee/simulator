@@ -9,5 +9,5 @@ interface PageProps {
  */
 export default async function CandidateDetailRedirect({ params }: PageProps) {
   const { id, assessmentId } = await params;
-  redirect(`/recruiter/assessments/${id}/candidates/${assessmentId}`);
+  redirect(`/recruiter/assessments/${id}/compare?ids=${assessmentId}`);
 }

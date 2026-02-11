@@ -25,8 +25,8 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/recruiter/simulations", label: "Simulations", icon: FolderOpen },
     { href: "/recruiter/assessments", label: "Assessments", icon: ClipboardCheck },
+    { href: "/recruiter/simulations", label: "Simulations", icon: FolderOpen },
   ];
 
   const isActive = (href: string) => {

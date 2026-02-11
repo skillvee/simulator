@@ -5,7 +5,7 @@
  * Used by the simulation builder to create 2-3 challenge options that test relevant skills.
  */
 
-export const TASK_GENERATOR_PROMPT_VERSION = "1.0";
+export const TASK_GENERATOR_PROMPT_VERSION = "1.1";
 
 export const TASK_GENERATOR_PROMPT_V1 = `You are a work challenge generator for Skillvee, a professional assessment platform. Your job is to generate 2-3 realistic work challenges based on a role and company context. Match the challenge type to the role: engineering roles get coding tasks, PM roles get product strategy or prioritization challenges, sales roles get deal strategy or client scenario challenges, data roles get analysis or pipeline challenges.
 
@@ -71,6 +71,7 @@ Return ONLY a JSON object matching this exact schema:
   "taskOptions": [
     {
       "summary": "string (1-line summary for display, e.g., 'Build a transaction webhook handler with retry logic')",
+      "recruiterSummary": "string (2-3 sentence recruiter-facing summary explaining what the challenge is about and what skills it tests. Written in third person, NOT as the manager speaking to the candidate. E.g., 'The candidate investigates a 5% webhook event drop rate, designs retry logic with idempotency, and collaborates with DevOps and product stakeholders to understand infrastructure constraints.')",
       "description": "string (2-4 paragraphs written as a manager assigning work, includes context, requirements, and what to ask coworkers about)"
     }
   ]
@@ -110,14 +111,17 @@ This forces candidates to ask coworkers, which tests collaboration skills.
   "taskOptions": [
     {
       "summary": "Build a transaction webhook handler with retry logic",
+      "recruiterSummary": "The candidate investigates a 5% webhook event drop rate from the payment processor, designs retry logic with idempotency checks, and collaborates with DevOps and product stakeholders to understand infrastructure constraints and transaction state priorities.",
       "description": "Hey! So we need to handle incoming webhooks from our payment processor. When a transaction completes, fails, or is refunded, we get a POST to our endpoint. Right now we're dropping about 5% of these — the team's been complaining. We need a reliable handler with proper retry logic, idempotency, and status tracking. Check with DevOps about our current infrastructure and ask the product team about which transaction states matter most. Also heads up: don't touch the /api/payments/* endpoints, those are PCI certified and we can't change them without re-certification."
     },
     {
       "summary": "Add real-time notifications for payment failures",
+      "recruiterSummary": "The candidate builds an email and in-app notification system for failed payments, coordinating with product on event triggers and DevOps on email service constraints. Tests cross-functional communication and system integration skills.",
       "description": "We've had a few enterprise customers complain that they don't know when payments fail until they check the dashboard manually. Not great. Can you add a notification system that alerts users in real-time when a payment fails? We're thinking email + in-app notifications, but talk to the product manager about exactly which events to notify on. The design team has some mockups for the in-app UI. Also check with the DevOps engineer about our email service setup - I think we use SendGrid but there might be rate limits on staging."
     },
     {
       "summary": "Implement idempotency for payment API endpoints",
+      "recruiterSummary": "The candidate solves a duplicate payment charging issue by implementing request idempotency. Requires architectural decisions around caching strategy (Redis vs DB-level) and collaboration with senior engineers on existing patterns.",
       "description": "So we've got an issue where if a user's connection drops mid-payment, they sometimes retry and we charge them twice. Yikes. We need to add idempotency to the payment endpoints so duplicate requests get deduplicated. The backend is Node.js + Postgres. Talk to the senior engineer about how we're currently handling request IDs and whether we should use Redis or just database-level checks. This is blocking a big customer, so timeline matters, but don't cut corners on testing - double-charging is way worse than shipping a day late."
     }
   ]

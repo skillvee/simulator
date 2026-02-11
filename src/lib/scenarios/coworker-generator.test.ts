@@ -99,7 +99,7 @@ describe("generateCoworkers", () => {
     expect(result.coworkers[0].name).toBe("Jordan Kim");
     expect(result.coworkers[0].role).toBe("Engineering Manager");
     expect(result.coworkers[1].name).toBe("Aisha Patel");
-    expect(result._meta.promptVersion).toBe("1.0");
+    expect(result._meta.promptVersion).toBe("2.0");
     expect(result._meta.generatedAt).toBeDefined();
   });
 
@@ -203,7 +203,7 @@ describe("generateCoworkers", () => {
     );
   });
 
-  it("throws error if no Engineering Manager", async () => {
+  it("retries and patches first coworker if no Engineering Manager", async () => {
     const noManager = [
       {
         name: "Alice Johnson",
@@ -249,12 +249,69 @@ describe("generateCoworkers", () => {
       text: JSON.stringify(noManager),
     });
 
-    await expect(generateCoworkers(mockInput)).rejects.toThrow(
-      "Generated coworkers must include an Engineering Manager"
-    );
+    const result = await generateCoworkers(mockInput);
+
+    // Should have retried (2 calls) and patched first coworker
+    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
+    expect(result.coworkers[0].role).toBe("Engineering Manager");
+    expect(result.coworkers[0].name).toBe("Alice Johnson");
   });
 
-  it("throws error if coworker has less than 2 critical knowledge items", async () => {
+  it("succeeds on retry when first attempt lacks Engineering Manager", async () => {
+    const noManager = [
+      {
+        name: "Alice Johnson",
+        role: "Senior Developer",
+        personaStyle: "Technical and detailed",
+        knowledge: [
+          {
+            topic: "architecture",
+            triggerKeywords: ["arch", "design"],
+            response: "We use microservices",
+            isCritical: true,
+          },
+          {
+            topic: "deployment",
+            triggerKeywords: ["deploy", "ci"],
+            response: "We use GitHub Actions",
+            isCritical: true,
+          },
+        ],
+      },
+      {
+        name: "Bob Smith",
+        role: "Product Manager",
+        personaStyle: "User-focused",
+        knowledge: [
+          {
+            topic: "requirements",
+            triggerKeywords: ["requirements", "specs"],
+            response: "Check the PRD",
+            isCritical: true,
+          },
+          {
+            topic: "timeline",
+            triggerKeywords: ["deadline", "timeline"],
+            response: "We need this by end of month",
+            isCritical: true,
+          },
+        ],
+      },
+    ];
+
+    // First call returns no manager, second call returns valid data
+    mockGenerateContent
+      .mockResolvedValueOnce({ text: JSON.stringify(noManager) })
+      .mockResolvedValueOnce({ text: JSON.stringify(mockCoworkers) });
+
+    const result = await generateCoworkers(mockInput);
+
+    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
+    expect(result.coworkers[0].role).toBe("Engineering Manager");
+    expect(result.coworkers[0].name).toBe("Jordan Kim");
+  });
+
+  it("throws error if coworker has less than 2 critical knowledge items after retries", async () => {
     const insufficientCritical = [
       {
         name: "Jordan Kim",
@@ -303,6 +360,8 @@ describe("generateCoworkers", () => {
     await expect(generateCoworkers(mockInput)).rejects.toThrow(
       'Coworker "Jordan Kim" has only 1 critical knowledge items, need at least 2'
     );
+    // Should have retried
+    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
   });
 
   it("accepts exactly 3 coworkers", async () => {
