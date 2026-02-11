@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/server/db";
-import { VideoAssessmentStatus } from "@prisma/client";
+import { VideoAssessmentStatus, type AssessmentDimension } from "@prisma/client";
 import { CandidateProfileClient } from "./client";
 
 interface PageProps {
@@ -47,7 +47,7 @@ export default async function CandidateProfilePage({ params }: PageProps) {
     candidate: videoAssessment.candidate,
     scores: videoAssessment.scores.map((score) => ({
       id: score.id,
-      dimension: score.dimension,
+      dimension: score.dimension as AssessmentDimension,
       score: score.score,
       observableBehaviors: score.observableBehaviors,
       trainableGap: score.trainableGap,

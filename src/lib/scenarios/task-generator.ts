@@ -120,7 +120,6 @@ export async function generateCodingTask(
 
     // Additional validation: each task description should be 2-4 paragraphs (roughly)
     for (const task of taskOptions) {
-      const paragraphCount = task.description.split("\n\n").length;
       if (task.description.length < 100) {
         throw new Error(
           `Task description too short (${task.description.length} chars): "${task.summary}"`
@@ -169,7 +168,7 @@ Now generate 2-3 work challenge options appropriate for this role and context.`;
  */
 function cleanJsonResponse(text: string): string {
   // Remove markdown fences (both ```json and ``` variants)
-  let cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
   // Trim whitespace
   return cleaned.trim();
 }

@@ -45,6 +45,7 @@ export function createMockAssessment(
     codeReview: null,
     managerMessagesStarted: false,
     report: null,
+    reviewedAt: null,
     supersededBy: null,
     createdAt: now,
     updatedAt: now,

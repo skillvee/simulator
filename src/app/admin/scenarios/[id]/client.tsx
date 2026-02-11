@@ -372,7 +372,7 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
               Repository URL
             </h3>
             <a
-              href={scenario.repoUrl}
+              href={scenario.repoUrl ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block rounded-md bg-primary/10 px-3 py-1 font-mono text-sm text-primary transition-colors hover:bg-primary/20"

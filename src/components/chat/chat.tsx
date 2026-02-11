@@ -64,7 +64,7 @@ export function Chat({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [isManagerTyping, setIsManagerTyping] = useState(false);
+  const [, setIsManagerTyping] = useState(false);
   const [isCoworkerTyping, setIsCoworkerTyping] = useState(false);
   const [userHasSentMessage, setUserHasSentMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

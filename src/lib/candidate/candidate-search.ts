@@ -190,7 +190,7 @@ export async function searchCandidates(
 
     // Build dimension scores
     const dimensionScores: DimensionScoreInput[] = data.scores.map((s) => ({
-      dimension: s.dimension,
+      dimension: s.dimension as AssessmentDimension,
       score: s.score,
     }));
 
@@ -357,7 +357,7 @@ async function fetchCandidateData(videoAssessmentIds: string[]): Promise<
       candidateName: assessment.candidate.name,
       candidateEmail: assessment.candidate.email,
       scores: assessment.scores.map((s) => ({
-        dimension: s.dimension,
+        dimension: s.dimension as AssessmentDimension,
         score: s.score,
       })),
       observableBehaviors,

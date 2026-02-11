@@ -231,11 +231,15 @@ export async function generateAndStoreEmbeddings(
     }
 
     // Create the text to embed
+    const typedScores = assessment.scores.map((s) => ({
+      ...s,
+      dimension: s.dimension as AssessmentDimension,
+    }));
     const observableBehaviorsText = formatDimensionScoresForEmbedding(
-      assessment.scores
+      typedScores
     );
     const embeddingText = createEmbeddingText(
-      assessment.scores,
+      typedScores,
       assessment.summary.overallSummary
     );
 

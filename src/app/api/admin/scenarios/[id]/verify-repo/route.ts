@@ -88,10 +88,16 @@ export async function GET(request: Request, context: RouteContext) {
 
   const result: VerifyResult = {
     accessible: false,
-    repoUrl: scenario.repoUrl,
+    repoUrl: scenario.repoUrl ?? "",
   };
 
   // Parse the GitHub URL
+  if (!scenario.repoUrl) {
+    return NextResponse.json({
+      ...result,
+      error: "No repository URL set for this scenario",
+    });
+  }
   const parsed = parseGitHubRepoUrl(scenario.repoUrl);
   if (!parsed) {
     return NextResponse.json({

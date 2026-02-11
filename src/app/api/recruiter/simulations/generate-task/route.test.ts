@@ -158,6 +158,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     });
 
     const invalidBody = { ...validRequestBody };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (invalidBody as any).roleName;
 
     const request = new Request(
@@ -261,6 +262,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     });
 
     const invalidBody = { ...validRequestBody };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (invalidBody as any).domainContext;
 
     const request = new Request(
@@ -285,6 +287,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     });
 
     const invalidBody = { ...validRequestBody };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (invalidBody as any).companyName;
 
     const request = new Request(

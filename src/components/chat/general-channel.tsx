@@ -27,10 +27,10 @@ interface GeneralChannelProps {
  * Unlike DM views, all messages are left-aligned with avatar + name
  */
 export function GeneralChannel({
-  assessmentId,
+  assessmentId: _assessmentId,
   initialMessages,
   onSendMessage,
-  onNewMessage,
+  onNewMessage: _onNewMessage,
 }: GeneralChannelProps) {
   const [messages, setMessages] = useState<ChannelMessage[]>(initialMessages);
   const [input, setInput] = useState("");

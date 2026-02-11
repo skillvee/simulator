@@ -7,7 +7,7 @@ import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
 import { CoworkerAvatar } from "./coworker-avatar";
-import type { DecorativeTeamMember, StatusScheduleEntry } from "@/types";
+import type { DecorativeTeamMember } from "@/types";
 
 /**
  * Get the current status for a decorative member based on elapsed time
@@ -254,7 +254,7 @@ function SlackLayoutInner({
     }
   };
 
-  const handleSelectChannel = (channel: "general") => {
+  const handleSelectChannel = (_channel: "general") => {
     // Close sidebar on mobile after selection
     setIsSidebarOpen(false);
 
@@ -413,12 +413,14 @@ function SlackLayoutInner({
         {/* Main content area */}
         <main className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden" style={{background: "hsl(var(--slack-bg-main))"}}>
           {/* Pass incrementUnread function to children if they're Chat components */}
+          {/* eslint-disable @typescript-eslint/no-explicit-any */}
           {isValidElement(children) && children.type && (children.type as any).name === 'Chat'
             ? cloneElement(children as React.ReactElement<any>, {
                 onNewMessage: incrementUnread
               })
             : children
           }
+          {/* eslint-enable @typescript-eslint/no-explicit-any */}
         </main>
       </div>
     </CallContext.Provider>

@@ -146,7 +146,7 @@ export function inferDemographics(fullName: string): Demographics {
   const lastName = parts[parts.length - 1] || "";
 
   // Try first name, then last name for ethnicity
-  let group: EthnicGroup = ETHNICITY_MAP[firstName] || ETHNICITY_MAP[lastName] || "mixed";
+  const group: EthnicGroup = ETHNICITY_MAP[firstName] || ETHNICITY_MAP[lastName] || "mixed";
 
   // Infer gender from first name
   let gender: Gender;

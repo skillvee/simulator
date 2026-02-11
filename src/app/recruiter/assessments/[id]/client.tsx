@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar } from "@/components/ui/avatar";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -268,7 +267,7 @@ export function SimulationCandidatesClientV3({
   expectedScore,
   dimensionExpectations,
   archetypeName,
-  roleFamilyName,
+  roleFamilyName: _roleFamilyName,
   candidates,
 }: SimulationCandidatesClientV3Props) {
   const router = useRouter();

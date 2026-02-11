@@ -67,12 +67,12 @@ export function CandidateExperienceSummary({
         <div className="space-y-3">
           <h2 className="text-xl font-semibold">Candidate Experience</h2>
           <p className="text-base leading-relaxed text-foreground/90">
-            When a candidate joins, they'll be onboarded as a{" "}
+            When a candidate joins, they&apos;ll be onboarded as a{" "}
             <strong>{roleName}</strong> at <strong>{companyName}</strong>.
-            They'll meet their team on Slack — {renderTeamIntro()}. Their manager{" "}
+            They&apos;ll meet their team on Slack — {renderTeamIntro()}. Their manager{" "}
             <strong>{managerName}</strong> will kick off the project:{" "}
-            {taskSummary}. They'll have ~90 minutes to complete the task, ask
-            questions, and submit a pull request. Finally, they'll defend their
+            {taskSummary}. They&apos;ll have ~90 minutes to complete the task, ask
+            questions, and submit a pull request. Finally, they&apos;ll defend their
             work in a call with {managerName}.
           </p>
         </div>

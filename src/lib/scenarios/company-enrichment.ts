@@ -99,13 +99,13 @@ export async function enrichCompanyContext(
             : "Unknown Gemini error",
       };
     }
-  } catch (error) {
+  } catch (err) {
     // Best-effort: if anything fails, return original description
     return {
       companyDescription: existingDescription,
       wasEnriched: false,
       enrichmentSource: "none",
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: err instanceof Error ? err.message : "Unknown error",
     };
   }
 }
@@ -151,7 +151,7 @@ async function fetchCompanyInfoWithTimeout(
 
     // Return first 2000 characters for summarization
     return textContent.slice(0, 2000) || null;
-  } catch (error) {
+  } catch {
     // Timeout, network error, or any other issue
     return null;
   } finally {
@@ -196,7 +196,7 @@ Return ONLY the company description, nothing else.`;
     ],
   });
 
-  const description = result.text.trim();
+  const description = (result.text ?? "").trim();
 
   // Fallback to existing description if AI returns empty or very short response
   if (description.length < 20) {

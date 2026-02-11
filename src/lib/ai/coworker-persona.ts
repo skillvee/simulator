@@ -8,7 +8,6 @@
 import type {
   CoworkerKnowledge,
   CoworkerPersona,
-  CoworkerPersonality,
   DecorativeTeamMember,
 } from "@/types";
 

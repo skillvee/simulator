@@ -37,3 +37,9 @@ export * from "./entity-extraction";
 
 // feedback-parsing exports
 export * from "./feedback-parsing";
+
+// archetype-weights exports
+export * from "./archetype-weights";
+
+// seniority-thresholds exports
+export * from "./seniority-thresholds";

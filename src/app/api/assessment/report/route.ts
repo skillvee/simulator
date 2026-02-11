@@ -305,7 +305,7 @@ export async function POST(request: Request) {
         // Fetch the results
         const results = await getEvaluationResults(videoAssessmentId);
         if (results.summary?.rawAiResponse) {
-          videoResult = results.summary.rawAiResponse as VideoEvaluationOutput;
+          videoResult = results.summary.rawAiResponse as unknown as VideoEvaluationOutput;
         }
       } catch (error) {
         console.error("Error running video evaluation:", error);

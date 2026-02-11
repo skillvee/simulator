@@ -59,6 +59,7 @@ export type {
 // Conversation types
 export type {
   ChatMessage,
+  MessageReaction,
   TranscriptMessage,
   ConversationWithMeta,
   CoworkerMemory,

@@ -37,6 +37,8 @@ export function createMockScenario(overrides?: Partial<Scenario>): Scenario {
     taskDescription: "Implement a feature following best practices.",
     repoUrl: "https://github.com/test/repo",
     techStack: ["typescript", "react", "node"],
+    targetLevel: "mid",
+    archetypeId: null,
     isPublished: false,
     createdById: null,
     createdAt: now,

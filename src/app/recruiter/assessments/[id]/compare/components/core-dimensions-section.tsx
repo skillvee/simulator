@@ -160,7 +160,7 @@ function DimensionDetailContent({
 
 export function CoreDimensionsSection({
   candidates,
-  defaultExpanded = false,
+  defaultExpanded: _defaultExpanded = false,
   onTimestampClick,
 }: CoreDimensionsSectionProps) {
   const isSingle = candidates.length === 1;

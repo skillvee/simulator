@@ -14,7 +14,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "@/lib/api";
-import { getProactiveMessages, type ProactiveMessage } from "@/lib/ai/coworker-persona";
+import { getProactiveMessages } from "@/lib/ai/coworker-persona";
 import type { ChatMessage } from "@/types";
 
 interface Coworker {

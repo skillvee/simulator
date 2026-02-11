@@ -183,6 +183,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     });
 
     const invalidBody = { ...validRequestBody };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (invalidBody as any).roleName;
 
     const request = new Request(

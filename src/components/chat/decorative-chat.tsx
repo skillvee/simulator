@@ -146,7 +146,7 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
                   {member.statusMessage || "This team member is away."}
                 </p>
                 <p className="max-w-md text-sm text-muted-foreground mt-2">
-                  You can still send them a message and they'll respond when
+                  You can still send them a message and they&apos;ll respond when
                   available.
                 </p>
               </div>
