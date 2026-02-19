@@ -78,11 +78,12 @@ model User {
   // Data deletion request tracking
   dataDeleteRequestedAt DateTime?
 
-  accounts         Account[]
-  sessions         Session[]
-  assessments      Assessment[]
-  videoAssessments VideoAssessment[]
-  createdScenarios Scenario[] @relation("CreatedScenarios")
+  accounts              Account[]
+  sessions              Session[]
+  assessments           Assessment[]
+  videoAssessments      VideoAssessment[]
+  createdScenarios      Scenario[] @relation("CreatedScenarios")
+  simulationCreationLogs SimulationCreationLog[]
 }
 
 // ============================================================================
@@ -96,6 +97,7 @@ model Scenario {
   companyDescription String @db.Text
   taskDescription String   @db.Text
   repoUrl         String?  // Nullable - system-managed, provisioned asynchronously
+  repoSpec        Json?    // Cached AI-generated RepoSpec for debugging and re-provisioning
   techStack       String[] // e.g., ["typescript", "react", "node"]
   targetLevel     String   @default("mid") // "junior" | "mid" | "senior" | "staff" — seniority level being hired for
   archetypeId     String?  // Optional link to role archetype for role-specific scoring expectations
@@ -109,8 +111,9 @@ model Scenario {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  coworkers       Coworker[]
-  assessments     Assessment[]
+  coworkers            Coworker[]
+  assessments          Assessment[]
+  simulationCreationLogs SimulationCreationLog[]
 }
 
 model Coworker {
@@ -151,6 +154,10 @@ model Assessment {
   startedAt     DateTime         @default(now())
   completedAt   DateTime?
   reviewedAt    DateTime?        // When recruiter first viewed the completed assessment
+
+  // Per-assessment repository (forked from scenario template)
+  repoUrl       String?          // GitHub repo URL specific to this assessment
+  repoStatus    String?          @default("pending") // "pending" | "provisioning" | "ready" | "failed"
 
   // Deliverables
   prUrl         String?
@@ -641,4 +648,51 @@ model CandidateEmbedding {
 
   // Index for efficient vector similarity search
   @@index([videoAssessmentId])
+}
+
+// ============================================================================
+// SIMULATION CREATION LOG
+// Tracks every simulation creation attempt (success + failure) for admin visibility
+// ============================================================================
+
+enum SimulationCreationStatus {
+  STARTED       // Generation kicked off (parse-jd or guided form submitted)
+  GENERATING    // AI is generating tasks/coworkers
+  SAVING        // Saving to database
+  COMPLETED     // Successfully created
+  FAILED        // Failed at any stage
+}
+
+model SimulationCreationLog {
+  id              String                   @id @default(cuid())
+  userId          String                   // Who initiated the creation
+  status          SimulationCreationStatus @default(STARTED)
+
+  // Input data (what was provided)
+  roleTitle       String?                  // Role being hired for
+  companyName     String?                  // Company name
+  techStack       String[]                 // Tech stack selected
+  seniorityLevel  String?                  // junior/mid/senior/staff
+  archetypeId     String?                  // Selected role archetype
+  source          String                   @default("guided") // "jd_paste" | "guided" — how they started
+
+  // Result
+  scenarioId      String?                  // If successful, the created scenario ID
+  scenario        Scenario?                @relation(fields: [scenarioId], references: [id], onDelete: SetNull)
+
+  // Error tracking
+  failedStep      String?                  // Which step failed: "parse_jd" | "generate_tasks" | "generate_coworkers" | "save_scenario" | "save_coworkers"
+  errorMessage    String?                  @db.Text // Human-readable error
+  errorDetails    Json?                    // Full error payload for debugging
+
+  // Timing
+  createdAt       DateTime                 @default(now())
+  completedAt     DateTime?                // When it finished (success or failure)
+
+  // Relations
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }

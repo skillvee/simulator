@@ -1,13 +1,27 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, X, User, Shield, Calendar, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  X,
+  User,
+  Shield,
+  Calendar,
+  FileText,
+  RotateCcw,
+  AlertTriangle,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  ImageMinus,
+} from "lucide-react";
 import type { UserRole } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { LucideIcon } from "lucide-react";
 
 // Serialized types from server (dates as strings)
@@ -15,6 +29,7 @@ interface SerializedUser {
   id: string;
   name: string | null;
   email: string | null;
+  image: string | null;
   role: UserRole;
   createdAt: string;
   updatedAt: string;
@@ -53,10 +68,83 @@ function formatDate(dateString: string): string {
   }).format(new Date(dateString));
 }
 
+interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error";
+}
+
 export function UsersClient({ users, stats }: UsersClientProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [dateRange, setDateRange] = useState<DateRange>("all");
+  const [resetTarget, setResetTarget] = useState<SerializedUser | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
+  const [deleteImageTarget, setDeleteImageTarget] =
+    useState<SerializedUser | null>(null);
+  const [isDeletingImage, setIsDeletingImage] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const addToast = (message: string, type: Toast["type"]) => {
+    const id = `toast-${Date.now()}`;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  };
+
+  const handleReset = async () => {
+    if (!resetTarget) return;
+    setIsResetting(true);
+    try {
+      const response = await fetch("/api/admin/user/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: resetTarget.id }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to reset user");
+      }
+      addToast(data.message, "success");
+      setResetTarget(null);
+      router.refresh();
+    } catch (error) {
+      addToast(
+        error instanceof Error ? error.message : "Failed to reset user",
+        "error"
+      );
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    if (!deleteImageTarget) return;
+    setIsDeletingImage(true);
+    try {
+      const response = await fetch("/api/admin/user/delete-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: deleteImageTarget.id }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to delete image");
+      }
+      addToast(data.message, "success");
+      setDeleteImageTarget(null);
+      router.refresh();
+    } catch (error) {
+      addToast(
+        error instanceof Error ? error.message : "Failed to delete image",
+        "error"
+      );
+    } finally {
+      setIsDeletingImage(false);
+    }
+  };
 
   // Filter users based on criteria
   const filteredUsers = useMemo(() => {
@@ -93,7 +181,7 @@ export function UsersClient({ users, stats }: UsersClientProps) {
   }, [users, searchQuery, roleFilter, dateRange]);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="px-8 py-10">
       <h1 className="mb-8 text-3xl font-semibold">Users</h1>
 
       {/* Aggregate Stats */}
@@ -200,17 +288,189 @@ export function UsersClient({ users, stats }: UsersClientProps) {
                   <th className="p-4 text-left text-xs font-medium text-muted-foreground">
                     ASSESSMENTS
                   </th>
+                  <th className="p-4 text-right text-xs font-medium text-muted-foreground">
+                    ACTIONS
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => (
-                  <UserRow key={user.id} user={user} />
+                  <UserRow
+                    key={user.id}
+                    user={user}
+                    onReset={() => setResetTarget(user)}
+                    onDeleteImage={() => setDeleteImageTarget(user)}
+                  />
                 ))}
               </tbody>
             </table>
           )}
         </CardContent>
       </Card>
+
+      {/* Reset Confirmation Dialog */}
+      {resetTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => !isResetting && setResetTarget(null)}
+        >
+          <Card
+            className="mx-4 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardContent className="p-6">
+              <div className="mb-6 flex items-start gap-4">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                  <AlertTriangle className="h-6 w-6 text-destructive" />
+                </div>
+                <div>
+                  <h2 className="mb-2 text-xl font-semibold">
+                    Reset Candidate Data
+                  </h2>
+                  <p className="text-muted-foreground">
+                    This will delete{" "}
+                    <strong>
+                      all {resetTarget.assessmentCount} assessment(s)
+                    </strong>{" "}
+                    for{" "}
+                    <strong>
+                      {resetTarget.name || resetTarget.email}
+                    </strong>
+                    , including conversations, recordings, scores, and reports.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                <p className="text-sm text-destructive">
+                  <strong>Warning:</strong> This action cannot be undone. The
+                  user account will be preserved, but they will start fresh from
+                  the introduction screen on their next assessment.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setResetTarget(null)}
+                  disabled={isResetting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleReset}
+                  disabled={isResetting}
+                >
+                  {isResetting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Resetting...
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Reset All Data
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Image Confirmation Dialog */}
+      {deleteImageTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => !isDeletingImage && setDeleteImageTarget(null)}
+        >
+          <Card
+            className="mx-4 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardContent className="p-6">
+              <div className="mb-6 flex items-start gap-4">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                  <ImageMinus className="h-6 w-6 text-destructive" />
+                </div>
+                <div>
+                  <h2 className="mb-2 text-xl font-semibold">
+                    Delete Profile Image
+                  </h2>
+                  <p className="text-muted-foreground">
+                    This will delete the profile image for{" "}
+                    <strong>
+                      {deleteImageTarget.name || deleteImageTarget.email}
+                    </strong>
+                    . The image will be removed from storage and the user will
+                    see a default avatar.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteImageTarget(null)}
+                  disabled={isDeletingImage}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteImage}
+                  disabled={isDeletingImage}
+                >
+                  {isDeletingImage ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <ImageMinus className="mr-2 h-4 w-4" />
+                      Delete Image
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Toast Notifications */}
+      {toasts.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-50 flex max-w-md flex-col gap-2">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={`flex items-center gap-2 rounded-lg border px-4 py-3 shadow-lg ${
+                toast.type === "success"
+                  ? "border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200"
+                  : "border-destructive/30 bg-destructive/5 text-destructive"
+              }`}
+            >
+              {toast.type === "success" ? (
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              )}
+              <p className="text-sm">{toast.message}</p>
+              <button
+                onClick={() =>
+                  setToasts((prev) => prev.filter((t) => t.id !== toast.id))
+                }
+                className="ml-2 flex-shrink-0 opacity-60 hover:opacity-100"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -241,7 +501,15 @@ function StatCard({
   );
 }
 
-function UserRow({ user }: { user: SerializedUser }) {
+function UserRow({
+  user,
+  onReset,
+  onDeleteImage,
+}: {
+  user: SerializedUser;
+  onReset: () => void;
+  onDeleteImage: () => void;
+}) {
   return (
     <tr
       className="border-b border-border transition-colors hover:bg-muted/50"
@@ -250,6 +518,9 @@ function UserRow({ user }: { user: SerializedUser }) {
       <td className="p-4">
         <div className="flex items-center gap-3">
           <Avatar>
+            {user.image && (
+              <AvatarImage src={user.image} alt={user.name || "User"} />
+            )}
             <AvatarFallback className="bg-primary/10 text-primary">
               {getInitials(user.name, user.email)}
             </AvatarFallback>
@@ -285,6 +556,32 @@ function UserRow({ user }: { user: SerializedUser }) {
         >
           {user.assessmentCount}
         </span>
+      </td>
+      <td className="p-4 text-right">
+        <div className="flex items-center justify-end gap-1">
+          {user.image && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDeleteImage}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <ImageMinus className="mr-1.5 h-3.5 w-3.5" />
+              Delete Image
+            </Button>
+          )}
+          {user.assessmentCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReset}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+              Reset
+            </Button>
+          )}
+        </div>
       </td>
     </tr>
   );

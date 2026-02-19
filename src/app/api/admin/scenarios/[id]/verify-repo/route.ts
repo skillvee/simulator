@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { env } from "@/lib/core";
 
 interface SessionUser {
   id: string;
@@ -108,7 +107,15 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   const { owner, repo } = parsed;
-  const token = env.GITHUB_TOKEN;
+  // Use GITHUB_ORG_TOKEN (same token used for provisioning) to access private repos
+  const token = process.env.GITHUB_ORG_TOKEN;
+
+  if (!token) {
+    return NextResponse.json({
+      ...result,
+      error: "GITHUB_ORG_TOKEN is not configured. Cannot verify private repositories.",
+    });
+  }
 
   try {
     // Fetch repo info from GitHub API

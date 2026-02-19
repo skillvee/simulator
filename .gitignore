@@ -5,6 +5,7 @@ node_modules
 
 # Testing
 coverage
+tests/qa/output/
 
 # Next.js
 .next/
@@ -37,3 +38,4 @@ next-env.d.ts
 # Prisma
 prisma/migrations/**/migration_lock.toml
 supabase/.temp/
+.env*.local

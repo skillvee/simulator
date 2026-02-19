@@ -14,6 +14,7 @@ import { AssessmentStatus } from "@prisma/client";
 import { generateManagerGreetings } from "@/lib/chat/greeting-generator";
 import { success, error, validateRequest } from "@/lib/api";
 import { z } from "zod";
+import type { CoworkerPersonality } from "@/types";
 import type { Prisma } from "@prisma/client";
 
 const ManagerStartRequestSchema = z.object({
@@ -93,14 +94,22 @@ export async function POST(request: Request) {
     return error("No coworkers configured for this scenario", 400, "NO_COWORKERS");
   }
 
-  // Generate greeting messages
-  const greetingMessages = generateManagerGreetings({
+  // Build list of non-manager teammates to introduce
+  const teammates = assessment.scenario.coworkers
+    .filter((c) => c.id !== managerCoworker.id)
+    .map((c) => ({ name: c.name, role: c.role }));
+
+  // Generate greeting messages (async — uses Gemini for natural phrasing)
+  const greetingMessages = await generateManagerGreetings({
     userName: session.user.name || "there",
     managerName: managerCoworker.name,
     managerRole: managerCoworker.role,
     companyName: assessment.scenario.companyName,
-    repoUrl: assessment.scenario.repoUrl,
+    repoUrl: assessment.repoUrl || assessment.scenario.repoUrl,
     taskDescription: assessment.scenario.taskDescription,
+    personaStyle: managerCoworker.personaStyle,
+    personality: managerCoworker.personality as CoworkerPersonality | null,
+    teammates,
   });
 
   // Check if conversation already exists with this manager

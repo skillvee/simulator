@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -105,53 +105,17 @@ const COMMON_TECH_STACKS = [
 ];
 
 /**
- * Infer the best-matching archetype from a role name.
+ * Look up the archetype database ID from a slug, using the fetched role families.
  * Returns the archetype ID or null if no match.
  */
-function inferArchetype(
-  roleName: string,
+function findArchetypeIdBySlug(
+  slug: string,
   families: RoleFamilyWithArchetypes[]
 ): string | null {
-  if (!roleName || families.length === 0) return null;
-
-  const lower = roleName.toLowerCase();
-
-  // Keyword map: substring → archetype slug
-  const keywords: [string[], string][] = [
-    // Engineering
-    [["frontend", "front-end", "front end", "ui engineer", "ui developer"], "frontend_engineer"],
-    [["backend", "back-end", "back end", "server engineer", "api engineer"], "backend_engineer"],
-    [["full stack", "fullstack", "full-stack"], "fullstack_engineer"],
-    [["tech lead", "architect", "staff engineer", "principal engineer", "engineering manager"], "tech_lead"],
-    [["devops", "sre", "site reliability", "infrastructure", "platform engineer"], "devops_sre"],
-    // Product Management
-    [["growth pm", "growth product"], "growth_pm"],
-    [["platform pm", "platform product"], "platform_pm"],
-    [["product manager", "product owner", "pm"], "core_pm"],
-    // Data Science
-    [["analytics engineer", "data engineer"], "analytics_engineer"],
-    [["data analyst", "business analyst", "bi analyst"], "data_analyst"],
-    [["ml engineer", "machine learning", "ai engineer", "data scientist"], "ml_engineer"],
-    // Program Management
-    [["technical program", "tpm"], "technical_program_manager"],
-    [["program manager", "pgm"], "business_program_manager"],
-    // Sales
-    [["account executive", "ae ", "account manager"], "account_executive"],
-    [["sdr", "sales development", "bdr", "business development rep"], "sales_development_rep"],
-    [["solutions engineer", "sales engineer", "se ", "pre-sales"], "solutions_engineer"],
-    // Customer Success
-    [["onboarding specialist", "implementation specialist"], "onboarding_specialist"],
-    [["customer success manager", "csm"], "customer_success_manager"],
-    [["renewals manager", "renewal"], "renewals_manager"],
-  ];
-
-  for (const [terms, slug] of keywords) {
-    if (terms.some((term) => lower.includes(term))) {
-      for (const family of families) {
-        const match = family.archetypes.find((a) => a.slug === slug);
-        if (match) return match.id;
-      }
-    }
+  if (!slug || families.length === 0) return null;
+  for (const family of families) {
+    const match = family.archetypes.find((a) => a.slug === slug);
+    if (match) return match.id;
   }
   return null;
 }
@@ -229,6 +193,57 @@ export function RecruiterScenarioBuilderClient() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [expandedTaskIndex, setExpandedTaskIndex] = useState<number | null>(null);
 
+  // Creation log tracking — fire-and-forget logging of every attempt
+  const creationLogIdRef = useRef<string | null>(null);
+
+  const createLog = async (data: {
+    roleTitle?: string;
+    companyName?: string;
+    techStack?: string[];
+    seniorityLevel?: string;
+    archetypeId?: string;
+    source: "jd_paste" | "guided";
+  }) => {
+    try {
+      const res = await fetch("/api/recruiter/simulations/creation-log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const { data: result } = await res.json();
+        creationLogIdRef.current = result.logId;
+      }
+    } catch (err) {
+      console.error("Failed to create creation log:", err);
+    }
+  };
+
+  const updateLog = async (data: {
+    status: "STARTED" | "GENERATING" | "SAVING" | "COMPLETED" | "FAILED";
+    scenarioId?: string;
+    failedStep?: string;
+    errorMessage?: string;
+    errorDetails?: unknown;
+    roleTitle?: string;
+    companyName?: string;
+    techStack?: string[];
+    seniorityLevel?: string;
+    archetypeId?: string;
+  }) => {
+    const logId = creationLogIdRef.current;
+    if (!logId) return;
+    try {
+      await fetch("/api/recruiter/simulations/creation-log", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logId, ...data }),
+      });
+    } catch (err) {
+      console.error("Failed to update creation log:", err);
+    }
+  };
+
   // Check if parsed JD data has enough usable info to proceed directly to generation.
   // Only require a role name — everything else has robust fallbacks in generatePreviewContent.
   const hasUsableData = (parsed: ParseJDResponse): boolean => {
@@ -247,6 +262,10 @@ export function RecruiterScenarioBuilderClient() {
     if (parsed.seniorityLevel.value) {
       setSeniorityLevel(parsed.seniorityLevel.value);
     }
+    if (parsed.roleArchetype?.value) {
+      const archetypeId = findArchetypeIdBySlug(parsed.roleArchetype.value, roleFamilies);
+      if (archetypeId) setSelectedArchetypeId(archetypeId);
+    }
   };
 
   const handleContinue = async () => {
@@ -254,6 +273,9 @@ export function RecruiterScenarioBuilderClient() {
 
     setIsLoading(true);
     setError(null);
+
+    // Log the creation attempt
+    await createLog({ source: "jd_paste" });
 
     try {
       // Step 1: Parse the job description
@@ -271,6 +293,15 @@ export function RecruiterScenarioBuilderClient() {
       const parsedData = await parseResponse.json() as ParseJDResponse;
       setParsedJDData(parsedData);
 
+      // Update log with parsed data
+      await updateLog({
+        status: "GENERATING",
+        roleTitle: parsedData.roleName.value || undefined,
+        companyName: parsedData.companyName.value || undefined,
+        techStack: parsedData.techStack.value || undefined,
+        seniorityLevel: parsedData.seniorityLevel.value || undefined,
+      });
+
       // Step 2: Check if we got enough data to generate directly
       if (!hasUsableData(parsedData)) {
         // Not enough info — redirect to guided form pre-filled with what we extracted
@@ -281,10 +312,12 @@ export function RecruiterScenarioBuilderClient() {
         return;
       }
 
-      // Step 3: Auto-infer archetype from role name
+      // Step 3: Auto-select archetype from AI classification
       if (!selectedArchetypeId || selectedArchetypeId === "none") {
-        const inferred = inferArchetype(parsedData.roleName.value || "", roleFamilies);
-        if (inferred) setSelectedArchetypeId(inferred);
+        if (parsedData.roleArchetype?.value) {
+          const archetypeId = findArchetypeIdBySlug(parsedData.roleArchetype.value, roleFamilies);
+          if (archetypeId) setSelectedArchetypeId(archetypeId);
+        }
       }
 
       // Step 4: Transition to generating step
@@ -295,7 +328,13 @@ export function RecruiterScenarioBuilderClient() {
 
     } catch (err) {
       console.error("Failed to parse job description:", err);
-      setError(err instanceof Error ? err.message : "Failed to analyze job description");
+      const errorMsg = err instanceof Error ? err.message : "Failed to analyze job description";
+      await updateLog({
+        status: "FAILED",
+        failedStep: "parse_jd",
+        errorMessage: errorMsg,
+      });
+      setError(errorMsg);
       setIsLoading(false);
     }
   };
@@ -344,6 +383,27 @@ export function RecruiterScenarioBuilderClient() {
     setIsLoading(true);
     setError(null);
 
+    // Log the creation attempt (or update existing one if we fell back from JD parse)
+    if (!creationLogIdRef.current) {
+      await createLog({
+        source: "guided",
+        roleTitle: roleTitle.trim(),
+        companyName: companyName.trim(),
+        techStack: selectedTechStack,
+        seniorityLevel: seniorityLevel || undefined,
+        archetypeId: selectedArchetypeId || undefined,
+      });
+    } else {
+      await updateLog({
+        status: "GENERATING",
+        roleTitle: roleTitle.trim(),
+        companyName: companyName.trim(),
+        techStack: selectedTechStack,
+        seniorityLevel: seniorityLevel || undefined,
+        archetypeId: selectedArchetypeId || undefined,
+      });
+    }
+
     try {
       // Transform guided form data to ParsedJDResponse shape
       const guidedData: ParseJDResponse = {
@@ -369,15 +429,16 @@ export function RecruiterScenarioBuilderClient() {
           value: companyDescription.trim() || null,
           confidence: companyDescription.trim() ? "medium" : "low",
         },
+        roleArchetype: {
+          value: null,
+          confidence: "low",
+        },
       };
 
       setParsedJDData(guidedData);
 
-      // Auto-infer archetype from role title if not already set
-      if (!selectedArchetypeId || selectedArchetypeId === "none") {
-        const inferred = inferArchetype(roleTitle.trim(), roleFamilies);
-        if (inferred) setSelectedArchetypeId(inferred);
-      }
+      // Use archetype from guided form selection (user already picked one via dropdown)
+      // No auto-inference needed — the guided form has the archetype dropdown
 
       // Transition to generating step
       setStep("generating");
@@ -387,7 +448,13 @@ export function RecruiterScenarioBuilderClient() {
 
     } catch (err) {
       console.error("Failed to process guided form:", err);
-      setError(err instanceof Error ? err.message : "Failed to process your input");
+      const errorMsg = err instanceof Error ? err.message : "Failed to process your input";
+      await updateLog({
+        status: "FAILED",
+        failedStep: "generate_tasks",
+        errorMessage: errorMsg,
+      });
+      setError(errorMsg);
       setIsLoading(false);
     }
   };
@@ -399,6 +466,12 @@ export function RecruiterScenarioBuilderClient() {
     setIsLoading(true);
     setSaveError(null);
     setSaveProgress("Creating simulation...");
+
+    // Update log to saving state
+    await updateLog({
+      status: "SAVING",
+      archetypeId: selectedArchetypeId || undefined,
+    });
 
     try {
       // Step 1: Auto-generate simulation name if not edited
@@ -489,13 +562,24 @@ export function RecruiterScenarioBuilderClient() {
         console.error("Repo provisioning failed (non-blocking):", err);
       });
 
-      // Step 6: Redirect to simulation detail page
+      // Step 6: Mark log as completed and redirect
+      await updateLog({
+        status: "COMPLETED",
+        scenarioId: scenario.id,
+      });
+
       setSaveProgress(null);
       router.push(`/recruiter/simulations/${scenario.id}/settings?success=true`);
 
     } catch (err) {
       console.error("Failed to save simulation:", err);
-      setSaveError(err instanceof Error ? err.message : "Failed to save simulation. Please try again.");
+      const errorMsg = err instanceof Error ? err.message : "Failed to save simulation. Please try again.";
+      await updateLog({
+        status: "FAILED",
+        failedStep: "save_scenario",
+        errorMessage: errorMsg,
+      });
+      setSaveError(errorMsg);
       setSaveProgress(null);
       setIsLoading(false);
     }
@@ -532,6 +616,12 @@ export function RecruiterScenarioBuilderClient() {
 
       if (!taskResponse.ok) {
         const errorBody = await taskResponse.json().catch(() => ({}));
+        await updateLog({
+          status: "FAILED",
+          failedStep: "generate_tasks",
+          errorMessage: errorBody.error || "Failed to generate tasks",
+          errorDetails: errorBody,
+        });
         throw new Error(errorBody.error || "Failed to generate tasks");
       }
 
@@ -557,6 +647,12 @@ export function RecruiterScenarioBuilderClient() {
 
       if (!coworkersResponse2.ok) {
         const errorBody = await coworkersResponse2.json().catch(() => ({}));
+        await updateLog({
+          status: "FAILED",
+          failedStep: "generate_coworkers",
+          errorMessage: errorBody.message || errorBody.error || "Failed to generate coworkers",
+          errorDetails: errorBody,
+        });
         throw new Error(errorBody.message || errorBody.error || "Failed to generate coworkers");
       }
 
@@ -578,6 +674,20 @@ export function RecruiterScenarioBuilderClient() {
       setIsLoading(false);
     } catch (err) {
       console.error("Failed to generate preview content:", err);
+      const errorMsg = err instanceof Error ? err.message : "Generation failed";
+      // Only update log if it wasn't already updated by the specific failure handler above
+      if (creationLogIdRef.current) {
+        // Check if already marked as FAILED by the specific handler
+        // Only update if error is generic (not already handled)
+        const isSpecificError = errorMsg.includes("Failed to generate tasks") || errorMsg.includes("Failed to generate coworkers");
+        if (!isSpecificError) {
+          await updateLog({
+            status: "FAILED",
+            failedStep: "generate_preview",
+            errorMessage: errorMsg,
+          });
+        }
+      }
       // Instead of dumping back to entry, fall back to guided form so user can adjust and retry
       if (parsedJDData) {
         prefillGuidedForm(parsedJDData);

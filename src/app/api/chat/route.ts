@@ -12,6 +12,7 @@ import type { Prisma } from "@prisma/client";
 import { AssessmentStatus } from "@prisma/client";
 import {
   buildChatPrompt,
+  buildCallNudgeInstruction,
   buildPRAcknowledgmentContext,
   INVALID_PR_PROMPT,
   DUPLICATE_PR_PROMPT,
@@ -162,7 +163,7 @@ export async function POST(request: Request) {
   };
 
   // Use centralized chat prompt with Slack-like conversation guidelines
-  const systemPrompt = buildChatPrompt(
+  let systemPrompt = buildChatPrompt(
     persona,
     {
       companyName: assessment.scenario.companyName,
@@ -173,6 +174,12 @@ export async function POST(request: Request) {
     memoryContext,
     crossCoworkerContext
   );
+
+  // Nudge non-manager coworkers to suggest a call after 3 user messages
+  const userMessageCount = existingMessages.filter(m => m.role === "user").length;
+  if (!isManager(coworker.role) && userMessageCount === 2) {
+    systemPrompt += buildCallNudgeInstruction();
+  }
 
   // Build history for Gemini - include system prompt as first message
   const history = existingMessages.map((msg) => ({
@@ -423,6 +430,7 @@ export async function POST(request: Request) {
     response: responseText,
     timestamp: modelMessage.timestamp,
     prSubmitted,
+    defenseCallRequired: isCoworkerManager && (prSubmitted || prAlreadySaved),
   });
 }
 

@@ -1,14 +1,15 @@
 /**
  * Tests for repository provisioning API endpoint (US-007)
+ *
+ * The route now uses AI-generated repo specs instead of static templates.
+ * provisionRepo(scenarioId, metadata) → { repoUrl, repoSpec }
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock functions need to be defined before vi.mock
 const mockAuth = vi.fn();
 const mockFindUnique = vi.fn();
 const mockUpdate = vi.fn();
-const mockSelectTemplate = vi.fn();
 const mockProvisionRepo = vi.fn();
 
 vi.mock("@/auth", () => ({
@@ -25,16 +26,56 @@ vi.mock("@/server/db", () => ({
 }));
 
 vi.mock("@/lib/scenarios/repo-templates", () => ({
-  selectTemplate: (...args: unknown[]) => mockSelectTemplate(...args),
   provisionRepo: (...args: unknown[]) => mockProvisionRepo(...args),
+  needsRepo: (techStack: string[]) => {
+    if (!techStack || techStack.length === 0) return false;
+    const engineering = [
+      "react", "typescript", "nextjs", "node", "express", "api",
+      "frontend", "backend", "fullstack",
+    ];
+    return techStack.some((t) =>
+      engineering.some(
+        (e) => t.toLowerCase().includes(e) || e.includes(t.toLowerCase())
+      )
+    );
+  },
 }));
 
 // Import after mocks
 import { POST } from "../route";
 
+// Full scenario mock that matches the new DB query shape
+const fullScenarioMock = {
+  id: "test-scenario-id",
+  name: "Senior Backend Engineer at Meta",
+  companyName: "Meta",
+  companyDescription: "Social media and technology company",
+  taskDescription: "Fix webhook reliability in the payments service",
+  techStack: ["react", "typescript", "nextjs"],
+  targetLevel: "senior",
+  repoUrl: null,
+  createdById: "recruiter-1",
+  coworkers: [
+    {
+      name: "Sarah Kim",
+      role: "Engineering Manager",
+      personaStyle: "Warm and supportive",
+      knowledge: [
+        {
+          topic: "code_review",
+          triggerKeywords: ["pr", "review"],
+          response: "Tag me for review",
+          isCritical: true,
+        },
+      ],
+    },
+  ],
+};
+
 describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
   const mockScenarioId = "test-scenario-id";
-  const mockRepoUrl = "https://github.com/skillvee/simulation-test-scenario-id";
+  const mockRepoUrl =
+    "https://github.com/skillvee/simulation-test-scenario-id";
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -50,7 +91,7 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
       const data = await response.json();
 
@@ -69,7 +110,7 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
       const data = await response.json();
 
@@ -94,7 +135,7 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
       const data = await response.json();
 
@@ -103,15 +144,9 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
     });
 
     it("should return 403 if user is not the scenario owner", async () => {
-      mockAuth.mockResolvedValue({
-        user: { id: "recruiter-1", role: "RECRUITER" },
-      });
-
       mockFindUnique.mockResolvedValue({
-        id: mockScenarioId,
+        ...fullScenarioMock,
         createdById: "other-recruiter",
-        techStack: ["react", "typescript"],
-        repoUrl: null,
       });
 
       const request = new Request("http://localhost:3000/api/test", {
@@ -120,7 +155,7 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
       const data = await response.json();
 
@@ -134,21 +169,14 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       mockFindUnique.mockResolvedValue({
-        id: mockScenarioId,
+        ...fullScenarioMock,
         createdById: "other-recruiter",
-        techStack: ["react", "typescript"],
-        repoUrl: null,
       });
 
-      mockSelectTemplate.mockReturnValue({
-        id: "nextjs-typescript",
-        name: "Next.js + TypeScript Starter",
-        repoTemplate: "skillvee/nextjs-typescript-starter",
-        matchesTechStack: ["react", "typescript"],
-        description: "Test template",
+      mockProvisionRepo.mockResolvedValue({
+        repoUrl: mockRepoUrl,
+        repoSpec: { projectName: "test" },
       });
-
-      mockProvisionRepo.mockResolvedValue(mockRepoUrl);
 
       mockUpdate.mockResolvedValue({
         id: mockScenarioId,
@@ -161,7 +189,7 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
 
       expect(response.status).toBe(200);
@@ -169,19 +197,14 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
   });
 
   describe("repository already provisioned", () => {
-    beforeEach(() => {
+    it("should return existing repo URL if already provisioned", async () => {
       mockAuth.mockResolvedValue({
         user: { id: "recruiter-1", role: "RECRUITER" },
       });
-    });
 
-    it("should return existing repo URL if already provisioned", async () => {
       const existingRepoUrl = "https://github.com/skillvee/existing-repo";
-
       mockFindUnique.mockResolvedValue({
-        id: mockScenarioId,
-        createdById: "recruiter-1",
-        techStack: ["react", "typescript"],
+        ...fullScenarioMock,
         repoUrl: existingRepoUrl,
       });
 
@@ -191,7 +214,7 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
       const data = await response.json();
 
@@ -199,10 +222,7 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       expect(data.success).toBe(true);
       expect(data.message).toBe("Repository already provisioned");
       expect(data.repoUrl).toBe(existingRepoUrl);
-
-      // Should not call provision functions
       expect(mockProvisionRepo).not.toHaveBeenCalled();
-      expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
 
@@ -212,24 +232,14 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
         user: { id: "recruiter-1", role: "RECRUITER" },
       });
 
-      mockFindUnique.mockResolvedValue({
-        id: mockScenarioId,
-        createdById: "recruiter-1",
-        techStack: ["react", "typescript", "nextjs"],
-        repoUrl: null,
-      });
+      mockFindUnique.mockResolvedValue(fullScenarioMock);
     });
 
-    it("should auto-select template based on tech stack", async () => {
-      mockSelectTemplate.mockReturnValue({
-        id: "nextjs-typescript",
-        name: "Next.js + TypeScript Starter",
-        repoTemplate: "skillvee/nextjs-typescript-starter",
-        matchesTechStack: ["react", "typescript"],
-        description: "Test template",
+    it("should provision repo with scenario metadata", async () => {
+      mockProvisionRepo.mockResolvedValue({
+        repoUrl: mockRepoUrl,
+        repoSpec: { projectName: "payment-gateway" },
       });
-
-      mockProvisionRepo.mockResolvedValue(mockRepoUrl);
 
       mockUpdate.mockResolvedValue({
         id: mockScenarioId,
@@ -242,57 +252,33 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
       const data = await response.json();
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(data.repoUrl).toBe(mockRepoUrl);
-      expect(data.templateId).toBe("nextjs-typescript");
 
-      expect(mockSelectTemplate).toHaveBeenCalledWith([
-        "react",
-        "typescript",
-        "nextjs",
-      ]);
+      // Verify provisionRepo was called with scenarioId and metadata
       expect(mockProvisionRepo).toHaveBeenCalledWith(
         mockScenarioId,
-        "nextjs-typescript"
+        expect.objectContaining({
+          companyName: "Meta",
+          taskDescription: "Fix webhook reliability in the payments service",
+          techStack: ["react", "typescript", "nextjs"],
+          targetLevel: "senior",
+        })
       );
+
+      // Verify scenario was updated with repo URL and cached spec
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: mockScenarioId },
-        data: { repoUrl: mockRepoUrl },
+        data: {
+          repoUrl: mockRepoUrl,
+          repoSpec: { projectName: "payment-gateway" },
+        },
       });
-    });
-
-    it("should use explicit templateId if provided", async () => {
-      mockProvisionRepo.mockResolvedValue(mockRepoUrl);
-
-      mockUpdate.mockResolvedValue({
-        id: mockScenarioId,
-        repoUrl: mockRepoUrl,
-      });
-
-      const request = new Request("http://localhost:3000/api/test", {
-        method: "POST",
-        body: JSON.stringify({ templateId: "python-fastapi" }),
-      });
-
-      const response = await POST(request, {
-        params: { id: mockScenarioId },
-      });
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.templateId).toBe("python-fastapi");
-
-      // Should not call selectTemplate when explicit templateId provided
-      expect(mockSelectTemplate).not.toHaveBeenCalled();
-      expect(mockProvisionRepo).toHaveBeenCalledWith(
-        mockScenarioId,
-        "python-fastapi"
-      );
     });
   });
 
@@ -302,24 +288,11 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
         user: { id: "recruiter-1", role: "RECRUITER" },
       });
 
-      mockFindUnique.mockResolvedValue({
-        id: mockScenarioId,
-        createdById: "recruiter-1",
-        techStack: ["react", "typescript"],
-        repoUrl: null,
-      });
-
-      mockSelectTemplate.mockReturnValue({
-        id: "nextjs-typescript",
-        name: "Next.js + TypeScript Starter",
-        repoTemplate: "skillvee/nextjs-typescript-starter",
-        matchesTechStack: ["react", "typescript"],
-        description: "Test template",
-      });
+      mockFindUnique.mockResolvedValue(fullScenarioMock);
     });
 
-    it("should return 500 if GitHub API fails", async () => {
-      mockProvisionRepo.mockResolvedValue(null);
+    it("should return 500 if provisioning returns null repoUrl", async () => {
+      mockProvisionRepo.mockResolvedValue({ repoUrl: null });
 
       const request = new Request("http://localhost:3000/api/test", {
         method: "POST",
@@ -327,15 +300,12 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
       const data = await response.json();
 
       expect(response.status).toBe(500);
       expect(data.error).toBe("Repository provisioning failed");
-      expect(data.details).toContain("GitHub API");
-
-      // Should not update scenario if provisioning failed
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 
@@ -348,74 +318,42 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
       const data = await response.json();
 
       expect(response.status).toBe(500);
       expect(data.error).toBe("Repository provisioning failed");
       expect(data.details).toBe("Network error");
-
-      // Should not update scenario if provisioning failed
       expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
 
-  describe("request body parsing", () => {
-    beforeEach(() => {
+  describe("non-engineering scenarios", () => {
+    it("should skip provisioning for non-engineering tech stacks", async () => {
       mockAuth.mockResolvedValue({
         user: { id: "recruiter-1", role: "RECRUITER" },
       });
 
       mockFindUnique.mockResolvedValue({
-        id: mockScenarioId,
-        createdById: "recruiter-1",
-        techStack: ["react"],
-        repoUrl: null,
+        ...fullScenarioMock,
+        techStack: ["sales", "crm"],
       });
 
-      mockSelectTemplate.mockReturnValue({
-        id: "nextjs-typescript",
-        name: "Next.js + TypeScript Starter",
-        repoTemplate: "skillvee/nextjs-typescript-starter",
-        matchesTechStack: ["react"],
-        description: "Test template",
-      });
-
-      mockProvisionRepo.mockResolvedValue(mockRepoUrl);
-      mockUpdate.mockResolvedValue({
-        id: mockScenarioId,
-        repoUrl: mockRepoUrl,
-      });
-    });
-
-    it("should handle malformed JSON body gracefully", async () => {
       const request = new Request("http://localhost:3000/api/test", {
         method: "POST",
-        body: "invalid json",
+        body: JSON.stringify({}),
       });
 
       const response = await POST(request, {
-        params: { id: mockScenarioId },
+        params: Promise.resolve({ id: mockScenarioId }),
       });
+      const data = await response.json();
 
-      // Should fall back to auto-selecting template
       expect(response.status).toBe(200);
-      expect(mockSelectTemplate).toHaveBeenCalled();
-    });
-
-    it("should handle empty request body", async () => {
-      const request = new Request("http://localhost:3000/api/test", {
-        method: "POST",
-      });
-
-      const response = await POST(request, {
-        params: { id: mockScenarioId },
-      });
-
-      // Should fall back to auto-selecting template
-      expect(response.status).toBe(200);
-      expect(mockSelectTemplate).toHaveBeenCalled();
+      expect(data.skipped).toBe(true);
+      expect(data.reason).toBe("non-engineering");
+      expect(mockProvisionRepo).not.toHaveBeenCalled();
     });
   });
 });

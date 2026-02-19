@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Monitor, Mic, AlertTriangle, ArrowRight } from "lucide-react";
+import { Monitor, Mic, Camera, AlertTriangle, ArrowRight } from "lucide-react";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 import { shouldSkipScreenRecording } from "@/lib/core";
 import {
@@ -64,7 +64,7 @@ function ScreenRecordingGuardInner({
     );
 
     if (wasRecording === "active" && state === "stopped") {
-      // Recording was active but stopped (user closed screen share)
+      // Recording was active but stopped (user closed screen share or webcam disconnected)
       setShowStoppedModal(true);
       setShowInitialModal(false);
     } else if (state === "stopped" && permissionState === "stopped") {
@@ -121,6 +121,12 @@ function ScreenRecordingGuardInner({
                     +
                   </span>
                   <div className="rounded-xl bg-primary/10 p-4">
+                    <Camera className="h-8 w-8 text-primary" />
+                  </div>
+                  <span className="text-xl font-semibold text-muted-foreground">
+                    +
+                  </span>
+                  <div className="rounded-xl bg-primary/10 p-4">
                     <Mic className="h-8 w-8 text-primary" />
                   </div>
                 </div>
@@ -148,6 +154,17 @@ function ScreenRecordingGuardInner({
                     <span className="font-semibold">Screen Recording</span>
                     <p className="text-sm text-muted-foreground">
                       Your screen will be recorded during the work session
+                    </p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="rounded-full bg-primary/10 p-1.5">
+                    <Camera className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <span className="font-semibold">Webcam Recording</span>
+                    <p className="text-sm text-muted-foreground">
+                      Your webcam will be recorded for identity verification
                     </p>
                   </div>
                 </li>
@@ -191,7 +208,7 @@ function ScreenRecordingGuardInner({
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                You will be prompted to share your screen next
+                You will be prompted to share your screen and enable your webcam
               </p>
             </DialogFooter>
           </DialogContent>
@@ -222,10 +239,10 @@ function ScreenRecordingGuardInner({
               </div>
 
               <DialogTitle className="text-center text-2xl">
-                Screen Recording Stopped
+                Recording Stopped
               </DialogTitle>
               <DialogDescription className="text-center">
-                Your screen recording has stopped
+                Your screen or webcam recording has stopped
               </DialogDescription>
             </DialogHeader>
 
@@ -233,11 +250,11 @@ function ScreenRecordingGuardInner({
             <div className="rounded-lg bg-muted p-6">
               <p className="mb-4 text-muted-foreground">
                 To continue with the assessment, you need to share your screen
-                again.
+                and enable your webcam again.
               </p>
               <p className="text-sm text-muted-foreground">
-                Screen recording is required to capture your work process and
-                provide you with detailed feedback.
+                Both screen and webcam recording are required to capture your
+                work process and provide you with detailed feedback.
               </p>
             </div>
 
@@ -257,13 +274,13 @@ function ScreenRecordingGuardInner({
                 ) : (
                   <>
                     <Monitor className="h-4 w-4" />
-                    Resume Screen Sharing
+                    Resume Recording
                   </>
                 )}
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                You cannot continue without screen sharing enabled
+                You cannot continue without screen and webcam recording enabled
               </p>
             </DialogFooter>
           </DialogContent>

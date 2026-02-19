@@ -39,6 +39,8 @@ export function createMockAssessment(
     status: AssessmentStatus.WELCOME,
     startedAt: now,
     completedAt: null,
+    repoUrl: null,
+    repoStatus: "pending",
     prUrl: null,
     prSnapshot: null,
     ciStatus: null,

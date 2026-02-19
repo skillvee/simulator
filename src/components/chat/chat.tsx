@@ -11,6 +11,10 @@ import { useManagerAutoStart } from "@/hooks";
 import { playMessageSound, markUserInteraction } from "@/lib/sounds";
 import type { ChatMessage, MessageReaction } from "@/types";
 
+// Track which coworkers have already had sequential message reveal
+// Module-level so it persists across remounts within the same session
+const revealedCoworkers = new Set<string>();
+
 interface Coworker {
   id: string;
   name: string;
@@ -22,6 +26,18 @@ interface ChatProps {
   assessmentId: string;
   coworker: Coworker;
   onNewMessage?: (coworkerId: string) => void;
+  /** Cached messages from parent — used to restore state instantly on coworker switch */
+  cachedMessages?: ChatMessage[];
+  /** Called whenever messages change so parent can cache them per-coworker */
+  onMessagesChange?: (coworkerId: string, messages: ChatMessage[]) => void;
+  /** Disable text input (e.g., during voice kickoff) */
+  disableInput?: boolean;
+  /** Reason displayed when input is disabled */
+  disableReason?: string;
+  /** Initial PR URL — if set and coworker is manager, enables defense mode */
+  initialPrUrl?: string | null;
+  /** Skip manager auto-start text messages (used when voice kickoff is active) */
+  skipManagerAutoStart?: boolean;
 }
 
 // Note: PR submission handling and defense call flow will be implemented
@@ -59,18 +75,30 @@ export function Chat({
   assessmentId,
   coworker,
   onNewMessage,
+  cachedMessages,
+  onMessagesChange,
+  disableInput,
+  disableReason,
+  initialPrUrl,
+  skipManagerAutoStart,
 }: ChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(cachedMessages ?? []);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [, setIsManagerTyping] = useState(false);
   const [isCoworkerTyping, setIsCoworkerTyping] = useState(false);
   const [userHasSentMessage, setUserHasSentMessage] = useState(false);
+  const [defenseCallRequired, setDefenseCallRequired] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const historyLoadedRef = useRef(false);
+  const historyLoadedRef = useRef<string | null>(null);
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Defense mode: disable text input when PR submitted and coworker is manager
+  const isManagerCoworker = coworker.role.toLowerCase().includes("manager");
+  const isDefenseMode = defenseCallRequired || !!(initialPrUrl && isManagerCoworker);
+  const isInputDisabled = disableInput || isDefenseMode;
 
   // Check if currently in a call with this coworker
   const { activeCall, startCall } = useCallContext();
@@ -84,28 +112,47 @@ export function Chat({
     }
 
     setIsCoworkerTyping(true);
-    let cycle = 0;
 
-    const runCycle = () => {
-      // Show typing for 1-3 seconds
-      setIsCoworkerTyping(true);
-      const typingDuration = 1000 + Math.random() * 2000;
+    // Randomly decide the typing pattern (not always the same)
+    const pattern = Math.random();
 
-      setTimeout(() => {
-        cycle++;
-        if (cycle < 3) {
-          // Pause for 0.5-1 seconds then restart
-          setIsCoworkerTyping(false);
-          const pauseDuration = 500 + Math.random() * 500;
-          typingIntervalRef.current = setTimeout(runCycle, pauseDuration);
-        } else {
-          // After 3 cycles, stay showing typing until response arrives
+    if (pattern < 0.45) {
+      // 45% - Just type continuously (most common in real chat)
+      // No pauses, typing stays on until response arrives
+      return;
+    }
+
+    if (pattern < 0.75) {
+      // 30% - One brief pause (they're thinking mid-sentence)
+      const firstTypingDuration = 2000 + Math.random() * 3000;
+      typingIntervalRef.current = setTimeout(() => {
+        setIsCoworkerTyping(false);
+        const pauseDuration = 800 + Math.random() * 1200;
+        typingIntervalRef.current = setTimeout(() => {
           setIsCoworkerTyping(true);
+        }, pauseDuration);
+      }, firstTypingDuration);
+      return;
+    }
+
+    // 25% - Two pauses (rewriting/rethinking their response)
+    let pauseCount = 0;
+    const scheduleNextPause = () => {
+      const typingDuration = 1500 + Math.random() * 2500;
+      typingIntervalRef.current = setTimeout(() => {
+        pauseCount++;
+        if (pauseCount < 2) {
+          setIsCoworkerTyping(false);
+          const pauseDuration = 600 + Math.random() * 1000;
+          typingIntervalRef.current = setTimeout(() => {
+            setIsCoworkerTyping(true);
+            scheduleNextPause();
+          }, pauseDuration);
         }
+        // After 2 pauses, stay typing until response arrives
       }, typingDuration);
     };
-
-    runCycle();
+    scheduleNextPause();
   }, []);
 
   // Function to stop realistic typing pattern
@@ -143,38 +190,110 @@ export function Chat({
   }, [stopRealisticTyping]);
 
   // RF-015: Manager auto-start messages
-  // Triggers initial manager messages after 5-10 seconds on first visit
-  useManagerAutoStart({
+  // Triggers initial manager messages after a short delay on first visit
+  // When voice kickoff is active, skip text auto-delivery (messages come after call ends)
+  const { managerId: autoStartManagerId } = useManagerAutoStart({
     assessmentId,
     currentCoworkerId: coworker.id,
     onMessagesReceived: handleManagerMessages,
     onTypingStart: handleTypingStart,
     onTypingEnd: handleTypingEnd,
     userHasSentMessage,
+    skipAutoStart: skipManagerAutoStart,
   });
 
+  // If we're viewing the manager's chat and messages haven't arrived yet,
+  // show typing indicator instead of "Start a conversation" prompt
+  const isManagerChat = autoStartManagerId === coworker.id;
+
+  // Reveal manager-only history one message at a time with typing indicator
+  const revealMessagesSequentially = useCallback(
+    async (msgs: ChatMessage[]) => {
+      for (let i = 0; i < msgs.length; i++) {
+        // Show typing indicator before each message
+        setIsCoworkerTyping(true);
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1500 + Math.random() * 1500) // 1.5-3s typing
+        );
+        setIsCoworkerTyping(false);
+
+        // Add this message
+        setMessages((prev) => [...prev, msgs[i]]);
+        playMessageSound();
+
+        // Short pause between messages (0.5-1.5s)
+        if (i < msgs.length - 1) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 500 + Math.random() * 1000)
+          );
+        }
+      }
+    },
+    []
+  );
+
+  // Sync messages back to parent cache whenever they change
+  const onMessagesChangeRef = useRef(onMessagesChange);
+  onMessagesChangeRef.current = onMessagesChange;
+  useEffect(() => {
+    if (messages.length > 0) {
+      onMessagesChangeRef.current?.(coworker.id, messages);
+    }
+  }, [messages, coworker.id]);
+
   // Load chat history on mount
+  // If we have cached messages, show them instantly but also fetch from API
+  // in the background to fill in any messages missed during interrupted stagger delivery
   useEffect(() => {
     async function loadHistory() {
-      // Prevent duplicate loads
-      if (historyLoadedRef.current) return;
-      historyLoadedRef.current = true;
+      // Prevent duplicate loads for the same coworker
+      if (historyLoadedRef.current === coworker.id) return;
+      historyLoadedRef.current = coworker.id;
 
-      setIsLoading(true);
+      const hasCached = cachedMessages && cachedMessages.length > 0;
+
+      // If we have cached messages, show them instantly (no loading state)
+      // but still fetch from API below to reconcile any gaps
+      if (!hasCached) {
+        setIsLoading(true);
+      }
+
       try {
         const data = await api<{ messages: ChatMessage[] }>(
           `/api/chat?assessmentId=${assessmentId}&coworkerId=${coworker.id}`
         );
-        setMessages(data.messages || []);
+        const history = data.messages || [];
+
+        if (hasCached) {
+          // Reconcile: if API has more messages than cache, update to full history
+          if (history.length > (cachedMessages?.length ?? 0)) {
+            setMessages(history);
+          }
+          // Otherwise cache is already up-to-date, no update needed
+        } else {
+          // No cache — first load for this coworker
+          // If all messages are from the coworker (no user messages yet)
+          // and we haven't revealed for this coworker before, reveal one-by-one
+          const hasUserMessages = history.some((m) => m.role === "user");
+          if (!hasUserMessages && history.length > 0 && !revealedCoworkers.has(coworker.id)) {
+            revealedCoworkers.add(coworker.id);
+            setIsLoading(false);
+            await revealMessagesSequentially(history);
+            return;
+          } else {
+            setMessages(history);
+          }
+        }
+        setIsLoading(false);
       } catch (err) {
         console.error("Failed to load chat history:", err);
-        historyLoadedRef.current = false; // Allow retry on error
-      } finally {
+        historyLoadedRef.current = null; // Allow retry on error
         setIsLoading(false);
       }
     }
     loadHistory();
-  }, [assessmentId, coworker.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assessmentId, coworker.id, revealMessagesSequentially]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -214,25 +333,13 @@ export function Chat({
     setInput("");
     setIsSending(true);
 
-    // Start the realistic typing pattern
-    startRealisticTyping();
-
     try {
-      // Calculate delay based on coworker response speed
-      const getResponseDelay = (role: string): number => {
-        const isManager = role.toLowerCase().includes("manager");
-        if (isManager) return 2000 + Math.random() * 3000;  // 2-5s
-        return 5000 + Math.random() * 10000;  // 5-15s
-      };
-
-      const delay = getResponseDelay(coworker.role);
-      const delayPromise = new Promise(resolve => setTimeout(resolve, delay));
-
-      // Start API call and delay timer in parallel
+      // Start API call immediately (runs in background during reading delay)
       const apiPromise = api<{
         response: string;
         timestamp: string;
         prSubmitted?: boolean;
+        defenseCallRequired?: boolean;
       }>("/api/chat", {
         method: "POST",
         body: {
@@ -242,7 +349,26 @@ export function Chat({
         },
       });
 
-      // Wait for both API response and minimum delay
+      // Simulate "reading" delay before coworker starts typing
+      // Longer messages take longer to read (~200ms per word, min 1.5s, max 5s)
+      const wordCount = userMessage.text.split(/\s+/).length;
+      const readingDelay = Math.min(5000, Math.max(1500, wordCount * 200)) + Math.random() * 1500;
+      await new Promise(resolve => setTimeout(resolve, readingDelay));
+
+      // Now start the realistic typing pattern (after they've "read" the message)
+      startRealisticTyping();
+
+      // Additional composing delay based on coworker response speed
+      const getResponseDelay = (role: string): number => {
+        const isManager = role.toLowerCase().includes("manager");
+        if (isManager) return 2000 + Math.random() * 3000;  // 2-5s
+        return 5000 + Math.random() * 10000;  // 5-15s
+      };
+
+      const delay = getResponseDelay(coworker.role);
+      const delayPromise = new Promise(resolve => setTimeout(resolve, delay));
+
+      // Wait for both API response and composing delay
       const [data] = await Promise.all([apiPromise, delayPromise]);
 
       const modelMessage: ChatMessage = {
@@ -287,8 +413,10 @@ export function Chat({
         }, delay);
       }
 
-      // Note: PR detection and defense call flow will be handled in RF-012.
-      // The manager will prompt the candidate to call them after PR submission.
+      // Enable defense mode when PR is submitted — disables text input
+      if (data.prSubmitted || data.defenseCallRequired) {
+        setDefenseCallRequired(true);
+      }
     } catch (err) {
       // Remove the optimistic message on error
       setMessages((prev) => prev.slice(0, -1));
@@ -337,6 +465,14 @@ export function Chat({
                 <Headphones size={14} className="text-white" />
                 <span className="text-sm font-medium text-white">In Call</span>
               </div>
+            ) : isDefenseMode ? (
+              <Button
+                size="sm"
+                className="shadow-sm rounded-full animate-pulse bg-primary text-primary-foreground"
+                onClick={() => startCall(coworker.id, "coworker")}
+              >
+                <Headphones className="h-4 w-4 mr-2" /> Call Manager
+              </Button>
             ) : (
               <Button
                 size="sm"
@@ -358,23 +494,41 @@ export function Chat({
                 <div style={{color: "hsl(var(--slack-text-muted))"}}>Loading...</div>
               </div>
             ) : messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-center py-20">
-                <div className="mb-4">
-                  <CoworkerAvatar
-                    name={coworker.name}
-                    avatarUrl={coworker.avatarUrl}
-                    size="lg"
-                    className="shadow-md border border-border"
-                  />
+              isManagerChat ? (
+                // Manager will auto-start — show typing indicator so the candidate
+                // knows they don't need to initiate
+                <div className="flex h-full flex-col justify-end pb-4">
+                  <div className="flex gap-4">
+                    <CoworkerAvatar
+                      name={coworker.name}
+                      avatarUrl={coworker.avatarUrl}
+                      size="md"
+                      className="mt-1 shadow-sm border border-border"
+                    />
+                    <div className="flex flex-col items-start">
+                      <TypingIndicator coworkerName={coworker.name} />
+                    </div>
+                  </div>
                 </div>
-                <h2 className="mb-2 text-lg font-semibold" style={{color: "hsl(var(--slack-text))"}}>
-                  Start a conversation with {coworker.name}
-                </h2>
-                <p className="max-w-md text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
-                  {coworker.name} is a {coworker.role}. Ask questions about the
-                  project, codebase, or anything else you need help with.
-                </p>
-              </div>
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center text-center py-20">
+                  <div className="mb-4">
+                    <CoworkerAvatar
+                      name={coworker.name}
+                      avatarUrl={coworker.avatarUrl}
+                      size="lg"
+                      className="shadow-md border border-border"
+                    />
+                  </div>
+                  <h2 className="mb-2 text-lg font-semibold" style={{color: "hsl(var(--slack-text))"}}>
+                    Start a conversation with {coworker.name}
+                  </h2>
+                  <p className="max-w-md text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
+                    {coworker.name} is a {coworker.role}. Ask questions about the
+                    project, codebase, or anything else you need help with.
+                  </p>
+                </div>
+              )
             ) : (
               <>
                 {messages.map((message, index) => {
@@ -474,28 +628,48 @@ export function Chat({
 
         {/* Input area */}
         <div className="shrink-0 p-4" style={{borderTop: "1px solid hsl(var(--slack-border))"}}>
-          <div className="flex items-center gap-2 p-2 pl-4 rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all" style={{background: "hsl(var(--slack-bg-input))", border: "1px solid hsl(var(--slack-border))"}}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onClick={() => markUserInteraction()}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
-              disabled={isSending}
-              className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-slate-500"
-              style={{color: "hsl(var(--slack-text))"}}
-            />
-            <Button
-              size="icon"
-              onClick={sendMessage}
-              disabled={!input.trim() || isSending}
-              className="h-9 w-9 rounded-full shadow-sm"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
+          {isInputDisabled ? (
+            <div className="flex items-center justify-center gap-3 py-3 px-4 rounded-full" style={{background: "hsl(var(--slack-bg-surface))", border: "1px solid hsl(var(--slack-border))"}}>
+              <Headphones className="h-4 w-4 shrink-0" style={{color: "hsl(var(--slack-text-muted))"}} />
+              <span className="text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
+                {isDefenseMode
+                  ? "Call your manager to walk through your PR"
+                  : disableReason || "Text input is disabled"}
+              </span>
+              {isDefenseMode && !isInCall && (
+                <Button
+                  size="sm"
+                  className="rounded-full ml-2 shrink-0"
+                  onClick={() => startCall(coworker.id, "coworker")}
+                >
+                  <Headphones className="h-3 w-3 mr-1" /> Call Now
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 p-2 pl-4 rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all" style={{background: "hsl(var(--slack-bg-input))", border: "1px solid hsl(var(--slack-border))"}}>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onClick={() => markUserInteraction()}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message..."
+                disabled={isSending}
+                className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-slate-500"
+                style={{color: "hsl(var(--slack-text))"}}
+              />
+              <Button
+                size="icon"
+                onClick={sendMessage}
+                disabled={!input.trim() || isSending}
+                className="h-9 w-9 rounded-full shadow-sm"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

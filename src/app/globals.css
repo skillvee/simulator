@@ -71,16 +71,25 @@
   /* Slack-inspired dark theme for chat interface */
   .slack-theme {
     --slack-bg-sidebar: 217 25% 12%; /* Darkest - sidebar background */
-    --slack-bg-main: 217 20% 16%; /* Main chat panel background */
+    --slack-bg-main: 0 0% 100%; /* Main chat panel - white */
     --slack-bg-hover: 217 20% 20%; /* Hover state background */
-    --slack-bg-surface: 217 20% 22%; /* Message bubbles, cards */
-    --slack-bg-input: 217 20% 14%; /* Input fields background */
-    --slack-border: 217 15% 25%; /* Borders */
-    --slack-text: 210 10% 93%; /* Primary text color */
-    --slack-text-muted: 210 10% 60%; /* Secondary/muted text */
+    --slack-bg-surface: 220 14% 96%; /* Message bubbles, cards - light gray */
+    --slack-bg-input: 220 14% 96%; /* Input fields background */
+    --slack-border: 220 13% 91%; /* Borders - light */
+    --slack-text: 224 71% 4%; /* Primary text color - near black */
+    --slack-text-muted: 220 9% 46%; /* Secondary/muted text */
   }
 
-  /* Dark theme scrollbar styling */
+  /* Keep dark colors for the sidebar only */
+  .slack-theme aside {
+    --slack-bg-hover: 217 20% 20%;
+    --slack-bg-surface: 217 20% 22%;
+    --slack-border: 217 15% 25%;
+    --slack-text: 210 10% 93%;
+    --slack-text-muted: 210 10% 60%;
+  }
+
+  /* Scrollbar styling */
   .slack-theme ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -90,13 +99,24 @@
     background: transparent;
   }
 
-  .slack-theme ::-webkit-scrollbar-thumb {
+  /* Dark scrollbar for sidebar */
+  .slack-theme aside ::-webkit-scrollbar-thumb {
     background: hsl(217 15% 25%);
     border-radius: 4px;
   }
 
-  .slack-theme ::-webkit-scrollbar-thumb:hover {
+  .slack-theme aside ::-webkit-scrollbar-thumb:hover {
     background: hsl(217 15% 30%);
+  }
+
+  /* Light scrollbar for main content */
+  .slack-theme main ::-webkit-scrollbar-thumb {
+    background: hsl(220 13% 82%);
+    border-radius: 4px;
+  }
+
+  .slack-theme main ::-webkit-scrollbar-thumb:hover {
+    background: hsl(220 13% 72%);
   }
 
   /* Firefox scrollbar styling */

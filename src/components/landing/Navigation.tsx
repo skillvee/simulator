@@ -114,7 +114,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
                     className={`rounded-full px-6 ${
                       isDark
                         ? "border-white/30 text-white bg-transparent hover:bg-white/10 hover:border-white/50"
-                        : ""
+                        : "text-stone-700 hover:text-stone-900 hover:bg-stone-100"
                     }`}
                   >
                     Sign in

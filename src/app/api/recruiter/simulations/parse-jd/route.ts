@@ -114,6 +114,7 @@ export async function POST(request: Request) {
       "seniorityLevel",
       "keyResponsibilities",
       "domainContext",
+      "roleArchetype",
     ];
 
     const missingFields = expectedFields.filter(

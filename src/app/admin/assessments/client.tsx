@@ -163,7 +163,7 @@ export function AssessmentsClient({
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="px-8 py-10">
       <h1 className="mb-8 text-3xl font-semibold">Assessment Diagnostics</h1>
 
       {/* Aggregate Stats */}
@@ -434,7 +434,7 @@ function AssessmentDetails({
               <span className="text-muted-foreground">ID:</span> {assessment.id}
             </p>
             <p>
-              <span className="text-muted-foreground">Scenario:</span>{" "}
+              <span className="text-muted-foreground">Simulation:</span>{" "}
               {assessment.scenario.name}
             </p>
             <p>

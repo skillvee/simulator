@@ -2,9 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Monitor, Bot, Sparkles } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Monitor,
+  Bot,
+  Sparkles,
+  AppWindow,
+  ExternalLink,
+  MessageSquare,
+  Loader2,
+} from "lucide-react";
 
 interface ScenarioData {
   name: string;
@@ -25,9 +36,11 @@ export function WelcomePageClient({
 }: WelcomePageClientProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [isLaunching, setIsLaunching] = useState(false);
   const totalSteps = 3;
 
   const handleStart = () => {
+    setIsLaunching(true);
     router.push(`/assessments/${assessmentId}/work`);
   };
 
@@ -44,11 +57,16 @@ export function WelcomePageClient({
           className="absolute top-[-20%] left-[-20%] w-full h-full bg-primary/20 rounded-full blur-[150px] pointer-events-none"
         />
 
-        <header className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-primary font-black text-xl">
-            S
-          </div>
-          <span className="text-xl font-bold tracking-tight">SkillVee</span>
+        <header className="relative z-10">
+          <Image
+            src="/skillvee-logo.png"
+            alt="Skillvee"
+            width={120}
+            height={32}
+            className="object-contain brightness-0 invert"
+            style={{ height: "auto" }}
+            priority
+          />
         </header>
 
         <main className="relative z-10 py-12 lg:py-20">
@@ -56,26 +74,6 @@ export function WelcomePageClient({
             {step === 1 && (
               <motion.div
                 key="step1-left"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-8"
-              >
-                <h1 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-white">
-                  YOUR
-                  <br />
-                  NEXT ROLE.
-                </h1>
-                <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl">
-                  {scenario.companyName} is looking for someone to join their
-                  team. Experience a day in the role before you commit.
-                </p>
-              </motion.div>
-            )}
-
-            {step === 2 && (
-              <motion.div
-                key="step2-left"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -89,6 +87,27 @@ export function WelcomePageClient({
                   This is a simulation of real work. You&apos;ll collaborate
                   with AI teammates, use your favorite tools, and solve actual
                   problems.
+                </p>
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div
+                key="step2-left"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-8"
+              >
+                <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
+                  YOUR
+                  <br />
+                  SETUP.
+                </h2>
+                <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl leading-relaxed">
+                  Use your own IDE, browser, terminal — everything on your
+                  computer. We record your screen and assess how you actually
+                  work.
                 </p>
               </motion.div>
             )}
@@ -120,8 +139,12 @@ export function WelcomePageClient({
             AI Teammates
           </div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Use Any AI Tools
+            <AppWindow className="w-4 h-4 text-primary" />
+            Your Own Tools
+          </div>
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <Monitor className="w-4 h-4 text-primary" />
+            Screen Recorded
           </div>
         </footer>
       </div>
@@ -132,11 +155,12 @@ export function WelcomePageClient({
           {/* Progress Bar */}
           <div className="flex gap-2">
             {Array.from({ length: totalSteps }, (_, i) => i + 1).map((i) => (
-              <div
+              <button
                 key={i}
+                onClick={() => i < step && setStep(i)}
                 className={`h-1 flex-1 rounded-full transition-all duration-500 ${
                   i <= step ? "bg-primary" : "bg-slate-100"
-                }`}
+                } ${i < step ? "cursor-pointer hover:opacity-70" : "cursor-default"}`}
               />
             ))}
           </div>
@@ -155,17 +179,49 @@ export function WelcomePageClient({
                     Step 01
                   </h4>
                   <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                    Welcome
+                    The Experience
                   </h3>
                 </div>
-                <p className="text-slate-500 leading-relaxed font-medium">
-                  You&apos;ve been invited to experience a day at{" "}
-                  <span className="text-slate-900 font-semibold">
-                    {scenario.companyName}
-                  </span>
-                  . This simulation assesses how you work, not just what you
-                  produce.
-                </p>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Bot className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      Work with{" "}
+                      <strong>AI-powered teammates</strong> via chat.
+                      They&apos;ll respond just like real colleagues.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Monitor className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      Your{" "}
+                      <strong>
+                        entire screen will be recorded
+                      </strong>
+                      . We assess how you work, not just the end result.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Sparkles className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      <strong>Use any AI tools</strong> you want. Copilot,
+                      ChatGPT, Claude — whatever helps you work best.
+                    </p>
+                  </div>
+                </div>
+                <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
+                  <p className="text-sm text-slate-600">
+                    <strong className="text-slate-700">Tip:</strong> Don&apos;t
+                    hesitate to reach out to your teammates for clarification.
+                    That&apos;s exactly what we want to see!
+                  </p>
+                </div>
                 <Button
                   onClick={() => setStep(2)}
                   className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
@@ -189,17 +245,29 @@ export function WelcomePageClient({
                     Step 02
                   </h4>
                   <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                    The Experience
+                    Your Workspace, Your Rules
                   </h3>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Bot className="w-4 h-4 text-slate-500" />
+                      <AppWindow className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      Work with <strong>AI-powered teammates</strong> via Slack.
-                      They&apos;ll respond just like real colleagues.
+                      <strong>Work on your own computer.</strong> Use your IDE,
+                      terminal, browser, repos — any tool you normally use.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <ExternalLink className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      <strong>
+                        You&apos;re expected to work outside SkillVee.
+                      </strong>{" "}
+                      Write code in VS Code, look things up, use whatever
+                      workflow you prefer.
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -207,27 +275,21 @@ export function WelcomePageClient({
                       <Monitor className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      Your <strong>screen will be recorded</strong>. We assess
-                      how you work, not just the end result.
+                      <strong>We record your screen the whole time</strong> —
+                      everything you do is part of your assessment.
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Sparkles className="w-4 h-4 text-slate-500" />
+                      <MessageSquare className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>Use any AI tools</strong> you want. Copilot,
-                      ChatGPT, Claude - whatever helps you work best.
+                      <strong>Come back to SkillVee to chat</strong> with your
+                      manager and teammates whenever you need to.
                     </p>
                   </div>
                 </div>
-                <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
-                  <p className="text-sm text-slate-600">
-                    <strong className="text-slate-700">Tip:</strong> Don&apos;t
-                    hesitate to reach out to your teammates for clarification.
-                    That&apos;s exactly what we want to see!
-                  </p>
-                </div>
+
                 <Button
                   onClick={() => setStep(3)}
                   className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
@@ -235,6 +297,14 @@ export function WelcomePageClient({
                   Continue
                   <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
+
+                <button
+                  onClick={() => setStep(1)}
+                  className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </button>
               </motion.div>
             )}
 
@@ -250,7 +320,7 @@ export function WelcomePageClient({
                     Step 03
                   </h4>
                   <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                    Launch Environment
+                    Launch Simulation
                   </h3>
                 </div>
                 <p className="text-slate-500 leading-relaxed font-medium">
@@ -258,21 +328,37 @@ export function WelcomePageClient({
                   <strong className="text-slate-900">
                     intentionally incomplete
                   </strong>{" "}
-                  - part of the assessment is seeing how you ask questions and
+                  — part of the assessment is seeing how you ask questions and
                   gather requirements.
                 </p>
 
                 <p className="text-xs text-center text-slate-500">
-                  By continuing, you agree to screen recording during this
-                  assessment.
+                  By continuing, you agree to screen and webcam recording
+                  during this assessment.
                 </p>
 
                 <Button
                   onClick={handleStart}
-                  className="w-full h-14 rounded-full bg-primary text-white font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary/90"
+                  disabled={isLaunching}
+                  className="w-full h-14 rounded-full bg-primary text-white font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 disabled:opacity-90"
                 >
-                  Start Simulation
+                  {isLaunching ? (
+                    <>
+                      <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                      Launching...
+                    </>
+                  ) : (
+                    "Start Simulation"
+                  )}
                 </Button>
+
+                <button
+                  onClick={() => setStep(2)}
+                  className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </button>
               </motion.div>
             )}
           </AnimatePresence>

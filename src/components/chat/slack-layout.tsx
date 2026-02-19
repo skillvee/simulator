@@ -2,6 +2,7 @@
 
 import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { Menu, X, Headphones, Hash } from "lucide-react";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
@@ -81,8 +82,14 @@ interface SlackLayoutProps {
   children: React.ReactNode;
   /** Override the selected coworker (instead of getting from URL) */
   selectedCoworkerId?: string;
+  /** Callback when a coworker or channel is selected — keeps navigation client-side */
+  onSelectCoworker?: (coworkerId: string) => void;
   /** Callback when a defense call is completed (PR was submitted, call with manager ended) */
   onDefenseComplete?: () => void;
+  /** Callback when any call ends — receives the coworkerId of the ended call */
+  onCallEnd?: (coworkerId: string) => void;
+  /** Callback to expose startCall function to parent (for programmatic call initiation) */
+  onStartCallRef?: (startCall: (coworkerId: string, callType: "coworker") => void) => void;
   /** Callback to expose incrementUnread function to parent */
   onIncrementUnreadRef?: (incrementUnread: (coworkerId: string) => void) => void;
   /** Callback to expose incrementGeneralUnread function to parent */
@@ -142,7 +149,10 @@ function SlackLayoutInner({
   coworkers,
   children,
   selectedCoworkerId: overrideSelectedId,
+  onSelectCoworker,
   onDefenseComplete,
+  onCallEnd: onCallEndCallback,
+  onStartCallRef,
   onIncrementUnreadRef,
   onIncrementGeneralUnreadRef,
 }: SlackLayoutProps) {
@@ -186,7 +196,11 @@ function SlackLayoutInner({
   };
 
   const endCall = () => {
+    const endedCoworkerId = activeCall?.coworkerId;
     setActiveCall(null);
+    if (endedCoworkerId && onCallEndCallback) {
+      onCallEndCallback(endedCoworkerId);
+    }
   };
 
   // Increment unread count for a coworker
@@ -214,6 +228,13 @@ function SlackLayoutInner({
     playMessageSound();
   }, [selectedView]);
 
+  // Expose startCall to parent via callback ref (for programmatic call initiation)
+  useEffect(() => {
+    if (onStartCallRef) {
+      onStartCallRef(startCall);
+    }
+  }, [onStartCallRef]);
+
   // Expose incrementUnread to parent via callback ref
   useEffect(() => {
     if (onIncrementUnreadRef) {
@@ -237,6 +258,14 @@ function SlackLayoutInner({
     });
   };
 
+  const selectCoworker = useCallback((coworkerId: string) => {
+    if (onSelectCoworker) {
+      onSelectCoworker(coworkerId);
+    } else {
+      router.push(`/assessments/${assessmentId}/work?coworkerId=${coworkerId}`);
+    }
+  }, [onSelectCoworker, router, assessmentId]);
+
   const handleSelectCoworker = (
     coworkerId: string,
     action: "chat" | "call"
@@ -247,7 +276,7 @@ function SlackLayoutInner({
     if (action === "chat") {
       // Clear unread count when selecting a coworker
       clearUnread(coworkerId);
-      router.push(`/assessments/${assessmentId}/work?coworkerId=${coworkerId}`);
+      selectCoworker(coworkerId);
     } else {
       // Start call in-place instead of navigating to a separate page
       startCall(coworkerId, "coworker");
@@ -260,7 +289,7 @@ function SlackLayoutInner({
 
     // Clear unread count when selecting #general
     setGeneralUnread(0);
-    router.push(`/assessments/${assessmentId}/work?coworkerId=general`);
+    selectCoworker("general");
   };
 
   // Find the coworker being called
@@ -316,10 +345,15 @@ function SlackLayoutInner({
         >
           {/* Header with Skillvee logo */}
           <div className="h-16 flex items-center px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-lg mr-3">
-              S
-            </div>
-            <span className="font-bold text-lg tracking-tight" style={{color: "hsl(var(--slack-text))"}}>Skillvee</span>
+            <Image
+              src="/skillvee-logo.png"
+              alt="Skillvee"
+              width={120}
+              height={32}
+              className="object-contain brightness-0 invert"
+              style={{ height: "auto" }}
+              priority
+            />
           </div>
 
           {/* Coworker List - scrollable, shrinks when call widget appears */}
@@ -363,13 +397,12 @@ function SlackLayoutInner({
               </div>
             </div>
 
-            {/* Team Section */}
+            {/* Your Team Section - interactive coworkers */}
             <div>
               <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
-                Team
+                Your Team
               </h3>
               <div className="space-y-1">
-                {/* Online/Interactive coworkers */}
                 {coworkers.map((coworker) => (
                   <CoworkerItem
                     key={coworker.id}
@@ -381,15 +414,22 @@ function SlackLayoutInner({
                     onCall={() => handleSelectCoworker(coworker.id, "call")}
                   />
                 ))}
+              </div>
+            </div>
 
-                {/* Away/Decorative team members */}
+            {/* Others Section - decorative team members */}
+            <div>
+              <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
+                Others
+              </h3>
+              <div className="space-y-1">
                 {DECORATIVE_TEAM_MEMBERS.map((member) => (
                   <AwayTeamMember
                     key={member.name}
                     member={member}
-                    assessmentId={assessmentId}
                     isSelected={selectedCoworkerId === `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`}
                     elapsedMinutes={elapsedMinutes}
+                    onSelect={selectCoworker}
                   />
                 ))}
               </div>
@@ -523,35 +563,32 @@ function CoworkerItem({
 
 interface AwayTeamMemberProps {
   member: DecorativeTeamMember;
-  assessmentId: string;
   isSelected: boolean;
   elapsedMinutes: number;
+  onSelect: (decorativeId: string) => void;
 }
 
-function AwayTeamMember({ member, assessmentId, isSelected, elapsedMinutes }: AwayTeamMemberProps) {
-  const router = useRouter();
+function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTeamMemberProps) {
   const decorativeId = `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`;
 
   // Get current status based on elapsed time
   const currentStatus = getCurrentStatus(member, elapsedMinutes);
 
-  // Determine status dot color and opacity based on current availability
-  const statusConfig = {
-    online: { dotColor: "bg-green-500", opacity: "opacity-100" },
-    away: { dotColor: "bg-yellow-500", opacity: "opacity-80" },
-    "in-meeting": { dotColor: "bg-red-400", opacity: "opacity-80" },
-    offline: { dotColor: "bg-gray-400", opacity: "opacity-60" },
-  };
-
-  const config = statusConfig[currentStatus.status];
+  // Determine status dot color based on current availability
+  const statusDotColor = {
+    online: "bg-green-500",
+    away: "bg-yellow-500",
+    "in-meeting": "bg-red-400",
+    offline: "bg-gray-400",
+  }[currentStatus.status];
 
   return (
     <div
-      onClick={() => router.push(`/assessments/${assessmentId}/work?coworkerId=${decorativeId}`)}
-      className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-all ${config.opacity} border-l-2 ${
+      onClick={() => onSelect(decorativeId)}
+      className={`flex items-center gap-3 px-3 py-1.5 cursor-pointer transition-all opacity-50 hover:opacity-70 border-l-2 ${
         isSelected
-          ? "border-primary"
-          : "border-transparent hover:opacity-100"
+          ? "border-primary !opacity-70"
+          : "border-transparent"
       }`}
       style={{
         background: isSelected ? "hsl(var(--slack-bg-hover))" : "transparent",
@@ -570,7 +607,7 @@ function AwayTeamMember({ member, assessmentId, isSelected, elapsedMinutes }: Aw
       title={currentStatus.statusMessage || currentStatus.status}
     >
       <div className="relative">
-        <div className="inline-block rounded-full" style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}}>
+        <div className="inline-block rounded-full grayscale-[30%]" style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}}>
           <CoworkerAvatar
             name={member.name}
             avatarUrl={member.avatarUrl}
@@ -578,12 +615,12 @@ function AwayTeamMember({ member, assessmentId, isSelected, elapsedMinutes }: Aw
             className="shadow-sm"
           />
         </div>
-        {/* Status indicator dot - changes color based on current status */}
-        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${config.dotColor}`} style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}} />
+        {/* Status indicator dot - hollow ring style to distinguish from interactive coworkers */}
+        <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${statusDotColor}`} style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold truncate" style={{color: "hsl(var(--slack-text))"}}>{member.name}</div>
-        <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>
+        <div className="text-sm font-medium truncate" style={{color: "hsl(var(--slack-text))"}}>{member.name}</div>
+        <div className="text-[10px] truncate italic" style={{color: "hsl(var(--slack-text-muted))"}}>
           {currentStatus.statusMessage || member.role}
         </div>
       </div>

@@ -12,6 +12,10 @@ import {
   triggerVideoAssessment,
   type TriggerVideoAssessmentResult,
 } from "@/lib/analysis";
+import {
+  generateProfilePhoto,
+  type GenerateProfilePhotoResult,
+} from "@/lib/candidate";
 
 /**
  * POST /api/assessment/finalize
@@ -183,6 +187,28 @@ export async function POST(request: Request) {
       }
     }
 
+    // Trigger profile photo generation (async, non-blocking)
+    let profilePhotoResult: GenerateProfilePhotoResult | null = null;
+    try {
+      profilePhotoResult = await generateProfilePhoto({
+        assessmentId,
+        userId: session.user.id,
+      });
+
+      if (!profilePhotoResult.success) {
+        console.warn(
+          `Profile photo generation warning for ${assessmentId}:`,
+          profilePhotoResult.error
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `Profile photo generation error for ${assessmentId}:`,
+        error
+      );
+      // Don't fail the finalization if profile photo generation fails
+    }
+
     return NextResponse.json({
       success: true,
       assessment: updatedAssessment,
@@ -217,6 +243,15 @@ export async function POST(request: Request) {
             triggered: false,
             videoAssessmentId: null,
             hasRecording: false,
+          },
+      profilePhoto: profilePhotoResult
+        ? {
+            generated: profilePhotoResult.success,
+            imageUrl: profilePhotoResult.imageUrl,
+          }
+        : {
+            generated: false,
+            imageUrl: null,
           },
     });
   } catch (error) {

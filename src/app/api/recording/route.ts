@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const chunkIndex = formData.get("chunkIndex") as string | null;
     const timestamp = formData.get("timestamp") as string | null;
     const segmentId = formData.get("segmentId") as string | null;
+    const snapshotId = formData.get("snapshotId") as string | null; // e.g. "webcam-profile" for profile photo snapshot
 
     if (!file || !assessmentId || !type) {
       return error("Missing required fields: file, assessmentId, type", 400, "VALIDATION_ERROR");
@@ -62,7 +63,10 @@ export async function POST(request: NextRequest) {
     const extension = type === "video" ? "webm" : "jpg";
     const chunkSuffix = chunkIndex ? `-chunk-${chunkIndex}` : "";
     const tsValue = timestamp || Date.now().toString();
-    const path = `${assessmentId}/${tsValue}${chunkSuffix}.${extension}`;
+    // Use a deterministic path for named snapshots (e.g., webcam profile photo)
+    const path = snapshotId
+      ? `${assessmentId}/${snapshotId}.${extension}`
+      : `${assessmentId}/${tsValue}${chunkSuffix}.${extension}`;
 
     // Upload to Supabase storage
     const arrayBuffer = await file.arrayBuffer();
@@ -74,7 +78,7 @@ export async function POST(request: NextRequest) {
         contentType:
           file.type || (type === "video" ? "video/webm" : "image/jpeg"),
         cacheControl: "3600",
-        upsert: false,
+        upsert: !!snapshotId, // Allow overwriting named snapshots (e.g., webcam profile photo on retry)
       });
 
     if (uploadError) {

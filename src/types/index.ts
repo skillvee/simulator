@@ -104,6 +104,7 @@ export {
 export type {
   ConfidenceLevel,
   InferredSeniorityLevel,
+  RoleArchetypeSlug,
   ConfidentField,
   ParseJDRequest,
   ParseJDResponse,

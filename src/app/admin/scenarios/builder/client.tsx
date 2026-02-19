@@ -242,9 +242,9 @@ export function ScenarioBuilderClient() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-lg font-semibold">Scenario Builder</h1>
+            <h1 className="text-lg font-semibold">Simulation Builder</h1>
             <p className="text-sm text-muted-foreground">
-              Chat with AI to create your scenario
+              Chat with AI to create your simulation
             </p>
           </div>
           <Button variant="ghost" asChild className="ml-auto text-muted-foreground">
@@ -288,7 +288,7 @@ export function ScenarioBuilderClient() {
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-baseline gap-2">
                       <span className="font-semibold">
-                        {message.role === "user" ? "You" : "Scenario Builder"}
+                        {message.role === "user" ? "You" : "Simulation Builder"}
                       </span>
                       <span className="text-sm text-muted-foreground">
                         {formatTimestamp(message.timestamp)}
@@ -311,7 +311,7 @@ export function ScenarioBuilderClient() {
                   </Avatar>
                   <div className="flex-1">
                     <div className="mb-1 flex items-baseline gap-2">
-                      <span className="font-semibold">Scenario Builder</span>
+                      <span className="font-semibold">Simulation Builder</span>
                     </div>
                     <TypingIndicator />
                   </div>
@@ -360,7 +360,7 @@ export function ScenarioBuilderClient() {
         <header className="border-b border-border bg-background px-4 py-3">
           <h2 className="text-lg font-semibold">Preview</h2>
           <p className="text-sm text-muted-foreground">
-            Scenario data collected so far
+            Simulation data collected so far
           </p>
         </header>
 
@@ -374,7 +374,7 @@ export function ScenarioBuilderClient() {
             disabled={!isReadyToSave || isSaving}
             className="w-full"
           >
-            {isSaving ? "Saving..." : "Save Scenario"}
+            {isSaving ? "Saving..." : "Save Simulation"}
           </Button>
           {!isReadyToSave && (
             <p className="mt-2 text-center text-xs text-muted-foreground">

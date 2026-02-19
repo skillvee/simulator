@@ -21,12 +21,12 @@ export default async function ScenariosPage() {
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="px-8 py-10">
       <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="mb-2 text-3xl font-semibold">Scenarios</h1>
+          <h1 className="mb-2 text-3xl font-semibold">Simulations</h1>
           <p className="text-muted-foreground">
-            Manage assessment scenarios for candidates
+            Manage assessment simulations for candidates
           </p>
         </div>
         <Button asChild>
@@ -40,12 +40,12 @@ export default async function ScenariosPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <FileQuestion className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="mb-2 text-xl font-semibold">No scenarios yet</h2>
+            <h2 className="mb-2 text-xl font-semibold">No simulations yet</h2>
             <p className="mb-6 text-muted-foreground">
-              Create your first scenario using the AI-powered builder
+              Create your first simulation using the AI-powered builder
             </p>
             <Button asChild>
-              <Link href="/admin/scenarios/builder">Create Scenario</Link>
+              <Link href="/admin/scenarios/builder">Create Simulation</Link>
             </Button>
           </CardContent>
         </Card>

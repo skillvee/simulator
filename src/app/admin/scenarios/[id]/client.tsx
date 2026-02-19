@@ -8,6 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Coworker {
   id: string;
@@ -57,6 +68,30 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [coworkers, setCoworkers] = useState(scenario.coworkers);
   const [updatingVoice, setUpdatingVoice] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Delete simulation
+  const deleteSimulation = async () => {
+    setIsDeleting(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/admin/scenarios/${scenario.id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        router.push("/admin/scenarios");
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to delete simulation");
+        setIsDeleting(false);
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to delete simulation"
+      );
+      setIsDeleting(false);
+    }
+  };
 
   // Verify repository access
   const verifyRepo = async () => {
@@ -334,16 +369,16 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
                 ? "Updating..."
                 : isPublished
                   ? "Unpublish"
-                  : "Publish Scenario"}
+                  : "Publish Simulation"}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Scenario Details */}
+      {/* Simulation Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Scenario Details</CardTitle>
+          <CardTitle>Simulation Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Company Description */}
@@ -476,6 +511,51 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle className="text-destructive">Danger Zone</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Delete this simulation</p>
+              <p className="text-sm text-muted-foreground">
+                Permanently delete this simulation and all associated
+                assessments, recordings, and data. This action cannot be undone.
+              </p>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={isDeleting}>
+                  {isDeleting ? "Deleting..." : "Delete Simulation"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete simulation?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete{" "}
+                    <strong>{scenario.name}</strong> and all associated data
+                    including assessments, recordings, conversations, and
+                    coworkers. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={deleteSimulation}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </CardContent>
       </Card>
     </div>

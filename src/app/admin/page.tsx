@@ -22,7 +22,7 @@ export default async function AdminDashboard() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="px-8 py-10">
       <h1 className="mb-8 text-3xl font-semibold">Admin Dashboard</h1>
 
       {/* Analytics Dashboard */}
@@ -35,10 +35,10 @@ export default async function AdminDashboard() {
         <h2 className="mb-4 text-xl font-semibold">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
           <Button asChild className="shadow-sm hover:shadow-md transition-shadow">
-            <Link href="/admin/scenarios/new">Create Scenario</Link>
+            <Link href="/admin/scenarios/new">Create Simulation</Link>
           </Button>
           <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-shadow">
-            <Link href="/admin/scenarios">Manage Scenarios ({scenarioCount})</Link>
+            <Link href="/admin/scenarios">Manage Simulations ({scenarioCount})</Link>
           </Button>
           <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-shadow">
             <Link href="/admin/users">Manage Users</Link>

@@ -17,6 +17,15 @@ import {
   onStreamEnded,
   type ScreenPermissionState,
 } from "@/lib/media";
+import {
+  checkWebcamSupport,
+  requestWebcamCapture,
+  stopWebcamCapture,
+  isWebcamStreamActive,
+  onWebcamStreamEnded,
+  captureBestWebcamSnapshot,
+} from "@/lib/media";
+import { CanvasCompositor } from "@/lib/media";
 import { VideoRecorder, checkMediaRecorderSupport } from "@/lib/media";
 import { shouldSkipScreenRecording } from "@/lib/core";
 
@@ -27,6 +36,8 @@ export type ScreenRecordingState =
   | "stopped"
   | "error";
 
+export type WebcamState = "idle" | "requesting" | "active" | "denied" | "error";
+
 interface ScreenRecordingContextValue {
   state: ScreenRecordingState;
   permissionState: ScreenPermissionState;
@@ -35,6 +46,8 @@ interface ScreenRecordingContextValue {
   isRecording: boolean;
   chunkCount: number;
   screenshotCount: number;
+  webcamState: WebcamState;
+  webcamStream: MediaStream | null;
   startRecording: () => Promise<boolean>;
   stopRecording: () => void;
   retryRecording: () => Promise<boolean>;
@@ -55,7 +68,8 @@ async function uploadRecordingData(
   type: "video" | "screenshot",
   chunkIndex?: number,
   timestamp?: number,
-  segmentId?: string
+  segmentId?: string,
+  snapshotId?: string
 ): Promise<boolean> {
   try {
     const formData = new FormData();
@@ -70,6 +84,9 @@ async function uploadRecordingData(
     }
     if (segmentId) {
       formData.append("segmentId", segmentId);
+    }
+    if (snapshotId) {
+      formData.append("snapshotId", snapshotId);
     }
 
     const response = await fetch("/api/recording", {
@@ -192,9 +209,14 @@ export function ScreenRecordingProvider({
   const [chunkCount, setChunkCount] = useState(0);
   const [screenshotCount, setScreenshotCount] = useState(0);
   const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [webcamState, setWebcamState] = useState<WebcamState>("idle");
+  const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
+  const webcamStreamRef = useRef<MediaStream | null>(null);
+  const compositorRef = useRef<CanvasCompositor | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const webcamCleanupRef = useRef<(() => void) | null>(null);
   const videoRecorderRef = useRef<VideoRecorder | null>(null);
   const chunkIndexRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
@@ -220,6 +242,20 @@ export function ScreenRecordingProvider({
       videoRecorderRef.current = null;
     }
 
+    // Stop compositor
+    if (compositorRef.current) {
+      compositorRef.current.stop();
+      compositorRef.current = null;
+    }
+
+    // Stop webcam stream
+    if (webcamStreamRef.current) {
+      stopWebcamCapture(webcamStreamRef.current);
+      webcamStreamRef.current = null;
+      setWebcamStream(null);
+      setWebcamState("idle");
+    }
+
     // Mark segment as interrupted in database
     if (segmentIdRef.current) {
       interruptRecordingSession(assessmentId, segmentIdRef.current);
@@ -240,13 +276,29 @@ export function ScreenRecordingProvider({
       videoRecorderRef.current = null;
     }
 
+    // Stop compositor
+    if (compositorRef.current) {
+      compositorRef.current.stop();
+      compositorRef.current = null;
+    }
+
     if (cleanupRef.current) {
       cleanupRef.current();
       cleanupRef.current = null;
     }
+    if (webcamCleanupRef.current) {
+      webcamCleanupRef.current();
+      webcamCleanupRef.current = null;
+    }
     if (streamRef.current) {
       stopScreenCapture(streamRef.current);
       streamRef.current = null;
+    }
+    if (webcamStreamRef.current) {
+      stopWebcamCapture(webcamStreamRef.current);
+      webcamStreamRef.current = null;
+      setWebcamStream(null);
+      setWebcamState("idle");
     }
 
     // Reset counters
@@ -267,9 +319,60 @@ export function ScreenRecordingProvider({
     setError(null);
 
     try {
-      const stream = await requestScreenCapture();
-      streamRef.current = stream;
-      cleanupRef.current = onStreamEnded(stream, handleStreamStopped);
+      // Step 1: Request screen capture
+      const screenStream = await requestScreenCapture();
+      streamRef.current = screenStream;
+      cleanupRef.current = onStreamEnded(screenStream, handleStreamStopped);
+
+      // Step 2: Request webcam capture
+      setWebcamState("requesting");
+      let webcamMediaStream: MediaStream;
+      try {
+        webcamMediaStream = await requestWebcamCapture();
+        webcamStreamRef.current = webcamMediaStream;
+        setWebcamStream(webcamMediaStream);
+        setWebcamState("active");
+
+        // Listen for webcam disconnection
+        webcamCleanupRef.current = onWebcamStreamEnded(
+          webcamMediaStream,
+          handleStreamStopped
+        );
+      } catch (webcamErr) {
+        // Webcam is mandatory -- clean up screen stream and fail
+        stopScreenCapture(screenStream);
+        streamRef.current = null;
+
+        if (
+          webcamErr instanceof DOMException &&
+          (webcamErr.name === "NotAllowedError" ||
+            webcamErr.name === "PermissionDeniedError")
+        ) {
+          setWebcamState("denied");
+          setError("Webcam permission was denied. Both screen and webcam recording are required.");
+        } else {
+          setWebcamState("error");
+          setError("Failed to access webcam. Please ensure your camera is connected and not in use by another application.");
+        }
+        setState("error");
+        return false;
+      }
+
+      // Step 3: Create composite stream via canvas compositor
+      const compositor = new CanvasCompositor({
+        webcamWidth: 320,
+        webcamHeight: 240,
+        padding: 20,
+        borderRadius: 16,
+        position: "bottom-right",
+        frameRate: 5,
+      });
+      compositorRef.current = compositor;
+
+      const compositeStream = await compositor.createCompositeStream(
+        screenStream,
+        webcamMediaStream
+      );
 
       // Initialize start time
       startTimeRef.current = Date.now();
@@ -284,7 +387,24 @@ export function ScreenRecordingProvider({
         setScreenshotCount(0);
       }
 
-      // Create and start video recorder
+      // Step 4: Capture best webcam snapshot for profile photo (5 frames over 2s, picks sharpest)
+      captureBestWebcamSnapshot(webcamMediaStream, 0.9)
+        .then((snapshot) => {
+          uploadRecordingData(
+            assessmentId,
+            snapshot,
+            "screenshot",
+            undefined,
+            Date.now(),
+            segmentIdRef.current || undefined,
+            "webcam-profile"
+          );
+        })
+        .catch((err) => {
+          console.warn("Failed to capture webcam profile snapshot:", err);
+        });
+
+      // Step 5: Create and start video recorder with the composite stream
       videoRecorderRef.current = new VideoRecorder(
         {
           videoBitsPerSecond: 1_000_000, // 1 Mbps
@@ -325,7 +445,7 @@ export function ScreenRecordingProvider({
         }
       );
 
-      videoRecorderRef.current.start(stream);
+      videoRecorderRef.current.start(compositeStream);
 
       setState("recording");
       setPermissionState("granted");
@@ -384,16 +504,20 @@ export function ScreenRecordingProvider({
   const retryRecording = useCallback(async (): Promise<boolean> => {
     setState("idle");
     setPermissionState("prompt");
+    setWebcamState("idle");
     setError(null);
     return startRecording();
   }, [startRecording]);
 
-  // Check stream status periodically
+  // Check stream status periodically (both screen and webcam)
   useEffect(() => {
     if (state !== "recording") return;
 
     const interval = setInterval(() => {
-      if (!isStreamActive(streamRef.current)) {
+      const screenActive = isStreamActive(streamRef.current);
+      const webcamActive = isWebcamStreamActive(webcamStreamRef.current);
+
+      if (!screenActive || !webcamActive) {
         handleStreamStopped();
       }
     }, 1000);
@@ -413,6 +537,7 @@ export function ScreenRecordingProvider({
         // Set state to recording so downstream code works as expected
         setState("recording");
         setPermissionState("granted");
+        setWebcamState("active");
         sessionStorage.setItem(`screen-recording-${assessmentId}`, "active");
         setSessionLoaded(true);
         return;
@@ -473,6 +598,8 @@ export function ScreenRecordingProvider({
     isRecording: state === "recording",
     chunkCount,
     screenshotCount,
+    webcamState,
+    webcamStream,
     startRecording,
     stopRecording,
     retryRecording,

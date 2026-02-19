@@ -28,6 +28,7 @@ export default async function AdminUsersPage() {
     id: u.id,
     name: u.name,
     email: u.email,
+    image: u.image,
     role: u.role,
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString(),

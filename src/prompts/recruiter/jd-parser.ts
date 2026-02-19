@@ -60,12 +60,25 @@ Extract the following fields from the job description text. Use the exact struct
 - Infer from company description, product mentions, or industry keywords
 - Confidence: HIGH if domain is clearly described, MEDIUM if inferred from context, LOW if guessed
 
+### 8. roleArchetype (string)
+- Classify the role into ONE of the following archetype slugs based on the FULL job description context (title, responsibilities, tech stack, domain)
+- Available archetypes:
+  - Engineering: "frontend_engineer", "backend_engineer", "fullstack_engineer", "tech_lead", "devops_sre"
+  - Product Management: "growth_pm", "platform_pm", "core_pm"
+  - Data Science: "analytics_engineer", "data_analyst", "ml_engineer"
+  - Program Management: "technical_program_manager", "business_program_manager"
+  - Sales: "account_executive", "sales_development_rep", "solutions_engineer"
+  - Customer Success: "onboarding_specialist", "customer_success_manager", "renewals_manager"
+- Choose the BEST match considering the full job description, not just the title
+- For ambiguous roles, prefer the archetype that best matches the primary responsibilities
+- Confidence: HIGH if role clearly maps to one archetype, MEDIUM if 2+ could fit, LOW if very unclear or no match
+
 ## Edge Cases
 
 ### Very Short JDs (just a title)
 - Extract what's available (roleName with HIGH confidence)
 - Return null for missing fields with LOW confidence
-- Example: "Senior React Engineer" → roleName: "Senior React Engineer", techStack: ["React"], seniorityLevel: "senior", all others null
+- Example: "Senior React Engineer" → roleName: "Senior React Engineer", techStack: ["React"], seniorityLevel: "senior", roleArchetype: "frontend_engineer", all others null
 
 ### Very Long JDs (5+ pages)
 - Focus on the first 2-3 sections (title, company, responsibilities, requirements)
@@ -88,7 +101,8 @@ Return ONLY valid JSON (no markdown, no additional text) in this exact structure
   "techStack": { "value": ["array", "of", "strings"] or null, "confidence": "high|medium|low" },
   "seniorityLevel": { "value": "junior|mid|senior|staff" or null, "confidence": "high|medium|low" },
   "keyResponsibilities": { "value": ["array", "of", "strings"] or null, "confidence": "high|medium|low" },
-  "domainContext": { "value": "string or null", "confidence": "high|medium|low" }
+  "domainContext": { "value": "string or null", "confidence": "high|medium|low" },
+  "roleArchetype": { "value": "archetype_slug or null", "confidence": "high|medium|low" }
 }
 
 ## Example Output
@@ -102,7 +116,8 @@ For "Senior React Engineer at Stripe":
   "techStack": { "value": ["React", "TypeScript", "Node.js", "GraphQL"], "confidence": "medium" },
   "seniorityLevel": { "value": "senior", "confidence": "high" },
   "keyResponsibilities": { "value": ["Build payment UI components", "Optimize frontend performance", "Mentor junior engineers"], "confidence": "medium" },
-  "domainContext": { "value": "Online payments and financial infrastructure", "confidence": "high" }
+  "domainContext": { "value": "Online payments and financial infrastructure", "confidence": "high" },
+  "roleArchetype": { "value": "frontend_engineer", "confidence": "high" }
 }
 
 IMPORTANT: Return ONLY the JSON object, no markdown code fences, no explanations, no additional text.
@@ -119,4 +134,4 @@ export const JD_PARSER_PROMPT = JD_PARSER_PROMPT_V1;
 /**
  * Prompt version for audit trail
  */
-export const JD_PARSER_PROMPT_VERSION = "1.0";
+export const JD_PARSER_PROMPT_VERSION = "1.1";

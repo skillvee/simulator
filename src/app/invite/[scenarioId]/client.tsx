@@ -1,13 +1,14 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bot, Sparkles } from "lucide-react";
+import { Bot, Sparkles, Loader2 } from "lucide-react";
 
 interface ScenarioData {
   id: string;
@@ -40,33 +41,40 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const hasStartedRedirect = useRef(false);
 
-  // Create assessment and navigate to welcome
-  const handleCreateAndContinue = async () => {
+  // When user is authenticated, automatically create assessment and redirect
+  useEffect(() => {
+    if (!user || hasStartedRedirect.current) return;
+    hasStartedRedirect.current = true;
     setIsLoading(true);
-    setError("");
 
-    try {
-      const response = await fetch("/api/assessment/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scenarioId: scenario.id }),
-      });
+    (async () => {
+      try {
+        const response = await fetch("/api/assessment/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scenarioId: scenario.id }),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.error || "Failed to create assessment");
+        if (!response.ok) {
+          setError(data.error || "Failed to create assessment");
+          setIsLoading(false);
+          hasStartedRedirect.current = false;
+          return;
+        }
+
+        router.push(`/assessments/${data.assessment.id}/welcome`);
+      } catch (err) {
+        console.error("[invite] Assessment create failed:", err);
+        setError("An error occurred. Please try again.");
         setIsLoading(false);
-        return;
+        hasStartedRedirect.current = false;
       }
-
-      router.push(`/assessments/${data.assessment.id}/welcome`);
-    } catch {
-      setError("An error occurred. Please try again.");
-      setIsLoading(false);
-    }
-  };
+    })();
+  }, [user, scenario.id, router]);
 
   const handleGoogleAuth = () => {
     setIsLoading(true);
@@ -161,11 +169,16 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
           className="absolute top-[-20%] left-[-20%] w-full h-full bg-primary/20 rounded-full blur-[150px] pointer-events-none"
         />
 
-        <header className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-primary font-black text-xl">
-            S
-          </div>
-          <span className="text-xl font-bold tracking-tight">SkillVee</span>
+        <header className="relative z-10">
+          <Image
+            src="/skillvee-logo.png"
+            alt="Skillvee"
+            width={120}
+            height={32}
+            className="object-contain brightness-0 invert"
+            style={{ height: "auto" }}
+            priority
+          />
         </header>
 
         <main className="relative z-10 py-12 lg:py-20">
@@ -202,61 +215,36 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
       <div className="lg:w-2/5 bg-white text-slate-900 p-8 lg:p-16 flex items-center justify-center min-h-[50vh] lg:min-h-screen">
         <div className="w-full max-w-sm space-y-10">
           {user ? (
-            // Logged in - create assessment and continue
+            // Logged in - auto-redirecting to welcome
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="space-y-8"
             >
-              <div className="space-y-2">
-                <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                  Ready to Start
-                </h3>
-              </div>
-
-              <div className="space-y-6">
-                <div className="text-center py-4">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg
-                      className="w-6 h-6 text-primary"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-slate-600 text-sm">{user.email}</p>
-                </div>
-
-                {error && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                    {error}
-                  </div>
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                {error ? (
+                  <>
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm w-full">
+                      {error}
+                    </div>
+                    <p className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
+                      Not you?{" "}
+                      <Link
+                        href="/api/auth/signout"
+                        className="text-primary hover:underline"
+                      >
+                        Sign out
+                      </Link>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <p className="text-slate-500 text-sm font-medium">
+                      Setting up your simulation...
+                    </p>
+                  </>
                 )}
-
-                <Button
-                  onClick={handleCreateAndContinue}
-                  disabled={isLoading}
-                  className="w-full h-14 rounded-full bg-primary text-white font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary/90"
-                >
-                  {isLoading ? "Loading..." : "Start Simulation"}
-                </Button>
-
-                <p className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  Not you?{" "}
-                  <Link
-                    href="/api/auth/signout"
-                    className="text-primary hover:underline"
-                  >
-                    Sign out
-                  </Link>
-                </p>
               </div>
             </motion.div>
           ) : (
@@ -397,7 +385,8 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                 {/* Consent text (signup only) */}
                 {mode === "signup" && (
                   <p className="text-xs text-center text-slate-400">
-                    By signing up, you agree to screen recording and our{" "}
+                    By signing up, you agree to screen and webcam recording
+                    and our{" "}
                     <Link
                       href="/terms"
                       className="text-primary hover:underline"

@@ -1,17 +1,19 @@
 /**
  * POST /api/recruiter/simulations/[id]/provision-repo
  *
- * Background repository provisioning endpoint (US-007).
- * Creates a new GitHub repository from a template for a simulation.
+ * Repository provisioning endpoint (US-007).
+ * Uses AI to generate a complete, domain-specific GitHub repository
+ * based on the scenario's company, tech stack, task, and coworkers.
  *
- * This endpoint is designed to be called asynchronously after scenario creation
- * to avoid blocking the save operation.
+ * The generated repo is built on top of a clean scaffold, ensuring
+ * npm install && npm run build always works.
  */
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { selectTemplate, provisionRepo } from "@/lib/scenarios/repo-templates";
+import { provisionRepo, needsRepo } from "@/lib/scenarios/repo-templates";
+import type { ScenarioMetadata } from "@/lib/scenarios/repo-spec";
 
 interface SessionUser {
   id: string;
@@ -51,14 +53,27 @@ export async function POST(
     );
   }
 
-  // Verify scenario exists and user has access
+  // Fetch full scenario with coworkers for AI generation
   const scenario = await db.scenario.findUnique({
     where: { id: scenarioId },
     select: {
       id: true,
-      createdById: true,
+      name: true,
+      companyName: true,
+      companyDescription: true,
+      taskDescription: true,
       techStack: true,
+      targetLevel: true,
       repoUrl: true,
+      createdById: true,
+      coworkers: {
+        select: {
+          name: true,
+          role: true,
+          personaStyle: true,
+          knowledge: true,
+        },
+      },
     },
   });
 
@@ -86,52 +101,67 @@ export async function POST(
     );
   }
 
-  // Parse request body to get optional templateId
-  let templateId: string | undefined;
-  try {
-    const body = await request.json();
-    templateId = body.templateId;
-  } catch {
-    // Body is optional - if not provided, we'll auto-select based on tech stack
+  // Only provision repos for engineering-related tech stacks
+  if (!needsRepo(scenario.techStack)) {
+    return NextResponse.json(
+      {
+        success: true,
+        skipped: true,
+        reason: "non-engineering",
+        message: "Repository not needed for this tech stack",
+      },
+      { status: 200 }
+    );
   }
 
-  // Select template based on tech stack if not explicitly provided
-  if (!templateId) {
-    const selectedTemplate = selectTemplate(scenario.techStack);
-    templateId = selectedTemplate.id;
-  }
+  // Build scenario metadata for AI generation
+  const metadata: ScenarioMetadata = {
+    name: scenario.name,
+    companyName: scenario.companyName,
+    companyDescription: scenario.companyDescription,
+    taskDescription: scenario.taskDescription,
+    techStack: scenario.techStack,
+    targetLevel: scenario.targetLevel,
+    coworkers: scenario.coworkers.map((c) => ({
+      name: c.name,
+      role: c.role,
+      personaStyle: c.personaStyle,
+      knowledge: (c.knowledge as Array<{
+        topic: string;
+        triggerKeywords: string[];
+        response: string;
+        isCritical: boolean;
+      }>) || [],
+    })),
+  };
 
-  // Provision the repository (this runs in the background)
-  // We don't await the full generation to return a quick response
-  // The generation continues asynchronously
-  const provisionPromise = provisionRepo(scenarioId, templateId);
-
-  // For now, we wait for completion and return results
-  // In a production system, you might use a job queue instead
   try {
-    const repoUrl = await provisionPromise;
+    const { repoUrl, repoSpec } = await provisionRepo(scenarioId, metadata);
 
     if (!repoUrl) {
       return NextResponse.json(
         {
           error: "Repository provisioning failed",
-          details: "GitHub API returned an error or GITHUB_ORG_TOKEN is not set",
+          details:
+            "AI generation or GitHub API returned an error. Check GITHUB_ORG_TOKEN and GEMINI_API_KEY.",
         },
         { status: 500 }
       );
     }
 
-    // Update the scenario with the new repo URL
+    // Update the scenario with the new repo URL and cached spec
     await db.scenario.update({
       where: { id: scenarioId },
-      data: { repoUrl },
+      data: {
+        repoUrl,
+        ...(repoSpec ? { repoSpec: repoSpec as object } : {}),
+      },
     });
 
     return NextResponse.json({
       success: true,
       message: "Repository provisioned successfully",
       repoUrl,
-      templateId,
     });
   } catch (error) {
     console.error("[Provision Repo API] Provisioning failed:", error);

@@ -63,13 +63,27 @@ You have specific knowledge that might help them. Share it when asked, but don't
 
 ${knowledgeSection}
 
+## CRITICAL: Only Reference Real Things
+
+**NEVER invent or hallucinate** internal tools, systems, wiki pages, go/ links, databases, table names, URLs, documentation sites, or any other company resources that are not explicitly listed in your knowledge above. If someone asks about something you don't have specific knowledge about, say you're not sure or suggest they check with someone else. Do NOT make up plausible-sounding fake resources — this completely breaks the simulation.
+
+The candidate is working on a coding task in a real repository. The only real resources are:
+- The repo they've been given (their manager shared the link)
+- The codebase itself and its README/docs
+- The team members they can chat with
+- Anything explicitly listed in your knowledge section above
+
+If they ask "where are the docs?" or "where do I find X?" and it's not in your knowledge, say something like "hmm not sure, check the repo README" or "I think [manager] would know better" — don't invent fake wikis or internal tools.
+
 ## Conversation Rules
 
 1. **Stay in character** - You're ${coworker.name}, not a helpful bot
 2. **Don't volunteer info** - Wait until they ask
 3. **Be real** - If you don't know, say "not my area, try [person]"
 4. **Don't do their work** - Guide, don't solve
-5. **Reference context when relevant:**
+5. **Don't over-clarify your role** - Never say "I'm not your manager" or defensively correct their assumptions about who you are. If they treat you like a manager or ask you for task assignments, just redirect naturally ("your manager should have the details" or "I think [manager name] is handling that") without making it awkward
+6. **Go with the flow** - If they say "what do you need me to do?", don't lecture them about reporting lines. Just respond naturally based on what you know about their work
+7. **Reference context when relevant:**
 ${context.taskDescription ? `   - They're working on: "${context.taskDescription.slice(0, 200)}..."` : "   - (Task context not provided)"}
 ${context.techStack?.length ? `   - Tech stack includes: ${context.techStack.join(", ")}` : ""}
 
@@ -159,7 +173,7 @@ function getStyleGuidelines(personaStyle: string): string {
  * Build personality guidelines from structured personality dimensions.
  * This produces richer, more specific behavioral instructions than the keyword-based approach.
  */
-function getPersonalityGuidelines(
+export function getPersonalityGuidelines(
   personality: CoworkerPersonality,
   personaStyle: string
 ): string {
@@ -439,4 +453,23 @@ export function buildVoicePrompt(
 ): string {
   const base = buildCoworkerBasePrompt(coworker, context);
   return `${base}${memoryContext}${crossCoworkerContext}${VOICE_GUIDELINES}`;
+}
+
+/**
+ * Build a one-time instruction nudging the coworker to suggest a voice call.
+ * Injected into the prompt after 3 text exchanges with non-manager coworkers.
+ */
+export function buildCallNudgeInstruction(): string {
+  return `
+
+## Call Nudge (ONE TIME — this turn only)
+
+In your NEXT response, naturally suggest hopping on a quick call. Weave it into your answer — don't make the nudge the only thing you say. Answer their question AND suggest the call.
+
+Examples of natural nudges:
+- "hey this might be easier to just hop on a quick call, wanna chat for a sec?"
+- "this is getting complex enough that a call would be faster — want to jump on?"
+- "I feel like a quick call would help here, wanna connect?"
+
+Keep it casual and soft — a suggestion, not a command. They can ignore it.`;
 }

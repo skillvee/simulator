@@ -15,12 +15,18 @@ export {
   INVALID_PR_PROMPT,
   DUPLICATE_PR_PROMPT,
 } from "./manager/pr-submission";
+export {
+  buildGreetingPrompt,
+  type GreetingPromptContext,
+} from "./manager/greeting";
 
 // Coworker Personas
 export {
   buildCoworkerBasePrompt,
   buildChatPrompt,
   buildVoicePrompt,
+  buildCallNudgeInstruction,
+  getPersonalityGuidelines,
   CHAT_GUIDELINES,
   VOICE_GUIDELINES,
   type CoworkerContext,

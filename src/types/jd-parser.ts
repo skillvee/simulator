@@ -16,6 +16,37 @@ export type ConfidenceLevel = "high" | "medium" | "low";
 export type InferredSeniorityLevel = "junior" | "mid" | "senior" | "staff";
 
 /**
+ * Role archetype slugs that the AI can classify from a job description.
+ * Must match the slugs seeded in the Archetype table (prisma/seed-rubrics.ts).
+ */
+export type RoleArchetypeSlug =
+  // Engineering
+  | "frontend_engineer"
+  | "backend_engineer"
+  | "fullstack_engineer"
+  | "tech_lead"
+  | "devops_sre"
+  // Product Management
+  | "growth_pm"
+  | "platform_pm"
+  | "core_pm"
+  // Data Science
+  | "analytics_engineer"
+  | "data_analyst"
+  | "ml_engineer"
+  // Program Management
+  | "technical_program_manager"
+  | "business_program_manager"
+  // Sales
+  | "account_executive"
+  | "sales_development_rep"
+  | "solutions_engineer"
+  // Customer Success
+  | "onboarding_specialist"
+  | "customer_success_manager"
+  | "renewals_manager";
+
+/**
  * Field with confidence metadata
  */
 export interface ConfidentField<T> {
@@ -41,4 +72,5 @@ export interface ParseJDResponse {
   seniorityLevel: ConfidentField<InferredSeniorityLevel>;
   keyResponsibilities: ConfidentField<string[]>;
   domainContext: ConfidentField<string>;
+  roleArchetype: ConfidentField<RoleArchetypeSlug>;
 }

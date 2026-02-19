@@ -33,8 +33,12 @@ export default async function WorkPage({
     avatarUrl: c.avatarUrl,
   }));
 
-  // If no coworker selected, default to first coworker
-  const defaultCoworkerId = coworkers[0]?.id || null;
+  // Default to the manager so the candidate lands on their chat
+  // (the manager auto-starts the conversation with a welcome message)
+  const manager = coworkers.find((c) =>
+    c.role.toLowerCase().includes("manager")
+  );
+  const defaultCoworkerId = manager?.id || coworkers[0]?.id || null;
 
   return (
     <AssessmentScreenWrapper assessmentId={id}>
@@ -43,6 +47,8 @@ export default async function WorkPage({
         coworkers={coworkers}
         selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
         assessmentStartTime={assessment.createdAt}
+        managerMessagesStarted={assessment.managerMessagesStarted}
+        prUrl={assessment.prUrl}
       />
     </AssessmentScreenWrapper>
   );

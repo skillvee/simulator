@@ -4,13 +4,22 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   FolderOpen,
   ClipboardCheck,
   PanelLeftClose,
   PanelLeft,
   Plus,
+  LogOut,
+  ChevronsUpDown,
 } from "lucide-react";
 
 interface RecruiterSidebarProps {
@@ -106,29 +115,55 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
 
       {/* Footer */}
       <div className="flex h-[72px] items-center border-t border-white/10 px-3">
-        {sidebarOpen ? (
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 w-full">
-            <div className="h-9 w-9 rounded-full bg-blue-600/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium text-blue-300">
-                {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-              </span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            {sidebarOpen ? (
+              <button className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors w-full cursor-pointer">
+                <div className="h-9 w-9 rounded-full bg-blue-600/30 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-medium text-blue-300">
+                    {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-white truncate">
+                    {user.name || "Recruiter"}
+                  </p>
+                  <p className="text-xs text-white/50 truncate">{user.email}</p>
+                </div>
+                <ChevronsUpDown className="h-4 w-4 text-white/40 flex-shrink-0" />
+              </button>
+            ) : (
+              <button className="flex w-full justify-center cursor-pointer">
+                <div className="h-9 w-9 rounded-full bg-blue-600/30 hover:bg-blue-600/50 transition-colors flex items-center justify-center">
+                  <span className="text-sm font-medium text-blue-300">
+                    {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                  </span>
+                </div>
+              </button>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="top"
+            align="start"
+            className="w-56 bg-slate-900 border-white/10 text-white mb-1"
+          >
+            <div className="px-3 py-2.5 border-b border-white/10">
+              <p className="font-medium text-sm text-white">{user.name || "Recruiter"}</p>
+              <p className="text-xs truncate mt-0.5 text-slate-400">{user.email}</p>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
-                {user.name || "Recruiter"}
-              </p>
-              <p className="text-xs text-white/50 truncate">{user.email}</p>
+            <div className="p-1">
+              <DropdownMenuItem asChild variant="destructive">
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="w-full flex items-center gap-2 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign out
+                </button>
+              </DropdownMenuItem>
             </div>
-          </div>
-        ) : (
-          <div className="flex w-full justify-center">
-            <div className="h-9 w-9 rounded-full bg-blue-600/30 flex items-center justify-center">
-              <span className="text-sm font-medium text-blue-300">
-                {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-              </span>
-            </div>
-          </div>
-        )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );

@@ -35,6 +35,13 @@ vi.mock("@/lib/analysis", () => ({
     mockTriggerVideoAssessment(...args),
 }));
 
+// Mock profile photo generation (in @/lib/candidate)
+const mockGenerateProfilePhoto = vi.fn();
+vi.mock("@/lib/candidate", () => ({
+  generateProfilePhoto: (...args: unknown[]) =>
+    mockGenerateProfilePhoto(...args),
+}));
+
 import { POST } from "./route";
 
 describe("POST /api/assessment/finalize", () => {
@@ -185,6 +192,7 @@ describe("POST /api/assessment/finalize", () => {
       videoAssessmentId: null,
       hasRecording: false,
     });
+    expect(data.profilePhoto).toBeDefined();
 
     // Should not call cleanup when no PR URL
     expect(mockCleanupPrAfterAssessment).not.toHaveBeenCalled();
@@ -530,6 +538,139 @@ describe("POST /api/assessment/finalize", () => {
 
     const data = await response.json();
     // Finalization should succeed even if video assessment throws
+    expect(data.success).toBe(true);
+    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+  });
+
+  it("should trigger profile photo generation on finalization", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123" },
+    });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-123",
+      status: AssessmentStatus.WORKING,
+      startedAt,
+      prUrl: null,
+      scenario: { taskDescription: "Test task" },
+      recordings: [],
+    });
+    mockAssessmentUpdate.mockResolvedValue({
+      id: "test-id",
+      status: AssessmentStatus.COMPLETED,
+      startedAt,
+      completedAt: new Date(),
+      prUrl: null,
+    });
+    mockGenerateProfilePhoto.mockResolvedValue({
+      success: true,
+      imageUrl: "https://storage.example.com/avatars/candidates/user-123.jpg",
+    });
+
+    const request = new Request("http://localhost/api/assessment/finalize", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId: "test-id" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.profilePhoto).toEqual({
+      generated: true,
+      imageUrl: "https://storage.example.com/avatars/candidates/user-123.jpg",
+    });
+
+    // Verify profile photo was triggered with correct parameters
+    expect(mockGenerateProfilePhoto).toHaveBeenCalledWith({
+      assessmentId: "test-id",
+      userId: "user-123",
+    });
+  });
+
+  it("should finalize even if profile photo generation fails", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123" },
+    });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-123",
+      status: AssessmentStatus.WORKING,
+      startedAt,
+      prUrl: null,
+      scenario: { taskDescription: "Test task" },
+      recordings: [],
+    });
+    mockAssessmentUpdate.mockResolvedValue({
+      id: "test-id",
+      status: AssessmentStatus.COMPLETED,
+      startedAt,
+      completedAt: new Date(),
+      prUrl: null,
+    });
+    mockGenerateProfilePhoto.mockResolvedValue({
+      success: false,
+      imageUrl: null,
+      error: "Webcam profile snapshot not found",
+    });
+
+    const request = new Request("http://localhost/api/assessment/finalize", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId: "test-id" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    // Finalization should succeed even if profile photo fails
+    expect(data.success).toBe(true);
+    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.profilePhoto).toEqual({
+      generated: false,
+      imageUrl: null,
+    });
+  });
+
+  it("should finalize even if profile photo generation throws", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123" },
+    });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-123",
+      status: AssessmentStatus.WORKING,
+      startedAt,
+      prUrl: null,
+      scenario: { taskDescription: "Test task" },
+      recordings: [],
+    });
+    mockAssessmentUpdate.mockResolvedValue({
+      id: "test-id",
+      status: AssessmentStatus.COMPLETED,
+      startedAt,
+      completedAt: new Date(),
+      prUrl: null,
+    });
+    mockGenerateProfilePhoto.mockRejectedValue(new Error("Network error"));
+
+    const request = new Request("http://localhost/api/assessment/finalize", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId: "test-id" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    // Finalization should succeed even if profile photo throws
     expect(data.success).toBe(true);
     expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
   });

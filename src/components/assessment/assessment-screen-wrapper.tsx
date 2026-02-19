@@ -2,6 +2,7 @@
 
 import { ScreenRecordingProvider } from "@/contexts/screen-recording-context";
 import { ScreenRecordingGuard } from "./screen-recording-guard";
+import { WebcamPreview } from "./webcam-preview";
 
 interface AssessmentScreenWrapperProps {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export function AssessmentScreenWrapper({
         assessmentId={assessmentId}
         companyName={companyName}
       >
+        <WebcamPreview />
         {children}
       </ScreenRecordingGuard>
     </ScreenRecordingProvider>

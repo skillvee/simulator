@@ -49,6 +49,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
       value: "Online payments and financial infrastructure",
       confidence: "high",
     },
+    roleArchetype: { value: "frontend_engineer", confidence: "high" },
   };
 
   it("returns 401 if not authenticated", async () => {
@@ -232,7 +233,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     expect(data.seniorityLevel).toEqual({ value: "senior", confidence: "high" });
     expect(data.techStack.value).toContain("React");
     expect(data._meta).toBeDefined();
-    expect(data._meta.promptVersion).toBe("1.0");
+    expect(data._meta.promptVersion).toBe("1.1");
     expect(data._meta.parsedAt).toBeDefined();
   });
 
@@ -415,6 +416,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
       seniorityLevel: { value: "senior", confidence: "medium" },
       keyResponsibilities: { value: null, confidence: "low" },
       domainContext: { value: null, confidence: "low" },
+      roleArchetype: { value: "frontend_engineer", confidence: "medium" },
     };
 
     mockGenerateContent.mockResolvedValue({

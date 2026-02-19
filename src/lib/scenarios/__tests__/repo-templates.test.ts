@@ -1,177 +1,126 @@
 /**
- * Tests for repo template selection (US-007)
+ * Tests for scaffold selection and needsRepo (US-007)
  */
 
 import { describe, it, expect } from "vitest";
-import { selectTemplate, REPO_TEMPLATES } from "../repo-templates";
+import { selectScaffold, SCAFFOLDS, needsRepo } from "../repo-spec";
 
-describe("selectTemplate", () => {
+describe("selectScaffold", () => {
   describe("happy path", () => {
-    it("should select Next.js template for React + TypeScript stack", () => {
-      const result = selectTemplate(["react", "typescript", "nextjs"]);
-      expect(result.id).toBe("nextjs-typescript");
-      expect(result.name).toBe("Next.js + TypeScript Starter");
+    it("should select Next.js scaffold for React + TypeScript stack", () => {
+      const result = selectScaffold(["react", "typescript", "nextjs"]);
+      expect(result.id).toBe("nextjs-ts");
+      expect(result.repoTemplate).toBe("skillvee/scaffold-nextjs-ts");
     });
 
-    it("should select Express template for Node.js + Express stack", () => {
-      const result = selectTemplate(["node", "express", "typescript"]);
-      expect(result.id).toBe("express-typescript");
-      expect(result.name).toBe("Express + TypeScript Starter");
+    it("should select Express scaffold for Node.js backend stack", () => {
+      const result = selectScaffold(["node", "express", "api"]);
+      expect(result.id).toBe("express-ts");
     });
 
-    it("should select Python FastAPI template for Python stack", () => {
-      const result = selectTemplate(["python", "fastapi"]);
-      expect(result.id).toBe("python-fastapi");
-      expect(result.name).toBe("Python + FastAPI Starter");
-    });
-
-    it("should select fullstack monorepo for fullstack keywords", () => {
-      const result = selectTemplate(["fullstack", "monorepo"]);
-      expect(result.id).toBe("fullstack-monorepo");
-      expect(result.name).toBe("Full Stack Monorepo");
+    it("should select Next.js scaffold for fullstack keywords", () => {
+      const result = selectScaffold(["fullstack", "react"]);
+      expect(result.id).toBe("nextjs-ts");
     });
   });
 
   describe("case insensitivity", () => {
     it("should match regardless of case", () => {
-      const result = selectTemplate(["REACT", "TypeScript", "NextJS"]);
-      expect(result.id).toBe("nextjs-typescript");
+      const result = selectScaffold(["REACT", "TypeScript", "NextJS"]);
+      expect(result.id).toBe("nextjs-ts");
     });
 
     it("should handle mixed case with spaces", () => {
-      const result = selectTemplate(["Node.js", "EXPRESS", "typescript"]);
-      expect(result.id).toBe("express-typescript");
-    });
-  });
-
-  describe("partial matches", () => {
-    it("should match partial tech stack keywords", () => {
-      const result = selectTemplate(["react"]);
-      // Should match either nextjs-typescript or fullstack-monorepo (both have react)
-      expect(["nextjs-typescript", "fullstack-monorepo"]).toContain(result.id);
-    });
-
-    it("should select best match when multiple templates match", () => {
-      const result = selectTemplate(["react", "node"]);
-      // Both express-typescript and fullstack-monorepo could match
-      // Express has more specific keywords for Node.js backend
-      expect(["express-typescript", "fullstack-monorepo"]).toContain(result.id);
-    });
-
-    it("should match Express template for generic backend keywords", () => {
-      const result = selectTemplate(["backend", "api", "node"]);
-      expect(result.id).toBe("express-typescript");
+      const result = selectScaffold(["Node.js", "EXPRESS", "api"]);
+      expect(result.id).toBe("express-ts");
     });
   });
 
   describe("fallback behavior", () => {
-    it("should return fullstack monorepo for empty tech stack", () => {
-      const result = selectTemplate([]);
-      expect(result.id).toBe("fullstack-monorepo");
-      expect(result.name).toBe("Full Stack Monorepo");
+    it("should return first scaffold for empty tech stack", () => {
+      const result = selectScaffold([]);
+      expect(result.id).toBe("nextjs-ts");
     });
 
-    it("should return fullstack monorepo for unknown tech stack", () => {
-      const result = selectTemplate(["cobol", "fortran", "assembly"]);
-      expect(result.id).toBe("fullstack-monorepo");
-      expect(result.name).toBe("Full Stack Monorepo");
+    it("should return first scaffold for unknown tech stack", () => {
+      const result = selectScaffold(["cobol", "fortran", "assembly"]);
+      expect(result.id).toBe("nextjs-ts");
     });
 
-    it("should return fullstack monorepo when tech stack is undefined", () => {
+    it("should return first scaffold when tech stack is undefined", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = selectTemplate(undefined as any);
-      expect(result.id).toBe("fullstack-monorepo");
+      const result = selectScaffold(undefined as any);
+      expect(result.id).toBe("nextjs-ts");
     });
   });
 
-  describe("template registry validation", () => {
-    it("should have all required fields for each template", () => {
-      REPO_TEMPLATES.forEach((template) => {
-        expect(template.id).toBeDefined();
-        expect(template.name).toBeDefined();
-        expect(template.repoTemplate).toBeDefined();
-        expect(template.matchesTechStack).toBeDefined();
-        expect(template.description).toBeDefined();
-        expect(Array.isArray(template.matchesTechStack)).toBe(true);
-        expect(template.matchesTechStack.length).toBeGreaterThan(0);
+  describe("scaffold registry validation", () => {
+    it("should have all required fields for each scaffold", () => {
+      SCAFFOLDS.forEach((scaffold) => {
+        expect(scaffold.id).toBeDefined();
+        expect(scaffold.name).toBeDefined();
+        expect(scaffold.repoTemplate).toBeDefined();
+        expect(scaffold.matchesTechStack).toBeDefined();
+        expect(scaffold.description).toBeDefined();
+        expect(scaffold.devCommand).toBeDefined();
+        expect(scaffold.installCommand).toBeDefined();
+        expect(scaffold.testCommand).toBeDefined();
+        expect(Array.isArray(scaffold.matchesTechStack)).toBe(true);
+        expect(scaffold.matchesTechStack.length).toBeGreaterThan(0);
       });
     });
 
-    it("should have unique template IDs", () => {
-      const ids = REPO_TEMPLATES.map((t) => t.id);
+    it("should have unique scaffold IDs", () => {
+      const ids = SCAFFOLDS.map((s) => s.id);
       const uniqueIds = new Set(ids);
       expect(ids.length).toBe(uniqueIds.size);
     });
 
     it("should have valid GitHub repo format", () => {
-      REPO_TEMPLATES.forEach((template) => {
-        expect(template.repoTemplate).toMatch(/^[a-z0-9-]+\/[a-z0-9-]+$/i);
+      SCAFFOLDS.forEach((scaffold) => {
+        expect(scaffold.repoTemplate).toMatch(/^[a-z0-9-]+\/[a-z0-9-]+$/i);
       });
-    });
-
-    it("should have fullstack-monorepo as fallback", () => {
-      const fallback = REPO_TEMPLATES.find(
-        (t) => t.id === "fullstack-monorepo"
-      );
-      expect(fallback).toBeDefined();
-    });
-  });
-
-  describe("scoring algorithm", () => {
-    it("should prefer template with more matching keywords", () => {
-      // Next.js template has many React-related keywords
-      const result = selectTemplate([
-        "react",
-        "typescript",
-        "nextjs",
-        "frontend",
-      ]);
-      expect(result.id).toBe("nextjs-typescript");
-    });
-
-    it("should handle ties by returning first match", () => {
-      // Both templates might match "typescript" equally
-      const result = selectTemplate(["typescript"]);
-      // Should return one of the TypeScript templates consistently
-      expect(result.matchesTechStack).toContain("typescript");
     });
   });
 
   describe("real-world scenarios", () => {
     it("should handle typical frontend role tech stack", () => {
-      const result = selectTemplate([
+      const result = selectScaffold([
         "JavaScript",
         "React",
         "TypeScript",
         "HTML/CSS",
       ]);
-      expect(result.id).toBe("nextjs-typescript");
+      expect(result.id).toBe("nextjs-ts");
     });
 
     it("should handle typical backend role tech stack", () => {
-      const result = selectTemplate([
+      const result = selectScaffold([
         "Node.js",
         "Express",
         "PostgreSQL",
         "REST API",
       ]);
-      expect(result.id).toBe("express-typescript");
+      expect(result.id).toBe("express-ts");
     });
+  });
+});
 
-    it("should handle Python backend role tech stack", () => {
-      const result = selectTemplate(["Python", "FastAPI", "PostgreSQL"]);
-      expect(result.id).toBe("python-fastapi");
-    });
+describe("needsRepo", () => {
+  it("should return true for engineering tech stacks", () => {
+    expect(needsRepo(["react", "typescript"])).toBe(true);
+    expect(needsRepo(["node", "express"])).toBe(true);
+    expect(needsRepo(["nextjs"])).toBe(true);
+  });
 
-    it("should handle full stack role tech stack", () => {
-      const result = selectTemplate([
-        "React",
-        "Node.js",
-        "TypeScript",
-        "PostgreSQL",
-      ]);
-      // Could match nextjs, express, or fullstack - all are valid fullstack options
-      expect(["nextjs-typescript", "express-typescript", "fullstack-monorepo"]).toContain(result.id);
-    });
+  it("should return false for non-engineering tech stacks", () => {
+    expect(needsRepo(["sales", "crm"])).toBe(false);
+    expect(needsRepo(["product-management"])).toBe(false);
+  });
+
+  it("should return false for empty tech stack", () => {
+    expect(needsRepo([])).toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(needsRepo(undefined as any)).toBe(false);
   });
 });

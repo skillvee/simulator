@@ -43,3 +43,6 @@ export * from "./archetype-weights";
 
 // seniority-thresholds exports
 export * from "./seniority-thresholds";
+
+// profile-photo exports
+export * from "./profile-photo";

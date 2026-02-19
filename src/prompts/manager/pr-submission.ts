@@ -20,7 +20,7 @@ As their manager, acknowledge receipt of the PR and let them know you'll take a 
 export function buildPRAcknowledgmentContext(prUrl: string): string {
   return `The candidate just submitted their PR link: ${prUrl}
 
-As their manager, acknowledge receipt of the PR and let them know you'll take a quick look and then call them to discuss it. Be warm, encouraging, and conversational. Keep it brief (1-2 sentences). Something like acknowledging their work, mentioning you'll review it, and that you'll call them shortly.`;
+As their manager, acknowledge receipt of the PR warmly. Then tell them to give you a call so you can walk through it together. Make it clear calling is the next step — something like "give me a call when you're ready to walk me through it" or "hop on a call with me so we can go over this together". Keep it brief (2-3 sentences). Be encouraging about their submission.`;
 }
 
 /**
@@ -37,4 +37,4 @@ export const INVALID_PR_PROMPT = `The candidate just sent a message that seems l
  * Used when a candidate sends a PR link but one has already been recorded.
  * The manager should acknowledge without repeating the "call me" message.
  */
-export const DUPLICATE_PR_PROMPT = `The candidate just shared a PR link, but you've already received and acknowledged their PR submission earlier. Respond naturally to their message without repeating the "I'll call you" prompt. Just acknowledge casually, like "Got it, I already have your PR - ready when you are!" or similar. Keep it brief and friendly.`;
+export const DUPLICATE_PR_PROMPT = `The candidate just shared a PR link, but you've already received and acknowledged their PR submission earlier. Remind them casually that the next step is to call you to walk through it. Something like "I already have your PR! Just give me a call whenever you're ready to walk me through it." Keep it brief and friendly.`;
