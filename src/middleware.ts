@@ -82,12 +82,20 @@ function isAssessmentPageRoute(pathname: string): boolean {
 }
 
 /**
+ * Check if a route is an admin page route
+ */
+function isAdminPageRoute(pathname: string): boolean {
+  return pathname.startsWith("/admin");
+}
+
+/**
  * Centralized authentication middleware for API and page routes.
  *
  * This middleware:
  * - Protects all /api/* routes except /api/auth/* and PUBLIC_API_ROUTES
  * - Requires ADMIN role for /api/admin/* routes
  * - Requires RECRUITER or ADMIN role for /api/recruiter/* routes
+ * - Protects /admin/* page routes (requires ADMIN role)
  * - Protects /recruiter/* page routes (requires RECRUITER or ADMIN role)
  * - Protects /assessments/* page routes (requires authentication)
  * - Allows public access to /invite/* routes
@@ -96,6 +104,7 @@ function isAssessmentPageRoute(pathname: string): boolean {
  *
  * @see Issue #160: SEC-001 - Security audit finding #5 (HIGH severity)
  * @see Issue #187: RF-019 - Update middleware for new routes
+ * @see Run 010: Admin route protection fix
  */
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -184,6 +193,26 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // Handle admin page routes
+  if (isAdminPageRoute(pathname)) {
+    // Redirect to sign-in if not authenticated
+    if (!session?.user) {
+      const signInUrl = new URL("/sign-in", req.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    // Check admin role (only ADMIN allowed)
+    if (user?.role !== "ADMIN") {
+      // Redirect to home with error for wrong role
+      const homeUrl = new URL("/", req.url);
+      homeUrl.searchParams.set("error", "admin_access_required");
+      return NextResponse.redirect(homeUrl);
+    }
+
+    return NextResponse.next();
+  }
+
   // Redirect authenticated recruiters from home page to dashboard
   if (pathname === "/") {
     if (session?.user && (user?.role === "RECRUITER" || user?.role === "ADMIN")) {
@@ -204,6 +233,7 @@ export const config = {
   matcher: [
     "/",
     "/api/:path*",
+    "/admin/:path*",
     "/recruiter/:path*",
     "/assessments/:path*",
   ],
