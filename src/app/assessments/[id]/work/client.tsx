@@ -60,6 +60,12 @@ export function WorkPageClient({
     // startCall will be called via ref after SlackLayout mounts
   }, []);
 
+  // Handle declining the incoming kickoff call (use text chat instead)
+  const handleDeclineKickoff = useCallback(() => {
+    setKickoffCallState(null);
+    // This will allow the text-based manager greeting to trigger
+  }, []);
+
   // Ref to call startCall from CallContext (available after SlackLayout mounts)
   const startCallRef = useRef<((coworkerId: string, callType: "coworker") => void) | null>(null);
 
@@ -244,7 +250,7 @@ export function WorkPageClient({
     <>
       {/* Incoming call modal for mandatory voice kickoff */}
       {kickoffCallState === "ringing" && manager && (
-        <IncomingCallModal coworker={manager} onAccept={handleAcceptKickoff} />
+        <IncomingCallModal coworker={manager} onAccept={handleAcceptKickoff} onDecline={handleDeclineKickoff} />
       )}
 
       <SlackLayout

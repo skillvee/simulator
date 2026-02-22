@@ -554,12 +554,20 @@ export function RecruiterScenarioBuilderClient() {
         console.error("Avatar generation failed (non-blocking):", err);
       });
 
-      // Step 5: Trigger repo provisioning (fire-and-forget)
+      // Step 5: Trigger repo provisioning (background — errors logged)
       fetch(`/api/recruiter/simulations/${scenario.id}/provision-repo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          console.error(
+            `Repo provisioning failed (${res.status}):`,
+            data.details || data.error || "Unknown error"
+          );
+        }
       }).catch((err) => {
-        console.error("Repo provisioning failed (non-blocking):", err);
+        console.error("Repo provisioning network error:", err);
       });
 
       // Step 6: Mark log as completed and redirect
@@ -638,7 +646,7 @@ export function RecruiterScenarioBuilderClient() {
           roleName,
           seniorityLevel: seniority,
           companyName: companyNameValue,
-          companyDescription: companyDesc || `${companyNameValue} is a technology company.`,
+          companyDescription: companyDesc || domain || `${companyNameValue} is a technology company.`,
           techStack,
           taskDescription,
           keyResponsibilities: responsibilities.length > 0 ? responsibilities : ["Build and maintain features"],
@@ -662,7 +670,7 @@ export function RecruiterScenarioBuilderClient() {
       setPreviewData({
         simulationName: `${roleName} @ ${companyNameValue}`,
         companyName: companyNameValue,
-        companyDescription: companyDesc || `${companyNameValue} is a technology company.`,
+        companyDescription: companyDesc || domain || `${companyNameValue} is a technology company.`,
         techStack,
         taskOptions,
         selectedTask: null, // User must select

@@ -16,13 +16,15 @@ interface Coworker {
 interface IncomingCallModalProps {
   coworker: Coworker;
   onAccept: () => void;
+  onDecline?: () => void;
 }
 
 /**
- * Full-screen incoming call modal. Non-dismissable — candidate must accept.
- * Plays a ringing sound on mount and stops on accept or unmount.
+ * Full-screen incoming call modal for manager kickoff.
+ * Plays a ringing sound on mount and stops on accept/decline or unmount.
+ * If voice calls are not supported, candidate can decline to use text chat.
  */
-export function IncomingCallModal({ coworker, onAccept }: IncomingCallModalProps) {
+export function IncomingCallModal({ coworker, onAccept, onDecline }: IncomingCallModalProps) {
   const ringRef = useRef<{ stop: () => void } | null>(null);
 
   useEffect(() => {
@@ -35,6 +37,11 @@ export function IncomingCallModal({ coworker, onAccept }: IncomingCallModalProps
   const handleAccept = () => {
     ringRef.current?.stop();
     onAccept();
+  };
+
+  const handleDecline = () => {
+    ringRef.current?.stop();
+    onDecline?.();
   };
 
   return (
@@ -59,15 +66,27 @@ export function IncomingCallModal({ coworker, onAccept }: IncomingCallModalProps
           <p className="mt-3 text-sm text-white/80 animate-pulse">Incoming call...</p>
         </div>
 
-        {/* Accept button */}
-        <Button
-          size="lg"
-          className="mt-2 rounded-full bg-green-500 px-8 py-6 text-lg font-semibold text-white shadow-lg hover:bg-green-600 transition-colors"
-          onClick={handleAccept}
-        >
-          <Phone className="h-5 w-5 mr-2" />
-          Accept
-        </Button>
+        {/* Call action buttons */}
+        <div className="flex gap-4 mt-2">
+          <Button
+            size="lg"
+            className="rounded-full bg-green-500 px-8 py-6 text-lg font-semibold text-white shadow-lg hover:bg-green-600 transition-colors"
+            onClick={handleAccept}
+          >
+            <Phone className="h-5 w-5 mr-2" />
+            Accept
+          </Button>
+          {onDecline && (
+            <Button
+              size="lg"
+              variant="outline"
+              className="rounded-full border-white/20 bg-white/10 px-8 py-6 text-lg font-semibold text-white shadow-lg hover:bg-white/20 transition-colors"
+              onClick={handleDecline}
+            >
+              Use Text Chat
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

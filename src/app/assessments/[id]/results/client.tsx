@@ -46,19 +46,18 @@ const DIMENSION_LABELS: Record<string, string> = {
 };
 
 /**
- * Score level based on 1-5 scale
+ * Score level based on 1-4 rubric scale
  */
 function getScoreLevel(score: number): string {
-  if (score >= 4.5) return "exceptional";
-  if (score >= 3.5) return "strong";
-  if (score >= 2.5) return "adequate";
-  if (score >= 1.5) return "developing";
+  if (score >= 3.5) return "exceptional";
+  if (score >= 2.5) return "strong";
+  if (score >= 1.5) return "adequate";
   return "needs_improvement";
 }
 
 function SkillScoreBar({
   score,
-  maxScore = 5,
+  maxScore = 4,
 }: {
   score: number;
   maxScore?: number;
@@ -115,7 +114,7 @@ function VideoSkillCard({
           <div className="max-w-xs flex-1">
             <SkillScoreBar score={score} />
           </div>
-          <div className="text-lg font-semibold text-primary">{score}/5</div>
+          <div className="text-lg font-semibold text-primary">{score}/4</div>
           <span
             className={`rounded-md px-2 py-1 text-xs font-medium ${levelColors[level] || "bg-muted"}`}
           >

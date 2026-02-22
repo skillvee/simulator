@@ -75,12 +75,12 @@ function getStrengthBadgeStyles(level: CandidateStrengthLevel): string {
 }
 
 /**
- * Get dimension score color based on score (1-5 scale)
+ * Get dimension score color based on score (1-4 rubric scale)
  */
 function getDimensionScoreColor(score: number): string {
-  if (score >= 4.5) return "text-green-600";
-  if (score >= 3.5) return "text-blue-600";
-  if (score >= 2.5) return "text-stone-600";
+  if (score >= 3.5) return "text-green-600";
+  if (score >= 2.5) return "text-blue-600";
+  if (score >= 1.5) return "text-stone-600";
   return "text-red-600";
 }
 
@@ -128,7 +128,7 @@ function LoadingSkeleton() {
 
       {/* Dimension cards skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 7 }).map((_, i) => (
           <Skeleton key={i} className="h-40" />
         ))}
       </div>
@@ -277,7 +277,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
                 <span className={`text-4xl font-bold ${getDimensionScoreColor(data.overallScore)}`}>
                   {data.overallScore.toFixed(1)}
                 </span>
-                <span className="text-lg text-stone-400">/ 5.0</span>
+                <span className="text-lg text-stone-400">/ 4.0</span>
               </div>
             </div>
             {overallPercentile !== null && (

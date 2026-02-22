@@ -55,6 +55,10 @@ interface SimulationSettingsClientProps {
 export function SimulationSettingsClient({ scenario }: SimulationSettingsClientProps) {
   const [copied, setCopied] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [repoUrl, setRepoUrl] = useState(scenario.repoUrl);
+  const [repoStatus, setRepoStatus] = useState<"loading" | "ready" | "failed">(
+    scenario.repoUrl ? "ready" : "loading"
+  );
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -67,6 +71,40 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
       }
     }
   }, [searchParams]);
+
+  // Poll for repo URL if not yet available
+  useEffect(() => {
+    if (repoUrl) return;
+
+    let attempts = 0;
+    const maxAttempts = 24; // 2 minutes (24 * 5s)
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch(`/api/recruiter/simulations/${scenario.id}`);
+        if (res.ok) {
+          const json = await res.json();
+          const url = json.data?.repoUrl;
+          if (url) {
+            setRepoUrl(url);
+            setRepoStatus("ready");
+            clearInterval(interval);
+          } else if (attempts >= maxAttempts) {
+            setRepoStatus("failed");
+            clearInterval(interval);
+          }
+        }
+      } catch {
+        // Network error, keep polling
+      }
+      if (attempts >= maxAttempts) {
+        setRepoStatus("failed");
+        clearInterval(interval);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [repoUrl, scenario.id]);
 
   const getShareableLink = () => {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -261,16 +299,20 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
             <h3 className="text-sm font-medium text-stone-500 mb-2">
               Repository
             </h3>
-            {scenario.repoUrl ? (
+            {repoStatus === "ready" && repoUrl ? (
               <a
-                href={scenario.repoUrl}
+                href={repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors"
               >
-                {scenario.repoUrl}
+                {repoUrl}
                 <ExternalLink className="h-4 w-4" />
               </a>
+            ) : repoStatus === "failed" ? (
+              <span className="text-sm text-stone-400">
+                Not available — check GITHUB_ORG_TOKEN configuration
+              </span>
             ) : (
               <div className="flex items-center gap-2 text-stone-500">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-blue-600" />

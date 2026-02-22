@@ -210,6 +210,134 @@ function validateInternalConsistency(spec: RepoSpec): void {
   if (mainTaskIssues[0].state !== "open") {
     throw new Error("Main task issue must be open");
   }
+
+  // --- Semantic validation: cross-reference checks ---
+  const filePaths = new Set(spec.files.map((f) => f.path));
+
+  // Check README doesn't reference files that don't exist
+  const readmeFileRefs = Array.from(
+    spec.readmeContent.matchAll(
+      /(?:\.env\.example|(?:src|docs|tests|prisma)\/[\w./-]+\.\w+)/g
+    )
+  );
+  for (const match of readmeFileRefs) {
+    const ref = match[0];
+    if (!filePaths.has(ref)) {
+      // Special handling for .env.example - auto-create if referenced in README
+      if (ref === ".env.example") {
+        console.log("[validateInternalConsistency] Auto-adding missing .env.example referenced in README");
+        spec.files.push({
+          path: ".env.example",
+          content: "# Environment Variables\n\n# Database\nDATABASE_URL=postgresql://user:password@localhost:5432/dbname\n\n# Redis\nREDIS_URL=redis://localhost:6379\n\n# API Keys\n# API_KEY=your-api-key-here\n\n# Feature Flags\nENABLE_FEATURE_X=false\n",
+          addedInCommit: 0,
+          isStub: false
+        });
+        filePaths.add(".env.example");
+      } else {
+        throw new Error(
+          `README references "${ref}" but file not found in spec. Add it to files[] or remove the reference.`
+        );
+      }
+    }
+  }
+
+  // Check issue bodies and comments don't reference phantom files
+  for (const issue of spec.issues) {
+    const allText = [
+      issue.body,
+      ...issue.comments.map((c) => c.body),
+    ].join("\n");
+
+    // Match backtick-wrapped file paths and bare src/ paths
+    const issueFileRefs = Array.from(
+      allText.matchAll(
+        /`((?:src|docs|tests|prisma)\/[\w./-]+\.\w+)`|((?:src|docs|tests|prisma)\/[\w./-]+\.\w+)/g
+      )
+    );
+    for (const match of issueFileRefs) {
+      const ref = match[1] || match[2];
+      if (!filePaths.has(ref)) {
+        throw new Error(
+          `Issue "${issue.title}" references "${ref}" but file not found in spec. Add it to files[] or remove the reference.`
+        );
+      }
+    }
+  }
+
+  // Check code imports reference files that exist in the spec
+  for (const file of spec.files) {
+    if (!file.path.endsWith(".ts") && !file.path.endsWith(".tsx")) continue;
+
+    // Match relative imports: import ... from '../lib/db' or './utils'
+    const relativeImports = Array.from(
+      file.content.matchAll(
+        /(?:import|from)\s+['"](\.[^'"]+)['"]/g
+      )
+    );
+    for (const match of relativeImports) {
+      const importPath = match[1];
+      const resolved = resolveRelativeImport(file.path, importPath);
+      if (resolved && !filePaths.has(resolved)) {
+        // Also check with common extensions
+        const withExt = [resolved, `${resolved}.ts`, `${resolved}.tsx`, `${resolved}/index.ts`];
+        if (!withExt.some((p) => filePaths.has(p))) {
+          throw new Error(
+            `File "${file.path}" imports "${importPath}" which resolves to "${resolved}" but file not found in spec.`
+          );
+        }
+      }
+    }
+
+    // Match alias imports: import ... from '@/lib/db'
+    const aliasImports = Array.from(
+      file.content.matchAll(
+        /(?:import|from)\s+['"]@\/([^'"]+)['"]/g
+      )
+    );
+    for (const match of aliasImports) {
+      const aliasPath = `src/${match[1]}`;
+      const withExt = [aliasPath, `${aliasPath}.ts`, `${aliasPath}.tsx`, `${aliasPath}/index.ts`];
+      if (!withExt.some((p) => filePaths.has(p))) {
+        throw new Error(
+          `File "${file.path}" imports "@/${match[1]}" which resolves to "${aliasPath}" but file not found in spec.`
+        );
+      }
+    }
+  }
+
+  // Check for duplicate file paths
+  if (filePaths.size !== spec.files.length) {
+    const seen = new Set<string>();
+    for (const file of spec.files) {
+      if (seen.has(file.path)) {
+        throw new Error(`Duplicate file path: "${file.path}"`);
+      }
+      seen.add(file.path);
+    }
+  }
+}
+
+/**
+ * Resolve a relative import path against a source file's directory.
+ * e.g., resolveRelativeImport("src/services/webhook.ts", "../lib/db") → "src/lib/db"
+ */
+function resolveRelativeImport(
+  sourcePath: string,
+  importPath: string
+): string | null {
+  const parts = sourcePath.split("/");
+  parts.pop(); // remove filename
+
+  for (const segment of importPath.split("/")) {
+    if (segment === "..") {
+      if (parts.length === 0) return null;
+      parts.pop();
+    } else if (segment !== ".") {
+      parts.push(segment);
+    }
+  }
+
+  return parts.join("/");
 }
 
 /**

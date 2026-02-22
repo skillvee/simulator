@@ -3,15 +3,16 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { VideoAssessmentStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
-import type { AssessmentReport, SkillScore, ScoreLevel, VideoEvaluationResult, VideoSkillEvaluation, VideoDimension } from "@/types";
+import type { AssessmentReport, SkillScore, ScoreLevel, RubricAssessmentOutput } from "@/types";
 import { sendReportEmail, isEmailServiceConfigured } from "@/lib/external";
 import { getEvaluationResults, evaluateVideo } from "@/lib/analysis";
-import type { VideoEvaluationOutput } from "@/prompts/analysis/video-evaluation";
+import { RUBRIC_TO_ASSESSMENT_DIMENSION } from "@/lib/rubric/dimension-mapping";
 
 /**
- * Maps video evaluation dimension names to skill categories for the report
+ * Maps assessment dimension keys to report skill categories.
+ * Assessment dimensions (UPPERCASE) → report categories (lowercase).
  */
-const DIMENSION_TO_CATEGORY: Record<string, string> = {
+const ASSESSMENT_DIM_TO_CATEGORY: Record<string, string> = {
   COMMUNICATION: "communication",
   PROBLEM_SOLVING: "problem_decomposition",
   TECHNICAL_KNOWLEDGE: "code_quality",
@@ -23,120 +24,103 @@ const DIMENSION_TO_CATEGORY: Record<string, string> = {
 };
 
 /**
- * Maps a score (1-5) to a level label
+ * Maps a score (1-4 rubric scale) to a level label
  */
 function scoreToLevel(score: number): ScoreLevel {
-  if (score >= 4.5) return "exceptional";
-  if (score >= 3.5) return "strong";
-  if (score >= 2.5) return "adequate";
-  if (score >= 1.5) return "developing";
+  if (score >= 3.5) return "exceptional";
+  if (score >= 2.5) return "strong";
+  if (score >= 1.5) return "adequate";
   return "needs_improvement";
 }
 
 /**
- * Dimension names for video evaluation
+ * Converts rubric assessment output (v3) to assessment report format.
+ *
+ * The v3 rubric system stores dimension scores using role-family-specific slugs
+ * (e.g., "technical_execution", "problem_decomposition_design"). This function
+ * maps them through RUBRIC_TO_ASSESSMENT_DIMENSION → ASSESSMENT_DIM_TO_CATEGORY
+ * to produce the report's skill categories.
  */
-const VIDEO_DIMENSIONS: VideoDimension[] = [
-  "COMMUNICATION",
-  "PROBLEM_SOLVING",
-  "TECHNICAL_KNOWLEDGE",
-  "COLLABORATION",
-  "ADAPTABILITY",
-  "LEADERSHIP",
-  "CREATIVITY",
-  "TIME_MANAGEMENT",
-];
-
-/**
- * Converts video evaluation output to the new video evaluation result format
- */
-function convertToVideoEvaluationResult(
-  videoResult: VideoEvaluationOutput
-): VideoEvaluationResult {
-  const skills: VideoSkillEvaluation[] = VIDEO_DIMENSIONS.map(dimension => {
-    const scoreData = videoResult.dimension_scores[dimension];
-    return {
-      dimension,
-      score: scoreData?.score ?? null,
-      rationale: scoreData?.rationale ?? "",
-      greenFlags: scoreData?.greenFlags ?? [],
-      redFlags: scoreData?.redFlags ?? [],
-      timestamps: scoreData?.timestamps ?? [],
-    };
-  });
-
-  return {
-    evaluationVersion: videoResult.evaluation_version,
-    overallScore: videoResult.overall_score,
-    skills,
-    hiringSignals: videoResult.hiringSignals,
-    overallSummary: videoResult.overall_summary,
-    evaluationConfidence: videoResult.evaluation_confidence,
-    insufficientEvidenceNotes: videoResult.insufficient_evidence_notes ?? undefined,
-  };
-}
-
-/**
- * Converts video evaluation output to assessment report format
- */
-function convertVideoEvaluationToReport(
-  videoResult: VideoEvaluationOutput,
+function convertRubricToReport(
+  rubricResult: RubricAssessmentOutput,
   assessmentId: string,
   candidateName?: string,
   timing?: { totalDurationMinutes: number | null; workingPhaseMinutes: number | null },
   coworkersContacted?: number
 ): AssessmentReport {
-  // Convert dimension scores to skill scores (for backward compatibility)
   const skillScores: SkillScore[] = [];
 
-  for (const [dimension, scoreData] of Object.entries(videoResult.dimension_scores)) {
-    const category = DIMENSION_TO_CATEGORY[dimension];
-    if (!category || scoreData.score === null) continue;
+  // Track best score per assessment dimension (multiple rubric dims may map to same one)
+  const bestByCategory: Record<string, SkillScore> = {};
 
-    // Combine green flags and red flags as evidence
+  for (const dimScore of rubricResult.dimensionScores) {
+    if (dimScore.score === null) continue;
+
+    // Map rubric slug → assessment dimension → report category
+    const assessmentDim = RUBRIC_TO_ASSESSMENT_DIMENSION[dimScore.dimensionSlug];
+    const category = assessmentDim
+      ? ASSESSMENT_DIM_TO_CATEGORY[assessmentDim]
+      : dimScore.dimensionSlug; // Fall back to slug itself if no mapping
+
+    if (!category) continue;
+
     const evidence: string[] = [
-      ...scoreData.greenFlags.map(f => `+ ${f}`),
-      ...scoreData.redFlags.map(f => `- ${f}`),
+      ...dimScore.greenFlags.map(f => `+ ${f}`),
+      ...dimScore.redFlags.map(f => `- ${f}`),
     ];
 
-    skillScores.push({
+    const candidate: SkillScore = {
       category: category as SkillScore["category"],
-      score: scoreData.score,
-      level: scoreToLevel(scoreData.score),
+      score: dimScore.score,
+      level: scoreToLevel(dimScore.score),
       evidence,
-      notes: scoreData.rationale,
-    });
+      notes: dimScore.rationale,
+    };
+
+    // Keep the higher-scoring entry when multiple rubric dims map to same category
+    const existing = bestByCategory[category];
+    if (!existing || dimScore.score > existing.score) {
+      bestByCategory[category] = candidate;
+    }
   }
 
-  // Build narrative from hiring signals
-  const { hiringSignals } = videoResult;
+  skillScores.push(...Object.values(bestByCategory));
 
-  // Create the video evaluation result for new display
-  const videoEvaluation = convertToVideoEvaluationResult(videoResult);
+  // Build narrative from v3 fields (topStrengths / growthAreas / detectedRedFlags)
+  const strengths = rubricResult.topStrengths.map(s => s.description);
+  const areasForImprovement = rubricResult.growthAreas.map(g => g.description);
+
+  // Add detected red flags to areas for improvement
+  for (const rf of rubricResult.detectedRedFlags) {
+    areasForImprovement.push(`Red flag: ${rf.evidence}`);
+  }
+
+  // Build notable observations from highest-scoring dimension behaviors
+  const notableObservations: string[] = rubricResult.dimensionScores
+    .filter(d => d.score !== null && d.score >= 3)
+    .flatMap(d => d.observableBehaviors.slice(0, 1).map(b => `[${b.timestamp}] ${b.behavior}`))
+    .slice(0, 5);
 
   return {
     generatedAt: new Date().toISOString(),
     assessmentId,
     candidateName,
-    overallScore: videoResult.overall_score,
-    overallLevel: scoreToLevel(videoResult.overall_score),
+    overallScore: rubricResult.overallScore,
+    overallLevel: scoreToLevel(rubricResult.overallScore),
     skillScores,
     narrative: {
-      overallSummary: videoResult.overall_summary,
-      strengths: hiringSignals.overallGreenFlags,
-      areasForImprovement: hiringSignals.overallRedFlags,
-      notableObservations: videoResult.key_highlights
-        .filter(h => h.type === "positive")
-        .slice(0, 3)
-        .map(h => `[${h.timestamp}] ${h.description}`),
+      overallSummary: rubricResult.overallSummary,
+      strengths,
+      areasForImprovement,
+      notableObservations,
     },
     recommendations: skillScores
-      .filter(s => s.score <= 3)
+      .filter(s => s.score <= 2)
       .slice(0, 3)
       .map((skill) => ({
         category: skill.category,
-        priority: skill.score <= 2 ? "high" : "medium" as const,
-        title: `Improve ${skill.category.replace("_", " ")}`,
+        priority: skill.score <= 1 ? "high" : "medium" as const,
+        title: `Improve ${skill.category.replace(/_/g, " ")}`,
         description: skill.notes,
         actionableSteps: skill.evidence
           .filter(e => e.startsWith("- "))
@@ -147,13 +131,11 @@ function convertVideoEvaluationToReport(
       totalDurationMinutes: timing?.totalDurationMinutes ?? null,
       workingPhaseMinutes: timing?.workingPhaseMinutes ?? null,
       coworkersContacted: coworkersContacted ?? 0,
-      aiToolsUsed: true, // Assumed for simulation context
+      aiToolsUsed: true,
       testsStatus: "unknown",
       codeReviewScore: null,
     },
-    version: videoResult.evaluation_version,
-    // Include new video evaluation data for results page
-    videoEvaluation,
+    version: rubricResult.evaluationVersion,
   };
 }
 
@@ -257,11 +239,11 @@ export async function POST(request: Request) {
       },
     });
 
-    let videoResult: VideoEvaluationOutput | null = null;
+    let videoResult: RubricAssessmentOutput | null = null;
 
     if (videoAssessment?.status === VideoAssessmentStatus.COMPLETED && videoAssessment.summary?.rawAiResponse) {
-      // Use existing video evaluation result
-      videoResult = videoAssessment.summary.rawAiResponse as unknown as VideoEvaluationOutput;
+      // Use existing video evaluation result (v3 rubric format)
+      videoResult = videoAssessment.summary.rawAiResponse as unknown as RubricAssessmentOutput;
     } else if (!videoAssessment || videoAssessment.status === VideoAssessmentStatus.PENDING ||
                videoAssessment.status === VideoAssessmentStatus.FAILED) {
       // Trigger video evaluation and wait for it
@@ -305,7 +287,7 @@ export async function POST(request: Request) {
         // Fetch the results
         const results = await getEvaluationResults(videoAssessmentId);
         if (results.summary?.rawAiResponse) {
-          videoResult = results.summary.rawAiResponse as unknown as VideoEvaluationOutput;
+          videoResult = results.summary.rawAiResponse as unknown as RubricAssessmentOutput;
         }
       } catch (error) {
         console.error("Error running video evaluation:", error);
@@ -340,8 +322,8 @@ export async function POST(request: Request) {
         .filter((id): id is string => id !== null)
     );
 
-    // Convert video evaluation to report format
-    const report = convertVideoEvaluationToReport(
+    // Convert rubric evaluation to report format
+    const report = convertRubricToReport(
       videoResult,
       assessmentId,
       assessment.user?.name || undefined,

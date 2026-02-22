@@ -138,17 +138,6 @@ export async function POST(
   try {
     const { repoUrl, repoSpec } = await provisionRepo(scenarioId, metadata);
 
-    if (!repoUrl) {
-      return NextResponse.json(
-        {
-          error: "Repository provisioning failed",
-          details:
-            "AI generation or GitHub API returned an error. Check GITHUB_ORG_TOKEN and GEMINI_API_KEY.",
-        },
-        { status: 500 }
-      );
-    }
-
     // Update the scenario with the new repo URL and cached spec
     await db.scenario.update({
       where: { id: scenarioId },

@@ -12,6 +12,7 @@ import {
 import { z } from "zod";
 
 const GENERATION_MODEL = "gemini-3-flash-preview";
+const MAX_GENERATION_ATTEMPTS = 3; // Increased for better resilience against transient failures
 
 /**
  * Schema for a single task option
@@ -80,72 +81,86 @@ export async function generateCodingTask(
 ): Promise<GenerateCodingTaskResponse> {
   // Build the context prompt
   const contextPrompt = buildContextPrompt(input);
+  let lastError: Error | null = null;
 
-  try {
-    // Generate tasks using Gemini Flash
-    const response = await gemini.models.generateContent({
-      model: GENERATION_MODEL,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`,
-            },
-          ],
+  for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
+    try {
+      // Generate tasks using Gemini Flash
+      const response = await gemini.models.generateContent({
+        model: GENERATION_MODEL,
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`,
+              },
+            ],
+          },
+        ],
+      });
+
+      const responseText = response.text;
+      if (!responseText) {
+        throw new Error("Empty response from Gemini");
+      }
+
+      // Clean response (remove markdown fences if present)
+      const cleanedText = cleanJsonResponse(responseText);
+
+      // Parse and validate the JSON
+      const parsed = JSON.parse(cleanedText);
+
+      // Validate against schema
+      const result = taskGenerationResponseSchema.safeParse(parsed);
+      if (!result.success) {
+        throw new Error(
+          `Invalid task generation response: ${result.error.message}`
+        );
+      }
+
+      const { taskOptions } = result.data;
+
+      // Additional validation: each task description should be 2-4 paragraphs (roughly)
+      for (const task of taskOptions) {
+        if (task.description.length < 100) {
+          throw new Error(
+            `Task description too short (${task.description.length} chars): "${task.summary}"`
+          );
+        }
+        // Ensure summary is concise (1-line)
+        if (task.summary.length > 100) {
+          throw new Error(
+            `Task summary too long (${task.summary.length} chars): should be 1 line`
+          );
+        }
+      }
+
+      return {
+        taskOptions,
+        _meta: {
+          promptVersion: TASK_GENERATOR_PROMPT_VERSION,
+          generatedAt: new Date().toISOString(),
         },
-      ],
-    });
+      };
+    } catch (error) {
+      lastError =
+        error instanceof SyntaxError
+          ? new Error(`Failed to parse JSON response: ${error.message}`)
+          : error instanceof Error
+            ? error
+            : new Error(String(error));
 
-    const responseText = response.text;
-    if (!responseText) {
-      throw new Error("Empty response from Gemini");
-    }
-
-    // Clean response (remove markdown fences if present)
-    const cleanedText = cleanJsonResponse(responseText);
-
-    // Parse and validate the JSON
-    const parsed = JSON.parse(cleanedText);
-
-    // Validate against schema
-    const result = taskGenerationResponseSchema.safeParse(parsed);
-    if (!result.success) {
-      throw new Error(
-        `Invalid task generation response: ${result.error.message}`
-      );
-    }
-
-    const { taskOptions } = result.data;
-
-    // Additional validation: each task description should be 2-4 paragraphs (roughly)
-    for (const task of taskOptions) {
-      if (task.description.length < 100) {
-        throw new Error(
-          `Task description too short (${task.description.length} chars): "${task.summary}"`
+      if (attempt < MAX_GENERATION_ATTEMPTS) {
+        console.warn(
+          `Task generation attempt ${attempt} failed: ${lastError.message}, retrying...`
         );
-      }
-      // Ensure summary is concise (1-line)
-      if (task.summary.length > 100) {
-        throw new Error(
-          `Task summary too long (${task.summary.length} chars): should be 1 line`
-        );
+        continue;
       }
     }
-
-    return {
-      taskOptions,
-      _meta: {
-        promptVersion: TASK_GENERATOR_PROMPT_VERSION,
-        generatedAt: new Date().toISOString(),
-      },
-    };
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new Error(`Failed to parse JSON response: ${error.message}`);
-    }
-    throw error;
   }
+
+  throw lastError ?? new Error("Failed to generate coding task");
 }
 
 /**

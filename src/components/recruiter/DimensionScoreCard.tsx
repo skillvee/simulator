@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export interface DimensionScoreCardProps {
   /** Dimension name (e.g., "PROBLEM_SOLVING") */
   dimension: string;
-  /** Score on 1-5 scale */
+  /** Score on 1-4 rubric scale */
   score: number;
   /** Percentile rank (0-100) */
   percentile: number;
@@ -67,14 +67,14 @@ function getScoreBorderColor(score: number): string {
 }
 
 /**
- * Render score as filled circles (1-5 scale)
- * e.g., score 4 -> ●●●●○
+ * Render score as filled circles (1-4 rubric scale)
+ * e.g., score 3 -> ●●●○
  */
 function ScoreCircles({ score }: { score: number }) {
   const roundedScore = Math.round(score);
   const circles = [];
 
-  for (let i = 1; i <= 5; i++) {
+  for (let i = 1; i <= 4; i++) {
     circles.push(
       <span
         key={i}

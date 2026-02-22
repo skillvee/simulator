@@ -14,6 +14,40 @@ interface RouteContext {
 }
 
 /**
+ * GET /api/recruiter/simulations/[id]
+ * Get simulation details (used for polling repo provisioning status)
+ */
+export async function GET(request: Request, context: RouteContext) {
+  const session = await auth();
+
+  if (!session?.user) {
+    return error("Unauthorized", 401);
+  }
+
+  const user = session.user as SessionUser;
+  if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
+    return error("Recruiter access required", 403);
+  }
+
+  const { id } = await context.params;
+
+  const scenario = await db.scenario.findUnique({
+    where: { id },
+    select: { id: true, repoUrl: true, createdById: true },
+  });
+
+  if (!scenario) {
+    return error("Simulation not found", 404);
+  }
+
+  if (user.role === "RECRUITER" && scenario.createdById !== user.id) {
+    return error("Not authorized", 403);
+  }
+
+  return success({ repoUrl: scenario.repoUrl });
+}
+
+/**
  * DELETE /api/recruiter/simulations/[id]
  * Delete a simulation owned by the current recruiter
  */

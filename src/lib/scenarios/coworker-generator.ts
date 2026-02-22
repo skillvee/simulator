@@ -37,7 +37,7 @@ export type GenerateCoworkersResponse = {
   };
 };
 
-const MAX_GENERATION_ATTEMPTS = 2;
+const MAX_GENERATION_ATTEMPTS = 3; // Increased for better resilience against transient failures
 
 /**
  * Check if a role title refers to an Engineering Manager
@@ -74,8 +74,14 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
     return result.data;
   });
 
-  if (coworkers.length < 2 || coworkers.length > 3) {
-    throw new Error(`Expected 2-3 coworkers, got ${coworkers.length}`);
+  // Ensure we have at least 2 coworkers (critical for simulation quality)
+  if (coworkers.length < 2) {
+    throw new Error(`Expected at least 2 coworkers, got ${coworkers.length}. Generation must include an Engineering Manager plus 1-2 team members.`);
+  }
+
+  if (coworkers.length > 3) {
+    console.warn(`Got ${coworkers.length} coworkers, trimming to 3`);
+    coworkers.length = 3; // Trim to max 3
   }
 
   for (const coworker of coworkers) {
@@ -84,6 +90,26 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
       throw new Error(
         `Coworker "${coworker.name}" has only ${criticalCount} critical knowledge items, need at least 2`
       );
+    }
+
+    // Validate that knowledge doesn't contain specific file paths
+    for (const knowledge of coworker.knowledge) {
+      const specificPathPattern = /(?:src|lib|pages|api|components|stores|services)\/[\w\/-]+\.\w+/;
+      if (specificPathPattern.test(knowledge.response)) {
+        // Auto-fix by making the path reference generic
+        const originalResponse = knowledge.response;
+        knowledge.response = knowledge.response
+          .replace(/src\/stores\/[\w\/-]+\.\w+/g, "the state management files")
+          .replace(/src\/api\/[\w\/-]+\.\w+/g, "the API handlers")
+          .replace(/src\/components\/[\w\/-]+\.\w+/g, "the component files")
+          .replace(/src\/lib\/[\w\/-]+\.\w+/g, "the utility files")
+          .replace(/src\/services\/[\w\/-]+\.\w+/g, "the service layer")
+          .replace(/(?:src|lib|pages|api|components|stores|services)\/[\w\/-]+\.\w+/g, "the relevant files in the codebase");
+
+        console.warn(
+          `Fixed specific file path in ${coworker.name}'s knowledge: "${originalResponse}" → "${knowledge.response}"`
+        );
+      }
     }
   }
 

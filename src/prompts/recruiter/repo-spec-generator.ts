@@ -116,19 +116,23 @@ Return ONLY a JSON object matching this exact schema:
 - Focus on files that build the narrative: source files with breadcrumbs, docs, tests, schema
 
 ### File categories
-- **"stub"** — Partial implementations, TODO comments, breadcrumbs pointing to the task. These are the heart of the assessment. 2-4 of these.
-- **"working"** — Complete, functional code that provides context. The candidate reads these to understand the codebase. 4-8 of these.
-- **"test"** — Test files with passing tests AND test.skip/it.todo blocks for the unfinished task. 1-3 of these.
-- **"doc"** — Architecture docs, incident logs, API docs. Reference real file paths. 2-4 of these.
-- **"config"** — Domain-specific configs (prisma schema, .env.example with domain vars). 1-3 of these.
+- **"stub"** — Partial implementations with meaningful working code AND strategic TODOs. These guide without handing solutions. Should have 40-60% implementation done (function signatures, basic structure, error handling scaffolding), leaving the core logic as TODOs. 3-5 of these for better realism.
+- **"working"** — Complete, functional code that provides context. The candidate reads these to understand patterns and conventions. Include realistic utility functions, middleware, helper modules. 5-8 of these.
+- **"test"** — Test files with passing tests for existing features AND test.skip/it.todo blocks hinting at what needs testing for the task. Include edge case tests as TODOs. 2-4 of these.
+- **"doc"** — Architecture docs, incident logs, API docs. Reference real file paths and include "Known Gaps" sections pointing toward the task. 2-4 of these.
+- **"config"** — Domain-specific configs (prisma schema, .env.example with domain vars). Include commented sections showing planned features. 1-3 of these.
 
 ### File content rules
-1. All imports must reference real files from the manifest — don't import from files that don't exist
+1. **CRITICAL: Cross-Reference Integrity**
+   - All imports must reference files that exist in your files[] array
+   - README must only mention files that exist in your files[] array (especially .env.example)
+   - Issue bodies and comments must only reference files that exist in your files[] array
+   - If you mention src/pages/api/socket.ts in an issue, that file MUST be in files[]
+   - If README says "Copy .env.example", then .env.example MUST be in files[]
 2. Code must be syntactically valid for the tech stack
-3. TODOs must reference GitHub Issue numbers (e.g., "// TODO: Fix this — see Issue #3")
+3. TODOs must reference ONLY existing GitHub Issue numbers (e.g., "// TODO: Fix this — see Issue #3" where Issue #3 is actually in issues[]). Never reference issue numbers higher than the number of issues you generate.
 4. Stubs should have comments attributing them to a specific person ("// Started by Marcus, see commit history")
 5. Test files should use the project's test framework (vitest for TS, pytest for Python)
-6. Doc files should reference real file paths, not made-up ones
 
 ### What NOT to generate (scaffold provides these)
 - package.json / package-lock.json (scaffold provides)
@@ -264,6 +268,21 @@ For a "Senior Backend Engineer at Stripe, fix webhook reliability" scenario:
 7. Don't generate files the scaffold provides (package.json, tsconfig, etc.)
 8. Code must be syntactically valid
 9. Use the company name and domain throughout — this is NOT a generic project
+
+## Cross-Reference Integrity (CRITICAL — validated post-generation)
+
+Your output is **programmatically validated** for cross-reference integrity. Generation will FAIL and retry if any of these are violated:
+
+1. **README → files:** If the README mentions \`.env.example\`, \`docs/architecture.md\`, or ANY file path — that file MUST exist in your \`files[]\` array. Do NOT reference files you didn't generate.
+2. **Issues → files:** If an issue body or comment mentions a file path like \`src/services/webhook.ts\` — that file MUST exist in \`files[]\`. Never reference phantom files.
+3. **Imports → files:** Every \`import ... from './foo'\` or \`import ... from '@/lib/bar'\` in your code MUST resolve to a real file in \`files[]\`. If file A imports from file B, file B must exist.
+4. **No duplicate paths:** Every file in \`files[]\` must have a unique \`path\`.
+
+**Before finalizing your output, mentally walk through:**
+- Does every file path mentioned in README exist in files[]?
+- Does every file path mentioned in issues exist in files[]?
+- Does every import statement resolve to a file in files[]?
+- Is .env.example included if the README references it?
 
 IMPORTANT: Return ONLY the JSON object. No markdown code fences, no explanation, no extra text. Just the raw JSON object.
 `;

@@ -27,10 +27,12 @@ Extract the following fields from the job description text. Use the exact struct
 - Confidence: HIGH if clearly stated, MEDIUM if inferred, LOW if missing/guessed
 
 ### 3. companyDescription (string)
-- A 1-2 sentence description of what the company does
-- Infer from the job description context if not explicitly stated
-- Examples: "Financial infrastructure platform for internet businesses", "B2B SaaS for project management"
-- Confidence: HIGH if company mission is clearly described, MEDIUM if inferred from domain/product mentions, LOW if minimal context
+- A 1-2 sentence description of what the company does and its product/domain
+- **CRITICAL: Look for "About [Company]" sections, mission statements, or product descriptions.** Most JDs contain an explicit company description — extract it, don't return null.
+- If the JD says something like "We help teams do X" or "We build Y for Z", use that directly.
+- NEVER return a generic fallback like "[Company] is a technology company" — always extract the specific description from the JD text.
+- Examples: "Modern project management platform built for engineering teams", "Financial infrastructure platform for internet businesses", "B2B SaaS for project management"
+- Confidence: HIGH if "About" section or mission statement exists, MEDIUM if inferred from domain/product mentions, LOW if truly minimal context
 
 ### 4. techStack (string[])
 - Array of technologies, frameworks, languages, tools mentioned
@@ -41,12 +43,14 @@ Extract the following fields from the job description text. Use the exact struct
 
 ### 5. seniorityLevel ("junior" | "mid" | "senior" | "staff")
 - Infer from years of experience, title keywords, and scope of responsibilities
+- **CRITICAL: Title keywords are the STRONGEST signal.** If "Senior" appears in the title, the seniority MUST be "senior" (not "mid"). If "Staff" or "Principal" appears, it MUST be "staff".
 - Guidelines:
-  - "junior": 0-2 years, entry-level, junior in title, learning-focused
-  - "mid": 2-5 years, independent contributor, no leadership
-  - "senior": 5-8 years, senior in title, mentorship mentioned, technical leadership
-  - "staff": 8+ years, staff/principal/lead in title, architecture/strategy responsibilities
-- Confidence: HIGH if years + title + scope align, MEDIUM if 2 of 3 align, LOW if only 1 indicator
+  - "junior": 0-2 years, entry-level, "Junior" or "Associate" in title, learning-focused
+  - "mid": 2-5 years, independent contributor, no seniority keyword in title, no leadership
+  - "senior": 5+ years, "Senior" in title, OR mentorship mentioned + technical leadership
+  - "staff": 8+ years, "Staff"/"Principal"/"Lead"/"Distinguished" in title, architecture/strategy responsibilities
+- Confidence: HIGH if title contains seniority keyword (Senior, Staff, Junior, etc.), MEDIUM if inferred from years + scope, LOW if only 1 indicator
+- NEVER return null if the title contains a clear seniority keyword
 
 ### 6. keyResponsibilities (string[])
 - Extract 3-5 main duties from the "Responsibilities" or "What you'll do" section

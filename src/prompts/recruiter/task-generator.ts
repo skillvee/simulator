@@ -89,6 +89,16 @@ Return ONLY a JSON object matching this exact schema:
    - "Check with DevOps about our current infrastructure. The product team can clarify which transaction states matter most."
 4. **Constraints/notes** (optional, 1 sentence): Important gotchas
    - "Don't touch the /api/payments/* endpoints - those are PCI certified."
+5. **Cross-cutting concerns** (REQUIRED for senior+ roles, optional for mid-level): Operational requirements
+   - "Oh, and make sure we have proper observability - we need to know when retries are happening."
+   - "The security team will want to review the auth flow before we ship."
+   - "Set up monitoring so we know if the error rate spikes."
+   - "Make sure we're tracking performance metrics - this is on the critical path."
+   - "Don't forget about rate limiting - we've been burned by that before."
+   - "Add feature flags so we can roll this out gradually."
+   - "Include error tracking with proper context for debugging production issues."
+   - "Think about how we'll load test this before going to production."
+   - **IMPORTANT:** For senior roles, ALWAYS include at least one operational concern (monitoring, security, performance, scalability, or observability)
 
 **Tone:**
 - Casual but professional (like a real Slack message from a manager)
@@ -137,7 +147,7 @@ This forces candidates to ask coworkers, which tests collaboration skills.
 - "Add a feature to the dashboard where users can export their data to CSV. Product wants this to include filters (date range, status, etc) and it should handle large datasets without timing out. Talk to the product manager about exactly which fields to include and check with the senior dev about our current data fetching patterns."
 
 **Senior Backend Engineer (fintech):**
-- "We're seeing timeout issues on the reconciliation job that matches our internal records with the bank's transaction feed. It's hitting 30+ seconds for some merchants. Can you investigate and optimize? The job runs every hour but we're getting complaints about delayed balance updates. Check with the DBA about query patterns and ask the DevOps engineer about whether we should move this to a background job queue."
+- "We're seeing timeout issues on the reconciliation job that matches our internal records with the bank's transaction feed. It's hitting 30+ seconds for some merchants. Can you investigate and optimize? The job runs every hour but we're getting complaints about delayed balance updates. Check with the DBA about query patterns and ask the DevOps engineer about whether we should move this to a background job queue. Also, we'll need proper monitoring on the optimized version - set up alerts for when processing time exceeds 10 seconds, and make sure we're logging enough detail for debugging when things go wrong."
 
 **Staff Engineer (platform):**
 - "Our microservices are making too many redundant database calls - we're seeing the same queries run dozens of times per request. We need a caching strategy that works across services. This is a bit open-ended - you'll need to figure out what to cache, where to cache it, and how to handle invalidation. Talk to the engineering manager about current pain points and the principal engineer about our service mesh setup."

@@ -247,7 +247,7 @@ export function QuickDecisionPanel({
               <span className="text-4xl font-bold text-stone-900">
                 {overallScore.toFixed(1)}
               </span>
-              <span className="text-xl text-stone-400">/ 5.0</span>
+              <span className="text-xl text-stone-400">/ 4.0</span>
             </div>
             {overallPercentile !== null && (
               <Badge

@@ -3,19 +3,12 @@ generator client {
   previewFeatures = ["postgresqlExtensions"]
 }
 
-// Enable pgvector extension for semantic search
-// The extension must be enabled in Supabase: Extensions > vector
-
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   directUrl  = env("DIRECT_URL")
-  extensions = [vector]
+  extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector]
 }
-
-// ============================================================================
-// AUTH MODELS (NextAuth)
-// ============================================================================
 
 model Account {
   id                String  @id @default(cuid())
@@ -23,15 +16,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -52,9 +44,430 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// ============================================================================
-// USER MODEL
-// ============================================================================
+model User {
+  id                     String                  @id @default(cuid())
+  name                   String?
+  email                  String?                 @unique
+  emailVerified          DateTime?
+  image                  String?
+  password               String?
+  role                   UserRole                @default(USER)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  deletedAt              DateTime?
+  dataDeleteRequestedAt  DateTime?
+  accounts               Account[]
+  assessments            Assessment[]
+  createdScenarios       Scenario[]              @relation("CreatedScenarios")
+  sessions               Session[]
+  simulationCreationLogs SimulationCreationLog[]
+  videoAssessments       VideoAssessment[]
+}
+
+model Scenario {
+  id                     String                  @id @default(cuid())
+  name                   String
+  companyName            String
+  companyDescription     String
+  taskDescription        String
+  repoUrl                String?
+  techStack              String[]
+  isPublished            Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  createdById            String?
+  targetLevel            String                  @default("mid")
+  archetypeId            String?
+  repoSpec               Json?
+  assessments            Assessment[]
+  coworkers              Coworker[]
+  archetype              Archetype?              @relation(fields: [archetypeId], references: [id])
+  createdBy              User?                   @relation("CreatedScenarios", fields: [createdById], references: [id])
+  simulationCreationLogs SimulationCreationLog[]
+}
+
+model Coworker {
+  id            String         @id @default(cuid())
+  scenarioId    String
+  name          String
+  role          String
+  personaStyle  String
+  knowledge     Json
+  avatarUrl     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  voiceName     String?
+  personality   Json?
+  conversations Conversation[]
+  scenario      Scenario       @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+}
+
+model Assessment {
+  id                     String              @id @default(cuid())
+  userId                 String
+  scenarioId             String
+  status                 AssessmentStatus    @default(WELCOME)
+  startedAt              DateTime            @default(now())
+  completedAt            DateTime?
+  prUrl                  String?
+  report                 Json?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  ciStatus               Json?
+  prSnapshot             Json?
+  codeReview             Json?
+  supersededBy           String?
+  managerMessagesStarted Boolean             @default(false)
+  reviewedAt             DateTime?
+  repoUrl                String?
+  repoStatus             String?             @default("pending")
+  scenario               Scenario            @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiCalls               AssessmentApiCall[]
+  logs                   AssessmentLog[]
+  conversations          Conversation[]
+  recordings             Recording[]
+  videoAssessment        VideoAssessment?
+}
+
+model Conversation {
+  id           String     @id @default(cuid())
+  assessmentId String
+  coworkerId   String?
+  type         String
+  transcript   Json
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  coworker     Coworker?  @relation(fields: [coworkerId], references: [id])
+}
+
+model Recording {
+  id           String             @id @default(cuid())
+  assessmentId String
+  type         String
+  storageUrl   String
+  startTime    DateTime
+  endTime      DateTime?
+  analysis     Json?
+  createdAt    DateTime           @default(now())
+  assessment   Assessment         @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  segments     RecordingSegment[]
+}
+
+model RecordingSegment {
+  id              String           @id @default(cuid())
+  recordingId     String
+  segmentIndex    Int
+  startTime       DateTime
+  endTime         DateTime?
+  status          String           @default("recording")
+  chunkPaths      String[]
+  screenshotPaths String[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  recording       Recording        @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  analysis        SegmentAnalysis?
+}
+
+model SegmentAnalysis {
+  id                  String           @id @default(cuid())
+  segmentId           String           @unique
+  activityTimeline    Json?
+  toolUsage           Json?
+  stuckMoments        Json?
+  totalActiveTime     Int?
+  totalIdleTime       Int?
+  focusScore          Int?
+  aiAnalysis          Json?
+  analyzedAt          DateTime         @default(now())
+  screenshotsAnalyzed Int?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  segment             RecordingSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+}
+
+model VideoAssessment {
+  id                String                   @id @default(cuid())
+  candidateId       String
+  videoUrl          String
+  status            VideoAssessmentStatus    @default(PENDING)
+  createdAt         DateTime                 @default(now())
+  completedAt       DateTime?
+  assessmentId      String?                  @unique
+  lastFailureReason String?
+  retryCount        Int                      @default(0)
+  isSearchable      Boolean                  @default(true)
+  embeddings        CandidateEmbedding?
+  scores            DimensionScore[]
+  assessment        Assessment?              @relation(fields: [assessmentId], references: [id])
+  candidate         User                     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  apiCalls          VideoAssessmentApiCall[]
+  logs              VideoAssessmentLog[]
+  summary           VideoAssessmentSummary?
+
+  @@index([candidateId])
+  @@index([status])
+  @@index([assessmentId])
+}
+
+model DimensionScore {
+  id                  String          @id @default(cuid())
+  assessmentId        String
+  dimension           String
+  score               Int
+  observableBehaviors String
+  timestamps          Json
+  trainableGap        Boolean         @default(false)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  confidence          String          @default("medium")
+  rationale           String?
+  assessment          VideoAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, dimension])
+  @@index([assessmentId])
+}
+
+model VideoAssessmentSummary {
+  id             String          @id @default(cuid())
+  assessmentId   String          @unique
+  overallSummary String
+  rawAiResponse  Json
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  assessment     VideoAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+model AssessmentLog {
+  id           String                 @id @default(cuid())
+  assessmentId String
+  eventType    AssessmentLogEventType
+  timestamp    DateTime               @default(now())
+  durationMs   Int?
+  metadata     Json?
+  assessment   Assessment             @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([timestamp])
+  @@index([assessmentId, timestamp])
+}
+
+model AssessmentApiCall {
+  id                String     @id @default(cuid())
+  assessmentId      String
+  requestTimestamp  DateTime   @default(now())
+  responseTimestamp DateTime?
+  durationMs        Int?
+  promptText        String
+  promptTokens      Int?
+  responseText      String?
+  responseTokens    Int?
+  modelVersion      String
+  statusCode        Int?
+  errorMessage      String?
+  stackTrace        String?
+  modelUsed         String?
+  promptType        String?
+  promptVersion     String?
+  tokenCount        Int?
+  assessment        Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@index([requestTimestamp])
+  @@index([assessmentId, requestTimestamp])
+}
+
+model VideoAssessmentLog {
+  id                String                 @id @default(cuid())
+  videoAssessmentId String
+  eventType         AssessmentLogEventType
+  timestamp         DateTime               @default(now())
+  durationMs        Int?
+  metadata          Json?
+  videoAssessment   VideoAssessment        @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
+
+  @@index([videoAssessmentId])
+  @@index([timestamp])
+  @@index([videoAssessmentId, timestamp])
+}
+
+model VideoAssessmentApiCall {
+  id                String          @id @default(cuid())
+  videoAssessmentId String
+  requestTimestamp  DateTime        @default(now())
+  responseTimestamp DateTime?
+  durationMs        Int?
+  promptText        String
+  promptTokens      Int?
+  responseText      String?
+  responseTokens    Int?
+  modelVersion      String
+  statusCode        Int?
+  errorMessage      String?
+  stackTrace        String?
+  videoAssessment   VideoAssessment @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
+
+  @@index([videoAssessmentId])
+  @@index([requestTimestamp])
+  @@index([videoAssessmentId, requestTimestamp])
+}
+
+/// Role family grouping (e.g., Engineering, Product, Sales)
+/// Each family has its own set of role-specific dimensions and archetypes
+model RoleFamily {
+  id          String                @id @default(cuid())
+  slug        String                @unique
+  name        String
+  description String
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  archetypes  Archetype[]
+  redFlags    RedFlag[]
+  dimensions  RoleFamilyDimension[]
+}
+
+/// Assessment dimension definition (e.g., "Technical Execution", "Communication")
+/// Dimensions can be universal (isUniversal=true) or role-family-specific
+model Dimension {
+  id               String                @id @default(cuid())
+  slug             String                @unique
+  name             String
+  description      String
+  isUniversal      Boolean               @default(false)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  archetypeWeights ArchetypeWeight[]
+  roleFamilies     RoleFamilyDimension[]
+  rubricLevels     RubricLevel[]
+  seniorityGates   SeniorityGate[]
+}
+
+/// Join table linking role families to dimensions with ordering
+model RoleFamilyDimension {
+  id           String     @id @default(cuid())
+  roleFamilyId String
+  dimensionId  String
+  sortOrder    Int        @default(0)
+  dimension    Dimension  @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+  roleFamily   RoleFamily @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
+
+  @@unique([roleFamilyId, dimensionId])
+}
+
+/// Rubric level definition with behavioral anchors
+/// Each dimension has 4 levels (1-4), with optional role-family-specific overrides
+/// When roleFamilyId is null, this is the default rubric for the dimension.
+/// When roleFamilyId is set, this overrides the default for that role family.
+model RubricLevel {
+  id           String    @id @default(cuid())
+  dimensionId  String
+  roleFamilyId String?
+  level        Int
+  label        String
+  pattern      String
+  evidence     Json
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  dimension    Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+
+  @@unique([dimensionId, roleFamilyId, level])
+  @@index([dimensionId])
+  @@index([dimensionId, level])
+}
+
+/// Role archetype within a role family (e.g., "Frontend Engineer" within Engineering)
+model Archetype {
+  id             String            @id @default(cuid())
+  roleFamilyId   String
+  slug           String            @unique
+  name           String
+  description    String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  roleFamily     RoleFamily        @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
+  weights        ArchetypeWeight[]
+  scenarios      Scenario[]
+  seniorityGates SeniorityGate[]
+}
+
+/// Weight for a dimension within an archetype
+model ArchetypeWeight {
+  id          String    @id @default(cuid())
+  archetypeId String
+  dimensionId String
+  weight      Float
+  archetype   Archetype @relation(fields: [archetypeId], references: [id], onDelete: Cascade)
+  dimension   Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+
+  @@unique([archetypeId, dimensionId])
+}
+
+/// Seniority gate: minimum score per dimension per seniority level for an archetype
+model SeniorityGate {
+  id             String    @id @default(cuid())
+  archetypeId    String
+  dimensionId    String
+  seniorityLevel String
+  minScore       Int
+  archetype      Archetype @relation(fields: [archetypeId], references: [id], onDelete: Cascade)
+  dimension      Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
+
+  @@unique([archetypeId, dimensionId, seniorityLevel])
+}
+
+/// Red flag definitions per role family
+/// Binary indicators that are always surfaced regardless of scores
+model RedFlag {
+  id           String     @id @default(cuid())
+  roleFamilyId String
+  slug         String
+  name         String
+  description  String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  roleFamily   RoleFamily @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
+
+  @@unique([roleFamilyId, slug])
+}
+
+model CandidateEmbedding {
+  id                      String                @id @default(cuid())
+  videoAssessmentId       String                @unique
+  observableBehaviorsText String
+  overallSummaryText      String
+  embedding               Unsupported("vector")
+  embeddingModel          String                @default("text-embedding-004")
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  videoAssessment         VideoAssessment       @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
+
+  @@index([videoAssessmentId])
+}
+
+model SimulationCreationLog {
+  id             String                   @id @default(cuid())
+  userId         String
+  status         SimulationCreationStatus @default(STARTED)
+  roleTitle      String?
+  companyName    String?
+  techStack      String[]
+  seniorityLevel String?
+  archetypeId    String?
+  source         String                   @default("guided")
+  scenarioId     String?
+  failedStep     String?
+  errorMessage   String?
+  errorDetails   Json?
+  createdAt      DateTime                 @default(now())
+  completedAt    DateTime?
+  scenario       Scenario?                @relation(fields: [scenarioId], references: [id])
+  user           User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
 
 enum UserRole {
   USER
@@ -62,225 +475,12 @@ enum UserRole {
   RECRUITER
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          UserRole  @default(USER)
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
-
-  // Data deletion request tracking
-  dataDeleteRequestedAt DateTime?
-
-  accounts              Account[]
-  sessions              Session[]
-  assessments           Assessment[]
-  videoAssessments      VideoAssessment[]
-  createdScenarios      Scenario[] @relation("CreatedScenarios")
-  simulationCreationLogs SimulationCreationLog[]
-}
-
-// ============================================================================
-// SCENARIO MODELS
-// ============================================================================
-
-model Scenario {
-  id              String   @id @default(cuid())
-  name            String
-  companyName     String
-  companyDescription String @db.Text
-  taskDescription String   @db.Text
-  repoUrl         String?  // Nullable - system-managed, provisioned asynchronously
-  repoSpec        Json?    // Cached AI-generated RepoSpec for debugging and re-provisioning
-  techStack       String[] // e.g., ["typescript", "react", "node"]
-  targetLevel     String   @default("mid") // "junior" | "mid" | "senior" | "staff" — seniority level being hired for
-  archetypeId     String?  // Optional link to role archetype for role-specific scoring expectations
-  archetype       Archetype? @relation(fields: [archetypeId], references: [id], onDelete: SetNull)
-  isPublished     Boolean  @default(false)
-
-  // Recruiter ownership (RF-002)
-  createdById     String?
-  createdBy       User?    @relation("CreatedScenarios", fields: [createdById], references: [id], onDelete: SetNull)
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  coworkers            Coworker[]
-  assessments          Assessment[]
-  simulationCreationLogs SimulationCreationLog[]
-}
-
-model Coworker {
-  id            String   @id @default(cuid())
-  scenarioId    String
-  name          String
-  role          String   // e.g., "Product Manager", "Senior Developer"
-  personaStyle  String   @db.Text // Communication style description
-  personality   Json?    // Structured personality dimensions (warmth, helpfulness, etc.)
-  knowledge     Json     // Specific knowledge they hold
-  avatarUrl     String?
-  voiceName     String?  // Gemini Live voice name (e.g., "Orus", "Aoede")
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  scenario      Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-  conversations Conversation[]
-}
-
-// ============================================================================
-// ASSESSMENT MODELS
-// ============================================================================
-
 enum AssessmentStatus {
-  WELCOME    // After auth, on welcome page
-  WORKING    // In Slack, working on task
-  COMPLETED  // Assessment finished
+  WELCOME
+  WORKING
+  COMPLETED
 }
 
-model Assessment {
-  id            String           @id @default(cuid())
-  userId        String
-  scenarioId    String
-  status        AssessmentStatus @default(WELCOME)
-
-  // Timing
-  startedAt     DateTime         @default(now())
-  completedAt   DateTime?
-  reviewedAt    DateTime?        // When recruiter first viewed the completed assessment
-
-  // Per-assessment repository (forked from scenario template)
-  repoUrl       String?          // GitHub repo URL specific to this assessment
-  repoStatus    String?          @default("pending") // "pending" | "provisioning" | "ready" | "failed"
-
-  // Deliverables
-  prUrl         String?
-  prSnapshot    Json?            // PR content snapshot for historical reference
-  ciStatus      Json?            // CI test pass/fail status from GitHub Actions
-
-  // AI Analysis
-  codeReview    Json?            // AI code review analysis (quality, patterns, security, maintainability)
-
-  // Manager auto-start messages (RF-015)
-  managerMessagesStarted Boolean @default(false) // True once manager initial messages have been sent
-
-  // Results
-  report        Json?            // Final assessment report
-
-  // Reassessment tracking (US-021)
-  supersededBy  String?          // ID of the new assessment that replaced this one
-
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scenario        Scenario         @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-  conversations   Conversation[]
-  recordings      Recording[]
-  logs            AssessmentLog[]
-  apiCalls        AssessmentApiCall[]
-  videoAssessment VideoAssessment? // Auto-triggered video evaluation
-}
-
-model Conversation {
-  id            String   @id @default(cuid())
-  assessmentId  String
-  coworkerId    String?  // null for HR interview
-  type          String   // "text" | "voice"
-  transcript    Json     // Array of messages
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  coworker      Coworker?  @relation(fields: [coworkerId], references: [id], onDelete: SetNull)
-}
-
-model Recording {
-  id            String   @id @default(cuid())
-  assessmentId  String
-  type          String   // "screen" | "audio"
-  storageUrl    String
-  startTime     DateTime
-  endTime       DateTime?
-  analysis      Json?    // AI analysis results
-
-  createdAt     DateTime @default(now())
-
-  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  segments      RecordingSegment[]
-}
-
-// ============================================================================
-// RECORDING SEGMENTS (for robustness and stitching)
-// ============================================================================
-
-model RecordingSegment {
-  id            String   @id @default(cuid())
-  recordingId   String
-  segmentIndex  Int      // Order of segment within the recording
-  startTime     DateTime
-  endTime       DateTime?
-  status        String   @default("recording") // "recording" | "completed" | "interrupted"
-
-  // Storage paths for all chunks in this segment
-  chunkPaths    String[] // Array of storage paths for each chunk
-  screenshotPaths String[] // Array of storage paths for screenshots
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  recording     Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
-  analysis      SegmentAnalysis?
-}
-
-// ============================================================================
-// SEGMENT ANALYSIS (incremental recording analysis)
-// ============================================================================
-
-model SegmentAnalysis {
-  id              String   @id @default(cuid())
-  segmentId       String   @unique // One analysis per segment
-
-  // Activity Timeline
-  activityTimeline Json?   // Array of {timestamp, activity, description}
-
-  // Tool Usage
-  toolUsage        Json?   // Array of {tool, usageCount, contextNotes}
-
-  // Stuck Moments
-  stuckMoments     Json?   // Array of {startTime, endTime, description, potentialCause}
-
-  // Summary Metrics
-  totalActiveTime  Int?    // Active coding/working time in seconds
-  totalIdleTime    Int?    // Idle/thinking time in seconds
-  focusScore       Int?    // 1-5 score based on tool switching and activity patterns
-
-  // AI Analysis Metadata
-  aiAnalysis       Json?   // Full raw AI analysis response
-  analyzedAt       DateTime @default(now())
-  screenshotsAnalyzed Int?  // Number of screenshots analyzed
-
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  segment          RecordingSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
-}
-
-// ============================================================================
-// VIDEO ASSESSMENT MODELS (US-002)
-// For video-based candidate assessments with dimension scoring
-// ============================================================================
-
-// Assessment dimension enum - used by embeddings, candidate search, and percentile calculator
-// Note: DimensionScore.dimension is stored as String for flexibility with the Dimension table,
-// but this enum is still used in code for type-safe dimension references.
 enum AssessmentDimension {
   COMMUNICATION
   PROBLEM_SOLVING
@@ -299,80 +499,6 @@ enum VideoAssessmentStatus {
   FAILED
 }
 
-model VideoAssessment {
-  id            String                @id @default(cuid())
-  candidateId   String                // References User.id
-  videoUrl      String                // URL to the uploaded video
-  status        VideoAssessmentStatus @default(PENDING)
-
-  // Optional link to work simulation assessment (for auto-triggered evaluations)
-  assessmentId  String?               @unique // One video assessment per simulation
-
-  // Failure tracking (US-015)
-  retryCount        Int               @default(0) // Number of retry attempts
-  lastFailureReason String?           @db.Text    // Reason for last failure
-
-  // Visibility for hiring manager search (US-005)
-  isSearchable      Boolean           @default(true) // Whether profile is visible to hiring managers
-
-  createdAt     DateTime              @default(now())
-  completedAt   DateTime?
-
-  // Relations
-  candidate     User                  @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  assessment    Assessment?           @relation(fields: [assessmentId], references: [id], onDelete: SetNull)
-  scores        DimensionScore[]
-  summary       VideoAssessmentSummary?
-  logs          VideoAssessmentLog[]
-  apiCalls      VideoAssessmentApiCall[]
-  embeddings    CandidateEmbedding?   // Semantic search embeddings
-
-  // Indexes for efficient querying
-  @@index([candidateId])
-  @@index([status])
-  @@index([assessmentId])
-}
-
-model DimensionScore {
-  id                  String              @id @default(cuid())
-  assessmentId        String
-  dimension           String              // Rubric dimension slug (e.g. "technical_execution", "communication")
-  score               Int                 // 1-4 scale (Foundational, Competent, Advanced, Expert)
-  confidence          String              @default("medium") // "high" | "medium" | "low"
-  observableBehaviors String              @db.Text // Description of observed behaviors
-  timestamps          Json                // Array of timestamps where behavior was observed
-  trainableGap        Boolean             @default(false) // Whether this is a trainable skill gap
-  rationale           String?             @db.Text // Why this score was given
-
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-
-  // Relations
-  assessment          VideoAssessment     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-
-  // Ensure one score per dimension per assessment
-  @@unique([assessmentId, dimension])
-  @@index([assessmentId])
-}
-
-model VideoAssessmentSummary {
-  id              String          @id @default(cuid())
-  assessmentId    String          @unique // One summary per assessment
-  overallSummary  String          @db.Text // Human-readable summary
-  rawAiResponse   Json            // Internal: full AI response for debugging/auditing
-
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-
-  // Relations
-  assessment      VideoAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-}
-
-// ============================================================================
-// ASSESSMENT LOGS MODELS (US-016)
-// For admin diagnostics and system auditing
-// ============================================================================
-
 enum AssessmentLogEventType {
   STARTED
   PROMPT_SENT
@@ -383,316 +509,10 @@ enum AssessmentLogEventType {
   COMPLETED
 }
 
-model AssessmentLog {
-  id            String                  @id @default(cuid())
-  assessmentId  String
-  eventType     AssessmentLogEventType
-  timestamp     DateTime                @default(now())
-  durationMs    Int?                    // Duration in milliseconds (nullable)
-  metadata      Json?                   // Additional context (jsonb)
-
-  // Relations
-  assessment    Assessment              @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-
-  // Indexes for efficient querying
-  @@index([assessmentId])
-  @@index([timestamp])
-  @@index([assessmentId, timestamp])
-}
-
-model AssessmentApiCall {
-  id                String    @id @default(cuid())
-  assessmentId      String
-  requestTimestamp  DateTime  @default(now())
-  responseTimestamp DateTime?
-  durationMs        Int?      // Duration in milliseconds
-  promptText        String    @db.Text
-  promptTokens      Int?      // Token count (nullable)
-  responseText      String?   @db.Text
-  responseTokens    Int?      // Token count (nullable)
-  modelVersion      String
-  statusCode        Int?
-  errorMessage      String?   @db.Text
-  stackTrace        String?   @db.Text
-
-  // AI Context (REF-017)
-  promptType        String?   // e.g., "HR_INTERVIEW", "CODE_REVIEW"
-  promptVersion     String?   // e.g., "1.0.0"
-  modelUsed         String?   // e.g., "gemini-3-flash-preview"
-  tokenCount        Int?      // Approximate tokens used
-
-  // Relations
-  assessment        Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-
-  // Indexes for efficient querying
-  @@index([assessmentId])
-  @@index([requestTimestamp])
-  @@index([assessmentId, requestTimestamp])
-}
-
-// ============================================================================
-// VIDEO ASSESSMENT LOGS MODELS (US-020)
-// For video assessment diagnostics and system auditing
-// ============================================================================
-
-model VideoAssessmentLog {
-  id                  String                  @id @default(cuid())
-  videoAssessmentId   String
-  eventType           AssessmentLogEventType
-  timestamp           DateTime                @default(now())
-  durationMs          Int?                    // Duration in milliseconds (nullable)
-  metadata            Json?                   // Additional context (jsonb)
-
-  // Relations
-  videoAssessment     VideoAssessment         @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
-
-  // Indexes for efficient querying
-  @@index([videoAssessmentId])
-  @@index([timestamp])
-  @@index([videoAssessmentId, timestamp])
-}
-
-model VideoAssessmentApiCall {
-  id                  String          @id @default(cuid())
-  videoAssessmentId   String
-  requestTimestamp    DateTime        @default(now())
-  responseTimestamp   DateTime?
-  durationMs          Int?            // Duration in milliseconds
-  promptText          String          @db.Text
-  promptTokens        Int?            // Token count (nullable)
-  responseText        String?         @db.Text
-  responseTokens      Int?            // Token count (nullable)
-  modelVersion        String
-  statusCode          Int?
-  errorMessage        String?         @db.Text
-  stackTrace          String?         @db.Text
-
-  // Relations
-  videoAssessment     VideoAssessment @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
-
-  // Indexes for efficient querying
-  @@index([videoAssessmentId])
-  @@index([requestTimestamp])
-  @@index([videoAssessmentId, requestTimestamp])
-}
-
-// ============================================================================
-// ASSESSMENT RUBRIC MODELS
-// Data-driven rubric system with role families, dimensions, archetypes
-// ============================================================================
-
-/// Role family grouping (e.g., Engineering, Product, Sales)
-/// Each family has its own set of role-specific dimensions and archetypes
-model RoleFamily {
-  id          String   @id @default(cuid())
-  slug        String   @unique // e.g., "engineering", "sales"
-  name        String   // e.g., "Software Engineering", "Sales"
-  description String   @db.Text
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  dimensions  RoleFamilyDimension[] // Links to dimensions for this family
-  archetypes  Archetype[]
-  redFlags    RedFlag[]
-}
-
-/// Assessment dimension definition (e.g., "Technical Execution", "Communication")
-/// Dimensions can be universal (isUniversal=true) or role-family-specific
-model Dimension {
-  id          String   @id @default(cuid())
-  slug        String   @unique // e.g., "communication", "technical_execution"
-  name        String   // e.g., "Communication"
-  description String   @db.Text // What this dimension measures
-  isUniversal Boolean  @default(false) // Universal dimensions apply to all role families
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  rubricLevels    RubricLevel[]
-  roleFamilies    RoleFamilyDimension[] // Which families use this dimension
-  archetypeWeights ArchetypeWeight[]
-  seniorityGates  SeniorityGate[]
-}
-
-/// Join table linking role families to dimensions with ordering
-model RoleFamilyDimension {
-  id           String @id @default(cuid())
-  roleFamilyId String
-  dimensionId  String
-  sortOrder    Int    @default(0) // Display order within the role family
-
-  roleFamily   RoleFamily @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
-  dimension    Dimension  @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
-
-  @@unique([roleFamilyId, dimensionId])
-}
-
-/// Rubric level definition with behavioral anchors
-/// Each dimension has 4 levels (1-4), with optional role-family-specific overrides
-/// When roleFamilyId is null, this is the default rubric for the dimension.
-/// When roleFamilyId is set, this overrides the default for that role family.
-model RubricLevel {
-  id           String  @id @default(cuid())
-  dimensionId  String
-  roleFamilyId String? // null = default for this dimension; set = override for a specific role family
-  level        Int     // 1=Foundational, 2=Competent, 3=Advanced, 4=Expert
-  label        String  // "Foundational", "Competent", "Advanced", "Expert"
-  pattern      String  @db.Text // Pattern description (the bold sentence)
-  evidence     Json    // String[] — "Evidence may include" bullets
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  dimension    Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
-
-  // Note: Postgres treats NULL as distinct in unique constraints, so
-  // the unique constraint only prevents duplicates when roleFamilyId is set.
-  // Default rubric levels (roleFamilyId=null) are managed by the seed script.
-  @@unique([dimensionId, roleFamilyId, level])
-  @@index([dimensionId])
-  @@index([dimensionId, level])
-}
-
-/// Role archetype within a role family (e.g., "Frontend Engineer" within Engineering)
-model Archetype {
-  id           String @id @default(cuid())
-  roleFamilyId String
-  slug         String @unique // e.g., "frontend_engineer"
-  name         String // e.g., "Frontend Engineer"
-  description  String @db.Text
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  roleFamily   RoleFamily       @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
-  weights      ArchetypeWeight[]
-  seniorityGates SeniorityGate[]
-  scenarios    Scenario[]
-}
-
-/// Weight for a dimension within an archetype
-model ArchetypeWeight {
-  id          String @id @default(cuid())
-  archetypeId String
-  dimensionId String
-  weight      Float  // Numeric multiplier (e.g., 1.0, 1.2, 1.5)
-
-  archetype   Archetype @relation(fields: [archetypeId], references: [id], onDelete: Cascade)
-  dimension   Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
-
-  @@unique([archetypeId, dimensionId])
-}
-
-/// Seniority gate: minimum score per dimension per seniority level for an archetype
-model SeniorityGate {
-  id             String @id @default(cuid())
-  archetypeId    String
-  dimensionId    String
-  seniorityLevel String // "JUNIOR", "MID", "SENIOR"
-  minScore       Int    // Minimum required score (1-4)
-
-  archetype      Archetype @relation(fields: [archetypeId], references: [id], onDelete: Cascade)
-  dimension      Dimension @relation(fields: [dimensionId], references: [id], onDelete: Cascade)
-
-  @@unique([archetypeId, dimensionId, seniorityLevel])
-}
-
-/// Red flag definitions per role family
-/// Binary indicators that are always surfaced regardless of scores
-model RedFlag {
-  id           String @id @default(cuid())
-  roleFamilyId String
-  slug         String // e.g., "misrepresentation", "unverified_ai_usage"
-  name         String // e.g., "Misrepresentation"
-  description  String @db.Text // What this red flag means
-
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  roleFamily   RoleFamily @relation(fields: [roleFamilyId], references: [id], onDelete: Cascade)
-
-  @@unique([roleFamilyId, slug])
-}
-
-// ============================================================================
-// CANDIDATE EMBEDDINGS MODEL (US-011)
-// For semantic search on candidate data using pgvector
-// ============================================================================
-
-model CandidateEmbedding {
-  id                  String          @id @default(cuid())
-  videoAssessmentId   String          @unique // One embedding set per assessment
-
-  // Concatenated observable behaviors from all dimensions
-  // This is the primary text used for generating the embedding
-  observableBehaviorsText String      @db.Text
-
-  // Overall summary from VideoAssessmentSummary
-  overallSummaryText  String          @db.Text
-
-  // Combined embedding (768 dimensions for text-embedding-004)
-  // Embedding generated from concatenated observable behaviors + overall summary
-  embedding           Unsupported("vector(768)")
-
-  // Metadata for the embedding
-  embeddingModel      String          @default("text-embedding-004")
-
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-
-  // Relations
-  videoAssessment     VideoAssessment @relation(fields: [videoAssessmentId], references: [id], onDelete: Cascade)
-
-  // Index for efficient vector similarity search
-  @@index([videoAssessmentId])
-}
-
-// ============================================================================
-// SIMULATION CREATION LOG
-// Tracks every simulation creation attempt (success + failure) for admin visibility
-// ============================================================================
-
 enum SimulationCreationStatus {
-  STARTED       // Generation kicked off (parse-jd or guided form submitted)
-  GENERATING    // AI is generating tasks/coworkers
-  SAVING        // Saving to database
-  COMPLETED     // Successfully created
-  FAILED        // Failed at any stage
-}
-
-model SimulationCreationLog {
-  id              String                   @id @default(cuid())
-  userId          String                   // Who initiated the creation
-  status          SimulationCreationStatus @default(STARTED)
-
-  // Input data (what was provided)
-  roleTitle       String?                  // Role being hired for
-  companyName     String?                  // Company name
-  techStack       String[]                 // Tech stack selected
-  seniorityLevel  String?                  // junior/mid/senior/staff
-  archetypeId     String?                  // Selected role archetype
-  source          String                   @default("guided") // "jd_paste" | "guided" — how they started
-
-  // Result
-  scenarioId      String?                  // If successful, the created scenario ID
-  scenario        Scenario?                @relation(fields: [scenarioId], references: [id], onDelete: SetNull)
-
-  // Error tracking
-  failedStep      String?                  // Which step failed: "parse_jd" | "generate_tasks" | "generate_coworkers" | "save_scenario" | "save_coworkers"
-  errorMessage    String?                  @db.Text // Human-readable error
-  errorDetails    Json?                    // Full error payload for debugging
-
-  // Timing
-  createdAt       DateTime                 @default(now())
-  completedAt     DateTime?                // When it finished (success or failure)
-
-  // Relations
-  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
+  STARTED
+  GENERATING
+  SAVING
+  COMPLETED
+  FAILED
 }

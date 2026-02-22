@@ -63,6 +63,17 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 
+  // Validate and ensure knowledge is an array
+  let validatedKnowledge = [];
+  if (knowledge) {
+    if (Array.isArray(knowledge)) {
+      validatedKnowledge = knowledge;
+    } else {
+      console.warn(`[Coworker Create] Knowledge is not an array for ${name}, converting to empty array`);
+      console.error(`[Coworker Create] Invalid knowledge data:`, knowledge);
+    }
+  }
+
   const coworker = await db.coworker.create({
     data: {
       scenarioId,
@@ -70,7 +81,7 @@ export async function POST(request: Request, context: RouteContext) {
       role,
       personaStyle,
       personality: personality || null,
-      knowledge: knowledge || {},
+      knowledge: validatedKnowledge,  // Use validated array
       avatarUrl,
       voiceName: voiceName || null,
     },

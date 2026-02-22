@@ -41,33 +41,42 @@ export { needsRepoCheck as needsRepo };
 export async function provisionRepo(
   scenarioId: string,
   metadata: ScenarioMetadata
-): Promise<{ repoUrl: string | null; repoSpec?: unknown }> {
+): Promise<{ repoUrl: string; repoSpec: unknown }> {
   const githubToken = process.env.GITHUB_ORG_TOKEN;
 
   if (!githubToken) {
-    console.error(
-      "[provisionRepo] GITHUB_ORG_TOKEN not set. Cannot provision repo."
-    );
-    return { repoUrl: null };
+    const error = "GITHUB_ORG_TOKEN not set. Add it to .env.local to enable repo provisioning.";
+    console.error(`[provisionRepo] ERROR: ${error}`);
+    throw new Error(error);
   }
 
   try {
     // Phase 1: Generate repo spec from scenario metadata
     console.log(
-      `[provisionRepo] Generating repo spec for "${metadata.companyName}" scenario...`
+      `[provisionRepo] Starting provisioning for scenario ${scenarioId} - "${metadata.companyName}"...`
     );
     const { spec } = await generateRepoSpec(metadata);
+    console.log(
+      `[provisionRepo] Generated spec: ${spec.projectName} (${spec.files.length} files, ${spec.commitHistory.length} commits)`
+    );
 
     // Phase 2: Build the repo on GitHub
     console.log(
-      `[provisionRepo] Building repo from spec: ${spec.projectName} (${spec.files.length} files, ${spec.commitHistory.length} commits)...`
+      `[provisionRepo] Creating GitHub repository...`
     );
     const repoUrl = await buildRepoFromSpec(scenarioId, spec, githubToken);
 
+    if (!repoUrl) {
+      const error = "GitHub repo creation failed — check GITHUB_ORG_TOKEN permissions and GitHub API status";
+      console.error(`[provisionRepo] ERROR: ${error}`);
+      throw new Error(error);
+    }
+
+    console.log(`[provisionRepo] SUCCESS: Repository provisioned at ${repoUrl}`);
     return { repoUrl, repoSpec: spec };
   } catch (error) {
-    console.error("[provisionRepo] Failed to provision repo:", error);
-    return { repoUrl: null };
+    console.error(`[provisionRepo] FATAL ERROR for scenario ${scenarioId}:`, error);
+    throw error;
   }
 }
 
