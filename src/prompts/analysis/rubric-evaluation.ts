@@ -155,7 +155,7 @@ ${redFlagSchema}
       "description": "<1-2 sentence explanation of the gap and what improvement looks like>"
     }
   ],
-  "overall_summary": "<A comprehensive narrative paragraph (5-8 sentences) that synthesizes the candidate's performance across all dimensions. Describe their overall approach, standout capabilities, how they handled challenges, their collaboration style, and an honest assessment of readiness. This should read like a hiring committee summary, not a list of scores.>",
+  "overall_summary": "<MUST BE 5-8 COMPLETE SENTENCES. A comprehensive narrative paragraph that synthesizes the candidate's performance across all dimensions. Include: (1) Their overall approach to the task. (2) Their standout technical capabilities. (3) How they handled challenges or unknowns. (4) Their collaboration and communication style. (5) Problem-solving methodology. (6) Areas where they excelled. (7) Growth opportunities. (8) Final readiness assessment. This should read like a real hiring committee summary, not a list of scores. MINIMUM 5 SENTENCES, MAXIMUM 8 SENTENCES.>",
   "evaluation_confidence": "high" | "medium" | "low",
   "insufficient_evidence_notes": "<explanation if any dimensions could not be fully evaluated, or null>"
 }

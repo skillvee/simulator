@@ -1,6 +1,12 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import type { UserRole } from "@prisma/client";
+import {
+  aiChatLimiter,
+  aiGenerationLimiter,
+  aiAnalysisLimiter,
+  applyRateLimit
+} from "@/lib/rate-limiter";
 
 /**
  * Extended session user with role information
@@ -123,6 +129,73 @@ export default auth((req) => {
 
   // Handle API routes
   if (pathname.startsWith("/api/")) {
+    // Apply rate limiting to AI endpoints BEFORE authentication
+    // This prevents unauthenticated DoS attacks
+    if (pathname.startsWith("/api/chat")) {
+      const { limited, remaining } = applyRateLimit(req, aiChatLimiter);
+      if (limited) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Rate limit exceeded. Please try again later.",
+            retryAfter: 60
+          },
+          {
+            status: 429,
+            headers: {
+              'X-RateLimit-Limit': '30',
+              'X-RateLimit-Remaining': remaining.toString(),
+              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+            }
+          }
+        );
+      }
+    } else if (
+      pathname.startsWith("/api/recruiter/simulations/generate") ||
+      pathname.startsWith("/api/recruiter/simulations/parse")
+    ) {
+      const { limited, remaining } = applyRateLimit(req, aiGenerationLimiter);
+      if (limited) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Rate limit exceeded for generation. Please wait before trying again.",
+            retryAfter: 60
+          },
+          {
+            status: 429,
+            headers: {
+              'X-RateLimit-Limit': '5',
+              'X-RateLimit-Remaining': remaining.toString(),
+              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+            }
+          }
+        );
+      }
+    } else if (
+      pathname.startsWith("/api/assessment/report") ||
+      pathname.startsWith("/api/assessment/finalize")
+    ) {
+      const { limited, remaining } = applyRateLimit(req, aiAnalysisLimiter);
+      if (limited) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Rate limit exceeded for analysis. Please wait before trying again.",
+            retryAfter: 60
+          },
+          {
+            status: 429,
+            headers: {
+              'X-RateLimit-Limit': '10',
+              'X-RateLimit-Remaining': remaining.toString(),
+              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+            }
+          }
+        );
+      }
+    }
+
     // Allow public API routes without authentication
     if (isPublicApiRoute(pathname)) {
       return NextResponse.next();

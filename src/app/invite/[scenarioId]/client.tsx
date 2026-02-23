@@ -196,6 +196,31 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
               {scenario.companyName} is looking for someone to join their team.
               Experience a day in the role before you commit.
             </p>
+            {scenario.taskDescription && (
+              <div className="mt-4 space-y-3">
+                <p className="text-sm font-semibold text-slate-300">Your Task:</p>
+                <p className="text-sm text-slate-400 line-clamp-3">
+                  {scenario.taskDescription.slice(0, 200)}...
+                </p>
+              </div>
+            )}
+            {scenario.techStack && scenario.techStack.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {scenario.techStack.slice(0, 5).map((tech) => (
+                  <span
+                    key={tech}
+                    className="px-3 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20"
+                  >
+                    {tech}
+                  </span>
+                ))}
+                {scenario.techStack.length > 5 && (
+                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-800 text-slate-400">
+                    +{scenario.techStack.length - 5} more
+                  </span>
+                )}
+              </div>
+            )}
           </motion.div>
         </main>
 

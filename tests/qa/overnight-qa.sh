@@ -31,8 +31,17 @@ if [ ! -d ".next/server" ] || [ "$(find .next/server -name '*.js' -newer node_mo
   echo "Build complete."
 fi
 
+# Pre-assign run numbers to avoid collisions between sequential runs.
+# Each Claude session gets told its run number instead of scanning the output dir.
+LAST_RUN=$(ls -d "$OUTPUT_DIR"/run-[0-9][0-9][0-9] 2>/dev/null | sort -V | tail -1 | grep -o '[0-9]\{3\}$')
+if [ -z "$LAST_RUN" ]; then
+  NEXT_RUN_NUM=1
+else
+  NEXT_RUN_NUM=$((10#$LAST_RUN + 1))
+fi
+
 # Build the QA prompt from the skill file (strip YAML frontmatter so --- isn't parsed as CLI flags)
-QA_PROMPT="$(awk '/^---$/{n++; next} n>=2' .claude/skills/qa/SKILL.md)"
+QA_PROMPT_BASE="$(awk '/^---$/{n++; next} n>=2' .claude/skills/qa/SKILL.md)"
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "Overnight QA Runner"
@@ -47,13 +56,24 @@ COMPLETED=0
 FAILED=0
 
 for i in $(seq 1 "$TOTAL_RUNS"); do
+  # Pre-assign a unique run number for this iteration
+  RUN_NUM=$(printf "%03d" $((NEXT_RUN_NUM + i - 1)))
+
   echo ""
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "QA Run $i/$TOTAL_RUNS — started at $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "QA Run $i/$TOTAL_RUNS (run-$RUN_NUM) — started at $(date '+%Y-%m-%d %H:%M:%S')"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   LOG_FILE="$LOG_DIR/run-$i.log"
   > "$LOG_FILE"
+
+  # Pre-create the run directory so no other run can claim this number
+  mkdir -p "$OUTPUT_DIR/run-$RUN_NUM"
+
+  # Inject the assigned run number into the prompt so Claude doesn't scan for it
+  QA_PROMPT="IMPORTANT: Your run number is $RUN_NUM. Use output directory tests/qa/output/run-$RUN_NUM/ for ALL output. Do NOT scan for or determine the run number yourself — it has been pre-assigned.
+
+$QA_PROMPT_BASE"
 
   # Run Claude with stream-json and hang recovery (same pattern as ralph.sh)
   claude --dangerously-skip-permissions -p "$QA_PROMPT" --output-format stream-json --verbose > "$LOG_FILE" 2>&1 &

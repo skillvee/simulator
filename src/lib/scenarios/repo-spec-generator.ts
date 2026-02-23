@@ -229,8 +229,8 @@ function validateInternalConsistency(spec: RepoSpec): void {
         spec.files.push({
           path: ".env.example",
           content: "# Environment Variables\n\n# Database\nDATABASE_URL=postgresql://user:password@localhost:5432/dbname\n\n# Redis\nREDIS_URL=redis://localhost:6379\n\n# API Keys\n# API_KEY=your-api-key-here\n\n# Feature Flags\nENABLE_FEATURE_X=false\n",
-          addedInCommit: 0,
-          isStub: false
+          purpose: "config",
+          addedInCommit: 0
         });
         filePaths.add(".env.example");
       } else {
@@ -298,9 +298,37 @@ function validateInternalConsistency(spec: RepoSpec): void {
       const aliasPath = `src/${match[1]}`;
       const withExt = [aliasPath, `${aliasPath}.ts`, `${aliasPath}.tsx`, `${aliasPath}/index.ts`];
       if (!withExt.some((p) => filePaths.has(p))) {
-        throw new Error(
-          `File "${file.path}" imports "@/${match[1]}" which resolves to "${aliasPath}" but file not found in spec.`
-        );
+        // Special handling for common database client files - auto-create if missing
+        if (aliasPath === "src/lib/prisma" || aliasPath === "src/lib/db") {
+          console.log(`[validateInternalConsistency] Auto-adding missing ${aliasPath}.ts for database client`);
+          spec.files.push({
+            path: `${aliasPath}.ts`,
+            content: `// Database client configuration
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = global as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+export default prisma;
+`,
+            purpose: "working",
+            addedInCommit: 0
+          });
+          filePaths.add(`${aliasPath}.ts`);
+        } else {
+          throw new Error(
+            `File "${file.path}" imports "@/${match[1]}" which resolves to "${aliasPath}" but file not found in spec.`
+          );
+        }
       }
     }
   }

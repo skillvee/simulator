@@ -9,6 +9,70 @@ import { getEvaluationResults, evaluateVideo } from "@/lib/analysis";
 import { RUBRIC_TO_ASSESSMENT_DIMENSION } from "@/lib/rubric/dimension-mapping";
 
 /**
+ * Legacy VideoEvaluationOutput format detection and migration
+ * Converts v1.x format to v3.0.0 RubricAssessmentOutput format
+ */
+function migrateVideoEvaluationToRubric(data: any): RubricAssessmentOutput | null {
+  // Check if it's already in v3 format (has dimensionScores array)
+  if (data?.dimensionScores && Array.isArray(data.dimensionScores)) {
+    return data as RubricAssessmentOutput;
+  }
+
+  // Check if it's legacy v1 format (has skill_scores object)
+  if (data?.skill_scores && typeof data.skill_scores === 'object') {
+    const migrated: RubricAssessmentOutput = {
+      evaluationVersion: "3.0.0",
+      roleFamilySlug: "engineering",  // Default to engineering for legacy data
+      overallScore: data.overall_score?.score || 2.0,
+      dimensionScores: [],
+      detectedRedFlags: data.red_flags?.map((rf: any) => ({
+        flag: rf.signal || rf,
+        evidence: rf.evidence || "",
+        severity: "medium" as const
+      })) || [],
+      topStrengths: data.green_flags?.map((gf: any) => ({
+        dimension: "general",
+        score: 3.0,
+        description: gf.signal || gf,
+        evidence: []
+      })) || [],
+      growthAreas: data.areas_for_improvement?.map((area: any) => ({
+        dimension: "general",
+        score: 2.0,
+        description: area,
+        suggestion: ""
+      })) || [],
+      overallSummary: data.overall_summary || "",
+      evaluationConfidence: "medium" as const,
+      insufficientEvidenceNotes: null
+    };
+
+    // Migrate skill scores to dimension scores
+    Object.entries(data.skill_scores).forEach(([key, value]: [string, any]) => {
+      migrated.dimensionScores.push({
+        dimensionSlug: key.toLowerCase().replace(/_/g, '-'),
+        dimensionName: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        score: value.score || null,
+        summary: `Performance in ${key.replace(/_/g, ' ')}`,
+        confidence: "medium" as const,
+        rationale: value.rationale || "",
+        observableBehaviors: [],
+        timestamps: [],
+        trainableGap: value.score && value.score < 3.0 || false,
+        greenFlags: [],
+        redFlags: []
+      });
+    });
+
+    return migrated;
+  }
+
+  // Unknown format
+  console.warn("Unknown video evaluation format, cannot migrate:", data);
+  return null;
+}
+
+/**
  * Maps assessment dimension keys to report skill categories.
  * Assessment dimensions (UPPERCASE) → report categories (lowercase).
  */
@@ -242,8 +306,11 @@ export async function POST(request: Request) {
     let videoResult: RubricAssessmentOutput | null = null;
 
     if (videoAssessment?.status === VideoAssessmentStatus.COMPLETED && videoAssessment.summary?.rawAiResponse) {
-      // Use existing video evaluation result (v3 rubric format)
-      videoResult = videoAssessment.summary.rawAiResponse as unknown as RubricAssessmentOutput;
+      // Use existing video evaluation result - migrate if needed from v1 to v3 format
+      videoResult = migrateVideoEvaluationToRubric(videoAssessment.summary.rawAiResponse);
+      if (!videoResult) {
+        console.error("Failed to migrate video evaluation format for assessment", assessmentId);
+      }
     } else if (!videoAssessment || videoAssessment.status === VideoAssessmentStatus.PENDING ||
                videoAssessment.status === VideoAssessmentStatus.FAILED) {
       // Trigger video evaluation and wait for it
@@ -287,7 +354,10 @@ export async function POST(request: Request) {
         // Fetch the results
         const results = await getEvaluationResults(videoAssessmentId);
         if (results.summary?.rawAiResponse) {
-          videoResult = results.summary.rawAiResponse as unknown as RubricAssessmentOutput;
+          videoResult = migrateVideoEvaluationToRubric(results.summary.rawAiResponse);
+          if (!videoResult) {
+            console.error("Failed to migrate newly evaluated video format for assessment", assessmentId);
+          }
         }
       } catch (error) {
         console.error("Error running video evaluation:", error);

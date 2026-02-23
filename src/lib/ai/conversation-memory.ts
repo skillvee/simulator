@@ -179,7 +179,13 @@ export function formatMemoryForPrompt(
   }
 
   sections.push(
-    "\nContinue the conversation naturally, referencing prior discussions when relevant. Don't repeat information you've already shared unless asked."
+    "\n**CRITICAL INCREMENTAL SHARING RULES:**",
+    "- If the candidate asks about something you discussed before, BUILD on what you already told them",
+    "- Say things like 'As I mentioned...' or 'Building on what we discussed...' when referencing past topics",
+    "- If they ask about the SAME topic again, share NEW details you didn't mention before",
+    "- NEVER repeat the exact same information - always add something new or go deeper",
+    "- Example: If you previously said 'We use Redis for caching', next time say 'The Redis setup I mentioned also handles our pub/sub for real-time updates'",
+    "\nContinue the conversation naturally, always building on prior discussions. Don't repeat information unless specifically asked to clarify."
   );
 
   return sections.join("\n");

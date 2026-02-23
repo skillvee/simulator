@@ -39,7 +39,7 @@ function SignUpForm() {
     if (role === "candidate") {
       return "/candidate/call"; // Candidates go to call/screening flow
     } else if (role === "employer") {
-      return "/hire/dashboard"; // Employers go to hire dashboard
+      return "/recruiter/assessments"; // Employers go to recruiter dashboard
     }
     return searchParams.get("callbackUrl") ?? "/";
   };
@@ -85,9 +85,8 @@ function SignUpForm() {
         body: JSON.stringify({
           email,
           password,
-          firstName,
-          lastName,
-          userType: role ?? "candidate", // Default to candidate if no role specified
+          name: firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName || undefined,
+          role: role === "employer" ? "RECRUITER" : "USER", // Map employer to RECRUITER, default to USER
         }),
       });
 
