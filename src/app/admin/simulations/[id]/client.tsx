@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Copy, Check, ExternalLink } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +70,30 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
   const [coworkers, setCoworkers] = useState(scenario.coworkers);
   const [updatingVoice, setUpdatingVoice] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const getInviteLink = () => {
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    return `${baseUrl}/invite/${scenario.id}`;
+  };
+
+  const copyInviteLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getInviteLink());
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Fallback
+      const textArea = document.createElement("textarea");
+      textArea.value = getInviteLink();
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    }
+  };
 
   // Delete simulation
   const deleteSimulation = async () => {
@@ -79,7 +104,7 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
         method: "DELETE",
       });
       if (response.ok) {
-        router.push("/admin/scenarios");
+        router.push("/admin/simulations");
       } else {
         const data = await response.json();
         setError(data.error || "Failed to delete simulation");
@@ -374,6 +399,61 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Invitation Link */}
+      {isPublished && (
+        <Card className="border-blue-200 dark:border-blue-800">
+          <CardHeader>
+            <CardTitle>Invitation Link</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-3 text-sm text-muted-foreground">
+              Share this link with candidates to invite them to this simulation.
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 rounded-md border bg-muted/50 px-4 py-2.5 font-mono text-sm select-all">
+                {getInviteLink()}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyInviteLink}
+                className={
+                  linkCopied
+                    ? "border-green-500 bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                    : ""
+                }
+              >
+                {linkCopied ? (
+                  <>
+                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-1.5 h-3.5 w-3.5" />
+                    Copy
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <a
+                  href={getInviteLink()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                  Open
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Simulation Details */}
       <Card>

@@ -299,7 +299,7 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
                   <div>
                     <p className="text-xs font-medium text-muted-foreground">Created Simulation</p>
                     <Link
-                      href={`/admin/scenarios/${selectedLog.scenario.id}`}
+                      href={`/admin/simulations/${selectedLog.scenario.id}`}
                       className="text-sm text-primary hover:underline"
                     >
                       {selectedLog.scenario.name}

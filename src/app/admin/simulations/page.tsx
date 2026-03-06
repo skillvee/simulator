@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileQuestion } from "lucide-react";
+import { CopyLinkButton } from "./copy-link-button";
 
 export default async function ScenariosPage() {
   // Ensure only admins can access
@@ -30,7 +31,7 @@ export default async function ScenariosPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/admin/scenarios/builder">Create with AI</Link>
+          <Link href="/admin/simulations/builder">Create with AI</Link>
         </Button>
       </header>
 
@@ -45,14 +46,14 @@ export default async function ScenariosPage() {
               Create your first simulation using the AI-powered builder
             </p>
             <Button asChild>
-              <Link href="/admin/scenarios/builder">Create Simulation</Link>
+              <Link href="/admin/simulations/builder">Create Simulation</Link>
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
           {scenarios.map((scenario) => (
-            <Link key={scenario.id} href={`/admin/scenarios/${scenario.id}`}>
+            <Link key={scenario.id} href={`/admin/simulations/${scenario.id}`}>
               <Card className="p-6 transition-all duration-200 hover:shadow-md hover:bg-muted/50">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
@@ -86,7 +87,10 @@ export default async function ScenariosPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col items-end gap-2">
+                    {scenario.isPublished && (
+                      <CopyLinkButton scenarioId={scenario.id} />
+                    )}
                     {scenario.techStack.length > 0 && (
                       <div className="flex flex-wrap justify-end gap-1">
                         {scenario.techStack.slice(0, 4).map((tech, i) => (

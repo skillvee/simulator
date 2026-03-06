@@ -35,10 +35,10 @@ export default async function AdminDashboard() {
         <h2 className="mb-4 text-xl font-semibold">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
           <Button asChild className="shadow-sm hover:shadow-md transition-shadow">
-            <Link href="/admin/scenarios/new">Create Simulation</Link>
+            <Link href="/admin/simulations/builder">Create Simulation</Link>
           </Button>
           <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-shadow">
-            <Link href="/admin/scenarios">Manage Simulations ({scenarioCount})</Link>
+            <Link href="/admin/simulations">Manage Simulations ({scenarioCount})</Link>
           </Button>
           <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-shadow">
             <Link href="/admin/users">Manage Users</Link>

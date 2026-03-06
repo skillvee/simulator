@@ -209,7 +209,7 @@ export function ScenarioBuilderClient() {
       });
 
       // Navigate to the scenario detail/edit page
-      router.push(`/admin/scenarios`);
+      router.push(`/admin/simulations`);
     } catch (err) {
       console.error("Failed to save scenario:", err);
       setError(err instanceof Error ? err.message : "Failed to save scenario");
@@ -248,7 +248,7 @@ export function ScenarioBuilderClient() {
             </p>
           </div>
           <Button variant="ghost" asChild className="ml-auto text-muted-foreground">
-            <Link href="/admin/scenarios">Cancel</Link>
+            <Link href="/admin/simulations">Cancel</Link>
           </Button>
         </header>
 
