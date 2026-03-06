@@ -567,11 +567,13 @@ Acceptance Criteria:
 
   if (testCandidate) {
     // Create test assessment for welcome/resume flow
+    // Reset managerMessagesStarted so re-seeding gives a clean slate
     await prisma.assessment.upsert({
       where: { id: TEST_ASSESSMENT_IDS.welcome },
       update: {
         status: "WELCOME",
         scenarioId: recruiterScenario.id,
+        managerMessagesStarted: false,
       },
       create: {
         id: TEST_ASSESSMENT_IDS.welcome,
@@ -580,8 +582,12 @@ Acceptance Criteria:
         status: "WELCOME",
       },
     });
+    // Clean up stale conversations from previous test runs
+    await prisma.conversation.deleteMany({
+      where: { assessmentId: TEST_ASSESSMENT_IDS.welcome },
+    });
     console.log(`  ✅ Welcome assessment: ${TEST_ASSESSMENT_IDS.welcome}`);
-    console.log(`     Status: WELCOME`);
+    console.log(`     Status: WELCOME (reset to clean slate)`);
 
     // Create test assessment in working state for recruiter flow
     await prisma.assessment.upsert({

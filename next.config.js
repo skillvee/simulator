@@ -47,6 +47,17 @@ const nextConfig = {
         destination: "/api/recruiter/simulations/:id/coworkers",
         permanent: true,
       },
+      // Redirect old /admin/scenarios URLs to /admin/simulations
+      {
+        source: "/admin/scenarios",
+        destination: "/admin/simulations",
+        permanent: true,
+      },
+      {
+        source: "/admin/scenarios/:path*",
+        destination: "/admin/simulations/:path*",
+        permanent: true,
+      },
     ];
   },
 };

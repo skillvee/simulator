@@ -20,6 +20,7 @@ import {
 import { success, error, validateRequest } from "@/lib/api";
 import { ChatRequestSchema } from "@/lib/schemas";
 import { isValidPrUrl } from "@/lib/external";
+import { sanitizeForStorage } from "@/lib/sanitization";
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
@@ -59,7 +60,9 @@ export async function POST(request: Request) {
 
   const validated = await validateRequest(request, ChatRequestSchema);
   if ("error" in validated) return validated.error;
-  const { assessmentId, coworkerId, message } = validated.data;
+  const { assessmentId, coworkerId } = validated.data;
+  // Sanitize message to prevent XSS attacks
+  const message = sanitizeForStorage(validated.data.message);
 
   // Verify assessment belongs to user and get scenario context
   const assessment = await db.assessment.findFirst({

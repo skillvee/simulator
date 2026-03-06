@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { db } from "@/server/db";
 import { Prisma } from "@prisma/client";
-import { validateRequest } from "@/lib/api";
+import { validateRequest, success, error } from "@/lib/api";
 import { RegisterRequestSchema } from "@/lib/schemas";
 
 export async function POST(request: Request) {
@@ -30,7 +29,7 @@ export async function POST(request: Request) {
       });
 
       // Return user without password
-      return NextResponse.json(
+      return success(
         {
           user: {
             id: user.id,
@@ -39,27 +38,21 @@ export async function POST(request: Request) {
             role: user.role,
           },
         },
-        { status: 201 }
+        201
       );
-    } catch (error) {
+    } catch (err) {
       // Handle unique constraint violation (P2002) - email already exists
       if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002"
       ) {
-        return NextResponse.json(
-          { error: "Email already registered" },
-          { status: 409 }
-        );
+        return error("Email already registered", 409, "DUPLICATE_EMAIL");
       }
       // Re-throw other errors to be handled by outer catch
-      throw error;
+      throw err;
     }
-  } catch (error) {
-    console.error("Registration error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Registration error:", err);
+    return error("Internal server error", 500);
   }
 }

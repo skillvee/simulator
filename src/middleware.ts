@@ -88,6 +88,13 @@ function isAssessmentPageRoute(pathname: string): boolean {
 }
 
 /**
+ * Check if a route is a candidate dashboard page route
+ */
+function isCandidateDashboardRoute(pathname: string): boolean {
+  return pathname.startsWith("/candidate/dashboard");
+}
+
+/**
  * Check if a route is an admin page route
  */
 function isAdminPageRoute(pathname: string): boolean {
@@ -232,6 +239,16 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // Handle candidate dashboard routes (any authenticated user)
+  if (isCandidateDashboardRoute(pathname)) {
+    if (!session?.user) {
+      const signInUrl = new URL("/sign-in", req.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+    return NextResponse.next();
+  }
+
   // Handle recruiter page routes
   if (isRecruiterPageRoute(pathname)) {
     // Redirect to sign-in if not authenticated
@@ -286,10 +303,17 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Redirect authenticated recruiters from home page to dashboard
+  // Redirect authenticated users from home page to their dashboard
   if (pathname === "/") {
-    if (session?.user && (user?.role === "RECRUITER" || user?.role === "ADMIN")) {
-      return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
+    if (session?.user) {
+      if (user?.role === "ADMIN") {
+        return NextResponse.redirect(new URL("/admin", req.url));
+      }
+      if (user?.role === "RECRUITER") {
+        return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
+      }
+      // Candidates (USER role) go to candidate dashboard
+      return NextResponse.redirect(new URL("/candidate/dashboard", req.url));
     }
   }
 
@@ -307,6 +331,7 @@ export const config = {
     "/",
     "/api/:path*",
     "/admin/:path*",
+    "/candidate/dashboard/:path*",
     "/recruiter/:path*",
     "/assessments/:path*",
   ],

@@ -179,8 +179,9 @@ const AVATAR_POOL: Record<string, string[]> = {
   "hispanic-male": ["carlos-mendez", "diego-vargas", "miguel-santos", "andres-gutierrez", "pablo-reyes"],
   "middle-eastern-female": ["fatima-al-rashid", "leila-hassan", "noor-abbasi", "sara-khoury", "yasmin-farah"],
   "middle-eastern-male": ["omar-hassan", "ali-tehrani", "karim-mansour", "tariq-ibrahim", "rami-khoury"],
-  "mixed-female": ["alex-morgan", "jordan-lee", "taylor-santos", "sam-chen-williams", "riley-patel"],
-  "mixed-male": ["kai-nakamura", "eden-tadesse", "marco-silva", "jayden-kim", "nico-fernandez"],
+  // Mixed avatars reuse existing pool files (mixed-specific avatars were never generated)
+  "mixed-female": ["emma-johnson", "grace-santos", "maya-williams", "rachel-thompson", "aisha-johnson"],
+  "mixed-male": ["alex-rivera", "jordan-davis", "rafael-cruz", "daniel-kowalski", "carlos-mendez"],
 };
 
 /**
@@ -194,8 +195,8 @@ export function getPoolAvatarPath(fullName: string): string {
   const pool = AVATAR_POOL[key];
 
   if (!pool || pool.length === 0) {
-    // Absolute fallback
-    return "/avatars/pool/alex-morgan.jpg";
+    // Absolute fallback — use an avatar that actually exists in the pool
+    return "/avatars/pool/emma-johnson.jpg";
   }
 
   // Use name hash to pick a consistent index

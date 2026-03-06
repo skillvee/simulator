@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { generateEphemeralToken } from "@/lib/ai/gemini";
+import { GEMINI_VOICES } from "@/lib/ai/gemini-config";
 import {
   buildCoworkerMemory,
   formatMemoryForPrompt,
@@ -8,8 +9,9 @@ import {
   formatConversationsForSummary,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
+import { inferDemographics } from "@/lib/avatar";
 import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
-import { buildVoicePrompt, buildDefensePrompt, type DefenseContext } from "@/prompts";
+import { buildVoicePrompt, buildDefensePrompt, type DefenseContext, buildKickoffVoicePrompt } from "@/prompts";
 import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
 
@@ -93,9 +95,12 @@ export async function POST(request: Request) {
       }));
 
     // Build memory context for this coworker (with summarization)
+    // Voice calls get more recent messages since Gemini Live can only
+    // receive context via systemInstruction (no history param).
     const memory = await buildCoworkerMemory(
       coworkerConversations,
-      coworker.name
+      coworker.name,
+      { maxRecentMessages: 20 }
     );
     const memoryContext = formatMemoryForPrompt(memory, coworker.name);
 
@@ -128,17 +133,15 @@ export async function POST(request: Request) {
       avatarUrl: coworker.avatarUrl,
     };
 
-    // Determine if this is a defense call
-    // Defense mode is triggered when:
-    // 1. A PR has been submitted (assessment.prUrl is set)
-    // 2. The coworker being called is the manager
-    const isDefenseCall = Boolean(assessment.prUrl) && isManager(coworker.role);
+    // Determine call type: defense, kickoff, or regular
+    const isManagerCoworker = isManager(coworker.role);
+    const isDefenseCall = Boolean(assessment.prUrl) && isManagerCoworker;
+    const isKickoffCall = !assessment.prUrl && !assessment.managerMessagesStarted && isManagerCoworker;
 
     let systemInstruction: string;
 
     if (isDefenseCall) {
       // Build defense prompt for PR review call
-      // Format all conversations for summary context
       const allConvsMapped = allConversations.map((c) => ({
         type: c.type as "text" | "voice",
         coworkerId: c.coworkerId,
@@ -168,8 +171,31 @@ export async function POST(request: Request) {
       };
 
       systemInstruction = buildDefensePrompt(defenseContext);
+    } else if (isKickoffCall) {
+      // First call with the manager — explain the task from scratch
+      // Fetch all coworkers to provide teammate context (prevents hallucinated names)
+      const allCoworkers = await db.coworker.findMany({
+        where: { scenarioId: assessment.scenarioId },
+        select: { id: true, name: true, role: true },
+      });
+      const teammates = allCoworkers
+        .filter((c) => c.id !== coworkerId)
+        .map((c) => ({ name: c.name, role: c.role }));
+
+      systemInstruction = buildKickoffVoicePrompt({
+        managerName: coworker.name,
+        managerRole: coworker.role,
+        companyName: assessment.scenario.companyName,
+        candidateName: session.user.name || undefined,
+        taskDescription: assessment.scenario.taskDescription,
+        techStack: assessment.scenario.techStack,
+        repoUrl: assessment.repoUrl || assessment.scenario.repoUrl,
+        personaStyle: coworker.personaStyle,
+        personality: coworker.personality as import("@/types").CoworkerPersonality | null,
+        teammates,
+      });
     } else {
-      // Use regular coworker voice prompt
+      // Regular coworker voice prompt (mid-work calls, non-manager calls)
       systemInstruction = buildVoicePrompt(
         persona,
         {
@@ -184,10 +210,18 @@ export async function POST(request: Request) {
     }
 
     // Generate ephemeral token for client-side connection
-    // Use coworker's configured voice, or fall back to default
+    // Use coworker's configured voice, or infer from name gender
+    let voiceName = coworker.voiceName || undefined;
+    if (!voiceName) {
+      const { gender } = inferDemographics(coworker.name);
+      const voices = gender === "male" ? GEMINI_VOICES.male : GEMINI_VOICES.female;
+      // Pick a deterministic voice based on name hash
+      const hash = coworker.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+      voiceName = voices[hash % voices.length].name;
+    }
     const token = await generateEphemeralToken({
       systemInstruction,
-      voiceName: coworker.voiceName || undefined,
+      voiceName,
     });
 
     return success({

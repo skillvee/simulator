@@ -2,7 +2,7 @@
  * POST /api/chat/manager-start
  *
  * RF-015: Triggers manager auto-start messages for an assessment.
- * Called after a 5-10 second delay when a candidate first lands on the chat page.
+ * Called shortly after a candidate first lands on the chat page.
  *
  * Returns the messages that should be displayed, allowing the client to
  * stagger their display with typing indicators for a realistic feel.
@@ -19,6 +19,7 @@ import type { Prisma } from "@prisma/client";
 
 const ManagerStartRequestSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
+  postVoiceKickoff: z.boolean().optional().default(false),
 });
 
 /**
@@ -110,6 +111,7 @@ export async function POST(request: Request) {
     personaStyle: managerCoworker.personaStyle,
     personality: managerCoworker.personality as CoworkerPersonality | null,
     teammates,
+    postVoiceKickoff: validated.data.postVoiceKickoff,
   });
 
   // Check if conversation already exists with this manager

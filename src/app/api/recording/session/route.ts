@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { isE2ETestMode } from "@/lib/core";
+import { shouldAllowTestModeRecording } from "@/lib/core";
 
 // Note: Screenshot analysis was removed as part of assessment simplification (RF-022).
 // The new system uses only video evaluation instead of screenshot-by-screenshot analysis.
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Reject testMode requests if not in development mode (double-gate safety)
-    if (testMode && !isE2ETestMode()) {
+    if (testMode && !shouldAllowTestModeRecording()) {
       return NextResponse.json(
         { error: "Test mode is only available in development environment" },
         { status: 403 }

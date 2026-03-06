@@ -91,3 +91,18 @@ export function shouldSkipScreenRecording(): boolean {
       env.NEXT_PUBLIC_E2E_TEST_MODE === true)
   );
 }
+
+/**
+ * Server-side check for whether test-mode recording sessions should be allowed.
+ * Returns true when in development AND either E2E test mode or skip-screen-recording is enabled.
+ * This matches the client-side shouldSkipScreenRecording() logic so the API doesn't reject
+ * fake recording sessions that the client legitimately creates.
+ */
+export function shouldAllowTestModeRecording(): boolean {
+  return (
+    process.env.NODE_ENV === "development" &&
+    (env.E2E_TEST_MODE === true ||
+      env.NEXT_PUBLIC_SKIP_SCREEN_RECORDING === true ||
+      env.NEXT_PUBLIC_E2E_TEST_MODE === true)
+  );
+}

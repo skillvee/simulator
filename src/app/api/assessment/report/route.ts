@@ -8,57 +8,82 @@ import { sendReportEmail, isEmailServiceConfigured } from "@/lib/external";
 import { getEvaluationResults, evaluateVideo } from "@/lib/analysis";
 import { RUBRIC_TO_ASSESSMENT_DIMENSION } from "@/lib/rubric/dimension-mapping";
 
+/** Shape of a legacy v1 red/green flag entry */
+interface LegacyFlag {
+  signal?: string;
+  evidence?: string;
+}
+
+/** Shape of a legacy v1 skill score entry */
+interface LegacySkillScore {
+  score?: number | null;
+  rationale?: string;
+}
+
 /**
  * Legacy VideoEvaluationOutput format detection and migration
  * Converts v1.x format to v3.0.0 RubricAssessmentOutput format
  */
-function migrateVideoEvaluationToRubric(data: any): RubricAssessmentOutput | null {
+function migrateVideoEvaluationToRubric(data: unknown): RubricAssessmentOutput | null {
+  // Narrow to record so we can access properties safely
+  if (!data || typeof data !== 'object') return null;
+  const record = data as Record<string, unknown>;
+
   // Check if it's already in v3 format (has dimensionScores array)
-  if (data?.dimensionScores && Array.isArray(data.dimensionScores)) {
+  if (record.dimensionScores && Array.isArray(record.dimensionScores)) {
     return data as RubricAssessmentOutput;
   }
 
   // Check if it's legacy v1 format (has skill_scores object)
-  if (data?.skill_scores && typeof data.skill_scores === 'object') {
+  if (record.skill_scores && typeof record.skill_scores === 'object') {
+    const overallScore = record.overall_score as { score?: number } | undefined;
+    const redFlags = record.red_flags as (LegacyFlag | string)[] | undefined;
+    const greenFlags = record.green_flags as (LegacyFlag | string)[] | undefined;
+    const areasForImprovement = record.areas_for_improvement as string[] | undefined;
+    const skillScores = record.skill_scores as Record<string, LegacySkillScore>;
+
     const migrated: RubricAssessmentOutput = {
       evaluationVersion: "3.0.0",
       roleFamilySlug: "engineering",  // Default to engineering for legacy data
-      overallScore: data.overall_score?.score || 2.0,
+      overallScore: overallScore?.score || 2.0,
       dimensionScores: [],
-      detectedRedFlags: data.red_flags?.map((rf: any) => ({
-        flag: rf.signal || rf,
-        evidence: rf.evidence || "",
-        severity: "medium" as const
-      })) || [],
-      topStrengths: data.green_flags?.map((gf: any) => ({
+      detectedRedFlags: redFlags?.map((rf) => {
+        const flag = typeof rf === 'string' ? rf : rf;
+        return {
+          flag: typeof flag === 'string' ? flag : flag.signal || '',
+          evidence: typeof flag === 'string' ? '' : flag.evidence || '',
+          severity: "medium" as const,
+        };
+      }) || [],
+      topStrengths: greenFlags?.map((gf) => ({
         dimension: "general",
         score: 3.0,
-        description: gf.signal || gf,
+        description: typeof gf === 'string' ? gf : gf.signal || '',
         evidence: []
       })) || [],
-      growthAreas: data.areas_for_improvement?.map((area: any) => ({
+      growthAreas: areasForImprovement?.map((area) => ({
         dimension: "general",
         score: 2.0,
         description: area,
         suggestion: ""
       })) || [],
-      overallSummary: data.overall_summary || "",
+      overallSummary: (record.overall_summary as string) || "",
       evaluationConfidence: "medium" as const,
       insufficientEvidenceNotes: null
     };
 
     // Migrate skill scores to dimension scores
-    Object.entries(data.skill_scores).forEach(([key, value]: [string, any]) => {
+    Object.entries(skillScores).forEach(([key, value]) => {
       migrated.dimensionScores.push({
         dimensionSlug: key.toLowerCase().replace(/_/g, '-'),
         dimensionName: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        score: value.score || null,
+        score: value.score ?? null,
         summary: `Performance in ${key.replace(/_/g, ' ')}`,
         confidence: "medium" as const,
         rationale: value.rationale || "",
         observableBehaviors: [],
         timestamps: [],
-        trainableGap: value.score && value.score < 3.0 || false,
+        trainableGap: (value.score != null && value.score < 3.0) || false,
         greenFlags: [],
         redFlags: []
       });
