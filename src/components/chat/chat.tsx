@@ -30,14 +30,8 @@ interface ChatProps {
   cachedMessages?: ChatMessage[];
   /** Called whenever messages change so parent can cache them per-coworker */
   onMessagesChange?: (coworkerId: string, messages: ChatMessage[]) => void;
-  /** Disable text input (e.g., during voice kickoff) */
-  disableInput?: boolean;
-  /** Reason displayed when input is disabled */
-  disableReason?: string;
   /** Initial PR URL — if set and coworker is manager, enables defense mode */
   initialPrUrl?: string | null;
-  /** Skip manager auto-start text messages (used when voice kickoff is active) */
-  skipManagerAutoStart?: boolean;
 }
 
 // Note: PR submission handling and defense call flow will be implemented
@@ -77,10 +71,7 @@ export function Chat({
   onNewMessage,
   cachedMessages,
   onMessagesChange,
-  disableInput,
-  disableReason,
   initialPrUrl,
-  skipManagerAutoStart,
 }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(cachedMessages ?? []);
   const [input, setInput] = useState("");
@@ -98,7 +89,7 @@ export function Chat({
   // Defense mode: disable text input when PR submitted and coworker is manager
   const isManagerCoworker = coworker.role.toLowerCase().includes("manager");
   const isDefenseMode = defenseCallRequired || !!(initialPrUrl && isManagerCoworker);
-  const isInputDisabled = disableInput || isDefenseMode;
+  const isInputDisabled = isDefenseMode;
 
   // Check if currently in a call with this coworker
   const { activeCall, startCall } = useCallContext();
@@ -192,14 +183,19 @@ export function Chat({
   // RF-015: Manager auto-start messages
   // Triggers initial manager messages after a short delay on first visit
   // When voice kickoff is active, skip text auto-delivery (messages come after call ends)
+  // Mark coworker as revealed before auto-start delivers, so loadHistory doesn't double-reveal
+  const handleManagerMessagesWithRevealGuard = useCallback((newMessages: ChatMessage[]) => {
+    revealedCoworkers.add(coworker.id);
+    handleManagerMessages(newMessages);
+  }, [coworker.id, handleManagerMessages]);
+
   const { managerId: autoStartManagerId } = useManagerAutoStart({
     assessmentId,
     currentCoworkerId: coworker.id,
-    onMessagesReceived: handleManagerMessages,
+    onMessagesReceived: handleManagerMessagesWithRevealGuard,
     onTypingStart: handleTypingStart,
     onTypingEnd: handleTypingEnd,
     userHasSentMessage,
-    skipAutoStart: skipManagerAutoStart,
   });
 
   // If we're viewing the manager's chat and messages haven't arrived yet,
@@ -213,7 +209,7 @@ export function Chat({
         // Show typing indicator before each message
         setIsCoworkerTyping(true);
         await new Promise((resolve) =>
-          setTimeout(resolve, 1500 + Math.random() * 1500) // 1.5-3s typing
+          setTimeout(resolve, 800 + Math.random() * 700) // 0.8-1.5s typing
         );
         setIsCoworkerTyping(false);
 
@@ -224,7 +220,7 @@ export function Chat({
         // Short pause between messages (0.5-1.5s)
         if (i < msgs.length - 1) {
           await new Promise((resolve) =>
-            setTimeout(resolve, 500 + Math.random() * 1000)
+            setTimeout(resolve, 300 + Math.random() * 400)
           );
         }
       }
@@ -350,9 +346,8 @@ export function Chat({
       });
 
       // Simulate "reading" delay before coworker starts typing
-      // Longer messages take longer to read (~200ms per word, min 1.5s, max 5s)
-      const wordCount = userMessage.text.split(/\s+/).length;
-      const readingDelay = Math.min(5000, Math.max(1500, wordCount * 200)) + Math.random() * 1500;
+      // Short delay to feel natural (0.5-1.5s)
+      const readingDelay = 500 + Math.random() * 1000;
       await new Promise(resolve => setTimeout(resolve, readingDelay));
 
       // Now start the realistic typing pattern (after they've "read" the message)
@@ -361,8 +356,8 @@ export function Chat({
       // Additional composing delay based on coworker response speed
       const getResponseDelay = (role: string): number => {
         const isManager = role.toLowerCase().includes("manager");
-        if (isManager) return 2000 + Math.random() * 3000;  // 2-5s
-        return 5000 + Math.random() * 10000;  // 5-15s
+        if (isManager) return 1000 + Math.random() * 1500;  // 1-2.5s
+        return 1500 + Math.random() * 2000;  // 1.5-3.5s
       };
 
       const delay = getResponseDelay(coworker.role);
@@ -495,8 +490,7 @@ export function Chat({
               </div>
             ) : messages.length === 0 ? (
               isManagerChat ? (
-                // Manager will auto-start — show typing indicator so the candidate
-                // knows they don't need to initiate
+                // Manager auto-start active — show typing indicator while first message loads
                 <div className="flex h-full flex-col justify-end pb-4">
                   <div className="flex gap-4">
                     <CoworkerAvatar
@@ -634,7 +628,7 @@ export function Chat({
               <span className="text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
                 {isDefenseMode
                   ? "Call your manager to walk through your PR"
-                  : disableReason || "Text input is disabled"}
+                  : "Text input is disabled"}
               </span>
               {isDefenseMode && !isInCall && (
                 <Button

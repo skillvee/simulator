@@ -32,7 +32,7 @@ interface WelcomePageClientProps {
 
 export function WelcomePageClient({
   assessmentId,
-  scenario,
+  scenario: _scenario,
 }: WelcomePageClientProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);

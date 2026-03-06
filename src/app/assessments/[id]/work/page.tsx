@@ -23,7 +23,7 @@ export default async function WorkPage({
 
   const assessment = await getAssessmentForChat(id, session.user.id);
   if (!assessment) {
-    redirect("/profile");
+    redirect("/candidate/dashboard");
   }
 
   const coworkers = assessment.scenario.coworkers.map((c) => ({

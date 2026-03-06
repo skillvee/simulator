@@ -28,6 +28,8 @@ export interface GreetingContext {
   personality?: CoworkerPersonality | null;
   /** Other interactive coworkers (excluding the manager) to introduce */
   teammates?: TeamMemberIntro[];
+  /** When true, generates a post-call written reference instead of a call invitation */
+  postVoiceKickoff?: boolean;
 }
 
 /**
@@ -62,6 +64,7 @@ export async function generateManagerGreetings(
       personaStyle: context.personaStyle,
       personality: context.personality,
       teammates: context.teammates,
+      postVoiceKickoff: context.postVoiceKickoff,
     };
 
     const prompt = buildGreetingPrompt(promptContext);
@@ -94,7 +97,20 @@ export async function generateManagerGreetings(
       );
     }
 
-    return toStaggeredMessages(messages);
+    const staggered = toStaggeredMessages(messages);
+
+    // Append the repo link as a separate system-delivered message
+    if (context.repoUrl) {
+      staggered.push({
+        role: "model" as const,
+        text: context.repoUrl,
+        timestamp: new Date(
+          new Date(staggered[staggered.length - 1].timestamp).getTime() + 3000
+        ).toISOString(),
+      });
+    }
+
+    return staggered;
   } catch (err) {
     console.warn(
       "[generateManagerGreetings] Gemini failed, using fallback:",
@@ -106,35 +122,50 @@ export async function generateManagerGreetings(
 
 /**
  * Fallback: hardcoded greeting messages used when Gemini is unavailable.
+ * Note: Message 1 (welcome) is now handled by the instant message in the hook,
+ * so these start with the task briefing.
  */
 function generateFallbackGreetings(context: GreetingContext): ChatMessage[] {
   const {
     userName,
     managerName,
-    managerRole,
     companyName,
     repoUrl,
     taskDescription,
-    teammates,
   } = context;
 
+  // Suppress unused variable warnings — kept in signature for API compatibility
+  void userName;
+  void managerName;
+  void companyName;
+
   const repoNote = repoUrl
-    ? `I've put everything into a repo for you here: ${repoUrl} — check the GitHub Issues for the full rundown.`
+    ? `Sending you the repo now — check the GitHub Issues for the full rundown.`
     : `Your repo is still being set up, I'll share the link once it's ready.`;
 
-  const texts: string[] = [
-    `Hey ${userName}! Welcome to ${companyName}! I'm ${managerName}, your ${managerRole} — excited to have you on the team.`,
-    `${taskDescription.slice(0, 200)}${taskDescription.length > 200 ? "..." : ""} ${repoNote} Let me know if you have any questions!`,
-  ];
+  const texts: string[] = context.postVoiceKickoff
+    ? [
+        `As we discussed — ${taskDescription.slice(0, 150)}${taskDescription.length > 150 ? "..." : ""} ${repoNote}`,
+        `Ping me if you get stuck on anything!`,
+      ]
+    : [
+        `${taskDescription.slice(0, 200)}${taskDescription.length > 200 ? "..." : ""} ${repoNote}`,
+        `Check the GitHub Issues and README to get the full picture.`,
+        `Take your time going through everything — then give me a call when you're ready to chat through any questions.`,
+      ];
 
-  if (teammates && teammates.length > 0) {
-    const introductions = teammates
-      .map((t) => `${t.name} (${t.role})`)
-      .join(" and ");
-    texts.push(
-      `Oh and ${introductions} are around if you need help — don't hesitate to ping them!`
-    );
+  const staggered = toStaggeredMessages(texts);
+
+  // Append repo link as a separate message
+  if (repoUrl) {
+    staggered.push({
+      role: "model" as const,
+      text: repoUrl,
+      timestamp: new Date(
+        new Date(staggered[staggered.length - 1].timestamp).getTime() + 3000
+      ).toISOString(),
+    });
   }
 
-  return toStaggeredMessages(texts);
+  return staggered;
 }

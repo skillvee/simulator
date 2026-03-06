@@ -29,12 +29,17 @@ const MIN_MESSAGES_FOR_SUMMARY = 5;
  *
  * @param conversations - All conversations with this coworker (text + voice)
  * @param coworkerName - Name of the coworker for personalized summary
+ * @param options - Optional config (e.g. maxRecentMessages for voice calls
+ *   which can only inject context via systemInstruction, not history)
  * @returns Memory context object
  */
 export async function buildCoworkerMemory(
   conversations: ConversationWithMeta[],
-  coworkerName: string
+  coworkerName: string,
+  options?: { maxRecentMessages?: number }
 ): Promise<CoworkerMemory> {
+  const maxRecent = options?.maxRecentMessages ?? MAX_RECENT_MESSAGES;
+
   // Flatten all messages across conversations
   const allMessages: ChatMessage[] = [];
   for (const conv of conversations) {
@@ -56,7 +61,7 @@ export async function buildCoworkerMemory(
   }
 
   // Get recent messages for immediate context
-  const recentMessages = allMessages.slice(-MAX_RECENT_MESSAGES);
+  const recentMessages = allMessages.slice(-maxRecent);
 
   // If we have enough messages, generate a summary of earlier ones
   let summary: string | null = null;
@@ -64,7 +69,7 @@ export async function buildCoworkerMemory(
     // Messages to summarize (everything except recent)
     const messagesToSummarize = allMessages.slice(
       0,
-      -MAX_RECENT_MESSAGES > 0 ? -MAX_RECENT_MESSAGES : totalMessageCount
+      totalMessageCount > maxRecent ? -maxRecent : totalMessageCount
     );
 
     if (messagesToSummarize.length > 0) {
@@ -81,35 +86,36 @@ export async function buildCoworkerMemory(
 }
 
 /**
- * Conversation summarization prompt
- *
- * Summarizes conversation history for memory injection.
- */
-const CONVERSATION_SUMMARY_PROMPT = `Summarize the following conversation between a job candidate and {coworkerName} (a coworker).
-Focus on:
-- Key topics discussed
-- Important information shared
-- Any questions the candidate asked
-- Commitments or follow-ups mentioned
-
-Keep the summary concise (2-4 sentences). Write from {coworkerName}'s perspective (e.g., "We discussed...", "They asked about...").
-
-Conversation:
-{conversation}
-
-Summary:`;
-
-/**
- * Build conversation summary prompt with context
+ * Build conversation summary prompt with context.
+ * Summary depth scales with conversation size so longer histories
+ * retain more detail (important for voice calls where summary is the
+ * only way to inject older context).
  */
 function buildConversationSummaryPrompt(
   coworkerName: string,
-  conversationText: string
+  conversationText: string,
+  messageCount: number
 ): string {
-  return CONVERSATION_SUMMARY_PROMPT.replace(
-    /{coworkerName}/g,
-    coworkerName
-  ).replace("{conversation}", conversationText);
+  const sentenceGuidance =
+    messageCount > 30
+      ? "6-10 sentences. Include specific technical details, decisions made, and any unresolved questions."
+      : messageCount > 15
+        ? "4-6 sentences. Include key decisions and important details shared."
+        : "2-4 sentences";
+
+  return `Summarize the following conversation between a job candidate and ${coworkerName} (a coworker).
+Focus on:
+- Key topics discussed and decisions made
+- Important technical details and information shared
+- Questions the candidate asked and answers given
+- Commitments, action items, or follow-ups mentioned
+
+Keep the summary concise (${sentenceGuidance}). Write from ${coworkerName}'s perspective (e.g., "We discussed...", "They asked about...").
+
+Conversation:
+${conversationText}
+
+Summary:`;
 }
 
 /**
@@ -127,8 +133,7 @@ async function summarizeConversation(
     .map((m) => `${m.role === "user" ? "Candidate" : coworkerName}: ${m.text}`)
     .join("\n");
 
-  // Use centralized prompt builder
-  const prompt = buildConversationSummaryPrompt(coworkerName, conversationText);
+  const prompt = buildConversationSummaryPrompt(coworkerName, conversationText, messages.length);
 
   try {
     const response = await gemini.models.generateContent({
@@ -228,10 +233,10 @@ export function buildCrossCoworkerContext(
         .find((m) => m.role === "user");
       if (lastUserMessage) {
         const preview =
-          lastUserMessage.text.slice(0, 100) +
-          (lastUserMessage.text.length > 100 ? "..." : "");
+          lastUserMessage.text.slice(0, 60) +
+          (lastUserMessage.text.length > 60 ? "..." : "");
         otherInteractions.push(
-          `- The candidate has also been talking with ${coworkerName} (${messageCount} messages). Recent topic: "${preview}"`
+          `- The candidate has talked with ${coworkerName} (${messageCount} messages). Last topic hint: "${preview}"`
         );
       }
     }
@@ -245,7 +250,11 @@ export function buildCrossCoworkerContext(
 The candidate has been reaching out to other team members. This is normal and encouraged.
 ${otherInteractions.join("\n")}
 
-You can acknowledge these interactions if relevant (e.g., "I heard you were talking to Alex about..."), but don't pry into their conversations with others.`;
+**IMPORTANT RULES about cross-coworker awareness:**
+- You can acknowledge that the candidate has been talking to specific coworkers listed above (e.g., "I heard you were talking to Alex")
+- If the candidate ASKS "who have I been chatting with?" — ONLY list the coworkers named above. Do NOT list team members they haven't talked to
+- Do NOT independently confirm specific technical details from another person's private conversation. If the candidate says "Alex told me about X", you may acknowledge they talked, but share your OWN perspective on X (not echoing what Alex said)
+- Do NOT pry into their conversations with others`;
 }
 
 /**

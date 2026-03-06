@@ -10,6 +10,10 @@
 // Manager Calls
 export { buildDefensePrompt, type DefenseContext } from "./manager/defense";
 export {
+  buildKickoffVoicePrompt,
+  type KickoffVoiceContext,
+} from "./manager/kickoff";
+export {
   PR_ACKNOWLEDGMENT_PROMPT,
   buildPRAcknowledgmentContext,
   INVALID_PR_PROMPT,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef, useMemo, useEffect } from "react";
+import { useCallback, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { SlackLayout, Chat } from "@/components/chat";
 import { GeneralChannel } from "@/components/chat/general-channel";
@@ -11,7 +11,6 @@ import { DecorativeChat } from "@/components/chat/decorative-chat";
 import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
 import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
 import { playMessageSound } from "@/lib/sounds";
-import { IncomingCallModal } from "@/components/chat/incoming-call-modal";
 import type { ChatMessage } from "@/types";
 import type { ChannelMessage } from "@/lib/ai/coworker-persona";
 
@@ -45,55 +44,10 @@ export function WorkPageClient({
   const { stopRecording } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
 
-  // Voice kickoff state management
+  // Manager reference for name substitution
   const manager = useMemo(
     () => coworkers.find((c) => c.role.toLowerCase().includes("manager")),
     [coworkers]
-  );
-  const [kickoffCallState, setKickoffCallState] = useState<
-    "ringing" | "in-call" | "completed" | null
-  >(() => (!managerMessagesStarted && manager ? "ringing" : null));
-
-  // Handle accepting the incoming kickoff call
-  const handleAcceptKickoff = useCallback(() => {
-    setKickoffCallState("in-call");
-    // startCall will be called via ref after SlackLayout mounts
-  }, []);
-
-  // Handle declining the incoming kickoff call (use text chat instead)
-  const handleDeclineKickoff = useCallback(() => {
-    setKickoffCallState(null);
-    // This will allow the text-based manager greeting to trigger
-  }, []);
-
-  // Ref to call startCall from CallContext (available after SlackLayout mounts)
-  const startCallRef = useRef<((coworkerId: string, callType: "coworker") => void) | null>(null);
-
-  // Start the call after accepting (needs the CallContext from SlackLayout)
-  useEffect(() => {
-    if (kickoffCallState === "in-call" && manager && startCallRef.current) {
-      startCallRef.current(manager.id, "coworker");
-    }
-  }, [kickoffCallState, manager]);
-
-  // Handle kickoff call ending
-  const handleCallEnd = useCallback(
-    async (coworkerId: string) => {
-      if (kickoffCallState === "in-call" && coworkerId === manager?.id) {
-        setKickoffCallState("completed");
-        // Generate text greeting messages for written reference
-        try {
-          await fetch("/api/chat/manager-start", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ assessmentId }),
-          });
-        } catch (err) {
-          console.error("Failed to generate kickoff text messages:", err);
-        }
-      }
-    },
-    [assessmentId, kickoffCallState, manager?.id]
   );
 
   // Client-side selection state — no server round-trip on coworker switch
@@ -123,7 +77,6 @@ export function WorkPageClient({
   const cachedMessagesForSelected = useMemo(
     () => (selectedCoworkerId ? messageCacheRef.current[selectedCoworkerId] : undefined),
     // Re-compute when we switch coworkers
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedCoworkerId]
   );
 
@@ -235,34 +188,14 @@ export function WorkPageClient({
     );
   }
 
-  // Determine if text input should be disabled for the manager chat
-  const isManagerSelected = selectedCoworker?.id === manager?.id;
-  const shouldDisableManagerInput =
-    kickoffCallState === "ringing" || kickoffCallState === "in-call";
-  const managerDisableReason =
-    kickoffCallState === "ringing"
-      ? "Accept the incoming call to get started"
-      : kickoffCallState === "in-call"
-      ? "Manager kickoff call in progress..."
-      : undefined;
-
   return (
     <>
-      {/* Incoming call modal for mandatory voice kickoff */}
-      {kickoffCallState === "ringing" && manager && (
-        <IncomingCallModal coworker={manager} onAccept={handleAcceptKickoff} onDecline={handleDeclineKickoff} />
-      )}
-
       <SlackLayout
         assessmentId={assessmentId}
         coworkers={coworkers}
         selectedCoworkerId={selectedCoworkerId ?? undefined}
         onSelectCoworker={handleSelectCoworker}
         onDefenseComplete={handleDefenseComplete}
-        onCallEnd={handleCallEnd}
-        onStartCallRef={(fn) => {
-          startCallRef.current = fn;
-        }}
         onIncrementUnreadRef={(fn) => {
           incrementUnreadRef.current = fn;
         }}
@@ -287,10 +220,7 @@ export function WorkPageClient({
             coworker={selectedCoworker}
             cachedMessages={cachedMessagesForSelected}
             onMessagesChange={handleMessagesChange}
-            disableInput={isManagerSelected && shouldDisableManagerInput ? true : undefined}
-            disableReason={isManagerSelected ? managerDisableReason : undefined}
             initialPrUrl={prUrl}
-            skipManagerAutoStart={kickoffCallState !== null && kickoffCallState !== "completed"}
           />
         ) : (
           <div className="flex flex-col min-h-0 h-full">

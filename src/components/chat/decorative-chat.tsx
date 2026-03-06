@@ -58,8 +58,8 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
       setHasResponded(true);
       setIsTyping(true);
 
-      // Random delay between 30-60 seconds (30000-60000ms)
-      const delay = Math.floor(Math.random() * 30000) + 30000;
+      // Random delay between 3-5 seconds
+      const delay = Math.floor(Math.random() * 2000) + 3000;
 
       setTimeout(() => {
         setIsTyping(false);

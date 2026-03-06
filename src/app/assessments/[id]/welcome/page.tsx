@@ -38,7 +38,7 @@ export default async function WelcomePage({ params }: PageProps) {
   });
 
   if (!assessment) {
-    redirect("/profile");
+    redirect("/candidate/dashboard");
   }
 
   // If already completed, go to results

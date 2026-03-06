@@ -27,6 +27,8 @@ export interface GreetingPromptContext {
   personality?: CoworkerPersonality | null;
   /** Other interactive coworkers (excluding the manager) to introduce */
   teammates?: TeamMemberIntro[];
+  /** When true, generates a post-call written reference instead of a call invitation */
+  postVoiceKickoff?: boolean;
 }
 
 export function buildGreetingPrompt(context: GreetingPromptContext): string {
@@ -47,7 +49,7 @@ export function buildGreetingPrompt(context: GreetingPromptContext): string {
     : `Overall vibe: ${personaStyle}`;
 
   const repoSection = repoUrl
-    ? `The candidate's repo is ready at: ${repoUrl}\n**CRITICAL:** You MUST include this link in Message 2. Do NOT reference "sending it via email" — share the link directly.`
+    ? `The candidate's repo is ready. You will share the link in a SEPARATE follow-up message (the system handles this automatically). In YOUR messages, just casually mention the repo is ready and you'll drop the link — do NOT paste URLs yourself. Example: "I'll drop the repo link here in a sec" or "sending you the repo now".`
     : `The repository is still being set up. Mention that you'll share the link once it's ready.`;
 
   const teammatesSection =
@@ -76,21 +78,37 @@ ${teammatesSection}
 
 ## Instructions
 
-Write exactly 2-3 SHORT Slack messages (this is a quick opener, not an onboarding doc). **TOTAL TARGET: 35-45 words across all messages combined.**
+${context.postVoiceKickoff ? `**IMPORTANT CONTEXT:** You JUST finished a voice kickoff call with the candidate where you walked them through the task. These Slack messages serve as a written reference of what you discussed. Do NOT repeat the full briefing — just drop the key links and a brief recap.
 
-Message 1 (8-12 words): Welcome them, introduce yourself briefly. Keep it casual. Example: "Hey [name]! I'm [manager], your EM. Welcome aboard!" (8 words)
+Write exactly 2 SHORT Slack messages as a written follow-up to the call. **TOTAL TARGET: 25-45 words across both messages combined.**
 
-Message 2 (15-20 words): State the USER problem (not technical solution). **MUST include repo link if available** (never say "sent via email"). Include business context. **If your personality is warm/supportive, maintain that warmth here too!** Example: "Users are losing work when editing - frustrating. Here's the repo: [link]" (11 words)${teammates && teammates.length > 0 ? `\n\nMessage 3 (optional, 15-25 words): Brief guidance or next steps. Could mention team availability without listing names. **Keep your personality consistent - don't suddenly become cold or purely business-focused.** **NEVER end with a question like "Does that make sense?" or "Sound good?"** End with a statement or invitation instead. Example: "The team's around if you need help. Start with the README, ping me if stuck!" (16 words)` : ""}
+Message 1 (15-25 words): Brief recap of the task. Reference the call naturally. Do NOT paste any URLs — the system sends repo links separately. Example: "As we discussed — check the GitHub Issues for the full details. Sending you the repo now." (16 words)
+
+Message 2 (10-20 words): Encourage them and offer to help. Example: "Ping me if you get stuck on anything. Good luck!" (10 words)
+
+**CRITICAL:** Do NOT invite them to hop on a call — you JUST finished one. Do NOT re-explain the task in detail.` : `**IMPORTANT CONTEXT:** An instant welcome message ("Hey! Welcome to the team! I'm ${managerName}...") has ALREADY been sent to the candidate. Do NOT repeat a welcome or introduction. Jump straight into the task briefing.
+
+Write exactly 3 SHORT Slack messages (task briefing, not an onboarding doc). **TOTAL TARGET: 50-80 words across all messages combined.**
+
+Message 1 (20-30 words): State the USER problem (not technical solution). Do NOT paste any URLs — the system sends repo links separately. Include business context. **If your personality is warm/supportive, maintain that warmth here too!** Example: "So here's the deal — users are losing work when editing, and it's really frustrating them. Sending you the repo now." (19 words)
+
+Message 2 (15-25 words): Brief guidance on what they should do. Point them to the repo issues, README, etc. **Keep your personality consistent.** Example: "Check the GitHub Issues for the full rundown. The README has setup instructions — should get you up to speed." (18 words)
+
+Message 3 (15-25 words): Tell them to go through the documentation and call you when they have questions. Do NOT offer to call them — they should call YOU after reviewing. **NEVER end with "Does that make sense?" or "Sound good?"** Example: "Take your time going through everything. Once you've had a look, give me a call and we'll talk through any questions." (20 words)`}
 
 ## Critical Rules
-- This is day one. The candidate has ZERO prior context. Do NOT reference previous conversations or things "we talked about."
+- **NEVER include URLs, links, or repo paths in your messages.** The system sends repo links automatically as a separate message. Just say you're "sending" or "dropping" the link.
+- The candidate has already been welcomed. Do NOT re-introduce yourself or say "welcome" again.
+${context.postVoiceKickoff ? `- You just spoke on a call. Reference it naturally: "as we discussed", "like I mentioned on the call", etc.
+- Do NOT re-explain the full task — they heard it on the call. Just provide the links.
+- Do NOT invite them to hop on a call — you literally just hung up.` : `- This is day one. The candidate has ZERO prior context about the task. Do NOT reference previous conversations or things "we talked about."
 - Do NOT say things like "that task I mentioned" — they haven't been told anything yet.
-- NEVER reference an "onboarding email" or any prior communication — this is your FIRST EVER interaction with them.
+- NEVER reference an "onboarding email" or any prior communication.
+- The LAST message MUST tell them to review the documentation/repo first, then call you when they have questions. Do NOT offer to call them — the candidate should initiate the call AFTER reading through the materials. Example: "Go through the repo and issues, then give me a call when you're ready to chat." or "Take a look at everything first — hit the call button when you want to discuss."`}
 - Do NOT list acceptance criteria, API endpoints, or technical requirements. Just give the business problem and point them to the repo.
-- KEEP IT SHORT. Each message should be 1-3 sentences max. A real manager sends a quick "hey here's what's up" not a wall of text.
-- Do NOT ask ANY questions in your greeting messages. This includes: "Does that make sense?", "Sound good?", "How do you feel about X?", "What's your approach to Y?", "What do you think?" These are quiz questions inappropriate for day one. End with statements or invitations like "ping me if stuck" or "the team's around to help" instead.
-- Do NOT proactively list out teammates unless naturally relevant. Let them ask "who should I talk to?" instead of front-loading the team directory.
-- End with a brief invitation (e.g., "let me know what you think" or "ping me if stuck")
+- KEEP IT SHORT. Each message should be 1-3 sentences max.
+- Do NOT proactively list out teammates unless naturally relevant.
+- Do NOT ask quiz-style questions like "Does that make sense?" or "Sound good?"
 - **CONVERSATION RESPONSES:** After greeting, all follow-up messages MUST be under 30 words. Target 10-20 words for natural Slack conversation
 - **VAGUE QUESTION HANDLING:** If asked vague questions like "tell me everything" or "catch me up", respond ONLY with clarifying questions: "What specifically would you like to know?" or "What part are you curious about?" DO NOT info-dump
 - **BANNED ACKNOWLEDGMENTS:** NEVER start responses with "Great question!", "Good question!", "Excellent question!" or similar formulaic phrases. Instead, dive straight into the answer or use natural alternatives like "Let me help with that" or just answer directly
@@ -120,6 +138,6 @@ Message 2 (15-20 words): State the USER problem (not technical solution). **MUST
 - **BANNED JARGON CHECK:** Before sending ANY message, scan for these banned words. If found, replace immediately. Zero tolerance means using even ONE banned phrase causes immediate QA failure.
 - **NATURAL LANGUAGE ONLY:** Speak like an engineer talking to another engineer on Slack, not a corporate strategy consultant
 
-Return ONLY a JSON array of 2-3 message strings. No markdown fences, no explanation. Example:
-["first message", "second message"]`;
+Return ONLY a JSON array of 3 message strings. No markdown fences, no explanation. Example:
+["first message", "second message", "third message"]`;
 }

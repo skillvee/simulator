@@ -26,6 +26,7 @@ export type CallState =
   | "requesting-permission"
   | "connecting"
   | "connected"
+  | "saving"
   | "error"
   | "ended";
 
@@ -391,12 +392,13 @@ export function FloatingCallBar({
     audioQueueRef.current = [];
   }, []);
 
-  // End call and save transcript
+  // End call and save transcript (transcript must be persisted BEFORE
+  // signaling "ended" so downstream handlers have voice context in the DB)
   const endCall = useCallback(async () => {
     disconnect();
-    setCallState("ended");
+    setCallState("saving");
 
-    // Save transcript to server
+    // Save transcript to server BEFORE signaling ended
     if (transcriptRef.current.length > 0) {
       try {
         const transcriptEndpoint = getTranscriptEndpoint();
@@ -413,6 +415,8 @@ export function FloatingCallBar({
         console.error("Error saving transcript:", err);
       }
     }
+
+    setCallState("ended");
 
     // If this was a defense call, trigger the defense completion flow
     if (isDefenseCallRef.current && onDefenseComplete) {
@@ -592,6 +596,25 @@ export function FloatingCallBar({
               >
                 <PhoneOff className="h-4 w-4" />
               </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Saving state - brief transitional state while transcript is persisted
+  if (callState === "saving") {
+    return (
+      <div className="relative">
+        <div className="rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border/50 overflow-hidden" style={{background: "hsl(var(--slack-bg-surface))"}}>
+          <div className="p-4">
+            <div className="flex items-center gap-3">
+              <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
+              <div>
+                <p className="text-sm font-bold" style={{color: "hsl(var(--slack-text))"}}>Call ended</p>
+                <p className="text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>Saving conversation...</p>
+              </div>
             </div>
           </div>
         </div>

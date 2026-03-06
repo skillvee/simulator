@@ -18,7 +18,6 @@ import {
   type ScreenPermissionState,
 } from "@/lib/media";
 import {
-  checkWebcamSupport,
   requestWebcamCapture,
   stopWebcamCapture,
   isWebcamStreamActive,
