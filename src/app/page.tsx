@@ -162,12 +162,6 @@ export default function HomePage() {
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
-                <Link href="/demo#sample">
-                  <Button variant="ghost" className="h-14 px-6 rounded-full text-white hover:bg-white/10 font-semibold group">
-                    <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
-                    See Sample
-                  </Button>
-                </Link>
               </div>
 
             </motion.div>

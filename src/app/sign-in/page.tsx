@@ -52,11 +52,15 @@ function SignInForm() {
       setError("Invalid email or password");
       setIsLoading(false);
     } else {
-      // If no explicit callbackUrl was provided, check user role to redirect recruiters to dashboard
+      // If no explicit callbackUrl was provided, check user role to redirect to appropriate dashboard
       if (!searchParams.get("callbackUrl")) {
         const session = await getSession();
         const role = (session?.user as { role?: string } | undefined)?.role;
-        if (role === "RECRUITER" || role === "ADMIN") {
+        if (role === "ADMIN") {
+          router.push("/admin");
+          return;
+        }
+        if (role === "RECRUITER") {
           router.push("/recruiter/dashboard");
           return;
         }

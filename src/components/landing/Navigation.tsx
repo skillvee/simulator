@@ -15,11 +15,20 @@ interface NavigationProps {
 
 export default function Navigation({ currentPage, variant = "light" }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, user } = useAuth();
   const pathname = usePathname();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const isDark = variant === "dark";
+
+  // Route to the correct dashboard based on role
+  const userRole = (user as { role?: string } | undefined)?.role;
+  const dashboardHref =
+    userRole === "ADMIN"
+      ? "/admin"
+      : userRole === "RECRUITER"
+        ? "/recruiter/dashboard"
+        : "/candidate/dashboard";
 
   // Get sign-in URL with callback (skip for homepage)
   const getSignInUrl = () => {
@@ -91,7 +100,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
           <div className="flex items-center gap-4">
             {isSignedIn ? (
               <>
-                <Link href="/recruiter/dashboard">
+                <Link href={dashboardHref}>
                   <Button variant={isDark ? "ghost" : "outline"} className={isDark ? "text-slate-400 hover:text-white hover:bg-white/10" : ""}>
                     Dashboard
                   </Button>
@@ -196,7 +205,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
             <div className={`pt-4 space-y-4 ${isDark ? "border-t border-white/10" : "border-t border-stone-200"}`}>
               {isSignedIn ? (
                 <div className="space-y-4">
-                  <Link href="/dashboard" onClick={() => setIsOpen(false)}>
+                  <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
                     <Button variant="outline" className={`w-full ${isDark ? "border-white/20 text-white hover:bg-white/10" : ""}`}>
                       Dashboard
                     </Button>
