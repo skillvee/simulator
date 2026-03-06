@@ -1,4 +1,10 @@
-import type { CandidateStrengthLevel } from "./types";
+// Re-export shared helpers
+export {
+  formatDimensionName,
+  getStrengthBadgeStyles,
+  getScoreColor,
+  getConfidenceBadgeStyles,
+} from "@/components/assessment/helpers";
 
 /**
  * Parse timestamp string (MM:SS or HH:MM:SS) to seconds
@@ -39,61 +45,4 @@ export function getInitials(name: string | null): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0][0].toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-/**
- * Convert SCREAMING_SNAKE_CASE to Title Case
- * PROBLEM_SOLVING -> Problem Solving
- */
-export function formatDimensionName(dimension: string): string {
-  return dimension
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-/**
- * Get strength level badge styling
- */
-export function getStrengthBadgeStyles(level: CandidateStrengthLevel): string {
-  switch (level) {
-    case "Exceptional":
-      return "bg-green-100 text-green-800 hover:bg-green-100";
-    case "Strong":
-      return "bg-blue-100 text-blue-800 hover:bg-blue-100";
-    case "Meets expectations":
-      return "bg-stone-100 text-stone-700 hover:bg-stone-100";
-    case "Below expectations":
-      return "bg-red-100 text-red-800 hover:bg-red-100";
-  }
-}
-
-/**
- * Get confidence badge styling
- */
-export function getConfidenceBadgeStyles(confidence: string): string {
-  switch (confidence.toLowerCase()) {
-    case "high":
-      return "bg-green-100 text-green-800";
-    case "medium":
-      return "bg-yellow-100 text-yellow-800";
-    case "low":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-stone-100 text-stone-600";
-  }
-}
-
-/**
- * Get color classes for a score value (0-4 scale)
- */
-export function getScoreColor(score: number): {
-  bg: string;
-  text: string;
-  fill: string;
-} {
-  if (score >= 3.5) return { bg: "bg-green-100", text: "text-green-800", fill: "text-green-600" };
-  if (score >= 2.5) return { bg: "bg-blue-100", text: "text-blue-800", fill: "text-blue-600" };
-  if (score >= 1.5) return { bg: "bg-stone-100", text: "text-stone-700", fill: "text-stone-500" };
-  return { bg: "bg-red-100", text: "text-red-800", fill: "text-red-600" };
 }

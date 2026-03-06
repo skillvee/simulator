@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { requireCandidate } from "@/lib/core";
 import { db } from "@/server/db";
-import { ResultsClient } from "./client";
+import { transformToCandidateResults } from "@/lib/candidate/results-transformer";
+import { CandidateSidebar } from "@/app/candidate/dashboard/components/sidebar";
+import { CandidateResultsClient } from "./client";
 import type { AssessmentReport } from "@/types";
 
 interface ResultsPageProps {
@@ -9,18 +11,14 @@ interface ResultsPageProps {
 }
 
 export default async function ResultsPage({ params }: ResultsPageProps) {
-  const session = await auth();
+  const user = await requireCandidate();
   const { id } = await params;
-
-  if (!session?.user?.id) {
-    redirect("/sign-in");
-  }
 
   // Fetch the assessment and verify ownership
   const assessment = await db.assessment.findFirst({
     where: {
       id,
-      userId: session.user.id,
+      userId: user.id,
     },
     include: {
       scenario: {
@@ -29,17 +27,11 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           companyName: true,
         },
       },
-      user: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
     },
   });
 
   if (!assessment) {
-    redirect("/");
+    redirect("/candidate/dashboard");
   }
 
   // Only COMPLETED assessments can view results
@@ -51,15 +43,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   let report = assessment.report as AssessmentReport | null;
 
   if (!report) {
-    // Try to generate the report via API
-    // This is a fallback - normally the report is generated during finalization
     try {
       const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
       const response = await fetch(`${baseUrl}/api/assessment/report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Cookie: `next-auth.session-token=${session.user.id}`,
+          Cookie: `next-auth.session-token=${user.id}`,
         },
         body: JSON.stringify({ assessmentId: id }),
         cache: "no-store",
@@ -74,13 +64,27 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     }
   }
 
+  // Transform to candidate-safe format
+  const candidateResults = report
+    ? transformToCandidateResults(report, {
+        assessmentId: id,
+        candidateName: user.name || "there",
+        scenarioName: assessment.scenario.name,
+        companyName: assessment.scenario.companyName,
+      })
+    : null;
+
   return (
-    <ResultsClient
-      assessmentId={id}
-      scenarioName={assessment.scenario.name}
-      companyName={assessment.scenario.companyName}
-      userName={assessment.user?.name || session.user.name || "there"}
-      report={report}
-    />
+    <div className="flex h-screen bg-white">
+      <CandidateSidebar
+        user={{ name: user.name ?? null, email: user.email ?? null }}
+      />
+      <main className="flex-1 overflow-y-auto bg-white">
+        <CandidateResultsClient
+          assessmentId={id}
+          results={candidateResults}
+        />
+      </main>
+    </div>
   );
 }

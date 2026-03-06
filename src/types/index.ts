@@ -54,6 +54,11 @@ export type {
   RubricAssessmentOutput,
   ArchetypeFitResult,
   HiringManagerOutput,
+  // Candidate results types (candidate-facing view)
+  CandidateResultsData,
+  CandidateDimensionScore,
+  CandidateStrengthOrGrowth,
+  CandidateWorkStyleMetrics,
 } from "./assessment";
 
 // Conversation types

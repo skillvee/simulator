@@ -500,3 +500,61 @@ export interface VideoEvaluationResult {
   evaluationConfidence: "high" | "medium" | "low";
   insufficientEvidenceNotes?: string;
 }
+
+// ============================================================================
+// Candidate Results Data (filtered for candidate-facing view)
+// ============================================================================
+
+/**
+ * Candidate-friendly results data.
+ * Filters out recruiter-only information like hiring signals,
+ * percentiles, red flags, timestamps, and observable behaviors.
+ */
+export interface CandidateResultsData {
+  assessmentId: string;
+  candidateName: string;
+  scenarioName: string;
+  companyName: string;
+  generatedAt: string;
+  scoreScale: 4 | 5;
+  overallScore: number;
+  strengthLevel: string;
+  dimensionScores: CandidateDimensionScore[];
+  topStrengths: CandidateStrengthOrGrowth[];
+  growthAreas: CandidateStrengthOrGrowth[];
+  overallSummary: string;
+  metrics: CandidateWorkStyleMetrics | null;
+  evaluationConfidence: "high" | "medium" | "low";
+}
+
+/**
+ * Dimension score safe for candidate viewing.
+ * Includes strengths (reframed green flags) but omits red flags and timestamps.
+ */
+export interface CandidateDimensionScore {
+  dimension: string;
+  score: number;
+  summary: string;
+  strengths: string[];
+  rationale: string;
+}
+
+/**
+ * A strength or growth area for candidate display
+ */
+export interface CandidateStrengthOrGrowth {
+  dimension: string;
+  score: number;
+  description: string;
+}
+
+/**
+ * Simplified work style metrics for candidate view
+ */
+export interface CandidateWorkStyleMetrics {
+  totalDurationMinutes: number | null;
+  workingPhaseMinutes: number | null;
+  coworkersContacted: number;
+  aiToolsUsed: boolean;
+  testsStatus: string;
+}
