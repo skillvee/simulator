@@ -179,10 +179,12 @@ function ImprovementTrends({
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
                 Latest Score
               </p>
-              <p className="text-3xl font-semibold text-primary">{lastScore.toFixed(1)}/5</p>
+              <p className="text-3xl font-semibold text-primary">
+                {lastScore.toFixed(1)}/5
+              </p>
             </div>
           </div>
 
@@ -469,7 +471,10 @@ export default async function ProfilePage() {
                       {report && (
                         <div className="mt-4 border-t border-border pt-4">
                           <p className="line-clamp-2 text-sm text-muted-foreground">
-                            {report.narrative?.overallSummary?.substring(0, 200)}
+                            {report.narrative?.overallSummary?.substring(
+                              0,
+                              200
+                            )}
                             {(report.narrative?.overallSummary?.length || 0) >
                               200 && "..."}
                           </p>
@@ -492,10 +497,14 @@ export default async function ProfilePage() {
                                   ? "s"
                                   : ""}
                                 .
-                                {assessment.videoAssessment.lastFailureReason && (
+                                {assessment.videoAssessment
+                                  .lastFailureReason && (
                                   <span className="mt-1 block font-mono">
                                     Reason:{" "}
-                                    {assessment.videoAssessment.lastFailureReason}
+                                    {
+                                      assessment.videoAssessment
+                                        .lastFailureReason
+                                    }
                                   </span>
                                 )}
                               </p>
@@ -517,9 +526,7 @@ export default async function ProfilePage() {
 
                         {assessment.status !== "COMPLETED" && (
                           <Button size="sm" asChild>
-                            <Link
-                              href={`/assessments/${assessment.id}/work`}
-                            >
+                            <Link href={`/assessments/${assessment.id}/work`}>
                               Continue Assessment
                             </Link>
                           </Button>

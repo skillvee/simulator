@@ -225,12 +225,15 @@ function validateInternalConsistency(spec: RepoSpec): void {
     if (!filePaths.has(ref)) {
       // Special handling for .env.example - auto-create if referenced in README
       if (ref === ".env.example") {
-        console.log("[validateInternalConsistency] Auto-adding missing .env.example referenced in README");
+        console.log(
+          "[validateInternalConsistency] Auto-adding missing .env.example referenced in README"
+        );
         spec.files.push({
           path: ".env.example",
-          content: "# Environment Variables\n\n# Database\nDATABASE_URL=postgresql://user:password@localhost:5432/dbname\n\n# Redis\nREDIS_URL=redis://localhost:6379\n\n# API Keys\n# API_KEY=your-api-key-here\n\n# Feature Flags\nENABLE_FEATURE_X=false\n",
+          content:
+            "# Environment Variables\n\n# Database\nDATABASE_URL=postgresql://user:password@localhost:5432/dbname\n\n# Redis\nREDIS_URL=redis://localhost:6379\n\n# API Keys\n# API_KEY=your-api-key-here\n\n# Feature Flags\nENABLE_FEATURE_X=false\n",
           purpose: "config",
-          addedInCommit: 0
+          addedInCommit: 0,
         });
         filePaths.add(".env.example");
       } else {
@@ -243,10 +246,9 @@ function validateInternalConsistency(spec: RepoSpec): void {
 
   // Check issue bodies and comments don't reference phantom files
   for (const issue of spec.issues) {
-    const allText = [
-      issue.body,
-      ...issue.comments.map((c) => c.body),
-    ].join("\n");
+    const allText = [issue.body, ...issue.comments.map((c) => c.body)].join(
+      "\n"
+    );
 
     // Match backtick-wrapped file paths and bare src/ paths
     const issueFileRefs = Array.from(
@@ -270,16 +272,19 @@ function validateInternalConsistency(spec: RepoSpec): void {
 
     // Match relative imports: import ... from '../lib/db' or './utils'
     const relativeImports = Array.from(
-      file.content.matchAll(
-        /(?:import|from)\s+['"](\.[^'"]+)['"]/g
-      )
+      file.content.matchAll(/(?:import|from)\s+['"](\.[^'"]+)['"]/g)
     );
     for (const match of relativeImports) {
       const importPath = match[1];
       const resolved = resolveRelativeImport(file.path, importPath);
       if (resolved && !filePaths.has(resolved)) {
         // Also check with common extensions
-        const withExt = [resolved, `${resolved}.ts`, `${resolved}.tsx`, `${resolved}/index.ts`];
+        const withExt = [
+          resolved,
+          `${resolved}.ts`,
+          `${resolved}.tsx`,
+          `${resolved}/index.ts`,
+        ];
         if (!withExt.some((p) => filePaths.has(p))) {
           throw new Error(
             `File "${file.path}" imports "${importPath}" which resolves to "${resolved}" but file not found in spec.`
@@ -290,17 +295,22 @@ function validateInternalConsistency(spec: RepoSpec): void {
 
     // Match alias imports: import ... from '@/lib/db'
     const aliasImports = Array.from(
-      file.content.matchAll(
-        /(?:import|from)\s+['"]@\/([^'"]+)['"]/g
-      )
+      file.content.matchAll(/(?:import|from)\s+['"]@\/([^'"]+)['"]/g)
     );
     for (const match of aliasImports) {
       const aliasPath = `src/${match[1]}`;
-      const withExt = [aliasPath, `${aliasPath}.ts`, `${aliasPath}.tsx`, `${aliasPath}/index.ts`];
+      const withExt = [
+        aliasPath,
+        `${aliasPath}.ts`,
+        `${aliasPath}.tsx`,
+        `${aliasPath}/index.ts`,
+      ];
       if (!withExt.some((p) => filePaths.has(p))) {
         // Special handling for common database client files - auto-create if missing
         if (aliasPath === "src/lib/prisma" || aliasPath === "src/lib/db") {
-          console.log(`[validateInternalConsistency] Auto-adding missing ${aliasPath}.ts for database client`);
+          console.log(
+            `[validateInternalConsistency] Auto-adding missing ${aliasPath}.ts for database client`
+          );
           spec.files.push({
             path: `${aliasPath}.ts`,
             content: `// Database client configuration
@@ -321,7 +331,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 export default prisma;
 `,
             purpose: "working",
-            addedInCommit: 0
+            addedInCommit: 0,
           });
           filePaths.add(`${aliasPath}.ts`);
         } else {

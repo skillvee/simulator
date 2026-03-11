@@ -48,47 +48,43 @@ export async function loadRubricForRoleFamily(
   // Build dimensions with the correct rubric levels
   // For each dimension, use role-family-specific overrides if they exist,
   // otherwise fall back to the default rubric levels (roleFamilyId = null)
-  const dimensions: DimensionWithRubric[] = roleFamily.dimensions.map(
-    (rfd) => {
-      const dim = rfd.dimension;
+  const dimensions: DimensionWithRubric[] = roleFamily.dimensions.map((rfd) => {
+    const dim = rfd.dimension;
 
-      // Separate overrides (for this role family) from defaults (roleFamilyId = null)
-      const overrides = dim.rubricLevels.filter(
-        (rl) => rl.roleFamilyId === roleFamily.id
-      );
-      const defaults = dim.rubricLevels.filter(
-        (rl) => rl.roleFamilyId === null
-      );
+    // Separate overrides (for this role family) from defaults (roleFamilyId = null)
+    const overrides = dim.rubricLevels.filter(
+      (rl) => rl.roleFamilyId === roleFamily.id
+    );
+    const defaults = dim.rubricLevels.filter((rl) => rl.roleFamilyId === null);
 
-      // For each level 1-4, prefer the override if it exists
-      const levels: RubricLevelData[] = [1, 2, 3, 4].map((level) => {
-        const override = overrides.find((rl) => rl.level === level);
-        const fallback = defaults.find((rl) => rl.level === level);
-        const source = override || fallback;
+    // For each level 1-4, prefer the override if it exists
+    const levels: RubricLevelData[] = [1, 2, 3, 4].map((level) => {
+      const override = overrides.find((rl) => rl.level === level);
+      const fallback = defaults.find((rl) => rl.level === level);
+      const source = override || fallback;
 
-        if (!source) {
-          throw new Error(
-            `Missing rubric level ${level} for dimension ${dim.slug} in role family ${roleFamilySlug}`
-          );
-        }
-
-        return {
-          level: source.level,
-          label: source.label,
-          pattern: source.pattern,
-          evidence: source.evidence as string[],
-        };
-      });
+      if (!source) {
+        throw new Error(
+          `Missing rubric level ${level} for dimension ${dim.slug} in role family ${roleFamilySlug}`
+        );
+      }
 
       return {
-        slug: dim.slug,
-        name: dim.name,
-        description: dim.description,
-        isUniversal: dim.isUniversal,
-        levels,
+        level: source.level,
+        label: source.label,
+        pattern: source.pattern,
+        evidence: source.evidence as string[],
       };
-    }
-  );
+    });
+
+    return {
+      slug: dim.slug,
+      name: dim.name,
+      description: dim.description,
+      isUniversal: dim.isUniversal,
+      levels,
+    };
+  });
 
   // Build red flags
   const redFlags: RedFlagData[] = roleFamily.redFlags.map((rf) => ({

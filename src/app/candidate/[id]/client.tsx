@@ -303,7 +303,10 @@ function DimensionScoreCard({
           {/* Trainable gap indicator */}
           {trainableGap && (
             <div>
-              <Badge variant="outline" className="rounded-md bg-primary/10 text-primary">
+              <Badge
+                variant="outline"
+                className="rounded-md bg-primary/10 text-primary"
+              >
                 Trainable Gap
               </Badge>
             </div>
@@ -449,10 +452,7 @@ function RoleBanner({ archetype }: { archetype: RoleArchetype }) {
   const displayName = getArchetypeDisplayName(archetype);
 
   return (
-    <Card
-      className="border-primary bg-primary/5"
-      data-testid="role-banner"
-    >
+    <Card className="border-primary bg-primary/5" data-testid="role-banner">
       <CardContent className="flex items-center gap-4 p-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
           <Briefcase size={20} className="text-primary" />
@@ -789,7 +789,9 @@ function CandidateProfileInner({ data }: { data: CandidateProfileData }) {
               <div className="flex-1">
                 <h1 className="mb-1 text-2xl font-semibold">{displayName}</h1>
                 {candidate.email && (
-                  <p className="mb-2 text-muted-foreground">{candidate.email}</p>
+                  <p className="mb-2 text-muted-foreground">
+                    {candidate.email}
+                  </p>
                 )}
                 {formattedDate && (
                   <p className="text-sm text-muted-foreground">
@@ -801,14 +803,20 @@ function CandidateProfileInner({ data }: { data: CandidateProfileData }) {
               {/* Searchable Status Badge */}
               <div className="flex items-center gap-2">
                 {isSearchable ? (
-                  <Badge variant="outline" className="inline-flex items-center gap-2 rounded-md bg-green-500/10 px-3 py-2 text-green-600">
+                  <Badge
+                    variant="outline"
+                    className="inline-flex items-center gap-2 rounded-md bg-green-500/10 px-3 py-2 text-green-600"
+                  >
                     <Eye size={16} />
                     <span className="text-sm">
                       Searchable by hiring managers
                     </span>
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="inline-flex items-center gap-2 rounded-md bg-muted px-3 py-2">
+                  <Badge
+                    variant="outline"
+                    className="inline-flex items-center gap-2 rounded-md bg-muted px-3 py-2"
+                  >
                     <EyeOff size={16} />
                     <span className="text-sm">Private</span>
                   </Badge>
@@ -838,7 +846,9 @@ function CandidateProfileInner({ data }: { data: CandidateProfileData }) {
                 {summary.overallSummary}
               </p>
             ) : (
-              <p className="italic text-muted-foreground">No summary available</p>
+              <p className="italic text-muted-foreground">
+                No summary available
+              </p>
             )}
           </CardContent>
         </Card>

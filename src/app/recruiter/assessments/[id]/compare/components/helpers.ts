@@ -92,8 +92,19 @@ export function getScoreColor(score: number): {
   text: string;
   fill: string;
 } {
-  if (score >= 3.5) return { bg: "bg-green-100", text: "text-green-800", fill: "text-green-600" };
-  if (score >= 2.5) return { bg: "bg-blue-100", text: "text-blue-800", fill: "text-blue-600" };
-  if (score >= 1.5) return { bg: "bg-stone-100", text: "text-stone-700", fill: "text-stone-500" };
+  if (score >= 3.5)
+    return {
+      bg: "bg-green-100",
+      text: "text-green-800",
+      fill: "text-green-600",
+    };
+  if (score >= 2.5)
+    return { bg: "bg-blue-100", text: "text-blue-800", fill: "text-blue-600" };
+  if (score >= 1.5)
+    return {
+      bg: "bg-stone-100",
+      text: "text-stone-700",
+      fill: "text-stone-500",
+    };
   return { bg: "bg-red-100", text: "text-red-800", fill: "text-red-600" };
 }

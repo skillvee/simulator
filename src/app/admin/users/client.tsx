@@ -332,10 +332,7 @@ export function UsersClient({ users, stats }: UsersClientProps) {
                     <strong>
                       all {resetTarget.assessmentCount} assessment(s)
                     </strong>{" "}
-                    for{" "}
-                    <strong>
-                      {resetTarget.name || resetTarget.email}
-                    </strong>
+                    for <strong>{resetTarget.name || resetTarget.email}</strong>
                     , including conversations, recordings, scores, and reports.
                   </p>
                 </div>
@@ -493,7 +490,9 @@ function StatCard({
           <Icon className="h-4 w-4 text-muted-foreground" />
           <p className="text-xs font-medium text-muted-foreground">{label}</p>
         </div>
-        <p className={`text-2xl font-semibold ${highlight ? "text-primary" : ""}`}>
+        <p
+          className={`text-2xl font-semibold ${highlight ? "text-primary" : ""}`}
+        >
           {value}
         </p>
       </CardContent>

@@ -65,9 +65,7 @@ ${dim.description}
   const levels = dim.levels
     .sort((a, b) => a.level - b.level)
     .map((lvl) => {
-      const evidenceBullets = lvl.evidence
-        .map((e) => `  - ${e}`)
-        .join("\n");
+      const evidenceBullets = lvl.evidence.map((e) => `  - ${e}`).join("\n");
       return `**Level ${lvl.level} — ${lvl.label}**
 
 *Pattern: ${lvl.pattern}*

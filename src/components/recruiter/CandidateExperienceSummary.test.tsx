@@ -75,7 +75,9 @@ describe("CandidateExperienceSummary", () => {
     );
 
     // Check heading
-    expect(screen.getByRole("heading", { name: "Candidate Experience" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Candidate Experience" })
+    ).toBeInTheDocument();
 
     // Check narrative contains key elements (use getAllByText for text that appears multiple times)
     const roleElements = screen.getAllByText(/Senior Backend Engineer/);
@@ -187,7 +189,9 @@ describe("CandidateExperienceSummary", () => {
     );
 
     // Should handle gracefully - single coworker becomes manager and there are no team members
-    expect(screen.getByRole("heading", { name: "Candidate Experience" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Candidate Experience" })
+    ).toBeInTheDocument();
     const nameElements = screen.getAllByText(/Chris Taylor/);
     expect(nameElements.length).toBeGreaterThan(0);
   });
@@ -203,7 +207,9 @@ describe("CandidateExperienceSummary", () => {
     );
 
     // Should render with fallback text
-    expect(screen.getByRole("heading", { name: "Candidate Experience" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Candidate Experience" })
+    ).toBeInTheDocument();
     // Check for fallback text in the paragraph
     const paragraph = screen.getByText(/When a candidate joins/);
     expect(paragraph.textContent).toContain("their manager");

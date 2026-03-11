@@ -8,8 +8,16 @@ import {
   formatConversationsForSummary,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
-import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
-import { buildVoicePrompt, buildDefensePrompt, type DefenseContext } from "@/prompts";
+import type {
+  CoworkerPersona,
+  ChatMessage,
+  ConversationWithMeta,
+} from "@/types";
+import {
+  buildVoicePrompt,
+  buildDefensePrompt,
+  type DefenseContext,
+} from "@/prompts";
 import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
 

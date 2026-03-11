@@ -21,7 +21,14 @@ import { ArrowRight, User, TrendingUp, X } from "lucide-react";
 import type { RoleArchetype, WeightLevel } from "@/lib/candidate";
 import type { SeniorityLevel } from "@/lib/candidate";
 import { SENIORITY_THRESHOLDS } from "@/lib/candidate";
-import { Card, CardContent, Avatar, AvatarFallback, Badge, Button } from "@/components/ui";
+import {
+  Card,
+  CardContent,
+  Avatar,
+  AvatarFallback,
+  Badge,
+  Button,
+} from "@/components/ui";
 
 // ============================================================================
 // Types
@@ -211,7 +218,9 @@ function FitScoreBadge({ score }: { score: number }) {
 
   return (
     <Badge
-      variant={isHighScore ? "default" : isMediumScore ? "secondary" : "outline"}
+      variant={
+        isHighScore ? "default" : isMediumScore ? "secondary" : "outline"
+      }
       className="flex items-center gap-1.5 px-3 py-1.5 text-base"
       data-testid="fit-score-badge"
     >
@@ -267,14 +276,17 @@ export function CandidateSearchResultCard({
 
   return (
     <Card
-      className={`flex h-full flex-col shadow-sm hover:shadow-md transition-shadow ${className}`}
+      className={`flex h-full flex-col shadow-sm transition-shadow hover:shadow-md ${className}`}
       data-testid="candidate-card"
     >
       {/* Header: Avatar, Name, Fit Score */}
       <header className="flex items-start gap-4 border-b border-border p-4">
         {/* Avatar */}
-        <Avatar className="h-12 w-12 flex-shrink-0" data-testid="candidate-avatar">
-          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+        <Avatar
+          className="h-12 w-12 flex-shrink-0"
+          data-testid="candidate-avatar"
+        >
+          <AvatarFallback className="bg-primary/10 font-semibold text-primary">
             {initials}
           </AvatarFallback>
         </Avatar>
@@ -356,7 +368,7 @@ export function CandidateSearchResultCard({
             <Button
               variant="outline"
               onClick={() => onReject(id)}
-              className="hover:border-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
+              className="transition-colors hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
               data-testid="reject-button"
               aria-label="Not a fit"
             >
@@ -393,10 +405,7 @@ export function CandidateSearchResultGrid({
 }: CandidateSearchResultGridProps) {
   if (candidates.length === 0) {
     return (
-      <Card
-        className="p-8 text-center shadow-sm"
-        data-testid="no-results"
-      >
+      <Card className="p-8 text-center shadow-sm" data-testid="no-results">
         <User size={48} className="mx-auto mb-4 text-muted-foreground" />
         <p className="text-muted-foreground">
           No candidates found matching your criteria.

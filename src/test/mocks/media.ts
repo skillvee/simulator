@@ -278,7 +278,8 @@ export function setupMediaMocks(): MediaMocksState {
     }
   }
 
-  global.MediaRecorder = MockMediaRecorderClass as unknown as typeof MediaRecorder;
+  global.MediaRecorder =
+    MockMediaRecorderClass as unknown as typeof MediaRecorder;
 
   // Mock AudioContext class
   class MockAudioContextClass {

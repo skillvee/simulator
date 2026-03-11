@@ -53,7 +53,7 @@ export default async function ScenariosPage() {
         <div className="space-y-4">
           {scenarios.map((scenario) => (
             <Link key={scenario.id} href={`/admin/scenarios/${scenario.id}`}>
-              <Card className="p-6 transition-all duration-200 hover:shadow-md hover:bg-muted/50">
+              <Card className="p-6 transition-all duration-200 hover:bg-muted/50 hover:shadow-md">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">

@@ -50,63 +50,74 @@ export function useProactiveMessages({
   assessmentStartTime,
   onProactiveMessage,
 }: UseProactiveMessagesProps) {
-  const [scheduledMessages, setScheduledMessages] = useState<ScheduledMessage[]>([]);
+  const [scheduledMessages, setScheduledMessages] = useState<
+    ScheduledMessage[]
+  >([]);
   const isMountedRef = useRef(true);
   const hasInitializedRef = useRef(false);
 
   // Calculate delivery time with randomization (±2 minutes)
-  const calculateDeliveryTime = useCallback((baseDelayMinutes: number): number => {
-    const randomOffsetMs = (Math.random() - 0.5) * 2 * 2 * 60 * 1000; // ±2 minutes
-    const baseDelayMs = baseDelayMinutes * 60 * 1000;
-    const assessmentStartMs = assessmentStartTime.getTime();
-    return assessmentStartMs + baseDelayMs + randomOffsetMs;
-  }, [assessmentStartTime]);
+  const calculateDeliveryTime = useCallback(
+    (baseDelayMinutes: number): number => {
+      const randomOffsetMs = (Math.random() - 0.5) * 2 * 2 * 60 * 1000; // ±2 minutes
+      const baseDelayMs = baseDelayMinutes * 60 * 1000;
+      const assessmentStartMs = assessmentStartTime.getTime();
+      return assessmentStartMs + baseDelayMs + randomOffsetMs;
+    },
+    [assessmentStartTime]
+  );
 
   // Deliver a proactive message
-  const deliverMessage = useCallback(async (
-    coworkerId: string,
-    coworkerName: string,
-    messageText: string
-  ) => {
-    if (!isMountedRef.current) return;
-
-    // Skip if user is currently chatting with this coworker
-    if (selectedCoworkerId === coworkerId) {
-      console.log(`[Proactive] Skipping message from ${coworkerName} - user is already chatting with them`);
-      return;
-    }
-
-    try {
-      // Save message to conversation history
-      const response = await api<{ success: boolean; timestamp: string }>(
-        "/api/chat/proactive",
-        {
-          method: "POST",
-          body: {
-            assessmentId,
-            coworkerId,
-            message: messageText,
-          },
-        }
-      );
-
+  const deliverMessage = useCallback(
+    async (coworkerId: string, coworkerName: string, messageText: string) => {
       if (!isMountedRef.current) return;
 
-      // Create ChatMessage object
-      const chatMessage: ChatMessage = {
-        role: "model",
-        text: messageText,
-        timestamp: response.timestamp,
-      };
+      // Skip if user is currently chatting with this coworker
+      if (selectedCoworkerId === coworkerId) {
+        console.log(
+          `[Proactive] Skipping message from ${coworkerName} - user is already chatting with them`
+        );
+        return;
+      }
 
-      // Notify parent to update unread count and play sound
-      onProactiveMessage(coworkerId, chatMessage);
+      try {
+        // Save message to conversation history
+        const response = await api<{ success: boolean; timestamp: string }>(
+          "/api/chat/proactive",
+          {
+            method: "POST",
+            body: {
+              assessmentId,
+              coworkerId,
+              message: messageText,
+            },
+          }
+        );
 
-      console.log(`[Proactive] Delivered message from ${coworkerName}: "${messageText.slice(0, 50)}..."`);
-    } catch (error) {
-      console.error(`[Proactive] Failed to deliver message from ${coworkerName}:`, error);
-    }
-  }, [assessmentId, selectedCoworkerId, onProactiveMessage]);
+        if (!isMountedRef.current) return;
+
+        // Create ChatMessage object
+        const chatMessage: ChatMessage = {
+          role: "model",
+          text: messageText,
+          timestamp: response.timestamp,
+        };
+
+        // Notify parent to update unread count and play sound
+        onProactiveMessage(coworkerId, chatMessage);
+
+        console.log(
+          `[Proactive] Delivered message from ${coworkerName}: "${messageText.slice(0, 50)}..."`
+        );
+      } catch (error) {
+        console.error(
+          `[Proactive] Failed to deliver message from ${coworkerName}:`,
+          error
+        );
+      }
+    },
+    [assessmentId, selectedCoworkerId, onProactiveMessage]
+  );
 
   // Initialize scheduled messages on mount
   useEffect(() => {
@@ -119,7 +130,10 @@ export function useProactiveMessages({
 
     // Generate scheduled messages for each coworker
     for (const coworker of coworkers) {
-      const proactiveMessages = getProactiveMessages(coworker.name, coworker.role);
+      const proactiveMessages = getProactiveMessages(
+        coworker.name,
+        coworker.role
+      );
 
       for (const pm of proactiveMessages) {
         // Check condition
@@ -145,7 +159,9 @@ export function useProactiveMessages({
 
     setScheduledMessages(scheduled);
 
-    console.log(`[Proactive] Scheduled ${scheduled.length} messages for delivery`);
+    console.log(
+      `[Proactive] Scheduled ${scheduled.length} messages for delivery`
+    );
 
     return () => {
       isMountedRef.current = false;

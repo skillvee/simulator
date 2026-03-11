@@ -1,11 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { NextResponse } from "next/server";
-import {
-  getAnalytics,
-  TimePeriodSchema,
-  type TimePeriod,
-} from "@/lib/core";
+import { getAnalytics, TimePeriodSchema, type TimePeriod } from "@/lib/core";
 
 /**
  * GET /api/admin/analytics

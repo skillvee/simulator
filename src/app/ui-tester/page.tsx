@@ -13,7 +13,11 @@ export default function UITester() {
         <div className="text-center">
           <p className="text-lg font-medium text-stone-700">No test active</p>
           <p className="mt-1 text-sm text-stone-500">
-            Run <code className="rounded bg-stone-200 px-1.5 py-0.5 font-mono text-xs">/ui-test [url]</code> to start
+            Run{" "}
+            <code className="rounded bg-stone-200 px-1.5 py-0.5 font-mono text-xs">
+              /ui-test [url]
+            </code>{" "}
+            to start
           </p>
         </div>
       </div>

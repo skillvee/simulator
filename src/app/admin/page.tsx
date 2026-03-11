@@ -34,13 +34,26 @@ export default async function AdminDashboard() {
       <section className="mb-12">
         <h2 className="mb-4 text-xl font-semibold">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
-          <Button asChild className="shadow-sm hover:shadow-md transition-shadow">
+          <Button
+            asChild
+            className="shadow-sm transition-shadow hover:shadow-md"
+          >
             <Link href="/admin/scenarios/new">Create Simulation</Link>
           </Button>
-          <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-shadow">
-            <Link href="/admin/scenarios">Manage Simulations ({scenarioCount})</Link>
+          <Button
+            asChild
+            variant="outline"
+            className="shadow-sm transition-shadow hover:shadow-md"
+          >
+            <Link href="/admin/scenarios">
+              Manage Simulations ({scenarioCount})
+            </Link>
           </Button>
-          <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-shadow">
+          <Button
+            asChild
+            variant="outline"
+            className="shadow-sm transition-shadow hover:shadow-md"
+          >
             <Link href="/admin/users">Manage Users</Link>
           </Button>
         </div>
@@ -50,7 +63,11 @@ export default async function AdminDashboard() {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Recent Assessments</h2>
-          <Button asChild variant="link" className="text-primary hover:text-primary/80 transition-colors">
+          <Button
+            asChild
+            variant="link"
+            className="text-primary transition-colors hover:text-primary/80"
+          >
             <Link href="/admin/assessments">View All</Link>
           </Button>
         </div>
@@ -82,7 +99,7 @@ export default async function AdminDashboard() {
                   {recentAssessments.map((assessment) => (
                     <tr
                       key={assessment.id}
-                      className="border-b border-border last:border-b-0 transition-colors hover:bg-muted/50"
+                      className="border-b border-border transition-colors last:border-b-0 hover:bg-muted/50"
                     >
                       <td className="p-4">
                         <p className="font-semibold">

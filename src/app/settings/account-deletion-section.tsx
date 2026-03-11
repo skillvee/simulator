@@ -130,7 +130,9 @@ export function AccountDeletionSection({
 
   return (
     <section className="mb-12">
-      <h2 className="mb-6 text-2xl font-semibold text-destructive">Danger Zone</h2>
+      <h2 className="mb-6 text-2xl font-semibold text-destructive">
+        Danger Zone
+      </h2>
 
       <Card className="border-destructive">
         <CardContent className="p-6">
@@ -142,8 +144,8 @@ export function AccountDeletionSection({
               <h3 className="mb-1 font-semibold">Delete Account</h3>
               <p className="text-sm text-muted-foreground">
                 Permanently delete your account and all associated data. This
-                includes your profile, all assessments, recordings, uploaded CVs,
-                and reports.
+                includes your profile, all assessments, recordings, uploaded
+                CVs, and reports.
               </p>
             </div>
           </div>
@@ -252,8 +254,8 @@ export function AccountDeletionSection({
                   <div>
                     <p className="font-medium">Delete Immediately</p>
                     <p className="text-sm text-muted-foreground">
-                      Permanently delete your account and all data right now. This
-                      action cannot be undone.
+                      Permanently delete your account and all data right now.
+                      This action cannot be undone.
                     </p>
                   </div>
                 </label>

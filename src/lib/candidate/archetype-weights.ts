@@ -234,9 +234,7 @@ export function calculateFitScore(
   }
 
   const fitScore =
-    maxPossible > 0
-      ? Math.round((weightedSum / maxPossible) * 1000) / 10
-      : 0;
+    maxPossible > 0 ? Math.round((weightedSum / maxPossible) * 1000) / 10 : 0;
 
   return {
     fitScore,

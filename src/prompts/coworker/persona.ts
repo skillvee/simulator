@@ -190,30 +190,52 @@ function buildKnowledgeSection(knowledge: CoworkerKnowledge[]): string {
       : "";
 
     // Add synonym support for common keywords - EXPANDED for better matching
-    const keywordsWithSynonyms = k.triggerKeywords.map(kw => {
-      const kwLower = kw.toLowerCase();
-      if (kwLower === 'deploy') return 'deploy, deployment, deploying, deploys, release, releasing, releases, ship, shipping, ships, production, prod';
-      if (kwLower === 'auth') return 'auth, authentication, authorization, authenticate, authorize, login, jwt, token, tokens, session, sessions';
-      if (kwLower === 'cache') return 'cache, caching, cached, caches, redis, memory, storage, ttl, expire, expiration';
-      if (kwLower === 'merge') return 'merge, merging, merges, merged, conflict, conflicts, concurrent, collision, collisions, overwrite';
-      if (kwLower === 'priority') return 'priority, priorities, prioritize, important, urgent, critical, asap, why, business, customer';
-      if (kwLower === 'redis') return 'redis, cache, caching, pub/sub, pubsub, publish, subscribe, session, connection, memory, eviction';
-      if (kwLower === 'websocket' || kwLower === 'socket') return 'websocket, websockets, socket, sockets, ws, wss, real-time, realtime, connection, connections, gateway, heartbeat';
-      if (kwLower === 'ui' || kwLower === 'interface') return 'ui, ux, interface, design, screen, view, modal, dialog, frontend, user experience, figma';
-      if (kwLower === 'conflict') return 'conflict, conflicts, collision, concurrent, overwrite, overwrites, overwriting, merge, data loss';
-      if (kwLower === 'idle') return 'idle, timeout, inactive, away, afk, lunch, break, status';
-      if (kwLower === 'scope') return 'scope, where, pages, workspace, area, coverage, boundaries';
-      if (kwLower === 'review' || kwLower === 'pr') return 'pr, review, approve, approval, merge, process, sign-off, signoff';
-      if (kwLower === 'ecs' || kwLower === 'cluster') return 'ecs, cluster, clusters, fargate, node, nodes, scaling, broadcast, distributed';
-      if (kwLower === 'ttl') return 'ttl, expire, expiration, timeout, eviction, memory';
-      if (kwLower === 'limit' || kwLower === 'limits') return 'limit, limits, throttle, rate limit, capacity, max, maximum, constraint';
-      if (kwLower === 'kpis' || kwLower === 'kpi') return 'kpi, kpis, metrics, metric, measurement, measurements, performance, indicator, indicators, goal, goals, target, targets';
-      if (kwLower === 'metrics' || kwLower === 'metric') return 'metric, metrics, kpi, kpis, measurement, measurements, analytics, data, stats, statistics, performance';
-      if (kwLower === 'performance') return 'performance, speed, fast, slow, latency, throughput, efficiency, optimization, optimizing, metrics';
-      if (kwLower === 'success rate' || kwLower === 'success') return 'success, success rate, failure rate, error rate, completion, percentage, reliability, uptime';
-      if (kwLower === 'user experience' || kwLower === 'ux') return 'user experience, ux, customer experience, cx, usability, satisfaction, user satisfaction';
-      return kw;
-    }).join(", ");
+    const keywordsWithSynonyms = k.triggerKeywords
+      .map((kw) => {
+        const kwLower = kw.toLowerCase();
+        if (kwLower === "deploy")
+          return "deploy, deployment, deploying, deploys, release, releasing, releases, ship, shipping, ships, production, prod";
+        if (kwLower === "auth")
+          return "auth, authentication, authorization, authenticate, authorize, login, jwt, token, tokens, session, sessions";
+        if (kwLower === "cache")
+          return "cache, caching, cached, caches, redis, memory, storage, ttl, expire, expiration";
+        if (kwLower === "merge")
+          return "merge, merging, merges, merged, conflict, conflicts, concurrent, collision, collisions, overwrite";
+        if (kwLower === "priority")
+          return "priority, priorities, prioritize, important, urgent, critical, asap, why, business, customer";
+        if (kwLower === "redis")
+          return "redis, cache, caching, pub/sub, pubsub, publish, subscribe, session, connection, memory, eviction";
+        if (kwLower === "websocket" || kwLower === "socket")
+          return "websocket, websockets, socket, sockets, ws, wss, real-time, realtime, connection, connections, gateway, heartbeat";
+        if (kwLower === "ui" || kwLower === "interface")
+          return "ui, ux, interface, design, screen, view, modal, dialog, frontend, user experience, figma";
+        if (kwLower === "conflict")
+          return "conflict, conflicts, collision, concurrent, overwrite, overwrites, overwriting, merge, data loss";
+        if (kwLower === "idle")
+          return "idle, timeout, inactive, away, afk, lunch, break, status";
+        if (kwLower === "scope")
+          return "scope, where, pages, workspace, area, coverage, boundaries";
+        if (kwLower === "review" || kwLower === "pr")
+          return "pr, review, approve, approval, merge, process, sign-off, signoff";
+        if (kwLower === "ecs" || kwLower === "cluster")
+          return "ecs, cluster, clusters, fargate, node, nodes, scaling, broadcast, distributed";
+        if (kwLower === "ttl")
+          return "ttl, expire, expiration, timeout, eviction, memory";
+        if (kwLower === "limit" || kwLower === "limits")
+          return "limit, limits, throttle, rate limit, capacity, max, maximum, constraint";
+        if (kwLower === "kpis" || kwLower === "kpi")
+          return "kpi, kpis, metrics, metric, measurement, measurements, performance, indicator, indicators, goal, goals, target, targets";
+        if (kwLower === "metrics" || kwLower === "metric")
+          return "metric, metrics, kpi, kpis, measurement, measurements, analytics, data, stats, statistics, performance";
+        if (kwLower === "performance")
+          return "performance, speed, fast, slow, latency, throughput, efficiency, optimization, optimizing, metrics";
+        if (kwLower === "success rate" || kwLower === "success")
+          return "success, success rate, failure rate, error rate, completion, percentage, reliability, uptime";
+        if (kwLower === "user experience" || kwLower === "ux")
+          return "user experience, ux, customer experience, cx, usability, satisfaction, user satisfaction";
+        return kw;
+      })
+      .join(", ");
 
     return `**${k.topic}**${criticalNote}
 **TRIGGER KEYWORDS:** ${k.triggerKeywords.join(", ")}
@@ -324,7 +346,7 @@ export function getPersonalityGuidelines(
         "- You share context freely, even a bit beyond what was asked",
         "- You'll mention related things they might not know to ask about",
         '- **🚨 GATEKEEPING OVERRIDE FOR GENEROUS PERSONALITIES 🚨**: Even though you\'re generous, vague first messages ("catch me up", "tell me everything", "can you help me?") MUST be gatekept. Respond with: "happy to help! what specifically would you like to know?" or "sure! what part are you working on?" — being generous means being generous WHEN ASKED SPECIFIC QUESTIONS, not dumping everything upfront',
-        '- **VAGUE QUESTION HANDLING IS NON-NEGOTIABLE**: Your generous nature NEVER overrides the gatekeeping rule for vague questions. Ask for clarification FIRST, then be generous with your answer.',
+        "- **VAGUE QUESTION HANDLING IS NON-NEGOTIABLE**: Your generous nature NEVER overrides the gatekeeping rule for vague questions. Ask for clarification FIRST, then be generous with your answer.",
         "- Even when asked directly, share ONE piece of information per response — don't dump everything you know at once. Wait for follow-up questions to share more"
       );
       break;
@@ -666,11 +688,11 @@ export function buildChatPrompt(
   const base = buildCoworkerBasePrompt(coworker, context);
 
   // Extract verbosity from personality to reinforce at top of prompt
-  const verbosity = coworker.personality?.verbosity || 'moderate';
+  const verbosity = coworker.personality?.verbosity || "moderate";
   const wordLimitReminder = `
 🚨🚨🚨 IMMEDIATE WORD COUNT REQUIREMENT 🚨🚨🚨
 You are ${coworker.name} with ${verbosity.toUpperCase()} verbosity.
-Your ABSOLUTE MAXIMUM words per message: ${verbosity === 'terse' ? '10' : verbosity === 'moderate' ? '20' : '35'}
+Your ABSOLUTE MAXIMUM words per message: ${verbosity === "terse" ? "10" : verbosity === "moderate" ? "20" : "35"}
 COUNT EVERY WORD. STOP BEFORE EXCEEDING. VIOLATIONS = FAILURE.
 🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
 `;

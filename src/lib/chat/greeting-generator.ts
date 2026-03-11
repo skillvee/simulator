@@ -38,9 +38,7 @@ function toStaggeredMessages(texts: string[]): ChatMessage[] {
   return texts.map((text, i) => ({
     role: "model" as const,
     text,
-    timestamp: new Date(
-      baseTimestamp.getTime() + i * 3000
-    ).toISOString(),
+    timestamp: new Date(baseTimestamp.getTime() + i * 3000).toISOString(),
   }));
 }
 

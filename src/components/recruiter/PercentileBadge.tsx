@@ -115,7 +115,7 @@ export function PercentileBadge({
           data-testid="percentile-badge"
           aria-label={tooltipText}
           className={cn(
-            "inline-flex items-center justify-center rounded-full font-medium whitespace-nowrap transition-colors",
+            "inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium transition-colors",
             getTierStyles(percentile),
             getSizeStyles(size),
             className

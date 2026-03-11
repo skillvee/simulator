@@ -89,8 +89,7 @@ async function getSimulationsWithStats(
     if (completedWithScores.length > 0) {
       const scoresWithNames = completedWithScores.map((a) => {
         const scores = a.videoAssessment!.scores;
-        const avg =
-          scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
+        const avg = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
         return { name: a.user.name ?? "Anonymous", score: avg };
       });
 
@@ -104,7 +103,10 @@ async function getSimulationsWithStats(
     let lastActivityDescription: string | null = null;
 
     for (const a of assessments) {
-      if (a.completedAt && (!lastActivityDate || a.completedAt > lastActivityDate)) {
+      if (
+        a.completedAt &&
+        (!lastActivityDate || a.completedAt > lastActivityDate)
+      ) {
         lastActivityDate = a.completedAt;
         lastActivityDescription = `${a.user.name ?? "Someone"} completed`;
       }
@@ -135,8 +137,7 @@ async function getSimulationsWithStats(
         const scores = a.videoAssessment!.scores;
         return scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
       });
-      avgScore =
-        allAvgs.reduce((sum, s) => sum + s, 0) / allAvgs.length;
+      avgScore = allAvgs.reduce((sum, s) => sum + s, 0) / allAvgs.length;
     }
 
     const level = (scenario.targetLevel ?? "mid") as TargetLevel;

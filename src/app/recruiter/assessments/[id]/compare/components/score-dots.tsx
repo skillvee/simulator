@@ -10,7 +10,12 @@ interface ScoreDotsProps {
   size?: "sm" | "md";
 }
 
-export function ScoreDots({ score, maxScore = 4, showNumber = true, size = "sm" }: ScoreDotsProps) {
+export function ScoreDots({
+  score,
+  maxScore = 4,
+  showNumber = true,
+  size = "sm",
+}: ScoreDotsProps) {
   const roundedScore = Math.round(score);
   const colors = getScoreColor(score);
   const dotSize = size === "sm" ? "text-xs" : "text-sm";
@@ -18,11 +23,13 @@ export function ScoreDots({ score, maxScore = 4, showNumber = true, size = "sm" 
   return (
     <div className="flex items-center gap-1.5">
       {showNumber && (
-        <span className={cn(
-          "font-semibold rounded-md px-1.5 py-0.5 text-xs tabular-nums",
-          colors.bg,
-          colors.text
-        )}>
+        <span
+          className={cn(
+            "rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums",
+            colors.bg,
+            colors.text
+          )}
+        >
           {score.toFixed(1)}
         </span>
       )}
@@ -30,9 +37,7 @@ export function ScoreDots({ score, maxScore = 4, showNumber = true, size = "sm" 
         {Array.from({ length: maxScore }, (_, i) => (
           <span
             key={i}
-            className={cn(
-              i < roundedScore ? colors.fill : "text-stone-300"
-            )}
+            className={cn(i < roundedScore ? colors.fill : "text-stone-300")}
           >
             {i < roundedScore ? "\u25CF" : "\u25CB"}
           </span>

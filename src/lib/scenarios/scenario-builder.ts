@@ -352,7 +352,10 @@ export function applyExtraction(
       updated.coworkers[existingIndex] = extraction.newCoworker;
     } else {
       // Add new coworker
-      updated.coworkers = [...(updated.coworkers || []), extraction.newCoworker];
+      updated.coworkers = [
+        ...(updated.coworkers || []),
+        extraction.newCoworker,
+      ];
     }
   }
 

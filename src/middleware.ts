@@ -5,7 +5,7 @@ import {
   aiChatLimiter,
   aiGenerationLimiter,
   aiAnalysisLimiter,
-  applyRateLimit
+  applyRateLimit,
 } from "@/lib/rate-limiter";
 
 /**
@@ -23,20 +23,13 @@ interface ExtendedSessionUser {
  * Public API routes that don't require authentication.
  * These routes are accessible without a valid session.
  */
-const PUBLIC_API_ROUTES = [
-  "/api/search/extract",
-  "/api/search/parse-feedback",
-];
+const PUBLIC_API_ROUTES = ["/api/search/extract", "/api/search/parse-feedback"];
 
 /**
  * Public page routes that don't require authentication.
  * These routes are accessible without a valid session.
  */
-const PUBLIC_PAGE_ROUTES = [
-  "/invite",
-  "/sign-in",
-  "/sign-up",
-];
+const PUBLIC_PAGE_ROUTES = ["/invite", "/sign-in", "/sign-up"];
 
 /**
  * Check if a route matches the public API routes allowlist
@@ -138,15 +131,15 @@ export default auth((req) => {
           {
             success: false,
             error: "Rate limit exceeded. Please try again later.",
-            retryAfter: 60
+            retryAfter: 60,
           },
           {
             status: 429,
             headers: {
-              'X-RateLimit-Limit': '30',
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
-            }
+              "X-RateLimit-Limit": "30",
+              "X-RateLimit-Remaining": remaining.toString(),
+              "X-RateLimit-Reset": new Date(Date.now() + 60000).toISOString(),
+            },
           }
         );
       }
@@ -159,16 +152,17 @@ export default auth((req) => {
         return NextResponse.json(
           {
             success: false,
-            error: "Rate limit exceeded for generation. Please wait before trying again.",
-            retryAfter: 60
+            error:
+              "Rate limit exceeded for generation. Please wait before trying again.",
+            retryAfter: 60,
           },
           {
             status: 429,
             headers: {
-              'X-RateLimit-Limit': '5',
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
-            }
+              "X-RateLimit-Limit": "5",
+              "X-RateLimit-Remaining": remaining.toString(),
+              "X-RateLimit-Reset": new Date(Date.now() + 60000).toISOString(),
+            },
           }
         );
       }
@@ -181,16 +175,17 @@ export default auth((req) => {
         return NextResponse.json(
           {
             success: false,
-            error: "Rate limit exceeded for analysis. Please wait before trying again.",
-            retryAfter: 60
+            error:
+              "Rate limit exceeded for analysis. Please wait before trying again.",
+            retryAfter: 60,
           },
           {
             status: 429,
             headers: {
-              'X-RateLimit-Limit': '10',
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
-            }
+              "X-RateLimit-Limit": "10",
+              "X-RateLimit-Remaining": remaining.toString(),
+              "X-RateLimit-Reset": new Date(Date.now() + 60000).toISOString(),
+            },
           }
         );
       }
@@ -288,7 +283,10 @@ export default auth((req) => {
 
   // Redirect authenticated recruiters from home page to dashboard
   if (pathname === "/") {
-    if (session?.user && (user?.role === "RECRUITER" || user?.role === "ADMIN")) {
+    if (
+      session?.user &&
+      (user?.role === "RECRUITER" || user?.role === "ADMIN")
+    ) {
       return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
     }
   }

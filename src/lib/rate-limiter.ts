@@ -8,7 +8,7 @@
  */
 
 interface RateLimitEntry {
-  requests: number[];  // Timestamps of requests
+  requests: number[]; // Timestamps of requests
   blocked?: boolean;
 }
 
@@ -37,7 +37,7 @@ class RateLimiter {
 
     // Remove requests outside the window
     entry.requests = entry.requests.filter(
-      timestamp => now - timestamp < this.windowMs
+      (timestamp) => now - timestamp < this.windowMs
     );
 
     // Check if limit exceeded
@@ -65,7 +65,7 @@ class RateLimiter {
     if (!entry) return this.maxRequests;
 
     const validRequests = entry.requests.filter(
-      timestamp => now - timestamp < this.windowMs
+      (timestamp) => now - timestamp < this.windowMs
     );
 
     return Math.max(0, this.maxRequests - validRequests.length);
@@ -79,7 +79,7 @@ class RateLimiter {
 
     this.store.forEach((entry, key) => {
       const validRequests = entry.requests.filter(
-        timestamp => now - timestamp < this.windowMs
+        (timestamp) => now - timestamp < this.windowMs
       );
 
       if (validRequests.length === 0) {
@@ -104,9 +104,9 @@ class RateLimiter {
 }
 
 // Rate limiters for different endpoint categories
-export const aiChatLimiter = new RateLimiter(60000, 30);  // 30 requests per minute for chat
-export const aiGenerationLimiter = new RateLimiter(60000, 5);  // 5 requests per minute for generation
-export const aiAnalysisLimiter = new RateLimiter(60000, 10);  // 10 requests per minute for analysis
+export const aiChatLimiter = new RateLimiter(60000, 30); // 30 requests per minute for chat
+export const aiGenerationLimiter = new RateLimiter(60000, 5); // 5 requests per minute for generation
+export const aiAnalysisLimiter = new RateLimiter(60000, 10); // 10 requests per minute for analysis
 
 /**
  * Get the client IP address from the request
@@ -114,13 +114,13 @@ export const aiAnalysisLimiter = new RateLimiter(60000, 10);  // 10 requests per
 export function getClientIp(req: Request): string {
   // Try various headers that might contain the client IP
   const headers = req.headers;
-  const forwardedFor = headers.get('x-forwarded-for');
-  const realIp = headers.get('x-real-ip');
-  const cfConnectingIp = headers.get('cf-connecting-ip');
+  const forwardedFor = headers.get("x-forwarded-for");
+  const realIp = headers.get("x-real-ip");
+  const cfConnectingIp = headers.get("cf-connecting-ip");
 
   if (forwardedFor) {
     // x-forwarded-for may contain multiple IPs, get the first one
-    return forwardedFor.split(',')[0].trim();
+    return forwardedFor.split(",")[0].trim();
   }
 
   if (realIp) {
@@ -133,7 +133,7 @@ export function getClientIp(req: Request): string {
 
   // Fallback to a default if we can't determine the IP
   // In production, this should be properly configured
-  return 'unknown';
+  return "unknown";
 }
 
 /**

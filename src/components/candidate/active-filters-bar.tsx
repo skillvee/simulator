@@ -196,10 +196,7 @@ export function ActiveFiltersBar({
   const hasRefinedFilters = filters.some((f) => f.isRefinedByFeedback);
 
   return (
-    <Card
-      className={`shadow-sm ${className}`}
-      data-testid="active-filters-bar"
-    >
+    <Card className={`shadow-sm ${className}`} data-testid="active-filters-bar">
       <CardContent className="p-4">
         {/* Header row with label and clear all */}
         <div className="mb-3 flex items-center justify-between">

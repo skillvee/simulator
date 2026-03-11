@@ -7,7 +7,11 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getScenarioDetails(scenarioId: string, userId: string, userRole: string) {
+async function getScenarioDetails(
+  scenarioId: string,
+  userId: string,
+  userRole: string
+) {
   const scenario = await db.scenario.findUnique({
     where: { id: scenarioId },
     select: {

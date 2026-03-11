@@ -2,16 +2,19 @@
 
 import { useCallback, useState, useRef, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { SlackLayout, Chat } from "@/components/chat";
-import { GeneralChannel } from "@/components/chat/general-channel";
+import {
+  SlackLayout,
+  Chat,
+  GeneralChannel,
+  DecorativeChat,
+  IncomingCallModal,
+} from "@/components/chat";
 import { GENERAL_CHANNEL_MESSAGES } from "@/lib/ai/coworker-persona";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
-import { DecorativeChat } from "@/components/chat/decorative-chat";
 import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
 import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
 import { playMessageSound } from "@/lib/sounds";
-import { IncomingCallModal } from "@/components/chat/incoming-call-modal";
 import type { ChatMessage } from "@/types";
 import type { ChannelMessage } from "@/lib/ai/coworker-persona";
 
@@ -67,7 +70,9 @@ export function WorkPageClient({
   }, []);
 
   // Ref to call startCall from CallContext (available after SlackLayout mounts)
-  const startCallRef = useRef<((coworkerId: string, callType: "coworker") => void) | null>(null);
+  const startCallRef = useRef<
+    ((coworkerId: string, callType: "coworker") => void) | null
+  >(null);
 
   // Start the call after accepting (needs the CallContext from SlackLayout)
   useEffect(() => {
@@ -97,16 +102,27 @@ export function WorkPageClient({
   );
 
   // Client-side selection state — no server round-trip on coworker switch
-  const [selectedCoworkerId, setSelectedCoworkerId] = useState(initialSelectedCoworkerId);
+  const [selectedCoworkerId, setSelectedCoworkerId] = useState(
+    initialSelectedCoworkerId
+  );
 
-  const handleSelectCoworker = useCallback((coworkerId: string) => {
-    setSelectedCoworkerId(coworkerId);
-    // Sync URL without triggering server navigation
-    window.history.replaceState(null, "", `/assessments/${assessmentId}/work?coworkerId=${coworkerId}`);
-  }, [assessmentId]);
+  const handleSelectCoworker = useCallback(
+    (coworkerId: string) => {
+      setSelectedCoworkerId(coworkerId);
+      // Sync URL without triggering server navigation
+      window.history.replaceState(
+        null,
+        "",
+        `/assessments/${assessmentId}/work?coworkerId=${coworkerId}`
+      );
+    },
+    [assessmentId]
+  );
 
   // Refs to store the increment functions from SlackLayout
-  const incrementUnreadRef = useRef<((coworkerId: string) => void) | null>(null);
+  const incrementUnreadRef = useRef<((coworkerId: string) => void) | null>(
+    null
+  );
   const incrementGeneralUnreadRef = useRef<(() => void) | null>(null);
 
   // State to store ambient messages that arrive while user is viewing the channel
@@ -115,34 +131,46 @@ export function WorkPageClient({
   // Per-coworker message cache so switching is instant (like Slack)
   const messageCacheRef = useRef<Record<string, ChatMessage[]>>({});
 
-  const handleMessagesChange = useCallback((coworkerId: string, messages: ChatMessage[]) => {
-    messageCacheRef.current[coworkerId] = messages;
-  }, []);
+  const handleMessagesChange = useCallback(
+    (coworkerId: string, messages: ChatMessage[]) => {
+      messageCacheRef.current[coworkerId] = messages;
+    },
+    []
+  );
 
   // Memoize cached messages for the selected coworker to avoid unnecessary re-renders
   const cachedMessagesForSelected = useMemo(
-    () => (selectedCoworkerId ? messageCacheRef.current[selectedCoworkerId] : undefined),
+    () =>
+      selectedCoworkerId
+        ? messageCacheRef.current[selectedCoworkerId]
+        : undefined,
     // Re-compute when we switch coworkers
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [selectedCoworkerId]
   );
 
   // Handle proactive messages from coworkers
-  const handleProactiveMessage = useCallback((coworkerId: string, message: ChatMessage) => {
-    // Increment unread count for this coworker
-    if (incrementUnreadRef.current) {
-      incrementUnreadRef.current(coworkerId);
-    }
+  const handleProactiveMessage = useCallback(
+    (coworkerId: string, message: ChatMessage) => {
+      // Increment unread count for this coworker
+      if (incrementUnreadRef.current) {
+        incrementUnreadRef.current(coworkerId);
+      }
 
-    // Play notification sound
-    playMessageSound();
+      // Play notification sound
+      playMessageSound();
 
-    console.log(`[WorkPage] Proactive message from ${coworkerId}: ${message.text.slice(0, 50)}...`);
-  }, []);
+      console.log(
+        `[WorkPage] Proactive message from ${coworkerId}: ${message.text.slice(0, 50)}...`
+      );
+    },
+    []
+  );
 
   // Handle ambient messages in #general channel
   const handleAmbientMessage = useCallback((message: ChannelMessage) => {
-    console.log(`[WorkPage] Ambient message in #general: ${message.text.slice(0, 50)}...`);
+    console.log(
+      `[WorkPage] Ambient message in #general: ${message.text.slice(0, 50)}...`
+    );
 
     // Add to ambient messages state
     setAmbientMessages((prev) => [...prev, message]);
@@ -180,7 +208,9 @@ export function WorkPageClient({
   const isDecorativeCoworker = selectedCoworkerId?.startsWith("decorative-");
   const decorativeMember = isDecorativeCoworker
     ? DECORATIVE_TEAM_MEMBERS.find(
-        (m) => `decorative-${m.name.toLowerCase().replace(/\s+/g, '-')}` === selectedCoworkerId
+        (m) =>
+          `decorative-${m.name.toLowerCase().replace(/\s+/g, "-")}` ===
+          selectedCoworkerId
       )
     : null;
 
@@ -243,14 +273,18 @@ export function WorkPageClient({
     kickoffCallState === "ringing"
       ? "Accept the incoming call to get started"
       : kickoffCallState === "in-call"
-      ? "Manager kickoff call in progress..."
-      : undefined;
+        ? "Manager kickoff call in progress..."
+        : undefined;
 
   return (
     <>
       {/* Incoming call modal for mandatory voice kickoff */}
       {kickoffCallState === "ringing" && manager && (
-        <IncomingCallModal coworker={manager} onAccept={handleAcceptKickoff} onDecline={handleDeclineKickoff} />
+        <IncomingCallModal
+          coworker={manager}
+          onAccept={handleAcceptKickoff}
+          onDecline={handleDeclineKickoff}
+        />
       )}
 
       <SlackLayout
@@ -276,10 +310,7 @@ export function WorkPageClient({
             initialMessages={[...GENERAL_CHANNEL_MESSAGES, ...ambientMessages]}
           />
         ) : decorativeMember ? (
-          <DecorativeChat
-            member={decorativeMember}
-            managerName={managerName}
-          />
+          <DecorativeChat member={decorativeMember} managerName={managerName} />
         ) : selectedCoworker ? (
           <Chat
             key={selectedCoworker.id}
@@ -287,16 +318,22 @@ export function WorkPageClient({
             coworker={selectedCoworker}
             cachedMessages={cachedMessagesForSelected}
             onMessagesChange={handleMessagesChange}
-            disableInput={isManagerSelected && shouldDisableManagerInput ? true : undefined}
+            disableInput={
+              isManagerSelected && shouldDisableManagerInput ? true : undefined
+            }
             disableReason={isManagerSelected ? managerDisableReason : undefined}
             initialPrUrl={prUrl}
-            skipManagerAutoStart={kickoffCallState !== null && kickoffCallState !== "completed"}
+            skipManagerAutoStart={
+              kickoffCallState !== null && kickoffCallState !== "completed"
+            }
           />
         ) : (
-          <div className="flex flex-col min-h-0 h-full">
-            <div className="flex-1 min-h-0 bg-background rounded-2xl shadow-sm border border-border flex items-center justify-center">
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex min-h-0 flex-1 items-center justify-center rounded-2xl border border-border bg-background shadow-sm">
               <div className="text-center">
-                <h2 className="mb-2 text-xl font-semibold">No Coworkers Available</h2>
+                <h2 className="mb-2 text-xl font-semibold">
+                  No Coworkers Available
+                </h2>
                 <p className="text-muted-foreground">
                   There are no coworkers configured for this scenario.
                 </p>

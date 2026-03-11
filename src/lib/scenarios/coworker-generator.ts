@@ -9,7 +9,10 @@ import {
   COWORKER_GENERATOR_PROMPT_V1,
   COWORKER_GENERATOR_PROMPT_VERSION,
 } from "@/prompts/recruiter/coworker-generator";
-import { type CoworkerBuilderData, coworkerBuilderSchema } from "./scenario-builder";
+import {
+  type CoworkerBuilderData,
+  coworkerBuilderSchema,
+} from "./scenario-builder";
 
 const GENERATION_MODEL = "gemini-3-flash-preview";
 
@@ -56,7 +59,9 @@ function isEngineeringManagerRole(role: string): boolean {
  * Parse and validate a raw Gemini response into coworker data.
  * Returns the validated coworkers array or throws with a specific message.
  */
-function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] {
+function parseAndValidateCoworkers(
+  responseText: string
+): CoworkerBuilderData[] {
   const cleanedText = cleanJsonResponse(responseText);
   const parsed = JSON.parse(cleanedText);
 
@@ -76,7 +81,9 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
 
   // Ensure we have at least 2 coworkers (critical for simulation quality)
   if (coworkers.length < 2) {
-    throw new Error(`Expected at least 2 coworkers, got ${coworkers.length}. Generation must include an Engineering Manager plus 1-2 team members.`);
+    throw new Error(
+      `Expected at least 2 coworkers, got ${coworkers.length}. Generation must include an Engineering Manager plus 1-2 team members.`
+    );
   }
 
   if (coworkers.length > 3) {
@@ -94,7 +101,8 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
 
     // Validate that knowledge doesn't contain specific file paths
     for (const knowledge of coworker.knowledge) {
-      const specificPathPattern = /(?:src|lib|pages|api|components|stores|services)\/[\w\/-]+\.\w+/;
+      const specificPathPattern =
+        /(?:src|lib|pages|api|components|stores|services)\/[\w\/-]+\.\w+/;
       if (specificPathPattern.test(knowledge.response)) {
         // Auto-fix by making the path reference generic
         const originalResponse = knowledge.response;
@@ -104,7 +112,10 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
           .replace(/src\/components\/[\w\/-]+\.\w+/g, "the component files")
           .replace(/src\/lib\/[\w\/-]+\.\w+/g, "the utility files")
           .replace(/src\/services\/[\w\/-]+\.\w+/g, "the service layer")
-          .replace(/(?:src|lib|pages|api|components|stores|services)\/[\w\/-]+\.\w+/g, "the relevant files in the codebase");
+          .replace(
+            /(?:src|lib|pages|api|components|stores|services)\/[\w\/-]+\.\w+/g,
+            "the relevant files in the codebase"
+          );
 
         console.warn(
           `Fixed specific file path in ${coworker.name}'s knowledge: "${originalResponse}" → "${knowledge.response}"`
@@ -165,13 +176,17 @@ export async function generateCoworkers(
       const coworkers = parseAndValidateCoworkers(responseText);
 
       // Validate we have an Engineering Manager
-      const hasManager = coworkers.some((c) => isEngineeringManagerRole(c.role));
+      const hasManager = coworkers.some((c) =>
+        isEngineeringManagerRole(c.role)
+      );
       if (!hasManager) {
         if (attempt < MAX_GENERATION_ATTEMPTS) {
           console.warn(
             `Attempt ${attempt}: No Engineering Manager found in generated coworkers, retrying...`
           );
-          lastError = new Error("Generated coworkers must include an Engineering Manager");
+          lastError = new Error(
+            "Generated coworkers must include an Engineering Manager"
+          );
           continue;
         }
         // Final attempt: patch the first coworker's role to Engineering Manager

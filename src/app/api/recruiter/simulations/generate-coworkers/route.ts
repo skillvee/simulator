@@ -21,9 +21,13 @@ const requestSchema = z.object({
   seniorityLevel: z.enum(["junior", "mid", "senior", "staff", "principal"]),
   companyName: z.string().min(1, "Company name is required"),
   companyDescription: z.string().min(1, "Company description is required"),
-  techStack: z.array(z.string()).min(1, "Tech stack must have at least one item"),
+  techStack: z
+    .array(z.string())
+    .min(1, "Tech stack must have at least one item"),
   taskDescription: z.string().min(1, "Task description is required"),
-  keyResponsibilities: z.array(z.string()).min(1, "Key responsibilities must have at least one item"),
+  keyResponsibilities: z
+    .array(z.string())
+    .min(1, "Key responsibilities must have at least one item"),
 });
 
 /**

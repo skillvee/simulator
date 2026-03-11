@@ -34,6 +34,7 @@ Skillvee assesses **HOW developers work**, not just WHAT they produce. Candidate
 ## Assessment Flow
 
 ### Phase 1: HR Interview
+
 - **Model:** `gemini-2.5-flash-native-audio-latest` via Gemini Live
 - **Purpose:** Verify CV claims, assess communication skills
 - **Prompt:** `src/prompts/hr/interview.ts`
@@ -41,6 +42,7 @@ Skillvee assesses **HOW developers work**, not just WHAT they produce. Candidate
 - **Output:** Transcript, communication/CV verification scores
 
 ### Phase 2: Manager Kickoff
+
 - **Model:** `gemini-2.5-flash-native-audio-latest` via Gemini Live
 - **Purpose:** Brief candidate on task (intentionally vague to test clarifying questions)
 - **Prompt:** `src/prompts/manager/kickoff.ts`
@@ -48,6 +50,7 @@ Skillvee assesses **HOW developers work**, not just WHAT they produce. Candidate
 - **Output:** Transcript, record of questions asked
 
 ### Phase 3: Coding Task
+
 - **Model:** `gemini-3-flash-preview` for text chat
 - **Purpose:** Candidate works on task, can chat with AI coworkers
 - **Prompts:** `src/prompts/coworker/persona.ts`
@@ -58,6 +61,7 @@ Skillvee assesses **HOW developers work**, not just WHAT they produce. Candidate
   - Screen recording captures work process
 
 ### Phase 4: PR Defense
+
 - **Model:** `gemini-2.5-flash-native-audio-latest` via Gemini Live
 - **Purpose:** Candidate defends their PR to the manager
 - **Prompt:** `src/prompts/manager/defense.ts`
@@ -115,19 +119,19 @@ Skillvee assesses **HOW developers work**, not just WHAT they produce. Candidate
 
 ### Key Entities
 
-| Entity | Purpose | Key Fields |
-|--------|---------|------------|
-| `User` | Platform users (candidates & admins) | email, role (USER/ADMIN), cvUrl, parsedProfile |
-| `Scenario` | Assessment scenarios with company context | name, companyName, taskDescription, repoUrl, techStack |
-| `Coworker` | AI coworkers within a scenario | name, role, personaStyle, knowledge (JSON), voiceName |
-| `Assessment` | A candidate's assessment attempt | userId, scenarioId, status, prUrl, codeReview, report |
-| `Conversation` | Chat/voice transcripts | assessmentId, coworkerId, type, transcript (JSON) |
-| `Recording` | Screen recording metadata | assessmentId, type, storageUrl, analysis |
-| `RecordingSegment` | Recording chunks for robustness | recordingId, chunkPaths, screenshotPaths |
-| `HRInterviewAssessment` | HR-specific scores | communicationScore, cvVerificationNotes |
-| `VideoAssessment` | Full video evaluation | candidateId, status, scores |
-| `DimensionScore` | Per-dimension scores | dimension, score, observableBehaviors, timestamps |
-| `CandidateEmbedding` | Semantic search vectors | embedding (vector 768), observableBehaviorsText |
+| Entity                  | Purpose                                   | Key Fields                                             |
+| ----------------------- | ----------------------------------------- | ------------------------------------------------------ |
+| `User`                  | Platform users (candidates & admins)      | email, role (USER/ADMIN), cvUrl, parsedProfile         |
+| `Scenario`              | Assessment scenarios with company context | name, companyName, taskDescription, repoUrl, techStack |
+| `Coworker`              | AI coworkers within a scenario            | name, role, personaStyle, knowledge (JSON), voiceName  |
+| `Assessment`            | A candidate's assessment attempt          | userId, scenarioId, status, prUrl, codeReview, report  |
+| `Conversation`          | Chat/voice transcripts                    | assessmentId, coworkerId, type, transcript (JSON)      |
+| `Recording`             | Screen recording metadata                 | assessmentId, type, storageUrl, analysis               |
+| `RecordingSegment`      | Recording chunks for robustness           | recordingId, chunkPaths, screenshotPaths               |
+| `HRInterviewAssessment` | HR-specific scores                        | communicationScore, cvVerificationNotes                |
+| `VideoAssessment`       | Full video evaluation                     | candidateId, status, scores                            |
+| `DimensionScore`        | Per-dimension scores                      | dimension, score, observableBehaviors, timestamps      |
+| `CandidateEmbedding`    | Semantic search vectors                   | embedding (vector 768), observableBehaviorsText        |
 
 ### Assessment Status Flow
 
@@ -150,49 +154,52 @@ HR_INTERVIEW → ONBOARDING → WORKING → FINAL_DEFENSE → PROCESSING → COM
 
 ### Models Used
 
-| Stage | Model | Purpose |
-|-------|-------|---------|
-| HR Interview | `gemini-2.5-flash-native-audio-latest` | Voice conversation via Gemini Live |
-| Manager Kickoff | `gemini-2.5-flash-native-audio-latest` | Voice briefing via Gemini Live |
-| Coworker Chat | `gemini-3-flash-preview` | Text chat responses |
-| Coworker Voice | `gemini-2.5-flash-native-audio-latest` | Voice calls via Gemini Live |
-| PR Defense | `gemini-2.5-flash-native-audio-latest` | Voice review via Gemini Live |
-| Code Review | `gemini-3-flash-preview` | PR analysis |
-| CV Parsing | `gemini-3-flash-preview` | Extract structured data from CVs |
-| Video Evaluation | `gemini-3-flash-preview` | Full assessment analysis |
-| Recording Analysis | `gemini-3-flash-preview` | Screenshot/activity analysis |
+| Stage              | Model                                  | Purpose                            |
+| ------------------ | -------------------------------------- | ---------------------------------- |
+| HR Interview       | `gemini-2.5-flash-native-audio-latest` | Voice conversation via Gemini Live |
+| Manager Kickoff    | `gemini-2.5-flash-native-audio-latest` | Voice briefing via Gemini Live     |
+| Coworker Chat      | `gemini-3-flash-preview`               | Text chat responses                |
+| Coworker Voice     | `gemini-2.5-flash-native-audio-latest` | Voice calls via Gemini Live        |
+| PR Defense         | `gemini-2.5-flash-native-audio-latest` | Voice review via Gemini Live       |
+| Code Review        | `gemini-3-flash-preview`               | PR analysis                        |
+| CV Parsing         | `gemini-3-flash-preview`               | Extract structured data from CVs   |
+| Video Evaluation   | `gemini-3-flash-preview`               | Full assessment analysis           |
+| Recording Analysis | `gemini-3-flash-preview`               | Screenshot/activity analysis       |
 
 ### Prompt Files
 
-| Domain | File | Purpose |
-|--------|------|---------|
-| HR | `src/prompts/hr/interview.ts` | HR phone screen persona |
-| Manager | `src/prompts/manager/kickoff.ts` | Task briefing (intentionally vague) |
-| Manager | `src/prompts/manager/defense.ts` | PR review conversation |
-| Manager | `src/prompts/manager/pr-submission.ts` | PR acknowledgment messages |
-| Coworker | `src/prompts/coworker/persona.ts` | Chat/voice persona builder |
-| Analysis | `src/prompts/analysis/code-review.ts` | PR code review |
-| Analysis | `src/prompts/analysis/cv-parser.ts` | CV extraction |
-| Analysis | `src/prompts/analysis/video-evaluation.ts` | Full video assessment |
-| Analysis | `src/prompts/analysis/recording.ts` | Screen recording analysis |
-| Analysis | `src/prompts/analysis/assessment.ts` | Narrative/recommendations |
-| Analysis | `src/prompts/analysis/hr-assessment.ts` | HR interview scoring |
-| Analysis | `src/prompts/analysis/entity-extraction.ts` | Extract entities from text |
-| Analysis | `src/prompts/analysis/feedback-parsing.ts` | Parse feedback responses |
+| Domain   | File                                        | Purpose                             |
+| -------- | ------------------------------------------- | ----------------------------------- |
+| HR       | `src/prompts/hr/interview.ts`               | HR phone screen persona             |
+| Manager  | `src/prompts/manager/kickoff.ts`            | Task briefing (intentionally vague) |
+| Manager  | `src/prompts/manager/defense.ts`            | PR review conversation              |
+| Manager  | `src/prompts/manager/pr-submission.ts`      | PR acknowledgment messages          |
+| Coworker | `src/prompts/coworker/persona.ts`           | Chat/voice persona builder          |
+| Analysis | `src/prompts/analysis/code-review.ts`       | PR code review                      |
+| Analysis | `src/prompts/analysis/cv-parser.ts`         | CV extraction                       |
+| Analysis | `src/prompts/analysis/video-evaluation.ts`  | Full video assessment               |
+| Analysis | `src/prompts/analysis/recording.ts`         | Screen recording analysis           |
+| Analysis | `src/prompts/analysis/assessment.ts`        | Narrative/recommendations           |
+| Analysis | `src/prompts/analysis/hr-assessment.ts`     | HR interview scoring                |
+| Analysis | `src/prompts/analysis/entity-extraction.ts` | Extract entities from text          |
+| Analysis | `src/prompts/analysis/feedback-parsing.ts`  | Parse feedback responses            |
 
 ### Gemini Integration Patterns
 
 **Voice (Gemini Live):**
+
 - Ephemeral token obtained from `/api/*/token` endpoints
 - Transcription enabled server-side in token config
 - Audio: 16kHz input (to Gemini), 24kHz output (from Gemini)
 - Connection states: `idle → requesting-permission → connecting → connected → ended`
 
 **Text Chat:**
+
 - `systemInstruction` not supported - use first user/model message pair instead
 - Clean JSON markdown from responses before parsing
 
 **AI Call Logging:**
+
 ```typescript
 import { logAICall } from "@/lib/analysis";
 
@@ -214,6 +221,7 @@ const tracker = await logAICall({
 **Rationale:** All voice calls (HR, kickoff, coworker, defense) share common logic but have different token endpoints and end-call behavior.
 
 **Implementation:**
+
 ```
 src/hooks/voice/
 ├── types.ts              # VoiceConnectionState, shared types
@@ -313,12 +321,12 @@ const data = record.field as unknown as MyType;
 
 // Write: double-cast
 await prisma.model.update({
-  data: { field: value as unknown as Prisma.InputJsonValue }
+  data: { field: value as unknown as Prisma.InputJsonValue },
 });
 
 // Null: use Prisma.JsonNull
 await prisma.model.update({
-  data: { field: Prisma.JsonNull }
+  data: { field: Prisma.JsonNull },
 });
 ```
 
@@ -394,6 +402,7 @@ simulator/
 ### E2E Test Data
 
 Run `npx tsx prisma/seed.ts` to create test users:
+
 - **Login:** `user@test.com` / `testpassword123`
 - **Work page:** `/assessments/test-assessment-chat/work`
 

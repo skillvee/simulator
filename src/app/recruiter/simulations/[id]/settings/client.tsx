@@ -22,7 +22,10 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
-import { LEVEL_EXPECTATIONS, type TargetLevel } from "@/lib/rubric/level-expectations";
+import {
+  LEVEL_EXPECTATIONS,
+  type TargetLevel,
+} from "@/lib/rubric/level-expectations";
 
 interface Coworker {
   id: string;
@@ -52,7 +55,9 @@ interface SimulationSettingsClientProps {
   scenario: ScenarioData;
 }
 
-export function SimulationSettingsClient({ scenario }: SimulationSettingsClientProps) {
+export function SimulationSettingsClient({
+  scenario,
+}: SimulationSettingsClientProps) {
   const [copied, setCopied] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [repoUrl, setRepoUrl] = useState(scenario.repoUrl);
@@ -166,7 +171,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
       <div className="mb-8">
         <Link
           href="/recruiter/simulations"
-          className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-stone-600 transition-colors hover:text-stone-900"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Simulations
@@ -176,7 +181,9 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
             <h1 className="text-3xl font-semibold text-stone-900">
               {scenario.name}
             </h1>
-            <p className="mt-1 text-lg text-stone-600">{scenario.companyName}</p>
+            <p className="mt-1 text-lg text-stone-600">
+              {scenario.companyName}
+            </p>
           </div>
         </div>
       </div>
@@ -194,8 +201,8 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
-            <div className="flex-1 flex items-center rounded-lg border border-blue-200 bg-white px-4 py-3">
-              <code className="text-sm text-stone-800 break-all">
+            <div className="flex flex-1 items-center rounded-lg border border-blue-200 bg-white px-4 py-3">
+              <code className="break-all text-sm text-stone-800">
                 {getShareableLink()}
               </code>
             </div>
@@ -231,17 +238,17 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h3 className="text-sm font-medium text-stone-500 mb-2">
+            <h3 className="mb-2 text-sm font-medium text-stone-500">
               Task Description
             </h3>
-            <p className="text-stone-900 whitespace-pre-wrap">
+            <p className="whitespace-pre-wrap text-stone-900">
               {scenario.taskDescription}
             </p>
           </div>
 
           {scenario.techStack.length > 0 && (
             <div>
-              <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
+              <h3 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-stone-500">
                 <Code className="h-4 w-4" />
                 Tech Stack
               </h3>
@@ -260,43 +267,59 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           )}
 
           <div>
-            <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
+            <h3 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-stone-500">
               <GraduationCap className="h-4 w-4" />
               Target Level
             </h3>
             {(() => {
-              const level = LEVEL_EXPECTATIONS[(scenario.targetLevel || "mid") as TargetLevel];
+              const level =
+                LEVEL_EXPECTATIONS[
+                  (scenario.targetLevel || "mid") as TargetLevel
+                ];
               return (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-50 text-blue-700 hover:bg-blue-50"
+                  >
                     {level.label}
                   </Badge>
-                  <span className="text-sm text-stone-500">{level.yearsRange} experience</span>
+                  <span className="text-sm text-stone-500">
+                    {level.yearsRange} experience
+                  </span>
                   {scenario.archetypeName ? (
                     <>
                       <span className="text-sm text-stone-400">·</span>
-                      <Badge variant="secondary" className="bg-purple-50 text-purple-700 hover:bg-purple-50">
+                      <Badge
+                        variant="secondary"
+                        className="bg-purple-50 text-purple-700 hover:bg-purple-50"
+                      >
                         {scenario.archetypeName}
                       </Badge>
                       {scenario.roleFamilyName && (
-                        <span className="text-sm text-stone-400">({scenario.roleFamilyName})</span>
+                        <span className="text-sm text-stone-400">
+                          ({scenario.roleFamilyName})
+                        </span>
                       )}
                     </>
                   ) : (
-                    <span className="text-sm text-stone-400">· Expected score: {level.expectedScore}/4</span>
+                    <span className="text-sm text-stone-400">
+                      · Expected score: {level.expectedScore}/4
+                    </span>
                   )}
                 </div>
               );
             })()}
             {scenario.archetypeName && (
-              <p className="text-xs text-stone-400 mt-1">
-                Per-dimension scoring expectations are adjusted for this role archetype and seniority level
+              <p className="mt-1 text-xs text-stone-400">
+                Per-dimension scoring expectations are adjusted for this role
+                archetype and seniority level
               </p>
             )}
           </div>
 
           <div>
-            <h3 className="text-sm font-medium text-stone-500 mb-2">
+            <h3 className="mb-2 text-sm font-medium text-stone-500">
               Repository
             </h3>
             {repoStatus === "ready" && repoUrl ? (
@@ -304,7 +327,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                 href={repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors"
+                className="inline-flex items-center gap-1.5 text-blue-600 transition-colors hover:text-blue-700"
               >
                 {repoUrl}
                 <ExternalLink className="h-4 w-4" />
@@ -322,7 +345,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           </div>
 
           <div>
-            <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
+            <h3 className="mb-2 flex items-center gap-1.5 text-sm font-medium text-stone-500">
               <Calendar className="h-4 w-4" />
               Created
             </h3>
@@ -341,18 +364,24 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
         </CardHeader>
         <CardContent>
           {scenario.coworkers.length === 0 ? (
-            <p className="text-stone-500 text-sm">No coworkers configured.</p>
+            <p className="text-sm text-stone-500">No coworkers configured.</p>
           ) : (
             <div className="space-y-4">
               {scenario.coworkers.map((coworker) => (
                 <div
                   key={coworker.id}
-                  className="flex items-center gap-4 p-4 rounded-lg bg-stone-50 border border-stone-100"
+                  className="flex items-center gap-4 rounded-lg border border-stone-100 bg-stone-50 p-4"
                 >
-                  <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
+                  <CoworkerAvatar
+                    name={coworker.name}
+                    avatarUrl={coworker.avatarUrl}
+                    size="md"
+                  />
                   <div className="flex-1">
-                    <p className="font-medium text-stone-900">{coworker.name}</p>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-stone-500">
+                    <p className="font-medium text-stone-900">
+                      {coworker.name}
+                    </p>
+                    <div className="mt-1 flex items-center gap-3 text-sm text-stone-500">
                       <span className="flex items-center gap-1">
                         <Briefcase className="h-3.5 w-3.5" />
                         {coworker.role}

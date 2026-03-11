@@ -17,8 +17,16 @@ import {
   formatConversationsForSummary,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
-import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
-import { buildVoicePrompt, buildDefensePrompt, type DefenseContext } from "@/prompts";
+import type {
+  CoworkerPersona,
+  ChatMessage,
+  ConversationWithMeta,
+} from "@/types";
+import {
+  buildVoicePrompt,
+  buildDefensePrompt,
+  type DefenseContext,
+} from "@/prompts";
 import { success, error, validateRequest } from "@/lib/api";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
@@ -93,7 +101,10 @@ export async function POST(request: Request) {
       updatedAt: c.updatedAt,
     }));
 
-  const memory = await buildCoworkerMemory(coworkerConversations, coworker.name);
+  const memory = await buildCoworkerMemory(
+    coworkerConversations,
+    coworker.name
+  );
   const memoryContext = formatMemoryForPrompt(memory, coworker.name);
 
   const coworkerMap = new Map<string, string>();
@@ -199,7 +210,9 @@ export async function POST(request: Request) {
       },
       {
         role: "model",
-        parts: [{ text: "I understand. I'm ready to have this call in character." }],
+        parts: [
+          { text: "I understand. I'm ready to have this call in character." },
+        ],
       },
       ...history,
       {
@@ -209,7 +222,8 @@ export async function POST(request: Request) {
     ],
   });
 
-  const responseText = response.text || "Sorry, I didn't catch that. Could you say that again?";
+  const responseText =
+    response.text || "Sorry, I didn't catch that. Could you say that again?";
   const timestamp = new Date().toISOString();
 
   // Save to voice conversation

@@ -412,11 +412,7 @@ export async function getStatusDistribution(): Promise<StatusDistribution[]> {
   const total = counts.reduce((sum, c) => sum + c._count, 0);
 
   // Define order of statuses
-  const statusOrder: AssessmentStatus[] = [
-    "WELCOME",
-    "WORKING",
-    "COMPLETED",
-  ];
+  const statusOrder: AssessmentStatus[] = ["WELCOME", "WORKING", "COMPLETED"];
 
   return statusOrder.map((status) => {
     const found = counts.find((c) => c.status === status);
@@ -461,19 +457,14 @@ export async function getCompletionFunnel(): Promise<FunnelStep[]> {
       count: working,
       percentage: started > 0 ? Math.round((working / started) * 100) : 0,
       dropoffRate:
-        started > 0
-          ? Math.round(((started - working) / started) * 100)
-          : 0,
+        started > 0 ? Math.round(((started - working) / started) * 100) : 0,
     },
     {
       step: "Completed",
       count: completed,
-      percentage:
-        working > 0 ? Math.round((completed / working) * 100) : 0,
+      percentage: working > 0 ? Math.round((completed / working) * 100) : 0,
       dropoffRate:
-        working > 0
-          ? Math.round(((working - completed) / working) * 100)
-          : 0,
+        working > 0 ? Math.round(((working - completed) / working) * 100) : 0,
     },
   ];
 

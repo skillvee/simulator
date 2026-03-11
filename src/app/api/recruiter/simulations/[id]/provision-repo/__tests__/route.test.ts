@@ -30,8 +30,15 @@ vi.mock("@/lib/scenarios/repo-templates", () => ({
   needsRepo: (techStack: string[]) => {
     if (!techStack || techStack.length === 0) return false;
     const engineering = [
-      "react", "typescript", "nextjs", "node", "express", "api",
-      "frontend", "backend", "fullstack",
+      "react",
+      "typescript",
+      "nextjs",
+      "node",
+      "express",
+      "api",
+      "frontend",
+      "backend",
+      "fullstack",
     ];
     return techStack.some((t) =>
       engineering.some(
@@ -74,8 +81,7 @@ const fullScenarioMock = {
 
 describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
   const mockScenarioId = "test-scenario-id";
-  const mockRepoUrl =
-    "https://github.com/skillvee/simulation-test-scenario-id";
+  const mockRepoUrl = "https://github.com/skillvee/simulation-test-scenario-id";
 
   beforeEach(() => {
     vi.clearAllMocks();

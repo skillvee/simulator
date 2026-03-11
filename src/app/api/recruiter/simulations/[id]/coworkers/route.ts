@@ -53,7 +53,15 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName } = body;
+  const {
+    name,
+    role,
+    personaStyle,
+    personality,
+    knowledge,
+    avatarUrl,
+    voiceName,
+  } = body;
 
   // Validate required fields
   if (!name || !role || !personaStyle) {
@@ -69,7 +77,9 @@ export async function POST(request: Request, context: RouteContext) {
     if (Array.isArray(knowledge)) {
       validatedKnowledge = knowledge;
     } else {
-      console.warn(`[Coworker Create] Knowledge is not an array for ${name}, converting to empty array`);
+      console.warn(
+        `[Coworker Create] Knowledge is not an array for ${name}, converting to empty array`
+      );
       console.error(`[Coworker Create] Invalid knowledge data:`, knowledge);
     }
   }
@@ -81,7 +91,7 @@ export async function POST(request: Request, context: RouteContext) {
       role,
       personaStyle,
       personality: personality || null,
-      knowledge: validatedKnowledge,  // Use validated array
+      knowledge: validatedKnowledge, // Use validated array
       avatarUrl,
       voiceName: voiceName || null,
     },

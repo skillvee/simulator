@@ -49,8 +49,16 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
           id: true,
           name: true,
           roleFamily: { select: { name: true } },
-          weights: { select: { dimension: { select: { slug: true } }, weight: true } },
-          seniorityGates: { select: { dimension: { select: { slug: true } }, seniorityLevel: true, minScore: true } },
+          weights: {
+            select: { dimension: { select: { slug: true } }, weight: true },
+          },
+          seniorityGates: {
+            select: {
+              dimension: { select: { slug: true } },
+              seniorityLevel: true,
+              minScore: true,
+            },
+          },
         },
       },
     },
@@ -69,13 +77,20 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
   if (simulation.archetype) {
     archetypeName = simulation.archetype.name;
     roleFamilyName = simulation.archetype.roleFamily.name;
-    const gateLevel = targetLevel === "junior" ? "JUNIOR" : targetLevel === "mid" ? "MID" : "SENIOR";
+    const gateLevel =
+      targetLevel === "junior"
+        ? "JUNIOR"
+        : targetLevel === "mid"
+          ? "MID"
+          : "SENIOR";
     const gates: Record<string, number> = {};
     for (const gate of simulation.archetype.seniorityGates) {
-      if (gate.seniorityLevel === gateLevel) gates[gate.dimension.slug] = gate.minScore;
+      if (gate.seniorityLevel === gateLevel)
+        gates[gate.dimension.slug] = gate.minScore;
     }
     const weights: Record<string, number> = {};
-    for (const w of simulation.archetype.weights) weights[w.dimension.slug] = w.weight;
+    for (const w of simulation.archetype.weights)
+      weights[w.dimension.slug] = w.weight;
     dimensionExpectations = computeExpectedScores(gates, weights);
   }
 
@@ -94,7 +109,8 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
 
   const candidatesData: CandidateData[] = assessments.map((assessment) => {
     const videoAssessment = assessment.videoAssessment;
-    const hasCompletedVideoAssessment = videoAssessment?.status === VideoAssessmentStatus.COMPLETED;
+    const hasCompletedVideoAssessment =
+      videoAssessment?.status === VideoAssessmentStatus.COMPLETED;
 
     if (!hasCompletedVideoAssessment || !videoAssessment?.scores.length) {
       return {
@@ -115,15 +131,20 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
     }
 
     const scores = videoAssessment.scores;
-    const overallScore = scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
+    const overallScore =
+      scores.reduce((sum, s) => sum + s.score, 0) / scores.length;
 
     const report = assessment.report as {
-      percentiles?: { overall?: number; [dimension: string]: number | undefined };
+      percentiles?: {
+        overall?: number;
+        [dimension: string]: number | undefined;
+      };
     } | null;
 
     const percentile = report?.percentiles?.overall ?? null;
 
-    const rawAiResponse = videoAssessment.summary?.rawAiResponse as unknown as RubricAssessmentOutput | null;
+    const rawAiResponse = videoAssessment.summary
+      ?.rawAiResponse as unknown as RubricAssessmentOutput | null;
 
     let redFlagCount = 0;
     const redFlags: string[] = [];

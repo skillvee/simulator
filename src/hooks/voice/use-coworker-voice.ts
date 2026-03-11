@@ -48,10 +48,7 @@ export function useCoworkerVoice({
   const progressKey = `coworker-call-${coworkerId}`;
 
   // Memoize token request body to prevent unnecessary re-renders
-  const tokenRequestBody = useMemo(
-    () => ({ coworkerId }),
-    [coworkerId]
-  );
+  const tokenRequestBody = useMemo(() => ({ coworkerId }), [coworkerId]);
 
   const base = useVoiceBase({
     assessmentId,

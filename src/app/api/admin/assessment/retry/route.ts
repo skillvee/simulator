@@ -18,9 +18,7 @@ import {
 } from "@/lib/analysis";
 
 // Allowed statuses for reassessment
-const RETRIABLE_STATUSES: AssessmentStatus[] = [
-  AssessmentStatus.COMPLETED,
-];
+const RETRIABLE_STATUSES: AssessmentStatus[] = [AssessmentStatus.COMPLETED];
 
 export interface RetryAssessmentRequest {
   assessmentId: string;

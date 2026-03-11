@@ -20,7 +20,9 @@ const PRICING = {
 export default function PricingContent() {
   const [isAnnual, setIsAnnual] = useState(true);
 
-  const starterPrice = isAnnual ? PRICING.starter.annual : PRICING.starter.monthly;
+  const starterPrice = isAnnual
+    ? PRICING.starter.annual
+    : PRICING.starter.monthly;
   const proPrice = isAnnual ? PRICING.pro.annual : PRICING.pro.monthly;
 
   const tiers = [
@@ -45,7 +47,11 @@ export default function PricingContent() {
       description: "For small hiring teams",
       highlight: false,
       features: [
-        { text: isAnnual ? "180 assessments" : "15 assessments", bold: true, suffix: ` per ${isAnnual ? "year" : "month"}` },
+        {
+          text: isAnnual ? "180 assessments" : "15 assessments",
+          bold: true,
+          suffix: ` per ${isAnnual ? "year" : "month"}`,
+        },
         { text: "Everything in Free" },
         { text: "Candidate comparison dashboard" },
         { text: "Assessment analytics" },
@@ -61,7 +67,11 @@ export default function PricingContent() {
       highlight: true,
       badge: "Best Value",
       features: [
-        { text: isAnnual ? "600 assessments" : "50 assessments", bold: true, suffix: ` per ${isAnnual ? "year" : "month"}` },
+        {
+          text: isAnnual ? "600 assessments" : "50 assessments",
+          bold: true,
+          suffix: ` per ${isAnnual ? "year" : "month"}`,
+        },
         { text: "Everything in Starter" },
         { text: "Custom simulation scenarios" },
         { text: "Team collaboration tools" },
@@ -94,12 +104,12 @@ export default function PricingContent() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="flex justify-center mb-12"
+        className="mb-12 flex justify-center"
       >
-        <div className="inline-flex items-center bg-slate-100 rounded-full p-1.5">
+        <div className="inline-flex items-center rounded-full bg-slate-100 p-1.5">
           <button
             onClick={() => setIsAnnual(false)}
-            className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
+            className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-all ${
               !isAnnual
                 ? "bg-white text-slate-900 shadow-md"
                 : "text-slate-600 hover:text-slate-900"
@@ -109,14 +119,14 @@ export default function PricingContent() {
           </button>
           <button
             onClick={() => setIsAnnual(true)}
-            className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
+            className={`flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all ${
               isAnnual
                 ? "bg-white text-slate-900 shadow-md"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
             Annual
-            <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
               Save 17%
             </span>
           </button>
@@ -124,14 +134,14 @@ export default function PricingContent() {
       </motion.div>
 
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         {tiers.map((tier, index) => (
           <motion.div
             key={tier.name}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 * index }}
-            className={`relative bg-white rounded-2xl p-6 transition-all duration-300 hover:shadow-xl ${
+            className={`relative rounded-2xl bg-white p-6 transition-all duration-300 hover:shadow-xl ${
               tier.highlight
                 ? "border-2 border-primary shadow-lg shadow-primary/10"
                 : "border border-slate-200 hover:border-primary/30"
@@ -139,29 +149,37 @@ export default function PricingContent() {
           >
             {tier.badge && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">
+                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-white">
                   {tier.badge}
                 </span>
               </div>
             )}
 
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-black text-slate-900 mb-3">{tier.name}</h3>
+            <div className="mb-6 text-center">
+              <h3 className="mb-3 text-2xl font-black text-slate-900">
+                {tier.name}
+              </h3>
               <div className="mb-3">
-                <span className="text-4xl font-black text-slate-900">{tier.price}</span>
+                <span className="text-4xl font-black text-slate-900">
+                  {tier.price}
+                </span>
                 {tier.price !== "Custom" && (
-                  <span className="text-slate-500 text-sm ml-1">/month</span>
+                  <span className="ml-1 text-sm text-slate-500">/month</span>
                 )}
               </div>
-              <p className="text-slate-600 text-sm">{tier.description}</p>
+              <p className="text-sm text-slate-600">{tier.description}</p>
             </div>
 
-            <div className="space-y-3 mb-6">
+            <div className="mb-6 space-y-3">
               {tier.features.map((feature, i) => (
                 <div key={i} className="flex items-start space-x-2">
-                  <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-slate-700 text-sm">
-                    {feature.bold ? <strong>{feature.text}</strong> : feature.text}
+                  <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+                  <span className="text-sm text-slate-700">
+                    {feature.bold ? (
+                      <strong>{feature.text}</strong>
+                    ) : (
+                      feature.text
+                    )}
                     {feature.suffix}
                   </span>
                 </div>
@@ -174,7 +192,7 @@ export default function PricingContent() {
                 variant={tier.ctaVariant === "primary" ? "default" : "outline"}
                 className={`w-full rounded-full font-semibold ${
                   tier.ctaVariant === "primary"
-                    ? "bg-primary hover:bg-primary/90 text-white"
+                    ? "bg-primary text-white hover:bg-primary/90"
                     : "hover:border-primary/50"
                 }`}
               >

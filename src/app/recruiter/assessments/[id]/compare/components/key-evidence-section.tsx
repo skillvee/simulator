@@ -28,7 +28,9 @@ interface KeyEvidenceSectionProps {
  */
 function deriveKeyEvidence(candidate: CandidateComparison): EvidenceMoment[] {
   const moments: EvidenceMoment[] = [];
-  const sorted = [...candidate.dimensionScores].sort((a, b) => b.score - a.score);
+  const sorted = [...candidate.dimensionScores].sort(
+    (a, b) => b.score - a.score
+  );
 
   for (const dim of sorted) {
     if (moments.length >= 2) break;
@@ -40,7 +42,9 @@ function deriveKeyEvidence(candidate: CandidateComparison): EvidenceMoment[] {
         description: ob.behavior,
       });
     } else if (dim.timestamps.length > 0 && dim.rationale) {
-      const description = dim.rationale.split('.')[0].substring(0, 80) + (dim.rationale.length > 80 ? '...' : '');
+      const description =
+        dim.rationale.split(".")[0].substring(0, 80) +
+        (dim.rationale.length > 80 ? "..." : "");
       moments.push({
         timestamp: dim.timestamps[0],
         dimension: dim.dimension,
@@ -53,7 +57,7 @@ function deriveKeyEvidence(candidate: CandidateComparison): EvidenceMoment[] {
   for (const dim of reversed) {
     if (moments.length >= 3) break;
     const firstTs = dim.observableBehaviors[0]?.timestamp ?? dim.timestamps[0];
-    if (moments.some(m => m.timestamp === firstTs)) continue;
+    if (moments.some((m) => m.timestamp === firstTs)) continue;
 
     if (dim.observableBehaviors.length > 0) {
       const ob = dim.observableBehaviors[0];
@@ -63,7 +67,9 @@ function deriveKeyEvidence(candidate: CandidateComparison): EvidenceMoment[] {
         description: ob.behavior,
       });
     } else if (dim.timestamps.length > 0 && dim.rationale) {
-      const description = dim.rationale.split('.')[0].substring(0, 80) + (dim.rationale.length > 80 ? '...' : '');
+      const description =
+        dim.rationale.split(".")[0].substring(0, 80) +
+        (dim.rationale.length > 80 ? "..." : "");
       moments.push({
         timestamp: dim.timestamps[0],
         dimension: dim.dimension,
@@ -75,16 +81,20 @@ function deriveKeyEvidence(candidate: CandidateComparison): EvidenceMoment[] {
   return moments;
 }
 
-export function KeyEvidenceSection({ candidates, defaultExpanded = false, onTimestampClick }: KeyEvidenceSectionProps) {
+export function KeyEvidenceSection({
+  candidates,
+  defaultExpanded = false,
+  onTimestampClick,
+}: KeyEvidenceSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
     <div className="border-b border-stone-200 bg-white">
       <div
-        className="px-6 py-4 border-b border-stone-200 flex items-center justify-between cursor-pointer hover:bg-stone-50 transition-colors"
+        className="flex cursor-pointer items-center justify-between border-b border-stone-200 px-6 py-4 transition-colors hover:bg-stone-50"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900">
           {isExpanded ? (
             <ChevronDown className="h-5 w-5 text-stone-400" />
           ) : (
@@ -97,7 +107,9 @@ export function KeyEvidenceSection({ candidates, defaultExpanded = false, onTime
       {isExpanded && (
         <div
           className="grid"
-          style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
+          style={{
+            gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
+          }}
         >
           <div className="border-r border-stone-200"></div>
 
@@ -106,7 +118,7 @@ export function KeyEvidenceSection({ candidates, defaultExpanded = false, onTime
             return (
               <div
                 key={candidate.assessmentId}
-                className="p-4 border-r border-stone-200 last:border-r-0"
+                className="border-r border-stone-200 p-4 last:border-r-0"
               >
                 {moments.length > 0 ? (
                   <ul className="space-y-3">
@@ -122,9 +134,9 @@ export function KeyEvidenceSection({ candidates, defaultExpanded = false, onTime
                               moment.dimension
                             );
                           }}
-                          className="inline-flex items-start gap-2 text-left w-full hover:bg-stone-50 p-2 rounded transition-colors"
+                          className="inline-flex w-full items-start gap-2 rounded p-2 text-left transition-colors hover:bg-stone-50"
                         >
-                          <Badge className="px-2 py-1 text-xs font-mono bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-200 flex-shrink-0">
+                          <Badge className="flex-shrink-0 border border-blue-200 bg-blue-100 px-2 py-1 font-mono text-xs text-blue-800 hover:bg-blue-200">
                             [{moment.timestamp}]
                           </Badge>
                           <div className="text-xs">
@@ -138,7 +150,9 @@ export function KeyEvidenceSection({ candidates, defaultExpanded = false, onTime
                     ))}
                   </ul>
                 ) : (
-                  <span className="text-sm text-stone-400 italic">No evidence available</span>
+                  <span className="text-sm italic text-stone-400">
+                    No evidence available
+                  </span>
                 )}
               </div>
             );

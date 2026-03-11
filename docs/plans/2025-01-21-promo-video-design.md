@@ -13,30 +13,33 @@ A 90-second animated product demo showcasing Skillvee's main flow. Energetic, bo
 
 ## Video Structure & Timing
 
-| Segment | Duration | Content |
-|---------|----------|---------|
-| **Opening** | 8 sec | LeetCode problem flash → glitch/break → "There's a better way." |
-| **CV Upload** | 12 sec | "Your experience matters." → PDF drops → profile parses |
-| **HR Interview** | 18 sec | "REAL conversations." → voice waveform, interview questions animate |
-| **Slack/Collab** | 22 sec | "REAL teamwork." → sidebar reveals team → messages fly → quick call snippet |
-| **Submit PR** | 12 sec | "REAL code reviews." → send link to manager → manager replies → call UI appears |
-| **Results + CTA** | 18 sec | Scores animate in → "See HOW you work." → "Start Practicing" button + URL |
+| Segment           | Duration | Content                                                                         |
+| ----------------- | -------- | ------------------------------------------------------------------------------- |
+| **Opening**       | 8 sec    | LeetCode problem flash → glitch/break → "There's a better way."                 |
+| **CV Upload**     | 12 sec   | "Your experience matters." → PDF drops → profile parses                         |
+| **HR Interview**  | 18 sec   | "REAL conversations." → voice waveform, interview questions animate             |
+| **Slack/Collab**  | 22 sec   | "REAL teamwork." → sidebar reveals team → messages fly → quick call snippet     |
+| **Submit PR**     | 12 sec   | "REAL code reviews." → send link to manager → manager replies → call UI appears |
+| **Results + CTA** | 18 sec   | Scores animate in → "See HOW you work." → "Start Practicing" button + URL       |
 
 ---
 
 ## Visual Design System
 
 **Colors:**
+
 - Background: White (#FFFFFF)
 - Text: Black (#000000)
 - Accent: Gold (#f7da50)
 - Borders: 2px solid black
 
 **Typography:**
+
 - Headings: DM Sans (bold)
 - Code/Labels: Space Mono
 
 **Shapes:**
+
 - Border radius: 0px (sharp corners everywhere)
 - No shadows
 - 2px black borders on all UI elements
@@ -108,11 +111,13 @@ A 90-second animated product demo showcasing Skillvee's main flow. Energetic, bo
 ## Audio
 
 ### Music
+
 - Energetic electronic/synth track, ~120-130 BPM
 - Clear beat drops for scene transitions and text punches
 - Source: Epidemic Sound, Artlist, or similar (royalty-free)
 
 ### Sound Effects (layered)
+
 - Message send: soft whoosh
 - Message receive: ping/notification sound
 - Call connect: subtle ring → connect tone
@@ -145,11 +150,11 @@ A 90-second animated product demo showcasing Skillvee's main flow. Energetic, bo
 
 ## Text Callouts (beat-synced)
 
-| Scene | Callout |
-|-------|---------|
-| Opening (problem) | "This isn't how real work looks." / "There's a better way." |
-| CV Upload | "YOUR EXPERIENCE MATTERS." |
-| HR Interview | "REAL CONVERSATIONS." |
-| Slack/Collaboration | "REAL TEAMWORK." |
-| Submit PR | "REAL CODE REVIEWS." |
-| Results/CTA | "See HOW you work." / "Start Practicing" |
+| Scene               | Callout                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| Opening (problem)   | "This isn't how real work looks." / "There's a better way." |
+| CV Upload           | "YOUR EXPERIENCE MATTERS."                                  |
+| HR Interview        | "REAL CONVERSATIONS."                                       |
+| Slack/Collaboration | "REAL TEAMWORK."                                            |
+| Submit PR           | "REAL CODE REVIEWS."                                        |
+| Results/CTA         | "See HOW you work." / "Start Practicing"                    |

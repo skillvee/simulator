@@ -2,7 +2,12 @@
 
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, CheckCircle2, AlertTriangle } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDimensionName } from "./helpers";
 import { ScoreDots } from "./score-dots";
@@ -34,7 +39,7 @@ function DimensionDetailContent({
 
   if (!dimScore) {
     return (
-      <div className="text-sm text-stone-400 italic">
+      <div className="text-sm italic text-stone-400">
         Not assessed on this dimension
       </div>
     );
@@ -45,14 +50,14 @@ function DimensionDetailContent({
       {/* Observable Behaviors */}
       {dimScore.observableBehaviors.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-stone-700 mb-1.5">
+          <h4 className="mb-1.5 text-xs font-semibold text-stone-700">
             Observable Behaviors
           </h4>
           <ul className="space-y-1.5">
             {dimScore.observableBehaviors.map((ob, idx) => (
               <li
                 key={idx}
-                className="text-xs text-stone-600 flex items-start gap-2"
+                className="flex items-start gap-2 text-xs text-stone-600"
               >
                 {ob.timestamp && (
                   <button
@@ -65,7 +70,7 @@ function DimensionDetailContent({
                         dimension
                       );
                     }}
-                    className="px-1.5 py-0.5 text-[10px] font-mono bg-blue-100 text-blue-800 hover:bg-blue-200 rounded border border-blue-200 transition-colors flex-shrink-0"
+                    className="flex-shrink-0 rounded border border-blue-200 bg-blue-100 px-1.5 py-0.5 font-mono text-[10px] text-blue-800 transition-colors hover:bg-blue-200"
                   >
                     {ob.timestamp}
                   </button>
@@ -80,16 +85,16 @@ function DimensionDetailContent({
       {/* Positive Signals */}
       {dimScore.greenFlags.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-stone-700 mb-1.5">
+          <h4 className="mb-1.5 text-xs font-semibold text-stone-700">
             Positive Signals
           </h4>
           <ul className="space-y-1">
             {dimScore.greenFlags.map((flag, idx) => (
               <li
                 key={idx}
-                className="text-xs text-stone-600 flex items-start gap-1.5"
+                className="flex items-start gap-1.5 text-xs text-stone-600"
               >
-                <CheckCircle2 className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="mt-0.5 h-3 w-3 flex-shrink-0 text-green-600" />
                 <span>{flag}</span>
               </li>
             ))}
@@ -100,16 +105,16 @@ function DimensionDetailContent({
       {/* Concerns */}
       {dimScore.redFlags.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-stone-700 mb-1.5">
+          <h4 className="mb-1.5 text-xs font-semibold text-stone-700">
             Concerns
           </h4>
           <ul className="space-y-1">
             {dimScore.redFlags.map((flag, idx) => (
               <li
                 key={idx}
-                className="text-xs text-stone-600 flex items-start gap-1.5"
+                className="flex items-start gap-1.5 text-xs text-stone-600"
               >
-                <AlertTriangle className="h-3 w-3 text-orange-600 mt-0.5 flex-shrink-0" />
+                <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0 text-orange-600" />
                 <span>{flag}</span>
               </li>
             ))}
@@ -120,7 +125,7 @@ function DimensionDetailContent({
       {/* Rationale */}
       {dimScore.rationale && (
         <div>
-          <h4 className="text-xs font-semibold text-stone-700 mb-1">
+          <h4 className="mb-1 text-xs font-semibold text-stone-700">
             Rationale
           </h4>
           <p className="text-xs text-stone-600">{dimScore.rationale}</p>
@@ -128,32 +133,33 @@ function DimensionDetailContent({
       )}
 
       {/* Fallback timestamps */}
-      {dimScore.observableBehaviors.length === 0 && dimScore.timestamps.length > 0 && (
-        <div>
-          <h4 className="text-xs font-semibold text-stone-700 mb-1.5">
-            Evidence Timestamps
-          </h4>
-          <div className="flex flex-wrap gap-1.5">
-            {dimScore.timestamps.map((timestamp, idx) => (
-              <button
-                key={idx}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTimestampClick(
-                    timestamp,
-                    candidate.candidateName,
-                    candidate.videoUrl,
-                    dimension
-                  );
-                }}
-                className="px-2 py-1 text-xs font-mono bg-blue-100 text-blue-800 hover:bg-blue-200 rounded border border-blue-200 transition-colors"
-              >
-                [{timestamp}]
-              </button>
-            ))}
+      {dimScore.observableBehaviors.length === 0 &&
+        dimScore.timestamps.length > 0 && (
+          <div>
+            <h4 className="mb-1.5 text-xs font-semibold text-stone-700">
+              Evidence Timestamps
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {dimScore.timestamps.map((timestamp, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTimestampClick(
+                      timestamp,
+                      candidate.candidateName,
+                      candidate.videoUrl,
+                      dimension
+                    );
+                  }}
+                  className="rounded border border-blue-200 bg-blue-100 px-2 py-1 font-mono text-xs text-blue-800 transition-colors hover:bg-blue-200"
+                >
+                  [{timestamp}]
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
@@ -200,7 +206,9 @@ export function CoreDimensionsSection({
     if (isSingle) return new Set();
     const scores = candidates
       .map((c) => {
-        const dimScore = c.dimensionScores.find((s) => s.dimension === dimension);
+        const dimScore = c.dimensionScores.find(
+          (s) => s.dimension === dimension
+        );
         return { assessmentId: c.assessmentId, score: dimScore?.score ?? null };
       })
       .filter((item) => item.score !== null);
@@ -219,8 +227,10 @@ export function CoreDimensionsSection({
     return (
       <div className="border-b border-stone-200 bg-white">
         {/* Section Header */}
-        <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-stone-900">Core Dimensions</h2>
+        <div className="flex items-center justify-between border-b border-stone-200 px-6 py-4">
+          <h2 className="text-lg font-semibold text-stone-900">
+            Core Dimensions
+          </h2>
           <div className="flex gap-2">
             <Button
               variant="ghost"
@@ -252,17 +262,20 @@ export function CoreDimensionsSection({
             );
 
             return (
-              <div key={dimension} className="border-b border-stone-200 last:border-b-0">
+              <div
+                key={dimension}
+                className="border-b border-stone-200 last:border-b-0"
+              >
                 {/* Collapsed Row */}
                 <div
-                  className="flex items-center justify-between px-6 py-4 hover:bg-stone-50 cursor-pointer transition-colors"
+                  className="flex cursor-pointer items-center justify-between px-6 py-4 transition-colors hover:bg-stone-50"
                   onClick={() => toggleRow(dimension)}
                 >
                   <div className="flex items-center gap-2">
                     {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-stone-400 flex-shrink-0" />
+                      <ChevronDown className="h-4 w-4 flex-shrink-0 text-stone-400" />
                     ) : (
-                      <ChevronRight className="h-4 w-4 text-stone-400 flex-shrink-0" />
+                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-stone-400" />
                     )}
                     <span className="font-medium text-stone-900">
                       {formatDimensionName(dimension)}
@@ -271,7 +284,7 @@ export function CoreDimensionsSection({
                   <div className="flex items-center gap-3">
                     {dimScore && <ScoreDots score={dimScore.score} />}
                     {dimScore?.summary && (
-                      <p className="text-xs text-stone-500 line-clamp-1 max-w-md text-right hidden md:block">
+                      <p className="line-clamp-1 hidden max-w-md text-right text-xs text-stone-500 md:block">
                         {dimScore.summary}
                       </p>
                     )}
@@ -280,7 +293,7 @@ export function CoreDimensionsSection({
 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="px-6 pb-4 pt-0 bg-stone-50/50 border-t border-stone-100">
+                  <div className="border-t border-stone-100 bg-stone-50/50 px-6 pb-4 pt-0">
                     <div className="pl-6 pt-3">
                       <DimensionDetailContent
                         candidate={candidate}
@@ -302,8 +315,10 @@ export function CoreDimensionsSection({
   return (
     <div className="border-b border-stone-200 bg-white">
       {/* Section Header */}
-      <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-stone-900">Core Dimensions</h2>
+      <div className="flex items-center justify-between border-b border-stone-200 px-6 py-4">
+        <h2 className="text-lg font-semibold text-stone-900">
+          Core Dimensions
+        </h2>
         <div className="flex gap-2">
           <Button
             variant="ghost"
@@ -333,19 +348,24 @@ export function CoreDimensionsSection({
           const winners = getDimensionWinners(dimension);
 
           return (
-            <div key={dimension} className="border-b border-stone-200 last:border-b-0">
+            <div
+              key={dimension}
+              className="border-b border-stone-200 last:border-b-0"
+            >
               {/* Collapsed Row — compact ScoreDots + one-line summary */}
               <div
-                className="grid hover:bg-stone-50 cursor-pointer transition-colors"
-                style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
+                className="grid cursor-pointer transition-colors hover:bg-stone-50"
+                style={{
+                  gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
+                }}
                 onClick={() => toggleRow(dimension)}
               >
                 {/* Dimension Label */}
-                <div className="p-4 border-r border-stone-200 flex items-center gap-2">
+                <div className="flex items-center gap-2 border-r border-stone-200 p-4">
                   {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-stone-400 flex-shrink-0" />
+                    <ChevronDown className="h-4 w-4 flex-shrink-0 text-stone-400" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-stone-400 flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-stone-400" />
                   )}
                   <span className="font-medium text-stone-900">
                     {formatDimensionName(dimension)}
@@ -357,13 +377,14 @@ export function CoreDimensionsSection({
                   const dimScore = candidate.dimensionScores.find(
                     (s) => s.dimension === dimension
                   );
-                  const isWinner = dimScore && winners.has(candidate.assessmentId);
+                  const isWinner =
+                    dimScore && winners.has(candidate.assessmentId);
 
                   return (
                     <div
                       key={candidate.assessmentId}
                       className={cn(
-                        "p-4 border-r border-stone-200 last:border-r-0",
+                        "border-r border-stone-200 p-4 last:border-r-0",
                         isWinner && "bg-blue-50/50"
                       )}
                     >
@@ -371,7 +392,7 @@ export function CoreDimensionsSection({
                         <div className="flex items-start gap-3">
                           <ScoreDots score={dimScore.score} />
                           {dimScore.summary && (
-                            <p className="text-xs text-stone-500 line-clamp-1 flex-1">
+                            <p className="line-clamp-1 flex-1 text-xs text-stone-500">
                               {dimScore.summary}
                             </p>
                           )}
@@ -388,7 +409,9 @@ export function CoreDimensionsSection({
               {isExpanded && (
                 <div
                   className="grid bg-stone-50/50"
-                  style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
+                  style={{
+                    gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
+                  }}
                 >
                   <div className="border-r border-stone-200"></div>
 
@@ -396,13 +419,14 @@ export function CoreDimensionsSection({
                     const dimScore = candidate.dimensionScores.find(
                       (s) => s.dimension === dimension
                     );
-                    const isWinner = dimScore && winners.has(candidate.assessmentId);
+                    const isWinner =
+                      dimScore && winners.has(candidate.assessmentId);
 
                     return (
                       <div
                         key={candidate.assessmentId}
                         className={cn(
-                          "p-4 border-r border-stone-200 last:border-r-0",
+                          "border-r border-stone-200 p-4 last:border-r-0",
                           isWinner && "bg-blue-50/50"
                         )}
                       >

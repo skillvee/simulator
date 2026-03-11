@@ -38,7 +38,11 @@ export default async function ScenarioDetailPage({ params }: PageProps) {
     <div className="px-8 py-10">
       {/* Breadcrumb */}
       <nav className="mb-6">
-        <Button variant="ghost" asChild className="gap-2 text-muted-foreground hover:text-foreground">
+        <Button
+          variant="ghost"
+          asChild
+          className="gap-2 text-muted-foreground hover:text-foreground"
+        >
           <Link href="/admin/scenarios">
             <ArrowLeft className="h-4 w-4" />
             Back to Simulations

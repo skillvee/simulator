@@ -39,8 +39,7 @@ export function TimelineEvent({
     event.isError &&
     Boolean(event.errorMessage || event.stackTrace || event.metadata);
   const hasExpandableApiContent =
-    event.type === "apiCall" &&
-    Boolean(event.promptText || event.responseText);
+    event.type === "apiCall" && Boolean(event.promptText || event.responseText);
   const hasExpandableContent =
     hasExpandableErrorContent || hasExpandableApiContent;
   const isExpanded =
@@ -168,45 +167,47 @@ export function TimelineEvent({
           )}
 
           {/* Expandable error content (for log events with errors) */}
-          {isErrorExpanded && hasExpandableErrorContent && event.type === "log" && (
-            <Card
-              className="mt-4 border-destructive bg-destructive/10"
-              data-testid={`error-details-${event.id}`}
-            >
-              <CardContent className="p-4">
-                {event.errorMessage && (
-                  <div className="mb-3">
-                    <p className="mb-1 text-xs font-medium text-destructive">
-                      ERROR MESSAGE
-                    </p>
-                    <p className="text-sm text-destructive">
-                      {event.errorMessage}
-                    </p>
-                  </div>
-                )}
-                {event.stackTrace && (
-                  <div className="mb-3">
-                    <p className="mb-1 text-xs font-medium text-destructive">
-                      STACK TRACE
-                    </p>
-                    <pre className="max-h-48 overflow-x-auto overflow-y-auto whitespace-pre-wrap rounded-md border border-destructive/30 bg-destructive/5 p-2 font-mono text-xs text-destructive">
-                      {event.stackTrace}
-                    </pre>
-                  </div>
-                )}
-                {event.metadata != null && (
-                  <div>
-                    <p className="mb-1 text-xs font-medium text-destructive">
-                      METADATA
-                    </p>
-                    <pre className="max-h-48 overflow-x-auto overflow-y-auto whitespace-pre-wrap rounded-md border border-destructive/30 bg-destructive/5 p-2 font-mono text-xs text-destructive">
-                      {JSON.stringify(event.metadata, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          {isErrorExpanded &&
+            hasExpandableErrorContent &&
+            event.type === "log" && (
+              <Card
+                className="mt-4 border-destructive bg-destructive/10"
+                data-testid={`error-details-${event.id}`}
+              >
+                <CardContent className="p-4">
+                  {event.errorMessage && (
+                    <div className="mb-3">
+                      <p className="mb-1 text-xs font-medium text-destructive">
+                        ERROR MESSAGE
+                      </p>
+                      <p className="text-sm text-destructive">
+                        {event.errorMessage}
+                      </p>
+                    </div>
+                  )}
+                  {event.stackTrace && (
+                    <div className="mb-3">
+                      <p className="mb-1 text-xs font-medium text-destructive">
+                        STACK TRACE
+                      </p>
+                      <pre className="max-h-48 overflow-x-auto overflow-y-auto whitespace-pre-wrap rounded-md border border-destructive/30 bg-destructive/5 p-2 font-mono text-xs text-destructive">
+                        {event.stackTrace}
+                      </pre>
+                    </div>
+                  )}
+                  {event.metadata != null && (
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-destructive">
+                        METADATA
+                      </p>
+                      <pre className="max-h-48 overflow-x-auto overflow-y-auto whitespace-pre-wrap rounded-md border border-destructive/30 bg-destructive/5 p-2 font-mono text-xs text-destructive">
+                        {JSON.stringify(event.metadata, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
           {/* Expandable API call details */}
           {isApiCallExpanded && event.type === "apiCall" && (

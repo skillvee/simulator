@@ -70,10 +70,7 @@ export function ErrorDisplay({
 
   return (
     <Card
-      className={cn(
-        "border-destructive bg-destructive/5 shadow-sm",
-        className
-      )}
+      className={cn("border-destructive bg-destructive/5 shadow-sm", className)}
     >
       <CardContent className="p-6">
         <div className="flex flex-col items-center text-center">
@@ -192,12 +189,7 @@ export function InlineError({
   className = "",
 }: InlineErrorProps) {
   return (
-    <Card
-      className={cn(
-        "border-destructive bg-destructive/10",
-        className
-      )}
-    >
+    <Card className={cn("border-destructive bg-destructive/10", className)}>
       <CardContent className="flex items-center justify-between gap-4 p-3">
         <div className="flex items-center gap-2 text-destructive">
           <AlertTriangle className="h-4 w-4 flex-shrink-0" />

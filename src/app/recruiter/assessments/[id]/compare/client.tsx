@@ -150,23 +150,20 @@ export function CandidateCompareClient({
     return (
       <div className="md:hidden">
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <div className="sticky top-0 z-50 bg-white border-b border-stone-200">
+          <div className="sticky top-0 z-50 border-b border-stone-200 bg-white">
             <TabsList
-              className="w-full grid"
+              className="grid w-full"
               style={{
                 gridTemplateColumns: `repeat(${candidates.length}, 1fr)`,
               }}
             >
               {candidates.map((candidate, index) => (
-                <TabsTrigger
-                  key={candidate.assessmentId}
-                  value={String(index)}
-                >
+                <TabsTrigger key={candidate.assessmentId} value={String(index)}>
                   <div className="flex flex-col items-center gap-1">
-                    <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
                       {getInitials(candidate.candidateName)}
                     </div>
-                    <span className="text-xs truncate max-w-[80px]">
+                    <span className="max-w-[80px] truncate text-xs">
                       {candidate.candidateName || "Anonymous"}
                     </span>
                   </div>
@@ -183,7 +180,7 @@ export function CandidateCompareClient({
                   <div className="flex flex-col items-center gap-4">
                     <div
                       className={cn(
-                        "h-32 w-32 rounded-full flex items-center justify-center border-4",
+                        "flex h-32 w-32 items-center justify-center rounded-full border-4",
                         isWinner
                           ? "border-blue-600 bg-blue-50"
                           : "border-stone-200 bg-stone-50"
@@ -199,7 +196,7 @@ export function CandidateCompareClient({
                       </span>
                     </div>
 
-                    <div className="flex flex-col items-center gap-2 w-full">
+                    <div className="flex w-full flex-col items-center gap-2">
                       <Badge
                         className={getStrengthBadgeStyles(
                           candidate.strengthLevel
@@ -209,16 +206,15 @@ export function CandidateCompareClient({
                       </Badge>
                       {showPercentiles && (
                         <Badge variant="outline" className="text-xs">
-                          Top{" "}
-                          {Math.round(100 - candidate.overallPercentile)}%
-                          <span className="text-stone-400 ml-1">
+                          Top {Math.round(100 - candidate.overallPercentile)}%
+                          <span className="ml-1 text-stone-400">
                             of {totalCandidatesInSimulation}
                           </span>
                         </Badge>
                       )}
                     </div>
 
-                    <p className="text-sm text-stone-600 text-center">
+                    <p className="text-center text-sm text-stone-600">
                       {candidate.summary || "No summary available"}
                     </p>
                   </div>
@@ -234,12 +230,12 @@ export function CandidateCompareClient({
   return (
     <div className="min-h-screen bg-white">
       {/* Back Link */}
-      <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-stone-200 px-6 py-4">
         <Button
           asChild
           variant="ghost"
           size="sm"
-          className="text-stone-600 hover:text-stone-900 -ml-2"
+          className="-ml-2 text-stone-600 hover:text-stone-900"
         >
           <Link href={`/recruiter/assessments/${simulationId}`}>
             <ChevronLeft className="mr-1.5 h-4 w-4" />
@@ -248,7 +244,12 @@ export function CandidateCompareClient({
         </Button>
 
         {isSingle && (
-          <Button asChild variant="outline" size="sm" className="border-stone-200">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="border-stone-200"
+          >
             <Link href={`/recruiter/assessments/${simulationId}`}>
               <Users className="mr-1.5 h-4 w-4" />
               Compare with others

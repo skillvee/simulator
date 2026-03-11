@@ -76,11 +76,7 @@ interface AssessmentsClientProps {
 
 type DateRange = "24h" | "7d" | "30d" | "all";
 
-const STATUS_OPTIONS: AssessmentStatus[] = [
-  "WELCOME",
-  "WORKING",
-  "COMPLETED",
-];
+const STATUS_OPTIONS: AssessmentStatus[] = ["WELCOME", "WORKING", "COMPLETED"];
 
 const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
   { value: "24h", label: "Last 24h" },
@@ -313,20 +309,14 @@ function StatCard({
   error?: boolean;
 }) {
   return (
-    <Card
-      className={
-        error ? "border-destructive bg-destructive/10" : ""
-      }
-    >
+    <Card className={error ? "border-destructive bg-destructive/10" : ""}>
       <CardContent className="p-4">
-        <p className="mb-2 text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="mb-2 text-xs font-medium text-muted-foreground">
+          {label}
+        </p>
         <p
           className={`text-2xl font-semibold ${
-            error
-              ? "text-destructive"
-              : highlight
-                ? "text-primary"
-                : ""
+            error ? "text-destructive" : highlight ? "text-primary" : ""
           }`}
         >
           {value}
@@ -376,7 +366,9 @@ function AssessmentRow({
         </td>
         <td className="p-4">
           <Badge
-            variant={assessment.status === "COMPLETED" ? "default" : "secondary"}
+            variant={
+              assessment.status === "COMPLETED" ? "default" : "secondary"
+            }
             className={
               assessment.status === "COMPLETED"
                 ? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
@@ -529,9 +521,7 @@ function LogEntry({ log }: { log: SerializedLog }) {
   return (
     <div
       className={`flex items-center gap-2 rounded-md px-2 py-1 text-xs ${
-        isError
-          ? "bg-destructive/10 text-destructive"
-          : ""
+        isError ? "bg-destructive/10 text-destructive" : ""
       }`}
     >
       <Clock className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
@@ -539,7 +529,13 @@ function LogEntry({ log }: { log: SerializedLog }) {
         {new Date(log.timestamp).toLocaleTimeString()}
       </span>
       <Badge
-        variant={isError ? "destructive" : log.eventType === "COMPLETED" ? "default" : "secondary"}
+        variant={
+          isError
+            ? "destructive"
+            : log.eventType === "COMPLETED"
+              ? "default"
+              : "secondary"
+        }
         className={
           log.eventType === "COMPLETED"
             ? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
@@ -588,8 +584,7 @@ function ApiCallRow({ call }: { call: SerializedApiCall }) {
           </Badge>
         ) : (
           <Badge className="gap-1 bg-green-500/10 text-green-600 hover:bg-green-500/20">
-            <CheckCircle2 className="h-3 w-3" />{" "}
-            {call.statusCode ?? "OK"}
+            <CheckCircle2 className="h-3 w-3" /> {call.statusCode ?? "OK"}
           </Badge>
         )}
       </td>

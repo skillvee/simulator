@@ -76,7 +76,10 @@ function typingDurationForMessage(text: string): number {
   const msPerWord = randomDelay(MS_PER_WORD_MIN, MS_PER_WORD_MAX);
   const duration = wordCount * msPerWord;
   // Clamp between floor and cap
-  return Math.min(TYPING_DURATION_CAP, Math.max(TYPING_DURATION_FLOOR, duration));
+  return Math.min(
+    TYPING_DURATION_CAP,
+    Math.max(TYPING_DURATION_FLOOR, duration)
+  );
 }
 
 export function useManagerAutoStart({
@@ -120,9 +123,7 @@ export function useManagerAutoStart({
 
         // Wait proportional to message length (longer messages = longer typing)
         const typingDuration = typingDurationForMessage(messages[i].text);
-        await new Promise((resolve) =>
-          setTimeout(resolve, typingDuration)
-        );
+        await new Promise((resolve) => setTimeout(resolve, typingDuration));
 
         // Check again after typing delay
         if (!isMountedRef.current || cancelledRef.current) {
@@ -230,7 +231,12 @@ export function useManagerAutoStart({
     return () => {
       isMountedRef.current = false;
     };
-  }, [assessmentId, currentCoworkerId, deliverMessagesWithStagger, skipAutoStart]);
+  }, [
+    assessmentId,
+    currentCoworkerId,
+    deliverMessagesWithStagger,
+    skipAutoStart,
+  ]);
 
   return {
     isLoading,

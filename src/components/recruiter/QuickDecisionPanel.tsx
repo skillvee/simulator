@@ -19,7 +19,11 @@ import { parseTimestampToSeconds } from "@/lib/utils/timestamp";
 /**
  * Candidate strength levels
  */
-export type StrengthLevel = "Exceptional" | "Strong" | "Proficient" | "Developing";
+export type StrengthLevel =
+  | "Exceptional"
+  | "Strong"
+  | "Proficient"
+  | "Developing";
 
 /**
  * Dimension data for the panel
@@ -112,21 +116,19 @@ function getTopDimensions(dimensions: DimensionData[]): DimensionData[] {
  */
 function getAreasToProbe(dimensions: DimensionData[]): DimensionData[] {
   // Filter to only those with score < 3 or trainableGap
-  const probeWorthy = dimensions.filter(
-    (d) => d.score < 3 || d.trainableGap
-  );
+  const probeWorthy = dimensions.filter((d) => d.score < 3 || d.trainableGap);
 
   // Sort by score ascending (lowest first), then return bottom 2
-  return probeWorthy
-    .sort((a, b) => a.score - b.score)
-    .slice(0, 2);
+  return probeWorthy.sort((a, b) => a.score - b.score).slice(0, 2);
 }
 
 /**
  * Get key timestamps for "Jump to evidence" section
  * Returns timestamps from top dimensions
  */
-function getKeyTimestamps(dimensions: DimensionData[]): { timestamp: string; dimension: string }[] {
+function getKeyTimestamps(
+  dimensions: DimensionData[]
+): { timestamp: string; dimension: string }[] {
   const topDimensions = getTopDimensions(dimensions);
   const timestamps: { timestamp: string; dimension: string }[] = [];
 
@@ -198,17 +200,24 @@ export function QuickDecisionPanel({
         className
       )}
     >
-      <Card className={cn(
-        "shadow-lg border-2",
-        getStrengthContainerStyles(strengthLevel)
-      )}>
+      <Card
+        className={cn(
+          "border-2 shadow-lg",
+          getStrengthContainerStyles(strengthLevel)
+        )}
+      >
         {/* Mobile header with toggle */}
         <div
-          className="lg:hidden flex items-center justify-between p-4 cursor-pointer"
+          className="flex cursor-pointer items-center justify-between p-4 lg:hidden"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           <div className="flex items-center gap-3">
-            <Badge className={cn("text-base px-3 py-1.5 font-semibold", getStrengthBadgeStyles(strengthLevel))}>
+            <Badge
+              className={cn(
+                "px-3 py-1.5 text-base font-semibold",
+                getStrengthBadgeStyles(strengthLevel)
+              )}
+            >
               {strengthLevel}
             </Badge>
             <span className="text-lg font-bold text-stone-900">
@@ -225,18 +234,20 @@ export function QuickDecisionPanel({
         {/* Main content - always visible on desktop, collapsible on mobile */}
         <CardContent
           className={cn(
-            "p-4 lg:p-5 space-y-5",
+            "space-y-5 p-4 lg:p-5",
             // Mobile: collapse/expand animation
             "lg:block",
             isExpanded ? "block" : "hidden"
           )}
         >
           {/* Strength level - prominent on desktop (hidden on mobile as it's in header) */}
-          <div className="hidden lg:block text-center pb-4 border-b border-stone-200">
-            <Badge className={cn(
-              "text-xl px-5 py-2.5 font-bold",
-              getStrengthBadgeStyles(strengthLevel)
-            )}>
+          <div className="hidden border-b border-stone-200 pb-4 text-center lg:block">
+            <Badge
+              className={cn(
+                "px-5 py-2.5 text-xl font-bold",
+                getStrengthBadgeStyles(strengthLevel)
+              )}
+            >
               {strengthLevel}
             </Badge>
           </div>
@@ -270,12 +281,12 @@ export function QuickDecisionPanel({
                 {topDimensions.map((dim) => (
                   <div
                     key={dim.dimension}
-                    className="bg-white/60 rounded-lg p-3 border border-green-100"
+                    className="rounded-lg border border-green-100 bg-white/60 p-3"
                   >
-                    <p className="font-medium text-sm text-stone-900">
+                    <p className="text-sm font-medium text-stone-900">
                       {formatDimensionName(dim.dimension)}
                     </p>
-                    <p className="text-xs text-stone-600 mt-1 italic">
+                    <p className="mt-1 text-xs italic text-stone-600">
                       &ldquo;{getBriefQuote(dim.observableBehaviors)}&rdquo;
                     </p>
                   </div>
@@ -295,19 +306,19 @@ export function QuickDecisionPanel({
                 {areasToProbe.map((dim) => (
                   <div
                     key={dim.dimension}
-                    className="bg-white/60 rounded-lg p-3 border border-amber-100"
+                    className="rounded-lg border border-amber-100 bg-white/60 p-3"
                   >
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm text-stone-900">
+                      <p className="text-sm font-medium text-stone-900">
                         {formatDimensionName(dim.dimension)}
                       </p>
                       {dim.trainableGap && (
-                        <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">
+                        <Badge className="border-0 bg-amber-100 text-xs text-amber-700">
                           Trainable
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-stone-500 mt-1">
+                    <p className="mt-1 text-xs text-stone-500">
                       Score: {dim.score.toFixed(1)}/5
                     </p>
                   </div>
@@ -328,7 +339,7 @@ export function QuickDecisionPanel({
                   <button
                     key={idx}
                     onClick={() => handleTimestampClick(timestamp)}
-                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-1 rounded bg-white/60 hover:bg-blue-50 transition-colors border border-blue-100"
+                    className="rounded border border-blue-100 bg-white/60 px-2 py-1 text-xs text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-800 hover:underline"
                     title={dimension}
                   >
                     {timestamp}
@@ -339,13 +350,15 @@ export function QuickDecisionPanel({
           )}
 
           {/* Compare button */}
-          <div className="pt-2 border-t border-stone-200">
+          <div className="border-t border-stone-200 pt-2">
             <Button
               asChild
               variant="outline"
               className="w-full border-stone-300 hover:bg-white"
             >
-              <Link href={`/recruiter/candidates/s/${scenarioId}/compare?ids=${assessmentId}`}>
+              <Link
+                href={`/recruiter/candidates/s/${scenarioId}/compare?ids=${assessmentId}`}
+              >
                 <Users className="mr-2 h-4 w-4" />
                 Compare
               </Link>

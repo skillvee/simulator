@@ -18,7 +18,6 @@ import {
   type ScreenPermissionState,
 } from "@/lib/media";
 import {
-  checkWebcamSupport,
   requestWebcamCapture,
   stopWebcamCapture,
   isWebcamStreamActive,
@@ -349,10 +348,14 @@ export function ScreenRecordingProvider({
             webcamErr.name === "PermissionDeniedError")
         ) {
           setWebcamState("denied");
-          setError("Webcam permission was denied. Both screen and webcam recording are required.");
+          setError(
+            "Webcam permission was denied. Both screen and webcam recording are required."
+          );
         } else {
           setWebcamState("error");
-          setError("Failed to access webcam. Please ensure your camera is connected and not in use by another application.");
+          setError(
+            "Failed to access webcam. Please ensure your camera is connected and not in use by another application."
+          );
         }
         setState("error");
         return false;

@@ -7,7 +7,11 @@ import {
   buildCrossCoworkerContext,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
-import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
+import type {
+  CoworkerPersona,
+  ChatMessage,
+  ConversationWithMeta,
+} from "@/types";
 import type { Prisma } from "@prisma/client";
 import { AssessmentStatus } from "@prisma/client";
 import {
@@ -176,7 +180,9 @@ export async function POST(request: Request) {
   );
 
   // Nudge non-manager coworkers to suggest a call after 3 user messages
-  const userMessageCount = existingMessages.filter(m => m.role === "user").length;
+  const userMessageCount = existingMessages.filter(
+    (m) => m.role === "user"
+  ).length;
   if (!isManager(coworker.role) && userMessageCount === 2) {
     systemPrompt += buildCallNudgeInstruction();
   }
@@ -326,7 +332,11 @@ export async function POST(request: Request) {
       responseText =
         response.text || "I'm sorry, I couldn't generate a response.";
     }
-  } else if (isCoworkerManager && message.toLowerCase().includes("pr") && message.toLowerCase().includes("http")) {
+  } else if (
+    isCoworkerManager &&
+    message.toLowerCase().includes("pr") &&
+    message.toLowerCase().includes("http")
+  ) {
     // User tried to submit a PR but it wasn't a valid PR URL
     const response = await gemini.models.generateContent({
       model: CHAT_MODEL,
@@ -379,7 +389,9 @@ export async function POST(request: Request) {
         },
         {
           role: "model",
-          parts: [{ text: "I understand. I'm ready to chat as this coworker." }],
+          parts: [
+            { text: "I understand. I'm ready to chat as this coworker." },
+          ],
         },
         ...history,
         {
@@ -449,10 +461,7 @@ export async function GET(request: Request) {
   const coworkerId = searchParams.get("coworkerId");
 
   if (!assessmentId || !coworkerId) {
-    return error(
-      "Missing required parameters: assessmentId, coworkerId",
-      400
-    );
+    return error("Missing required parameters: assessmentId, coworkerId", 400);
   }
 
   // Verify assessment belongs to user and get scenario context

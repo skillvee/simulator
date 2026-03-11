@@ -126,12 +126,13 @@ export async function POST(
       name: c.name,
       role: c.role,
       personaStyle: c.personaStyle,
-      knowledge: (c.knowledge as Array<{
-        topic: string;
-        triggerKeywords: string[];
-        response: string;
-        isCritical: boolean;
-      }>) || [],
+      knowledge:
+        (c.knowledge as Array<{
+          topic: string;
+          triggerKeywords: string[];
+          response: string;
+          isCritical: boolean;
+        }>) || [],
     })),
   };
 

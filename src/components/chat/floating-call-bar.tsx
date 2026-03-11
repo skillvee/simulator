@@ -459,7 +459,10 @@ export function FloatingCallBar({
   if (callState === "error") {
     return (
       <div className="relative">
-        <div className="rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-destructive/30 overflow-hidden" style={{background: "hsl(var(--slack-bg-surface))"}}>
+        <div
+          className="overflow-hidden rounded-2xl border border-destructive/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+          style={{ background: "hsl(var(--slack-bg-surface))" }}
+        >
           <div className="h-1 bg-destructive" />
           <div className="p-4">
             <div className="flex items-center justify-between">
@@ -468,13 +471,23 @@ export function FloatingCallBar({
                   <PhoneOff size={16} className="text-destructive-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-destructive">Call Failed</p>
-                  <p className="max-w-[150px] truncate text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>
+                  <p className="text-sm font-bold text-destructive">
+                    Call Failed
+                  </p>
+                  <p
+                    className="max-w-[150px] truncate text-xs"
+                    style={{ color: "hsl(var(--slack-text-muted))" }}
+                  >
                     {error || "Connection error"}
                   </p>
                 </div>
               </div>
-              <Button onClick={onCallEnd} variant="outline" size="sm" className="rounded-full">
+              <Button
+                onClick={onCallEnd}
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+              >
                 Dismiss
               </Button>
             </div>
@@ -488,13 +501,19 @@ export function FloatingCallBar({
   if (callState === "requesting-permission" || callState === "connecting") {
     return (
       <div className="relative">
-        <div className="absolute inset-x-0 bottom-0 top-0 bg-primary/5 blur-xl rounded-full" />
-        <div className="relative rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden" style={{background: "hsl(var(--slack-bg-surface))", border: "1px solid hsl(var(--slack-border))"}}>
-          <div className="h-1 bg-gradient-to-r from-primary to-primary/60 animate-pulse" />
+        <div className="absolute inset-x-0 bottom-0 top-0 rounded-full bg-primary/5 blur-xl" />
+        <div
+          className="relative overflow-hidden rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+          style={{
+            background: "hsl(var(--slack-bg-surface))",
+            border: "1px solid hsl(var(--slack-border))",
+          }}
+        >
+          <div className="h-1 animate-pulse bg-gradient-to-r from-primary to-primary/60" />
           <div className="p-4">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <span className="absolute -inset-1 rounded-full bg-primary/20 animate-pulse" />
+                <span className="absolute -inset-1 animate-pulse rounded-full bg-primary/20" />
                 <CoworkerAvatar
                   name={coworker.name}
                   avatarUrl={coworker.avatarUrl}
@@ -503,8 +522,16 @@ export function FloatingCallBar({
                 />
               </div>
               <div>
-                <p className="text-sm font-bold" style={{color: "hsl(var(--slack-text))"}}>{coworker.name}</p>
-                <p className="text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>
+                <p
+                  className="text-sm font-bold"
+                  style={{ color: "hsl(var(--slack-text))" }}
+                >
+                  {coworker.name}
+                </p>
+                <p
+                  className="text-xs"
+                  style={{ color: "hsl(var(--slack-text-muted))" }}
+                >
                   {callState === "requesting-permission"
                     ? "Requesting microphone..."
                     : "Connecting..."}
@@ -521,13 +548,19 @@ export function FloatingCallBar({
   if (callState === "connected") {
     return (
       <div className="relative">
-        <div className="absolute inset-x-0 bottom-0 top-0 bg-primary/5 blur-xl rounded-full" />
-        <div className="relative rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden" style={{background: "hsl(var(--slack-bg-surface))", border: "1px solid hsl(var(--slack-border))"}}>
+        <div className="absolute inset-x-0 bottom-0 top-0 rounded-full bg-primary/5 blur-xl" />
+        <div
+          className="relative overflow-hidden rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)]"
+          style={{
+            background: "hsl(var(--slack-bg-surface))",
+            border: "1px solid hsl(var(--slack-border))",
+          }}
+        >
           <div className="p-4">
-            <div className="flex items-start justify-between mb-4">
+            <div className="mb-4 flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <span className="absolute -inset-1 rounded-full bg-green-500/20 animate-pulse" />
+                  <span className="absolute -inset-1 animate-pulse rounded-full bg-green-500/20" />
                   <CoworkerAvatar
                     name={coworker.name}
                     avatarUrl={coworker.avatarUrl}
@@ -536,8 +569,13 @@ export function FloatingCallBar({
                   />
                 </div>
                 <div>
-                  <div className="text-sm font-bold" style={{color: "hsl(var(--slack-text))"}}>On Call</div>
-                  <div className="text-xs text-green-400 font-medium flex items-center gap-1">
+                  <div
+                    className="text-sm font-bold"
+                    style={{ color: "hsl(var(--slack-text))" }}
+                  >
+                    On Call
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-medium text-green-400">
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                     Connected
                   </div>
@@ -551,19 +589,23 @@ export function FloatingCallBar({
                 variant={isMuted ? "secondary" : "outline"}
                 size="icon"
                 className="h-10 w-10 rounded-full"
-                style={{borderColor: "hsl(var(--slack-border))"}}
+                style={{ borderColor: "hsl(var(--slack-border))" }}
                 aria-label={isMuted ? "Unmute" : "Mute"}
               >
-                {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isMuted ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
               </Button>
 
               {/* Waveform Visualization */}
-              <div className="flex-1 flex justify-center items-center h-10 gap-0.5">
+              <div className="flex h-10 flex-1 items-center justify-center gap-0.5">
                 {isSpeaking ? (
                   [...Array(12)].map((_, i) => (
                     <div
                       key={i}
-                      className="w-1 bg-primary/40 rounded-full animate-pulse"
+                      className="w-1 animate-pulse rounded-full bg-primary/40"
                       style={{
                         height: Math.random() * 20 + 4 + "px",
                         animationDelay: i * 0.1 + "s",
@@ -574,12 +616,15 @@ export function FloatingCallBar({
                   [...Array(12)].map((_, i) => (
                     <div
                       key={i}
-                      className="w-1 bg-muted-foreground/30 rounded-full"
+                      className="w-1 rounded-full bg-muted-foreground/30"
                       style={{ height: "4px" }}
                     />
                   ))
                 ) : (
-                  <div className="h-1 w-full rounded-full" style={{background: "hsl(var(--slack-bg-hover))"}} />
+                  <div
+                    className="h-1 w-full rounded-full"
+                    style={{ background: "hsl(var(--slack-bg-hover))" }}
+                  />
                 )}
               </div>
 

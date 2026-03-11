@@ -19,7 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle, XCircle, Clock, Loader2, Save, AlertTriangle } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  Loader2,
+  Save,
+  AlertTriangle,
+} from "lucide-react";
 
 interface CreationLog {
   id: string;
@@ -46,11 +53,31 @@ interface CreationLogsClientProps {
 }
 
 const STATUS_CONFIG = {
-  STARTED: { label: "Started", icon: Clock, className: "bg-blue-500/10 text-blue-600 border-blue-200" },
-  GENERATING: { label: "Generating", icon: Loader2, className: "bg-yellow-500/10 text-yellow-600 border-yellow-200" },
-  SAVING: { label: "Saving", icon: Save, className: "bg-purple-500/10 text-purple-600 border-purple-200" },
-  COMPLETED: { label: "Completed", icon: CheckCircle, className: "bg-green-500/10 text-green-600 border-green-200" },
-  FAILED: { label: "Failed", icon: XCircle, className: "bg-red-500/10 text-red-600 border-red-200" },
+  STARTED: {
+    label: "Started",
+    icon: Clock,
+    className: "bg-blue-500/10 text-blue-600 border-blue-200",
+  },
+  GENERATING: {
+    label: "Generating",
+    icon: Loader2,
+    className: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
+  },
+  SAVING: {
+    label: "Saving",
+    icon: Save,
+    className: "bg-purple-500/10 text-purple-600 border-purple-200",
+  },
+  COMPLETED: {
+    label: "Completed",
+    icon: CheckCircle,
+    className: "bg-green-500/10 text-green-600 border-green-200",
+  },
+  FAILED: {
+    label: "Failed",
+    icon: XCircle,
+    className: "bg-red-500/10 text-red-600 border-red-200",
+  },
 } as const;
 
 const STEP_LABELS: Record<string, string> = {
@@ -83,25 +110,29 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
   const [selectedLog, setSelectedLog] = useState<CreationLog | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const filteredLogs = statusFilter === "all"
-    ? logs
-    : logs.filter((log) => log.status === statusFilter);
+  const filteredLogs =
+    statusFilter === "all"
+      ? logs
+      : logs.filter((log) => log.status === statusFilter);
 
   const stats = {
     total: logs.length,
     completed: logs.filter((l) => l.status === "COMPLETED").length,
     failed: logs.filter((l) => l.status === "FAILED").length,
-    inProgress: logs.filter((l) => ["STARTED", "GENERATING", "SAVING"].includes(l.status)).length,
+    inProgress: logs.filter((l) =>
+      ["STARTED", "GENERATING", "SAVING"].includes(l.status)
+    ).length,
   };
 
-  const successRate = stats.total > 0
-    ? Math.round((stats.completed / stats.total) * 100)
-    : 0;
+  const successRate =
+    stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   return (
     <div className="px-8 py-10">
       <header className="mb-8">
-        <h1 className="mb-2 text-3xl font-semibold">Simulation Creation Logs</h1>
+        <h1 className="mb-2 text-3xl font-semibold">
+          Simulation Creation Logs
+        </h1>
         <p className="text-muted-foreground">
           Track every simulation creation attempt — successful and failed
         </p>
@@ -136,11 +167,20 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All ({stats.total})</SelectItem>
-            <SelectItem value="COMPLETED">Completed ({stats.completed})</SelectItem>
+            <SelectItem value="COMPLETED">
+              Completed ({stats.completed})
+            </SelectItem>
             <SelectItem value="FAILED">Failed ({stats.failed})</SelectItem>
-            <SelectItem value="STARTED">Started ({logs.filter(l => l.status === "STARTED").length})</SelectItem>
-            <SelectItem value="GENERATING">Generating ({logs.filter(l => l.status === "GENERATING").length})</SelectItem>
-            <SelectItem value="SAVING">Saving ({logs.filter(l => l.status === "SAVING").length})</SelectItem>
+            <SelectItem value="STARTED">
+              Started ({logs.filter((l) => l.status === "STARTED").length})
+            </SelectItem>
+            <SelectItem value="GENERATING">
+              Generating ({logs.filter((l) => l.status === "GENERATING").length}
+              )
+            </SelectItem>
+            <SelectItem value="SAVING">
+              Saving ({logs.filter((l) => l.status === "SAVING").length})
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -159,13 +199,27 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">STATUS</th>
-                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">USER</th>
-                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">ROLE / COMPANY</th>
-                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">SOURCE</th>
-                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">FAILED AT</th>
-                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">DURATION</th>
-                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">DATE</th>
+                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                      STATUS
+                    </th>
+                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                      USER
+                    </th>
+                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                      ROLE / COMPANY
+                    </th>
+                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                      SOURCE
+                    </th>
+                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                      FAILED AT
+                    </th>
+                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                      DURATION
+                    </th>
+                    <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                      DATE
+                    </th>
                     <th className="p-4 text-left text-xs font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
@@ -176,22 +230,32 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
                     return (
                       <tr
                         key={log.id}
-                        className="border-b border-border last:border-b-0 transition-colors hover:bg-muted/50 cursor-pointer"
+                        className="cursor-pointer border-b border-border transition-colors last:border-b-0 hover:bg-muted/50"
                         onClick={() => setSelectedLog(log)}
                       >
                         <td className="p-4">
                           <Badge variant="outline" className={config.className}>
-                            <StatusIcon className={`mr-1 h-3 w-3 ${log.status === "GENERATING" ? "animate-spin" : ""}`} />
+                            <StatusIcon
+                              className={`mr-1 h-3 w-3 ${log.status === "GENERATING" ? "animate-spin" : ""}`}
+                            />
                             {config.label}
                           </Badge>
                         </td>
                         <td className="p-4">
-                          <p className="text-sm font-medium">{log.user.name || "Unknown"}</p>
-                          <p className="text-xs text-muted-foreground">{log.user.email}</p>
+                          <p className="text-sm font-medium">
+                            {log.user.name || "Unknown"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {log.user.email}
+                          </p>
                         </td>
                         <td className="p-4">
-                          <p className="text-sm font-medium">{log.roleTitle || "—"}</p>
-                          <p className="text-xs text-muted-foreground">{log.companyName || "—"}</p>
+                          <p className="text-sm font-medium">
+                            {log.roleTitle || "—"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {log.companyName || "—"}
+                          </p>
                         </td>
                         <td className="p-4">
                           <Badge variant="secondary" className="text-xs">
@@ -207,9 +271,13 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
                               </span>
                             </div>
                           ) : log.status === "COMPLETED" ? (
-                            <span className="text-sm text-muted-foreground">—</span>
+                            <span className="text-sm text-muted-foreground">
+                              —
+                            </span>
                           ) : (
-                            <span className="text-sm text-muted-foreground">—</span>
+                            <span className="text-sm text-muted-foreground">
+                              —
+                            </span>
                           )}
                         </td>
                         <td className="p-4 text-sm text-muted-foreground">
@@ -234,38 +302,54 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
       </Card>
 
       {/* Detail Dialog */}
-      <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
+      <Dialog
+        open={!!selectedLog}
+        onOpenChange={(open) => !open && setSelectedLog(null)}
+      >
         <DialogContent className="max-w-lg">
           {selectedLog && (
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   Creation Attempt Details
-                  <Badge variant="outline" className={STATUS_CONFIG[selectedLog.status].className}>
+                  <Badge
+                    variant="outline"
+                    className={STATUS_CONFIG[selectedLog.status].className}
+                  >
                     {STATUS_CONFIG[selectedLog.status].label}
                   </Badge>
                 </DialogTitle>
                 <DialogDescription>
                   {formatDate(selectedLog.createdAt)}
-                  {selectedLog.completedAt && ` — ${formatDuration(selectedLog.createdAt, selectedLog.completedAt)}`}
+                  {selectedLog.completedAt &&
+                    ` — ${formatDuration(selectedLog.createdAt, selectedLog.completedAt)}`}
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">
                 {/* User */}
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">User</p>
-                  <p className="text-sm">{selectedLog.user.name || "Unknown"} ({selectedLog.user.email})</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    User
+                  </p>
+                  <p className="text-sm">
+                    {selectedLog.user.name || "Unknown"} (
+                    {selectedLog.user.email})
+                  </p>
                 </div>
 
                 {/* Role & Company */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Role Title</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Role Title
+                    </p>
                     <p className="text-sm">{selectedLog.roleTitle || "—"}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Company</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Company
+                    </p>
                     <p className="text-sm">{selectedLog.companyName || "—"}</p>
                   </div>
                 </div>
@@ -273,10 +357,18 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
                 {/* Tech Stack */}
                 {selectedLog.techStack.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Tech Stack</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Tech Stack
+                    </p>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {selectedLog.techStack.map((tech) => (
-                        <Badge key={tech} variant="secondary" className="text-xs">{tech}</Badge>
+                        <Badge
+                          key={tech}
+                          variant="secondary"
+                          className="text-xs"
+                        >
+                          {tech}
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -285,19 +377,31 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
                 {/* Source & Seniority */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Source</p>
-                    <p className="text-sm">{selectedLog.source === "jd_paste" ? "Job Description Paste" : "Guided Form"}</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Source
+                    </p>
+                    <p className="text-sm">
+                      {selectedLog.source === "jd_paste"
+                        ? "Job Description Paste"
+                        : "Guided Form"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Seniority Level</p>
-                    <p className="text-sm capitalize">{selectedLog.seniorityLevel || "—"}</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Seniority Level
+                    </p>
+                    <p className="text-sm capitalize">
+                      {selectedLog.seniorityLevel || "—"}
+                    </p>
                   </div>
                 </div>
 
                 {/* Linked Simulation */}
                 {selectedLog.scenario && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Created Simulation</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Created Simulation
+                    </p>
                     <Link
                       href={`/admin/scenarios/${selectedLog.scenario.id}`}
                       className="text-sm text-primary hover:underline"
@@ -310,27 +414,38 @@ export function CreationLogsClient({ logs }: CreationLogsClientProps) {
                 {/* Error Section */}
                 {selectedLog.status === "FAILED" && (
                   <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="mb-2 flex items-center gap-2">
                       <XCircle className="h-4 w-4 text-red-600" />
-                      <p className="text-sm font-semibold text-red-600">Failure Details</p>
+                      <p className="text-sm font-semibold text-red-600">
+                        Failure Details
+                      </p>
                     </div>
                     {selectedLog.failedStep && (
                       <div className="mb-2">
-                        <p className="text-xs font-medium text-red-500">Failed Step</p>
+                        <p className="text-xs font-medium text-red-500">
+                          Failed Step
+                        </p>
                         <p className="text-sm text-red-700 dark:text-red-400">
-                          {STEP_LABELS[selectedLog.failedStep] || selectedLog.failedStep}
+                          {STEP_LABELS[selectedLog.failedStep] ||
+                            selectedLog.failedStep}
                         </p>
                       </div>
                     )}
                     {selectedLog.errorMessage && (
                       <div className="mb-2">
-                        <p className="text-xs font-medium text-red-500">Error Message</p>
-                        <p className="text-sm text-red-700 dark:text-red-400">{selectedLog.errorMessage}</p>
+                        <p className="text-xs font-medium text-red-500">
+                          Error Message
+                        </p>
+                        <p className="text-sm text-red-700 dark:text-red-400">
+                          {selectedLog.errorMessage}
+                        </p>
                       </div>
                     )}
                     {selectedLog.errorDetails != null && (
                       <div>
-                        <p className="text-xs font-medium text-red-500">Error Details</p>
+                        <p className="text-xs font-medium text-red-500">
+                          Error Details
+                        </p>
                         <pre className="mt-1 max-h-40 overflow-auto rounded bg-red-100 p-2 text-xs text-red-800 dark:bg-red-950/50 dark:text-red-300">
                           {typeof selectedLog.errorDetails === "string"
                             ? selectedLog.errorDetails

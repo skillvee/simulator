@@ -57,7 +57,15 @@ export async function POST(request: Request) {
   // Validate request body using Zod schema
   const validated = await validateRequest(request, ScenarioCreateSchema);
   if ("error" in validated) return validated.error;
-  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, isPublished } = validated.data;
+  const {
+    name,
+    companyName,
+    companyDescription,
+    taskDescription,
+    repoUrl,
+    techStack,
+    isPublished,
+  } = validated.data;
 
   const scenario = await db.scenario.create({
     data: {

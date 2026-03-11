@@ -39,8 +39,8 @@ export function ConfirmationDialog({
               <h2 className="mb-2 text-xl font-semibold">Retry Assessment</h2>
               <p className="text-muted-foreground">
                 This will create a <strong>new assessment</strong> and mark this
-                one as superseded. The original assessment data will be preserved
-                for historical reference.
+                one as superseded. The original assessment data will be
+                preserved for historical reference.
               </p>
             </div>
           </div>

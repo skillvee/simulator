@@ -721,7 +721,9 @@ export function CandidateSearchClient() {
             )}
             <h1 className="text-xl font-semibold">Candidate Search</h1>
           </div>
-          <Badge variant="secondary" className="rounded-md">BETA</Badge>
+          <Badge variant="secondary" className="rounded-md">
+            BETA
+          </Badge>
         </div>
       </header>
 
@@ -768,9 +770,7 @@ export function CandidateSearchClient() {
                     <div
                       key={index}
                       className={`h-2 w-2 rounded-full transition-colors ${
-                        index <= loadingMessageIndex
-                          ? "bg-primary"
-                          : "bg-muted"
+                        index <= loadingMessageIndex ? "bg-primary" : "bg-muted"
                       }`}
                       data-testid={`progress-dot-${index}`}
                     />
@@ -919,7 +919,7 @@ export function CandidateSearchClient() {
         {toasts.map((toast) => (
           <Card
             key={toast.id}
-            className={`${toast.type === "success" ? "bg-green-500/10 border-green-500/50" : ""} ${toast.type === "error" ? "bg-red-500/10 border-red-500/50" : ""} ${toast.type === "info" ? "" : ""}`}
+            className={`${toast.type === "success" ? "border-green-500/50 bg-green-500/10" : ""} ${toast.type === "error" ? "border-red-500/50 bg-red-500/10" : ""} ${toast.type === "info" ? "" : ""}`}
             data-testid="toast"
           >
             <CardContent className="flex items-center gap-3 px-4 py-3">
@@ -952,11 +952,7 @@ function ContextTagBadge({ tag }: ContextTagBadgeProps) {
           : "bg-muted/50 text-muted-foreground"
       }`}
     >
-      <span
-        className={
-          tag.isActive ? "text-primary" : "text-muted-foreground"
-        }
-      >
+      <span className={tag.isActive ? "text-primary" : "text-muted-foreground"}>
         {tag.icon}
       </span>
       <div className="flex flex-col">

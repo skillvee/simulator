@@ -28,20 +28,22 @@ Demonstrate that we understand the hiring pain from both sides — the hiring ma
 
 ### 2. Be specific, not vague
 
-| ❌ Vague | ✅ Specific |
-|----------|-------------|
-| "Boosts hiring performance" | "Reduces time-to-hire by 37%" |
-| "Better than traditional tests" | "Bad hires cost $14,900 on average" |
-| "Candidates hate it" | "Your coding test got leaked to Reddit last week" |
+| ❌ Vague                        | ✅ Specific                                       |
+| ------------------------------- | ------------------------------------------------- |
+| "Boosts hiring performance"     | "Reduces time-to-hire by 37%"                     |
+| "Better than traditional tests" | "Bad hires cost $14,900 on average"               |
+| "Candidates hate it"            | "Your coding test got leaked to Reddit last week" |
 
 ### 3. Lead with problems, not features
 
 Use the **PAS framework**:
+
 - **Problem**: Name the pain clearly
 - **Agitation**: Twist the knife (lightly)
 - **Solution**: Present how we fix it
 
 **Example**:
+
 - Problem: "Resumes are AI-generated now"
 - Agitation: "You're screening 500 identical applications"
 - Solution: "See candidates do real work before the offer"
@@ -119,6 +121,7 @@ Our audience knows their domain. Don't over-explain. Don't patronize. Get to the
 - No jargon, no features
 
 **Examples**:
+
 - ✅ "Stop interviewing. Start watching them work."
 - ✅ "Stop guessing. Start seeing."
 - ❌ "AI-Powered Work Simulation Platform for Technical Hiring" (feature dump)
@@ -130,6 +133,7 @@ Our audience knows their domain. Don't over-explain. Don't patronize. Get to the
 - Use questions or provocative statements
 
 **Examples**:
+
 - ✅ "Why simulations > algorithm tests (other than the obvious)"
 - ✅ "Your algorithm test has a problem: it doesn't work anymore"
 - ❌ "Our Solution" (generic)
@@ -149,12 +153,14 @@ Our audience knows their domain. Don't over-explain. Don't patronize. Get to the
 ### Primary: HR / Talent Acquisition
 
 **Their pain points**:
+
 - Drowning in AI-generated resumes (76% struggle to find qualified candidates)
 - Time-to-hire averaging 44 days and climbing
 - Bad hires destroying team morale (53% feel less engaged)
 - Existing tools (HackerRank, etc.) not catching AI cheating
 
 **Frame solutions as**:
+
 - Screening efficiency
 - Reduced time-to-hire
 - Confidence in hiring decisions
@@ -163,12 +169,14 @@ Our audience knows their domain. Don't over-explain. Don't patronize. Get to the
 ### Secondary: Engineers / Technical Hiring Managers
 
 **Their pain points**:
+
 - Artificial puzzles disconnected from real work
 - Candidates who interview well but can't perform
 - Wasting time on redundant screenings
 - Can't assess "soft" skills that actually matter
 
 **Frame solutions as**:
+
 - Seeing real problem-solving
 - Better signal-to-noise ratio
 - Less time wasted on bad fits
@@ -177,12 +185,14 @@ Our audience knows their domain. Don't over-explain. Don't patronize. Get to the
 ### Tertiary: Candidates (in content that reaches them)
 
 **Their pain points**:
+
 - Hazing culture in technical interviews
 - Tests that don't reflect real work
 - Non-reusable effort across companies
 - Bias toward recent grads who "studied"
 
 **Frame Skillvee as**:
+
 - Fair evaluation of actual ability
 - Chance to show real skills, not memorization
 - Modern approach that respects their time
@@ -197,11 +207,11 @@ We can be direct about why we're different. We don't need to trash competitors �
 
 ### Positioning framework
 
-| Competitor | Their approach | Our contrast |
-|------------|---------------|--------------|
-| HackerRank | Bans AI, tests trivia | Can't ban AI from real work |
-| CodeSignal | Generic "GCA score" | Scores don't show how people work |
-| TestGorilla | 350 disconnected tests | Disconnected ≠ realistic |
+| Competitor  | Their approach         | Our contrast                      |
+| ----------- | ---------------------- | --------------------------------- |
+| HackerRank  | Bans AI, tests trivia  | Can't ban AI from real work       |
+| CodeSignal  | Generic "GCA score"    | Scores don't show how people work |
+| TestGorilla | 350 disconnected tests | Disconnected ≠ realistic          |
 
 ### Example copy
 
@@ -224,26 +234,26 @@ They test what candidates memorized. We show you how they work."
 
 ### Use these
 
-| Word/Phrase | Why |
-|-------------|-----|
-| "See how they actually work" | Our core differentiator |
-| "Work simulation" | Clearer than "assessment" |
-| "Real work" | Contrast to artificial tests |
-| "Before you hire" | Stakes are clear |
-| "Can't be faked" | Addresses AI cheating directly |
+| Word/Phrase                  | Why                            |
+| ---------------------------- | ------------------------------ |
+| "See how they actually work" | Our core differentiator        |
+| "Work simulation"            | Clearer than "assessment"      |
+| "Real work"                  | Contrast to artificial tests   |
+| "Before you hire"            | Stakes are clear               |
+| "Can't be faked"             | Addresses AI cheating directly |
 
 ### Avoid these
 
-| Word/Phrase | Why | Use instead |
-|-------------|-----|-------------|
-| "Leverage" | Corporate speak | "Use" |
-| "Utilize" | Same | "Use" |
-| "Best-in-class" | Empty superlative | Specific claim |
-| "Revolutionary" | Overused | Show, don't tell |
-| "Seamless" | Meaningless | Be specific |
-| "Cutting-edge" | Buzzword | Describe the actual tech |
-| "Empower" | Vague | What actually happens? |
-| "Holistic" | Corporate | "Complete" or be specific |
+| Word/Phrase     | Why               | Use instead               |
+| --------------- | ----------------- | ------------------------- |
+| "Leverage"      | Corporate speak   | "Use"                     |
+| "Utilize"       | Same              | "Use"                     |
+| "Best-in-class" | Empty superlative | Specific claim            |
+| "Revolutionary" | Overused          | Show, don't tell          |
+| "Seamless"      | Meaningless       | Be specific               |
+| "Cutting-edge"  | Buzzword          | Describe the actual tech  |
+| "Empower"       | Vague             | What actually happens?    |
+| "Holistic"      | Corporate         | "Complete" or be specific |
 
 ---
 
@@ -317,28 +327,28 @@ Make them conversational, not clinical:
 
 ### Corporate → Conversational
 
-| ❌ Before | ✅ After |
-|-----------|----------|
-| "Traditional assessments can't keep up with AI" | "Algorithm tests are dead. You just haven't buried them yet." |
-| "Your current hiring tools were built for a world without ChatGPT" | "HackerRank was built when invert-a-binary-tree was a personality test. That was a different era." |
-| "Leverage our AI-powered platform to optimize your hiring workflow" | "See how candidates actually work before you hire them" |
-| "Our comprehensive assessment solution addresses modern hiring challenges" | "One realistic work day. Live stakeholders. Can't be faked." |
+| ❌ Before                                                                  | ✅ After                                                                                           |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| "Traditional assessments can't keep up with AI"                            | "Algorithm tests are dead. You just haven't buried them yet."                                      |
+| "Your current hiring tools were built for a world without ChatGPT"         | "HackerRank was built when invert-a-binary-tree was a personality test. That was a different era." |
+| "Leverage our AI-powered platform to optimize your hiring workflow"        | "See how candidates actually work before you hire them"                                            |
+| "Our comprehensive assessment solution addresses modern hiring challenges" | "One realistic work day. Live stakeholders. Can't be faked."                                       |
 
 ### Generic → Specific
 
-| ❌ Before | ✅ After |
-|-----------|----------|
-| "Reduce bad hires" | "Bad hires cost $14,900. Stop making them." |
-| "Faster hiring process" | "Cut your 44-day time-to-hire in half" |
+| ❌ Before                     | ✅ After                                               |
+| ----------------------------- | ------------------------------------------------------ |
+| "Reduce bad hires"            | "Bad hires cost $14,900. Stop making them."            |
+| "Faster hiring process"       | "Cut your 44-day time-to-hire in half"                 |
 | "Better candidate experience" | "Candidates show real skills, not trivia memorization" |
 
 ### Feature → Benefit
 
-| ❌ Before | ✅ After |
-|-----------|----------|
-| "30-45 minute work simulations" | "In 45 minutes, see how they'd handle their first week" |
-| "AI-powered evaluation" | "Know who can actually do the job before day one" |
-| "Multiple assessment types" | "Test the work they'll actually do, not algorithms they'll never use" |
+| ❌ Before                       | ✅ After                                                              |
+| ------------------------------- | --------------------------------------------------------------------- |
+| "30-45 minute work simulations" | "In 45 minutes, see how they'd handle their first week"               |
+| "AI-powered evaluation"         | "Know who can actually do the job before day one"                     |
+| "Multiple assessment types"     | "Test the work they'll actually do, not algorithms they'll never use" |
 
 ---
 

@@ -25,7 +25,8 @@ vi.mock("@/server/db", () => ({
       update: (...args: unknown[]) => mockUpdate(...args),
     },
     videoAssessment: {
-      findUnique: (...args: unknown[]) => mockFindUniqueVideoAssessment(...args),
+      findUnique: (...args: unknown[]) =>
+        mockFindUniqueVideoAssessment(...args),
       create: (...args: unknown[]) => mockCreateVideoAssessment(...args),
       update: (...args: unknown[]) => mockUpdateVideoAssessment(...args),
     },
@@ -35,7 +36,8 @@ vi.mock("@/server/db", () => ({
 // Mock analysis module
 vi.mock("@/lib/analysis", () => ({
   evaluateVideo: (...args: unknown[]) => mockEvaluateVideo(...args),
-  getEvaluationResults: (...args: unknown[]) => mockGetEvaluationResults(...args),
+  getEvaluationResults: (...args: unknown[]) =>
+    mockGetEvaluationResults(...args),
 }));
 
 // Mock email module
@@ -137,7 +139,8 @@ const sampleVideoEvaluationOutput = {
       quote: null,
     },
   ],
-  overall_summary: "Strong candidate with good communication and problem-solving skills.",
+  overall_summary:
+    "Strong candidate with good communication and problem-solving skills.",
   evaluation_confidence: "high" as const,
   insufficient_evidence_notes: null,
 };

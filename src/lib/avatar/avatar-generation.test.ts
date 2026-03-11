@@ -109,7 +109,8 @@ describe("Avatar Generation Service", () => {
 
   describe("generateAvatarsForScenario", () => {
     it("should return empty array when no coworkers need avatars", async () => {
-      const { generateAvatarsForScenario } = await import("./avatar-generation");
+      const { generateAvatarsForScenario } =
+        await import("./avatar-generation");
 
       mockCoworkerFindMany.mockResolvedValue([]);
 

@@ -280,7 +280,9 @@ export async function generateAvatarsForScenario(
   });
 
   if (coworkers.length === 0) {
-    console.log(`[Avatar] No coworkers need avatars for scenario ${scenarioId}`);
+    console.log(
+      `[Avatar] No coworkers need avatars for scenario ${scenarioId}`
+    );
     return [];
   }
 

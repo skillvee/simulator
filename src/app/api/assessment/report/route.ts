@@ -3,66 +3,108 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { VideoAssessmentStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
-import type { AssessmentReport, SkillScore, ScoreLevel, RubricAssessmentOutput } from "@/types";
+import type {
+  AssessmentReport,
+  SkillScore,
+  ScoreLevel,
+  RubricAssessmentOutput,
+} from "@/types";
 import { sendReportEmail, isEmailServiceConfigured } from "@/lib/external";
 import { getEvaluationResults, evaluateVideo } from "@/lib/analysis";
 import { RUBRIC_TO_ASSESSMENT_DIMENSION } from "@/lib/rubric/dimension-mapping";
+
+/** Shape of a legacy v1 red-flag entry (object or plain string). */
+interface LegacyRedFlag {
+  signal?: string;
+  evidence?: string;
+}
+
+/** Shape of a legacy v1 green-flag entry (object or plain string). */
+interface LegacyGreenFlag {
+  signal?: string;
+}
+
+/** Shape of a single skill score in the legacy v1 format. */
+interface LegacySkillScore {
+  score?: number;
+  rationale?: string;
+}
+
+/** Union covering both the legacy v1 and current v3 evaluation shapes. */
+interface LegacyVideoEvaluation {
+  dimensionScores?: unknown[];
+  skill_scores?: Record<string, LegacySkillScore>;
+  overall_score?: { score?: number };
+  red_flags?: (LegacyRedFlag | string)[];
+  green_flags?: (LegacyGreenFlag | string)[];
+  areas_for_improvement?: string[];
+  overall_summary?: string;
+}
 
 /**
  * Legacy VideoEvaluationOutput format detection and migration
  * Converts v1.x format to v3.0.0 RubricAssessmentOutput format
  */
-function migrateVideoEvaluationToRubric(data: any): RubricAssessmentOutput | null {
+function migrateVideoEvaluationToRubric(
+  data: LegacyVideoEvaluation
+): RubricAssessmentOutput | null {
   // Check if it's already in v3 format (has dimensionScores array)
   if (data?.dimensionScores && Array.isArray(data.dimensionScores)) {
-    return data as RubricAssessmentOutput;
+    return data as unknown as RubricAssessmentOutput;
   }
 
   // Check if it's legacy v1 format (has skill_scores object)
-  if (data?.skill_scores && typeof data.skill_scores === 'object') {
+  if (data?.skill_scores && typeof data.skill_scores === "object") {
     const migrated: RubricAssessmentOutput = {
       evaluationVersion: "3.0.0",
-      roleFamilySlug: "engineering",  // Default to engineering for legacy data
+      roleFamilySlug: "engineering", // Default to engineering for legacy data
       overallScore: data.overall_score?.score || 2.0,
       dimensionScores: [],
-      detectedRedFlags: data.red_flags?.map((rf: any) => ({
-        flag: rf.signal || rf,
-        evidence: rf.evidence || "",
-        severity: "medium" as const
-      })) || [],
-      topStrengths: data.green_flags?.map((gf: any) => ({
-        dimension: "general",
-        score: 3.0,
-        description: gf.signal || gf,
-        evidence: []
-      })) || [],
-      growthAreas: data.areas_for_improvement?.map((area: any) => ({
-        dimension: "general",
-        score: 2.0,
-        description: area,
-        suggestion: ""
-      })) || [],
+      detectedRedFlags:
+        data.red_flags?.map((rf: LegacyRedFlag | string) => ({
+          slug: "legacy-migrated",
+          name: (typeof rf === "string" ? rf : rf.signal) || "",
+          description: (typeof rf === "string" ? rf : rf.signal) || "",
+          evidence: (typeof rf === "string" ? "" : rf.evidence) || "",
+          timestamps: [],
+        })) || [],
+      topStrengths:
+        data.green_flags?.map((gf: LegacyGreenFlag | string) => ({
+          dimension: "general",
+          score: 3.0,
+          description: (typeof gf === "string" ? gf : gf.signal) || "",
+        })) || [],
+      growthAreas:
+        data.areas_for_improvement?.map((area: string) => ({
+          dimension: "general",
+          score: 2.0,
+          description: area,
+        })) || [],
       overallSummary: data.overall_summary || "",
       evaluationConfidence: "medium" as const,
-      insufficientEvidenceNotes: null
+      insufficientEvidenceNotes: null,
     };
 
     // Migrate skill scores to dimension scores
-    Object.entries(data.skill_scores).forEach(([key, value]: [string, any]) => {
-      migrated.dimensionScores.push({
-        dimensionSlug: key.toLowerCase().replace(/_/g, '-'),
-        dimensionName: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        score: value.score || null,
-        summary: `Performance in ${key.replace(/_/g, ' ')}`,
-        confidence: "medium" as const,
-        rationale: value.rationale || "",
-        observableBehaviors: [],
-        timestamps: [],
-        trainableGap: value.score && value.score < 3.0 || false,
-        greenFlags: [],
-        redFlags: []
-      });
-    });
+    Object.entries(data.skill_scores).forEach(
+      ([key, value]: [string, LegacySkillScore]) => {
+        migrated.dimensionScores.push({
+          dimensionSlug: key.toLowerCase().replace(/_/g, "-"),
+          dimensionName: key
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase()),
+          score: value.score || null,
+          summary: `Performance in ${key.replace(/_/g, " ")}`,
+          confidence: "medium" as const,
+          rationale: value.rationale || "",
+          observableBehaviors: [],
+          timestamps: [],
+          trainableGap: (value.score && value.score < 3.0) || false,
+          greenFlags: [],
+          redFlags: [],
+        });
+      }
+    );
 
     return migrated;
   }
@@ -109,7 +151,10 @@ function convertRubricToReport(
   rubricResult: RubricAssessmentOutput,
   assessmentId: string,
   candidateName?: string,
-  timing?: { totalDurationMinutes: number | null; workingPhaseMinutes: number | null },
+  timing?: {
+    totalDurationMinutes: number | null;
+    workingPhaseMinutes: number | null;
+  },
   coworkersContacted?: number
 ): AssessmentReport {
   const skillScores: SkillScore[] = [];
@@ -121,7 +166,8 @@ function convertRubricToReport(
     if (dimScore.score === null) continue;
 
     // Map rubric slug → assessment dimension → report category
-    const assessmentDim = RUBRIC_TO_ASSESSMENT_DIMENSION[dimScore.dimensionSlug];
+    const assessmentDim =
+      RUBRIC_TO_ASSESSMENT_DIMENSION[dimScore.dimensionSlug];
     const category = assessmentDim
       ? ASSESSMENT_DIM_TO_CATEGORY[assessmentDim]
       : dimScore.dimensionSlug; // Fall back to slug itself if no mapping
@@ -129,8 +175,8 @@ function convertRubricToReport(
     if (!category) continue;
 
     const evidence: string[] = [
-      ...dimScore.greenFlags.map(f => `+ ${f}`),
-      ...dimScore.redFlags.map(f => `- ${f}`),
+      ...dimScore.greenFlags.map((f) => `+ ${f}`),
+      ...dimScore.redFlags.map((f) => `- ${f}`),
     ];
 
     const candidate: SkillScore = {
@@ -151,8 +197,10 @@ function convertRubricToReport(
   skillScores.push(...Object.values(bestByCategory));
 
   // Build narrative from v3 fields (topStrengths / growthAreas / detectedRedFlags)
-  const strengths = rubricResult.topStrengths.map(s => s.description);
-  const areasForImprovement = rubricResult.growthAreas.map(g => g.description);
+  const strengths = rubricResult.topStrengths.map((s) => s.description);
+  const areasForImprovement = rubricResult.growthAreas.map(
+    (g) => g.description
+  );
 
   // Add detected red flags to areas for improvement
   for (const rf of rubricResult.detectedRedFlags) {
@@ -161,8 +209,12 @@ function convertRubricToReport(
 
   // Build notable observations from highest-scoring dimension behaviors
   const notableObservations: string[] = rubricResult.dimensionScores
-    .filter(d => d.score !== null && d.score >= 3)
-    .flatMap(d => d.observableBehaviors.slice(0, 1).map(b => `[${b.timestamp}] ${b.behavior}`))
+    .filter((d) => d.score !== null && d.score >= 3)
+    .flatMap((d) =>
+      d.observableBehaviors
+        .slice(0, 1)
+        .map((b) => `[${b.timestamp}] ${b.behavior}`)
+    )
     .slice(0, 5);
 
   return {
@@ -179,16 +231,16 @@ function convertRubricToReport(
       notableObservations,
     },
     recommendations: skillScores
-      .filter(s => s.score <= 2)
+      .filter((s) => s.score <= 2)
       .slice(0, 3)
       .map((skill) => ({
         category: skill.category,
-        priority: skill.score <= 1 ? "high" : "medium" as const,
+        priority: skill.score <= 1 ? "high" : ("medium" as const),
         title: `Improve ${skill.category.replace(/_/g, " ")}`,
         description: skill.notes,
         actionableSteps: skill.evidence
-          .filter(e => e.startsWith("- "))
-          .map(e => `Address: ${e.slice(2)}`)
+          .filter((e) => e.startsWith("- "))
+          .map((e) => `Address: ${e.slice(2)}`)
           .slice(0, 3),
       })),
     metrics: {
@@ -286,7 +338,10 @@ export async function POST(request: Request) {
     const videoUrl = assessment.recordings[0]?.storageUrl;
     if (!videoUrl) {
       return NextResponse.json(
-        { error: "No video recording found for this assessment. Video evaluation cannot proceed without a recording." },
+        {
+          error:
+            "No video recording found for this assessment. Video evaluation cannot proceed without a recording.",
+        },
         { status: 400 }
       );
     }
@@ -305,14 +360,25 @@ export async function POST(request: Request) {
 
     let videoResult: RubricAssessmentOutput | null = null;
 
-    if (videoAssessment?.status === VideoAssessmentStatus.COMPLETED && videoAssessment.summary?.rawAiResponse) {
+    if (
+      videoAssessment?.status === VideoAssessmentStatus.COMPLETED &&
+      videoAssessment.summary?.rawAiResponse
+    ) {
       // Use existing video evaluation result - migrate if needed from v1 to v3 format
-      videoResult = migrateVideoEvaluationToRubric(videoAssessment.summary.rawAiResponse);
+      videoResult = migrateVideoEvaluationToRubric(
+        videoAssessment.summary.rawAiResponse as LegacyVideoEvaluation
+      );
       if (!videoResult) {
-        console.error("Failed to migrate video evaluation format for assessment", assessmentId);
+        console.error(
+          "Failed to migrate video evaluation format for assessment",
+          assessmentId
+        );
       }
-    } else if (!videoAssessment || videoAssessment.status === VideoAssessmentStatus.PENDING ||
-               videoAssessment.status === VideoAssessmentStatus.FAILED) {
+    } else if (
+      !videoAssessment ||
+      videoAssessment.status === VideoAssessmentStatus.PENDING ||
+      videoAssessment.status === VideoAssessmentStatus.FAILED
+    ) {
       // Trigger video evaluation and wait for it
       try {
         // Create video assessment record if it doesn't exist
@@ -354,9 +420,14 @@ export async function POST(request: Request) {
         // Fetch the results
         const results = await getEvaluationResults(videoAssessmentId);
         if (results.summary?.rawAiResponse) {
-          videoResult = migrateVideoEvaluationToRubric(results.summary.rawAiResponse);
+          videoResult = migrateVideoEvaluationToRubric(
+            results.summary.rawAiResponse as LegacyVideoEvaluation
+          );
           if (!videoResult) {
-            console.error("Failed to migrate newly evaluated video format for assessment", assessmentId);
+            console.error(
+              "Failed to migrate newly evaluated video format for assessment",
+              assessmentId
+            );
           }
         }
       } catch (error) {
@@ -368,7 +439,10 @@ export async function POST(request: Request) {
       }
     } else if (videoAssessment.status === VideoAssessmentStatus.PROCESSING) {
       return NextResponse.json(
-        { error: "Video evaluation is still in progress. Please try again later." },
+        {
+          error:
+            "Video evaluation is still in progress. Please try again later.",
+        },
         { status: 202 }
       );
     }
@@ -382,13 +456,14 @@ export async function POST(request: Request) {
 
     // Calculate timing
     const completedAt = assessment.completedAt || new Date();
-    const totalDurationMs = completedAt.getTime() - assessment.startedAt.getTime();
+    const totalDurationMs =
+      completedAt.getTime() - assessment.startedAt.getTime();
     const totalDurationMinutes = Math.floor(totalDurationMs / 60000);
 
     // Count unique coworkers contacted
     const uniqueCoworkerIds = new Set(
       assessment.conversations
-        .map(c => c.coworkerId)
+        .map((c) => c.coworkerId)
         .filter((id): id is string => id !== null)
     );
 

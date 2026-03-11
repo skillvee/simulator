@@ -30,7 +30,8 @@ vi.mock("@/server/db", () => ({
     user: {
       update: (args: unknown) => mockUpdate(args),
     },
-    $transaction: (fn: (tx: unknown) => Promise<unknown>) => mockTransaction(fn),
+    $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
+      mockTransaction(fn),
   },
 }));
 
@@ -99,7 +100,10 @@ describe("data-deletion", () => {
       // Transaction mock - execute the callback with a mock tx
       mockTransaction.mockImplementation(async (fn) => {
         const tx = {
-          assessment: { count: vi.fn().mockResolvedValue(0), deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+          assessment: {
+            count: vi.fn().mockResolvedValue(0),
+            deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+          },
           conversation: { count: vi.fn().mockResolvedValue(0) },
           recording: { count: vi.fn().mockResolvedValue(0) },
           recordingSegment: { count: vi.fn().mockResolvedValue(0) },
@@ -140,7 +144,10 @@ describe("data-deletion", () => {
       mockTransaction.mockImplementation(async (fn) => {
         callOrder.push("transaction");
         const tx = {
-          assessment: { count: vi.fn().mockResolvedValue(1), deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          assessment: {
+            count: vi.fn().mockResolvedValue(1),
+            deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
+          },
           conversation: { count: vi.fn().mockResolvedValue(1) },
           recording: { count: vi.fn().mockResolvedValue(1) },
           recordingSegment: { count: vi.fn().mockResolvedValue(1) },
@@ -175,14 +182,45 @@ describe("data-deletion", () => {
       mockTransaction.mockImplementation(async (fn) => {
         const tx = {
           assessment: {
-            count: vi.fn().mockImplementation(() => { txOperations.push("assessment.count"); return Promise.resolve(0); }),
-            deleteMany: vi.fn().mockImplementation(() => { txOperations.push("assessment.deleteMany"); return Promise.resolve({ count: 0 }); }),
+            count: vi.fn().mockImplementation(() => {
+              txOperations.push("assessment.count");
+              return Promise.resolve(0);
+            }),
+            deleteMany: vi.fn().mockImplementation(() => {
+              txOperations.push("assessment.deleteMany");
+              return Promise.resolve({ count: 0 });
+            }),
           },
-          conversation: { count: vi.fn().mockImplementation(() => { txOperations.push("conversation.count"); return Promise.resolve(0); }) },
-          recording: { count: vi.fn().mockImplementation(() => { txOperations.push("recording.count"); return Promise.resolve(0); }) },
-          recordingSegment: { count: vi.fn().mockImplementation(() => { txOperations.push("recordingSegment.count"); return Promise.resolve(0); }) },
-          hRInterviewAssessment: { count: vi.fn().mockImplementation(() => { txOperations.push("hRInterviewAssessment.count"); return Promise.resolve(0); }) },
-          user: { update: vi.fn().mockImplementation(() => { txOperations.push("user.update"); return Promise.resolve({}); }) },
+          conversation: {
+            count: vi.fn().mockImplementation(() => {
+              txOperations.push("conversation.count");
+              return Promise.resolve(0);
+            }),
+          },
+          recording: {
+            count: vi.fn().mockImplementation(() => {
+              txOperations.push("recording.count");
+              return Promise.resolve(0);
+            }),
+          },
+          recordingSegment: {
+            count: vi.fn().mockImplementation(() => {
+              txOperations.push("recordingSegment.count");
+              return Promise.resolve(0);
+            }),
+          },
+          hRInterviewAssessment: {
+            count: vi.fn().mockImplementation(() => {
+              txOperations.push("hRInterviewAssessment.count");
+              return Promise.resolve(0);
+            }),
+          },
+          user: {
+            update: vi.fn().mockImplementation(() => {
+              txOperations.push("user.update");
+              return Promise.resolve({});
+            }),
+          },
         };
         return fn(tx);
       });
@@ -206,7 +244,9 @@ describe("data-deletion", () => {
       ]);
 
       // Transaction fails mid-operation
-      mockTransaction.mockRejectedValueOnce(new Error("Database transaction failed"));
+      mockTransaction.mockRejectedValueOnce(
+        new Error("Database transaction failed")
+      );
       mockStorageRemove.mockResolvedValue({ error: null });
 
       const result = await deleteUserData("user-123");
@@ -232,7 +272,10 @@ describe("data-deletion", () => {
 
       mockTransaction.mockImplementation(async (fn) => {
         const tx = {
-          assessment: { count: vi.fn().mockResolvedValue(0), deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+          assessment: {
+            count: vi.fn().mockResolvedValue(0),
+            deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+          },
           conversation: { count: vi.fn().mockResolvedValue(0) },
           recording: { count: vi.fn().mockResolvedValue(0) },
           recordingSegment: { count: vi.fn().mockResolvedValue(0) },
@@ -273,7 +316,10 @@ describe("data-deletion", () => {
 
       mockTransaction.mockImplementation(async (fn) => {
         const tx = {
-          assessment: { count: vi.fn().mockResolvedValue(5), deleteMany: vi.fn().mockResolvedValue({ count: 5 }) },
+          assessment: {
+            count: vi.fn().mockResolvedValue(5),
+            deleteMany: vi.fn().mockResolvedValue({ count: 5 }),
+          },
           conversation: { count: vi.fn().mockResolvedValue(10) },
           recording: { count: vi.fn().mockResolvedValue(3) },
           recordingSegment: { count: vi.fn().mockResolvedValue(7) },
@@ -311,7 +357,10 @@ describe("data-deletion", () => {
 
       mockTransaction.mockImplementation(async (fn) => {
         const tx = {
-          assessment: { count: vi.fn().mockResolvedValue(0), deleteMany: vi.fn().mockResolvedValue({ count: 0 }) },
+          assessment: {
+            count: vi.fn().mockResolvedValue(0),
+            deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+          },
           conversation: { count: vi.fn().mockResolvedValue(0) },
           recording: { count: vi.fn().mockResolvedValue(0) },
           recordingSegment: { count: vi.fn().mockResolvedValue(0) },
@@ -320,7 +369,7 @@ describe("data-deletion", () => {
             update: vi.fn().mockImplementation((args: unknown) => {
               mockUpdate(args);
               return Promise.resolve({});
-            })
+            }),
           },
         };
         return fn(tx);

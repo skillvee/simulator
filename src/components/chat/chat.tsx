@@ -48,7 +48,11 @@ interface ChatProps {
  * Detect reactions based on user message content
  * Returns array of reactions that should be added to the user's message
  */
-function detectReactions(userMessage: string, coworkerName: string, isFirstMessage: boolean): MessageReaction[] {
+function detectReactions(
+  userMessage: string,
+  coworkerName: string,
+  isFirstMessage: boolean
+): MessageReaction[] {
   const reactions: MessageReaction[] = [];
   const lowerMsg = userMessage.toLowerCase();
 
@@ -59,12 +63,20 @@ function detectReactions(userMessage: string, coworkerName: string, isFirstMessa
   }
 
   // PR URL detection
-  if (lowerMsg.includes("github.com") || lowerMsg.includes("gitlab.com") || lowerMsg.includes("bitbucket.org")) {
+  if (
+    lowerMsg.includes("github.com") ||
+    lowerMsg.includes("gitlab.com") ||
+    lowerMsg.includes("bitbucket.org")
+  ) {
     reactions.push({ emoji: "👀", reactorName: coworkerName });
   }
 
   // Thank you detection
-  if (lowerMsg.includes("thank") || lowerMsg.includes("thx") || lowerMsg.includes("thanks")) {
+  if (
+    lowerMsg.includes("thank") ||
+    lowerMsg.includes("thx") ||
+    lowerMsg.includes("thanks")
+  ) {
     reactions.push({ emoji: "👍", reactorName: coworkerName });
   }
 
@@ -97,7 +109,8 @@ export function Chat({
 
   // Defense mode: disable text input when PR submitted and coworker is manager
   const isManagerCoworker = coworker.role.toLowerCase().includes("manager");
-  const isDefenseMode = defenseCallRequired || !!(initialPrUrl && isManagerCoworker);
+  const isDefenseMode =
+    defenseCallRequired || !!(initialPrUrl && isManagerCoworker);
   const isInputDisabled = disableInput || isDefenseMode;
 
   // Check if currently in a call with this coworker
@@ -165,19 +178,22 @@ export function Chat({
   }, []);
 
   // Callbacks for manager auto-start messages
-  const handleManagerMessages = useCallback((newMessages: ChatMessage[]) => {
-    setMessages((prev) => [...prev, ...newMessages]);
-    // Notify parent component about new messages for unread count
-    if (onNewMessage && newMessages.length > 0) {
-      // Only count model messages (from the coworker)
-      const modelMessages = newMessages.filter(msg => msg.role === 'model');
-      modelMessages.forEach(() => {
-        onNewMessage(coworker.id);
-        // Play sound for each model message
-        playMessageSound();
-      });
-    }
-  }, [coworker.id, onNewMessage]);
+  const handleManagerMessages = useCallback(
+    (newMessages: ChatMessage[]) => {
+      setMessages((prev) => [...prev, ...newMessages]);
+      // Notify parent component about new messages for unread count
+      if (onNewMessage && newMessages.length > 0) {
+        // Only count model messages (from the coworker)
+        const modelMessages = newMessages.filter((msg) => msg.role === "model");
+        modelMessages.forEach(() => {
+          onNewMessage(coworker.id);
+          // Play sound for each model message
+          playMessageSound();
+        });
+      }
+    },
+    [coworker.id, onNewMessage]
+  );
 
   const handleTypingStart = useCallback(() => {
     setIsManagerTyping(true);
@@ -212,8 +228,8 @@ export function Chat({
       for (let i = 0; i < msgs.length; i++) {
         // Show typing indicator before each message
         setIsCoworkerTyping(true);
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1500 + Math.random() * 1500) // 1.5-3s typing
+        await new Promise(
+          (resolve) => setTimeout(resolve, 1500 + Math.random() * 1500) // 1.5-3s typing
         );
         setIsCoworkerTyping(false);
 
@@ -275,7 +291,11 @@ export function Chat({
           // If all messages are from the coworker (no user messages yet)
           // and we haven't revealed for this coworker before, reveal one-by-one
           const hasUserMessages = history.some((m) => m.role === "user");
-          if (!hasUserMessages && history.length > 0 && !revealedCoworkers.has(coworker.id)) {
+          if (
+            !hasUserMessages &&
+            history.length > 0 &&
+            !revealedCoworkers.has(coworker.id)
+          ) {
             revealedCoworkers.add(coworker.id);
             setIsLoading(false);
             await revealMessagesSequentially(history);
@@ -352,8 +372,9 @@ export function Chat({
       // Simulate "reading" delay before coworker starts typing
       // Longer messages take longer to read (~200ms per word, min 1.5s, max 5s)
       const wordCount = userMessage.text.split(/\s+/).length;
-      const readingDelay = Math.min(5000, Math.max(1500, wordCount * 200)) + Math.random() * 1500;
-      await new Promise(resolve => setTimeout(resolve, readingDelay));
+      const readingDelay =
+        Math.min(5000, Math.max(1500, wordCount * 200)) + Math.random() * 1500;
+      await new Promise((resolve) => setTimeout(resolve, readingDelay));
 
       // Now start the realistic typing pattern (after they've "read" the message)
       startRealisticTyping();
@@ -361,12 +382,12 @@ export function Chat({
       // Additional composing delay based on coworker response speed
       const getResponseDelay = (role: string): number => {
         const isManager = role.toLowerCase().includes("manager");
-        if (isManager) return 2000 + Math.random() * 3000;  // 2-5s
-        return 5000 + Math.random() * 10000;  // 5-15s
+        if (isManager) return 2000 + Math.random() * 3000; // 2-5s
+        return 5000 + Math.random() * 10000; // 5-15s
       };
 
       const delay = getResponseDelay(coworker.role);
-      const delayPromise = new Promise(resolve => setTimeout(resolve, delay));
+      const delayPromise = new Promise((resolve) => setTimeout(resolve, delay));
 
       // Wait for both API response and composing delay
       const [data] = await Promise.all([apiPromise, delayPromise]);
@@ -392,15 +413,21 @@ export function Chat({
 
       // Detect if reactions should be added to the user's message
       // Count user messages before this one to detect first message
-      const userMessageCountBefore = messages.filter(m => m.role === "user").length;
+      const userMessageCountBefore = messages.filter(
+        (m) => m.role === "user"
+      ).length;
       const isFirstUserMessage = userMessageCountBefore === 0;
-      const reactions = detectReactions(userMessage.text, coworker.name, isFirstUserMessage);
+      const reactions = detectReactions(
+        userMessage.text,
+        coworker.name,
+        isFirstUserMessage
+      );
 
       // Add reactions with a delay (2-5 seconds) if any were detected
       if (reactions.length > 0) {
         const delay = 2000 + Math.random() * 3000;
         setTimeout(() => {
-          setMessages(prev => {
+          setMessages((prev) => {
             // Find the user message we just added (should be second to last now)
             const userMsgIndex = prev.length - 2;
             if (userMsgIndex >= 0 && prev[userMsgIndex].role === "user") {
@@ -447,14 +474,33 @@ export function Chat({
   };
 
   return (
-    <div className="flex flex-col min-h-0 h-full">
-      <div className="flex-1 min-h-0 shadow-sm flex flex-col" style={{background: "hsl(var(--slack-bg-main))", border: "1px solid hsl(var(--slack-border))"}}>
+    <div className="flex h-full min-h-0 flex-col">
+      <div
+        className="flex min-h-0 flex-1 flex-col shadow-sm"
+        style={{
+          background: "hsl(var(--slack-bg-main))",
+          border: "1px solid hsl(var(--slack-border))",
+        }}
+      >
         {/* Header */}
-        <header className="shrink-0 h-16 flex items-center justify-between px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
+        <header
+          className="flex h-16 shrink-0 items-center justify-between px-6"
+          style={{ borderBottom: "1px solid hsl(var(--slack-border))" }}
+        >
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
-              <h2 className="text-lg font-bold" style={{color: "hsl(var(--slack-text))"}}>{coworker.name}</h2>
-              <span className="text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>{coworker.role}</span>
+              <h2
+                className="text-lg font-bold"
+                style={{ color: "hsl(var(--slack-text))" }}
+              >
+                {coworker.name}
+              </h2>
+              <span
+                className="text-xs"
+                style={{ color: "hsl(var(--slack-text-muted))" }}
+              >
+                {coworker.role}
+              </span>
             </div>
           </div>
 
@@ -468,30 +514,32 @@ export function Chat({
             ) : isDefenseMode ? (
               <Button
                 size="sm"
-                className="shadow-sm rounded-full animate-pulse bg-primary text-primary-foreground"
+                className="animate-pulse rounded-full bg-primary text-primary-foreground shadow-sm"
                 onClick={() => startCall(coworker.id, "coworker")}
               >
-                <Headphones className="h-4 w-4 mr-2" /> Call Manager
+                <Headphones className="mr-2 h-4 w-4" /> Call Manager
               </Button>
             ) : (
               <Button
                 size="sm"
                 variant="outline"
-                className="shadow-sm rounded-full"
+                className="rounded-full shadow-sm"
                 onClick={() => startCall(coworker.id, "coworker")}
               >
-                <Headphones className="h-4 w-4 mr-2" /> Start Call
+                <Headphones className="mr-2 h-4 w-4" /> Start Call
               </Button>
             )}
           </div>
         </header>
 
         {/* Messages area */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6">
-          <div className="py-6 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6">
+          <div className="space-y-6 py-6">
             {isLoading ? (
               <div className="flex h-full items-center justify-center py-20">
-                <div style={{color: "hsl(var(--slack-text-muted))"}}>Loading...</div>
+                <div style={{ color: "hsl(var(--slack-text-muted))" }}>
+                  Loading...
+                </div>
               </div>
             ) : messages.length === 0 ? (
               isManagerChat ? (
@@ -503,7 +551,7 @@ export function Chat({
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
                       size="md"
-                      className="mt-1 shadow-sm border border-border"
+                      className="mt-1 border border-border shadow-sm"
                     />
                     <div className="flex flex-col items-start">
                       <TypingIndicator coworkerName={coworker.name} />
@@ -511,21 +559,27 @@ export function Chat({
                   </div>
                 </div>
               ) : (
-                <div className="flex h-full flex-col items-center justify-center text-center py-20">
+                <div className="flex h-full flex-col items-center justify-center py-20 text-center">
                   <div className="mb-4">
                     <CoworkerAvatar
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
                       size="lg"
-                      className="shadow-md border border-border"
+                      className="border border-border shadow-md"
                     />
                   </div>
-                  <h2 className="mb-2 text-lg font-semibold" style={{color: "hsl(var(--slack-text))"}}>
+                  <h2
+                    className="mb-2 text-lg font-semibold"
+                    style={{ color: "hsl(var(--slack-text))" }}
+                  >
                     Start a conversation with {coworker.name}
                   </h2>
-                  <p className="max-w-md text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
-                    {coworker.name} is a {coworker.role}. Ask questions about the
-                    project, codebase, or anything else you need help with.
+                  <p
+                    className="max-w-md text-sm"
+                    style={{ color: "hsl(var(--slack-text-muted))" }}
+                  >
+                    {coworker.name} is a {coworker.role}. Ask questions about
+                    the project, codebase, or anything else you need help with.
                   </p>
                 </div>
               )
@@ -534,11 +588,14 @@ export function Chat({
                 {messages.map((message, index) => {
                   const isMe = message.role === "user";
                   return (
-                    <div key={index} className={`flex gap-4 ${isMe ? "flex-row-reverse" : ""}`}>
+                    <div
+                      key={index}
+                      className={`flex gap-4 ${isMe ? "flex-row-reverse" : ""}`}
+                    >
                       {/* Avatar */}
                       {isMe ? (
-                        <Avatar className="h-10 w-10 mt-1 shadow-sm border border-border">
-                          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                        <Avatar className="mt-1 h-10 w-10 border border-border shadow-sm">
+                          <AvatarFallback className="bg-primary text-sm font-medium text-primary-foreground">
                             You
                           </AvatarFallback>
                         </Avatar>
@@ -547,44 +604,63 @@ export function Chat({
                           name={coworker.name}
                           avatarUrl={coworker.avatarUrl}
                           size="md"
-                          className="mt-1 shadow-sm border border-border"
+                          className="mt-1 border border-border shadow-sm"
                         />
                       )}
 
                       {/* Message content */}
-                      <div className={`flex flex-col max-w-[60%] ${isMe ? "items-end" : "items-start"}`}>
+                      <div
+                        className={`flex max-w-[60%] flex-col ${isMe ? "items-end" : "items-start"}`}
+                      >
                         <div
-                          className={`px-5 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
+                          className={`rounded-2xl px-5 py-3 text-[15px] leading-relaxed shadow-sm ${
                             isMe
-                              ? "bg-primary text-primary-foreground rounded-br-sm"
+                              ? "rounded-br-sm bg-primary text-primary-foreground"
                               : "rounded-bl-sm"
                           }`}
-                          style={isMe ? {} : {background: "hsl(var(--slack-bg-surface))", color: "hsl(var(--slack-text))"}}
+                          style={
+                            isMe
+                              ? {}
+                              : {
+                                  background: "hsl(var(--slack-bg-surface))",
+                                  color: "hsl(var(--slack-text))",
+                                }
+                          }
                         >
                           {message.text}
                         </div>
 
                         {/* Reactions */}
                         {message.reactions && message.reactions.length > 0 && (
-                          <div className="flex gap-1 mt-1 px-1">
+                          <div className="mt-1 flex gap-1 px-1">
                             {message.reactions.map((reaction, i) => (
                               <span
                                 key={i}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full cursor-default hover:bg-opacity-80 transition-colors"
+                                className="inline-flex cursor-default items-center gap-1 rounded-full px-2 py-0.5 transition-colors hover:bg-opacity-80"
                                 style={{
                                   background: "hsl(var(--slack-bg-surface))",
-                                  border: "1px solid hsl(var(--slack-border))"
+                                  border: "1px solid hsl(var(--slack-border))",
                                 }}
                                 title={`${reaction.reactorName} reacted`}
                               >
                                 <span>{reaction.emoji}</span>
-                                <span className="text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>1</span>
+                                <span
+                                  className="text-xs"
+                                  style={{
+                                    color: "hsl(var(--slack-text-muted))",
+                                  }}
+                                >
+                                  1
+                                </span>
                               </span>
                             ))}
                           </div>
                         )}
 
-                        <span className="text-xs mt-1.5 font-medium px-1" style={{color: "hsl(var(--slack-text-muted))"}}>
+                        <span
+                          className="mt-1.5 px-1 text-xs font-medium"
+                          style={{ color: "hsl(var(--slack-text-muted))" }}
+                        >
                           {formatTimestamp(message.timestamp)}
                         </span>
                       </div>
@@ -594,13 +670,29 @@ export function Chat({
 
                 {/* Call Started Indicator */}
                 {isInCall && (
-                  <div className="flex justify-center my-6">
-                    <div className="flex items-center gap-2 rounded-full px-4 py-1.5 shadow-sm" style={{background: "hsla(var(--slack-bg-surface), 0.5)", border: "1px solid hsl(var(--slack-border))"}}>
-                      <div className="bg-green-900 p-1 rounded-full">
+                  <div className="my-6 flex justify-center">
+                    <div
+                      className="flex items-center gap-2 rounded-full px-4 py-1.5 shadow-sm"
+                      style={{
+                        background: "hsla(var(--slack-bg-surface), 0.5)",
+                        border: "1px solid hsl(var(--slack-border))",
+                      }}
+                    >
+                      <div className="rounded-full bg-green-900 p-1">
                         <Headphones className="h-3 w-3 text-green-400" />
                       </div>
-                      <span className="text-xs font-medium" style={{color: "hsl(var(--slack-text))"}}>Call started</span>
-                      <span className="text-[10px]" style={{color: "hsl(var(--slack-text-muted))"}}>• Now</span>
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: "hsl(var(--slack-text))" }}
+                      >
+                        Call started
+                      </span>
+                      <span
+                        className="text-[10px]"
+                        style={{ color: "hsl(var(--slack-text-muted))" }}
+                      >
+                        • Now
+                      </span>
                     </div>
                   </div>
                 )}
@@ -612,7 +704,7 @@ export function Chat({
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
                       size="md"
-                      className="mt-1 shadow-sm border [border-color:hsl(var(--slack-border))]"
+                      className="mt-1 border shadow-sm [border-color:hsl(var(--slack-border))]"
                     />
                     <div className="flex flex-col items-start">
                       <TypingIndicator coworkerName={coworker.name} />
@@ -627,11 +719,26 @@ export function Chat({
         </div>
 
         {/* Input area */}
-        <div className="shrink-0 p-4" style={{borderTop: "1px solid hsl(var(--slack-border))"}}>
+        <div
+          className="shrink-0 p-4"
+          style={{ borderTop: "1px solid hsl(var(--slack-border))" }}
+        >
           {isInputDisabled ? (
-            <div className="flex items-center justify-center gap-3 py-3 px-4 rounded-full" style={{background: "hsl(var(--slack-bg-surface))", border: "1px solid hsl(var(--slack-border))"}}>
-              <Headphones className="h-4 w-4 shrink-0" style={{color: "hsl(var(--slack-text-muted))"}} />
-              <span className="text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
+            <div
+              className="flex items-center justify-center gap-3 rounded-full px-4 py-3"
+              style={{
+                background: "hsl(var(--slack-bg-surface))",
+                border: "1px solid hsl(var(--slack-border))",
+              }}
+            >
+              <Headphones
+                className="h-4 w-4 shrink-0"
+                style={{ color: "hsl(var(--slack-text-muted))" }}
+              />
+              <span
+                className="text-sm"
+                style={{ color: "hsl(var(--slack-text-muted))" }}
+              >
                 {isDefenseMode
                   ? "Call your manager to walk through your PR"
                   : disableReason || "Text input is disabled"}
@@ -639,15 +746,21 @@ export function Chat({
               {isDefenseMode && !isInCall && (
                 <Button
                   size="sm"
-                  className="rounded-full ml-2 shrink-0"
+                  className="ml-2 shrink-0 rounded-full"
                   onClick={() => startCall(coworker.id, "coworker")}
                 >
-                  <Headphones className="h-3 w-3 mr-1" /> Call Now
+                  <Headphones className="mr-1 h-3 w-3" /> Call Now
                 </Button>
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2 p-2 pl-4 rounded-full focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all" style={{background: "hsl(var(--slack-bg-input))", border: "1px solid hsl(var(--slack-border))"}}>
+            <div
+              className="flex items-center gap-2 rounded-full p-2 pl-4 transition-all focus-within:border-primary/30 focus-within:ring-2 focus-within:ring-primary/20"
+              style={{
+                background: "hsl(var(--slack-bg-input))",
+                border: "1px solid hsl(var(--slack-border))",
+              }}
+            >
               <input
                 ref={inputRef}
                 type="text"
@@ -657,8 +770,8 @@ export function Chat({
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
                 disabled={isSending}
-                className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-slate-500"
-                style={{color: "hsl(var(--slack-text))"}}
+                className="flex-1 border-none bg-transparent px-2 text-sm outline-none placeholder:text-slate-500"
+                style={{ color: "hsl(var(--slack-text))" }}
               />
               <Button
                 size="icon"
@@ -680,23 +793,38 @@ export function Chat({
 function TypingIndicator({ coworkerName }: { coworkerName: string }) {
   return (
     <div className="flex flex-col items-start gap-1">
-      <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl rounded-bl-sm shadow-sm" style={{background: "hsl(var(--slack-bg-surface))"}}>
+      <div
+        className="inline-flex items-center gap-2 rounded-2xl rounded-bl-sm px-5 py-3 shadow-sm"
+        style={{ background: "hsl(var(--slack-bg-surface))" }}
+      >
         <div className="flex gap-1">
           <span
             className="h-2 w-2 animate-pulse rounded-full"
-            style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "0ms"}}
+            style={{
+              background: "hsla(var(--slack-text-muted), 0.6)",
+              animationDelay: "0ms",
+            }}
           />
           <span
             className="h-2 w-2 animate-pulse rounded-full"
-            style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "150ms"}}
+            style={{
+              background: "hsla(var(--slack-text-muted), 0.6)",
+              animationDelay: "150ms",
+            }}
           />
           <span
             className="h-2 w-2 animate-pulse rounded-full"
-            style={{background: "hsla(var(--slack-text-muted), 0.6)", animationDelay: "300ms"}}
+            style={{
+              background: "hsla(var(--slack-text-muted), 0.6)",
+              animationDelay: "300ms",
+            }}
           />
         </div>
       </div>
-      <span className="text-xs px-2" style={{color: "hsl(var(--slack-text-muted))"}}>
+      <span
+        className="px-2 text-xs"
+        style={{ color: "hsl(var(--slack-text-muted))" }}
+      >
         {coworkerName} is typing...
       </span>
     </div>

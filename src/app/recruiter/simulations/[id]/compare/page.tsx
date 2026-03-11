@@ -8,7 +8,10 @@ interface PageProps {
 /**
  * Redirect old compare page to assessments
  */
-export default async function CompareRedirect({ params, searchParams }: PageProps) {
+export default async function CompareRedirect({
+  params,
+  searchParams,
+}: PageProps) {
   const { id } = await params;
   const { ids } = await searchParams;
   const query = ids ? `?ids=${ids}` : "";

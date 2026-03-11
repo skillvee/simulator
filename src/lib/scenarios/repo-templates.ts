@@ -45,7 +45,8 @@ export async function provisionRepo(
   const githubToken = process.env.GITHUB_ORG_TOKEN;
 
   if (!githubToken) {
-    const error = "GITHUB_ORG_TOKEN not set. Add it to .env.local to enable repo provisioning.";
+    const error =
+      "GITHUB_ORG_TOKEN not set. Add it to .env.local to enable repo provisioning.";
     console.error(`[provisionRepo] ERROR: ${error}`);
     throw new Error(error);
   }
@@ -61,21 +62,25 @@ export async function provisionRepo(
     );
 
     // Phase 2: Build the repo on GitHub
-    console.log(
-      `[provisionRepo] Creating GitHub repository...`
-    );
+    console.log(`[provisionRepo] Creating GitHub repository...`);
     const repoUrl = await buildRepoFromSpec(scenarioId, spec, githubToken);
 
     if (!repoUrl) {
-      const error = "GitHub repo creation failed — check GITHUB_ORG_TOKEN permissions and GitHub API status";
+      const error =
+        "GitHub repo creation failed — check GITHUB_ORG_TOKEN permissions and GitHub API status";
       console.error(`[provisionRepo] ERROR: ${error}`);
       throw new Error(error);
     }
 
-    console.log(`[provisionRepo] SUCCESS: Repository provisioned at ${repoUrl}`);
+    console.log(
+      `[provisionRepo] SUCCESS: Repository provisioned at ${repoUrl}`
+    );
     return { repoUrl, repoSpec: spec };
   } catch (error) {
-    console.error(`[provisionRepo] FATAL ERROR for scenario ${scenarioId}:`, error);
+    console.error(
+      `[provisionRepo] FATAL ERROR for scenario ${scenarioId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -152,7 +157,9 @@ async function replayCommitHistory(
     );
 
     if (!headRefRes.ok) {
-      console.warn(`${LOG_PREFIX} Failed to get HEAD ref: ${headRefRes.status}`);
+      console.warn(
+        `${LOG_PREFIX} Failed to get HEAD ref: ${headRefRes.status}`
+      );
       return;
     }
 
@@ -325,7 +332,9 @@ async function replayCommitHistory(
         `${LOG_PREFIX} Successfully replayed ${commitsToReplay.length} commits to ${targetOwner}/${targetRepo}`
       );
     } else {
-      console.warn(`${LOG_PREFIX} Failed to update ref: ${updateRefRes.status}`);
+      console.warn(
+        `${LOG_PREFIX} Failed to update ref: ${updateRefRes.status}`
+      );
     }
   } catch (err) {
     console.warn(`${LOG_PREFIX} Error:`, err);
@@ -375,8 +384,7 @@ async function copyIssuesFromTemplate(
           body: JSON.stringify({
             title: issue.title,
             body: issue.body || "",
-            labels:
-              issue.labels?.map((l: { name: string }) => l.name) || [],
+            labels: issue.labels?.map((l: { name: string }) => l.name) || [],
           }),
         }
       );
@@ -494,11 +502,7 @@ export async function provisionAssessmentRepo(
     );
 
     // Replay commit history (template generation squashes to one commit)
-    await replayCommitHistory(
-      `${owner}/${templateRepo}`,
-      repoUrl,
-      githubToken
-    );
+    await replayCommitHistory(`${owner}/${templateRepo}`, repoUrl, githubToken);
 
     // Copy GitHub Issues (template generation doesn't copy issues)
     await copyIssuesFromTemplate(
@@ -509,10 +513,7 @@ export async function provisionAssessmentRepo(
 
     return repoUrl;
   } catch (error) {
-    console.error(
-      "[provisionAssessmentRepo] Failed to provision repo:",
-      error
-    );
+    console.error("[provisionAssessmentRepo] Failed to provision repo:", error);
     return null;
   }
 }

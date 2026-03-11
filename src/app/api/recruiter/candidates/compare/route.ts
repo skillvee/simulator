@@ -3,8 +3,17 @@ import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
-import { getRelativeStrength, type TargetLevel, type RelativeStrength } from "@/lib/rubric/level-expectations";
-import type { AssessmentMetrics, TimestampedBehavior, RubricAssessmentOutput, AssessmentStrengthOrGap } from "@/types";
+import {
+  getRelativeStrength,
+  type TargetLevel,
+  type RelativeStrength,
+} from "@/lib/rubric/level-expectations";
+import type {
+  AssessmentMetrics,
+  TimestampedBehavior,
+  RubricAssessmentOutput,
+  AssessmentStrengthOrGap,
+} from "@/types";
 
 // ============================================================================
 // Types
@@ -108,7 +117,10 @@ export async function GET(request: Request) {
     return error("assessmentIds query parameter is required", 400);
   }
 
-  const assessmentIds = assessmentIdsParam.split(",").map((id) => id.trim()).filter(Boolean);
+  const assessmentIds = assessmentIdsParam
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
 
   if (assessmentIds.length === 0) {
     return error("At least one assessmentId is required", 400);
@@ -177,7 +189,10 @@ export async function GET(request: Request) {
     );
 
     if (unauthorizedAssessments.length > 0) {
-      return error("You do not have access to one or more of these candidates", 403);
+      return error(
+        "You do not have access to one or more of these candidates",
+        403
+      );
     }
   }
 
@@ -193,12 +208,16 @@ export async function GET(request: Request) {
       const overallPercentile = percentiles?.overall ?? 0;
 
       // Parse report JSON for metrics
-      const report = assessment.report as { metrics?: AssessmentMetrics } | null;
+      const report = assessment.report as {
+        metrics?: AssessmentMetrics;
+      } | null;
       const metrics = report?.metrics;
-      const targetLevel = (assessment.scenario.targetLevel || "mid") as TargetLevel;
+      const targetLevel = (assessment.scenario.targetLevel ||
+        "mid") as TargetLevel;
 
       // Parse rawAiResponse for v3 rubric data (top_strengths, growth_areas, dimension summaries)
-      const rawAiResponse = videoAssessment?.summary?.rawAiResponse as unknown as RubricAssessmentOutput | null;
+      const rawAiResponse = videoAssessment?.summary
+        ?.rawAiResponse as unknown as RubricAssessmentOutput | null;
 
       // Build dimension scores with percentiles, flags, rationale, timestamps, behaviors
       const dimensionScores: DimensionScoreComparison[] = [];
@@ -219,18 +238,28 @@ export async function GET(request: Request) {
 
           // Parse observable behaviors — try JSON first (v3), fall back to text (v2)
           let observableBehaviors: TimestampedBehavior[] = [];
-          if (rubricDimData?.observableBehaviors && Array.isArray(rubricDimData.observableBehaviors)) {
+          if (
+            rubricDimData?.observableBehaviors &&
+            Array.isArray(rubricDimData.observableBehaviors)
+          ) {
             observableBehaviors = rubricDimData.observableBehaviors;
           } else if (score.observableBehaviors) {
             // Try parsing as JSON (v3 storage format)
             try {
               const parsed = JSON.parse(score.observableBehaviors);
-              if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === "object" && "timestamp" in parsed[0]) {
+              if (
+                Array.isArray(parsed) &&
+                parsed.length > 0 &&
+                typeof parsed[0] === "object" &&
+                "timestamp" in parsed[0]
+              ) {
                 observableBehaviors = parsed;
               }
             } catch {
               // v2 text format — split into sentences and pair with timestamps
-              const sentences = score.observableBehaviors.split(/\.\s+/).filter(Boolean);
+              const sentences = score.observableBehaviors
+                .split(/\.\s+/)
+                .filter(Boolean);
               observableBehaviors = sentences.map((s, i) => ({
                 timestamp: timestamps[i] ?? "",
                 behavior: s.endsWith(".") ? s : s + ".",
@@ -255,30 +284,39 @@ export async function GET(request: Request) {
       // Calculate overall score from dimension scores
       const overallScore =
         dimensionScores.length > 0
-          ? dimensionScores.reduce((sum, s) => sum + s.score, 0) / dimensionScores.length
+          ? dimensionScores.reduce((sum, s) => sum + s.score, 0) /
+            dimensionScores.length
           : 0;
 
       // Extract top strengths and growth areas from v3 rubric data, or derive from scores
-      let topStrengths: AssessmentStrengthOrGap[] = rawAiResponse?.topStrengths ?? [];
-      let growthAreas: AssessmentStrengthOrGap[] = rawAiResponse?.growthAreas ?? [];
+      let topStrengths: AssessmentStrengthOrGap[] =
+        rawAiResponse?.topStrengths ?? [];
+      let growthAreas: AssessmentStrengthOrGap[] =
+        rawAiResponse?.growthAreas ?? [];
 
       // Fallback: derive from dimension scores if not stored
       if (topStrengths.length === 0 && dimensionScores.length > 0) {
         const sorted = [...dimensionScores].sort((a, b) => b.score - a.score);
-        topStrengths = sorted.slice(0, 3).filter(d => d.score >= 3).map(d => ({
-          dimension: d.dimension,
-          score: d.score,
-          description: d.greenFlags[0] ?? d.rationale.split(".")[0] ?? "",
-        }));
+        topStrengths = sorted
+          .slice(0, 3)
+          .filter((d) => d.score >= 3)
+          .map((d) => ({
+            dimension: d.dimension,
+            score: d.score,
+            description: d.greenFlags[0] ?? d.rationale.split(".")[0] ?? "",
+          }));
       }
 
       if (growthAreas.length === 0 && dimensionScores.length > 0) {
         const sorted = [...dimensionScores].sort((a, b) => a.score - b.score);
-        growthAreas = sorted.slice(0, 3).filter(d => d.score <= 2).map(d => ({
-          dimension: d.dimension,
-          score: d.score,
-          description: d.redFlags[0] ?? d.rationale.split(".")[0] ?? "",
-        }));
+        growthAreas = sorted
+          .slice(0, 3)
+          .filter((d) => d.score <= 2)
+          .map((d) => ({
+            dimension: d.dimension,
+            score: d.score,
+            description: d.redFlags[0] ?? d.rationale.split(".")[0] ?? "",
+          }));
       }
 
       // Extract summary from VideoAssessmentSummary
@@ -297,16 +335,23 @@ export async function GET(request: Request) {
             : aiScore >= 1.5
               ? "Basic"
               : "None";
-      const aiBehaviors = creativityDim?.observableBehaviors
-        ?.map((ob) => ob.behavior)
-        .slice(0, 3) ?? [];
+      const aiBehaviors =
+        creativityDim?.observableBehaviors
+          ?.map((ob) => ob.behavior)
+          .slice(0, 3) ?? [];
 
       // Compute voice call minutes and message word count from conversations
       let voiceCallMinutes = 0;
       let messageWordCount = 0;
 
       for (const convo of assessment.conversations) {
-        const messages = Array.isArray(convo.transcript) ? (convo.transcript as Array<{ role?: string; text?: string; timestamp?: string }>) : [];
+        const messages = Array.isArray(convo.transcript)
+          ? (convo.transcript as Array<{
+              role?: string;
+              text?: string;
+              timestamp?: string;
+            }>)
+          : [];
 
         if (convo.type === "voice") {
           // Approximate duration from first and last message timestamps
@@ -324,7 +369,8 @@ export async function GET(request: Request) {
               // Try MM:SS or HH:MM:SS
               const parts = ts.split(":").map(Number);
               if (parts.length === 2) return (parts[0] * 60 + parts[1]) * 1000;
-              if (parts.length === 3) return (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
+              if (parts.length === 3)
+                return (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
               return null;
             };
             const firstMs = parseTs(first);

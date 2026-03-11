@@ -16,14 +16,18 @@ interface ExtendedSessionUser {
 /**
  * Check if the given user has recruiter role
  */
-export function isRecruiter(user: ExtendedSessionUser | undefined | null): boolean {
+export function isRecruiter(
+  user: ExtendedSessionUser | undefined | null
+): boolean {
   return user?.role === "RECRUITER";
 }
 
 /**
  * Check if the given user can access recruiter features (RECRUITER or ADMIN)
  */
-export function canAccessRecruiterFeatures(user: ExtendedSessionUser | undefined | null): boolean {
+export function canAccessRecruiterFeatures(
+  user: ExtendedSessionUser | undefined | null
+): boolean {
   return user?.role === "RECRUITER" || user?.role === "ADMIN";
 }
 

@@ -14,7 +14,5 @@ interface PageTransitionProps {
  * Animation: 150ms ease-out, 4px vertical slide
  */
 export function PageTransition({ children, className }: PageTransitionProps) {
-  return (
-    <div className={cn("animate-page-enter", className)}>{children}</div>
-  );
+  return <div className={cn("animate-page-enter", className)}>{children}</div>;
 }

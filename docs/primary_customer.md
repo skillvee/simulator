@@ -13,6 +13,7 @@
 **Target Company Profile**: High-growth startups (Series B, C, D) with aggressive hiring targets (5+ technical hires per month)
 
 **Why This Segment**:
+
 - They own hiring outcomes and live with consequences of bad hires
 - They care about quality signal, not just screening volume
 - Scaling fast means every hire matters—bad hires compound quickly
@@ -36,6 +37,7 @@ Tech Hiring Managers are the people responsible for building and growing enginee
 - Principal/Staff Engineer (with hiring responsibilities)
 
 They are **not recruiters**. While recruiters manage candidate pipelines and process, hiring managers:
+
 - Define what "good" looks like for their team
 - Make final hiring decisions
 - Onboard new hires onto their team
@@ -44,7 +46,9 @@ They are **not recruiters**. While recruiters manage candidate pipelines and pro
 ### What They Care About Most
 
 #### 1. Team Productivity & Velocity
+
 Engineering managers are measured on what their team ships. Every hiring decision directly impacts their ability to deliver. They ask themselves:
+
 - "Will this person make my team faster or slower?"
 - "How long until they're productive?"
 - "Will I need to spend significant time mentoring them?"
@@ -52,7 +56,9 @@ Engineering managers are measured on what their team ships. Every hiring decisio
 > 65% of engineering leaders reject quantity-based metrics like lines of code, favoring quality-focused measures that better reflect real impact. ([LeadDev](https://leaddev.com/the-engineering-team-performance-report-2025))
 
 #### 2. Team Dynamics & Culture Fit
+
 A bad hire doesn't just fail to contribute—they actively harm the team:
+
 - Demotivate high performers
 - Create tension and conflict
 - Cause top talent to leave
@@ -60,7 +66,9 @@ A bad hire doesn't just fail to contribute—they actively harm the team:
 > "One of the most overlooked consequences of a bad hire is the effect on existing team members. A poor performer or disruptive personality can demotivate skilled workers, foster resentment, or even cause high-performing employees to leave." ([HBK](https://hbkcpa.com/insights/the-hidden-costs-of-bad-hiring-how-to-calculate-your-true-cost-per-hire/))
 
 #### 3. Code Quality & Technical Standards
+
 They want engineers who:
+
 - Write clean, maintainable code
 - Understand testing and quality practices
 - Can work independently without constant review
@@ -69,7 +77,9 @@ They want engineers who:
 > Engineering leaders are balancing rapid feature delivery with sustainable codebase health. Investing in long-term stability means fewer emergencies and smoother development. ([LeadDev](https://leaddev.com/career-development/what-engineering-managers-need-to-know-for-2025))
 
 #### 4. Communication & Collaboration Skills
+
 Modern engineering is collaborative. They need people who:
+
 - Can explain their work clearly
 - Participate effectively in code reviews
 - Communicate proactively about blockers
@@ -78,7 +88,9 @@ Modern engineering is collaborative. They need people who:
 > "In today's world, a hiring manager is just as likely to be looking for teamwork and general problem-solving skills as they are hard technical skills." ([Built In](https://builtin.com/software-engineering-perspectives/what-look-when-hiring-software-engineers))
 
 #### 5. Growth Mindset & Learning Ability
+
 Technology changes constantly. They value:
+
 - Curiosity and willingness to learn
 - Ability to adapt to new tools and frameworks
 - Coachability and openness to feedback
@@ -148,6 +160,7 @@ Extended hiring processes hurt everyone:
 ### Pain Point #5: Senior Candidates Resist Traditional Assessments
 
 Top senior engineers refuse to:
+
 - Spend hours on take-home projects
 - Do whiteboard algorithm problems
 - "Prove themselves" with tests that don't reflect real work
@@ -159,6 +172,7 @@ Top senior engineers refuse to:
 ### Pain Point #6: Volume of Applicants
 
 Application volume has exploded:
+
 - One Y Combinator startup received 23,000 applications in 30 days for 8 roles
 - Spotify received 1,700 applicants in 15 hours for one role
 - Companies report going from 1-5 resumes/week to 300+/week
@@ -199,6 +213,7 @@ Research strongly supports work sample tests and job simulations:
 ### Why PM Hiring Is Also a Target
 
 Product management hiring faces similar challenges:
+
 - Role is broad and not standardized across companies
 - Hard to assess "product sense" in interviews
 - Success depends on how they work, not just what they know
@@ -226,15 +241,15 @@ Product management hiring faces similar challenges:
 
 ### Ideal Customer Characteristics
 
-| Attribute | Target Profile |
-|-----------|---------------|
-| **Company Stage** | High-growth startups: Series B, C, or D |
-| **Hiring Volume** | 5+ technical hires per month (aggressive scaling) |
-| **Industry** | Technology, FinTech, SaaS, AI/ML, Developer Tools, Healthcare Tech |
-| **Engineering Team Size** | 30-300 engineers (rapidly growing) |
-| **Employer Brand** | Strong enough to attract large applicant pools |
-| **Hiring Challenge** | Quality at speed—too many applicants, not enough signal |
-| **Budget Authority** | Hiring managers can expense tools without procurement |
+| Attribute                 | Target Profile                                                     |
+| ------------------------- | ------------------------------------------------------------------ |
+| **Company Stage**         | High-growth startups: Series B, C, or D                            |
+| **Hiring Volume**         | 5+ technical hires per month (aggressive scaling)                  |
+| **Industry**              | Technology, FinTech, SaaS, AI/ML, Developer Tools, Healthcare Tech |
+| **Engineering Team Size** | 30-300 engineers (rapidly growing)                                 |
+| **Employer Brand**        | Strong enough to attract large applicant pools                     |
+| **Hiring Challenge**      | Quality at speed—too many applicants, not enough signal            |
+| **Budget Authority**      | Hiring managers can expense tools without procurement              |
 
 ### Why High-Growth Startups
 
@@ -251,6 +266,7 @@ Product management hiring faces similar challenges:
 **The good news**: Series B-D startups have strong employer brands. They've proven product-market fit, have funding, offer equity upside, and work on interesting problems. Top talent wants to work there.
 
 **The bad news**: This creates a firehose of applications:
+
 - One Y Combinator startup received 23,000 applications in 30 days for 8 roles
 - Companies report going from 1-5 resumes/week to 300+/week
 - Great candidates get lost in the noise
@@ -261,13 +277,13 @@ Product management hiring faces similar challenges:
 
 ### Startup-Specific Pain Points
 
-| Pain Point | Why It Hits Startups Harder |
-|------------|---------------------------|
-| **Bad hire cost** | Small team = massive impact. One bad senior hire can set roadmap back 6 months |
-| **Manager time** | Engineering managers are also ICs. They can't spend 50% of time on hiring |
-| **Speed vs. quality** | Competitors are also hiring. Slow process loses candidates to faster offers |
-| **Culture preservation** | Early hires define culture. Wrong person can poison a team |
-| **No HR support** | Often no dedicated recruiting ops. Managers do everything |
+| Pain Point               | Why It Hits Startups Harder                                                    |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| **Bad hire cost**        | Small team = massive impact. One bad senior hire can set roadmap back 6 months |
+| **Manager time**         | Engineering managers are also ICs. They can't spend 50% of time on hiring      |
+| **Speed vs. quality**    | Competitors are also hiring. Slow process loses candidates to faster offers    |
+| **Culture preservation** | Early hires define culture. Wrong person can poison a team                     |
+| **No HR support**        | Often no dedicated recruiting ops. Managers do everything                      |
 
 ### Market Context
 
@@ -284,16 +300,17 @@ Product management hiring faces similar challenges:
 
 ### Decision Makers vs. Users
 
-| Role | Relationship to Skillvee |
-|------|-------------------------|
-| **Hiring Manager** | Primary buyer. Makes decisions, reviews results, champions internally |
-| **Recruiter / Recruiting Coordinator** | Operational user. Sends links, tracks completion, but doesn't evaluate results |
-| **VP Engineering / Head of Engineering** | Expansion buyer. Mandates adoption org-wide after initial success |
-| **Founder / CTO** | At smaller startups, may be the hiring manager themselves |
+| Role                                     | Relationship to Skillvee                                                       |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| **Hiring Manager**                       | Primary buyer. Makes decisions, reviews results, champions internally          |
+| **Recruiter / Recruiting Coordinator**   | Operational user. Sends links, tracks completion, but doesn't evaluate results |
+| **VP Engineering / Head of Engineering** | Expansion buyer. Mandates adoption org-wide after initial success              |
+| **Founder / CTO**                        | At smaller startups, may be the hiring manager themselves                      |
 
 ### Startup Buying Dynamics
 
 **Why startups buy differently**:
+
 - No lengthy procurement cycles
 - Engineering leadership has budget authority
 - Word-of-mouth and peer recommendations matter
@@ -310,12 +327,14 @@ Product management hiring faces similar challenges:
 ### Purchasing Considerations
 
 At $79-199/month price point:
+
 - Can be expensed on a corporate card
 - "Try for one role" is low-risk
 - ROI is obvious if even one bad hire is avoided (saves $50K+)
 - No procurement/legal review needed at this price
 
 For company-wide adoption:
+
 - May want annual contract for budget predictability
 - Volume pricing for high-hiring-velocity teams
 - Integration with ATS (Greenhouse, Lever, Ashby) becomes valuable
@@ -350,13 +369,13 @@ For company-wide adoption:
 
 ### Traditional Alternatives
 
-| Alternative | Limitation | Skillvee Advantage |
-|-------------|------------|-------------------|
-| LeetCode/HackerRank | Tests algorithmic skills, not real work | Simulates actual day-on-the-job |
-| Take-home projects | Time burden, candidates drop out | Structured, reasonable time commitment |
-| Whiteboard interviews | Artificial stress, poor predictive validity | Natural work environment simulation |
-| Reference checks | Biased, limited information | Objective, behavioral observation |
-| Resume screening | Credentials don't predict performance | See actual work product and process |
+| Alternative           | Limitation                                  | Skillvee Advantage                     |
+| --------------------- | ------------------------------------------- | -------------------------------------- |
+| LeetCode/HackerRank   | Tests algorithmic skills, not real work     | Simulates actual day-on-the-job        |
+| Take-home projects    | Time burden, candidates drop out            | Structured, reasonable time commitment |
+| Whiteboard interviews | Artificial stress, poor predictive validity | Natural work environment simulation    |
+| Reference checks      | Biased, limited information                 | Objective, behavioral observation      |
+| Resume screening      | Credentials don't predict performance       | See actual work product and process    |
 
 ### Why Skillvee Wins
 
@@ -384,15 +403,15 @@ Tech Hiring Managers at high-growth startups face a unique challenge: they have 
 
 To make this concrete, here are examples of companies that fit our ideal customer profile:
 
-| Company Type | Example Characteristics |
-|--------------|------------------------|
-| **Series B Fintech** | 80 employees, 25 engineers, hiring 8 engineers this quarter, just raised $40M |
+| Company Type                 | Example Characteristics                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------------------------- |
+| **Series B Fintech**         | 80 employees, 25 engineers, hiring 8 engineers this quarter, just raised $40M             |
 | **Series C Developer Tools** | 200 employees, 80 engineers, hiring 15 engineers this quarter, strong HN/Twitter presence |
-| **Series D SaaS** | 500 employees, 150 engineers, hiring 20+ engineers this quarter, expanding to new markets |
-| **AI/ML Startup** | 50 employees, 30 engineers, hiring senior ML engineers, swimming in applicants |
+| **Series D SaaS**            | 500 employees, 150 engineers, hiring 20+ engineers this quarter, expanding to new markets |
+| **AI/ML Startup**            | 50 employees, 30 engineers, hiring senior ML engineers, swimming in applicants            |
 
 **Common thread**: They all have more applicants than they can thoroughly evaluate, and they all feel the pain when a hire doesn't work out.
 
 ---
 
-*Last updated: February 2026*
+_Last updated: February 2026_

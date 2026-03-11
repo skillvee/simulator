@@ -181,7 +181,9 @@ describe("POST /api/assessment/complete", () => {
     const json = await response.json();
     expect(json.success).toBe(true);
     expect(json.data.assessment.status).toBe(AssessmentStatus.WORKING);
-    expect(json.data.assessment.prUrl).toBe("https://github.com/org/repo/pull/123");
+    expect(json.data.assessment.prUrl).toBe(
+      "https://github.com/org/repo/pull/123"
+    );
     expect(json.data.timing.startedAt).toBeDefined();
     expect(json.data.timing.completedWorkingAt).toBeDefined();
     expect(json.data.timing.workingDurationSeconds).toBeGreaterThanOrEqual(0);
@@ -303,7 +305,9 @@ describe("GET /api/assessment/complete", () => {
     expect(json.success).toBe(true);
     expect(json.data.assessment.id).toBe("test-id");
     expect(json.data.assessment.status).toBe(AssessmentStatus.WORKING);
-    expect(json.data.assessment.prUrl).toBe("https://github.com/org/repo/pull/123");
+    expect(json.data.assessment.prUrl).toBe(
+      "https://github.com/org/repo/pull/123"
+    );
     expect(json.data.timing.startedAt).toBe("2025-01-01T10:00:00.000Z");
     expect(json.data.timing.completedAt).toBeNull();
     expect(json.data.timing.elapsedSeconds).toBeGreaterThan(0);

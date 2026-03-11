@@ -24,7 +24,11 @@ interface IncomingCallModalProps {
  * Plays a ringing sound on mount and stops on accept/decline or unmount.
  * If voice calls are not supported, candidate can decline to use text chat.
  */
-export function IncomingCallModal({ coworker, onAccept, onDecline }: IncomingCallModalProps) {
+export function IncomingCallModal({
+  coworker,
+  onAccept,
+  onDecline,
+}: IncomingCallModalProps) {
   const ringRef = useRef<{ stop: () => void } | null>(null);
 
   useEffect(() => {
@@ -49,8 +53,14 @@ export function IncomingCallModal({ coworker, onAccept, onDecline }: IncomingCal
       <div className="flex flex-col items-center gap-6 text-center">
         {/* Pulsing rings */}
         <div className="relative">
-          <div className="absolute inset-0 -m-4 animate-ping rounded-full bg-primary/20" style={{ animationDuration: "1.5s" }} />
-          <div className="absolute inset-0 -m-8 animate-ping rounded-full bg-primary/10" style={{ animationDuration: "2s" }} />
+          <div
+            className="absolute inset-0 -m-4 animate-ping rounded-full bg-primary/20"
+            style={{ animationDuration: "1.5s" }}
+          />
+          <div
+            className="absolute inset-0 -m-8 animate-ping rounded-full bg-primary/10"
+            style={{ animationDuration: "2s" }}
+          />
           <CoworkerAvatar
             name={coworker.name}
             avatarUrl={coworker.avatarUrl}
@@ -63,24 +73,26 @@ export function IncomingCallModal({ coworker, onAccept, onDecline }: IncomingCal
         <div className="mt-2">
           <h2 className="text-xl font-bold text-white">{coworker.name}</h2>
           <p className="text-sm text-white/60">{coworker.role}</p>
-          <p className="mt-3 text-sm text-white/80 animate-pulse">Incoming call...</p>
+          <p className="mt-3 animate-pulse text-sm text-white/80">
+            Incoming call...
+          </p>
         </div>
 
         {/* Call action buttons */}
-        <div className="flex gap-4 mt-2">
+        <div className="mt-2 flex gap-4">
           <Button
             size="lg"
-            className="rounded-full bg-green-500 px-8 py-6 text-lg font-semibold text-white shadow-lg hover:bg-green-600 transition-colors"
+            className="rounded-full bg-green-500 px-8 py-6 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-green-600"
             onClick={handleAccept}
           >
-            <Phone className="h-5 w-5 mr-2" />
+            <Phone className="mr-2 h-5 w-5" />
             Accept
           </Button>
           {onDecline && (
             <Button
               size="lg"
               variant="outline"
-              className="rounded-full border-white/20 bg-white/10 px-8 py-6 text-lg font-semibold text-white shadow-lg hover:bg-white/20 transition-colors"
+              className="rounded-full border-white/20 bg-white/10 px-8 py-6 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-white/20"
               onClick={handleDecline}
             >
               Use Text Chat

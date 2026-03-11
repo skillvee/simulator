@@ -82,7 +82,15 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName } = body;
+  const {
+    name,
+    role,
+    personaStyle,
+    personality,
+    knowledge,
+    avatarUrl,
+    voiceName,
+  } = body;
 
   // Validate required fields
   if (!name || !role || !personaStyle) {

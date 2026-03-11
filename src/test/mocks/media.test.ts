@@ -112,9 +112,15 @@ describe("createMockMediaStream", () => {
   it("methods return expected types", () => {
     const mock = createMockMediaStream();
 
-    expect(Array.isArray((mock.getTracks as Mock<() => unknown[]>)())).toBe(true);
-    expect(Array.isArray((mock.getAudioTracks as Mock<() => unknown[]>)())).toBe(true);
-    expect(Array.isArray((mock.getVideoTracks as Mock<() => unknown[]>)())).toBe(true);
+    expect(Array.isArray((mock.getTracks as Mock<() => unknown[]>)())).toBe(
+      true
+    );
+    expect(
+      Array.isArray((mock.getAudioTracks as Mock<() => unknown[]>)())
+    ).toBe(true);
+    expect(
+      Array.isArray((mock.getVideoTracks as Mock<() => unknown[]>)())
+    ).toBe(true);
   });
 });
 

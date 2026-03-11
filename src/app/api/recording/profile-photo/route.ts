@@ -45,10 +45,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      return error(
-        result.error || "Profile photo generation failed",
-        500
-      );
+      return error(result.error || "Profile photo generation failed", 500);
     }
 
     return success({

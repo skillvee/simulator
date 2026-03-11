@@ -235,9 +235,8 @@ export async function generateAndStoreEmbeddings(
       ...s,
       dimension: s.dimension as AssessmentDimension,
     }));
-    const observableBehaviorsText = formatDimensionScoresForEmbedding(
-      typedScores
-    );
+    const observableBehaviorsText =
+      formatDimensionScoresForEmbedding(typedScores);
     const embeddingText = createEmbeddingText(
       typedScores,
       assessment.summary.overallSummary

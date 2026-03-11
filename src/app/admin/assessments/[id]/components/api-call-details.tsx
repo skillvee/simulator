@@ -46,7 +46,9 @@ export function ApiCallDetails({
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium text-muted-foreground">DURATION</p>
+            <p className="text-xs font-medium text-muted-foreground">
+              DURATION
+            </p>
             <p className="text-sm">
               {event.durationMs ? formatDuration(event.durationMs) : "N/A"}
             </p>
@@ -124,9 +126,7 @@ export function ApiCallDetails({
                 <p className="mb-1 text-xs font-medium text-destructive">
                   ERROR MESSAGE
                 </p>
-                <p className="text-sm text-destructive">
-                  {event.errorMessage}
-                </p>
+                <p className="text-sm text-destructive">{event.errorMessage}</p>
               </div>
             )}
             {event.stackTrace && (

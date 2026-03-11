@@ -7,7 +7,9 @@ interface PageProps {
 /**
  * Legacy scoped candidates page - redirects to new simulations route
  */
-export default async function LegacyScopedCandidatesPage({ params }: PageProps) {
+export default async function LegacyScopedCandidatesPage({
+  params,
+}: PageProps) {
   const { simulationId } = await params;
   redirect(`/recruiter/assessments/${simulationId}`);
 }

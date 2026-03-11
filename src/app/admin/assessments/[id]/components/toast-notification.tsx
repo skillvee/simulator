@@ -10,7 +10,10 @@ interface ToastNotificationProps {
   onDismiss: (id: string) => void;
 }
 
-export function ToastNotification({ toast, onDismiss }: ToastNotificationProps) {
+export function ToastNotification({
+  toast,
+  onDismiss,
+}: ToastNotificationProps) {
   const bgClass =
     toast.type === "success"
       ? "border-green-500 bg-green-50 dark:bg-green-950"

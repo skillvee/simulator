@@ -157,16 +157,16 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#020617] text-white font-sans overflow-hidden">
+    <div className="flex min-h-screen flex-col overflow-hidden bg-[#020617] font-sans text-white lg:flex-row">
       {/* Left Panel - Narrative */}
-      <div className="lg:w-3/5 p-8 lg:p-24 flex flex-col justify-between relative min-h-[50vh] lg:min-h-screen">
+      <div className="relative flex min-h-[50vh] flex-col justify-between p-8 lg:min-h-screen lg:w-3/5 lg:p-24">
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-20%] left-[-20%] w-full h-full bg-primary/20 rounded-full blur-[150px] pointer-events-none"
+          className="pointer-events-none absolute left-[-20%] top-[-20%] h-full w-full rounded-full bg-primary/20 blur-[150px]"
         />
 
         <header className="relative z-10">
@@ -187,19 +187,21 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
-            <h1 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-white">
+            <h1 className="text-5xl font-black leading-[0.85] tracking-tight text-white lg:text-[90px]">
               YOUR
               <br />
               NEXT ROLE.
             </h1>
-            <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl">
+            <p className="max-w-xl text-xl font-medium text-slate-400 lg:text-2xl">
               {scenario.companyName} is looking for someone to join their team.
               Experience a day in the role before you commit.
             </p>
             {scenario.taskDescription && (
               <div className="mt-4 space-y-3">
-                <p className="text-sm font-semibold text-slate-300">Your Task:</p>
-                <p className="text-sm text-slate-400 line-clamp-3">
+                <p className="text-sm font-semibold text-slate-300">
+                  Your Task:
+                </p>
+                <p className="line-clamp-3 text-sm text-slate-400">
                   {scenario.taskDescription.slice(0, 200)}...
                 </p>
               </div>
@@ -209,13 +211,13 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                 {scenario.techStack.slice(0, 5).map((tech) => (
                   <span
                     key={tech}
-                    className="px-3 py-1 text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20"
+                    className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary"
                   >
                     {tech}
                   </span>
                 ))}
                 {scenario.techStack.length > 5 && (
-                  <span className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-800 text-slate-400">
+                  <span className="rounded-full bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-400">
                     +{scenario.techStack.length - 5} more
                   </span>
                 )}
@@ -226,18 +228,18 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
 
         <footer className="relative z-10 flex items-center gap-8">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <Bot className="w-4 h-4 text-primary" />
+            <Bot className="h-4 w-4 text-primary" />
             AI Teammates
           </div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <Sparkles className="w-4 h-4 text-primary" />
+            <Sparkles className="h-4 w-4 text-primary" />
             Use Any AI Tools
           </div>
         </footer>
       </div>
 
       {/* Right Panel - Auth */}
-      <div className="lg:w-2/5 bg-white text-slate-900 p-8 lg:p-16 flex items-center justify-center min-h-[50vh] lg:min-h-screen">
+      <div className="flex min-h-[50vh] items-center justify-center bg-white p-8 text-slate-900 lg:min-h-screen lg:w-2/5 lg:p-16">
         <div className="w-full max-w-sm space-y-10">
           {user ? (
             // Logged in - auto-redirecting to welcome
@@ -246,13 +248,13 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-8"
             >
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <div className="flex flex-col items-center justify-center space-y-4 py-12">
                 {error ? (
                   <>
-                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm w-full">
+                    <div className="w-full rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                       {error}
                     </div>
-                    <p className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400">
                       Not you?{" "}
                       <Link
                         href="/api/auth/signout"
@@ -264,8 +266,8 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                   </>
                 ) : (
                   <>
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                    <p className="text-slate-500 text-sm font-medium">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm font-medium text-slate-500">
                       Setting up your simulation...
                     </p>
                   </>
@@ -280,14 +282,14 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
               className="space-y-8"
             >
               <div className="space-y-2">
-                <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
+                <h3 className="text-2xl font-bold tracking-tight lg:text-3xl">
                   Get Started
                 </h3>
               </div>
 
               <div className="space-y-6">
                 {error && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                     {error}
                   </div>
                 )}
@@ -296,11 +298,11 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full h-12 rounded-full text-sm font-semibold border-slate-200 hover:bg-slate-50"
+                  className="h-12 w-full rounded-full border-slate-200 text-sm font-semibold hover:bg-slate-50"
                   onClick={handleGoogleAuth}
                   disabled={isLoading}
                 >
-                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                  <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -327,7 +329,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                     <div className="w-full border-t border-slate-200" />
                   </div>
                   <div className="relative flex justify-center text-xs">
-                    <span className="bg-white px-4 text-slate-400 font-medium">
+                    <span className="bg-white px-4 font-medium text-slate-400">
                       or {mode === "signup" ? "sign up" : "sign in"} with email
                     </span>
                   </div>
@@ -343,7 +345,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                         onChange={(e) => setFirstName(e.target.value)}
                         placeholder="First name"
                         disabled={isLoading}
-                        className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
+                        className="h-12 rounded-full border-transparent bg-slate-50 px-5 focus:border-primary focus:bg-white"
                       />
                       <Input
                         type="text"
@@ -351,7 +353,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                         onChange={(e) => setLastName(e.target.value)}
                         placeholder="Last name"
                         disabled={isLoading}
-                        className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
+                        className="h-12 rounded-full border-transparent bg-slate-50 px-5 focus:border-primary focus:bg-white"
                       />
                     </div>
                   )}
@@ -363,7 +365,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                     placeholder="Email address"
                     required
                     disabled={isLoading}
-                    className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
+                    className="h-12 rounded-full border-transparent bg-slate-50 px-5 focus:border-primary focus:bg-white"
                   />
 
                   <Input
@@ -377,7 +379,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                     }
                     required
                     disabled={isLoading}
-                    className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
+                    className="h-12 rounded-full border-transparent bg-slate-50 px-5 focus:border-primary focus:bg-white"
                   />
 
                   {mode === "signup" && (
@@ -388,14 +390,14 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                       placeholder="Confirm password"
                       required
                       disabled={isLoading}
-                      className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
+                      className="h-12 rounded-full border-transparent bg-slate-50 px-5 focus:border-primary focus:bg-white"
                     />
                   )}
 
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full h-14 rounded-full bg-primary text-white font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary/90"
+                    className="h-14 w-full rounded-full bg-primary text-lg font-bold text-white shadow-xl shadow-primary/20 hover:bg-primary/90"
                   >
                     {isLoading
                       ? mode === "signup"
@@ -409,9 +411,9 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
 
                 {/* Consent text (signup only) */}
                 {mode === "signup" && (
-                  <p className="text-xs text-center text-slate-400">
-                    By signing up, you agree to screen and webcam recording
-                    and our{" "}
+                  <p className="text-center text-xs text-slate-400">
+                    By signing up, you agree to screen and webcam recording and
+                    our{" "}
                     <Link
                       href="/terms"
                       className="text-primary hover:underline"
@@ -454,9 +456,9 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
 
 function InvitePageLoading() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617]">
+    <div className="flex min-h-screen items-center justify-center bg-[#020617]">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
         <p className="mt-4 text-slate-400">Loading...</p>
       </div>
     </div>

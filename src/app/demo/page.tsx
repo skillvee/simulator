@@ -6,7 +6,16 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, ArrowRight, Clock, Users, Calendar, TrendingDown, Brain, DollarSign } from "lucide-react";
+import {
+  CheckCircle,
+  ArrowRight,
+  Clock,
+  Users,
+  Calendar,
+  TrendingDown,
+  Brain,
+  DollarSign,
+} from "lucide-react";
 import Navigation from "@/components/landing/Navigation";
 import Footer from "@/components/landing/Footer";
 
@@ -49,32 +58,32 @@ export default function DemoPage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-32 pb-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+      <section className="relative overflow-hidden bg-white pb-20 pt-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2 lg:gap-16">
             {/* Left: Content */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
+              <p className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
                 Book a Demo
               </p>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-6 leading-tight">
+              <h1 className="mb-6 text-3xl font-black leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
                 See the platform.{" "}
                 <span className="text-primary">Ask the hard questions.</span>
               </h1>
 
-              <p className="text-lg sm:text-xl text-slate-600 mb-8">
+              <p className="mb-8 text-lg text-slate-600 sm:text-xl">
                 20 minutes. No slides. We&apos;ll show you exactly how Skillvee
                 works with your roles—and you&apos;ll see why algorithm tests
                 are dead.
               </p>
 
               {/* What you'll get */}
-              <div className="space-y-4 mb-8">
+              <div className="mb-8 space-y-4">
                 <h3 className="font-semibold text-slate-900">In your demo:</h3>
                 <ul className="space-y-3">
                   {[
@@ -84,7 +93,7 @@ export default function DemoPage() {
                     "Get honest answers about fit for your team",
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                      <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
                       <span className="text-slate-600">{item}</span>
                     </li>
                   ))}
@@ -92,17 +101,17 @@ export default function DemoPage() {
               </div>
 
               {/* Trust indicators */}
-              <div className="flex flex-wrap items-center gap-6 pt-6 border-t border-slate-200">
+              <div className="flex flex-wrap items-center gap-6 border-t border-slate-200 pt-6">
                 <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Clock className="w-4 h-4" />
+                  <Clock className="h-4 w-4" />
                   <span>20 minutes</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Users className="w-4 h-4" />
+                  <Users className="h-4 w-4" />
                   <span>Talk to a founder</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Calendar className="w-4 h-4" />
+                  <Calendar className="h-4 w-4" />
                   <span>Pick your time</span>
                 </div>
               </div>
@@ -114,14 +123,14 @@ export default function DemoPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
                 {formState === "form" && (
                   <>
-                    <h2 className="text-xl font-semibold text-slate-900 mb-6">
+                    <h2 className="mb-6 text-xl font-semibold text-slate-900">
                       Request your demo
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor="name">Name</Label>
                           <Input
@@ -145,14 +154,17 @@ export default function DemoPage() {
                             required
                             value={formData.email}
                             onChange={(e) =>
-                              setFormData({ ...formData, email: e.target.value })
+                              setFormData({
+                                ...formData,
+                                email: e.target.value,
+                              })
                             }
                             className="h-12"
                           />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label htmlFor="company">Company</Label>
                           <Input
@@ -162,7 +174,10 @@ export default function DemoPage() {
                             required
                             value={formData.company}
                             onChange={(e) =>
-                              setFormData({ ...formData, company: e.target.value })
+                              setFormData({
+                                ...formData,
+                                company: e.target.value,
+                              })
                             }
                             className="h-12"
                           />
@@ -185,21 +200,24 @@ export default function DemoPage() {
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full h-12 text-base bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="h-12 w-full bg-primary text-base text-white shadow-lg transition-all duration-300 hover:bg-primary/90 hover:shadow-xl"
                       >
                         {isSubmitting ? (
                           "Loading..."
                         ) : (
                           <>
                             Continue to scheduling
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            <ArrowRight className="ml-2 h-4 w-4" />
                           </>
                         )}
                       </Button>
 
-                      <p className="text-xs text-slate-500 text-center">
+                      <p className="text-center text-xs text-slate-500">
                         We&apos;ll never share your info. See our{" "}
-                        <a href="/privacy" className="text-primary hover:underline">
+                        <a
+                          href="/privacy"
+                          className="text-primary hover:underline"
+                        >
                           privacy policy
                         </a>
                         .
@@ -210,9 +228,9 @@ export default function DemoPage() {
 
                 {formState === "scheduling" && (
                   <>
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-5 h-5 text-emerald-600" />
+                    <div className="mb-6 flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+                        <CheckCircle className="h-5 w-5 text-emerald-600" />
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-slate-900">
@@ -225,7 +243,7 @@ export default function DemoPage() {
                     </div>
 
                     {/* Calendly Inline Widget */}
-                    <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                       <InlineWidget
                         url={CALENDLY_URL}
                         styles={{ height: "700px", minWidth: "320px" }}
@@ -247,7 +265,7 @@ export default function DemoPage() {
                       />
                     </div>
 
-                    <p className="text-xs text-slate-500 text-center mt-4">
+                    <p className="mt-4 text-center text-xs text-slate-500">
                       No time that works?{" "}
                       <a
                         href="mailto:hi@skillvee.com"
@@ -260,21 +278,22 @@ export default function DemoPage() {
                 )}
 
                 {formState === "submitted" && (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <CheckCircle className="w-8 h-8 text-emerald-600" />
+                  <div className="py-8 text-center">
+                    <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                      <CheckCircle className="h-8 w-8 text-emerald-600" />
                     </div>
-                    <h2 className="text-2xl font-semibold text-slate-900 mb-3">
+                    <h2 className="mb-3 text-2xl font-semibold text-slate-900">
                       You&apos;re all set!
                     </h2>
-                    <p className="text-slate-600 mb-6">
-                      Check your email for the calendar invite. We&apos;ll send a
-                      quick prep guide before your demo.
+                    <p className="mb-6 text-slate-600">
+                      Check your email for the calendar invite. We&apos;ll send
+                      a quick prep guide before your demo.
                     </p>
-                    <div className="bg-primary/5 rounded-xl p-4 border border-primary/10">
+                    <div className="rounded-xl border border-primary/10 bg-primary/5 p-4">
                       <p className="text-sm text-slate-700">
                         <strong>Pro tip:</strong> Have a job description ready.
-                        We&apos;ll show you exactly how Skillvee would assess that role.
+                        We&apos;ll show you exactly how Skillvee would assess
+                        that role.
                       </p>
                     </div>
                   </div>
@@ -370,23 +389,23 @@ export default function DemoPage() {
       */}
 
       {/* Why teams switch section */}
-      <section className="relative py-24 bg-white">
-        <div className="max-w-5xl mx-auto px-6">
+      <section className="relative bg-white py-24">
+        <div className="mx-auto max-w-5xl px-6">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="mb-16 text-center"
           >
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
+            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
               Why Switch
             </p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4">
+            <h2 className="mb-4 text-3xl font-black text-slate-900 sm:text-4xl lg:text-5xl">
               Why teams switch to Skillvee
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {[
               {
                 icon: TrendingDown,
@@ -418,15 +437,17 @@ export default function DemoPage() {
                 transition={{ delay: i * 0.15 }}
                 className="border-t-4 border-slate-900 pt-8"
               >
-                <item.icon className="w-8 h-8 text-primary mb-4" />
-                <div className="text-5xl lg:text-6xl font-black text-primary mb-2">
+                <item.icon className="mb-4 h-8 w-8 text-primary" />
+                <div className="mb-2 text-5xl font-black text-primary lg:text-6xl">
                   {item.stat}
                 </div>
-                <div className="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-3">
+                <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-900">
                   {item.label}
                 </div>
-                <p className="text-slate-600 mb-2">{item.desc}</p>
-                <span className="text-xs text-slate-400">Source: {item.source}</span>
+                <p className="mb-2 text-slate-600">{item.desc}</p>
+                <span className="text-xs text-slate-400">
+                  Source: {item.source}
+                </span>
               </motion.div>
             ))}
           </div>
@@ -434,37 +455,43 @@ export default function DemoPage() {
       </section>
 
       {/* CTA Section - Dark theme matching homepage */}
-      <section className="py-32 bg-[#020617] relative overflow-hidden">
+      <section className="relative overflow-hidden bg-[#020617] py-32">
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.2, 0.4, 0.2],
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/20 rounded-full blur-[200px] pointer-events-none"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[200px]"
         />
 
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
+            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
               Ready to Start?
             </p>
-            <h2 className="text-4xl lg:text-6xl font-black text-white mb-6">
+            <h2 className="mb-6 text-4xl font-black text-white lg:text-6xl">
               STOP GUESSING.
               <br />
               <span className="text-primary">START KNOWING.</span>
             </h2>
-            <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+            <p className="mx-auto mb-10 max-w-2xl text-xl text-slate-400">
               See exactly how candidates perform before you make the offer.
             </p>
-            <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-              <Button className="h-14 px-10 rounded-full bg-white text-slate-900 font-bold text-lg shadow-xl hover:bg-slate-100 group">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+            >
+              <Button className="group h-14 rounded-full bg-white px-10 text-lg font-bold text-slate-900 shadow-xl hover:bg-slate-100">
                 Book Your Demo
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </a>
           </motion.div>

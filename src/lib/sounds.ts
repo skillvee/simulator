@@ -14,11 +14,11 @@ export function markUserInteraction() {
   userHasInteracted = true;
 
   // Initialize audio context on first interaction
-  if (!audioContext && typeof window !== 'undefined' && window.AudioContext) {
+  if (!audioContext && typeof window !== "undefined" && window.AudioContext) {
     try {
       audioContext = new AudioContext();
     } catch (error) {
-      console.warn('Failed to initialize AudioContext:', error);
+      console.warn("Failed to initialize AudioContext:", error);
     }
   }
 }
@@ -56,7 +56,7 @@ export function playMessageSound() {
     oscillator.start(currentTime);
     oscillator.stop(currentTime + 0.15);
   } catch (error) {
-    console.warn('Failed to play message sound:', error);
+    console.warn("Failed to play message sound:", error);
   }
 }
 
@@ -109,7 +109,7 @@ export function playCallRingSound(): { stop: () => void } {
         timeoutId = setTimeout(playRingTone, 1500);
       }
     } catch (error) {
-      console.warn('Failed to play ring sound:', error);
+      console.warn("Failed to play ring sound:", error);
     }
   };
 
@@ -124,7 +124,7 @@ export function playCallRingSound(): { stop: () => void } {
         clearTimeout(timeoutId);
         timeoutId = null;
       }
-    }
+    },
   };
 }
 
@@ -133,11 +133,11 @@ export function playCallRingSound(): { stop: () => void } {
  * Call this when the component unmounts or the app closes
  */
 export function cleanupAudio() {
-  if (audioContext && audioContext.state !== 'closed') {
+  if (audioContext && audioContext.state !== "closed") {
     try {
       audioContext.close();
     } catch (error) {
-      console.warn('Failed to close AudioContext:', error);
+      console.warn("Failed to close AudioContext:", error);
     }
   }
   audioContext = null;

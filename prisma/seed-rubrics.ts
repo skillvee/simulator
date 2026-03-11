@@ -159,8 +159,7 @@ const UNIVERSAL_DIMENSIONS = [
       {
         level: 2,
         label: "Competent",
-        pattern:
-          "Engages respectfully and incorporates feedback when given.",
+        pattern: "Engages respectfully and incorporates feedback when given.",
         evidence: [
           "Accepts feedback politely and acknowledges suggestions",
           "Answers questions about their approach without becoming defensive",
@@ -267,8 +266,7 @@ const ENGINEERING = {
     {
       slug: "technical_execution",
       name: "Technical Execution",
-      description:
-        "Quality, correctness, and efficiency of code produced.",
+      description: "Quality, correctness, and efficiency of code produced.",
       rubric: [
         {
           level: 1,
@@ -285,8 +283,7 @@ const ENGINEERING = {
         {
           level: 2,
           label: "Competent",
-          pattern:
-            "Produces working code that solves the core problem.",
+          pattern: "Produces working code that solves the core problem.",
           evidence: [
             "Code runs and produces correct output for the primary use case",
             "Code is readable but may have inefficiencies, duplication, or inconsistent patterns",
@@ -331,8 +328,7 @@ const ENGINEERING = {
         {
           level: 1,
           label: "Foundational",
-          pattern:
-            "Does not adapt when new information is available.",
+          pattern: "Does not adapt when new information is available.",
           evidence: [
             "Repeats the same approach after it has already failed",
             "Does not adjust when given direct feedback",
@@ -428,7 +424,7 @@ const ENGINEERING = {
             "Minimal wasted time; clear progression from start to finish",
             "Uses AI tools as an accelerator while demonstrating deep understanding of the output",
             "Testing is part of the implementation process, not an afterthought",
-            'Shows awareness of their own process (e.g., timeboxing, deliberate sequencing)',
+            "Shows awareness of their own process (e.g., timeboxing, deliberate sequencing)",
             "Environment setup and tooling use is smooth and confident",
           ],
         },
@@ -712,8 +708,7 @@ const ENGINEERING = {
     {
       slug: "no_verification",
       name: "No Verification",
-      description:
-        "Submits code without any form of testing or checking.",
+      description: "Submits code without any form of testing or checking.",
     },
     {
       slug: "time_mismanagement",
@@ -1311,8 +1306,7 @@ const DATA_SCIENCE = {
         {
           level: 2,
           label: "Competent",
-          pattern:
-            "Presents findings clearly with basic interpretation.",
+          pattern: "Presents findings clearly with basic interpretation.",
           evidence: [
             "States what the data shows in plain language",
             "Visualizations are accurate and understandable",
@@ -1528,8 +1522,7 @@ const DATA_SCIENCE = {
     {
       slug: "methodology_absence",
       name: "Methodology Absence",
-      description:
-        "Cannot explain or justify the analytical approach used.",
+      description: "Cannot explain or justify the analytical approach used.",
     },
     {
       slug: "data_quality_blindness",
@@ -1757,8 +1750,7 @@ const PROGRAM_MANAGEMENT = {
         {
           level: 2,
           label: "Competent",
-          pattern:
-            "Tracks basic progress and identifies major blockers.",
+          pattern: "Tracks basic progress and identifies major blockers.",
           evidence: [
             "Maintains a status view of key milestones",
             "Identifies when work is off track",
@@ -2177,7 +2169,7 @@ const SALES = {
         level: 3,
         label: "Advanced",
         pattern:
-          'Communicates with intent — adapts tone, pace, and depth to the buyer.',
+          "Communicates with intent — adapts tone, pace, and depth to the buyer.",
         evidence: [
           "Mirrors the customer's communication style naturally",
           "Uses storytelling to make points memorable",
@@ -2617,7 +2609,7 @@ const CUSTOMER_SUCCESS = {
         level: 3,
         label: "Advanced",
         pattern:
-          'Communicates with empathy and structure — customers feel heard and know exactly what to expect.',
+          "Communicates with empathy and structure — customers feel heard and know exactly what to expect.",
         evidence: [
           "Adapts tone and approach based on the customer's emotional state",
           "Proactively communicates updates, changes, and upcoming events",
@@ -2870,7 +2862,9 @@ async function seedRubrics() {
       });
     }
   }
-  console.log(`    ✓ ${UNIVERSAL_DIMENSIONS.length} universal dimensions created`);
+  console.log(
+    `    ✓ ${UNIVERSAL_DIMENSIONS.length} universal dimensions created`
+  );
 
   // Step 2: Create role families with their dimensions, archetypes, etc.
   const roleFamilies: RoleFamilyData[] = [
@@ -3067,7 +3061,9 @@ async function seedRubrics() {
         }
       }
     }
-    console.log(`    ✓ ${family.archetypes.length} archetypes with weights and gates`);
+    console.log(
+      `    ✓ ${family.archetypes.length} archetypes with weights and gates`
+    );
 
     // Create red flags
     for (const flag of family.redFlags) {
@@ -3100,7 +3096,9 @@ async function seedRubrics() {
 
   console.log("\n✅ Rubric seed complete!");
   console.log(`   ${roleFamilies.length} role families`);
-  console.log(`   ${totalDimensions} dimensions (${UNIVERSAL_DIMENSIONS.length} universal)`);
+  console.log(
+    `   ${totalDimensions} dimensions (${UNIVERSAL_DIMENSIONS.length} universal)`
+  );
   console.log(`   ${totalRubricLevels} rubric levels`);
   console.log(`   ${totalArchetypes} archetypes`);
   console.log(`   ${totalWeights} archetype weights`);

@@ -24,16 +24,15 @@ export function CandidateExperienceSummary({
   taskSummary,
 }: CandidateExperienceSummaryProps) {
   // Find the manager (Engineering Manager or first coworker with "Manager" in role)
-  const manager = coworkers.find(
-    (c) =>
-      c.role === "Engineering Manager" ||
-      c.role.toLowerCase().includes("manager")
-  ) || coworkers[0];
+  const manager =
+    coworkers.find(
+      (c) =>
+        c.role === "Engineering Manager" ||
+        c.role.toLowerCase().includes("manager")
+    ) || coworkers[0];
 
   // Get up to 3 coworkers to mention (prefer non-managers first)
-  const teamMembers = coworkers
-    .filter((c) => c !== manager)
-    .slice(0, 3);
+  const teamMembers = coworkers.filter((c) => c !== manager).slice(0, 3);
 
   // Fallback if no manager or team members
   const managerName = manager?.name || "their manager";
@@ -53,8 +52,7 @@ export function CandidateExperienceSummary({
       return (
         <span key={c.name}>
           {needsAnd && "and "}
-          <strong>{c.name}</strong> ({c.role})
-          {needsComma && ", "}
+          <strong>{c.name}</strong> ({c.role}){needsComma && ", "}
         </span>
       );
     });
@@ -69,11 +67,11 @@ export function CandidateExperienceSummary({
           <p className="text-base leading-relaxed text-foreground/90">
             When a candidate joins, they&apos;ll be onboarded as a{" "}
             <strong>{roleName}</strong> at <strong>{companyName}</strong>.
-            They&apos;ll meet their team on Slack — {renderTeamIntro()}. Their manager{" "}
-            <strong>{managerName}</strong> will kick off the project:{" "}
-            {taskSummary}. They&apos;ll have ~90 minutes to complete the task, ask
-            questions, and submit a pull request. Finally, they&apos;ll defend their
-            work in a call with {managerName}.
+            They&apos;ll meet their team on Slack — {renderTeamIntro()}. Their
+            manager <strong>{managerName}</strong> will kick off the project:{" "}
+            {taskSummary}. They&apos;ll have ~90 minutes to complete the task,
+            ask questions, and submit a pull request. Finally, they&apos;ll
+            defend their work in a call with {managerName}.
           </p>
         </div>
 

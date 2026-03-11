@@ -46,7 +46,7 @@ export function CoworkerAvatar({
   return (
     <Avatar className={cn(sizeClasses[size], className)}>
       <AvatarImage src={imageUrl} alt={`${name}'s avatar`} />
-      <AvatarFallback className="bg-primary text-primary-foreground font-medium">
+      <AvatarFallback className="bg-primary font-medium text-primary-foreground">
         {initials}
       </AvatarFallback>
     </Avatar>

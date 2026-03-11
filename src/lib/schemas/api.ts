@@ -34,13 +34,8 @@ export type CallTokenRequest = z.infer<typeof CallTokenRequestSchema>;
  * POST /api/auth/register - Register a new user
  */
 export const RegisterRequestSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Invalid email format"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters"),
+  email: z.string().min(1, "Email is required").email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   name: z.string().optional(),
   // Role can only be USER or RECRUITER via signup (never ADMIN)
   role: z.enum(["USER", "RECRUITER"]).optional(),
@@ -58,7 +53,10 @@ export const ScenarioCreateSchema = z.object({
   taskDescription: z.string().min(1, "Task description is required"),
   repoUrl: z.string().optional(),
   techStack: z.array(z.string()).optional().default([]),
-  targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional().default("mid"),
+  targetLevel: z
+    .enum(["junior", "mid", "senior", "staff"])
+    .optional()
+    .default("mid"),
   archetypeId: z.string().min(1, "Role archetype is required"),
   isPublished: z.boolean().optional().default(false),
 });
@@ -70,7 +68,10 @@ export type ScenarioCreate = z.infer<typeof ScenarioCreateSchema>;
 export const ScenarioUpdateSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
   companyName: z.string().min(1, "Company name is required").optional(),
-  companyDescription: z.string().min(1, "Company description is required").optional(),
+  companyDescription: z
+    .string()
+    .min(1, "Company description is required")
+    .optional(),
   taskDescription: z.string().min(1, "Task description is required").optional(),
   repoUrl: z.string().optional(),
   techStack: z.array(z.string()).optional(),

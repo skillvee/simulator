@@ -93,7 +93,15 @@ export async function PATCH(request: Request) {
       return error("Invalid request body", 400, "VALIDATION_ERROR");
     }
 
-    const { logId, status, scenarioId, failedStep, errorMessage, errorDetails, ...updates } = validated.data;
+    const {
+      logId,
+      status,
+      scenarioId,
+      failedStep,
+      errorMessage,
+      errorDetails,
+      ...updates
+    } = validated.data;
 
     // Verify the log belongs to this user
     const existing = await db.simulationCreationLog.findFirst({
@@ -108,11 +116,13 @@ export async function PATCH(request: Request) {
     if (scenarioId) updateData.scenarioId = scenarioId;
     if (failedStep) updateData.failedStep = failedStep;
     if (errorMessage) updateData.errorMessage = errorMessage;
-    if (errorDetails !== undefined) updateData.errorDetails = errorDetails as object;
+    if (errorDetails !== undefined)
+      updateData.errorDetails = errorDetails as object;
     if (updates.roleTitle) updateData.roleTitle = updates.roleTitle;
     if (updates.companyName) updateData.companyName = updates.companyName;
     if (updates.techStack) updateData.techStack = updates.techStack;
-    if (updates.seniorityLevel) updateData.seniorityLevel = updates.seniorityLevel;
+    if (updates.seniorityLevel)
+      updateData.seniorityLevel = updates.seniorityLevel;
     if (updates.archetypeId) updateData.archetypeId = updates.archetypeId;
 
     if (status === "COMPLETED" || status === "FAILED") {

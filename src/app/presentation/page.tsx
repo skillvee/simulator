@@ -30,13 +30,15 @@ const slides = [
   {
     id: "title",
     title: "Skillvee",
-    subtitle: "Work simulation platform that lets hiring teams watch candidates do the actual job before they hire them.",
+    subtitle:
+      "Work simulation platform that lets hiring teams watch candidates do the actual job before they hire them.",
     visual: "logo",
   },
   {
     id: "problem",
     title: "The Problem",
-    subtitle: "Enterprise engineering teams are drowning in AI-enhanced candidates.",
+    subtitle:
+      "Enterprise engineering teams are drowning in AI-enhanced candidates.",
     visual: "stats",
     stats: [
       { value: "1000s/day", label: "Applications per role", icon: FileText },
@@ -44,7 +46,8 @@ const slides = [
       { value: "+42%", label: "Interview rounds since 2021", icon: TrendingUp },
       { value: "45%", label: "Use AI in interviews", icon: Sparkles },
     ],
-    footnote: "HackerRank bans AI and tests trivia. Take-homes get AI submissions. None of it works anymore.",
+    footnote:
+      "HackerRank bans AI and tests trivia. Take-homes get AI submissions. None of it works anymore.",
   },
   {
     id: "solution",
@@ -52,42 +55,59 @@ const slides = [
     subtitle: "45-minute work simulation with AI coworkers",
     visual: "simulation",
     features: [
-      { title: "Voice Calls", desc: "Real-time conversations with AI stakeholders" },
-      { title: "Real Deliverables", desc: "Candidates produce actual work artifacts" },
-      { title: "Screen Recorded", desc: "See exactly how they work and problem-solve" },
-      { title: "Side-by-Side", desc: "Compare candidates on actual work output" },
+      {
+        title: "Voice Calls",
+        desc: "Real-time conversations with AI stakeholders",
+      },
+      {
+        title: "Real Deliverables",
+        desc: "Candidates produce actual work artifacts",
+      },
+      {
+        title: "Screen Recorded",
+        desc: "See exactly how they work and problem-solve",
+      },
+      {
+        title: "Side-by-Side",
+        desc: "Compare candidates on actual work output",
+      },
     ],
   },
   // DEMO SLIDES - Recruiter creates scenario
   {
     id: "demo-builder",
     title: "Create Simulation",
-    subtitle: "Recruiters build scenarios through natural conversation with AI. No forms - just describe what you want.",
+    subtitle:
+      "Recruiters build scenarios through natural conversation with AI. No forms - just describe what you want.",
     visual: "demo-builder",
   },
   // DEMO SLIDES - Candidate Flow
   {
     id: "demo-join",
     title: "Candidate Joins",
-    subtitle: "Recruiter shares a unique link. Candidate sees the role and signs up.",
+    subtitle:
+      "Recruiter shares a unique link. Candidate sees the role and signs up.",
     visual: "demo-join",
   },
   {
     id: "demo-chat",
     title: "Slack-like Workspace",
-    subtitle: "Candidates collaborate with AI coworkers via chat and voice calls",
+    subtitle:
+      "Candidates collaborate with AI coworkers via chat and voice calls",
     visual: "demo-chat",
   },
   {
     id: "demo-call",
     title: "Voice Calls",
-    subtitle: "Real-time conversations with AI stakeholders powered by Gemini Live",
+    subtitle:
+      "Real-time conversations with AI stakeholders powered by Gemini Live",
     visual: "demo-call",
   },
   {
     id: "demo-analysis",
     title: "AI Analysis",
-    subtitle: "Screen recording is sent to Gemini multimodal to evaluate how candidates actually work",
+    subtitle:
+      "Screen recording is sent to Gemini multimodal to evaluate how candidates actually work",
     visual: "demo-analysis",
     dimensions: [
       "Problem Solving",
@@ -176,21 +196,22 @@ const slides = [
         ],
       },
     ],
-    whyUs: "HR Tech exits (we know the buyer) + Meta GenAI (we can build this) + this prototype (we ship fast)",
+    whyUs:
+      "HR Tech exits (we know the buyer) + Meta GenAI (we can build this) + this prototype (we ship fast)",
   },
 ];
 
 // Visual Components
 function LogoVisual() {
   return (
-    <div className="relative flex items-center justify-center h-full">
+    <div className="relative flex h-full items-center justify-center">
       <motion.div
         animate={{
           scale: [1, 1.05, 1],
           opacity: [0.8, 1, 0.8],
         }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute w-96 h-96 bg-primary/30 rounded-full blur-[100px]"
+        className="absolute h-96 w-96 rounded-full bg-primary/30 blur-[100px]"
       />
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -198,18 +219,20 @@ function LogoVisual() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative z-10 flex flex-col items-center gap-6"
       >
-        <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center text-primary font-black text-7xl shadow-2xl shadow-primary/30">
+        <div className="flex h-32 w-32 items-center justify-center rounded-[2.5rem] bg-white text-7xl font-black text-primary shadow-2xl shadow-primary/30">
           S
         </div>
-        <div className="text-4xl font-bold tracking-tight text-white">SkillVee</div>
+        <div className="text-4xl font-bold tracking-tight text-white">
+          SkillVee
+        </div>
       </motion.div>
     </div>
   );
 }
 
-function StatsVisual({ stats }: { stats: typeof slides[1]["stats"] }) {
+function StatsVisual({ stats }: { stats: (typeof slides)[1]["stats"] }) {
   return (
-    <div className="grid grid-cols-2 gap-6 h-full items-center">
+    <div className="grid h-full grid-cols-2 items-center gap-6">
       {stats?.map((stat, index) => {
         const Icon = stat.icon;
         return (
@@ -218,13 +241,17 @@ function StatsVisual({ stats }: { stats: typeof slides[1]["stats"] }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.15 }}
-            className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 flex flex-col items-center text-center"
+            className="flex flex-col items-center rounded-2xl border border-slate-700/50 bg-slate-800/50 p-6 text-center backdrop-blur-sm"
           >
-            <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-4">
-              <Icon className="w-6 h-6 text-primary" />
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
+              <Icon className="h-6 w-6 text-primary" />
             </div>
-            <div className="text-4xl font-black text-white mb-2">{stat.value}</div>
-            <div className="text-sm text-slate-400 font-medium">{stat.label}</div>
+            <div className="mb-2 text-4xl font-black text-white">
+              {stat.value}
+            </div>
+            <div className="text-sm font-medium text-slate-400">
+              {stat.label}
+            </div>
           </motion.div>
         );
       })}
@@ -232,12 +259,16 @@ function StatsVisual({ stats }: { stats: typeof slides[1]["stats"] }) {
   );
 }
 
-function SimulationVisual({ features }: { features: typeof slides[2]["features"] }) {
+function SimulationVisual({
+  features,
+}: {
+  features: (typeof slides)[2]["features"];
+}) {
   const icons = [Phone, FileText, Eye, Users];
 
   return (
-    <div className="h-full flex items-center justify-center">
-      <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+    <div className="flex h-full items-center justify-center">
+      <div className="grid w-full max-w-lg grid-cols-2 gap-4">
         {features?.map((feature, index) => {
           const Icon = icons[index];
           return (
@@ -246,17 +277,21 @@ function SimulationVisual({ features }: { features: typeof slides[2]["features"]
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.15 }}
-              className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-2xl p-5 relative overflow-hidden group"
+              className="group relative overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-800/50 p-5 backdrop-blur"
             >
               {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
               <div className="relative z-10">
-                <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center mb-3">
-                  <Icon className="w-5 h-5 text-primary" />
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
+                  <Icon className="h-5 w-5 text-primary" />
                 </div>
-                <div className="text-white font-bold text-base mb-1">{feature.title}</div>
-                <div className="text-slate-400 text-sm leading-relaxed">{feature.desc}</div>
+                <div className="mb-1 text-base font-bold text-white">
+                  {feature.title}
+                </div>
+                <div className="text-sm leading-relaxed text-slate-400">
+                  {feature.desc}
+                </div>
               </div>
             </motion.div>
           );
@@ -266,28 +301,28 @@ function SimulationVisual({ features }: { features: typeof slides[2]["features"]
   );
 }
 
-function GeminiVisual({ unlocks }: { unlocks: typeof slides[3]["unlocks"] }) {
+function GeminiVisual({ unlocks }: { unlocks: (typeof slides)[3]["unlocks"] }) {
   return (
-    <div className="flex flex-col gap-6 h-full justify-center">
+    <div className="flex h-full flex-col justify-center gap-6">
       {unlocks?.map((unlock, index) => (
         <motion.div
           key={unlock.title}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.2 }}
-          className="relative bg-gradient-to-r from-slate-800/80 to-slate-800/40 backdrop-blur border border-slate-700/50 rounded-2xl p-6 overflow-hidden"
+          className="relative overflow-hidden rounded-2xl border border-slate-700/50 bg-gradient-to-r from-slate-800/80 to-slate-800/40 p-6 backdrop-blur"
         >
           {/* Gemini gradient accent */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-2xl" />
+          <div className="absolute right-0 top-0 h-32 w-32 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-2xl" />
 
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-white" />
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <h4 className="text-xl font-bold text-white">{unlock.title}</h4>
             </div>
-            <p className="text-slate-300 leading-relaxed">{unlock.desc}</p>
+            <p className="leading-relaxed text-slate-300">{unlock.desc}</p>
           </div>
         </motion.div>
       ))}
@@ -295,34 +330,48 @@ function GeminiVisual({ unlocks }: { unlocks: typeof slides[3]["unlocks"] }) {
   );
 }
 
-function MarketVisual({ marketData }: { marketData: typeof slides[4]["marketData"] }) {
+function MarketVisual({
+  marketData,
+}: {
+  marketData: (typeof slides)[4]["marketData"];
+}) {
   return (
-    <div className="h-full flex flex-col justify-center gap-6">
+    <div className="flex h-full flex-col justify-center gap-6">
       {/* TAM visualization */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-2xl p-6"
+        className="rounded-2xl border border-slate-700/50 bg-slate-800/50 p-6 backdrop-blur"
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <div className="text-slate-400 text-sm font-medium mb-1">Total Addressable Market</div>
-            <div className="text-5xl font-black text-white">{marketData?.tam}</div>
+            <div className="mb-1 text-sm font-medium text-slate-400">
+              Total Addressable Market
+            </div>
+            <div className="text-5xl font-black text-white">
+              {marketData?.tam}
+            </div>
           </div>
           <div className="text-right">
-            <div className="text-slate-400 text-sm font-medium mb-1">Growth Rate</div>
-            <div className="text-3xl font-bold text-primary">{marketData?.growth}</div>
+            <div className="mb-1 text-sm font-medium text-slate-400">
+              Growth Rate
+            </div>
+            <div className="text-3xl font-bold text-primary">
+              {marketData?.growth}
+            </div>
           </div>
         </div>
-        <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+        <div className="h-3 overflow-hidden rounded-full bg-slate-700">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "60%" }}
             transition={{ delay: 0.5, duration: 1 }}
-            className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full"
+            className="h-full rounded-full bg-gradient-to-r from-primary to-blue-400"
           />
         </div>
-        <div className="mt-3 text-xs text-slate-500">Competitors: {marketData?.competitors?.join(", ")}</div>
+        <div className="mt-3 text-xs text-slate-500">
+          Competitors: {marketData?.competitors?.join(", ")}
+        </div>
       </motion.div>
 
       {/* Beachhead */}
@@ -330,13 +379,13 @@ function MarketVisual({ marketData }: { marketData: typeof slides[4]["marketData
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-primary/10 border border-primary/30 rounded-2xl p-5"
+        className="rounded-2xl border border-primary/30 bg-primary/10 p-5"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <Target className="w-5 h-5 text-primary" />
-          <span className="text-primary font-bold">Beachhead</span>
+        <div className="mb-2 flex items-center gap-3">
+          <Target className="h-5 w-5 text-primary" />
+          <span className="font-bold text-primary">Beachhead</span>
         </div>
-        <p className="text-white font-medium">{marketData?.beachhead}</p>
+        <p className="font-medium text-white">{marketData?.beachhead}</p>
       </motion.div>
 
       {/* Moat */}
@@ -344,18 +393,26 @@ function MarketVisual({ marketData }: { marketData: typeof slides[4]["marketData
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4"
+        className="rounded-xl border border-slate-700/30 bg-slate-800/30 p-4"
       >
-        <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">Moat</div>
-        <p className="text-slate-300 text-sm">{marketData?.moat}</p>
+        <div className="mb-2 text-xs uppercase tracking-wider text-slate-500">
+          Moat
+        </div>
+        <p className="text-sm text-slate-300">{marketData?.moat}</p>
       </motion.div>
     </div>
   );
 }
 
-function TeamVisual({ members, whyUs }: { members: typeof slides[5]["members"]; whyUs: string }) {
+function TeamVisual({
+  members,
+  whyUs,
+}: {
+  members: (typeof slides)[5]["members"];
+  whyUs: string;
+}) {
   return (
-    <div className="h-full flex flex-col justify-center gap-8">
+    <div className="flex h-full flex-col justify-center gap-8">
       <div className="grid grid-cols-2 gap-8">
         {members?.map((member, index) => (
           <motion.div
@@ -363,18 +420,23 @@ function TeamVisual({ members, whyUs }: { members: typeof slides[5]["members"]; 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.2 }}
-            className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-3xl p-8"
+            className="rounded-3xl border border-slate-700/50 bg-slate-800/50 p-8 backdrop-blur"
           >
             {/* Avatar placeholder */}
-            <div className="w-20 h-20 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center mb-5 text-3xl font-black text-white shadow-lg shadow-primary/30">
+            <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-blue-600 text-3xl font-black text-white shadow-lg shadow-primary/30">
               {member.name.charAt(0)}
             </div>
             <h4 className="text-2xl font-bold text-white">{member.name}</h4>
-            <div className="text-primary font-semibold text-base mb-4">{member.role}</div>
+            <div className="mb-4 text-base font-semibold text-primary">
+              {member.role}
+            </div>
             <ul className="space-y-2">
               {member.highlights.map((h) => (
-                <li key={h} className="text-slate-300 text-sm flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 flex-shrink-0" />
+                <li
+                  key={h}
+                  className="flex items-start gap-2 text-sm text-slate-300"
+                >
+                  <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
                   {h}
                 </li>
               ))}
@@ -388,9 +450,9 @@ function TeamVisual({ members, whyUs }: { members: typeof slides[5]["members"]; 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="bg-primary/10 border border-primary/30 rounded-2xl p-5 text-center"
+        className="rounded-2xl border border-primary/30 bg-primary/10 p-5 text-center"
       >
-        <p className="text-white font-medium">{whyUs}</p>
+        <p className="font-medium text-white">{whyUs}</p>
       </motion.div>
     </div>
   );
@@ -400,8 +462,14 @@ function TeamVisual({ members, whyUs }: { members: typeof slides[5]["members"]; 
 
 function DemoBuilderVisual() {
   const chatMessages = [
-    { from: "ai", text: "Hi! I'll help you create a simulation. What role are you hiring for?" },
-    { from: "user", text: "Senior backend engineer at Acme Corp. They'll build a REST API." },
+    {
+      from: "ai",
+      text: "Hi! I'll help you create a simulation. What role are you hiring for?",
+    },
+    {
+      from: "user",
+      text: "Senior backend engineer at Acme Corp. They'll build a REST API.",
+    },
     { from: "ai", text: "Got it! What tech stack should they use?" },
     { from: "user", text: "Node.js, TypeScript, PostgreSQL" },
   ];
@@ -411,28 +479,28 @@ function DemoBuilderVisual() {
     company: "Acme Corp",
     task: "Build a REST API...",
     techStack: ["Node.js", "TypeScript", "PostgreSQL"],
-    coworkers: [
-      { name: "Sarah Chen", role: "Engineering Manager" },
-    ],
+    coworkers: [{ name: "Sarah Chen", role: "Engineering Manager" }],
   };
 
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200"
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
       >
         <div className="flex h-80">
           {/* Left - Chat panel */}
-          <div className="flex-1 flex flex-col border-r border-slate-200">
+          <div className="flex flex-1 flex-col border-r border-slate-200">
             {/* Header */}
-            <div className="h-10 border-b border-slate-200 flex items-center px-4 gap-2">
-              <Bot className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold text-slate-900">Simulation Builder</span>
+            <div className="flex h-10 items-center gap-2 border-b border-slate-200 px-4">
+              <Bot className="h-4 w-4 text-primary" />
+              <span className="text-xs font-semibold text-slate-900">
+                Simulation Builder
+              </span>
             </div>
             {/* Messages */}
-            <div className="flex-1 p-3 space-y-2 overflow-y-auto bg-slate-50">
+            <div className="flex-1 space-y-2 overflow-y-auto bg-slate-50 p-3">
               {chatMessages.map((msg, i) => (
                 <motion.div
                   key={i}
@@ -441,10 +509,14 @@ function DemoBuilderVisual() {
                   transition={{ delay: 0.2 + i * 0.3 }}
                   className={`flex gap-2 ${msg.from === "user" ? "flex-row-reverse" : ""}`}
                 >
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 ${msg.from === "user" ? "bg-primary" : "bg-gradient-to-br from-purple-500 to-pink-500"}`}>
+                  <div
+                    className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg text-[10px] font-bold text-white ${msg.from === "user" ? "bg-primary" : "bg-gradient-to-br from-purple-500 to-pink-500"}`}
+                  >
                     {msg.from === "user" ? "R" : "AI"}
                   </div>
-                  <div className={`max-w-[75%] text-[10px] p-2 rounded-lg ${msg.from === "user" ? "bg-primary/10 text-slate-700" : "bg-white border border-slate-200 text-slate-700"}`}>
+                  <div
+                    className={`max-w-[75%] rounded-lg p-2 text-[10px] ${msg.from === "user" ? "bg-primary/10 text-slate-700" : "border border-slate-200 bg-white text-slate-700"}`}
+                  >
                     {msg.text}
                   </div>
                 </motion.div>
@@ -456,66 +528,89 @@ function DemoBuilderVisual() {
                 transition={{ delay: 1.5 }}
                 className="flex gap-2"
               >
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[10px] font-bold">AI</div>
-                <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 flex items-center gap-1">
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 text-[10px] font-bold text-white">
+                  AI
+                </div>
+                <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2">
                   {[0, 1, 2].map((i) => (
                     <motion.div
                       key={i}
                       animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                      className="w-1.5 h-1.5 bg-slate-400 rounded-full"
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                      }}
+                      className="h-1.5 w-1.5 rounded-full bg-slate-400"
                     />
                   ))}
                 </div>
               </motion.div>
             </div>
             {/* Input */}
-            <div className="h-10 border-t border-slate-200 flex items-center px-3 gap-2">
+            <div className="flex h-10 items-center gap-2 border-t border-slate-200 px-3">
               <input
                 type="text"
                 placeholder="Describe your simulation..."
-                className="flex-1 text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1"
+                className="flex-1 rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[10px]"
                 disabled
               />
-              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-                <Send className="w-3 h-3 text-white" />
+              <div className="flex h-6 w-6 items-center justify-center rounded bg-primary">
+                <Send className="h-3 w-3 text-white" />
               </div>
             </div>
           </div>
 
           {/* Right - Preview panel */}
-          <div className="w-44 bg-slate-50 p-3 flex flex-col">
-            <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">Preview</div>
+          <div className="flex w-44 flex-col bg-slate-50 p-3">
+            <div className="mb-3 text-[9px] font-bold uppercase tracking-widest text-slate-400">
+              Preview
+            </div>
 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="space-y-2 flex-1"
+              className="flex-1 space-y-2"
             >
-              <div className="bg-white rounded-lg p-2 border border-slate-200">
-                <div className="text-[8px] text-slate-400 uppercase">Name</div>
-                <div className="text-[10px] font-semibold text-slate-900">{previewData.name}</div>
+              <div className="rounded-lg border border-slate-200 bg-white p-2">
+                <div className="text-[8px] uppercase text-slate-400">Name</div>
+                <div className="text-[10px] font-semibold text-slate-900">
+                  {previewData.name}
+                </div>
               </div>
-              <div className="bg-white rounded-lg p-2 border border-slate-200">
-                <div className="text-[8px] text-slate-400 uppercase">Company</div>
-                <div className="text-[10px] font-semibold text-slate-900">{previewData.company}</div>
+              <div className="rounded-lg border border-slate-200 bg-white p-2">
+                <div className="text-[8px] uppercase text-slate-400">
+                  Company
+                </div>
+                <div className="text-[10px] font-semibold text-slate-900">
+                  {previewData.company}
+                </div>
               </div>
-              <div className="bg-white rounded-lg p-2 border border-slate-200">
-                <div className="text-[8px] text-slate-400 uppercase">Tech Stack</div>
-                <div className="flex flex-wrap gap-1 mt-1">
+              <div className="rounded-lg border border-slate-200 bg-white p-2">
+                <div className="text-[8px] uppercase text-slate-400">
+                  Tech Stack
+                </div>
+                <div className="mt-1 flex flex-wrap gap-1">
                   {previewData.techStack.map((tech) => (
-                    <span key={tech} className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                    <span
+                      key={tech}
+                      className="rounded bg-primary/10 px-1.5 py-0.5 text-[8px] text-primary"
+                    >
                       {tech}
                     </span>
                   ))}
                 </div>
               </div>
-              <div className="bg-white rounded-lg p-2 border border-slate-200">
-                <div className="text-[8px] text-slate-400 uppercase">Coworkers</div>
+              <div className="rounded-lg border border-slate-200 bg-white p-2">
+                <div className="text-[8px] uppercase text-slate-400">
+                  Coworkers
+                </div>
                 {previewData.coworkers.map((cw) => (
-                  <div key={cw.name} className="flex items-center gap-1 mt-1">
-                    <div className="w-4 h-4 bg-emerald-500 rounded text-white text-[8px] flex items-center justify-center font-bold">S</div>
+                  <div key={cw.name} className="mt-1 flex items-center gap-1">
+                    <div className="flex h-4 w-4 items-center justify-center rounded bg-emerald-500 text-[8px] font-bold text-white">
+                      S
+                    </div>
                     <div className="text-[9px] text-slate-700">{cw.name}</div>
                   </div>
                 ))}
@@ -529,7 +624,7 @@ function DemoBuilderVisual() {
               transition={{ delay: 1.2 }}
               className="mt-2"
             >
-              <div className="bg-primary text-white text-[10px] font-bold py-1.5 rounded text-center">
+              <div className="rounded bg-primary py-1.5 text-center text-[10px] font-bold text-white">
                 Save Simulation
               </div>
             </motion.div>
@@ -542,44 +637,64 @@ function DemoBuilderVisual() {
 
 function DemoJoinVisual() {
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       {/* Mock join page - split screen */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-700/50"
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-700/50 bg-slate-900 shadow-2xl"
       >
         <div className="flex h-80">
           {/* Left - Dark panel */}
-          <div className="w-1/2 bg-[#020617] p-6 flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-[-50%] left-[-50%] w-full h-full bg-primary/20 rounded-full blur-[80px]" />
+          <div className="relative flex w-1/2 flex-col justify-between overflow-hidden bg-[#020617] p-6">
+            <div className="absolute left-[-50%] top-[-50%] h-full w-full rounded-full bg-primary/20 blur-[80px]" />
             <div className="relative z-10 flex items-center gap-2">
-              <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center text-primary font-black text-xs">S</div>
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-xs font-black text-primary">
+                S
+              </div>
               <span className="text-sm font-bold text-white">SkillVee</span>
             </div>
             <div className="relative z-10">
-              <h3 className="text-2xl font-black text-white leading-tight">YOUR<br />NEXT ROLE.</h3>
-              <p className="text-xs text-slate-400 mt-2">Acme Corp is looking for a Senior Engineer</p>
+              <h3 className="text-2xl font-black leading-tight text-white">
+                YOUR
+                <br />
+                NEXT ROLE.
+              </h3>
+              <p className="mt-2 text-xs text-slate-400">
+                Acme Corp is looking for a Senior Engineer
+              </p>
             </div>
             <div className="relative z-10 flex gap-4 text-[8px] text-slate-500">
-              <span className="flex items-center gap-1"><Bot className="w-3 h-3 text-primary" /> AI Teammates</span>
-              <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-primary" /> Use Any AI</span>
+              <span className="flex items-center gap-1">
+                <Bot className="h-3 w-3 text-primary" /> AI Teammates
+              </span>
+              <span className="flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-primary" /> Use Any AI
+              </span>
             </div>
           </div>
           {/* Right - Light panel */}
-          <div className="w-1/2 bg-white p-6 flex flex-col justify-center">
-            <div className="flex gap-1 mb-4">
+          <div className="flex w-1/2 flex-col justify-center bg-white p-6">
+            <div className="mb-4 flex gap-1">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={`h-1 flex-1 rounded-full ${i <= 1 ? "bg-primary" : "bg-slate-200"}`} />
+                <div
+                  key={i}
+                  className={`h-1 flex-1 rounded-full ${i <= 1 ? "bg-primary" : "bg-slate-200"}`}
+                />
               ))}
             </div>
-            <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 mb-1">Step 01</div>
-            <h4 className="text-lg font-bold text-slate-900 mb-2">Welcome</h4>
-            <p className="text-xs text-slate-500 mb-4">Experience a day at Acme Corp. This simulation assesses how you work.</p>
+            <div className="mb-1 text-[8px] font-bold uppercase tracking-widest text-slate-400">
+              Step 01
+            </div>
+            <h4 className="mb-2 text-lg font-bold text-slate-900">Welcome</h4>
+            <p className="mb-4 text-xs text-slate-500">
+              Experience a day at Acme Corp. This simulation assesses how you
+              work.
+            </p>
             <motion.div
               animate={{ scale: [1, 1.02, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="bg-slate-900 text-white text-xs font-bold py-2 px-4 rounded-full text-center"
+              className="rounded-full bg-slate-900 px-4 py-2 text-center text-xs font-bold text-white"
             >
               Continue →
             </motion.div>
@@ -592,45 +707,85 @@ function DemoJoinVisual() {
 
 function DemoChatVisual() {
   const coworkers = [
-    { name: "Sarah Chen", role: "Engineering Manager", color: "bg-emerald-500", online: true },
-    { name: "Alex Kim", role: "Product Manager", color: "bg-purple-500", online: true },
-    { name: "Jordan Lee", role: "Senior Engineer", color: "bg-orange-500", online: false },
+    {
+      name: "Sarah Chen",
+      role: "Engineering Manager",
+      color: "bg-emerald-500",
+      online: true,
+    },
+    {
+      name: "Alex Kim",
+      role: "Product Manager",
+      color: "bg-purple-500",
+      online: true,
+    },
+    {
+      name: "Jordan Lee",
+      role: "Senior Engineer",
+      color: "bg-orange-500",
+      online: false,
+    },
   ];
 
   const messages = [
-    { from: "Sarah Chen", text: "Hey! Welcome to the team. I have a task for you today.", time: "9:00 AM", isManager: true },
-    { from: "You", text: "Thanks! Excited to get started. What's the project?", time: "9:01 AM", isYou: true },
-    { from: "Sarah Chen", text: "We need to add a new feature to the checkout flow. I'll send over the requirements.", time: "9:02 AM", isManager: true },
+    {
+      from: "Sarah Chen",
+      text: "Hey! Welcome to the team. I have a task for you today.",
+      time: "9:00 AM",
+      isManager: true,
+    },
+    {
+      from: "You",
+      text: "Thanks! Excited to get started. What's the project?",
+      time: "9:01 AM",
+      isYou: true,
+    },
+    {
+      from: "Sarah Chen",
+      text: "We need to add a new feature to the checkout flow. I'll send over the requirements.",
+      time: "9:02 AM",
+      isManager: true,
+    },
   ];
 
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200"
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
       >
         <div className="flex h-96">
           {/* Sidebar */}
-          <div className="w-48 bg-slate-50 border-r border-slate-200 p-3">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Team</div>
+          <div className="w-48 border-r border-slate-200 bg-slate-50 p-3">
+            <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Team
+            </div>
             {coworkers.map((cw, i) => (
               <motion.div
                 key={cw.name}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-100 cursor-pointer mb-1"
+                className="mb-1 flex cursor-pointer items-center gap-2 rounded-lg p-2 hover:bg-slate-100"
               >
                 <div className="relative">
-                  <div className={`w-8 h-8 ${cw.color} rounded-lg flex items-center justify-center text-white text-xs font-bold`}>
+                  <div
+                    className={`h-8 w-8 ${cw.color} flex items-center justify-center rounded-lg text-xs font-bold text-white`}
+                  >
                     {cw.name.charAt(0)}
                   </div>
-                  {cw.online && <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />}
+                  {cw.online && (
+                    <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-500" />
+                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-slate-900 truncate">{cw.name}</div>
-                  <div className="text-[10px] text-slate-400 truncate">{cw.role}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-semibold text-slate-900">
+                    {cw.name}
+                  </div>
+                  <div className="truncate text-[10px] text-slate-400">
+                    {cw.role}
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -638,20 +793,22 @@ function DemoChatVisual() {
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="mt-4 bg-primary text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white"
             >
-              <Phone className="w-3 h-3" /> Start Call
+              <Phone className="h-3 w-3" /> Start Call
             </motion.div>
           </div>
           {/* Chat area */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex flex-1 flex-col">
             {/* Header */}
-            <div className="h-12 border-b border-slate-200 flex items-center px-4 gap-2">
-              <Hash className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-semibold text-slate-900">sarah-chen</span>
+            <div className="flex h-12 items-center gap-2 border-b border-slate-200 px-4">
+              <Hash className="h-4 w-4 text-slate-400" />
+              <span className="text-sm font-semibold text-slate-900">
+                sarah-chen
+              </span>
             </div>
             {/* Messages */}
-            <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+            <div className="flex-1 space-y-3 overflow-y-auto p-4">
               {messages.map((msg, i) => (
                 <motion.div
                   key={i}
@@ -660,15 +817,25 @@ function DemoChatVisual() {
                   transition={{ delay: 0.3 + i * 0.2 }}
                   className={`flex gap-2 ${msg.isYou ? "flex-row-reverse" : ""}`}
                 >
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 ${msg.isYou ? "bg-primary" : "bg-emerald-500"}`}>
+                  <div
+                    className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-[10px] font-bold text-white ${msg.isYou ? "bg-primary" : "bg-emerald-500"}`}
+                  >
                     {msg.isYou ? "Y" : "S"}
                   </div>
-                  <div className={`max-w-[70%] ${msg.isYou ? "text-right" : ""}`}>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] font-semibold text-slate-900">{msg.from}</span>
-                      <span className="text-[9px] text-slate-400">{msg.time}</span>
+                  <div
+                    className={`max-w-[70%] ${msg.isYou ? "text-right" : ""}`}
+                  >
+                    <div className="mb-0.5 flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-slate-900">
+                        {msg.from}
+                      </span>
+                      <span className="text-[9px] text-slate-400">
+                        {msg.time}
+                      </span>
                     </div>
-                    <div className={`text-xs text-slate-700 p-2 rounded-lg ${msg.isYou ? "bg-primary/10" : "bg-slate-100"}`}>
+                    <div
+                      className={`rounded-lg p-2 text-xs text-slate-700 ${msg.isYou ? "bg-primary/10" : "bg-slate-100"}`}
+                    >
                       {msg.text}
                     </div>
                   </div>
@@ -676,15 +843,15 @@ function DemoChatVisual() {
               ))}
             </div>
             {/* Input */}
-            <div className="h-14 border-t border-slate-200 flex items-center px-4 gap-2">
+            <div className="flex h-14 items-center gap-2 border-t border-slate-200 px-4">
               <input
                 type="text"
                 placeholder="Type a message..."
-                className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2"
+                className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"
                 disabled
               />
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Send className="w-4 h-4 text-white" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                <Send className="h-4 w-4 text-white" />
               </div>
             </div>
           </div>
@@ -696,28 +863,28 @@ function DemoChatVisual() {
 
 function DemoCallVisual() {
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md"
       >
         {/* Call interface */}
-        <div className="bg-slate-900 rounded-3xl p-8 text-center relative overflow-hidden">
+        <div className="relative overflow-hidden rounded-3xl bg-slate-900 p-8 text-center">
           {/* Animated rings */}
           <motion.div
             animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <div className="w-40 h-40 border-2 border-primary/30 rounded-full" />
+            <div className="h-40 w-40 rounded-full border-2 border-primary/30" />
           </motion.div>
           <motion.div
             animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
             transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <div className="w-32 h-32 border-2 border-primary/50 rounded-full" />
+            <div className="h-32 w-32 rounded-full border-2 border-primary/50" />
           </motion.div>
 
           {/* Avatar */}
@@ -725,56 +892,56 @@ function DemoCallVisual() {
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full mx-auto flex items-center justify-center text-white text-3xl font-bold shadow-xl shadow-emerald-500/30"
+              className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-3xl font-bold text-white shadow-xl shadow-emerald-500/30"
             >
               S
             </motion.div>
             <motion.div
               animate={{ opacity: [1, 0.5, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
-              className="absolute bottom-1 right-1/2 translate-x-8 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900"
+              className="absolute bottom-1 right-1/2 h-4 w-4 translate-x-8 rounded-full border-2 border-slate-900 bg-green-500"
             />
           </div>
 
-          <h3 className="text-xl font-bold text-white mb-1">Sarah Chen</h3>
-          <p className="text-slate-400 text-sm mb-2">Engineering Manager</p>
+          <h3 className="mb-1 text-xl font-bold text-white">Sarah Chen</h3>
+          <p className="mb-2 text-sm text-slate-400">Engineering Manager</p>
 
           {/* Voice indicator */}
-          <div className="flex items-center justify-center gap-1 mb-6">
+          <div className="mb-6 flex items-center justify-center gap-1">
             {[...Array(5)].map((_, i) => (
               <motion.div
                 key={i}
                 animate={{ height: [8, 20, 8] }}
                 transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.1 }}
-                className="w-1 bg-primary rounded-full"
+                className="w-1 rounded-full bg-primary"
                 style={{ height: 8 }}
               />
             ))}
           </div>
 
-          <p className="text-xs text-slate-500 mb-6">Call in progress • 2:34</p>
+          <p className="mb-6 text-xs text-slate-500">Call in progress • 2:34</p>
 
           {/* Controls */}
           <div className="flex items-center justify-center gap-4">
             <motion.div
               whileHover={{ scale: 1.1 }}
-              className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center cursor-pointer"
+              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-slate-800"
             >
-              <Phone className="w-5 h-5 text-slate-400" />
+              <Phone className="h-5 w-5 text-slate-400" />
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.1 }}
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
-              className="w-14 h-14 bg-red-500 rounded-full flex items-center justify-center cursor-pointer shadow-lg shadow-red-500/30"
+              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full bg-red-500 shadow-lg shadow-red-500/30"
             >
-              <PhoneOff className="w-6 h-6 text-white" />
+              <PhoneOff className="h-6 w-6 text-white" />
             </motion.div>
             <motion.div
               whileHover={{ scale: 1.1 }}
-              className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center cursor-pointer"
+              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-slate-800"
             >
-              <Sparkles className="w-5 h-5 text-slate-400" />
+              <Sparkles className="h-5 w-5 text-slate-400" />
             </motion.div>
           </div>
         </div>
@@ -786,7 +953,7 @@ function DemoCallVisual() {
           transition={{ delay: 0.5 }}
           className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500"
         >
-          <div className="w-4 h-4 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded" />
+          <div className="h-4 w-4 rounded bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500" />
           Powered by Gemini Live
         </motion.div>
       </motion.div>
@@ -796,23 +963,23 @@ function DemoCallVisual() {
 
 function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
   return (
-    <div className="h-full flex items-center justify-center">
-      <div className="w-full max-w-2xl flex gap-6">
+    <div className="flex h-full items-center justify-center">
+      <div className="flex w-full max-w-2xl gap-6">
         {/* Left - Screen recording */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="flex-1"
         >
-          <div className="bg-slate-900 rounded-2xl p-4 relative overflow-hidden">
+          <div className="relative overflow-hidden rounded-2xl bg-slate-900 p-4">
             {/* Fake screen recording */}
-            <div className="aspect-video bg-slate-800 rounded-lg relative overflow-hidden">
+            <div className="relative aspect-video overflow-hidden rounded-lg bg-slate-800">
               {/* Code editor mockup */}
               <div className="absolute inset-0 p-3">
-                <div className="flex gap-1.5 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
-                  <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                <div className="mb-3 flex gap-1.5">
+                  <div className="h-2 w-2 rounded-full bg-red-500" />
+                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
+                  <div className="h-2 w-2 rounded-full bg-green-500" />
                 </div>
                 <div className="space-y-1.5">
                   {[...Array(6)].map((_, i) => (
@@ -821,34 +988,43 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
                       initial={{ width: 0 }}
                       animate={{ width: `${40 + Math.random() * 50}%` }}
                       transition={{ delay: 0.5 + i * 0.1, duration: 0.3 }}
-                      className="h-2 bg-slate-700 rounded"
+                      className="h-2 rounded bg-slate-700"
                     />
                   ))}
                 </div>
               </div>
               {/* Recording indicator */}
-              <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-red-500/90 px-2 py-1 rounded">
+              <div className="absolute right-2 top-2 flex items-center gap-1.5 rounded bg-red-500/90 px-2 py-1">
                 <motion.div
                   animate={{ opacity: [1, 0.3, 1] }}
                   transition={{ duration: 1, repeat: Infinity }}
-                  className="w-1.5 h-1.5 bg-white rounded-full"
+                  className="h-1.5 w-1.5 rounded-full bg-white"
                 />
-                <span className="text-[9px] text-white font-bold">REC</span>
+                <span className="text-[9px] font-bold text-white">REC</span>
               </div>
             </div>
             <div className="mt-3 text-center">
-              <div className="text-xs text-slate-400">45 min screen recording</div>
+              <div className="text-xs text-slate-400">
+                45 min screen recording
+              </div>
             </div>
           </div>
 
           {/* Arrow */}
-          <div className="flex justify-center my-4">
+          <div className="my-4 flex justify-center">
             <motion.div
               animate={{ y: [0, 5, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
               className="text-primary"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M12 5v14M19 12l-7 7-7-7" />
               </svg>
             </motion.div>
@@ -859,12 +1035,14 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8 }}
-            className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3 flex items-center justify-center gap-3"
+            className="flex items-center justify-center gap-3 rounded-xl border border-purple-500/30 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 p-3"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+              <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <div className="text-sm font-bold text-white">Gemini Multimodal Analysis</div>
+            <div className="text-sm font-bold text-white">
+              Gemini Multimodal Analysis
+            </div>
           </motion.div>
         </motion.div>
 
@@ -875,7 +1053,9 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
           transition={{ delay: 0.3 }}
           className="flex-1"
         >
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">8 Dimensions Assessed</div>
+          <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            8 Dimensions Assessed
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {dimensions.map((dim, i) => (
               <motion.div
@@ -883,17 +1063,17 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + i * 0.1 }}
-                className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 flex items-center gap-2"
+                className="flex items-center gap-2 rounded-lg border border-slate-700/50 bg-slate-800/50 p-3"
               >
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.8 + i * 0.1, type: "spring" }}
-                  className="w-5 h-5 bg-primary/20 rounded flex items-center justify-center"
+                  className="flex h-5 w-5 items-center justify-center rounded bg-primary/20"
                 >
-                  <CheckCircle2 className="w-3 h-3 text-primary" />
+                  <CheckCircle2 className="h-3 w-3 text-primary" />
                 </motion.div>
-                <span className="text-xs text-white font-medium">{dim}</span>
+                <span className="text-xs font-medium text-white">{dim}</span>
               </motion.div>
             ))}
           </div>
@@ -903,21 +1083,35 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
-            className="mt-4 bg-slate-800/30 border border-slate-700/30 rounded-lg p-3"
+            className="mt-4 rounded-lg border border-slate-700/30 bg-slate-800/30 p-3"
           >
-            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-2">AI Output</div>
+            <div className="mb-2 text-[9px] uppercase tracking-wider text-slate-500">
+              AI Output
+            </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400">Observable behaviors</span>
-                <span className="text-[10px] text-primary font-bold">24 found</span>
+                <span className="text-[10px] text-slate-400">
+                  Observable behaviors
+                </span>
+                <span className="text-[10px] font-bold text-primary">
+                  24 found
+                </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400">Timestamps linked</span>
-                <span className="text-[10px] text-primary font-bold">12 moments</span>
+                <span className="text-[10px] text-slate-400">
+                  Timestamps linked
+                </span>
+                <span className="text-[10px] font-bold text-primary">
+                  12 moments
+                </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400">Hiring signals</span>
-                <span className="text-[10px] text-emerald-400 font-bold">3 green, 1 red</span>
+                <span className="text-[10px] text-slate-400">
+                  Hiring signals
+                </span>
+                <span className="text-[10px] font-bold text-emerald-400">
+                  3 green, 1 red
+                </span>
               </div>
             </div>
           </motion.div>
@@ -942,25 +1136,25 @@ function DemoDashboardVisual() {
   ];
 
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 p-6"
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-slate-900">Dashboard</h3>
             <p className="text-xs text-slate-500">Welcome back, Recruiter</p>
           </div>
-          <div className="bg-primary text-white text-xs font-bold py-2 px-4 rounded-lg">
+          <div className="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white">
             + New Simulation
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="mb-6 grid grid-cols-4 gap-3">
           {stats.map((stat, i) => {
             const Icon = stat.icon;
             return (
@@ -969,10 +1163,12 @@ function DemoDashboardVisual() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-slate-50 rounded-xl p-3 text-center"
+                className="rounded-xl bg-slate-50 p-3 text-center"
               >
-                <Icon className="w-5 h-5 text-primary mx-auto mb-2" />
-                <div className="text-xl font-bold text-slate-900">{stat.value}</div>
+                <Icon className="mx-auto mb-2 h-5 w-5 text-primary" />
+                <div className="text-xl font-bold text-slate-900">
+                  {stat.value}
+                </div>
                 <div className="text-[10px] text-slate-500">{stat.label}</div>
               </motion.div>
             );
@@ -981,7 +1177,9 @@ function DemoDashboardVisual() {
 
         {/* Recent candidates */}
         <div>
-          <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Recent Activity</div>
+          <div className="mb-3 text-xs font-bold uppercase tracking-widest text-slate-400">
+            Recent Activity
+          </div>
           <div className="space-y-2">
             {candidates.map((c, i) => (
               <motion.div
@@ -989,14 +1187,16 @@ function DemoDashboardVisual() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + i * 0.1 }}
-                className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"
+                className="flex items-center justify-between rounded-xl bg-slate-50 p-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary text-xs font-bold">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
                     {c.name.charAt(0)}
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-slate-900">{c.name}</div>
+                    <div className="text-sm font-semibold text-slate-900">
+                      {c.name}
+                    </div>
                     <div className="text-[10px] text-slate-500">{c.date}</div>
                   </div>
                 </div>
@@ -1006,15 +1206,19 @@ function DemoDashboardVisual() {
                       {[1, 2, 3, 4, 5].map((n) => (
                         <Circle
                           key={n}
-                          className={`w-2 h-2 ${n <= Math.floor(c.score) ? "fill-primary text-primary" : "text-slate-300"}`}
+                          className={`h-2 w-2 ${n <= Math.floor(c.score) ? "fill-primary text-primary" : "text-slate-300"}`}
                         />
                       ))}
-                      <span className="text-xs font-bold text-slate-700 ml-1">{c.score}</span>
+                      <span className="ml-1 text-xs font-bold text-slate-700">
+                        {c.score}
+                      </span>
                     </div>
                   ) : (
-                    <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded-full">In Progress</span>
+                    <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] text-amber-600">
+                      In Progress
+                    </span>
                   )}
-                  <Eye className="w-4 h-4 text-slate-400 cursor-pointer" />
+                  <Eye className="h-4 w-4 cursor-pointer text-slate-400" />
                 </div>
               </motion.div>
             ))}
@@ -1034,24 +1238,32 @@ function DemoScorecardVisual() {
   ];
 
   const signals = {
-    green: ["Asked clarifying questions", "Used AI tools effectively", "Clear code structure"],
+    green: [
+      "Asked clarifying questions",
+      "Used AI tools effectively",
+      "Clear code structure",
+    ],
     red: ["Took long on edge cases"],
   };
 
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200"
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
       >
         {/* Header */}
-        <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 p-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white text-xl font-bold">J</div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-xl font-bold text-white">
+              J
+            </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900">John Smith</h3>
-              <p className="text-xs text-slate-500">Senior Engineer • Completed Jan 15</p>
+              <p className="text-xs text-slate-500">
+                Senior Engineer • Completed Jan 15
+              </p>
             </div>
           </div>
           <div className="text-right">
@@ -1060,10 +1272,12 @@ function DemoScorecardVisual() {
           </div>
         </div>
 
-        <div className="p-4 grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 p-4">
           {/* Dimensions */}
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Skill Dimensions</div>
+            <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Skill Dimensions
+            </div>
             <div className="space-y-2">
               {dimensions.map((d, i) => (
                 <motion.div
@@ -1071,26 +1285,36 @@ function DemoScorecardVisual() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-slate-50 rounded-lg p-3"
+                  className="rounded-lg bg-slate-50 p-3"
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-slate-900">{d.name}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                      d.level === "Exceptional" ? "bg-emerald-100 text-emerald-700" :
-                      d.level === "Strong" ? "bg-blue-100 text-blue-700" :
-                      "bg-slate-100 text-slate-700"
-                    }`}>{d.level}</span>
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-900">
+                      {d.name}
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] ${
+                        d.level === "Exceptional"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : d.level === "Strong"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      {d.level}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(d.score / 5) * 100}%` }}
                         transition={{ delay: 0.5 + i * 0.1, duration: 0.5 }}
-                        className="h-full bg-primary rounded-full"
+                        className="h-full rounded-full bg-primary"
                       />
                     </div>
-                    <span className="text-xs font-bold text-slate-700 w-6">{d.score}</span>
+                    <span className="w-6 text-xs font-bold text-slate-700">
+                      {d.score}
+                    </span>
                   </div>
                 </motion.div>
               ))}
@@ -1099,22 +1323,29 @@ function DemoScorecardVisual() {
 
           {/* Signals */}
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Hiring Signals</div>
+            <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Hiring Signals
+            </div>
             <div className="space-y-3">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="bg-emerald-50 border border-emerald-200 rounded-lg p-3"
+                className="rounded-lg border border-emerald-200 bg-emerald-50 p-3"
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span className="text-xs font-bold text-emerald-700">Strengths</span>
+                <div className="mb-2 flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs font-bold text-emerald-700">
+                    Strengths
+                  </span>
                 </div>
                 <ul className="space-y-1">
                   {signals.green.map((s) => (
-                    <li key={s} className="text-[10px] text-emerald-700 flex items-center gap-1">
-                      <span className="w-1 h-1 bg-emerald-500 rounded-full" />
+                    <li
+                      key={s}
+                      className="flex items-center gap-1 text-[10px] text-emerald-700"
+                    >
+                      <span className="h-1 w-1 rounded-full bg-emerald-500" />
                       {s}
                     </li>
                   ))}
@@ -1124,16 +1355,21 @@ function DemoScorecardVisual() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="bg-red-50 border border-red-200 rounded-lg p-3"
+                className="rounded-lg border border-red-200 bg-red-50 p-3"
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="w-4 h-4 text-red-600" />
-                  <span className="text-xs font-bold text-red-700">Areas to Probe</span>
+                <div className="mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <span className="text-xs font-bold text-red-700">
+                    Areas to Probe
+                  </span>
                 </div>
                 <ul className="space-y-1">
                   {signals.red.map((s) => (
-                    <li key={s} className="text-[10px] text-red-700 flex items-center gap-1">
-                      <span className="w-1 h-1 bg-red-500 rounded-full" />
+                    <li
+                      key={s}
+                      className="flex items-center gap-1 text-[10px] text-red-700"
+                    >
+                      <span className="h-1 w-1 rounded-full bg-red-500" />
                       {s}
                     </li>
                   ))}
@@ -1146,14 +1382,18 @@ function DemoScorecardVisual() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
-              className="mt-3 bg-slate-900 rounded-lg p-3 flex items-center gap-3"
+              className="mt-3 flex items-center gap-3 rounded-lg bg-slate-900 p-3"
             >
-              <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center">
-                <Play className="w-5 h-5 text-primary" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
+                <Play className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <div className="text-xs font-semibold text-white">Screen Recording</div>
-                <div className="text-[10px] text-slate-400">45 min • Watch full session</div>
+                <div className="text-xs font-semibold text-white">
+                  Screen Recording
+                </div>
+                <div className="text-[10px] text-slate-400">
+                  45 min • Watch full session
+                </div>
               </div>
             </motion.div>
           </div>
@@ -1165,24 +1405,49 @@ function DemoScorecardVisual() {
 
 function DemoCompareVisual() {
   const candidates = [
-    { name: "John Smith", score: 4.2, percentile: 92, level: "Strong", color: "bg-primary" },
-    { name: "Emma Wilson", score: 3.8, percentile: 75, level: "Proficient", color: "bg-purple-500" },
-    { name: "Alex Johnson", score: 4.5, percentile: 98, level: "Exceptional", color: "bg-emerald-500" },
+    {
+      name: "John Smith",
+      score: 4.2,
+      percentile: 92,
+      level: "Strong",
+      color: "bg-primary",
+    },
+    {
+      name: "Emma Wilson",
+      score: 3.8,
+      percentile: 75,
+      level: "Proficient",
+      color: "bg-purple-500",
+    },
+    {
+      name: "Alex Johnson",
+      score: 4.5,
+      percentile: 98,
+      level: "Exceptional",
+      color: "bg-emerald-500",
+    },
   ];
 
-  const dimensions = ["Problem Solving", "Communication", "Technical", "AI Leverage"];
+  const dimensions = [
+    "Problem Solving",
+    "Communication",
+    "Technical",
+    "AI Leverage",
+  ];
 
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="flex h-full items-center justify-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 p-6"
+        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
       >
-        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Compare Candidates</div>
+        <div className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+          Compare Candidates
+        </div>
 
         {/* Candidate headers */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="mb-6 grid grid-cols-4 gap-3">
           <div></div>
           {candidates.map((c, i) => (
             <motion.div
@@ -1192,16 +1457,24 @@ function DemoCompareVisual() {
               transition={{ delay: i * 0.1 }}
               className="text-center"
             >
-              <div className={`w-12 h-12 ${c.color} rounded-xl mx-auto flex items-center justify-center text-white text-lg font-bold mb-2`}>
+              <div
+                className={`h-12 w-12 ${c.color} mx-auto mb-2 flex items-center justify-center rounded-xl text-lg font-bold text-white`}
+              >
                 {c.name.charAt(0)}
               </div>
               <div className="text-sm font-bold text-slate-900">{c.name}</div>
-              <div className="text-2xl font-black text-slate-900">{c.score}</div>
-              <div className={`text-[10px] px-2 py-0.5 rounded-full inline-block mt-1 ${
-                c.percentile >= 90 ? "bg-emerald-100 text-emerald-700" :
-                c.percentile >= 75 ? "bg-blue-100 text-blue-700" :
-                "bg-slate-100 text-slate-700"
-              }`}>
+              <div className="text-2xl font-black text-slate-900">
+                {c.score}
+              </div>
+              <div
+                className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] ${
+                  c.percentile >= 90
+                    ? "bg-emerald-100 text-emerald-700"
+                    : c.percentile >= 75
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-slate-100 text-slate-700"
+                }`}
+              >
                 Top {100 - c.percentile}%
               </div>
             </motion.div>
@@ -1216,22 +1489,30 @@ function DemoCompareVisual() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + di * 0.1 }}
-              className="grid grid-cols-4 gap-3 items-center"
+              className="grid grid-cols-4 items-center gap-3"
             >
               <div className="text-xs font-medium text-slate-600">{dim}</div>
               {candidates.map((c, ci) => {
                 const score = 3 + Math.random() * 2; // Random for demo
                 return (
-                  <div key={`${c.name}-${dim}`} className="flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    key={`${c.name}-${dim}`}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(score / 5) * 100}%` }}
-                        transition={{ delay: 0.5 + di * 0.1 + ci * 0.05, duration: 0.5 }}
+                        transition={{
+                          delay: 0.5 + di * 0.1 + ci * 0.05,
+                          duration: 0.5,
+                        }}
                         className={`h-full rounded-full ${c.color}`}
                       />
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500 w-6">{score.toFixed(1)}</span>
+                    <span className="w-6 text-[10px] font-bold text-slate-500">
+                      {score.toFixed(1)}
+                    </span>
                   </div>
                 );
               })}
@@ -1244,12 +1525,16 @@ function DemoCompareVisual() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="mt-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-4"
+          className="mt-6 flex items-center gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4"
         >
-          <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+          <CheckCircle2 className="h-8 w-8 text-emerald-600" />
           <div>
-            <div className="text-sm font-bold text-emerald-800">Recommended: Alex Johnson</div>
-            <div className="text-xs text-emerald-600">Top 2% overall, exceptional problem solving skills</div>
+            <div className="text-sm font-bold text-emerald-800">
+              Recommended: Alex Johnson
+            </div>
+            <div className="text-xs text-emerald-600">
+              Top 2% overall, exceptional problem solving skills
+            </div>
           </div>
         </motion.div>
       </motion.div>
@@ -1291,7 +1576,8 @@ export default function PresentationPage() {
       setIsFullscreen(!!document.fullscreenElement);
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
   // Keyboard navigation
@@ -1318,11 +1604,11 @@ export default function PresentationPage() {
   const slide = slides[currentSlide];
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans overflow-hidden flex flex-col">
+    <div className="flex min-h-screen flex-col overflow-hidden bg-[#020617] font-sans text-white">
       {/* Main slide area */}
-      <div className="flex-1 flex">
+      <div className="flex flex-1">
         {/* Left: Text content */}
-        <div className="w-1/2 p-12 lg:p-20 flex flex-col justify-center relative">
+        <div className="relative flex w-1/2 flex-col justify-center p-12 lg:p-20">
           {/* Animated background */}
           <motion.div
             key={`bg-${currentSlide}`}
@@ -1331,7 +1617,7 @@ export default function PresentationPage() {
               opacity: [0.2, 0.4, 0.2],
             }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[-20%] left-[-20%] w-full h-full bg-primary/20 rounded-full blur-[150px] pointer-events-none"
+            className="pointer-events-none absolute left-[-20%] top-[-20%] h-full w-full rounded-full bg-primary/20 blur-[150px]"
           />
 
           <AnimatePresence mode="wait">
@@ -1344,28 +1630,33 @@ export default function PresentationPage() {
               className="relative z-10"
             >
               {/* Slide number */}
-              <div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4">
-                {String(currentSlide + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+              <div className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+                {String(currentSlide + 1).padStart(2, "0")} /{" "}
+                {String(slides.length).padStart(2, "0")}
               </div>
 
               {/* Title */}
-              <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-[0.9] text-white mb-6">
+              <h1 className="mb-6 text-5xl font-black leading-[0.9] tracking-tight text-white lg:text-7xl">
                 {slide.title.split(" ").map((word, i) => (
                   <span key={i}>
-                    {i === 0 ? <span className="text-primary">{word}</span> : word}
+                    {i === 0 ? (
+                      <span className="text-primary">{word}</span>
+                    ) : (
+                      word
+                    )}
                     {i < slide.title.split(" ").length - 1 ? " " : ""}
                   </span>
                 ))}
               </h1>
 
               {/* Subtitle */}
-              <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-lg leading-relaxed">
+              <p className="max-w-lg text-xl font-medium leading-relaxed text-slate-400 lg:text-2xl">
                 {slide.subtitle}
               </p>
 
               {/* Footnote if exists */}
               {"footnote" in slide && slide.footnote && (
-                <p className="mt-8 text-sm text-slate-500 max-w-md italic">
+                <p className="mt-8 max-w-md text-sm italic text-slate-500">
                   {slide.footnote}
                 </p>
               )}
@@ -1374,7 +1665,7 @@ export default function PresentationPage() {
         </div>
 
         {/* Right: Visual */}
-        <div className="w-1/2 p-12 lg:p-16 flex items-center justify-center">
+        <div className="flex w-1/2 items-center justify-center p-12 lg:p-16">
           <AnimatePresence mode="wait">
             <motion.div
               key={`visual-${slide.id}`}
@@ -1382,20 +1673,32 @@ export default function PresentationPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.4 }}
-              className="w-full h-full max-h-[600px]"
+              className="h-full max-h-[600px] w-full"
             >
               {slide.visual === "logo" && <LogoVisual />}
-              {slide.visual === "stats" && "stats" in slide && <StatsVisual stats={slide.stats} />}
-              {slide.visual === "simulation" && "features" in slide && <SimulationVisual features={slide.features} />}
-              {slide.visual === "gemini" && "unlocks" in slide && <GeminiVisual unlocks={slide.unlocks} />}
-              {slide.visual === "market" && "marketData" in slide && <MarketVisual marketData={slide.marketData} />}
-              {slide.visual === "team" && "members" in slide && <TeamVisual members={slide.members} whyUs={slide.whyUs || ""} />}
+              {slide.visual === "stats" && "stats" in slide && (
+                <StatsVisual stats={slide.stats} />
+              )}
+              {slide.visual === "simulation" && "features" in slide && (
+                <SimulationVisual features={slide.features} />
+              )}
+              {slide.visual === "gemini" && "unlocks" in slide && (
+                <GeminiVisual unlocks={slide.unlocks} />
+              )}
+              {slide.visual === "market" && "marketData" in slide && (
+                <MarketVisual marketData={slide.marketData} />
+              )}
+              {slide.visual === "team" && "members" in slide && (
+                <TeamVisual members={slide.members} whyUs={slide.whyUs || ""} />
+              )}
               {/* Demo visuals */}
               {slide.visual === "demo-builder" && <DemoBuilderVisual />}
               {slide.visual === "demo-join" && <DemoJoinVisual />}
               {slide.visual === "demo-chat" && <DemoChatVisual />}
               {slide.visual === "demo-call" && <DemoCallVisual />}
-              {slide.visual === "demo-analysis" && "dimensions" in slide && <DemoAnalysisVisual dimensions={slide.dimensions} />}
+              {slide.visual === "demo-analysis" && "dimensions" in slide && (
+                <DemoAnalysisVisual dimensions={slide.dimensions} />
+              )}
               {slide.visual === "demo-dashboard" && <DemoDashboardVisual />}
               {slide.visual === "demo-scorecard" && <DemoScorecardVisual />}
               {slide.visual === "demo-compare" && <DemoCompareVisual />}
@@ -1405,10 +1708,10 @@ export default function PresentationPage() {
       </div>
 
       {/* Navigation bar */}
-      <div className="h-20 border-t border-slate-800/50 flex items-center justify-between px-12">
+      <div className="flex h-20 items-center justify-between border-t border-slate-800/50 px-12">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-primary font-black text-lg">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-lg font-black text-primary">
             S
           </div>
           <span className="text-lg font-bold tracking-tight">SkillVee</span>
@@ -1420,9 +1723,9 @@ export default function PresentationPage() {
             <button
               key={s.id}
               onClick={() => goToSlide(i)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`h-2 w-2 rounded-full transition-all ${
                 i === currentSlide
-                  ? "bg-primary w-8"
+                  ? "w-8 bg-primary"
                   : i < currentSlide
                     ? "bg-slate-500"
                     : "bg-slate-700"
@@ -1432,28 +1735,34 @@ export default function PresentationPage() {
         </div>
 
         {/* Controls */}
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           {/* Fullscreen toggle */}
           <button
             onClick={toggleFullscreen}
-            className="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all mr-2"
-            title={isFullscreen ? "Exit fullscreen (F)" : "Enter fullscreen (F)"}
+            className="mr-2 flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 text-slate-400 transition-all hover:border-slate-500 hover:text-white"
+            title={
+              isFullscreen ? "Exit fullscreen (F)" : "Enter fullscreen (F)"
+            }
           >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
           </button>
           <button
             onClick={prevSlide}
             disabled={currentSlide === 0}
-            className="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 text-slate-400 transition-all hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={nextSlide}
             disabled={currentSlide === slides.length - 1}
-            className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-30"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>

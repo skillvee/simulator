@@ -94,14 +94,10 @@ export function AssessmentsListClient({
 }: AssessmentsListClientProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleCopyLink = async (
-    e: React.MouseEvent,
-    simulationId: string
-  ) => {
+  const handleCopyLink = async (e: React.MouseEvent, simulationId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const baseUrl =
-      typeof window !== "undefined" ? window.location.origin : "";
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
     const link = `${baseUrl}/invite/${simulationId}`;
     try {
       await navigator.clipboard.writeText(link);
@@ -139,10 +135,8 @@ export function AssessmentsListClient({
   // Sort by urgency: needs-review first, then active, then empty
   const sorted = useMemo(() => {
     return [...simulations].sort((a, b) => {
-      const stateA =
-        a.needsReviewCount > 0 ? 0 : a.totalCandidates > 0 ? 1 : 2;
-      const stateB =
-        b.needsReviewCount > 0 ? 0 : b.totalCandidates > 0 ? 1 : 2;
+      const stateA = a.needsReviewCount > 0 ? 0 : a.totalCandidates > 0 ? 1 : 2;
+      const stateB = b.needsReviewCount > 0 ? 0 : b.totalCandidates > 0 ? 1 : 2;
       if (stateA !== stateB) return stateA - stateB;
       // Within same state, sort by most recent activity, then creation date
       const dateA = a.lastActivityDate ?? a.createdAt;
@@ -166,7 +160,7 @@ export function AssessmentsListClient({
 
       {/* Stat pills */}
       {simulations.length > 0 && (
-        <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="mb-6 flex flex-wrap items-center gap-3">
           <StatPill label="simulations" value={simulations.length} />
           <StatPill label="candidates" value={totalCandidates} />
           <StatPill label="completed" value={totalCompleted} />
@@ -174,11 +168,7 @@ export function AssessmentsListClient({
             <StatPill label="in progress" value={totalInProgress} />
           )}
           {totalNeedsReview > 0 && (
-            <StatPill
-              label="to review"
-              value={totalNeedsReview}
-              highlight
-            />
+            <StatPill label="to review" value={totalNeedsReview} highlight />
           )}
         </div>
       )}
@@ -195,10 +185,7 @@ export function AssessmentsListClient({
               Create a simulation and invite candidates to see their assessment
               results here.
             </p>
-            <Button
-              asChild
-              className="mt-6 bg-blue-600 hover:bg-blue-700"
-            >
+            <Button asChild className="mt-6 bg-blue-600 hover:bg-blue-700">
               <Link href="/recruiter/simulations/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Your First Simulation
@@ -207,7 +194,7 @@ export function AssessmentsListClient({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {sorted.map((sim) => (
             <AssessmentCard
               key={sim.id}
@@ -235,10 +222,10 @@ function StatPill({
 }) {
   return (
     <div
-      className={`rounded-lg px-3.5 py-2 border ${
+      className={`rounded-lg border px-3.5 py-2 ${
         highlight
-          ? "bg-blue-50 border-blue-200"
-          : "bg-stone-50 border-stone-100"
+          ? "border-blue-200 bg-blue-50"
+          : "border-stone-100 bg-stone-50"
       }`}
     >
       <div
@@ -276,7 +263,7 @@ function ScoreCircle({
   return (
     <div className="flex items-center gap-2">
       <div
-        className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border-2 flex-shrink-0 ${colorClass}`}
+        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold ${colorClass}`}
       >
         {score.toFixed(1)}
       </div>
@@ -292,7 +279,7 @@ function ScoreCircle({
 function PipelineBar({ sim }: { sim: AssessmentCardData }) {
   return (
     <div>
-      <div className="flex items-center gap-1.5 mb-1.5">
+      <div className="mb-1.5 flex items-center gap-1.5">
         <Users className="h-3.5 w-3.5 text-stone-400" />
         <span className="text-xs text-stone-600">
           <span className="font-medium text-stone-900">
@@ -302,7 +289,7 @@ function PipelineBar({ sim }: { sim: AssessmentCardData }) {
         </span>
       </div>
 
-      <div className="flex h-2 w-full rounded-full overflow-hidden bg-stone-100 mb-2">
+      <div className="mb-2 flex h-2 w-full overflow-hidden rounded-full bg-stone-100">
         {sim.completedCount > 0 && (
           <div
             className="bg-green-500"
@@ -361,12 +348,12 @@ function TechStackTags({ techStack }: { techStack: string[] }) {
   const overflow = techStack.length - 3;
 
   return (
-    <div className="flex items-center gap-1 flex-wrap">
+    <div className="flex flex-wrap items-center gap-1">
       {visible.map((tech) => (
         <Badge
           key={tech}
           variant="secondary"
-          className="bg-stone-100 text-stone-500 text-[10px] px-1.5 py-0 font-normal border-0"
+          className="border-0 bg-stone-100 px-1.5 py-0 text-[10px] font-normal text-stone-500"
         >
           {tech}
         </Badge>
@@ -384,7 +371,7 @@ function LastActivity({ sim }: { sim: AssessmentCardData }) {
   if (!sim.lastActivityDate) return null;
 
   return (
-    <div className="pt-2 border-t border-stone-100">
+    <div className="border-t border-stone-100 pt-2">
       <div className="flex items-center gap-1 text-xs text-stone-400">
         <Clock className="h-3 w-3 flex-shrink-0" />
         <span className="truncate">
@@ -416,7 +403,7 @@ function CompanyStatus({
       {showCompany && (
         <>
           <span
-            className={`text-xs truncate ${dimmed ? "text-stone-400" : "text-stone-400"}`}
+            className={`truncate text-xs ${dimmed ? "text-stone-400" : "text-stone-400"}`}
           >
             {sim.companyName}
           </span>
@@ -424,14 +411,12 @@ function CompanyStatus({
         </>
       )}
       {sim.isPublished ? (
-        <span className="flex items-center gap-1 text-[11px] text-green-600 flex-shrink-0">
+        <span className="flex flex-shrink-0 items-center gap-1 text-[11px] text-green-600">
           <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
           Open
         </span>
       ) : (
-        <span className="text-[11px] text-stone-400 flex-shrink-0">
-          Draft
-        </span>
+        <span className="flex-shrink-0 text-[11px] text-stone-400">Draft</span>
       )}
     </div>
   );
@@ -454,30 +439,27 @@ function AssessmentCard({
   // State A: Needs attention
   if (hasUnreviewed) {
     return (
-      <Link
-        href={`/recruiter/assessments/${sim.id}`}
-        className="block group"
-      >
-        <Card className="bg-white shadow-sm hover:shadow-md transition-all h-full flex flex-col rounded-xl border border-stone-200 hover:border-blue-300">
-          <CardContent className="p-4 flex flex-col flex-1 gap-3">
+      <Link href={`/recruiter/assessments/${sim.id}`} className="group block">
+        <Card className="flex h-full flex-col rounded-xl border border-stone-200 bg-white shadow-sm transition-all hover:border-blue-300 hover:shadow-md">
+          <CardContent className="flex flex-1 flex-col gap-3 p-4">
             {/* Review CTA — primary element */}
             <div className="flex items-center gap-1.5">
-              <Eye className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <Eye className="h-4 w-4 flex-shrink-0 text-blue-600" />
               <span className="text-base font-semibold text-blue-700">
                 {sim.needsReviewCount} to review
               </span>
-              <ArrowRight className="h-3.5 w-3.5 ml-auto text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowRight className="ml-auto h-3.5 w-3.5 text-blue-400 opacity-0 transition-opacity group-hover:opacity-100" />
             </div>
 
             {/* Title + level + copy */}
             <div className="flex items-start justify-between">
-              <h3 className="text-sm font-medium text-stone-900 group-hover:text-blue-600 transition-colors leading-tight line-clamp-1">
+              <h3 className="line-clamp-1 text-sm font-medium leading-tight text-stone-900 transition-colors group-hover:text-blue-600">
                 {normalizeTitle(sim.name)}
               </h3>
-              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+              <div className="ml-2 flex flex-shrink-0 items-center gap-1">
                 <Badge
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0 text-stone-500 border-stone-200"
+                  className="border-stone-200 px-1.5 py-0 text-[10px] text-stone-500"
                 >
                   {LEVEL_LABELS[sim.targetLevel] ?? sim.targetLevel}
                 </Badge>
@@ -511,7 +493,7 @@ function AssessmentCard({
 
             {/* Score with context */}
             {sim.avgScore !== null && (
-              <div className="pt-2 border-t border-stone-100">
+              <div className="border-t border-stone-100 pt-2">
                 <ScoreCircle
                   score={sim.avgScore}
                   strengthLabel={sim.strengthLabel}
@@ -534,21 +516,18 @@ function AssessmentCard({
   // State B: Active (has candidates, none to review)
   if (hasCandidates) {
     return (
-      <Link
-        href={`/recruiter/assessments/${sim.id}`}
-        className="block group"
-      >
-        <Card className="bg-white shadow-sm hover:shadow-md transition-all h-full flex flex-col rounded-xl border border-stone-200 hover:border-blue-300">
-          <CardContent className="p-4 flex flex-col flex-1 gap-2.5">
+      <Link href={`/recruiter/assessments/${sim.id}`} className="group block">
+        <Card className="flex h-full flex-col rounded-xl border border-stone-200 bg-white shadow-sm transition-all hover:border-blue-300 hover:shadow-md">
+          <CardContent className="flex flex-1 flex-col gap-2.5 p-4">
             {/* Title + level + copy */}
             <div className="flex items-start justify-between">
-              <h3 className="text-sm font-semibold text-stone-900 group-hover:text-blue-600 transition-colors leading-tight line-clamp-2">
+              <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-stone-900 transition-colors group-hover:text-blue-600">
                 {normalizeTitle(sim.name)}
               </h3>
-              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+              <div className="ml-2 flex flex-shrink-0 items-center gap-1">
                 <Badge
                   variant="outline"
-                  className="text-[10px] px-1.5 py-0 text-stone-500 border-stone-200"
+                  className="border-stone-200 px-1.5 py-0 text-[10px] text-stone-500"
                 >
                   {LEVEL_LABELS[sim.targetLevel] ?? sim.targetLevel}
                 </Badge>
@@ -582,7 +561,7 @@ function AssessmentCard({
 
             {/* Score with context */}
             {sim.avgScore !== null && (
-              <div className="pt-2 border-t border-stone-100">
+              <div className="border-t border-stone-100 pt-2">
                 <ScoreCircle
                   score={sim.avgScore}
                   strengthLabel={sim.strengthLabel}
@@ -596,7 +575,7 @@ function AssessmentCard({
 
             {/* Last activity — more prominent for active cards */}
             {sim.lastActivityDate && (
-              <div className="pt-2 border-t border-stone-100">
+              <div className="border-t border-stone-100 pt-2">
                 <div className="flex items-center gap-1 text-xs text-stone-500">
                   <Clock className="h-3 w-3 flex-shrink-0" />
                   <span className="truncate">
@@ -615,22 +594,19 @@ function AssessmentCard({
 
   // State C: Empty (no candidates)
   return (
-    <Link
-      href={`/recruiter/assessments/${sim.id}`}
-      className="block group"
-    >
-      <Card className="bg-stone-50/50 shadow-none hover:shadow-sm transition-all h-full flex flex-col rounded-xl border border-stone-200 hover:border-blue-300">
-        <CardContent className="p-3.5 flex flex-col flex-1 gap-2">
+    <Link href={`/recruiter/assessments/${sim.id}`} className="group block">
+      <Card className="flex h-full flex-col rounded-xl border border-stone-200 bg-stone-50/50 shadow-none transition-all hover:border-blue-300 hover:shadow-sm">
+        <CardContent className="flex flex-1 flex-col gap-2 p-3.5">
           {/* Title + copy */}
           <div className="flex items-start justify-between">
-            <h3 className="text-sm font-semibold text-stone-700 group-hover:text-blue-600 transition-colors leading-tight line-clamp-1">
+            <h3 className="line-clamp-1 text-sm font-semibold leading-tight text-stone-700 transition-colors group-hover:text-blue-600">
               {normalizeTitle(sim.name)}
             </h3>
             <Button
               variant="ghost"
               size="sm"
               onClick={(e) => onCopyLink(e, sim.id)}
-              className={`h-6 w-6 p-0 flex-shrink-0 ml-2 ${
+              className={`ml-2 h-6 w-6 flex-shrink-0 p-0 ${
                 copiedId === sim.id
                   ? "text-blue-700"
                   : "text-stone-300 hover:text-stone-500"
@@ -649,10 +625,10 @@ function AssessmentCard({
 
           {/* Empty state */}
           <div className="py-2">
-            <p className="text-xs text-stone-400 mb-2">No candidates yet</p>
+            <p className="mb-2 text-xs text-stone-400">No candidates yet</p>
             <button
               onClick={(e) => onCopyLink(e, sim.id)}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 transition-colors hover:text-blue-700"
             >
               <LinkIcon className="h-3 w-3" />
               Copy invite link

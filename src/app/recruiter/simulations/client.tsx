@@ -55,8 +55,9 @@ interface Props {
 export function SimulationsTableClient({ simulations }: Props) {
   const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] =
-    useState<SimulationManageData | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SimulationManageData | null>(
+    null
+  );
   const [isDeleting, setIsDeleting] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("created");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -64,8 +65,7 @@ export function SimulationsTableClient({ simulations }: Props) {
   const copyLink = async (e: React.MouseEvent, simulationId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const baseUrl =
-      typeof window !== "undefined" ? window.location.origin : "";
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
     const link = `${baseUrl}/invite/${simulationId}`;
     try {
       await navigator.clipboard.writeText(link);
@@ -86,10 +86,9 @@ export function SimulationsTableClient({ simulations }: Props) {
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(
-        `/api/recruiter/simulations/${deleteTarget.id}`,
-        { method: "DELETE" }
-      );
+      const res = await fetch(`/api/recruiter/simulations/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) {
         const data = await res.json();
         toast.error(data.error || "Failed to delete");
@@ -142,11 +141,11 @@ export function SimulationsTableClient({ simulations }: Props) {
 
   const SortIcon = ({ col }: { col: SortKey }) => {
     if (sortKey !== col)
-      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
+      return <ArrowUpDown className="ml-1 h-3 w-3 opacity-30" />;
     return sortDir === "asc" ? (
-      <ChevronUp className="h-3 w-3 ml-1 text-blue-600" />
+      <ChevronUp className="ml-1 h-3 w-3 text-blue-600" />
     ) : (
-      <ChevronDown className="h-3 w-3 ml-1 text-blue-600" />
+      <ChevronDown className="ml-1 h-3 w-3 text-blue-600" />
     );
   };
 
@@ -165,9 +164,7 @@ export function SimulationsTableClient({ simulations }: Props) {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-stone-900">
-            Simulations
-          </h1>
+          <h1 className="text-2xl font-semibold text-stone-900">Simulations</h1>
           <p className="mt-1 text-sm text-stone-500">
             {simulations.length > 0
               ? `${simulations.length} simulation${simulations.length !== 1 ? "s" : ""}`
@@ -192,10 +189,7 @@ export function SimulationsTableClient({ simulations }: Props) {
             <p className="mt-2 text-stone-500">
               Create your first work simulation to start assessing candidates.
             </p>
-            <Button
-              asChild
-              className="mt-6 bg-blue-600 hover:bg-blue-700"
-            >
+            <Button asChild className="mt-6 bg-blue-600 hover:bg-blue-700">
               <Link href="/recruiter/simulations/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Your First Simulation
@@ -204,14 +198,14 @@ export function SimulationsTableClient({ simulations }: Props) {
           </CardContent>
         </Card>
       ) : (
-        <Card className="shadow-sm border-stone-200 overflow-hidden rounded-xl">
+        <Card className="overflow-hidden rounded-xl border-stone-200 shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent border-stone-200">
+              <TableRow className="border-stone-200 hover:bg-transparent">
                 <TableHead className="pl-4">
                   <button
                     onClick={() => toggleSort("name")}
-                    className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
+                    className="flex items-center text-xs font-medium text-stone-500 transition-colors hover:text-stone-900"
                   >
                     Simulation
                     <SortIcon col="name" />
@@ -220,7 +214,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                 <TableHead>
                   <button
                     onClick={() => toggleSort("company")}
-                    className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
+                    className="flex items-center text-xs font-medium text-stone-500 transition-colors hover:text-stone-900"
                   >
                     Company
                     <SortIcon col="company" />
@@ -234,7 +228,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                 <TableHead className="w-[80px]">
                   <button
                     onClick={() => toggleSort("level")}
-                    className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
+                    className="flex items-center text-xs font-medium text-stone-500 transition-colors hover:text-stone-900"
                   >
                     Level
                     <SortIcon col="level" />
@@ -243,7 +237,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                 <TableHead className="w-[100px]">
                   <button
                     onClick={() => toggleSort("candidates")}
-                    className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
+                    className="flex items-center text-xs font-medium text-stone-500 transition-colors hover:text-stone-900"
                   >
                     Candidates
                     <SortIcon col="candidates" />
@@ -252,7 +246,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                 <TableHead>
                   <button
                     onClick={() => toggleSort("created")}
-                    className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
+                    className="flex items-center text-xs font-medium text-stone-500 transition-colors hover:text-stone-900"
                   >
                     Created
                     <SortIcon col="created" />
@@ -265,16 +259,14 @@ export function SimulationsTableClient({ simulations }: Props) {
               {sorted.map((sim) => (
                 <TableRow
                   key={sim.id}
-                  className="cursor-pointer hover:bg-blue-50/40 transition-colors group"
+                  className="group cursor-pointer transition-colors hover:bg-blue-50/40"
                   onClick={() =>
-                    router.push(
-                      `/recruiter/simulations/${sim.id}/settings`
-                    )
+                    router.push(`/recruiter/simulations/${sim.id}/settings`)
                   }
                 >
                   {/* Name */}
                   <TableCell className="pl-4">
-                    <span className="font-medium text-sm text-stone-900 group-hover:text-blue-600 transition-colors">
+                    <span className="text-sm font-medium text-stone-900 transition-colors group-hover:text-blue-600">
                       {sim.name}
                     </span>
                   </TableCell>
@@ -291,14 +283,14 @@ export function SimulationsTableClient({ simulations }: Props) {
                     {sim.isPublished ? (
                       <Badge
                         variant="secondary"
-                        className="bg-blue-50 text-blue-700 border-0 text-[11px] font-medium"
+                        className="border-0 bg-blue-50 text-[11px] font-medium text-blue-700"
                       >
                         Open
                       </Badge>
                     ) : (
                       <Badge
                         variant="secondary"
-                        className="bg-stone-100 text-stone-500 border-0 text-[11px]"
+                        className="border-0 bg-stone-100 text-[11px] text-stone-500"
                       >
                         Draft
                       </Badge>
@@ -307,21 +299,21 @@ export function SimulationsTableClient({ simulations }: Props) {
 
                   {/* Level */}
                   <TableCell>
-                    <span className="text-xs text-stone-600 capitalize">
+                    <span className="text-xs capitalize text-stone-600">
                       {levelLabel(sim.targetLevel)}
                     </span>
                   </TableCell>
 
                   {/* Candidates */}
                   <TableCell>
-                    <span className="text-sm font-mono text-stone-700">
+                    <span className="font-mono text-sm text-stone-700">
                       {sim.candidateCount}
                     </span>
                   </TableCell>
 
                   {/* Created */}
                   <TableCell>
-                    <span className="text-xs text-stone-500 font-mono">
+                    <span className="font-mono text-xs text-stone-500">
                       {formatDate(sim.createdAt)}
                     </span>
                   </TableCell>
@@ -331,10 +323,10 @@ export function SimulationsTableClient({ simulations }: Props) {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={(e) => copyLink(e, sim.id)}
-                        className={`p-1.5 rounded-md transition-colors ${
+                        className={`rounded-md p-1.5 transition-colors ${
                           copiedId === sim.id
                             ? "text-blue-600"
-                            : "text-stone-400 hover:text-stone-600 hover:bg-stone-100"
+                            : "text-stone-400 hover:bg-stone-100 hover:text-stone-600"
                         }`}
                       >
                         {copiedId === sim.id ? (
@@ -349,7 +341,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                           e.stopPropagation();
                           setDeleteTarget(sim);
                         }}
-                        className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-stone-100 rounded-md transition-colors"
+                        className="rounded-md p-1.5 text-stone-400 transition-colors hover:bg-stone-100 hover:text-red-500"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -377,14 +369,12 @@ export function SimulationsTableClient({ simulations }: Props) {
               <span className="font-medium text-stone-700">
                 {deleteTarget?.name}
               </span>{" "}
-              and all associated candidate results, recordings, and scores.
-              This action cannot be undone.
+              and all associated candidate results, recordings, and scores. This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}

@@ -205,7 +205,9 @@ describe("CoworkerSidebar", () => {
       );
 
       // Should only have one selected item
-      const selectedItems = container.querySelectorAll('[class*="bg-primary/10"]');
+      const selectedItems = container.querySelectorAll(
+        '[class*="bg-primary/10"]'
+      );
       expect(selectedItems).toHaveLength(1);
     });
   });

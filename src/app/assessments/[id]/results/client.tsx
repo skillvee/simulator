@@ -19,7 +19,11 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
-import type { AssessmentReport, VideoSkillEvaluation, HiringRecommendation } from "@/types";
+import type {
+  AssessmentReport,
+  VideoSkillEvaluation,
+  HiringRecommendation,
+} from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -131,7 +135,9 @@ function VideoSkillCard({
       {isExpanded && (
         <div className="border-t bg-muted/50 px-4 pb-4 pt-2">
           {/* Rationale */}
-          <p className="mb-4 text-sm text-muted-foreground">{skill.rationale}</p>
+          <p className="mb-4 text-sm text-muted-foreground">
+            {skill.rationale}
+          </p>
 
           {/* Green Flags */}
           {skill.greenFlags.length > 0 && (
@@ -179,7 +185,7 @@ function VideoSkillCard({
                 {skill.timestamps.map((ts, index) => (
                   <span
                     key={index}
-                    className="rounded-md bg-muted px-2 py-1 text-xs font-mono text-muted-foreground"
+                    className="rounded-md bg-muted px-2 py-1 font-mono text-xs text-muted-foreground"
                   >
                     [{ts}]
                   </span>
@@ -316,7 +322,9 @@ function OverallScoreDisplay({
     <div className="py-8 text-center">
       <div className="inline-flex h-32 w-32 items-center justify-center rounded-full border-4 border-primary bg-primary/10">
         <div>
-          <div className="text-5xl font-semibold text-primary">{score.toFixed(1)}</div>
+          <div className="text-5xl font-semibold text-primary">
+            {score.toFixed(1)}
+          </div>
           <div className="text-sm text-muted-foreground">/5</div>
         </div>
       </div>
@@ -361,7 +369,9 @@ function MetricsGrid({ metrics }: { metrics: AssessmentReport["metrics"] }) {
             <Users className="h-4 w-4" />
             <span className="text-xs font-medium">Coworkers</span>
           </div>
-          <div className="text-xl font-semibold">{metrics.coworkersContacted}</div>
+          <div className="text-xl font-semibold">
+            {metrics.coworkersContacted}
+          </div>
         </CardContent>
       </Card>
 
@@ -392,8 +402,13 @@ function MetricsGrid({ metrics }: { metrics: AssessmentReport["metrics"] }) {
   );
 }
 
-
-function NoReportState({ onGenerate, isGenerating }: { onGenerate: () => void; isGenerating: boolean }) {
+function NoReportState({
+  onGenerate,
+  isGenerating,
+}: {
+  onGenerate: () => void;
+  isGenerating: boolean;
+}) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-8">
       <Card className="max-w-md p-12 text-center shadow-lg">
@@ -402,8 +417,8 @@ function NoReportState({ onGenerate, isGenerating }: { onGenerate: () => void; i
             <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             <h2 className="mb-4 text-2xl font-semibold">Generating Report</h2>
             <p className="mb-6 text-muted-foreground">
-              We&apos;re analyzing your performance and generating your personalized
-              report. This may take a moment.
+              We&apos;re analyzing your performance and generating your
+              personalized report. This may take a moment.
             </p>
           </>
         ) : (
@@ -413,12 +428,10 @@ function NoReportState({ onGenerate, isGenerating }: { onGenerate: () => void; i
             </div>
             <h2 className="mb-4 text-2xl font-semibold">Report Not Ready</h2>
             <p className="mb-6 text-muted-foreground">
-              Your assessment report hasn&apos;t been generated yet. Click below to
-              generate it now.
+              Your assessment report hasn&apos;t been generated yet. Click below
+              to generate it now.
             </p>
-            <Button onClick={onGenerate}>
-              Generate Report
-            </Button>
+            <Button onClick={onGenerate}>Generate Report</Button>
           </>
         )}
       </Card>
@@ -471,7 +484,9 @@ export function ResultsClient({
 
   const expandAll = () => {
     if (report?.videoEvaluation) {
-      setExpandedSkills(new Set(report.videoEvaluation.skills.map((s) => s.dimension)));
+      setExpandedSkills(
+        new Set(report.videoEvaluation.skills.map((s) => s.dimension))
+      );
     } else if (report?.skillScores) {
       setExpandedSkills(new Set(report.skillScores.map((s) => s.category)));
     }
@@ -483,7 +498,12 @@ export function ResultsClient({
 
   // Show no report state with generate option
   if (!report) {
-    return <NoReportState onGenerate={handleGenerateReport} isGenerating={isGenerating} />;
+    return (
+      <NoReportState
+        onGenerate={handleGenerateReport}
+        isGenerating={isGenerating}
+      />
+    );
   }
 
   // Check if this is a new video evaluation report
@@ -516,9 +536,7 @@ export function ResultsClient({
           </div>
           <div className="text-right">
             <h1 className="font-semibold">Assessment Results</h1>
-            <p className="text-xs text-muted-foreground">
-              {formattedDate}
-            </p>
+            <p className="text-xs text-muted-foreground">{formattedDate}</p>
           </div>
         </div>
       </header>
@@ -536,18 +554,30 @@ export function ResultsClient({
                 Great work, {userName}! Here&apos;s your detailed assessment
                 breakdown.
               </p>
-              {hasVideoEvaluation && report.videoEvaluation?.evaluationConfidence && (
-                <div className="mt-4 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-muted-foreground">
-                    Evaluation confidence: <span className="font-medium capitalize">{report.videoEvaluation.evaluationConfidence}</span>
-                  </span>
-                </div>
-              )}
+              {hasVideoEvaluation &&
+                report.videoEvaluation?.evaluationConfidence && (
+                  <div className="mt-4 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-muted-foreground">
+                      Evaluation confidence:{" "}
+                      <span className="font-medium capitalize">
+                        {report.videoEvaluation.evaluationConfidence}
+                      </span>
+                    </span>
+                  </div>
+                )}
             </div>
             <OverallScoreDisplay
-              score={hasVideoEvaluation ? report.videoEvaluation!.overallScore : report.overallScore}
-              level={hasVideoEvaluation ? getScoreLevel(report.videoEvaluation!.overallScore) : report.overallLevel}
+              score={
+                hasVideoEvaluation
+                  ? report.videoEvaluation!.overallScore
+                  : report.overallScore
+              }
+              level={
+                hasVideoEvaluation
+                  ? getScoreLevel(report.videoEvaluation!.overallScore)
+                  : report.overallLevel
+              }
             />
           </div>
         </Card>
@@ -556,10 +586,16 @@ export function ResultsClient({
         {hasVideoEvaluation && report.videoEvaluation?.hiringSignals && (
           <section className="mb-8">
             <HiringSignalsSection
-              greenFlags={report.videoEvaluation.hiringSignals.overallGreenFlags}
+              greenFlags={
+                report.videoEvaluation.hiringSignals.overallGreenFlags
+              }
               redFlags={report.videoEvaluation.hiringSignals.overallRedFlags}
-              recommendation={report.videoEvaluation.hiringSignals.recommendation}
-              recommendationRationale={report.videoEvaluation.hiringSignals.recommendationRationale}
+              recommendation={
+                report.videoEvaluation.hiringSignals.recommendation
+              }
+              recommendationRationale={
+                report.videoEvaluation.hiringSignals.recommendationRationale
+              }
             />
           </section>
         )}
@@ -620,183 +656,200 @@ export function ResultsClient({
               Summary
             </h3>
             <Card className="p-6">
-              <p className="text-muted-foreground">{report.videoEvaluation.overallSummary}</p>
+              <p className="text-muted-foreground">
+                {report.videoEvaluation.overallSummary}
+              </p>
             </Card>
           </section>
         )}
 
         {/* Fallback: Old Format Display for legacy assessments */}
-        {!hasVideoEvaluation && report.skillScores && report.skillScores.length > 0 && (
-          <>
-            {/* Old Skill Breakdown */}
-            <section className="mb-8">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="flex items-center gap-2 text-xl font-semibold">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  Skill Breakdown
-                </h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={expandAll}
-                    className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    Expand All
-                  </button>
-                  <span className="text-muted-foreground">|</span>
-                  <button
-                    onClick={collapseAll}
-                    className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    Collapse All
-                  </button>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {report.skillScores.map((skill) => (
-                  <LegacySkillCard
-                    key={skill.category}
-                    skill={skill}
-                    isExpanded={expandedSkills.has(skill.category)}
-                    onToggle={() => toggleSkill(skill.category)}
-                  />
-                ))}
-              </div>
-            </section>
-
-            {/* Old Narrative Feedback */}
-            {report.narrative && (
+        {!hasVideoEvaluation &&
+          report.skillScores &&
+          report.skillScores.length > 0 && (
+            <>
+              {/* Old Skill Breakdown */}
               <section className="mb-8">
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                  <Award className="h-5 w-5 text-primary" />
-                  Narrative Feedback
-                </h3>
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-xl font-semibold">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Skill Breakdown
+                  </h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={expandAll}
+                      className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Expand All
+                    </button>
+                    <span className="text-muted-foreground">|</span>
+                    <button
+                      onClick={collapseAll}
+                      className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      Collapse All
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {report.skillScores.map((skill) => (
+                    <LegacySkillCard
+                      key={skill.category}
+                      skill={skill}
+                      isExpanded={expandedSkills.has(skill.category)}
+                      onToggle={() => toggleSkill(skill.category)}
+                    />
+                  ))}
+                </div>
+              </section>
 
-                <Card className="overflow-hidden">
-                  {/* Summary */}
-                  <div className="border-b p-6">
-                    <h4 className="mb-3 text-xs font-medium text-muted-foreground">
-                      Overall Summary
-                    </h4>
-                    <div className="prose prose-sm max-w-none">
-                      {report.narrative.overallSummary
-                        .split("\n\n")
-                        .map((paragraph, i) => (
-                          <p key={i} className="mb-3 last:mb-0">
-                            {paragraph}
-                          </p>
-                        ))}
+              {/* Old Narrative Feedback */}
+              {report.narrative && (
+                <section className="mb-8">
+                  <h3 className="mb-4 flex items-center gap-2 text-xl font-semibold">
+                    <Award className="h-5 w-5 text-primary" />
+                    Narrative Feedback
+                  </h3>
+
+                  <Card className="overflow-hidden">
+                    {/* Summary */}
+                    <div className="border-b p-6">
+                      <h4 className="mb-3 text-xs font-medium text-muted-foreground">
+                        Overall Summary
+                      </h4>
+                      <div className="prose prose-sm max-w-none">
+                        {report.narrative.overallSummary
+                          .split("\n\n")
+                          .map((paragraph, i) => (
+                            <p key={i} className="mb-3 last:mb-0">
+                              {paragraph}
+                            </p>
+                          ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Strengths */}
-                  <div className="border-b bg-green-50 p-6">
-                    <h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-green-800">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Strengths
-                    </h4>
-                    <ul className="space-y-2">
-                      {report.narrative.strengths.map((strength, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="mt-1 text-green-600">+</span>
-                          <span>{strength}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Areas for Improvement */}
-                  <div className="border-b bg-yellow-50 p-6">
-                    <h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-yellow-800">
-                      <TrendingUp className="h-4 w-4" />
-                      Areas for Improvement
-                    </h4>
-                    <ul className="space-y-2">
-                      {report.narrative.areasForImprovement.map((area, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="mt-1 text-yellow-600">•</span>
-                          <span>{area}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Notable Observations */}
-                  {report.narrative.notableObservations.length > 0 && (
-                    <div className="bg-blue-50 p-6">
-                      <h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-blue-800">
-                        <AlertCircle className="h-4 w-4" />
-                        Notable Observations
+                    {/* Strengths */}
+                    <div className="border-b bg-green-50 p-6">
+                      <h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-green-800">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Strengths
                       </h4>
                       <ul className="space-y-2">
-                        {report.narrative.notableObservations.map(
-                          (observation, index) => (
+                        {report.narrative.strengths.map((strength, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="mt-1 text-green-600">+</span>
+                            <span>{strength}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Areas for Improvement */}
+                    <div className="border-b bg-yellow-50 p-6">
+                      <h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-yellow-800">
+                        <TrendingUp className="h-4 w-4" />
+                        Areas for Improvement
+                      </h4>
+                      <ul className="space-y-2">
+                        {report.narrative.areasForImprovement.map(
+                          (area, index) => (
                             <li key={index} className="flex items-start gap-2">
-                              <span className="mt-1 text-blue-600">*</span>
-                              <span>{observation}</span>
+                              <span className="mt-1 text-yellow-600">•</span>
+                              <span>{area}</span>
                             </li>
                           )
                         )}
                       </ul>
                     </div>
-                  )}
-                </Card>
-              </section>
-            )}
 
-            {/* Old Recommendations */}
-            {report.recommendations && report.recommendations.length > 0 && (
-              <section className="mb-8">
-                <h3 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-                  <Target className="h-5 w-5 text-primary" />
-                  Recommendations
-                </h3>
+                    {/* Notable Observations */}
+                    {report.narrative.notableObservations.length > 0 && (
+                      <div className="bg-blue-50 p-6">
+                        <h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-blue-800">
+                          <AlertCircle className="h-4 w-4" />
+                          Notable Observations
+                        </h4>
+                        <ul className="space-y-2">
+                          {report.narrative.notableObservations.map(
+                            (observation, index) => (
+                              <li
+                                key={index}
+                                className="flex items-start gap-2"
+                              >
+                                <span className="mt-1 text-blue-600">*</span>
+                                <span>{observation}</span>
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </Card>
+                </section>
+              )}
 
-                <div className="space-y-4">
-                  {report.recommendations.map((rec, index) => {
-                    const priorityColors: Record<string, string> = {
-                      high: "bg-red-100 text-red-800",
-                      medium: "bg-yellow-100 text-yellow-800",
-                      low: "bg-green-100 text-green-800",
-                    };
+              {/* Old Recommendations */}
+              {report.recommendations && report.recommendations.length > 0 && (
+                <section className="mb-8">
+                  <h3 className="mb-4 flex items-center gap-2 text-xl font-semibold">
+                    <Target className="h-5 w-5 text-primary" />
+                    Recommendations
+                  </h3>
 
-                    return (
-                      <Card key={index} className="p-6">
-                        <div className="mb-3 flex items-start justify-between gap-4">
-                          <h4 className="text-lg font-semibold">{rec.title}</h4>
-                          <span
-                            className={`rounded-md px-2 py-1 text-xs font-medium ${priorityColors[rec.priority]}`}
-                          >
-                            {rec.priority.toUpperCase()}
-                          </span>
-                        </div>
-                        <p className="mb-4 text-muted-foreground">
-                          {rec.description}
-                        </p>
-                        {rec.actionableSteps && rec.actionableSteps.length > 0 && (
-                          <div>
-                            <h5 className="mb-2 text-xs font-medium text-muted-foreground">
-                              Action Steps
-                            </h5>
-                            <ol className="space-y-2">
-                              {rec.actionableSteps.map((step, stepIndex) => (
-                                <li key={stepIndex} className="flex items-start gap-3">
-                                  <span className="text-sm font-semibold text-primary">
-                                    {stepIndex + 1}.
-                                  </span>
-                                  <span>{step}</span>
-                                </li>
-                              ))}
-                            </ol>
+                  <div className="space-y-4">
+                    {report.recommendations.map((rec, index) => {
+                      const priorityColors: Record<string, string> = {
+                        high: "bg-red-100 text-red-800",
+                        medium: "bg-yellow-100 text-yellow-800",
+                        low: "bg-green-100 text-green-800",
+                      };
+
+                      return (
+                        <Card key={index} className="p-6">
+                          <div className="mb-3 flex items-start justify-between gap-4">
+                            <h4 className="text-lg font-semibold">
+                              {rec.title}
+                            </h4>
+                            <span
+                              className={`rounded-md px-2 py-1 text-xs font-medium ${priorityColors[rec.priority]}`}
+                            >
+                              {rec.priority.toUpperCase()}
+                            </span>
                           </div>
-                        )}
-                      </Card>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-          </>
-        )}
+                          <p className="mb-4 text-muted-foreground">
+                            {rec.description}
+                          </p>
+                          {rec.actionableSteps &&
+                            rec.actionableSteps.length > 0 && (
+                              <div>
+                                <h5 className="mb-2 text-xs font-medium text-muted-foreground">
+                                  Action Steps
+                                </h5>
+                                <ol className="space-y-2">
+                                  {rec.actionableSteps.map(
+                                    (step, stepIndex) => (
+                                      <li
+                                        key={stepIndex}
+                                        className="flex items-start gap-3"
+                                      >
+                                        <span className="text-sm font-semibold text-primary">
+                                          {stepIndex + 1}.
+                                        </span>
+                                        <span>{step}</span>
+                                      </li>
+                                    )
+                                  )}
+                                </ol>
+                              </div>
+                            )}
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
 
         {/* Footer Actions */}
         <section className="mt-8 border-t pt-8">
@@ -806,14 +859,10 @@ export function ResultsClient({
             </p>
             <div className="flex gap-4">
               <Button variant="outline" asChild>
-                <Link href="/profile">
-                  Back to Profile
-                </Link>
+                <Link href="/profile">Back to Profile</Link>
               </Button>
               <Button asChild>
-                <Link href="/">
-                  Start New Assessment
-                </Link>
+                <Link href="/">Start New Assessment</Link>
               </Button>
             </div>
           </div>
@@ -869,7 +918,9 @@ function LegacySkillCard({
           <div className="max-w-xs flex-1">
             <SkillScoreBar score={skill.score} />
           </div>
-          <div className="text-lg font-semibold text-primary">{skill.score}/5</div>
+          <div className="text-lg font-semibold text-primary">
+            {skill.score}/5
+          </div>
           <span
             className={`rounded-md px-2 py-1 text-xs font-medium ${levelColors[skill.level] || "bg-muted"}`}
           >

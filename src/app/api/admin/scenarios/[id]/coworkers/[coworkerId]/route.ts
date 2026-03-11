@@ -90,7 +90,15 @@ export async function PUT(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName } = body;
+  const {
+    name,
+    role,
+    personaStyle,
+    personality,
+    knowledge,
+    avatarUrl,
+    voiceName,
+  } = body;
 
   // Build update data with only provided fields
   const updateData: Record<string, unknown> = {};

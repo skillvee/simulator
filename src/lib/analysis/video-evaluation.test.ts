@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type {
-  VideoAssessmentStatus,
-} from "@prisma/client";
+import type { VideoAssessmentStatus } from "@prisma/client";
 
 // Mock gemini module
 vi.mock("@/lib/ai/gemini", () => ({
@@ -35,7 +33,8 @@ vi.mock("@/server/db", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
-    $transaction: (fn: (tx: unknown) => Promise<unknown>) => mockTransaction(fn),
+    $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
+      mockTransaction(fn),
   },
 }));
 
@@ -88,9 +87,11 @@ vi.mock("@/lib/rubric", () => ({
 
 // Mock rubric evaluation prompt builder
 vi.mock("@/prompts/analysis/rubric-evaluation", () => ({
-  buildRubricEvaluationPrompt: vi.fn().mockReturnValue(
-    "You are an objective, evidence-based evaluator. Evaluate this video."
-  ),
+  buildRubricEvaluationPrompt: vi
+    .fn()
+    .mockReturnValue(
+      "You are an objective, evidence-based evaluator. Evaluate this video."
+    ),
   RUBRIC_EVALUATION_PROMPT_VERSION: "1.0.0",
 }));
 
@@ -120,7 +121,9 @@ const mockVideoAssessmentFindUnique = db.videoAssessment
 const mockVideoAssessmentCreate = db.videoAssessment.create as ReturnType<
   typeof vi.fn
 >;
-const mockVideoAssessmentUpsert = (db.videoAssessment as unknown as { upsert: ReturnType<typeof vi.fn> }).upsert;
+const mockVideoAssessmentUpsert = (
+  db.videoAssessment as unknown as { upsert: ReturnType<typeof vi.fn> }
+).upsert;
 const mockDimensionScoreUpsert = db.dimensionScore.upsert as ReturnType<
   typeof vi.fn
 >;
@@ -699,14 +702,22 @@ describe("evaluateVideo", () => {
     mockTransaction.mockImplementation(async (fn) => {
       const tx = {
         dimensionScore: {
-          upsert: vi.fn().mockImplementation(async (args: { where: { assessmentId_dimension: { dimension: string } } }) => {
-            upsertCallCount++;
-            attemptedDimensions.push(args.where.assessmentId_dimension.dimension);
-            if (upsertCallCount === 5) {
-              throw new Error("Database error on 5th upsert");
-            }
-            return { id: `score-${upsertCallCount}` };
-          }),
+          upsert: vi
+            .fn()
+            .mockImplementation(
+              async (args: {
+                where: { assessmentId_dimension: { dimension: string } };
+              }) => {
+                upsertCallCount++;
+                attemptedDimensions.push(
+                  args.where.assessmentId_dimension.dimension
+                );
+                if (upsertCallCount === 5) {
+                  throw new Error("Database error on 5th upsert");
+                }
+                return { id: `score-${upsertCallCount}` };
+              }
+            ),
         },
         videoAssessmentSummary: {
           upsert: vi.fn().mockResolvedValue({ id: "summary-id" }),
@@ -1170,7 +1181,10 @@ describe("triggerVideoAssessment", () => {
     vi.clearAllMocks();
     mockVideoAssessmentUpdate.mockResolvedValue({ id: "video-assessment-123" });
     mockVideoAssessmentCreate.mockResolvedValue({ id: "video-assessment-123" });
-    mockVideoAssessmentUpsert.mockResolvedValue({ id: "video-assessment-123", status: "PENDING" });
+    mockVideoAssessmentUpsert.mockResolvedValue({
+      id: "video-assessment-123",
+      status: "PENDING",
+    });
     mockDimensionScoreUpsert.mockResolvedValue({ id: "test-score-id" });
     mockVideoAssessmentSummaryUpsert.mockResolvedValue({
       id: "test-summary-id",
@@ -1190,7 +1204,10 @@ describe("triggerVideoAssessment", () => {
   });
 
   it("should use upsert to atomically create or get VideoAssessment", async () => {
-    mockVideoAssessmentUpsert.mockResolvedValue({ id: "video-assessment-123", status: "PENDING" });
+    mockVideoAssessmentUpsert.mockResolvedValue({
+      id: "video-assessment-123",
+      status: "PENDING",
+    });
 
     const result = await triggerVideoAssessment({
       assessmentId: "simulation-123",
@@ -1439,7 +1456,9 @@ describe("retryVideoAssessment", () => {
     const result = await retryVideoAssessment("video-assessment-123");
 
     expect(result.success).toBe(false);
-    expect(result.error).toContain("Cannot retry assessment with status COMPLETED");
+    expect(result.error).toContain(
+      "Cannot retry assessment with status COMPLETED"
+    );
   });
 
   it("should return error for non-existent assessment", async () => {

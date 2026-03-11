@@ -8,7 +8,11 @@ import { cn } from "@/lib/utils";
 /**
  * Candidate strength levels
  */
-export type StrengthLevel = "Exceptional" | "Strong" | "Proficient" | "Developing";
+export type StrengthLevel =
+  | "Exceptional"
+  | "Strong"
+  | "Proficient"
+  | "Developing";
 
 /**
  * Props for HiringSignalsSummary component
@@ -56,7 +60,7 @@ export function HiringSignalsSummary({
   return (
     <div className="space-y-6">
       {/* Two-column layout for flags */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Green Flags - Where they shined */}
         <Card className="border-green-200 bg-green-50/50 shadow-sm">
           <CardHeader className="pb-2">
@@ -73,13 +77,13 @@ export function HiringSignalsSummary({
                     key={idx}
                     className="flex items-start gap-2 text-sm text-green-700"
                   >
-                    <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-green-600" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
                     <span>{flag}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-green-600 italic">
+              <p className="text-sm italic text-green-600">
                 No significant signals identified
               </p>
             )}
@@ -102,13 +106,13 @@ export function HiringSignalsSummary({
                     key={idx}
                     className="flex items-start gap-2 text-sm text-amber-700"
                   >
-                    <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                     <span>{flag}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-amber-600 italic">
+              <p className="text-sm italic text-amber-600">
                 No significant signals identified
               </p>
             )}
@@ -119,18 +123,21 @@ export function HiringSignalsSummary({
       {/* Summary section */}
       <Card className="border-stone-200 bg-white shadow-sm">
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-start gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start">
             {/* Large strength badge */}
             <div className="shrink-0">
-              <Badge className={cn(getStrengthBadgeStyles(strengthLevel), "font-semibold")}>
+              <Badge
+                className={cn(
+                  getStrengthBadgeStyles(strengthLevel),
+                  "font-semibold"
+                )}
+              >
                 {strengthLevel}
               </Badge>
             </div>
 
             {/* Overall summary text */}
-            <p className="text-stone-600 leading-relaxed">
-              {overallSummary}
-            </p>
+            <p className="leading-relaxed text-stone-600">{overallSummary}</p>
           </div>
         </CardContent>
       </Card>

@@ -14,14 +14,21 @@
  * @see Issue #98: REF-008
  */
 
-import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
+import {
+  render,
+  type RenderOptions,
+  type RenderResult,
+} from "@testing-library/react";
 import { SessionProvider } from "next-auth/react";
 import type { ReactElement, ReactNode } from "react";
 
 /**
  * Custom render options that extend the default testing-library options.
  */
-export interface RenderWithProvidersOptions extends Omit<RenderOptions, "wrapper"> {
+export interface RenderWithProvidersOptions extends Omit<
+  RenderOptions,
+  "wrapper"
+> {
   /**
    * Custom session data to use in tests.
    * If not provided, defaults to an unauthenticated session.

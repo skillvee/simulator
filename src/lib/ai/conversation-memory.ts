@@ -13,7 +13,11 @@ import type {
 } from "@/types";
 
 // Re-export types for backwards compatibility
-export type { ChatMessage, ConversationWithMeta, CoworkerMemory } from "@/types";
+export type {
+  ChatMessage,
+  ConversationWithMeta,
+  CoworkerMemory,
+} from "@/types";
 
 // Summarization model - use Flash for speed
 const SUMMARY_MODEL = "gemini-3-flash-preview";
@@ -282,7 +286,9 @@ export function formatConversationsForSummary(
     for (let i = 0; i < Math.min(2, msgs.length); i++) {
       const m = msgs[i];
       const role = m.role === "user" ? "Candidate" : coworkerName;
-      keyMessages.push(`${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`);
+      keyMessages.push(
+        `${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`
+      );
     }
 
     // Last 2 messages (if different from first 2)
@@ -291,17 +297,23 @@ export function formatConversationsForSummary(
       for (let i = Math.max(2, msgs.length - 2); i < msgs.length; i++) {
         const m = msgs[i];
         const role = m.role === "user" ? "Candidate" : coworkerName;
-        keyMessages.push(`${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`);
+        keyMessages.push(
+          `${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`
+        );
       }
     } else if (msgs.length > 2) {
       for (let i = 2; i < msgs.length; i++) {
         const m = msgs[i];
         const role = m.role === "user" ? "Candidate" : coworkerName;
-        keyMessages.push(`${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`);
+        keyMessages.push(
+          `${role}: ${m.text.slice(0, 150)}${m.text.length > 150 ? "..." : ""}`
+        );
       }
     }
 
-    summaries.push(`\n### ${convType} with ${coworkerName} (${msgs.length} messages)\n${keyMessages.join("\n")}`);
+    summaries.push(
+      `\n### ${convType} with ${coworkerName} (${msgs.length} messages)\n${keyMessages.join("\n")}`
+    );
   }
 
   return summaries.join("\n");

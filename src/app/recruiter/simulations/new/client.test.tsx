@@ -51,7 +51,8 @@ describe("Simulation Save Flow (US-011)", () => {
           type: "generated" as const,
           option: {
             summary: "Build a REST API",
-            recruiterSummary: "The candidate builds a REST API with authentication and authorization.",
+            recruiterSummary:
+              "The candidate builds a REST API with authentication and authorization.",
             description: "Create a REST API with authentication",
           },
         },
@@ -73,7 +74,8 @@ describe("Simulation Save Flow (US-011)", () => {
       };
 
       // Simulate the save flow logic
-      const taskDescription = previewData.selectedTask.option?.description || "";
+      const taskDescription =
+        previewData.selectedTask.option?.description || "";
 
       // Step 1: Create scenario
       const scenarioResponse = await fetch("/api/recruiter/simulations", {
@@ -89,7 +91,9 @@ describe("Simulation Save Flow (US-011)", () => {
       });
 
       expect(scenarioResponse.ok).toBe(true);
-      const { data: { scenario } } = await scenarioResponse.json();
+      const {
+        data: { scenario },
+      } = await scenarioResponse.json();
 
       // Verify scenario endpoint was called with correct data
       expect(global.fetch).toHaveBeenCalledWith(
@@ -210,7 +214,9 @@ describe("Simulation Save Flow (US-011)", () => {
         method: "POST",
         body: JSON.stringify({}),
       });
-      const { data: { scenario } } = await scenarioResponse.json();
+      const {
+        data: { scenario },
+      } = await scenarioResponse.json();
 
       // Create coworkers with Promise.allSettled
       const coworkerPromises = coworkers.map(async (coworker) => {
@@ -243,7 +249,10 @@ describe("Simulation Save Flow (US-011)", () => {
 
     it("should auto-generate simulation name if not edited", () => {
       const parsedJDData = {
-        roleName: { value: "Senior Frontend Engineer", confidence: "high" as const },
+        roleName: {
+          value: "Senior Frontend Engineer",
+          confidence: "high" as const,
+        },
         companyName: { value: "Acme Corp", confidence: "high" as const },
         companyDescription: { value: null, confidence: "low" as const },
         techStack: { value: null, confidence: "low" as const },
@@ -283,7 +292,9 @@ describe("Simulation Save Flow (US-011)", () => {
           ? previewData.selectedTask.customDescription
           : "default task";
 
-      expect(taskDescription).toBe("Build a custom feature for the payment system");
+      expect(taskDescription).toBe(
+        "Build a custom feature for the payment system"
+      );
     });
 
     it("should use generated task description when selected", () => {
@@ -292,7 +303,8 @@ describe("Simulation Save Flow (US-011)", () => {
           type: "generated" as const,
           option: {
             summary: "Implement caching",
-            recruiterSummary: "The candidate implements Redis caching for API performance optimization.",
+            recruiterSummary:
+              "The candidate implements Redis caching for API performance optimization.",
             description: "Add Redis caching to the API endpoints",
           },
         },
@@ -344,7 +356,10 @@ describe("Simulation Save Flow (US-011)", () => {
       // Mock repo provisioning endpoint
       const repoFetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ success: true, repoUrl: "https://github.com/test/repo" }),
+        json: async () => ({
+          success: true,
+          repoUrl: "https://github.com/test/repo",
+        }),
       });
 
       global.fetch = repoFetch;

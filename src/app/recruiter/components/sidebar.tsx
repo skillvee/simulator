@@ -34,7 +34,11 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/recruiter/assessments", label: "Assessments", icon: ClipboardCheck },
+    {
+      href: "/recruiter/assessments",
+      label: "Assessments",
+      icon: ClipboardCheck,
+    },
     { href: "/recruiter/simulations", label: "Simulations", icon: FolderOpen },
   ];
 
@@ -49,9 +53,12 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
       } flex flex-col bg-[#0B1437] transition-all duration-300`}
     >
       {/* Logo */}
-      <div className="flex h-[72px] items-center justify-between px-4 border-b border-white/10">
+      <div className="flex h-[72px] items-center justify-between border-b border-white/10 px-4">
         {sidebarOpen && (
-          <Link href="/recruiter/simulations" className="flex items-center gap-2">
+          <Link
+            href="/recruiter/simulations"
+            className="flex items-center gap-2"
+          >
             <Image
               src="/skillvee-logo.png"
               alt="SkillVee"
@@ -65,7 +72,7 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
           variant="ghost"
           size="icon"
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="h-8 w-8 text-white/60 hover:text-white hover:bg-white/10"
+          className="h-8 w-8 text-white/60 hover:bg-white/10 hover:text-white"
         >
           {sidebarOpen ? (
             <PanelLeftClose className="h-4 w-4" />
@@ -100,7 +107,7 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
                 className={`w-full justify-start gap-2 ${
                   active
                     ? "bg-white/10 text-white hover:bg-white/15"
-                    : "text-white/60 hover:text-white hover:bg-white/10"
+                    : "text-white/60 hover:bg-white/10 hover:text-white"
                 } ${!sidebarOpen && "justify-center px-2"}`}
               >
                 <Link href={item.href}>
@@ -118,23 +125,23 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             {sidebarOpen ? (
-              <button className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors w-full cursor-pointer">
-                <div className="h-9 w-9 rounded-full bg-blue-600/30 flex items-center justify-center flex-shrink-0">
+              <button className="flex w-full cursor-pointer items-center gap-3 rounded-lg bg-white/5 p-2 transition-colors hover:bg-white/10">
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-600/30">
                   <span className="text-sm font-medium text-blue-300">
                     {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
                   </span>
                 </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-white truncate">
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="truncate text-sm font-medium text-white">
                     {user.name || "Recruiter"}
                   </p>
-                  <p className="text-xs text-white/50 truncate">{user.email}</p>
+                  <p className="truncate text-xs text-white/50">{user.email}</p>
                 </div>
-                <ChevronsUpDown className="h-4 w-4 text-white/40 flex-shrink-0" />
+                <ChevronsUpDown className="h-4 w-4 flex-shrink-0 text-white/40" />
               </button>
             ) : (
-              <button className="flex w-full justify-center cursor-pointer">
-                <div className="h-9 w-9 rounded-full bg-blue-600/30 hover:bg-blue-600/50 transition-colors flex items-center justify-center">
+              <button className="flex w-full cursor-pointer justify-center">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600/30 transition-colors hover:bg-blue-600/50">
                   <span className="text-sm font-medium text-blue-300">
                     {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
                   </span>
@@ -145,19 +152,23 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
           <DropdownMenuContent
             side="top"
             align="start"
-            className="w-56 bg-slate-900 border-white/10 text-white mb-1"
+            className="mb-1 w-56 border-white/10 bg-slate-900 text-white"
           >
-            <div className="px-3 py-2.5 border-b border-white/10">
-              <p className="font-medium text-sm text-white">{user.name || "Recruiter"}</p>
-              <p className="text-xs truncate mt-0.5 text-slate-400">{user.email}</p>
+            <div className="border-b border-white/10 px-3 py-2.5">
+              <p className="text-sm font-medium text-white">
+                {user.name || "Recruiter"}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-slate-400">
+                {user.email}
+              </p>
             </div>
             <div className="p-1">
               <DropdownMenuItem asChild variant="destructive">
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="w-full flex items-center gap-2 cursor-pointer"
+                  className="flex w-full cursor-pointer items-center gap-2"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="h-4 w-4" />
                   Sign out
                 </button>
               </DropdownMenuItem>

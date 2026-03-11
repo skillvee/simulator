@@ -13,7 +13,10 @@ vi.mock("@/lib/ai/gemini", () => ({
 }));
 
 // Import after mocks
-import { generateCodingTask, type GenerateCodingTaskInput } from "./task-generator";
+import {
+  generateCodingTask,
+  type GenerateCodingTaskInput,
+} from "./task-generator";
 
 describe("generateCodingTask", () => {
   beforeEach(() => {
@@ -78,7 +81,8 @@ describe("generateCodingTask", () => {
   });
 
   it("handles markdown fences in response", async () => {
-    const wrappedResponse = "```json\n" + JSON.stringify(mockValidResponse) + "\n```";
+    const wrappedResponse =
+      "```json\n" + JSON.stringify(mockValidResponse) + "\n```";
     mockGenerateContent.mockResolvedValue({
       text: wrappedResponse,
     });
@@ -92,7 +96,8 @@ describe("generateCodingTask", () => {
   });
 
   it("handles plain backtick fences in response", async () => {
-    const wrappedResponse = "```\n" + JSON.stringify(mockValidResponse) + "\n```";
+    const wrappedResponse =
+      "```\n" + JSON.stringify(mockValidResponse) + "\n```";
     mockGenerateContent.mockResolvedValue({
       text: wrappedResponse,
     });
@@ -232,7 +237,8 @@ describe("generateCodingTask", () => {
         {
           summary:
             "This is an extremely long summary that goes way beyond the reasonable one-line limit and should be rejected by validation",
-          recruiterSummary: "A task with a long summary for testing validation.",
+          recruiterSummary:
+            "A task with a long summary for testing validation.",
           description:
             "This is a valid description that is long enough to pass validation checks and provides meaningful context.",
         },

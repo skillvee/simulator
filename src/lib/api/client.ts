@@ -49,7 +49,10 @@ interface ApiOptions {
  *   }
  * }
  */
-export async function api<T>(endpoint: string, options?: ApiOptions): Promise<T> {
+export async function api<T>(
+  endpoint: string,
+  options?: ApiOptions
+): Promise<T> {
   const response = await fetch(endpoint, {
     method: options?.method ?? "GET",
     headers: { "Content-Type": "application/json", ...options?.headers },

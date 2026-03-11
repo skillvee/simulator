@@ -15,10 +15,14 @@ export function WorkStyleSection({ candidates }: WorkStyleSectionProps) {
 
   const getAiUsageColor = (level: string): string => {
     switch (level) {
-      case "Expert": return "text-blue-700";
-      case "Strong": return "text-green-700";
-      case "Basic": return "text-yellow-700";
-      default: return "text-stone-500";
+      case "Expert":
+        return "text-blue-700";
+      case "Strong":
+        return "text-green-700";
+      case "Basic":
+        return "text-yellow-700";
+      default:
+        return "text-stone-500";
     }
   };
 
@@ -61,32 +65,48 @@ export function WorkStyleSection({ candidates }: WorkStyleSectionProps) {
 
     return (
       <div className="border-b border-stone-200 bg-white">
-        <div className="px-6 py-4 border-b border-stone-200">
+        <div className="border-b border-stone-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-stone-900">Work Style</h2>
         </div>
 
         <div className="px-6 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-4 md:grid-cols-3">
             {metricRows.map((row) => (
               <div key={row.label}>
-                <p className="text-xs font-medium text-stone-500 mb-0.5">{row.label}</p>
-                <p className="text-sm font-medium text-stone-900">{row.getValue(candidate)}</p>
+                <p className="mb-0.5 text-xs font-medium text-stone-500">
+                  {row.label}
+                </p>
+                <p className="text-sm font-medium text-stone-900">
+                  {row.getValue(candidate)}
+                </p>
               </div>
             ))}
 
             {/* AI Usage */}
-            <div className="col-span-2 md:col-span-3 pt-2 border-t border-stone-100">
-              <p className="text-xs font-medium text-stone-500 mb-1">AI Usage</p>
-              <div className="flex items-center gap-2 mb-1">
-                <span className={cn("text-sm font-semibold", getAiUsageColor(aiUsage.level))}>
+            <div className="col-span-2 border-t border-stone-100 pt-2 md:col-span-3">
+              <p className="mb-1 text-xs font-medium text-stone-500">
+                AI Usage
+              </p>
+              <div className="mb-1 flex items-center gap-2">
+                <span
+                  className={cn(
+                    "text-sm font-semibold",
+                    getAiUsageColor(aiUsage.level)
+                  )}
+                >
                   {aiUsage.level}
                 </span>
-                <span className="text-xs text-stone-400">({aiUsage.score}/4)</span>
+                <span className="text-xs text-stone-400">
+                  ({aiUsage.score}/4)
+                </span>
               </div>
               {aiUsage.behaviors.length > 0 && (
-                <ul className="space-y-1 mt-1">
+                <ul className="mt-1 space-y-1">
                   {aiUsage.behaviors.map((behavior, idx) => (
-                    <li key={idx} className="text-xs text-stone-500 leading-snug">
+                    <li
+                      key={idx}
+                      className="text-xs leading-snug text-stone-500"
+                    >
                       {behavior}
                     </li>
                   ))}
@@ -102,72 +122,84 @@ export function WorkStyleSection({ candidates }: WorkStyleSectionProps) {
   // Multi-candidate grid layout (original)
   return (
     <div className="border-b border-stone-200 bg-white">
-      <div className="px-6 py-4 border-b border-stone-200">
-        <h2 className="text-lg font-semibold text-stone-900">
-          Work Style
-        </h2>
+      <div className="border-b border-stone-200 px-6 py-4">
+        <h2 className="text-lg font-semibold text-stone-900">Work Style</h2>
       </div>
 
       <div>
-          {metricRows.map((row) => (
-            <div
-              key={row.label}
-              className="grid border-b border-stone-200"
-              style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
-            >
-              <div className="p-4 border-r border-stone-200 flex items-center">
-                <span className="font-medium text-stone-900">{row.label}</span>
-              </div>
+        {metricRows.map((row) => (
+          <div
+            key={row.label}
+            className="grid border-b border-stone-200"
+            style={{
+              gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
+            }}
+          >
+            <div className="flex items-center border-r border-stone-200 p-4">
+              <span className="font-medium text-stone-900">{row.label}</span>
+            </div>
 
-              {candidates.map((candidate) => (
-                <div
-                  key={candidate.assessmentId}
-                  className="p-4 border-r border-stone-200 last:border-r-0 flex items-center"
-                >
-                  <span className="text-sm text-stone-900">
-                    {row.getValue(candidate)}
+            {candidates.map((candidate) => (
+              <div
+                key={candidate.assessmentId}
+                className="flex items-center border-r border-stone-200 p-4 last:border-r-0"
+              >
+                <span className="text-sm text-stone-900">
+                  {row.getValue(candidate)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {/* AI Usage row — richer than a simple metric */}
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
+          }}
+        >
+          <div className="flex items-center border-r border-stone-200 p-4">
+            <span className="font-medium text-stone-900">AI Usage</span>
+          </div>
+
+          {candidates.map((candidate) => {
+            const { aiUsage } = candidate.metrics;
+            return (
+              <div
+                key={candidate.assessmentId}
+                className="border-r border-stone-200 p-4 last:border-r-0"
+              >
+                <div className="mb-1 flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "text-sm font-semibold",
+                      getAiUsageColor(aiUsage.level)
+                    )}
+                  >
+                    {aiUsage.level}
+                  </span>
+                  <span className="text-xs text-stone-400">
+                    ({aiUsage.score}/4)
                   </span>
                 </div>
-              ))}
-            </div>
-          ))}
-
-          {/* AI Usage row — richer than a simple metric */}
-          <div
-            className="grid"
-            style={{ gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)` }}
-          >
-            <div className="p-4 border-r border-stone-200 flex items-center">
-              <span className="font-medium text-stone-900">AI Usage</span>
-            </div>
-
-            {candidates.map((candidate) => {
-              const { aiUsage } = candidate.metrics;
-              return (
-                <div
-                  key={candidate.assessmentId}
-                  className="p-4 border-r border-stone-200 last:border-r-0"
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={cn("text-sm font-semibold", getAiUsageColor(aiUsage.level))}>
-                      {aiUsage.level}
-                    </span>
-                    <span className="text-xs text-stone-400">({aiUsage.score}/4)</span>
-                  </div>
-                  {aiUsage.behaviors.length > 0 && (
-                    <ul className="space-y-1 mt-1.5">
-                      {aiUsage.behaviors.map((behavior, idx) => (
-                        <li key={idx} className="text-xs text-stone-500 leading-snug">
-                          {behavior}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                {aiUsage.behaviors.length > 0 && (
+                  <ul className="mt-1.5 space-y-1">
+                    {aiUsage.behaviors.map((behavior, idx) => (
+                      <li
+                        key={idx}
+                        className="text-xs leading-snug text-stone-500"
+                      >
+                        {behavior}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
+      </div>
     </div>
   );
 }

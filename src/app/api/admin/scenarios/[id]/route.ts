@@ -81,14 +81,24 @@ export async function PUT(request: Request, context: RouteContext) {
   // Validate request body using Zod schema
   const validated = await validateRequest(request, ScenarioUpdateSchema);
   if ("error" in validated) return validated.error;
-  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, isPublished } = validated.data;
+  const {
+    name,
+    companyName,
+    companyDescription,
+    taskDescription,
+    repoUrl,
+    techStack,
+    isPublished,
+  } = validated.data;
 
   // Build update data with only provided fields
   const updateData: Record<string, unknown> = {};
   if (name !== undefined) updateData.name = name;
   if (companyName !== undefined) updateData.companyName = companyName;
-  if (companyDescription !== undefined) updateData.companyDescription = companyDescription;
-  if (taskDescription !== undefined) updateData.taskDescription = taskDescription;
+  if (companyDescription !== undefined)
+    updateData.companyDescription = companyDescription;
+  if (taskDescription !== undefined)
+    updateData.taskDescription = taskDescription;
   if (repoUrl !== undefined) updateData.repoUrl = repoUrl;
   if (techStack !== undefined) updateData.techStack = techStack;
   if (isPublished !== undefined) updateData.isPublished = isPublished;

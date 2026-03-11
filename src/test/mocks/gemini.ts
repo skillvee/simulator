@@ -163,7 +163,9 @@ export class MockGeminiSession {
   /**
    * Sets a custom response handler function.
    */
-  setResponseHandler(handler: (message: GeminiMessage) => GeminiResponse): void {
+  setResponseHandler(
+    handler: (message: GeminiMessage) => GeminiResponse
+  ): void {
     this.responseHandler = handler;
   }
 

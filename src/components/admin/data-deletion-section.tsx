@@ -117,8 +117,8 @@ export function DataDeletionSection({
               <h3 className="mb-1 font-semibold">Your Data Rights</h3>
               <p className="text-sm text-muted-foreground">
                 You can request deletion of all your data at any time. This
-                includes your account, assessments, recordings, and all associated
-                information.
+                includes your account, assessments, recordings, and all
+                associated information.
               </p>
             </div>
           </div>
@@ -127,7 +127,7 @@ export function DataDeletionSection({
           <div className="mb-6 border-b border-border pb-6">
             <Link
               href="/privacy"
-              className="inline-flex items-center gap-2 font-medium text-primary hover:text-primary/80 transition-colors"
+              className="inline-flex items-center gap-2 font-medium text-primary transition-colors hover:text-primary/80"
             >
               <span>Read our Privacy Policy</span>
               <svg

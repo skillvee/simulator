@@ -113,7 +113,9 @@ export async function calculatePercentiles(
   const totalCandidates = assessmentsWithScores.length;
 
   if (totalCandidates === 0) {
-    throw new Error("No completed assessments with scores found for comparison");
+    throw new Error(
+      "No completed assessments with scores found for comparison"
+    );
   }
 
   // Build score maps for efficient lookup
@@ -270,9 +272,7 @@ export async function getStoredPercentiles(
  * @param scores - Array of dimension scores
  * @returns Average score (1-5 scale)
  */
-function calculateAverageScore(
-  scores: Array<{ score: number }>
-): number {
+function calculateAverageScore(scores: Array<{ score: number }>): number {
   if (scores.length === 0) return 0;
   const sum = scores.reduce((acc, s) => acc + s.score, 0);
   return sum / scores.length;

@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { db } from "@/server/db";
-import { VideoAssessmentStatus, type AssessmentDimension } from "@prisma/client";
+import {
+  VideoAssessmentStatus,
+  type AssessmentDimension,
+} from "@prisma/client";
 import { CandidateProfileClient } from "./client";
 
 interface PageProps {

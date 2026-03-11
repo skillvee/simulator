@@ -20,12 +20,13 @@ import {
   RUBRIC_EVALUATION_PROMPT_VERSION,
   type RubricPromptInput,
 } from "@/prompts/analysis/rubric-evaluation";
-import {
-  AssessmentLogEventType,
-  VideoAssessmentStatus,
-} from "@prisma/client";
+import { AssessmentLogEventType, VideoAssessmentStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
-import type { RubricAssessmentOutput, TimestampedBehavior, DimensionConfidence } from "@/types";
+import type {
+  RubricAssessmentOutput,
+  TimestampedBehavior,
+  DimensionConfidence,
+} from "@/types";
 
 // Model for video evaluation (Gemini 3 Pro)
 const VIDEO_EVALUATION_MODEL = "gemini-3-pro-preview";
@@ -101,51 +102,52 @@ function parseEvaluationResponse(responseText: string): RubricAssessmentOutput {
   }
 
   // Map the raw response to RubricAssessmentOutput
-  const dimensionScores = Object.entries(parsed.dimension_scores as Record<string, Record<string, unknown>>).map(
-    ([slug, data]) => {
-      // Handle both v3 (array of {timestamp, behavior}) and v2 (flat string array) formats
-      const rawBehaviors = data.observable_behaviors as
-        | TimestampedBehavior[]
-        | string[]
-        | undefined;
-      let observableBehaviors: TimestampedBehavior[];
-      let timestamps: string[];
+  const dimensionScores = Object.entries(
+    parsed.dimension_scores as Record<string, Record<string, unknown>>
+  ).map(([slug, data]) => {
+    // Handle both v3 (array of {timestamp, behavior}) and v2 (flat string array) formats
+    const rawBehaviors = data.observable_behaviors as
+      | TimestampedBehavior[]
+      | string[]
+      | undefined;
+    let observableBehaviors: TimestampedBehavior[];
+    let timestamps: string[];
 
-      if (
-        Array.isArray(rawBehaviors) &&
-        rawBehaviors.length > 0 &&
-        typeof rawBehaviors[0] === "object" &&
-        "timestamp" in (rawBehaviors[0] as object)
-      ) {
-        // v3 format: array of {timestamp, behavior}
-        observableBehaviors = rawBehaviors as TimestampedBehavior[];
-        timestamps = observableBehaviors.map((b) => b.timestamp);
-      } else {
-        // v2 format: flat string array — pair with timestamps array
-        const flatBehaviors = (rawBehaviors as string[]) ?? [];
-        const flatTimestamps = (data.timestamps as string[]) ?? [];
-        observableBehaviors = flatBehaviors.map((b, i) => ({
-          timestamp: flatTimestamps[i] ?? "",
-          behavior: b,
-        }));
-        timestamps = flatTimestamps;
-      }
-
-      return {
-        dimensionSlug: slug,
-        dimensionName: slug, // Will be enriched from rubric data
-        score: (data.score as number | null) ?? null,
-        summary: (data.summary as string) ?? "",
-        confidence: ((data.confidence as string) ?? "medium") as DimensionConfidence,
-        rationale: (data.rationale as string) ?? "",
-        observableBehaviors,
-        timestamps,
-        trainableGap: (data.trainable_gap as boolean) ?? false,
-        greenFlags: (data.green_flags as string[]) ?? [],
-        redFlags: (data.red_flags as string[]) ?? [],
-      };
+    if (
+      Array.isArray(rawBehaviors) &&
+      rawBehaviors.length > 0 &&
+      typeof rawBehaviors[0] === "object" &&
+      "timestamp" in (rawBehaviors[0] as object)
+    ) {
+      // v3 format: array of {timestamp, behavior}
+      observableBehaviors = rawBehaviors as TimestampedBehavior[];
+      timestamps = observableBehaviors.map((b) => b.timestamp);
+    } else {
+      // v2 format: flat string array — pair with timestamps array
+      const flatBehaviors = (rawBehaviors as string[]) ?? [];
+      const flatTimestamps = (data.timestamps as string[]) ?? [];
+      observableBehaviors = flatBehaviors.map((b, i) => ({
+        timestamp: flatTimestamps[i] ?? "",
+        behavior: b,
+      }));
+      timestamps = flatTimestamps;
     }
-  );
+
+    return {
+      dimensionSlug: slug,
+      dimensionName: slug, // Will be enriched from rubric data
+      score: (data.score as number | null) ?? null,
+      summary: (data.summary as string) ?? "",
+      confidence: ((data.confidence as string) ??
+        "medium") as DimensionConfidence,
+      rationale: (data.rationale as string) ?? "",
+      observableBehaviors,
+      timestamps,
+      trainableGap: (data.trainable_gap as boolean) ?? false,
+      greenFlags: (data.green_flags as string[]) ?? [],
+      redFlags: (data.red_flags as string[]) ?? [],
+    };
+  });
 
   const detectedRedFlags = (parsed.detected_red_flags ?? []).map(
     (rf: Record<string, unknown>) => ({
@@ -175,7 +177,8 @@ function parseEvaluationResponse(responseText: string): RubricAssessmentOutput {
   );
 
   return {
-    evaluationVersion: parsed.evaluation_version ?? RUBRIC_EVALUATION_PROMPT_VERSION,
+    evaluationVersion:
+      parsed.evaluation_version ?? RUBRIC_EVALUATION_PROMPT_VERSION,
     roleFamilySlug: parsed.role_family_slug ?? DEFAULT_ROLE_FAMILY_SLUG,
     overallScore: parsed.overall_score,
     dimensionScores,
@@ -183,7 +186,8 @@ function parseEvaluationResponse(responseText: string): RubricAssessmentOutput {
     topStrengths,
     growthAreas,
     overallSummary: parsed.overall_summary,
-    evaluationConfidence: (parsed.evaluation_confidence ?? "medium") as DimensionConfidence,
+    evaluationConfidence: (parsed.evaluation_confidence ??
+      "medium") as DimensionConfidence,
     insufficientEvidenceNotes: parsed.insufficient_evidence_notes ?? null,
   };
 }
@@ -597,7 +601,13 @@ export interface TriggerVideoAssessmentResult {
 export async function triggerVideoAssessment(
   options: TriggerVideoAssessmentOptions
 ): Promise<TriggerVideoAssessmentResult> {
-  const { assessmentId, candidateId, videoUrl, taskDescription, roleFamilySlug } = options;
+  const {
+    assessmentId,
+    candidateId,
+    videoUrl,
+    taskDescription,
+    roleFamilySlug,
+  } = options;
 
   try {
     const videoAssessment = await db.videoAssessment.upsert({
@@ -654,7 +664,10 @@ export async function triggerVideoAssessment(
 
     return { success: true, videoAssessmentId: videoAssessment.id };
   } catch (error) {
-    console.error("[VideoEvaluation] Failed to trigger video assessment:", error);
+    console.error(
+      "[VideoEvaluation] Failed to trigger video assessment:",
+      error
+    );
     return {
       success: false,
       videoAssessmentId: null,
@@ -694,7 +707,11 @@ export async function retryVideoAssessment(
     });
 
     if (!videoAssessment) {
-      return { success: false, videoAssessmentId: null, error: "Video assessment not found" };
+      return {
+        success: false,
+        videoAssessmentId: null,
+        error: "Video assessment not found",
+      };
     }
 
     if (videoAssessment.status !== VideoAssessmentStatus.FAILED) {
@@ -723,7 +740,10 @@ export async function retryVideoAssessment(
       videoUrl: videoAssessment.videoUrl,
       taskDescription: videoAssessment.assessment?.scenario?.taskDescription,
     }).catch((error) => {
-      console.error(`[VideoEvaluation] Retry failed for ${videoAssessmentId}:`, error);
+      console.error(
+        `[VideoEvaluation] Retry failed for ${videoAssessmentId}:`,
+        error
+      );
     });
 
     return { success: true, videoAssessmentId };
@@ -753,12 +773,20 @@ export async function forceRetryVideoAssessment(
     });
 
     if (!videoAssessment) {
-      return { success: false, videoAssessmentId: null, error: "Video assessment not found" };
+      return {
+        success: false,
+        videoAssessmentId: null,
+        error: "Video assessment not found",
+      };
     }
 
     await db.videoAssessment.update({
       where: { id: videoAssessmentId },
-      data: { status: VideoAssessmentStatus.PENDING, retryCount: 0, lastFailureReason: null },
+      data: {
+        status: VideoAssessmentStatus.PENDING,
+        retryCount: 0,
+        lastFailureReason: null,
+      },
     });
 
     console.log(`[VideoEvaluation] Admin force-retry for ${videoAssessmentId}`);
@@ -768,7 +796,10 @@ export async function forceRetryVideoAssessment(
       videoUrl: videoAssessment.videoUrl,
       taskDescription: videoAssessment.assessment?.scenario?.taskDescription,
     }).catch((error) => {
-      console.error(`[VideoEvaluation] Force retry failed for ${videoAssessmentId}:`, error);
+      console.error(
+        `[VideoEvaluation] Force retry failed for ${videoAssessmentId}:`,
+        error
+      );
     });
 
     return { success: true, videoAssessmentId };

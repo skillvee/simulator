@@ -107,7 +107,10 @@ describe("calculatePercentiles", () => {
   });
 
   it("should calculate 0 percentile when target is lowest", async () => {
-    const lowestScores = ALL_DIMENSIONS.map((d) => ({ dimension: d, score: 1 }));
+    const lowestScores = ALL_DIMENSIONS.map((d) => ({
+      dimension: d,
+      score: 1,
+    }));
     const higherScores = ALL_DIMENSIONS.map((d) => ({
       dimension: d,
       score: 5,
@@ -193,7 +196,9 @@ describe("calculatePercentiles", () => {
     );
 
     vi.mocked(db.videoAssessment.findFirst).mockResolvedValue(targetAssessment);
-    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([targetAssessment]);
+    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([
+      targetAssessment,
+    ]);
 
     const result = await calculatePercentiles("assessment-1");
 
@@ -267,7 +272,9 @@ describe("calculatePercentiles", () => {
     );
 
     vi.mocked(db.videoAssessment.findFirst).mockResolvedValue(targetAssessment);
-    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([targetAssessment]);
+    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([
+      targetAssessment,
+    ]);
 
     const result = await calculatePercentiles("assessment-1");
 
@@ -296,7 +303,9 @@ describe("calculateAndStorePercentiles", () => {
     );
 
     vi.mocked(db.videoAssessment.findFirst).mockResolvedValue(targetAssessment);
-    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([targetAssessment]);
+    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([
+      targetAssessment,
+    ]);
     vi.mocked(db.assessment.findUnique).mockResolvedValue({
       id: "assessment-1",
       report: { existingField: "value" },
@@ -331,7 +340,9 @@ describe("calculateAndStorePercentiles", () => {
     );
 
     vi.mocked(db.videoAssessment.findFirst).mockResolvedValue(targetAssessment);
-    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([targetAssessment]);
+    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([
+      targetAssessment,
+    ]);
     vi.mocked(db.assessment.findUnique).mockResolvedValue({
       id: "assessment-1",
       report: null,
@@ -559,7 +570,9 @@ describe("Acceptance Criteria", () => {
     );
 
     vi.mocked(db.videoAssessment.findFirst).mockResolvedValue(targetAssessment);
-    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([targetAssessment]);
+    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([
+      targetAssessment,
+    ]);
 
     const result = await calculatePercentiles("assessment-1");
 
@@ -580,7 +593,9 @@ describe("Acceptance Criteria", () => {
     );
 
     vi.mocked(db.videoAssessment.findFirst).mockResolvedValue(targetAssessment);
-    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([targetAssessment]);
+    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([
+      targetAssessment,
+    ]);
 
     const result = await calculatePercentiles("assessment-1");
 
@@ -598,7 +613,9 @@ describe("Acceptance Criteria", () => {
     );
 
     vi.mocked(db.videoAssessment.findFirst).mockResolvedValue(targetAssessment);
-    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([targetAssessment]);
+    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([
+      targetAssessment,
+    ]);
 
     const result = await calculatePercentiles("test-assessment-id");
 
@@ -622,7 +639,9 @@ describe("Acceptance Criteria", () => {
     );
 
     vi.mocked(db.videoAssessment.findFirst).mockResolvedValue(targetAssessment);
-    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([targetAssessment]);
+    vi.mocked(db.videoAssessment.findMany).mockResolvedValue([
+      targetAssessment,
+    ]);
     vi.mocked(db.assessment.findUnique).mockResolvedValue({
       id: "assessment-1",
       report: {},

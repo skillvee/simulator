@@ -317,9 +317,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
       user: { id: "recruiter-123", role: "RECRUITER" },
     });
 
-    mockGenerateCoworkers.mockRejectedValue(
-      new Error("Gemini API error")
-    );
+    mockGenerateCoworkers.mockRejectedValue(new Error("Gemini API error"));
 
     const request = new Request(
       "http://localhost/api/recruiter/simulations/generate-coworkers",

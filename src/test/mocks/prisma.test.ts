@@ -78,7 +78,9 @@ describe("MockPrismaClient", () => {
 
     (prisma.user.findUnique as PrismaMockFn).mockResolvedValue(mockUser);
 
-    const result = await (prisma.user.findUnique as PrismaMockFn)({ where: { id: "123" } });
+    const result = await (prisma.user.findUnique as PrismaMockFn)({
+      where: { id: "123" },
+    });
     expect(result).toEqual(mockUser);
   });
 
@@ -86,7 +88,9 @@ describe("MockPrismaClient", () => {
     const prisma = new MockPrismaClient();
     const callback = vi.fn().mockResolvedValue("result");
 
-    const result = await (prisma.$transaction as Mock<(cb: unknown) => Promise<unknown>>)(callback);
+    const result = await (
+      prisma.$transaction as Mock<(cb: unknown) => Promise<unknown>>
+    )(callback);
 
     expect(callback).toHaveBeenCalledWith(prisma);
     expect(result).toBe("result");

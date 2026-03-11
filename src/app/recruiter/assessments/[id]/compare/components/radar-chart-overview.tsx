@@ -74,7 +74,7 @@ function SummaryRow({ candidates }: { candidates: CandidateComparison[] }) {
   if (isSingle) {
     return (
       <div className="border-t border-stone-200 px-6 py-4">
-        <p className="text-sm text-stone-600 leading-relaxed">
+        <p className="text-sm leading-relaxed text-stone-600">
           {candidates[0].summary || "No summary available"}
         </p>
       </div>
@@ -83,23 +83,23 @@ function SummaryRow({ candidates }: { candidates: CandidateComparison[] }) {
 
   return (
     <div
-      className="grid border-t border-stone-200 cursor-pointer hover:bg-stone-50/50 transition-colors"
+      className="grid cursor-pointer border-t border-stone-200 transition-colors hover:bg-stone-50/50"
       style={{
         gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
       }}
       onClick={() => setExpanded(!expanded)}
     >
-      <div className="p-4 border-r border-stone-200 flex items-center">
+      <div className="flex items-center border-r border-stone-200 p-4">
         <span className="font-medium text-stone-700">Summary</span>
       </div>
       {candidates.map((candidate) => (
         <div
           key={candidate.assessmentId}
-          className="p-4 border-r border-stone-200 last:border-r-0"
+          className="border-r border-stone-200 p-4 last:border-r-0"
         >
           <p
             className={cn(
-              "text-sm text-stone-600 leading-relaxed",
+              "text-sm leading-relaxed text-stone-600",
               !expanded && "line-clamp-3"
             )}
           >
@@ -141,9 +141,7 @@ export function RadarChartOverview({
           fullMark: 4,
         };
         candidates.forEach((c, idx) => {
-          const score = c.dimensionScores.find(
-            (d) => d.dimension === dim
-          );
+          const score = c.dimensionScores.find((d) => d.dimension === dim);
           point[`candidate${idx}`] = score?.score ?? 0;
         });
         return point;
@@ -156,7 +154,9 @@ export function RadarChartOverview({
     candidates.forEach((c, idx) => {
       config[`candidate${idx}`] = {
         label: c.candidateName || `Candidate ${idx + 1}`,
-        color: isSingle ? "hsl(221, 83%, 53%)" : CHART_COLORS[idx % CHART_COLORS.length],
+        color: isSingle
+          ? "hsl(221, 83%, 53%)"
+          : CHART_COLORS[idx % CHART_COLORS.length],
       };
     });
     return config;
@@ -169,7 +169,7 @@ export function RadarChartOverview({
       <div className="border-b border-stone-200 bg-white">
         <div className="flex flex-col md:flex-row">
           {/* Radar Chart */}
-          <div className="flex-1 px-6 pt-6 pb-2">
+          <div className="flex-1 px-6 pb-2 pt-6">
             <ChartContainer
               config={chartConfig}
               className="mx-auto aspect-square max-h-[350px]"
@@ -178,7 +178,14 @@ export function RadarChartOverview({
                 <PolarGrid stroke="hsl(var(--border))" />
                 <PolarAngleAxis
                   dataKey="dimension"
-                  tick={<CustomAngleTick payload={{ value: "" }} x={0} y={0} textAnchor="middle" />}
+                  tick={
+                    <CustomAngleTick
+                      payload={{ value: "" }}
+                      x={0}
+                      y={0}
+                      textAnchor="middle"
+                    />
+                  }
                 />
                 <PolarRadiusAxis
                   angle={90}
@@ -200,11 +207,11 @@ export function RadarChartOverview({
           </div>
 
           {/* Candidate Info */}
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 md:border-l md:border-stone-200">
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 md:border-l md:border-stone-200">
             {/* Avatar + Name */}
             <div className="flex items-center gap-3">
               <div
-                className="h-12 w-12 rounded-full flex items-center justify-center text-white font-semibold text-base"
+                className="flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold text-white"
                 style={{ backgroundColor: "hsl(221, 83%, 53%)" }}
               >
                 {getInitials(candidate.candidateName)}
@@ -215,7 +222,7 @@ export function RadarChartOverview({
             </div>
 
             {/* Score Circle */}
-            <div className="h-24 w-24 rounded-full flex items-center justify-center border-4 border-blue-600 bg-blue-50">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-blue-600 bg-blue-50">
               <span className="text-3xl font-bold text-blue-600">
                 {candidate.overallScore.toFixed(1)}
               </span>
@@ -223,13 +230,15 @@ export function RadarChartOverview({
 
             {/* Badges */}
             <div className="flex flex-col items-center gap-2">
-              <Badge className={getStrengthBadgeStyles(candidate.strengthLevel)}>
+              <Badge
+                className={getStrengthBadgeStyles(candidate.strengthLevel)}
+              >
                 {candidate.strengthLevel}
               </Badge>
               {showPercentiles && (
                 <Badge variant="outline" className="text-xs">
                   Top {Math.round(100 - candidate.overallPercentile)}%
-                  <span className="text-stone-400 ml-1">
+                  <span className="ml-1 text-stone-400">
                     of {totalCandidatesInSimulation}
                   </span>
                 </Badge>
@@ -248,7 +257,7 @@ export function RadarChartOverview({
   return (
     <div className="border-b border-stone-200 bg-white">
       {/* Radar Chart */}
-      <div className="px-6 pt-6 pb-2">
+      <div className="px-6 pb-2 pt-6">
         <ChartContainer
           config={chartConfig}
           className="mx-auto aspect-square max-h-[400px]"
@@ -257,7 +266,14 @@ export function RadarChartOverview({
             <PolarGrid stroke="hsl(var(--border))" />
             <PolarAngleAxis
               dataKey="dimension"
-              tick={<CustomAngleTick payload={{ value: "" }} x={0} y={0} textAnchor="middle" />}
+              tick={
+                <CustomAngleTick
+                  payload={{ value: "" }}
+                  x={0}
+                  y={0}
+                  textAnchor="middle"
+                />
+              }
             />
             <PolarRadiusAxis
               angle={90}
@@ -268,10 +284,7 @@ export function RadarChartOverview({
             {candidates.map((_, idx) => (
               <Radar
                 key={idx}
-                name={
-                  candidates[idx].candidateName ||
-                  `Candidate ${idx + 1}`
-                }
+                name={candidates[idx].candidateName || `Candidate ${idx + 1}`}
                 dataKey={`candidate${idx}`}
                 stroke={`var(--color-candidate${idx})`}
                 fill={`var(--color-candidate${idx})`}
@@ -292,7 +305,7 @@ export function RadarChartOverview({
           gridTemplateColumns: `200px repeat(${candidates.length}, 1fr)`,
         }}
       >
-        <div className="p-4 border-r border-stone-200 flex items-center">
+        <div className="flex items-center border-r border-stone-200 p-4">
           <span className="font-medium text-stone-700">Candidates</span>
         </div>
         {candidates.map((candidate, idx) => {
@@ -301,17 +314,16 @@ export function RadarChartOverview({
             <div
               key={candidate.assessmentId}
               className={cn(
-                "p-5 border-r border-stone-200 last:border-r-0 flex flex-col items-center gap-3",
+                "flex flex-col items-center gap-3 border-r border-stone-200 p-5 last:border-r-0",
                 isWinner && "bg-blue-50/50"
               )}
             >
               {/* Avatar + Name */}
               <div className="flex items-center gap-2">
                 <div
-                  className="h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white"
                   style={{
-                    backgroundColor:
-                      CHART_COLORS[idx % CHART_COLORS.length],
+                    backgroundColor: CHART_COLORS[idx % CHART_COLORS.length],
                   }}
                 >
                   {getInitials(candidate.candidateName)}
@@ -324,7 +336,7 @@ export function RadarChartOverview({
               {/* Score Circle */}
               <div
                 className={cn(
-                  "h-20 w-20 rounded-full flex items-center justify-center border-4",
+                  "flex h-20 w-20 items-center justify-center rounded-full border-4",
                   isWinner
                     ? "border-blue-600 bg-blue-50"
                     : "border-stone-200 bg-stone-50"
@@ -343,21 +355,15 @@ export function RadarChartOverview({
               {/* Badges */}
               <div className="flex flex-col items-center gap-1.5">
                 <Badge
-                  className={getStrengthBadgeStyles(
-                    candidate.strengthLevel
-                  )}
+                  className={getStrengthBadgeStyles(candidate.strengthLevel)}
                 >
                   {candidate.strengthLevel}
                 </Badge>
 
                 {showPercentiles && (
                   <Badge variant="outline" className="text-xs">
-                    Top{" "}
-                    {Math.round(
-                      100 - candidate.overallPercentile
-                    )}
-                    %
-                    <span className="text-stone-400 ml-1">
+                    Top {Math.round(100 - candidate.overallPercentile)}%
+                    <span className="ml-1 text-stone-400">
                       of {totalCandidatesInSimulation}
                     </span>
                   </Badge>

@@ -127,9 +127,7 @@ export default function PrivacyPolicyPage() {
             Core Platform Services
           </h3>
           <ul className="mb-6 ml-4 list-inside list-disc text-stone-700">
-            <li>
-              Conducting AI-powered interview simulations and assessments
-            </li>
+            <li>Conducting AI-powered interview simulations and assessments</li>
             <li>Providing personalized feedback and performance analytics</li>
             <li>Validating and certifying your demonstrated skills</li>
             <li>Creating professional profiles for employer matching</li>

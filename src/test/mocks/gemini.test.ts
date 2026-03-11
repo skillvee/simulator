@@ -31,13 +31,17 @@ describe("createMockGeminiSession", () => {
   it("methods are spy functions", async () => {
     const session = createMockGeminiSession();
 
-    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({ text: "Hello" });
+    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({
+      text: "Hello",
+    });
     expect(session.send).toHaveBeenCalledWith({ text: "Hello" });
   });
 
   it("allows configuring default response", () => {
     const customResponse = { text: "Custom response" };
-    const session = createMockGeminiSession({ defaultResponse: customResponse });
+    const session = createMockGeminiSession({
+      defaultResponse: customResponse,
+    });
 
     // defaultResponse is expanded to full GeminiResponse format
     expect(session.defaultResponse?.text).toBe("Custom response");
@@ -47,7 +51,9 @@ describe("createMockGeminiSession", () => {
     const session = createMockGeminiSession();
 
     // Should not throw - cast to callable mock
-    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({ text: "test" });
+    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({
+      text: "test",
+    });
     expect(session.send).toHaveBeenCalled();
   });
 });
@@ -67,9 +73,7 @@ describe("createMockGeminiResponse", () => {
   });
 
   it("allows custom candidates", () => {
-    const customCandidates = [
-      { content: { parts: [{ text: "Custom" }] } },
-    ];
+    const customCandidates = [{ content: { parts: [{ text: "Custom" }] } }];
     const response = createMockGeminiResponse({
       text: "Test",
       candidates: customCandidates,
@@ -97,8 +101,12 @@ describe("MockGeminiSession class", () => {
   it("tracks message history", async () => {
     const session = new MockGeminiSession();
 
-    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({ text: "First" });
-    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({ text: "Second" });
+    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({
+      text: "First",
+    });
+    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({
+      text: "Second",
+    });
 
     expect(session.messageHistory).toHaveLength(2);
     expect(session.messageHistory[0]).toEqual({ text: "First" });
@@ -107,7 +115,9 @@ describe("MockGeminiSession class", () => {
   it("can be reset", async () => {
     const session = new MockGeminiSession();
 
-    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({ text: "Message" });
+    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({
+      text: "Message",
+    });
     session.reset();
 
     expect(session.messageHistory).toHaveLength(0);
@@ -118,7 +128,9 @@ describe("MockGeminiSession class", () => {
     const mockFn = vi.fn().mockReturnValue({ text: "Mocked" });
 
     session.setResponseHandler(mockFn);
-    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({ text: "Test" });
+    await (session.send as Mock<(msg: GeminiMessage) => Promise<unknown>>)({
+      text: "Test",
+    });
 
     expect(mockFn).toHaveBeenCalled();
   });

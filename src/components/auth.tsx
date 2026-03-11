@@ -40,7 +40,12 @@ export function AuthButton({ variant = "light", appearance }: AuthButtonProps) {
   const isDark = variant === "dark";
 
   const initials = user.name
-    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
     : user.email?.[0]?.toUpperCase() || "U";
 
   return (
@@ -55,7 +60,10 @@ export function AuthButton({ variant = "light", appearance }: AuthButtonProps) {
           } ${appearance?.elements?.userButtonTrigger || ""}`}
         >
           <Avatar className={appearance?.elements?.avatarBox || "h-8 w-8"}>
-            <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
+            <AvatarImage
+              src={user.image || undefined}
+              alt={user.name || "User"}
+            />
             <AvatarFallback
               className={`text-sm font-medium ${
                 isDark
@@ -71,22 +79,30 @@ export function AuthButton({ variant = "light", appearance }: AuthButtonProps) {
       <DropdownMenuContent
         align="end"
         className={`w-52 ${
-          isDark
-            ? "bg-slate-900 border-white/10 text-white"
-            : ""
+          isDark ? "border-white/10 bg-slate-900 text-white" : ""
         }`}
       >
-        <div className={`px-3 py-2.5 ${isDark ? "border-b border-white/10" : "border-b border-stone-100"}`}>
-          <p className={`font-medium text-sm ${isDark ? "text-white" : "text-stone-900"}`}>{user.name}</p>
-          <p className={`text-xs truncate mt-0.5 ${isDark ? "text-slate-400" : "text-stone-500"}`}>{user.email}</p>
+        <div
+          className={`px-3 py-2.5 ${isDark ? "border-b border-white/10" : "border-b border-stone-100"}`}
+        >
+          <p
+            className={`text-sm font-medium ${isDark ? "text-white" : "text-stone-900"}`}
+          >
+            {user.name}
+          </p>
+          <p
+            className={`mt-0.5 truncate text-xs ${isDark ? "text-slate-400" : "text-stone-500"}`}
+          >
+            {user.email}
+          </p>
         </div>
         <div className="p-1">
           <DropdownMenuItem asChild variant="destructive">
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="w-full flex items-center gap-2 cursor-pointer"
+              className="flex w-full cursor-pointer items-center gap-2"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="h-4 w-4" />
               Sign out
             </button>
           </DropdownMenuItem>

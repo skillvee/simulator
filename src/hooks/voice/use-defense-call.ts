@@ -9,7 +9,10 @@ import type { CategorizedError } from "@/lib/core";
 
 export type { VoiceConnectionState as ConnectionState };
 
-export interface UseDefenseCallOptions extends Omit<VoiceBaseOptions, "maxRetries"> {
+export interface UseDefenseCallOptions extends Omit<
+  VoiceBaseOptions,
+  "maxRetries"
+> {
   /** Endpoint to get the call token. Will be configured when integrated with Slack. */
   tokenEndpoint?: string;
   /** Endpoint to save the transcript. Will be configured when integrated with Slack. */

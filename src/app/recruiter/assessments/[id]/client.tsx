@@ -41,7 +41,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { RelativeStrength, TargetLevel } from "@/lib/rubric/level-expectations";
+import type {
+  RelativeStrength,
+  TargetLevel,
+} from "@/lib/rubric/level-expectations";
 import { LEVEL_EXPECTATIONS } from "@/lib/rubric/level-expectations";
 
 // ---------------------------------------------------------------------------
@@ -78,14 +81,54 @@ interface SimulationCandidatesClientV3Props {
 type ExpectationStatus = "super_exceeds" | "exceeds" | "meets" | "below";
 
 const ALL_DIMENSIONS = [
-  { key: "COMMUNICATION", abbr: "Comm", full: "Communication", desc: "Clarity, listening, and ability to explain and defend decisions" },
-  { key: "PROBLEM_SOLVING", abbr: "Problem", full: "Problem Solving", desc: "How they structure problems, identify root causes, and design solutions" },
-  { key: "TECHNICAL_KNOWLEDGE", abbr: "Tech", full: "Technical Knowledge", desc: "Quality, correctness, and efficiency of code produced" },
-  { key: "COLLABORATION", abbr: "Collab", full: "Collaboration", desc: "How they respond to feedback, ask for help, and interact with teammates" },
-  { key: "ADAPTABILITY", abbr: "Adapt", full: "Adaptability", desc: "Speed of adapting to new information, tools, or feedback" },
-  { key: "LEADERSHIP", abbr: "Lead", full: "Leadership", desc: "Initiative, ownership, and ability to drive decisions forward" },
-  { key: "CREATIVITY", abbr: "Creative", full: "Creativity", desc: "Use of AI tools, novel approaches, and resourcefulness" },
-  { key: "TIME_MANAGEMENT", abbr: "Time", full: "Time Management", desc: "How they prioritize, sequence work, and manage their time" },
+  {
+    key: "COMMUNICATION",
+    abbr: "Comm",
+    full: "Communication",
+    desc: "Clarity, listening, and ability to explain and defend decisions",
+  },
+  {
+    key: "PROBLEM_SOLVING",
+    abbr: "Problem",
+    full: "Problem Solving",
+    desc: "How they structure problems, identify root causes, and design solutions",
+  },
+  {
+    key: "TECHNICAL_KNOWLEDGE",
+    abbr: "Tech",
+    full: "Technical Knowledge",
+    desc: "Quality, correctness, and efficiency of code produced",
+  },
+  {
+    key: "COLLABORATION",
+    abbr: "Collab",
+    full: "Collaboration",
+    desc: "How they respond to feedback, ask for help, and interact with teammates",
+  },
+  {
+    key: "ADAPTABILITY",
+    abbr: "Adapt",
+    full: "Adaptability",
+    desc: "Speed of adapting to new information, tools, or feedback",
+  },
+  {
+    key: "LEADERSHIP",
+    abbr: "Lead",
+    full: "Leadership",
+    desc: "Initiative, ownership, and ability to drive decisions forward",
+  },
+  {
+    key: "CREATIVITY",
+    abbr: "Creative",
+    full: "Creativity",
+    desc: "Use of AI tools, novel approaches, and resourcefulness",
+  },
+  {
+    key: "TIME_MANAGEMENT",
+    abbr: "Time",
+    full: "Time Management",
+    desc: "How they prioritize, sequence work, and manage their time",
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -107,7 +150,9 @@ function getDimStatus(score: number, expectedScore: number): ExpectationStatus {
   return "below";
 }
 
-function getOverallFit(level: RelativeStrength | null): ExpectationStatus | null {
+function getOverallFit(
+  level: RelativeStrength | null
+): ExpectationStatus | null {
   if (!level) return null;
   if (level === "Exceptional") return "super_exceeds";
   if (level === "Strong") return "exceeds";
@@ -115,7 +160,10 @@ function getOverallFit(level: RelativeStrength | null): ExpectationStatus | null
   return "below";
 }
 
-const FIT_DISPLAY: Record<ExpectationStatus, { label: string; className: string }> = {
+const FIT_DISPLAY: Record<
+  ExpectationStatus,
+  { label: string; className: string }
+> = {
   super_exceeds: {
     label: "Exceptional",
     className: "bg-emerald-50 text-emerald-700 border border-emerald-200",
@@ -148,27 +196,27 @@ const STATUS_LABEL_MAP: Record<ExpectationStatus, string> = {
 function DimIndicator({ status }: { status: ExpectationStatus }) {
   if (status === "super_exceeds") {
     return (
-      <div className="w-[22px] h-[22px] rounded-full bg-emerald-100 flex items-center justify-center">
+      <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-emerald-100">
         <ArrowUp className="h-3 w-3 text-emerald-600" strokeWidth={2.5} />
       </div>
     );
   }
   if (status === "exceeds") {
     return (
-      <div className="w-[22px] h-[22px] rounded-full bg-blue-100 flex items-center justify-center">
+      <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-blue-100">
         <ArrowUpRight className="h-3 w-3 text-blue-600" strokeWidth={2.5} />
       </div>
     );
   }
   if (status === "meets") {
     return (
-      <div className="w-[22px] h-[22px] rounded-full bg-gray-100 flex items-center justify-center">
+      <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-gray-100">
         <Check className="h-3 w-3 text-gray-400" strokeWidth={2.5} />
       </div>
     );
   }
   return (
-    <div className="w-[22px] h-[22px] rounded-full bg-red-100 flex items-center justify-center">
+    <div className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-red-100">
       <ArrowDownRight className="h-3 w-3 text-red-500" strokeWidth={2.5} />
     </div>
   );
@@ -187,13 +235,25 @@ function ScoreBar({ score }: { score: number }) {
 
         return (
           <div key={i} className="relative h-3.5 w-3.5">
-            <Star className="absolute inset-0 h-3.5 w-3.5 text-gray-200" strokeWidth={1.5} />
+            <Star
+              className="absolute inset-0 h-3.5 w-3.5 text-gray-200"
+              strokeWidth={1.5}
+            />
             {isFilled && (
-              <Star className="absolute inset-0 h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={1.5} />
+              <Star
+                className="absolute inset-0 h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                strokeWidth={1.5}
+              />
             )}
             {isPartial && (
-              <div className="absolute inset-0 overflow-hidden" style={{ width: `${partialFill * 100}%` }}>
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={1.5} />
+              <div
+                className="absolute inset-0 overflow-hidden"
+                style={{ width: `${partialFill * 100}%` }}
+              >
+                <Star
+                  className="h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                  strokeWidth={1.5}
+                />
               </div>
             )}
           </div>
@@ -203,7 +263,12 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-function FitBadge({ fit, strengthLevel, overallScore, expectedScore }: {
+function FitBadge({
+  fit,
+  strengthLevel,
+  overallScore,
+  expectedScore,
+}: {
   fit: ExpectationStatus;
   strengthLevel: RelativeStrength | null;
   overallScore: number | null;
@@ -216,21 +281,22 @@ function FitBadge({ fit, strengthLevel, overallScore, expectedScore }: {
       <Tooltip>
         <TooltipTrigger asChild>
           <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold cursor-help ${display.className}`}
+            className={`inline-flex cursor-help items-center rounded-full px-3 py-1 text-xs font-semibold ${display.className}`}
           >
             {display.label}
           </span>
         </TooltipTrigger>
         <TooltipContent className="max-w-xs">
-          <p className="font-medium text-sm">{STATUS_LABEL_MAP[fit]}</p>
+          <p className="text-sm font-medium">{STATUS_LABEL_MAP[fit]}</p>
           {strengthLevel && (
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="mt-0.5 text-xs text-gray-400">
               Original assessment: {strengthLevel}
             </p>
           )}
           {overallScore !== null && (
             <p className="text-xs text-gray-400">
-              Score: {overallScore.toFixed(1)} / 4 (expected: {expectedScore.toFixed(1)})
+              Score: {overallScore.toFixed(1)} / 4 (expected:{" "}
+              {expectedScore.toFixed(1)})
             </p>
           )}
         </TooltipContent>
@@ -246,7 +312,12 @@ function FitBadge({ fit, strengthLevel, overallScore, expectedScore }: {
 type SortOption = "fit" | "recent" | "name";
 type StatusFilter = "all" | "COMPLETED" | "WORKING" | "WELCOME";
 type FitFilter = "all" | "exceeds" | "meets" | "below";
-type ExtraColumn = "percentile" | "summary" | "confidence" | "date" | "flags_detail";
+type ExtraColumn =
+  | "percentile"
+  | "summary"
+  | "confidence"
+  | "date"
+  | "flags_detail";
 
 const EXTRA_COLUMNS: { key: ExtraColumn; label: string }[] = [
   { key: "percentile", label: "Percentile" },
@@ -297,7 +368,8 @@ export function SimulationCandidatesClientV3({
     const selectedIdsParam = searchParams.get("selectedIds");
     if (compareModeParam === "true") {
       setCompareMode(true);
-      if (selectedIdsParam) setSelectedIds(new Set(selectedIdsParam.split(",")));
+      if (selectedIdsParam)
+        setSelectedIds(new Set(selectedIdsParam.split(",")));
     }
   }, [searchParams]);
 
@@ -314,7 +386,9 @@ export function SimulationCandidatesClientV3({
       params.delete("compareMode");
       params.delete("selectedIds");
     }
-    const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+    const newUrl = params.toString()
+      ? `?${params.toString()}`
+      : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
   }, [compareMode, selectedIds, searchParams]);
 
@@ -328,7 +402,9 @@ export function SimulationCandidatesClientV3({
 
   const handleRowClick = (assessmentId: string) => {
     if (compareMode) return;
-    router.push(`/recruiter/assessments/${simulationId}/compare?ids=${assessmentId}`);
+    router.push(
+      `/recruiter/assessments/${simulationId}/compare?ids=${assessmentId}`
+    );
   };
 
   const toggleCompareMode = () => {
@@ -380,11 +456,13 @@ export function SimulationCandidatesClientV3({
 
   const filteredAndSortedCandidates = useMemo(() => {
     let filtered = [...candidates];
-    if (statusFilter !== "all") filtered = filtered.filter((c) => c.status === statusFilter);
+    if (statusFilter !== "all")
+      filtered = filtered.filter((c) => c.status === statusFilter);
     if (fitFilter !== "all") {
       filtered = filtered.filter((c) => {
         const fit = getOverallFit(c.strengthLevel);
-        if (fitFilter === "exceeds") return fit === "exceeds" || fit === "super_exceeds";
+        if (fitFilter === "exceeds")
+          return fit === "exceeds" || fit === "super_exceeds";
         return fit === fitFilter;
       });
     }
@@ -402,7 +480,9 @@ export function SimulationCandidatesClientV3({
         const bDate = b.completedAt ? new Date(b.completedAt).getTime() : 0;
         return bDate - aDate;
       } else {
-        return (a.name?.toLowerCase() || "").localeCompare(b.name?.toLowerCase() || "");
+        return (a.name?.toLowerCase() || "").localeCompare(
+          b.name?.toLowerCase() || ""
+        );
       }
     });
 
@@ -416,7 +496,8 @@ export function SimulationCandidatesClientV3({
         Name: c.name ?? "Anonymous",
         Email: c.email ?? "",
         Status: c.status,
-        Score: c.overallScore !== null ? Math.round(c.overallScore * 10) / 10 : null,
+        Score:
+          c.overallScore !== null ? Math.round(c.overallScore * 10) / 10 : null,
         Fit: fit ? STATUS_LABEL_MAP[fit] : "",
       };
 
@@ -435,7 +516,11 @@ export function SimulationCandidatesClientV3({
       row["Summary"] = c.summary ?? "";
       row["Confidence"] = c.evaluationConfidence ?? "";
       row["Completed Date"] = c.completedAt
-        ? new Date(c.completedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+        ? new Date(c.completedAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
         : "";
       row["Flag Details"] = c.redFlags.join("; ");
 
@@ -450,7 +535,8 @@ export function SimulationCandidatesClientV3({
   };
 
   const activeFilters = useMemo(() => {
-    const filters: Array<{ key: string; label: string; clear: () => void }> = [];
+    const filters: Array<{ key: string; label: string; clear: () => void }> =
+      [];
     if (statusFilter !== "all") {
       filters.push({
         key: "status",
@@ -468,35 +554,41 @@ export function SimulationCandidatesClientV3({
     return filters;
   }, [statusFilter, fitFilter]);
 
-  const totalColumns = (compareMode ? 1 : 0) + 5 + activeDimensions.length + extraColumns.size;
+  const totalColumns =
+    (compareMode ? 1 : 0) + 5 + activeDimensions.length + extraColumns.size;
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6">
         <Link
           href="/recruiter/assessments"
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 mb-2 transition-colors"
+          className="mb-2 inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-900"
         >
-          <ChevronLeft className="h-4 w-4 mr-1" />
+          <ChevronLeft className="mr-1 h-4 w-4" />
           All Assessments
         </Link>
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-gray-900">{simulationName}</h1>
-              <Badge variant="outline" className="text-xs font-medium text-gray-500">
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {simulationName}
+              </h1>
+              <Badge
+                variant="outline"
+                className="text-xs font-medium text-gray-500"
+              >
                 {levelInfo.label}
               </Badge>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
-              {filteredAndSortedCandidates.length} of {candidates.length} candidate{candidates.length !== 1 ? "s" : ""}
+            <p className="mt-1 text-sm text-gray-500">
+              {filteredAndSortedCandidates.length} of {candidates.length}{" "}
+              candidate{candidates.length !== 1 ? "s" : ""}
               {" · "}
               <span className="text-gray-400">
                 {archetypeName
                   ? `Evaluated against ${archetypeName} expectations for ${levelInfo.yearsRange} experience`
-                  : `Evaluated against ${levelInfo.label.toLowerCase()} expectations (${levelInfo.yearsRange})`
-                }
+                  : `Evaluated against ${levelInfo.label.toLowerCase()} expectations (${levelInfo.yearsRange})`}
               </span>
             </p>
           </div>
@@ -505,7 +597,7 @@ export function SimulationCandidatesClientV3({
               variant="outline"
               size="sm"
               onClick={handleCopyLink}
-              className={`rounded-lg transition-all ${copied ? "bg-blue-50 border-blue-200 text-blue-700" : ""}`}
+              className={`rounded-lg transition-all ${copied ? "border-blue-200 bg-blue-50 text-blue-700" : ""}`}
             >
               {copied ? (
                 <>
@@ -529,20 +621,20 @@ export function SimulationCandidatesClientV3({
                 <Settings2 className="mr-1.5 h-3.5 w-3.5" />
                 Columns
                 {extraColumns.size > 0 && (
-                  <span className="ml-1 text-[10px] bg-blue-100 text-blue-700 rounded-full px-1.5 py-0">
+                  <span className="ml-1 rounded-full bg-blue-100 px-1.5 py-0 text-[10px] text-blue-700">
                     {extraColumns.size}
                   </span>
                 )}
               </Button>
               {showColumnConfig && (
-                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg p-2 z-50 w-48 animate-fade-in">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide px-2 py-1">
+                <div className="absolute right-0 top-full z-50 mt-1 w-48 animate-fade-in rounded-xl border border-gray-200 bg-white p-2 shadow-lg">
+                  <p className="px-2 py-1 text-xs font-medium uppercase tracking-wide text-gray-500">
                     Extra columns
                   </p>
                   {EXTRA_COLUMNS.map((col) => (
                     <label
                       key={col.key}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer text-sm text-gray-700 transition-colors"
+                      className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
                     >
                       <Checkbox
                         checked={extraColumns.has(col.key)}
@@ -578,11 +670,16 @@ export function SimulationCandidatesClientV3({
 
       {/* Filters */}
       <div className="mb-4 space-y-2">
-        <div className="flex flex-wrap gap-3 items-center">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Sort</label>
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-              <SelectTrigger className="w-[140px] h-8 text-sm rounded-lg">
+            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              Sort
+            </label>
+            <Select
+              value={sortBy}
+              onValueChange={(v) => setSortBy(v as SortOption)}
+            >
+              <SelectTrigger className="h-8 w-[140px] rounded-lg text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -594,9 +691,14 @@ export function SimulationCandidatesClientV3({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</label>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-              <SelectTrigger className="w-[120px] h-8 text-sm rounded-lg">
+            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              Status
+            </label>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+            >
+              <SelectTrigger className="h-8 w-[120px] rounded-lg text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -609,9 +711,14 @@ export function SimulationCandidatesClientV3({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Fit</label>
-            <Select value={fitFilter} onValueChange={(v) => setFitFilter(v as FitFilter)}>
-              <SelectTrigger className="w-[130px] h-8 text-sm rounded-lg">
+            <label className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              Fit
+            </label>
+            <Select
+              value={fitFilter}
+              onValueChange={(v) => setFitFilter(v as FitFilter)}
+            >
+              <SelectTrigger className="h-8 w-[130px] rounded-lg text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -625,12 +732,12 @@ export function SimulationCandidatesClientV3({
         </div>
 
         {activeFilters.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 items-center">
+          <div className="flex flex-wrap items-center gap-1.5">
             {activeFilters.map((filter) => (
               <Badge
                 key={filter.key}
                 variant="secondary"
-                className="gap-1 cursor-pointer hover:bg-gray-200 text-xs rounded-full transition-colors"
+                className="cursor-pointer gap-1 rounded-full text-xs transition-colors hover:bg-gray-200"
                 onClick={filter.clear}
               >
                 {filter.label}
@@ -642,28 +749,37 @@ export function SimulationCandidatesClientV3({
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-5 mb-3 px-1">
+      <div className="mb-3 flex items-center gap-5 px-1">
         <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-          <div className="w-[18px] h-[18px] rounded-full bg-emerald-100 flex items-center justify-center">
-            <ArrowUp className="h-2.5 w-2.5 text-emerald-600" strokeWidth={2.5} />
+          <div className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-emerald-100">
+            <ArrowUp
+              className="h-2.5 w-2.5 text-emerald-600"
+              strokeWidth={2.5}
+            />
           </div>
           <span>Significantly exceeds</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-          <div className="w-[18px] h-[18px] rounded-full bg-blue-100 flex items-center justify-center">
-            <ArrowUpRight className="h-2.5 w-2.5 text-blue-600" strokeWidth={2.5} />
+          <div className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-blue-100">
+            <ArrowUpRight
+              className="h-2.5 w-2.5 text-blue-600"
+              strokeWidth={2.5}
+            />
           </div>
           <span>Exceeds</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-          <div className="w-[18px] h-[18px] rounded-full bg-gray-100 flex items-center justify-center">
+          <div className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-gray-100">
             <Check className="h-2.5 w-2.5 text-gray-400" strokeWidth={2.5} />
           </div>
           <span>Meets</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-gray-500">
-          <div className="w-[18px] h-[18px] rounded-full bg-red-100 flex items-center justify-center">
-            <ArrowDownRight className="h-2.5 w-2.5 text-red-500" strokeWidth={2.5} />
+          <div className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-red-100">
+            <ArrowDownRight
+              className="h-2.5 w-2.5 text-red-500"
+              strokeWidth={2.5}
+            />
           </div>
           <span>Below</span>
         </div>
@@ -673,8 +789,8 @@ export function SimulationCandidatesClientV3({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-x-auto">
-        <table className="w-full caption-bottom text-sm table-fixed">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+        <table className="w-full table-fixed caption-bottom text-sm">
           <colgroup>
             {compareMode && <col style={{ width: 40 }} />}
             <col style={{ width: 180 }} />
@@ -692,25 +808,27 @@ export function SimulationCandidatesClientV3({
             {extraColumns.has("flags_detail") && <col style={{ width: 200 }} />}
           </colgroup>
           <TableHeader>
-            <TableRow className="bg-gray-50/60 border-b">
+            <TableRow className="border-b bg-gray-50/60">
               {compareMode && <TableHead className="w-[40px]" />}
-              <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <TableHead className="whitespace-nowrap text-xs font-medium uppercase tracking-wide text-gray-500">
                 Candidate
               </TableHead>
-              <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <TableHead className="whitespace-nowrap text-xs font-medium uppercase tracking-wide text-gray-500">
                 Score
               </TableHead>
-              <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <TableHead className="whitespace-nowrap text-xs font-medium uppercase tracking-wide text-gray-500">
                 Fit
               </TableHead>
-              <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide text-center">
+              <TableHead className="whitespace-nowrap text-center text-xs font-medium uppercase tracking-wide text-gray-500">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="cursor-help">Dims</span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="text-xs">Dimension breakdown: exceeds / meets / below</p>
+                      <p className="text-xs">
+                        Dimension breakdown: exceeds / meets / below
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -718,12 +836,14 @@ export function SimulationCandidatesClientV3({
               {activeDimensions.map((dim) => (
                 <TableHead
                   key={dim.key}
-                  className="text-center whitespace-nowrap px-1 text-xs font-medium text-gray-500 uppercase tracking-wide"
+                  className="whitespace-nowrap px-1 text-center text-xs font-medium uppercase tracking-wide text-gray-500"
                 >
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="cursor-help text-[10px]">{dim.abbr}</span>
+                        <span className="cursor-help text-[10px]">
+                          {dim.abbr}
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
                         <p className="font-medium">{dim.full}</p>
@@ -733,31 +853,31 @@ export function SimulationCandidatesClientV3({
                   </TooltipProvider>
                 </TableHead>
               ))}
-              <TableHead className="whitespace-nowrap text-right text-xs font-medium text-gray-500 uppercase tracking-wide pr-6">
+              <TableHead className="whitespace-nowrap pr-6 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
                 Flags
               </TableHead>
               {extraColumns.has("percentile") && (
-                <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <TableHead className="whitespace-nowrap text-xs font-medium uppercase tracking-wide text-gray-500">
                   Percentile
                 </TableHead>
               )}
               {extraColumns.has("confidence") && (
-                <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <TableHead className="whitespace-nowrap text-xs font-medium uppercase tracking-wide text-gray-500">
                   Confidence
                 </TableHead>
               )}
               {extraColumns.has("date") && (
-                <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <TableHead className="whitespace-nowrap text-xs font-medium uppercase tracking-wide text-gray-500">
                   Date
                 </TableHead>
               )}
               {extraColumns.has("summary") && (
-                <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[200px]">
+                <TableHead className="min-w-[200px] whitespace-nowrap text-xs font-medium uppercase tracking-wide text-gray-500">
                   Summary
                 </TableHead>
               )}
               {extraColumns.has("flags_detail") && (
-                <TableHead className="whitespace-nowrap text-xs font-medium text-gray-500 uppercase tracking-wide min-w-[200px]">
+                <TableHead className="min-w-[200px] whitespace-nowrap text-xs font-medium uppercase tracking-wide text-gray-500">
                   Flag Details
                 </TableHead>
               )}
@@ -766,7 +886,10 @@ export function SimulationCandidatesClientV3({
           <TableBody>
             {filteredAndSortedCandidates.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={totalColumns} className="text-center text-gray-500 py-12">
+                <TableCell
+                  colSpan={totalColumns}
+                  className="py-12 text-center text-gray-500"
+                >
                   {candidates.length === 0
                     ? "No candidates yet. Share the invite link to get started!"
                     : "No candidates match the selected filters"}
@@ -774,24 +897,37 @@ export function SimulationCandidatesClientV3({
               </TableRow>
             ) : (
               filteredAndSortedCandidates.map((candidate) => {
-                const canSelect = candidate.status === "COMPLETED" && candidate.overallScore !== null;
+                const canSelect =
+                  candidate.status === "COMPLETED" &&
+                  candidate.overallScore !== null;
                 const isSelected = selectedIds.has(candidate.assessmentId);
                 const isIncomplete = candidate.status !== "COMPLETED";
                 const overallFit = getOverallFit(candidate.strengthLevel);
 
                 // Compute dimension summary for row tooltip
-                const dimSummary = activeDimensions.map((dim) => {
-                  const score = candidate.dimensionScores[dim.key];
-                  if (score === undefined) return null;
-                  return {
-                    name: dim.full,
-                    status: getDimStatus(score, getExpectedForDim(dim.key)),
-                  };
-                }).filter(Boolean) as { name: string; status: ExpectationStatus }[];
+                const dimSummary = activeDimensions
+                  .map((dim) => {
+                    const score = candidate.dimensionScores[dim.key];
+                    if (score === undefined) return null;
+                    return {
+                      name: dim.full,
+                      status: getDimStatus(score, getExpectedForDim(dim.key)),
+                    };
+                  })
+                  .filter(Boolean) as {
+                  name: string;
+                  status: ExpectationStatus;
+                }[];
 
-                const exceedsCount = dimSummary.filter((d) => d.status === "exceeds" || d.status === "super_exceeds").length;
-                const meetsCount = dimSummary.filter((d) => d.status === "meets").length;
-                const belowCount = dimSummary.filter((d) => d.status === "below").length;
+                const exceedsCount = dimSummary.filter(
+                  (d) => d.status === "exceeds" || d.status === "super_exceeds"
+                ).length;
+                const meetsCount = dimSummary.filter(
+                  (d) => d.status === "meets"
+                ).length;
+                const belowCount = dimSummary.filter(
+                  (d) => d.status === "below"
+                ).length;
 
                 return (
                   <TableRow
@@ -806,11 +942,16 @@ export function SimulationCandidatesClientV3({
                     }`}
                   >
                     {compareMode && (
-                      <TableCell className="py-2.5" onClick={(e) => e.stopPropagation()}>
+                      <TableCell
+                        className="py-2.5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {canSelect ? (
                           <Checkbox
                             checked={isSelected}
-                            onCheckedChange={() => toggleSelection(candidate.assessmentId)}
+                            onCheckedChange={() =>
+                              toggleSelection(candidate.assessmentId)
+                            }
                             disabled={!isSelected && selectedIds.size >= 4}
                           />
                         ) : null}
@@ -818,22 +959,26 @@ export function SimulationCandidatesClientV3({
                     )}
 
                     {/* Candidate */}
-                    <TableCell className="py-2.5 overflow-hidden">
+                    <TableCell className="overflow-hidden py-2.5">
                       <div className="flex items-center gap-2.5">
-                        <Avatar className="h-8 w-8 bg-gray-100 text-gray-600 flex items-center justify-center font-medium text-xs shrink-0">
+                        <Avatar className="flex h-8 w-8 shrink-0 items-center justify-center bg-gray-100 text-xs font-medium text-gray-600">
                           {getInitials(candidate.name)}
                         </Avatar>
                         <div className="min-w-0 overflow-hidden">
-                          <span className="font-medium text-gray-900 text-sm truncate block">
+                          <span className="block truncate text-sm font-medium text-gray-900">
                             {candidate.name ?? "Anonymous"}
                           </span>
                           <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                            <span className="truncate max-w-[140px]">{candidate.email}</span>
+                            <span className="max-w-[140px] truncate">
+                              {candidate.email}
+                            </span>
                             {isIncomplete && (
                               <>
                                 <span className="text-gray-300">&middot;</span>
                                 <span className="text-gray-400">
-                                  {candidate.status === "WORKING" ? "Working" : "Invited"}
+                                  {candidate.status === "WORKING"
+                                    ? "Working"
+                                    : "Invited"}
                                 </span>
                               </>
                             )}
@@ -847,7 +992,7 @@ export function SimulationCandidatesClientV3({
                       {candidate.overallScore !== null ? (
                         <div className="flex items-center gap-1.5">
                           <ScoreBar score={candidate.overallScore} />
-                          <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                          <span className="text-sm font-semibold tabular-nums text-gray-900">
                             {candidate.overallScore.toFixed(1)}
                           </span>
                         </div>
@@ -875,13 +1020,19 @@ export function SimulationCandidatesClientV3({
                       {dimSummary.length > 0 ? (
                         <div className="flex items-center justify-center gap-1.5 text-xs">
                           {exceedsCount > 0 && (
-                            <span className="text-blue-600 font-medium">{exceedsCount}&#8593;</span>
+                            <span className="font-medium text-blue-600">
+                              {exceedsCount}&#8593;
+                            </span>
                           )}
                           {meetsCount > 0 && (
-                            <span className="text-gray-400">{meetsCount}&#8594;</span>
+                            <span className="text-gray-400">
+                              {meetsCount}&#8594;
+                            </span>
                           )}
                           {belowCount > 0 && (
-                            <span className="text-red-500 font-medium">{belowCount}&#8595;</span>
+                            <span className="font-medium text-red-500">
+                              {belowCount}&#8595;
+                            </span>
                           )}
                         </div>
                       ) : (
@@ -894,59 +1045,93 @@ export function SimulationCandidatesClientV3({
                       const score = candidate.dimensionScores[dim.key];
                       const dimExpected = getExpectedForDim(dim.key);
                       return (
-                        <TableCell key={dim.key} className="text-center py-2.5 px-1">
+                        <TableCell
+                          key={dim.key}
+                          className="px-1 py-2.5 text-center"
+                        >
                           {score !== undefined ? (
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <div className="flex items-center justify-center cursor-help">
-                                    <DimIndicator status={getDimStatus(score, dimExpected)} />
+                                  <div className="flex cursor-help items-center justify-center">
+                                    <DimIndicator
+                                      status={getDimStatus(score, dimExpected)}
+                                    />
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent className="max-w-xs">
-                                  <p className="font-medium text-sm">{dim.full}</p>
-                                  <p className="text-xs text-gray-400">{dim.desc}</p>
-                                  <div className="flex items-center gap-1.5 mt-1.5 text-xs">
-                                    <DimIndicator status={getDimStatus(score, dimExpected)} />
+                                  <p className="text-sm font-medium">
+                                    {dim.full}
+                                  </p>
+                                  <p className="text-xs text-gray-400">
+                                    {dim.desc}
+                                  </p>
+                                  <div className="mt-1.5 flex items-center gap-1.5 text-xs">
+                                    <DimIndicator
+                                      status={getDimStatus(score, dimExpected)}
+                                    />
                                     <span className="font-medium">
-                                      {STATUS_LABEL_MAP[getDimStatus(score, dimExpected)]}
+                                      {
+                                        STATUS_LABEL_MAP[
+                                          getDimStatus(score, dimExpected)
+                                        ]
+                                      }
                                     </span>
                                   </div>
-                                  <p className="text-[11px] text-gray-400 mt-0.5">
-                                    Score: {score.toFixed(1)} / 4 · Expected: {dimExpected.toFixed(1)} for {levelInfo.label.toLowerCase()}
+                                  <p className="mt-0.5 text-[11px] text-gray-400">
+                                    Score: {score.toFixed(1)} / 4 · Expected:{" "}
+                                    {dimExpected.toFixed(1)} for{" "}
+                                    {levelInfo.label.toLowerCase()}
                                   </p>
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                           ) : (
-                            <span className="text-gray-300 text-xs">&mdash;</span>
+                            <span className="text-xs text-gray-300">
+                              &mdash;
+                            </span>
                           )}
                         </TableCell>
                       );
                     })}
 
                     {/* Flags */}
-                    <TableCell className="text-right py-2.5 pr-6">
+                    <TableCell className="py-2.5 pr-6 text-right">
                       {candidate.redFlagCount > 0 ? (
                         <TooltipProvider>
                           <Tooltip delayDuration={200}>
                             <TooltipTrigger asChild>
-                              <span className="inline-flex items-center gap-0.5 text-xs text-amber-600 cursor-help">
+                              <span className="inline-flex cursor-help items-center gap-0.5 text-xs text-amber-600">
                                 <AlertTriangle className="h-3 w-3" />
                                 {candidate.redFlagCount}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent side="left" align="start" className="max-w-xs">
-                              <p className="font-medium text-xs mb-1">Flags ({candidate.redFlagCount})</p>
-                              <ul className="text-xs space-y-0.5">
-                                {candidate.redFlags.slice(0, 8).map((flag, i) => (
-                                  <li key={i} className="flex items-start gap-1">
-                                    <span className="text-amber-500 mt-0.5 shrink-0">·</span>
-                                    <span>{flag}</span>
-                                  </li>
-                                ))}
+                            <TooltipContent
+                              side="left"
+                              align="start"
+                              className="max-w-xs"
+                            >
+                              <p className="mb-1 text-xs font-medium">
+                                Flags ({candidate.redFlagCount})
+                              </p>
+                              <ul className="space-y-0.5 text-xs">
+                                {candidate.redFlags
+                                  .slice(0, 8)
+                                  .map((flag, i) => (
+                                    <li
+                                      key={i}
+                                      className="flex items-start gap-1"
+                                    >
+                                      <span className="mt-0.5 shrink-0 text-amber-500">
+                                        ·
+                                      </span>
+                                      <span>{flag}</span>
+                                    </li>
+                                  ))}
                                 {candidate.redFlags.length > 8 && (
-                                  <li className="text-gray-400">+{candidate.redFlags.length - 8} more</li>
+                                  <li className="text-gray-400">
+                                    +{candidate.redFlags.length - 8} more
+                                  </li>
                                 )}
                               </ul>
                             </TooltipContent>
@@ -958,33 +1143,50 @@ export function SimulationCandidatesClientV3({
                     {/* Extra columns */}
                     {extraColumns.has("percentile") && (
                       <TableCell className="py-2.5 text-xs text-gray-600">
-                        {candidate.percentile !== null ? `Top ${candidate.percentile}%` : <span className="text-gray-300">&mdash;</span>}
+                        {candidate.percentile !== null ? (
+                          `Top ${candidate.percentile}%`
+                        ) : (
+                          <span className="text-gray-300">&mdash;</span>
+                        )}
                       </TableCell>
                     )}
                     {extraColumns.has("confidence") && (
                       <TableCell className="py-2.5 text-xs text-gray-600">
-                        {candidate.evaluationConfidence ?? <span className="text-gray-300">&mdash;</span>}
+                        {candidate.evaluationConfidence ?? (
+                          <span className="text-gray-300">&mdash;</span>
+                        )}
                       </TableCell>
                     )}
                     {extraColumns.has("date") && (
-                      <TableCell className="py-2.5 text-xs text-gray-500 whitespace-nowrap">
-                        {candidate.completedAt
-                          ? new Date(candidate.completedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                          : <span className="text-gray-300">&mdash;</span>
-                        }
+                      <TableCell className="whitespace-nowrap py-2.5 text-xs text-gray-500">
+                        {candidate.completedAt ? (
+                          new Date(candidate.completedAt).toLocaleDateString(
+                            "en-US",
+                            { month: "short", day: "numeric" }
+                          )
+                        ) : (
+                          <span className="text-gray-300">&mdash;</span>
+                        )}
                       </TableCell>
                     )}
                     {extraColumns.has("summary") && (
-                      <TableCell className="py-2.5 text-xs text-gray-600 max-w-xs">
-                        <span className="line-clamp-2">{candidate.summary ?? <span className="text-gray-300">&mdash;</span>}</span>
+                      <TableCell className="max-w-xs py-2.5 text-xs text-gray-600">
+                        <span className="line-clamp-2">
+                          {candidate.summary ?? (
+                            <span className="text-gray-300">&mdash;</span>
+                          )}
+                        </span>
                       </TableCell>
                     )}
                     {extraColumns.has("flags_detail") && (
-                      <TableCell className="py-2.5 text-xs text-gray-600 max-w-xs">
-                        {candidate.redFlags.length > 0
-                          ? <span className="line-clamp-2">{candidate.redFlags.join("; ")}</span>
-                          : <span className="text-gray-300">&mdash;</span>
-                        }
+                      <TableCell className="max-w-xs py-2.5 text-xs text-gray-600">
+                        {candidate.redFlags.length > 0 ? (
+                          <span className="line-clamp-2">
+                            {candidate.redFlags.join("; ")}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">&mdash;</span>
+                        )}
                       </TableCell>
                     )}
                   </TableRow>
@@ -997,7 +1199,7 @@ export function SimulationCandidatesClientV3({
 
       {/* Floating Action Bar (compare mode) */}
       {compareMode && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg py-3 px-6 z-50">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white px-6 py-3 shadow-lg">
           <div className="container mx-auto flex items-center justify-between">
             <p className="text-sm text-gray-600">
               {selectedIds.size === 0 && "Select 2-4 candidates to compare"}
@@ -1007,14 +1209,19 @@ export function SimulationCandidatesClientV3({
               )}
             </p>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={toggleCompareMode} className="rounded-lg">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleCompareMode}
+                className="rounded-lg"
+              >
                 Cancel
               </Button>
               <Button
                 size="sm"
                 onClick={handleCompare}
                 disabled={!canCompare}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 rounded-lg"
+                className="rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
               >
                 Compare {selectedIds.size >= 2 ? `(${selectedIds.size})` : ""}
               </Button>

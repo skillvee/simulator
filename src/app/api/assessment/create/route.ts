@@ -35,7 +35,10 @@ export async function POST(request: Request) {
       );
     }
   } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -51,7 +54,10 @@ export async function POST(request: Request) {
     });
 
     if (!scenario) {
-      return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Scenario not found" },
+        { status: 404 }
+      );
     }
 
     // Only allow creating assessments for published scenarios

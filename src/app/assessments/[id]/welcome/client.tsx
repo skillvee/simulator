@@ -32,7 +32,7 @@ interface WelcomePageClientProps {
 
 export function WelcomePageClient({
   assessmentId,
-  scenario,
+  scenario: _scenario,
 }: WelcomePageClientProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -45,16 +45,16 @@ export function WelcomePageClient({
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-[#020617] text-white font-sans overflow-hidden">
+    <div className="flex min-h-screen flex-col overflow-hidden bg-[#020617] font-sans text-white lg:flex-row">
       {/* Left Panel - Dynamic Narrative */}
-      <div className="lg:w-3/5 p-8 lg:p-24 flex flex-col justify-between relative min-h-[50vh] lg:min-h-screen">
+      <div className="relative flex min-h-[50vh] flex-col justify-between p-8 lg:min-h-screen lg:w-3/5 lg:p-24">
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[-20%] left-[-20%] w-full h-full bg-primary/20 rounded-full blur-[150px] pointer-events-none"
+          className="pointer-events-none absolute left-[-20%] top-[-20%] h-full w-full rounded-full bg-primary/20 blur-[150px]"
         />
 
         <header className="relative z-10">
@@ -79,11 +79,11 @@ export function WelcomePageClient({
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-8"
               >
-                <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
+                <h2 className="text-5xl font-black leading-[0.85] tracking-tight text-primary lg:text-[90px]">
                   NOT A<br />
                   TEST.
                 </h2>
-                <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl leading-relaxed">
+                <p className="max-w-xl text-xl font-medium leading-relaxed text-slate-400 lg:text-2xl">
                   This is a simulation of real work. You&apos;ll collaborate
                   with AI teammates, use your favorite tools, and solve actual
                   problems.
@@ -99,12 +99,12 @@ export function WelcomePageClient({
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-8"
               >
-                <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
+                <h2 className="text-5xl font-black leading-[0.85] tracking-tight text-primary lg:text-[90px]">
                   YOUR
                   <br />
                   SETUP.
                 </h2>
-                <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl leading-relaxed">
+                <p className="max-w-xl text-xl font-medium leading-relaxed text-slate-400 lg:text-2xl">
                   Use your own IDE, browser, terminal — everything on your
                   computer. We record your screen and assess how you actually
                   work.
@@ -120,12 +120,12 @@ export function WelcomePageClient({
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-8"
               >
-                <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
+                <h2 className="text-5xl font-black leading-[0.85] tracking-tight text-primary lg:text-[90px]">
                   READY.
                   <br />
                   GO.
                 </h2>
-                <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl">
+                <p className="max-w-xl text-xl font-medium text-slate-400 lg:text-2xl">
                   Your environment is ready. Let&apos;s begin.
                 </p>
               </motion.div>
@@ -135,22 +135,22 @@ export function WelcomePageClient({
 
         <footer className="relative z-10 flex items-center gap-8">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <Bot className="w-4 h-4 text-primary" />
+            <Bot className="h-4 w-4 text-primary" />
             AI Teammates
           </div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <AppWindow className="w-4 h-4 text-primary" />
+            <AppWindow className="h-4 w-4 text-primary" />
             Your Own Tools
           </div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <Monitor className="w-4 h-4 text-primary" />
+            <Monitor className="h-4 w-4 text-primary" />
             Screen Recorded
           </div>
         </footer>
       </div>
 
       {/* Right Panel - Instructions */}
-      <div className="lg:w-2/5 bg-white text-slate-900 p-8 lg:p-16 flex items-center justify-center min-h-[50vh] lg:min-h-screen">
+      <div className="flex min-h-[50vh] items-center justify-center bg-white p-8 text-slate-900 lg:min-h-screen lg:w-2/5 lg:p-16">
         <div className="w-full max-w-sm space-y-10">
           {/* Progress Bar */}
           <div className="flex gap-2">
@@ -178,44 +178,40 @@ export function WelcomePageClient({
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                     Step 01
                   </h4>
-                  <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
+                  <h3 className="text-2xl font-bold tracking-tight lg:text-3xl">
                     The Experience
                   </h3>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Bot className="w-4 h-4 text-slate-500" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                      <Bot className="h-4 w-4 text-slate-500" />
                     </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
-                      Work with{" "}
-                      <strong>AI-powered teammates</strong> via chat.
+                    <p className="text-sm leading-relaxed text-slate-600">
+                      Work with <strong>AI-powered teammates</strong> via chat.
                       They&apos;ll respond just like real colleagues.
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Monitor className="w-4 h-4 text-slate-500" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                      <Monitor className="h-4 w-4 text-slate-500" />
                     </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
-                      Your{" "}
-                      <strong>
-                        entire screen will be recorded
-                      </strong>
-                      . We assess how you work, not just the end result.
+                    <p className="text-sm leading-relaxed text-slate-600">
+                      Your <strong>entire screen will be recorded</strong>. We
+                      assess how you work, not just the end result.
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Sparkles className="w-4 h-4 text-slate-500" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                      <Sparkles className="h-4 w-4 text-slate-500" />
                     </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
+                    <p className="text-sm leading-relaxed text-slate-600">
                       <strong>Use any AI tools</strong> you want. Copilot,
                       ChatGPT, Claude — whatever helps you work best.
                     </p>
                   </div>
                 </div>
-                <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
+                <div className="rounded-xl border border-slate-200 bg-slate-100 p-4">
                   <p className="text-sm text-slate-600">
                     <strong className="text-slate-700">Tip:</strong> Don&apos;t
                     hesitate to reach out to your teammates for clarification.
@@ -224,10 +220,10 @@ export function WelcomePageClient({
                 </div>
                 <Button
                   onClick={() => setStep(2)}
-                  className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
+                  className="group h-14 w-full rounded-full bg-slate-900 text-lg font-bold text-white hover:bg-slate-800"
                 >
                   Continue
-                  <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </motion.div>
             )}
@@ -244,25 +240,25 @@ export function WelcomePageClient({
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                     Step 02
                   </h4>
-                  <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
+                  <h3 className="text-2xl font-bold tracking-tight lg:text-3xl">
                     Your Workspace, Your Rules
                   </h3>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <AppWindow className="w-4 h-4 text-slate-500" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                      <AppWindow className="h-4 w-4 text-slate-500" />
                     </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
+                    <p className="text-sm leading-relaxed text-slate-600">
                       <strong>Work on your own computer.</strong> Use your IDE,
                       terminal, browser, repos — any tool you normally use.
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ExternalLink className="w-4 h-4 text-slate-500" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                      <ExternalLink className="h-4 w-4 text-slate-500" />
                     </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
+                    <p className="text-sm leading-relaxed text-slate-600">
                       <strong>
                         You&apos;re expected to work outside SkillVee.
                       </strong>{" "}
@@ -271,19 +267,19 @@ export function WelcomePageClient({
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Monitor className="w-4 h-4 text-slate-500" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                      <Monitor className="h-4 w-4 text-slate-500" />
                     </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
+                    <p className="text-sm leading-relaxed text-slate-600">
                       <strong>We record your screen the whole time</strong> —
                       everything you do is part of your assessment.
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <MessageSquare className="w-4 h-4 text-slate-500" />
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                      <MessageSquare className="h-4 w-4 text-slate-500" />
                     </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
+                    <p className="text-sm leading-relaxed text-slate-600">
                       <strong>Come back to SkillVee to chat</strong> with your
                       manager and teammates whenever you need to.
                     </p>
@@ -292,17 +288,17 @@ export function WelcomePageClient({
 
                 <Button
                   onClick={() => setStep(3)}
-                  className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
+                  className="group h-14 w-full rounded-full bg-slate-900 text-lg font-bold text-white hover:bg-slate-800"
                 >
                   Continue
-                  <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
 
                 <button
                   onClick={() => setStep(1)}
-                  className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                  className="mx-auto flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="h-4 w-4" />
                   Back
                 </button>
               </motion.div>
@@ -319,11 +315,11 @@ export function WelcomePageClient({
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                     Step 03
                   </h4>
-                  <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
+                  <h3 className="text-2xl font-bold tracking-tight lg:text-3xl">
                     Launch Simulation
                   </h3>
                 </div>
-                <p className="text-slate-500 leading-relaxed font-medium">
+                <p className="font-medium leading-relaxed text-slate-500">
                   You&apos;ll receive a task from your manager. The context is{" "}
                   <strong className="text-slate-900">
                     intentionally incomplete
@@ -332,19 +328,19 @@ export function WelcomePageClient({
                   gather requirements.
                 </p>
 
-                <p className="text-xs text-center text-slate-500">
-                  By continuing, you agree to screen and webcam recording
-                  during this assessment.
+                <p className="text-center text-xs text-slate-500">
+                  By continuing, you agree to screen and webcam recording during
+                  this assessment.
                 </p>
 
                 <Button
                   onClick={handleStart}
                   disabled={isLaunching}
-                  className="w-full h-14 rounded-full bg-primary text-white font-bold text-lg shadow-xl shadow-primary/20 hover:bg-primary/90 disabled:opacity-90"
+                  className="h-14 w-full rounded-full bg-primary text-lg font-bold text-white shadow-xl shadow-primary/20 hover:bg-primary/90 disabled:opacity-90"
                 >
                   {isLaunching ? (
                     <>
-                      <Loader2 className="mr-2 w-5 h-5 animate-spin" />
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Launching...
                     </>
                   ) : (
@@ -354,9 +350,9 @@ export function WelcomePageClient({
 
                 <button
                   onClick={() => setStep(2)}
-                  className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                  className="mx-auto flex items-center gap-1 text-sm text-slate-400 transition-colors hover:text-slate-600"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="h-4 w-4" />
                   Back
                 </button>
               </motion.div>

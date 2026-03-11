@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { formatTime, formatDimensionName } from "./helpers";
 
@@ -60,14 +65,14 @@ export function VideoModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-0">
+      <DialogContent className="max-w-4xl overflow-hidden p-0">
+        <DialogHeader className="px-6 pb-0 pt-6">
           <DialogTitle className="flex items-center gap-2">
             <span>{candidateName || "Candidate"}</span>
             {dimensionName && (
               <>
                 <span className="text-stone-400">&middot;</span>
-                <span className="text-stone-600 font-normal">
+                <span className="font-normal text-stone-600">
                   {formatDimensionName(dimensionName)}
                 </span>
               </>
@@ -77,7 +82,7 @@ export function VideoModal({
 
         <div className="p-6 pt-4">
           {!videoUrl ? (
-            <div className="bg-stone-100 rounded-lg p-12 text-center">
+            <div className="rounded-lg bg-stone-100 p-12 text-center">
               <p className="text-stone-600">No recording available</p>
             </div>
           ) : (

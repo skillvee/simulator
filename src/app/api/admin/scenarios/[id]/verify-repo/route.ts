@@ -113,7 +113,8 @@ export async function GET(request: Request, context: RouteContext) {
   if (!token) {
     return NextResponse.json({
       ...result,
-      error: "GITHUB_ORG_TOKEN is not configured. Cannot verify private repositories.",
+      error:
+        "GITHUB_ORG_TOKEN is not configured. Cannot verify private repositories.",
     });
   }
 

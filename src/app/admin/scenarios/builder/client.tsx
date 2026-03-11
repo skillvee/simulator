@@ -247,7 +247,11 @@ export function ScenarioBuilderClient() {
               Chat with AI to create your simulation
             </p>
           </div>
-          <Button variant="ghost" asChild className="ml-auto text-muted-foreground">
+          <Button
+            variant="ghost"
+            asChild
+            className="ml-auto text-muted-foreground"
+          >
             <Link href="/admin/scenarios">Cancel</Link>
           </Button>
         </header>
@@ -405,9 +409,7 @@ function TypingIndicator() {
           style={{ animationDelay: "300ms" }}
         />
       </div>
-      <span className="ml-2 text-sm text-muted-foreground">
-        thinking...
-      </span>
+      <span className="ml-2 text-sm text-muted-foreground">thinking...</span>
     </div>
   );
 }
@@ -460,9 +462,7 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
           />
           {data.techStack && data.techStack.length > 0 && (
             <div>
-              <span className="text-sm text-muted-foreground">
-                Tech Stack:
-              </span>
+              <span className="text-sm text-muted-foreground">Tech Stack:</span>
               <div className="mt-1 flex flex-wrap gap-1">
                 {data.techStack.map((tech, i) => (
                   <Badge key={i} variant="secondary" className="text-xs">
@@ -486,7 +486,7 @@ function ScenarioPreview({ data }: { data: ScenarioBuilderData }) {
               <Card key={i} className="p-3">
                 <div className="mb-2 flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                    <AvatarFallback className="bg-primary/10 text-xs text-primary">
                       {coworker.name
                         .split(" ")
                         .map((n) => n[0])
@@ -538,9 +538,7 @@ function PreviewField({
   if (!value) {
     return (
       <div className="opacity-50">
-        <span className="text-sm text-muted-foreground">
-          {label}:
-        </span>
+        <span className="text-sm text-muted-foreground">{label}:</span>
         <span className="ml-1 text-sm italic text-muted-foreground">
           Not set
         </span>

@@ -15,7 +15,7 @@ export default function PricingPage() {
 
       <main className="flex-1">
         {/* Hero Section - Dark theme matching homepage */}
-        <section className="relative pt-32 pb-20 overflow-hidden">
+        <section className="relative overflow-hidden pb-20 pt-32">
           {/* Animated background glow */}
           <motion.div
             animate={{
@@ -23,7 +23,7 @@ export default function PricingPage() {
               opacity: [0.1, 0.2, 0.1],
             }}
             transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/30 rounded-full blur-[200px] pointer-events-none"
+            className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] rounded-full bg-primary/30 blur-[200px]"
           />
           <motion.div
             animate={{
@@ -31,36 +31,39 @@ export default function PricingPage() {
               opacity: [0.08, 0.15, 0.08],
             }}
             transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[200px] pointer-events-none"
+            className="pointer-events-none absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-indigo-500/20 blur-[200px]"
           />
 
-          <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-6 text-center">
+          <div className="relative z-10 mx-auto max-w-7xl px-6 text-center sm:px-8 lg:px-6">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-slate-400 text-sm">Simple, transparent pricing</span>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                <span className="text-sm text-slate-400">
+                  Simple, transparent pricing
+                </span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-6">
+              <h1 className="mb-6 text-4xl font-black leading-tight text-white sm:text-5xl lg:text-6xl">
                 Start free.
                 <br />
                 <span className="text-primary">Scale as you grow.</span>
               </h1>
 
-              <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-                No per-assessment fees, no surprises. Upgrade when you need more capacity.
+              <p className="mx-auto max-w-2xl text-xl text-slate-400">
+                No per-assessment fees, no surprises. Upgrade when you need more
+                capacity.
               </p>
             </motion.div>
           </div>
         </section>
 
         {/* Pricing Cards Section */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
+        <section className="bg-white py-20">
+          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-6">
             <PricingContent />
 
             {/* Value Props */}
@@ -68,9 +71,9 @@ export default function PricingPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mt-20 max-w-4xl mx-auto"
+              className="mx-auto mt-20 max-w-4xl"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
                 {[
                   { stat: "$0", label: "Setup fees" },
                   { stat: "Cancel", label: "Anytime, no contracts" },
@@ -82,9 +85,11 @@ export default function PricingPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className="text-center border-t-4 border-primary pt-6"
+                    className="border-t-4 border-primary pt-6 text-center"
                   >
-                    <div className="text-3xl font-black text-slate-900 mb-2">{item.stat}</div>
+                    <div className="mb-2 text-3xl font-black text-slate-900">
+                      {item.stat}
+                    </div>
                     <p className="text-slate-600">{item.label}</p>
                   </motion.div>
                 ))}
@@ -94,18 +99,18 @@ export default function PricingPage() {
         </section>
 
         {/* FAQ Section - Matching homepage style */}
-        <section className="py-24 bg-slate-50">
-          <div className="max-w-3xl mx-auto px-6">
+        <section className="bg-slate-50 py-24">
+          <div className="mx-auto max-w-3xl px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-12"
+              className="mb-12 text-center"
             >
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
+              <p className="mb-4 text-[10px] font-black uppercase tracking-[0.3em] text-primary">
                 Common Questions
               </p>
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-900">
+              <h2 className="text-3xl font-black text-slate-900 sm:text-4xl">
                 Pricing FAQ
               </h2>
             </motion.div>
@@ -114,15 +119,18 @@ export default function PricingPage() {
               {[
                 {
                   question: "What counts as an assessment?",
-                  answer: "Each unique candidate who completes a work simulation counts as one assessment. You can send unlimited invitations."
+                  answer:
+                    "Each unique candidate who completes a work simulation counts as one assessment. You can send unlimited invitations.",
                 },
                 {
                   question: "What happens if I exceed my monthly limit?",
-                  answer: "We'll notify you when you're approaching your limit. You can upgrade anytime, or purchase additional assessments at $10 each."
+                  answer:
+                    "We'll notify you when you're approaching your limit. You can upgrade anytime, or purchase additional assessments at $10 each.",
                 },
                 {
                   question: "Do unused assessments roll over?",
-                  answer: "Monthly allocations reset each billing cycle. Annual plans get a 20% bonus and more flexibility."
+                  answer:
+                    "Monthly allocations reset each billing cycle. Annual plans get a 20% bonus and more flexibility.",
                 },
               ].map((item, index) => (
                 <motion.div
@@ -131,14 +139,16 @@ export default function PricingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white border border-slate-200 hover:border-primary/30 rounded-xl p-6 transition-all duration-300 hover:shadow-lg"
+                  className="rounded-xl border border-slate-200 bg-white p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-lg"
                 >
                   <div className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-primary font-bold text-sm">Q</span>
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <span className="text-sm font-bold text-primary">Q</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900 text-lg mb-2">{item.question}</h3>
+                      <h3 className="mb-2 text-lg font-semibold text-slate-900">
+                        {item.question}
+                      </h3>
                       <p className="text-slate-600">{item.answer}</p>
                     </div>
                   </div>
@@ -150,11 +160,11 @@ export default function PricingPage() {
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="text-center mt-8"
+              className="mt-8 text-center"
             >
               <Link
                 href="/faq"
-                className="text-primary hover:text-primary/80 font-medium hover:underline transition-colors"
+                className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
               >
                 View all questions →
               </Link>
@@ -163,39 +173,43 @@ export default function PricingPage() {
         </section>
 
         {/* CTA Section - Dark theme matching homepage */}
-        <section className="py-32 bg-[#020617] relative overflow-hidden">
+        <section className="relative overflow-hidden bg-[#020617] py-32">
           <motion.div
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.2, 0.4, 0.2],
             }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/20 rounded-full blur-[200px] pointer-events-none"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[200px]"
           />
 
-          <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+          <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl lg:text-6xl font-black text-white mb-6">
+              <h2 className="mb-6 text-4xl font-black text-white lg:text-6xl">
                 NOT SURE WHICH PLAN?
                 <br />
                 <span className="text-primary">LET&apos;S TALK.</span>
               </h2>
-              <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-                Start with Free and upgrade when you need more capacity. Or schedule a demo to see how it works.
+              <p className="mx-auto mb-10 max-w-2xl text-xl text-slate-400">
+                Start with Free and upgrade when you need more capacity. Or
+                schedule a demo to see how it works.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Link href="/demo">
-                  <Button className="h-14 px-10 rounded-full bg-white text-slate-900 font-bold text-lg shadow-xl hover:bg-slate-100 group">
+                  <Button className="group h-14 rounded-full bg-white px-10 text-lg font-bold text-slate-900 shadow-xl hover:bg-slate-100">
                     Schedule a Demo
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
                 <Link href="/faq">
-                  <Button variant="ghost" className="h-14 px-8 rounded-full text-white hover:bg-white/10 font-semibold">
+                  <Button
+                    variant="ghost"
+                    className="h-14 rounded-full px-8 font-semibold text-white hover:bg-white/10"
+                  >
                     View FAQ
                   </Button>
                 </Link>

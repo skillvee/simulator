@@ -230,7 +230,10 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
       confidence: "high",
     });
     expect(data.companyName).toEqual({ value: "Stripe", confidence: "high" });
-    expect(data.seniorityLevel).toEqual({ value: "senior", confidence: "high" });
+    expect(data.seniorityLevel).toEqual({
+      value: "senior",
+      confidence: "high",
+    });
     expect(data.techStack.value).toContain("React");
     expect(data._meta).toBeDefined();
     expect(data._meta.promptVersion).toBe("1.1");

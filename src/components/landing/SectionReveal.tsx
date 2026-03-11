@@ -12,11 +12,18 @@ interface SectionRevealProps {
 /**
  * Wrapper component that reveals children on scroll
  */
-export function SectionReveal({ children, className = "", delay }: SectionRevealProps) {
+export function SectionReveal({
+  children,
+  className = "",
+  delay,
+}: SectionRevealProps) {
   const [ref, isVisible] = useScrollReveal<HTMLDivElement>();
 
   return (
-    <div ref={ref} className={`${getRevealClasses(isVisible, delay)} ${className}`}>
+    <div
+      ref={ref}
+      className={`${getRevealClasses(isVisible, delay)} ${className}`}
+    >
       {children}
     </div>
   );
@@ -36,7 +43,7 @@ export function StaggerReveal({
   children,
   className = "",
   baseDelay = 0,
-  staggerMs = 100
+  staggerMs = 100,
 }: StaggerRevealProps) {
   const [ref, isVisible] = useScrollReveal<HTMLDivElement>();
 

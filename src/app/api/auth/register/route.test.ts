@@ -133,7 +133,10 @@ describe("POST /api/auth/register", () => {
     expect(data.error).toBe("Validation failed");
     expect(data.code).toBe("VALIDATION_ERROR");
     expect(data.details).toContainEqual(
-      expect.objectContaining({ path: "email", message: "Invalid email format" })
+      expect.objectContaining({
+        path: "email",
+        message: "Invalid email format",
+      })
     );
   });
 

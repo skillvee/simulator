@@ -27,12 +27,20 @@ export async function POST(request: NextRequest) {
     const snapshotId = formData.get("snapshotId") as string | null; // e.g. "webcam-profile" for profile photo snapshot
 
     if (!file || !assessmentId || !type) {
-      return error("Missing required fields: file, assessmentId, type", 400, "VALIDATION_ERROR");
+      return error(
+        "Missing required fields: file, assessmentId, type",
+        400,
+        "VALIDATION_ERROR"
+      );
     }
 
     // Validate type value
     if (type !== "video" && type !== "screenshot") {
-      return error("Invalid type. Must be 'video' or 'screenshot'", 400, "VALIDATION_ERROR");
+      return error(
+        "Invalid type. Must be 'video' or 'screenshot'",
+        400,
+        "VALIDATION_ERROR"
+      );
     }
 
     // Verify the assessment belongs to the user
@@ -51,7 +59,11 @@ export async function POST(request: NextRequest) {
     const maxSize =
       type === "video" ? MAX_VIDEO_CHUNK_SIZE : MAX_SCREENSHOT_SIZE;
     if (file.size > maxSize) {
-      return error(`File too large. Maximum size is ${maxSize / 1024 / 1024}MB`, 400, "FILE_TOO_LARGE");
+      return error(
+        `File too large. Maximum size is ${maxSize / 1024 / 1024}MB`,
+        400,
+        "FILE_TOO_LARGE"
+      );
     }
 
     // Generate storage path

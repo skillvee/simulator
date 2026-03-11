@@ -46,10 +46,5 @@ export default async function WelcomePage({ params }: PageProps) {
     redirect(`/assessments/${id}/results`);
   }
 
-  return (
-    <WelcomePageClient
-      assessmentId={id}
-      scenario={assessment.scenario}
-    />
-  );
+  return <WelcomePageClient assessmentId={id} scenario={assessment.scenario} />;
 }

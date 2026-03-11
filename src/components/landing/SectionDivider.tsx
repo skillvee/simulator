@@ -11,11 +11,16 @@ interface DividerProps {
 /**
  * Gentle wave divider - use at bottom of sections
  */
-export function WaveDivider({ className = "", fillColor = "fill-white" }: DividerProps) {
+export function WaveDivider({
+  className = "",
+  fillColor = "fill-white",
+}: DividerProps) {
   return (
-    <div className={`absolute bottom-0 left-0 right-0 overflow-hidden leading-none ${className}`}>
+    <div
+      className={`absolute bottom-0 left-0 right-0 overflow-hidden leading-none ${className}`}
+    >
       <svg
-        className="relative block w-full h-12 sm:h-16 lg:h-20"
+        className="relative block h-12 w-full sm:h-16 lg:h-20"
         viewBox="0 0 1200 120"
         preserveAspectRatio="none"
       >
@@ -31,11 +36,16 @@ export function WaveDivider({ className = "", fillColor = "fill-white" }: Divide
 /**
  * Inverted wave - use at top of sections
  */
-export function WaveDividerTop({ className = "", fillColor = "fill-white" }: DividerProps) {
+export function WaveDividerTop({
+  className = "",
+  fillColor = "fill-white",
+}: DividerProps) {
   return (
-    <div className={`absolute top-0 left-0 right-0 overflow-hidden leading-none rotate-180 ${className}`}>
+    <div
+      className={`absolute left-0 right-0 top-0 rotate-180 overflow-hidden leading-none ${className}`}
+    >
       <svg
-        className="relative block w-full h-12 sm:h-16 lg:h-20"
+        className="relative block h-12 w-full sm:h-16 lg:h-20"
         viewBox="0 0 1200 120"
         preserveAspectRatio="none"
       >
@@ -51,11 +61,16 @@ export function WaveDividerTop({ className = "", fillColor = "fill-white" }: Div
 /**
  * Subtle curve divider - less dramatic than wave
  */
-export function CurveDivider({ className = "", fillColor = "fill-white" }: DividerProps) {
+export function CurveDivider({
+  className = "",
+  fillColor = "fill-white",
+}: DividerProps) {
   return (
-    <div className={`absolute bottom-0 left-0 right-0 overflow-hidden leading-none ${className}`}>
+    <div
+      className={`absolute bottom-0 left-0 right-0 overflow-hidden leading-none ${className}`}
+    >
       <svg
-        className="relative block w-full h-10 sm:h-14 lg:h-16"
+        className="relative block h-10 w-full sm:h-14 lg:h-16"
         viewBox="0 0 1200 120"
         preserveAspectRatio="none"
       >
@@ -74,8 +89,12 @@ export function CurveDivider({ className = "", fillColor = "fill-white" }: Divid
 export function GradientDivider({
   className = "",
   from = "from-transparent",
-  to = "to-white"
-}: { className?: string; from?: string; to?: string }) {
+  to = "to-white",
+}: {
+  className?: string;
+  from?: string;
+  to?: string;
+}) {
   return (
     <div
       className={`absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b ${from} ${to} pointer-events-none ${className}`}

@@ -153,8 +153,8 @@ Output a clean, high-quality professional headshot.`,
     throw new Error("No response parts from Gemini image editing");
   }
 
-  const imagePart = parts.find(
-    (part) => part.inlineData?.mimeType?.startsWith("image/")
+  const imagePart = parts.find((part) =>
+    part.inlineData?.mimeType?.startsWith("image/")
   );
 
   if (!imagePart?.inlineData?.data) {

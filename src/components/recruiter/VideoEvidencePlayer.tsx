@@ -13,7 +13,10 @@ import { cn } from "@/lib/utils";
 import { formatSecondsToTimestamp } from "@/lib/utils/timestamp";
 
 // Re-export timestamp utilities for convenience
-export { parseTimestampToSeconds, formatSecondsToTimestamp } from "@/lib/utils/timestamp";
+export {
+  parseTimestampToSeconds,
+  formatSecondsToTimestamp,
+} from "@/lib/utils/timestamp";
 
 /**
  * VideoEvidencePlayer ref handle for external control
@@ -97,12 +100,12 @@ export const VideoEvidencePlayer = forwardRef<
     return (
       <div
         className={cn(
-          "sticky top-0 z-10 bg-stone-100 rounded-lg overflow-hidden",
+          "sticky top-0 z-10 overflow-hidden rounded-lg bg-stone-100",
           "w-full md:w-[400px]",
           className
         )}
       >
-        <div className="aspect-video flex flex-col items-center justify-center text-stone-500 gap-3">
+        <div className="flex aspect-video flex-col items-center justify-center gap-3 text-stone-500">
           <Video className="h-12 w-12 text-stone-400" />
           <p className="text-sm font-medium">No video recording available</p>
         </div>
@@ -113,7 +116,7 @@ export const VideoEvidencePlayer = forwardRef<
   return (
     <div
       className={cn(
-        "sticky top-0 z-10 bg-black rounded-lg overflow-hidden shadow-lg",
+        "sticky top-0 z-10 overflow-hidden rounded-lg bg-black shadow-lg",
         "w-full md:w-[400px]",
         className
       )}
@@ -126,13 +129,13 @@ export const VideoEvidencePlayer = forwardRef<
           controls
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
-          className="w-full h-full object-contain"
+          className="h-full w-full object-contain"
         >
           Your browser does not support the video tag.
         </video>
 
         {/* Timestamp overlay */}
-        <div className="absolute bottom-12 right-2 bg-black/70 text-white px-2 py-1 rounded text-sm font-mono pointer-events-none">
+        <div className="pointer-events-none absolute bottom-12 right-2 rounded bg-black/70 px-2 py-1 font-mono text-sm text-white">
           {formatSecondsToTimestamp(currentTime)}
         </div>
       </div>

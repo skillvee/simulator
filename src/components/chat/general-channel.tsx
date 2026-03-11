@@ -111,7 +111,7 @@ export function GeneralChannel({
 
   return (
     <div
-      className="flex h-full flex-col rounded-xl overflow-hidden"
+      className="flex h-full flex-col overflow-hidden rounded-xl"
       style={{
         background: "hsl(var(--slack-bg-surface))",
         border: "1px solid hsl(var(--slack-border))",
@@ -131,7 +131,7 @@ export function GeneralChannel({
             # general
           </h2>
           <p
-            className="text-xs mt-0.5"
+            className="mt-0.5 text-xs"
             style={{ color: "hsl(var(--slack-text-muted))" }}
           >
             Team-wide announcements and chat
@@ -146,7 +146,7 @@ export function GeneralChannel({
       </div>
 
       {/* Messages Container - scrollable */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
         {messages.map((message, index) => (
           <ChannelMessageItem key={index} message={message} />
         ))}
@@ -159,7 +159,7 @@ export function GeneralChannel({
         className="p-4"
         style={{ borderTop: "1px solid hsl(var(--slack-border))" }}
       >
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           <input
             ref={inputRef}
             type="text"
@@ -194,9 +194,9 @@ export function GeneralChannel({
  */
 function ChannelMessageItem({ message }: { message: ChannelMessage }) {
   return (
-    <div className="flex gap-3 hover:bg-muted/30 -mx-2 px-2 py-1 rounded transition-colors">
+    <div className="-mx-2 flex gap-3 rounded px-2 py-1 transition-colors hover:bg-muted/30">
       {/* Avatar */}
-      <div className="shrink-0 mt-0.5">
+      <div className="mt-0.5 shrink-0">
         <CoworkerAvatar
           name={message.senderName}
           avatarUrl={message.senderAvatarUrl || null}
@@ -205,11 +205,11 @@ function ChannelMessageItem({ message }: { message: ChannelMessage }) {
       </div>
 
       {/* Message Content */}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         {/* Header: Name + Timestamp */}
-        <div className="flex items-baseline gap-2 mb-0.5">
+        <div className="mb-0.5 flex items-baseline gap-2">
           <span
-            className="font-semibold text-sm"
+            className="text-sm font-semibold"
             style={{ color: "hsl(var(--slack-text))" }}
           >
             {message.senderName}
@@ -224,7 +224,7 @@ function ChannelMessageItem({ message }: { message: ChannelMessage }) {
 
         {/* Message Text */}
         <div
-          className="text-sm leading-relaxed break-words"
+          className="break-words text-sm leading-relaxed"
           style={{ color: "hsl(var(--slack-text))" }}
         >
           {message.text}
@@ -232,11 +232,11 @@ function ChannelMessageItem({ message }: { message: ChannelMessage }) {
 
         {/* Reactions (if any) */}
         {message.reactions && message.reactions.length > 0 && (
-          <div className="flex gap-1 mt-1.5">
+          <div className="mt-1.5 flex gap-1">
             {message.reactions.map((reaction, idx) => (
               <div
                 key={idx}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs"
+                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
                 style={{
                   background: "hsl(var(--slack-bg-hover))",
                   border: "1px solid hsl(var(--slack-border))",

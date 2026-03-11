@@ -82,7 +82,7 @@ export const RUBRIC_TO_ASSESSMENT_DIMENSION: Record<string, string> = {
  */
 export function computeExpectedScores(
   seniorityGates: Record<string, number>,
-  archetypeWeights: Record<string, number>,
+  archetypeWeights: Record<string, number>
 ): Record<string, number> {
   const result: Record<string, { score: number; weight: number }> = {};
 

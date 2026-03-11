@@ -19,7 +19,11 @@ import type { CodeReviewData } from "@/types";
 /**
  * Candidate strength levels
  */
-type CandidateStrengthLevel = "Exceptional" | "Strong" | "Meets expectations" | "Below expectations";
+type CandidateStrengthLevel =
+  | "Exceptional"
+  | "Strong"
+  | "Meets expectations"
+  | "Below expectations";
 
 /**
  * Dimension score data from API
@@ -113,10 +117,10 @@ function LoadingSkeleton() {
     <div className="p-6">
       {/* Header skeleton */}
       <div className="mb-6">
-        <Skeleton className="h-4 w-32 mb-4" />
+        <Skeleton className="mb-4 h-4 w-32" />
         <div className="flex items-start justify-between">
           <div>
-            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="mb-2 h-8 w-64" />
             <Skeleton className="h-5 w-40" />
           </div>
           <Skeleton className="h-8 w-28" />
@@ -124,15 +128,14 @@ function LoadingSkeleton() {
       </div>
 
       {/* Overall score card skeleton */}
-      <Skeleton className="h-32 w-full mb-6" />
+      <Skeleton className="mb-6 h-32 w-full" />
 
       {/* Dimension cards skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         {Array.from({ length: 7 }).map((_, i) => (
           <Skeleton key={i} className="h-40" />
         ))}
       </div>
-
     </div>
   );
 }
@@ -142,12 +145,14 @@ function LoadingSkeleton() {
  */
 function ForbiddenError() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
-      <div className="rounded-full bg-red-100 p-4 mb-4">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center p-6">
+      <div className="mb-4 rounded-full bg-red-100 p-4">
         <ShieldAlert className="h-12 w-12 text-red-600" />
       </div>
-      <h1 className="text-2xl font-semibold text-stone-900 mb-2">Access Denied</h1>
-      <p className="text-stone-500 text-center mb-6 max-w-md">
+      <h1 className="mb-2 text-2xl font-semibold text-stone-900">
+        Access Denied
+      </h1>
+      <p className="mb-6 max-w-md text-center text-stone-500">
         You don&apos;t have permission to view this candidate&apos;s assessment.
         This may be because the assessment belongs to a different recruiter.
       </p>
@@ -161,7 +166,10 @@ function ForbiddenError() {
 /**
  * Main candidate detail client component
  */
-export function CandidateDetailClient({ assessmentId, simulationId }: CandidateDetailClientProps) {
+export function CandidateDetailClient({
+  assessmentId,
+  simulationId,
+}: CandidateDetailClientProps) {
   const [data, setData] = useState<CandidateDetailData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<number | null>(null);
@@ -169,7 +177,9 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch(`/api/recruiter/candidate/${assessmentId}`);
+        const response = await fetch(
+          `/api/recruiter/candidate/${assessmentId}`
+        );
 
         if (!response.ok) {
           setError(response.status);
@@ -198,12 +208,12 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
 
   if (error || !data) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
-        <AlertCircle className="h-12 w-12 text-stone-400 mb-4" />
-        <h1 className="text-xl font-semibold text-stone-900 mb-2">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-6">
+        <AlertCircle className="mb-4 h-12 w-12 text-stone-400" />
+        <h1 className="mb-2 text-xl font-semibold text-stone-900">
           Unable to load candidate data
         </h1>
-        <p className="text-stone-500 mb-6">
+        <p className="mb-6 text-stone-500">
           An error occurred while fetching the assessment details.
         </p>
         <Button asChild variant="outline">
@@ -224,18 +234,18 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
   const overallPercentile = data.percentiles?.overall ?? null;
 
   return (
-    <div className="p-6 overflow-y-auto">
+    <div className="overflow-y-auto p-6">
       {/* Header */}
       <div className="mb-6">
         <Link
           href={`/recruiter/assessments/${simulationId}`}
-          className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm text-stone-600 transition-colors hover:text-stone-900"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Candidates
         </Link>
 
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-semibold text-stone-900">
@@ -249,7 +259,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
               <p className="mt-1 text-stone-500">{data.scenarioName}</p>
             )}
             {data.completedAt && (
-              <p className="mt-1 text-sm text-stone-400 flex items-center gap-1.5">
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-stone-400">
                 <Calendar className="h-3.5 w-3.5" />
                 Completed {formatDate(data.completedAt)}
               </p>
@@ -257,7 +267,9 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           </div>
 
           <Button asChild variant="outline" className="border-stone-200">
-            <Link href={`/recruiter/assessments/${simulationId}/compare?ids=${assessmentId}`}>
+            <Link
+              href={`/recruiter/assessments/${simulationId}/compare?ids=${assessmentId}`}
+            >
               <Users className="mr-2 h-4 w-4" />
               Compare with others
             </Link>
@@ -268,13 +280,15 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
       {/* Overall Score Card */}
       <Card className="mb-6 border-stone-200 bg-white shadow-sm">
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-medium text-stone-500 mb-1">
+              <p className="mb-1 text-sm font-medium text-stone-500">
                 Overall Score
               </p>
               <div className="flex items-baseline gap-2">
-                <span className={`text-4xl font-bold ${getDimensionScoreColor(data.overallScore)}`}>
+                <span
+                  className={`text-4xl font-bold ${getDimensionScoreColor(data.overallScore)}`}
+                >
                   {data.overallScore.toFixed(1)}
                 </span>
                 <span className="text-lg text-stone-400">/ 4.0</span>
@@ -283,7 +297,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
             {overallPercentile !== null && (
               <div className="flex items-center gap-2">
                 <Badge
-                  className={`text-sm px-3 py-1.5 ${getPercentileBadgeColor(overallPercentile)}`}
+                  className={`px-3 py-1.5 text-sm ${getPercentileBadgeColor(overallPercentile)}`}
                 >
                   <TrendingUp className="mr-1.5 h-3.5 w-3.5" />
                   Top {Math.round(100 - overallPercentile)}%
@@ -292,7 +306,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
             )}
           </div>
           {data.overallSummary && (
-            <p className="mt-4 text-stone-600 border-t border-stone-100 pt-4">
+            <p className="mt-4 border-t border-stone-100 pt-4 text-stone-600">
               {data.overallSummary}
             </p>
           )}
@@ -301,10 +315,10 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
 
       {/* Dimension Cards */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-stone-900 mb-4">
+        <h2 className="mb-4 text-lg font-semibold text-stone-900">
           Dimension Scores
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {data.dimensionScores.map((dim) => {
             const dimPercentile = data.percentiles?.[dim.dimension] ?? null;
             return (
@@ -318,7 +332,9 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
                       {formatDimensionName(dim.dimension)}
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xl font-bold ${getDimensionScoreColor(dim.score)}`}>
+                      <span
+                        className={`text-xl font-bold ${getDimensionScoreColor(dim.score)}`}
+                      >
                         {dim.score.toFixed(1)}
                       </span>
                       {dimPercentile !== null && (
@@ -341,7 +357,6 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           })}
         </div>
       </div>
-
     </div>
   );
 }

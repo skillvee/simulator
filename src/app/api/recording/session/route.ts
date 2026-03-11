@@ -15,7 +15,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { assessmentId, action, segmentId, chunkPath, screenshotPath, testMode } = body;
+    const {
+      assessmentId,
+      action,
+      segmentId,
+      chunkPath,
+      screenshotPath,
+      testMode,
+    } = body;
 
     if (!assessmentId || !action) {
       return NextResponse.json(

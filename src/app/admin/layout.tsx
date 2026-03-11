@@ -11,7 +11,9 @@ export default async function AdminLayout({
 
   return (
     <div className="flex h-screen bg-white">
-      <AdminSidebar user={{ name: user.name ?? null, email: user.email ?? null }} />
+      <AdminSidebar
+        user={{ name: user.name ?? null, email: user.email ?? null }}
+      />
       <main className="flex-1 overflow-y-auto bg-white">{children}</main>
     </div>
   );

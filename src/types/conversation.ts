@@ -9,7 +9,7 @@
  * Emoji reaction on a chat message (like Slack reactions)
  */
 export interface MessageReaction {
-  emoji: string;      // "👀", "👍", "👋"
+  emoji: string; // "👀", "👍", "👋"
   reactorName: string; // coworker name who reacted
 }
 
@@ -20,7 +20,7 @@ export interface ChatMessage {
   role: "user" | "model";
   text: string;
   timestamp: string;
-  reactions?: MessageReaction[];  // Optional reactions on this message
+  reactions?: MessageReaction[]; // Optional reactions on this message
 }
 
 /**

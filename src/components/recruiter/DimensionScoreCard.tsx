@@ -124,7 +124,7 @@ export function DimensionScoreCard({
   return (
     <Card
       className={cn(
-        "border-stone-200 bg-white shadow-sm border-l-4",
+        "border-l-4 border-stone-200 bg-white shadow-sm",
         getScoreBorderColor(score)
       )}
     >
@@ -133,11 +133,11 @@ export function DimensionScoreCard({
           <CardTitle className="text-base font-medium text-stone-900">
             {formatDimensionName(dimension)}
           </CardTitle>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             <ScoreCircles score={score} />
             <Badge
               variant="secondary"
-              className="text-xs bg-stone-100 text-stone-600"
+              className="bg-stone-100 text-xs text-stone-600"
             >
               {formatPercentile(percentile)}
             </Badge>
@@ -148,7 +148,7 @@ export function DimensionScoreCard({
       <CardContent className="space-y-3">
         {/* Trainable gap indicator */}
         {trainableGap && (
-          <Badge className="bg-amber-100 text-amber-700 border-0 gap-1">
+          <Badge className="gap-1 border-0 bg-amber-100 text-amber-700">
             <GraduationCap className="h-3.5 w-3.5" />
             Trainable
           </Badge>
@@ -160,9 +160,9 @@ export function DimensionScoreCard({
             {observableBehaviors.map((behavior, idx) => (
               <li
                 key={idx}
-                className="text-sm text-stone-600 flex items-start gap-2"
+                className="flex items-start gap-2 text-sm text-stone-600"
               >
-                <span className="text-stone-400 mt-1">•</span>
+                <span className="mt-1 text-stone-400">•</span>
                 <span>{behavior}</span>
               </li>
             ))}
@@ -176,7 +176,7 @@ export function DimensionScoreCard({
               <button
                 key={idx}
                 onClick={() => handleTimestampClick(timestamp)}
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
+                className="rounded bg-blue-50 px-2 py-0.5 text-sm text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
               >
                 {timestamp}
               </button>

@@ -13,7 +13,10 @@ vi.mock("@/lib/ai/gemini", () => ({
 }));
 
 // Import after mocks
-import { generateCoworkers, type GenerateCoworkersInput } from "./coworker-generator";
+import {
+  generateCoworkers,
+  type GenerateCoworkersInput,
+} from "./coworker-generator";
 
 describe("generateCoworkers", () => {
   beforeEach(() => {
@@ -104,7 +107,8 @@ describe("generateCoworkers", () => {
   });
 
   it("handles markdown fences in response", async () => {
-    const wrappedResponse = "```json\n" + JSON.stringify(mockCoworkers) + "\n```";
+    const wrappedResponse =
+      "```json\n" + JSON.stringify(mockCoworkers) + "\n```";
     mockGenerateContent.mockResolvedValue({
       text: wrappedResponse,
     });
@@ -375,13 +379,15 @@ describe("generateCoworkers", () => {
           {
             topic: "deployment",
             triggerKeywords: ["deploy", "ci", "cd"],
-            response: "We use GitHub Actions for CI/CD. Check .github/workflows/",
+            response:
+              "We use GitHub Actions for CI/CD. Check .github/workflows/",
             isCritical: true,
           },
           {
             topic: "infrastructure",
             triggerKeywords: ["infra", "aws", "cloud"],
-            response: "Everything runs on AWS. Staging is in us-east-1, prod is us-west-2.",
+            response:
+              "Everything runs on AWS. Staging is in us-east-1, prod is us-west-2.",
             isCritical: true,
           },
         ],

@@ -13,6 +13,7 @@
 ## Task 1: Initialize Remotion Project
 
 **Files:**
+
 - Create: `remotion/` directory with full Remotion setup
 
 **Step 1: Create Remotion project**
@@ -22,6 +23,7 @@ cd /Users/matiashoyl/Proyectos/simulator && npx create-video@latest remotion --t
 ```
 
 When prompted:
+
 - Package manager: npm
 - TypeScript: Yes
 
@@ -52,6 +54,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion && git commit -m "c
 ## Task 2: Install Dependencies and Configure
 
 **Files:**
+
 - Modify: `remotion/package.json`
 - Modify: `remotion/remotion.config.ts`
 
@@ -90,6 +93,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion && git commit -m "c
 ## Task 3: Set Up Design System Constants
 
 **Files:**
+
 - Create: `remotion/src/lib/design-system.ts`
 - Create: `remotion/src/lib/fonts.ts`
 
@@ -98,11 +102,11 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion && git commit -m "c
 ```typescript
 // remotion/src/lib/design-system.ts
 export const colors = {
-  background: '#FFFFFF',
-  text: '#000000',
-  accent: '#f7da50',
-  border: '#000000',
-  success: '#22c55e',
+  background: "#FFFFFF",
+  text: "#000000",
+  accent: "#f7da50",
+  border: "#000000",
+  success: "#22c55e",
 } as const;
 
 export const spacing = {
@@ -138,17 +142,17 @@ export const timing = {
 
 ```typescript
 // remotion/src/lib/fonts.ts
-import { loadFont as loadDMSans } from '@remotion/google-fonts/DMSans';
-import { loadFont as loadSpaceMono } from '@remotion/google-fonts/SpaceMono';
+import { loadFont as loadDMSans } from "@remotion/google-fonts/DMSans";
+import { loadFont as loadSpaceMono } from "@remotion/google-fonts/SpaceMono";
 
-const dmSans = loadDMSans('normal', {
-  weights: ['400', '500', '700'],
-  subsets: ['latin'],
+const dmSans = loadDMSans("normal", {
+  weights: ["400", "500", "700"],
+  subsets: ["latin"],
 });
 
-const spaceMono = loadSpaceMono('normal', {
-  weights: ['400', '700'],
-  subsets: ['latin'],
+const spaceMono = loadSpaceMono("normal", {
+  weights: ["400", "700"],
+  subsets: ["latin"],
 });
 
 export const fonts = {
@@ -168,6 +172,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/lib && git comm
 ## Task 4: Create TextPunch Component
 
 **Files:**
+
 - Create: `remotion/src/components/TextPunch.tsx`
 
 **Step 1: Create the TextPunch component**
@@ -176,9 +181,15 @@ This is the bold text callout that punches in synced to beats.
 
 ```tsx
 // remotion/src/components/TextPunch.tsx
-import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
-import { colors, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
+import {
+  AbsoluteFill,
+  interpolate,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
+import { colors, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
 
 type TextPunchProps = {
   text: string;
@@ -211,8 +222,8 @@ export const TextPunch: React.FC<TextPunchProps> = ({
   return (
     <AbsoluteFill
       style={{
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         backgroundColor: colors.background,
       }}
     >
@@ -223,7 +234,7 @@ export const TextPunch: React.FC<TextPunchProps> = ({
           fontWeight: 700,
           color,
           transform: `scale(${scale}) rotate(${rotation}deg)`,
-          textAlign: 'center',
+          textAlign: "center",
           padding: 40,
         }}
       >
@@ -245,15 +256,16 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/components && g
 ## Task 5: Create Typewriter Component
 
 **Files:**
+
 - Create: `remotion/src/components/Typewriter.tsx`
 
 **Step 1: Create the Typewriter component**
 
 ```tsx
 // remotion/src/components/Typewriter.tsx
-import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
-import { colors } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
+import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { colors } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
 
 type TypewriterProps = {
   text: string;
@@ -278,8 +290,8 @@ export const Typewriter: React.FC<TypewriterProps> = ({
   // Blinking cursor
   const cursorOpacity = showCursor
     ? interpolate(frame % 16, [0, 8, 16], [1, 0, 1], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
       })
     : 0;
 
@@ -292,9 +304,7 @@ export const Typewriter: React.FC<TypewriterProps> = ({
       }}
     >
       {typedText}
-      {showCursor && (
-        <span style={{ opacity: cursorOpacity }}>▌</span>
-      )}
+      {showCursor && <span style={{ opacity: cursorOpacity }}>▌</span>}
     </span>
   );
 };
@@ -311,14 +321,15 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/components && g
 ## Task 6: Create Avatar Component
 
 **Files:**
+
 - Create: `remotion/src/components/Avatar.tsx`
 
 **Step 1: Create the Avatar component**
 
 ```tsx
 // remotion/src/components/Avatar.tsx
-import { colors, borders } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
+import { colors, borders } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
 
 type AvatarProps = {
   initials: string;
@@ -338,8 +349,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   backgroundColor = colors.accent,
 }) => {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <div style={{ position: 'relative' }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ position: "relative" }}>
         <div
           style={{
             width: size,
@@ -347,9 +358,9 @@ export const Avatar: React.FC<AvatarProps> = ({
             backgroundColor,
             border: `${borders.width}px solid ${colors.border}`,
             borderRadius: borders.radius,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
             fontFamily: fonts.mono,
             fontSize: size * 0.35,
             fontWeight: 700,
@@ -361,7 +372,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         {showStatus && (
           <div
             style={{
-              position: 'absolute',
+              position: "absolute",
               bottom: -2,
               left: -2,
               width: 10,
@@ -374,7 +385,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         )}
       </div>
       {(name || role) && (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           {name && (
             <span
               style={{
@@ -392,7 +403,7 @@ export const Avatar: React.FC<AvatarProps> = ({
               style={{
                 fontFamily: fonts.heading,
                 fontSize: 12,
-                color: '#666',
+                color: "#666",
               }}
             >
               {role}
@@ -416,15 +427,16 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/components && g
 ## Task 7: Create ChatBubble Component
 
 **Files:**
+
 - Create: `remotion/src/components/ChatBubble.tsx`
 
 **Step 1: Create the ChatBubble component**
 
 ```tsx
 // remotion/src/components/ChatBubble.tsx
-import { spring, useCurrentFrame, useVideoConfig } from 'remotion';
-import { colors, borders, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
+import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { colors, borders, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
 
 type ChatBubbleProps = {
   message: string;
@@ -453,8 +465,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
   return (
     <div
       style={{
-        display: 'flex',
-        justifyContent: isUser ? 'flex-end' : 'flex-start',
+        display: "flex",
+        justifyContent: isUser ? "flex-end" : "flex-start",
         marginBottom: 12,
         opacity,
         transform: `translateX(${translateX}px)`,
@@ -462,8 +474,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
     >
       <div
         style={{
-          maxWidth: '70%',
-          padding: '12px 16px',
+          maxWidth: "70%",
+          padding: "12px 16px",
           backgroundColor: isUser ? colors.accent : colors.background,
           border: `${borders.width}px solid ${colors.border}`,
           borderRadius: borders.radius,
@@ -490,26 +502,27 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/components && g
 ## Task 8: Create Button Component
 
 **Files:**
+
 - Create: `remotion/src/components/Button.tsx`
 
 **Step 1: Create the Button component**
 
 ```tsx
 // remotion/src/components/Button.tsx
-import { spring, useCurrentFrame, useVideoConfig } from 'remotion';
-import { colors, borders, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
+import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { colors, borders, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
 
 type ButtonProps = {
   label: string;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
   delay?: number;
   pressed?: boolean;
 };
 
 export const Button: React.FC<ButtonProps> = ({
   label,
-  variant = 'primary',
+  variant = "primary",
   delay = 0,
   pressed = false,
 }) => {
@@ -524,13 +537,13 @@ export const Button: React.FC<ButtonProps> = ({
 
   const scale = entrance * (pressed ? 0.95 : 1);
 
-  const isPrimary = variant === 'primary';
+  const isPrimary = variant === "primary";
 
   return (
     <div
       style={{
-        display: 'inline-block',
-        padding: '12px 24px',
+        display: "inline-block",
+        padding: "12px 24px",
         backgroundColor: isPrimary ? colors.text : colors.background,
         border: `${borders.width}px solid ${colors.border}`,
         borderRadius: borders.radius,
@@ -539,7 +552,7 @@ export const Button: React.FC<ButtonProps> = ({
         fontWeight: 700,
         color: isPrimary ? colors.background : colors.text,
         transform: `scale(${scale})`,
-        cursor: 'pointer',
+        cursor: "pointer",
       }}
     >
       {label}
@@ -559,14 +572,15 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/components && g
 ## Task 9: Create Waveform Component
 
 **Files:**
+
 - Create: `remotion/src/components/Waveform.tsx`
 
 **Step 1: Create the Waveform component for voice visualization**
 
 ```tsx
 // remotion/src/components/Waveform.tsx
-import { useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
-import { colors, borders } from '../lib/design-system';
+import { useCurrentFrame, useVideoConfig, interpolate } from "remotion";
+import { colors, borders } from "../lib/design-system";
 
 type WaveformProps = {
   bars?: number;
@@ -589,9 +603,9 @@ export const Waveform: React.FC<WaveformProps> = ({
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         gap: 4,
         height,
       }}
@@ -612,7 +626,7 @@ export const Waveform: React.FC<WaveformProps> = ({
               backgroundColor: colors.accent,
               border: `${borders.width}px solid ${colors.border}`,
               borderRadius: borders.radius,
-              transition: 'height 0.1s',
+              transition: "height 0.1s",
             }}
           />
         );
@@ -633,15 +647,16 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/components && g
 ## Task 10: Create ProgressBar Component
 
 **Files:**
+
 - Create: `remotion/src/components/ProgressBar.tsx`
 
 **Step 1: Create the ProgressBar component for score animations**
 
 ```tsx
 // remotion/src/components/ProgressBar.tsx
-import { spring, useCurrentFrame, useVideoConfig } from 'remotion';
-import { colors, borders, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
+import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { colors, borders, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
 
 type ProgressBarProps = {
   label: string;
@@ -670,8 +685,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
     <div style={{ marginBottom: 16 }}>
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
+          display: "flex",
+          justifyContent: "space-between",
           marginBottom: 8,
           fontFamily: fonts.heading,
           fontSize: 14,
@@ -683,18 +698,18 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
       </div>
       <div
         style={{
-          width: '100%',
+          width: "100%",
           height: 24,
           backgroundColor: colors.background,
           border: `${borders.width}px solid ${colors.border}`,
           borderRadius: borders.radius,
-          overflow: 'hidden',
+          overflow: "hidden",
         }}
       >
         <div
           style={{
             width: `${barWidth}%`,
-            height: '100%',
+            height: "100%",
             backgroundColor: colors.accent,
           }}
         />
@@ -715,6 +730,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/components && g
 ## Task 11: Create Scene1Opening Component
 
 **Files:**
+
 - Create: `remotion/src/scenes/Scene1Opening.tsx`
 
 **Step 1: Create the opening scene with LeetCode problem → glitch → "There's a better way"**
@@ -728,9 +744,9 @@ import {
   useVideoConfig,
   interpolate,
   spring,
-} from 'remotion';
-import { colors, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
+} from "remotion";
+import { colors, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
 
 export const Scene1Opening: React.FC = () => {
   const frame = useCurrentFrame();
@@ -772,13 +788,13 @@ const LeetCodeProblem: React.FC = () => {
   const { fps } = useVideoConfig();
 
   const opacity = interpolate(frame, [0, 0.5 * fps], [0, 1], {
-    extrapolateRight: 'clamp',
+    extrapolateRight: "clamp",
   });
 
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: '#1e1e1e',
+        backgroundColor: "#1e1e1e",
         padding: 60,
         opacity,
       }}
@@ -786,41 +802,37 @@ const LeetCodeProblem: React.FC = () => {
       <div
         style={{
           fontFamily: fonts.mono,
-          color: '#d4d4d4',
+          color: "#d4d4d4",
           fontSize: 14,
         }}
       >
-        <div style={{ color: '#569cd6', marginBottom: 20 }}>
+        <div style={{ color: "#569cd6", marginBottom: 20 }}>
           // Problem #2847: Reverse Linked List
         </div>
-        <div style={{ marginBottom: 10, color: '#6a9955' }}>
-          /**
-        </div>
-        <div style={{ color: '#6a9955', marginLeft: 4 }}>
+        <div style={{ marginBottom: 10, color: "#6a9955" }}>/**</div>
+        <div style={{ color: "#6a9955", marginLeft: 4 }}>
           * Given the head of a singly linked list,
         </div>
-        <div style={{ color: '#6a9955', marginLeft: 4 }}>
+        <div style={{ color: "#6a9955", marginLeft: 4 }}>
           * reverse the list, and return the reversed list.
         </div>
-        <div style={{ color: '#6a9955', marginLeft: 4 }}>
+        <div style={{ color: "#6a9955", marginLeft: 4 }}>
           * Time complexity must be O(n).
         </div>
-        <div style={{ color: '#6a9955', marginBottom: 20 }}>
-          */
-        </div>
+        <div style={{ color: "#6a9955", marginBottom: 20 }}>*/</div>
         <div>
-          <span style={{ color: '#c586c0' }}>function</span>{' '}
-          <span style={{ color: '#dcdcaa' }}>reverseList</span>
-          <span style={{ color: '#ffd700' }}>(</span>
-          <span style={{ color: '#9cdcfe' }}>head</span>
-          <span style={{ color: '#ffd700' }}>)</span>{' '}
-          <span style={{ color: '#ffd700' }}>{'{'}</span>
+          <span style={{ color: "#c586c0" }}>function</span>{" "}
+          <span style={{ color: "#dcdcaa" }}>reverseList</span>
+          <span style={{ color: "#ffd700" }}>(</span>
+          <span style={{ color: "#9cdcfe" }}>head</span>
+          <span style={{ color: "#ffd700" }}>)</span>{" "}
+          <span style={{ color: "#ffd700" }}>{"{"}</span>
         </div>
-        <div style={{ marginLeft: 20, color: '#6a9955' }}>
+        <div style={{ marginLeft: 20, color: "#6a9955" }}>
           // Your code here...
         </div>
         <div>
-          <span style={{ color: '#ffd700' }}>{'}'}</span>
+          <span style={{ color: "#ffd700" }}>{"}"}</span>
         </div>
       </div>
     </AbsoluteFill>
@@ -834,19 +846,19 @@ const GlitchEffect: React.FC = () => {
   const glitchIntensity = interpolate(frame, [0, 15, 30], [0, 1, 0]);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: '#1e1e1e' }}>
+    <AbsoluteFill style={{ backgroundColor: "#1e1e1e" }}>
       {/* Glitch bars */}
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: 0,
             right: 0,
-            top: `${(i * 10 + (frame * 3)) % 100}%`,
+            top: `${(i * 10 + frame * 3) % 100}%`,
             height: 20 + (frame % 10),
             backgroundColor:
-              i % 2 === 0 ? colors.accent : 'rgba(255,255,255,0.3)',
+              i % 2 === 0 ? colors.accent : "rgba(255,255,255,0.3)",
             opacity: glitchIntensity * 0.8,
           }}
         />
@@ -869,8 +881,8 @@ const MessageOne: React.FC = () => {
     <AbsoluteFill
       style={{
         backgroundColor: colors.text,
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
       }}
     >
       <div
@@ -880,7 +892,7 @@ const MessageOne: React.FC = () => {
           fontWeight: 700,
           color: colors.background,
           transform: `scale(${scale})`,
-          textAlign: 'center',
+          textAlign: "center",
           padding: 40,
         }}
       >
@@ -904,8 +916,8 @@ const MessageTwo: React.FC = () => {
 
   // Gold wipe from left
   const wipeProgress = interpolate(frame, [fps, 2 * fps], [0, 100], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
   });
 
   return (
@@ -913,8 +925,8 @@ const MessageTwo: React.FC = () => {
       {/* Text */}
       <AbsoluteFill
         style={{
-          justifyContent: 'center',
-          alignItems: 'center',
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         <div
@@ -933,11 +945,11 @@ const MessageTwo: React.FC = () => {
       {/* Gold wipe overlay */}
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 0,
           left: 0,
           width: `${wipeProgress}%`,
-          height: '100%',
+          height: "100%",
           backgroundColor: colors.accent,
         }}
       />
@@ -957,6 +969,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/scenes && git c
 ## Task 12: Create Scene2CVUpload Component
 
 **Files:**
+
 - Create: `remotion/src/scenes/Scene2CVUpload.tsx`
 
 **Step 1: Create the CV upload scene**
@@ -970,10 +983,10 @@ import {
   useVideoConfig,
   interpolate,
   spring,
-} from 'remotion';
-import { colors, borders, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
-import { TextPunch } from '../components/TextPunch';
+} from "remotion";
+import { colors, borders, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
+import { TextPunch } from "../components/TextPunch";
 
 export const Scene2CVUpload: React.FC = () => {
   const { fps } = useVideoConfig();
@@ -989,7 +1002,11 @@ export const Scene2CVUpload: React.FC = () => {
       </Sequence>
 
       {/* Upload UI (2-12s) */}
-      <Sequence from={textPunchEnd} durationInFrames={10 * fps} premountFor={fps}>
+      <Sequence
+        from={textPunchEnd}
+        durationInFrames={10 * fps}
+        premountFor={fps}
+      >
         <UploadInterface />
       </Sequence>
     </AbsoluteFill>
@@ -1002,7 +1019,7 @@ const UploadInterface: React.FC = () => {
 
   // UI fade in
   const uiOpacity = interpolate(frame, [0, 0.5 * fps], [0, 1], {
-    extrapolateRight: 'clamp',
+    extrapolateRight: "clamp",
   });
 
   // PDF drop animation (starts at 3s into this sequence = frame 90)
@@ -1040,62 +1057,66 @@ const UploadInterface: React.FC = () => {
           fontWeight: 500,
           color: colors.text,
           marginBottom: 40,
-          display: 'flex',
-          alignItems: 'center',
+          display: "flex",
+          alignItems: "center",
           gap: 12,
         }}
       >
         <span style={{ fontWeight: 700 }}>Skillvee</span>
-        <span style={{ color: '#666' }}>/</span>
+        <span style={{ color: "#666" }}>/</span>
         <span>Secure Payments Gateway Implementation</span>
       </div>
 
       {/* Progress steps */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
+          display: "flex",
+          alignItems: "center",
           gap: 24,
           marginBottom: 60,
         }}
       >
-        {['CV Upload', 'HR Interview', 'Manager Kickoff', 'Coding Task', 'PR Defense'].map(
-          (step, i) => (
+        {[
+          "CV Upload",
+          "HR Interview",
+          "Manager Kickoff",
+          "Coding Task",
+          "PR Defense",
+        ].map((step, i) => (
+          <div
+            key={step}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: fonts.heading,
+              fontSize: 12,
+              color: i === 0 ? colors.text : "#999",
+              fontWeight: i === 0 ? 700 : 400,
+            }}
+          >
             <div
-              key={step}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                fontFamily: fonts.heading,
-                fontSize: 12,
-                color: i === 0 ? colors.text : '#999',
-                fontWeight: i === 0 ? 700 : 400,
+                width: 24,
+                height: 24,
+                border: `${borders.width}px solid ${i === 0 ? colors.text : "#ccc"}`,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                fontFamily: fonts.mono,
+                fontSize: 10,
+                backgroundColor: i === 0 ? colors.accent : "transparent",
               }}
             >
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  border: `${borders.width}px solid ${i === 0 ? colors.text : '#ccc'}`,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  fontFamily: fonts.mono,
-                  fontSize: 10,
-                  backgroundColor: i === 0 ? colors.accent : 'transparent',
-                }}
-              >
-                {i + 1}
-              </div>
-              {step}
+              {i + 1}
             </div>
-          )
-        )}
+            {step}
+          </div>
+        ))}
       </div>
 
       {/* Main content */}
-      <div style={{ display: 'flex', gap: 60 }}>
+      <div style={{ display: "flex", gap: 60 }}>
         {/* Upload zone */}
         <div style={{ flex: 1 }}>
           <div
@@ -1112,14 +1133,14 @@ const UploadInterface: React.FC = () => {
             style={{
               border: `2px dashed ${colors.border}`,
               padding: 60,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
               minHeight: 200,
-              position: 'relative',
+              position: "relative",
               backgroundColor:
-                frame > dropStart ? 'rgba(247, 218, 80, 0.1)' : 'transparent',
+                frame > dropStart ? "rgba(247, 218, 80, 0.1)" : "transparent",
             }}
           >
             {/* PDF icon dropping */}
@@ -1128,24 +1149,24 @@ const UploadInterface: React.FC = () => {
                 style={{
                   transform: `translateY(${pdfY}px)`,
                   opacity: pdfOpacity,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
               >
                 <div
                   style={{
                     width: 60,
                     height: 80,
-                    backgroundColor: '#ff4444',
+                    backgroundColor: "#ff4444",
                     border: `${borders.width}px solid ${colors.border}`,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
                     fontFamily: fonts.mono,
                     fontSize: 12,
                     fontWeight: 700,
-                    color: 'white',
+                    color: "white",
                   }}
                 >
                   PDF
@@ -1180,7 +1201,7 @@ const UploadInterface: React.FC = () => {
               border: `${borders.width}px solid ${colors.border}`,
               padding: 24,
               transform: `scale(${profileProgress})`,
-              transformOrigin: 'top left',
+              transformOrigin: "top left",
             }}
           >
             <div
@@ -1197,14 +1218,14 @@ const UploadInterface: React.FC = () => {
               style={{
                 fontFamily: fonts.heading,
                 fontSize: 14,
-                color: '#666',
+                color: "#666",
                 marginBottom: 24,
               }}
             >
               Senior Software Engineer
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'AWS'].map(
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {["React", "TypeScript", "Node.js", "PostgreSQL", "AWS"].map(
                 (skill, i) => {
                   const tagDelay = profileStart + i * 5;
                   const tagProgress = spring({
@@ -1216,7 +1237,7 @@ const UploadInterface: React.FC = () => {
                     <div
                       key={skill}
                       style={{
-                        padding: '6px 12px',
+                        padding: "6px 12px",
                         backgroundColor: colors.accent,
                         border: `${borders.width}px solid ${colors.border}`,
                         fontFamily: fonts.mono,
@@ -1249,6 +1270,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/scenes && git c
 ## Task 13: Create Scene3HRInterview Component
 
 **Files:**
+
 - Create: `remotion/src/scenes/Scene3HRInterview.tsx`
 
 **Step 1: Create the HR interview scene**
@@ -1261,13 +1283,13 @@ import {
   useCurrentFrame,
   useVideoConfig,
   spring,
-} from 'remotion';
-import { colors, borders, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
-import { TextPunch } from '../components/TextPunch';
-import { Avatar } from '../components/Avatar';
-import { Waveform } from '../components/Waveform';
-import { ChatBubble } from '../components/ChatBubble';
+} from "remotion";
+import { colors, borders, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
+import { TextPunch } from "../components/TextPunch";
+import { Avatar } from "../components/Avatar";
+import { Waveform } from "../components/Waveform";
+import { ChatBubble } from "../components/ChatBubble";
 
 export const Scene3HRInterview: React.FC = () => {
   const { fps } = useVideoConfig();
@@ -1283,7 +1305,11 @@ export const Scene3HRInterview: React.FC = () => {
       </Sequence>
 
       {/* Interview UI (2-18s) */}
-      <Sequence from={textPunchEnd} durationInFrames={16 * fps} premountFor={fps}>
+      <Sequence
+        from={textPunchEnd}
+        durationInFrames={16 * fps}
+        premountFor={fps}
+      >
         <InterviewInterface />
       </Sequence>
     </AbsoluteFill>
@@ -1312,13 +1338,13 @@ const InterviewInterface: React.FC = () => {
       {/* Header */}
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           marginBottom: 40,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Avatar
             initials="HR"
             name="Sarah Mitchell"
@@ -1329,8 +1355,8 @@ const InterviewInterface: React.FC = () => {
         </div>
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 8,
             fontFamily: fonts.mono,
             fontSize: 12,
@@ -1340,7 +1366,7 @@ const InterviewInterface: React.FC = () => {
             style={{
               width: 8,
               height: 8,
-              backgroundColor: '#22c55e',
+              backgroundColor: "#22c55e",
               borderRadius: 0,
             }}
           />
@@ -1351,19 +1377,19 @@ const InterviewInterface: React.FC = () => {
       {/* Main interview area */}
       <div
         style={{
-          display: 'flex',
+          display: "flex",
           gap: 40,
-          height: '70%',
+          height: "70%",
         }}
       >
         {/* Avatar with waveform */}
         <div
           style={{
             flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
             border: `${borders.width}px solid ${colors.border}`,
             padding: 40,
           }}
@@ -1374,9 +1400,9 @@ const InterviewInterface: React.FC = () => {
               height: 120,
               backgroundColor: colors.accent,
               border: `${borders.width}px solid ${colors.border}`,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
               fontFamily: fonts.mono,
               fontSize: 36,
               fontWeight: 700,
@@ -1391,7 +1417,7 @@ const InterviewInterface: React.FC = () => {
               marginTop: 16,
               fontFamily: fonts.heading,
               fontSize: 14,
-              color: '#666',
+              color: "#666",
             }}
           >
             Sarah is speaking...
@@ -1404,7 +1430,7 @@ const InterviewInterface: React.FC = () => {
             flex: 1,
             border: `${borders.width}px solid ${colors.border}`,
             padding: 24,
-            overflow: 'hidden',
+            overflow: "hidden",
           }}
         >
           <div
@@ -1413,7 +1439,7 @@ const InterviewInterface: React.FC = () => {
               fontSize: 12,
               fontWeight: 700,
               marginBottom: 16,
-              color: '#666',
+              color: "#666",
             }}
           >
             TRANSCRIPT
@@ -1457,9 +1483,9 @@ const CheckmarkOverlay: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(255,255,255,0.9)",
       }}
     >
       <div
@@ -1468,13 +1494,13 @@ const CheckmarkOverlay: React.FC = () => {
           height: 80,
           backgroundColor: colors.success,
           border: `${borders.width}px solid ${colors.border}`,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
           transform: `scale(${scale})`,
         }}
       >
-        <span style={{ fontSize: 40, color: 'white' }}>✓</span>
+        <span style={{ fontSize: 40, color: "white" }}>✓</span>
       </div>
     </AbsoluteFill>
   );
@@ -1492,6 +1518,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/scenes && git c
 ## Task 14: Create Scene4SlackCollab Component
 
 **Files:**
+
 - Create: `remotion/src/scenes/Scene4SlackCollab.tsx`
 
 **Step 1: Create the Slack collaboration scene (longest scene at 22s)**
@@ -1505,20 +1532,20 @@ import {
   useVideoConfig,
   interpolate,
   spring,
-} from 'remotion';
-import { colors, borders, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
-import { TextPunch } from '../components/TextPunch';
-import { Avatar } from '../components/Avatar';
-import { Waveform } from '../components/Waveform';
-import { ChatBubble } from '../components/ChatBubble';
+} from "remotion";
+import { colors, borders, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
+import { TextPunch } from "../components/TextPunch";
+import { Avatar } from "../components/Avatar";
+import { Waveform } from "../components/Waveform";
+import { ChatBubble } from "../components/ChatBubble";
 
 const TEAM_MEMBERS = [
-  { initials: 'AC', name: 'Alex Chen', role: 'Engineering Manager' },
-  { initials: 'MG', name: 'Maria Garcia', role: 'Product Manager' },
-  { initials: 'ML', name: 'Marcus Lee', role: 'Frontend Engineer' },
-  { initials: 'PS', name: 'Priya Sharma', role: 'DevOps Engineer' },
-  { initials: 'JO', name: "James O'Brien", role: 'Backend Engineer' },
+  { initials: "AC", name: "Alex Chen", role: "Engineering Manager" },
+  { initials: "MG", name: "Maria Garcia", role: "Product Manager" },
+  { initials: "ML", name: "Marcus Lee", role: "Frontend Engineer" },
+  { initials: "PS", name: "Priya Sharma", role: "DevOps Engineer" },
+  { initials: "JO", name: "James O'Brien", role: "Backend Engineer" },
 ];
 
 export const Scene4SlackCollab: React.FC = () => {
@@ -1535,7 +1562,11 @@ export const Scene4SlackCollab: React.FC = () => {
       </Sequence>
 
       {/* Slack UI (2-22s) */}
-      <Sequence from={textPunchEnd} durationInFrames={20 * fps} premountFor={fps}>
+      <Sequence
+        from={textPunchEnd}
+        durationInFrames={20 * fps}
+        premountFor={fps}
+      >
         <SlackInterface />
       </Sequence>
     </AbsoluteFill>
@@ -1572,7 +1603,7 @@ const SlackInterface: React.FC = () => {
       {/* Sidebar */}
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: 0,
           top: 0,
           bottom: 0,
@@ -1588,7 +1619,7 @@ const SlackInterface: React.FC = () => {
             fontFamily: fonts.heading,
             fontSize: 12,
             fontWeight: 700,
-            color: '#666',
+            color: "#666",
             marginBottom: 16,
           }}
         >
@@ -1608,15 +1639,15 @@ const SlackInterface: React.FC = () => {
             <div
               key={member.initials}
               style={{
-                display: 'flex',
-                alignItems: 'center',
+                display: "flex",
+                alignItems: "center",
                 gap: 12,
-                padding: '12px 8px',
+                padding: "12px 8px",
                 marginBottom: 4,
-                backgroundColor: isSelected ? colors.accent : 'transparent',
+                backgroundColor: isSelected ? colors.accent : "transparent",
                 border: isSelected
                   ? `${borders.width}px solid ${colors.border}`
-                  : 'none',
+                  : "none",
                 opacity: memberProgress,
                 transform: `translateX(${(1 - memberProgress) * -50}px)`,
               }}
@@ -1641,7 +1672,7 @@ const SlackInterface: React.FC = () => {
                   style={{
                     fontFamily: fonts.heading,
                     fontSize: 11,
-                    color: '#666',
+                    color: "#666",
                   }}
                 >
                   {member.role}
@@ -1655,7 +1686,7 @@ const SlackInterface: React.FC = () => {
       {/* Main chat area */}
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: 250,
           top: 0,
           right: 0,
@@ -1666,9 +1697,9 @@ const SlackInterface: React.FC = () => {
         {/* Header */}
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
             paddingBottom: 16,
             borderBottom: `${borders.width}px solid ${colors.border}`,
             marginBottom: 24,
@@ -1682,10 +1713,10 @@ const SlackInterface: React.FC = () => {
           />
           <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
               gap: 8,
-              padding: '8px 16px',
+              padding: "8px 16px",
               backgroundColor: colors.accent,
               border: `${borders.width}px solid ${colors.border}`,
               fontFamily: fonts.heading,
@@ -1698,7 +1729,7 @@ const SlackInterface: React.FC = () => {
         </div>
 
         {/* Messages based on selected person */}
-        <div style={{ height: '60%', overflow: 'hidden' }}>
+        <div style={{ height: "60%", overflow: "hidden" }}>
           {selectedIndex === 0 && frame < 4 * fps && (
             <>
               <ChatBubble
@@ -1736,20 +1767,22 @@ const SlackInterface: React.FC = () => {
               />
               <div
                 style={{
-                  backgroundColor: '#1e1e1e',
+                  backgroundColor: "#1e1e1e",
                   padding: 16,
                   fontFamily: fonts.mono,
                   fontSize: 11,
-                  color: '#d4d4d4',
+                  color: "#d4d4d4",
                   border: `${borders.width}px solid ${colors.border}`,
                   marginLeft: 0,
                   marginBottom: 12,
-                  maxWidth: '70%',
+                  maxWidth: "70%",
                 }}
               >
-                const validateCard = (num: string) =&gt; {'{'}<br />
-                &nbsp;&nbsp;return luhnCheck(num);<br />
-                {'}'};
+                const validateCard = (num: string) =&gt; {"{"}
+                <br />
+                &nbsp;&nbsp;return luhnCheck(num);
+                <br />
+                {"}"};
               </div>
             </>
           )}
@@ -1784,7 +1817,7 @@ const CallOverlay: React.FC = () => {
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         bottom: 24,
         left: 24,
         right: 24,
@@ -1792,24 +1825,24 @@ const CallOverlay: React.FC = () => {
         backgroundColor: colors.background,
         border: `${borders.width}px solid ${colors.border}`,
         transform: `translateY(${y}px)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         gap: 40,
       }}
     >
       {!showCheckmark ? (
         <>
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: "center" }}>
             <div
               style={{
                 width: 80,
                 height: 80,
                 backgroundColor: colors.accent,
                 border: `${borders.width}px solid ${colors.border}`,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
                 fontFamily: fonts.mono,
                 fontSize: 24,
                 fontWeight: 700,
@@ -1818,7 +1851,13 @@ const CallOverlay: React.FC = () => {
             >
               AC
             </div>
-            <div style={{ fontFamily: fonts.heading, fontSize: 14, fontWeight: 700 }}>
+            <div
+              style={{
+                fontFamily: fonts.heading,
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
               Alex Chen
             </div>
           </div>
@@ -1827,7 +1866,7 @@ const CallOverlay: React.FC = () => {
             style={{
               fontFamily: fonts.heading,
               fontSize: 14,
-              color: '#666',
+              color: "#666",
             }}
           >
             Call in progress...
@@ -1836,8 +1875,8 @@ const CallOverlay: React.FC = () => {
       ) : (
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 16,
           }}
         >
@@ -1847,14 +1886,16 @@ const CallOverlay: React.FC = () => {
               height: 60,
               backgroundColor: colors.success,
               border: `${borders.width}px solid ${colors.border}`,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-            <span style={{ fontSize: 30, color: 'white' }}>✓</span>
+            <span style={{ fontSize: 30, color: "white" }}>✓</span>
           </div>
-          <div style={{ fontFamily: fonts.heading, fontSize: 16, fontWeight: 700 }}>
+          <div
+            style={{ fontFamily: fonts.heading, fontSize: 16, fontWeight: 700 }}
+          >
             Call ended
           </div>
         </div>
@@ -1875,6 +1916,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/scenes && git c
 ## Task 15: Create Scene5SubmitPR Component
 
 **Files:**
+
 - Create: `remotion/src/scenes/Scene5SubmitPR.tsx`
 
 **Step 1: Create the PR submission scene**
@@ -1887,12 +1929,12 @@ import {
   useCurrentFrame,
   useVideoConfig,
   spring,
-} from 'remotion';
-import { colors, borders, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
-import { TextPunch } from '../components/TextPunch';
-import { Avatar } from '../components/Avatar';
-import { Typewriter } from '../components/Typewriter';
+} from "remotion";
+import { colors, borders, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
+import { TextPunch } from "../components/TextPunch";
+import { Avatar } from "../components/Avatar";
+import { Typewriter } from "../components/Typewriter";
 
 export const Scene5SubmitPR: React.FC = () => {
   const { fps } = useVideoConfig();
@@ -1908,7 +1950,11 @@ export const Scene5SubmitPR: React.FC = () => {
       </Sequence>
 
       {/* Chat with manager (2-12s) */}
-      <Sequence from={textPunchEnd} durationInFrames={10 * fps} premountFor={fps}>
+      <Sequence
+        from={textPunchEnd}
+        durationInFrames={10 * fps}
+        premountFor={fps}
+      >
         <PRSubmitChat />
       </Sequence>
     </AbsoluteFill>
@@ -1942,9 +1988,9 @@ const PRSubmitChat: React.FC = () => {
       {/* Header */}
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           paddingBottom: 24,
           borderBottom: `${borders.width}px solid ${colors.border}`,
           marginBottom: 40,
@@ -1958,8 +2004,8 @@ const PRSubmitChat: React.FC = () => {
         />
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 8,
             fontFamily: fonts.mono,
             fontSize: 12,
@@ -1990,7 +2036,9 @@ const PRSubmitChat: React.FC = () => {
       </div>
 
       {/* Call button pulsing */}
-      {frame >= callButtonPulse && <PulsingCallButton frame={frame - callButtonPulse} />}
+      {frame >= callButtonPulse && (
+        <PulsingCallButton frame={frame - callButtonPulse} />
+      )}
     </AbsoluteFill>
   );
 };
@@ -2007,8 +2055,8 @@ const UserPRMessage: React.FC<{ frame: number }> = ({ frame }) => {
   return (
     <div
       style={{
-        display: 'flex',
-        justifyContent: 'flex-end',
+        display: "flex",
+        justifyContent: "flex-end",
         marginBottom: 16,
         opacity: entrance,
         transform: `translateX(${(1 - entrance) * 100}px)`,
@@ -2016,7 +2064,7 @@ const UserPRMessage: React.FC<{ frame: number }> = ({ frame }) => {
     >
       <div
         style={{
-          maxWidth: '70%',
+          maxWidth: "70%",
           padding: 16,
           backgroundColor: colors.accent,
           border: `${borders.width}px solid ${colors.border}`,
@@ -2035,8 +2083,8 @@ const UserPRMessage: React.FC<{ frame: number }> = ({ frame }) => {
           style={{
             fontFamily: fonts.mono,
             fontSize: 12,
-            color: '#0066cc',
-            textDecoration: 'underline',
+            color: "#0066cc",
+            textDecoration: "underline",
           }}
         >
           <Typewriter
@@ -2048,12 +2096,12 @@ const UserPRMessage: React.FC<{ frame: number }> = ({ frame }) => {
         <div
           style={{
             marginTop: 8,
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 4,
             fontFamily: fonts.mono,
             fontSize: 10,
-            color: '#666',
+            color: "#666",
           }}
         >
           ✓ Delivered
@@ -2079,15 +2127,15 @@ const ManagerReply: React.FC<{ frame: number }> = ({ frame }) => {
   return (
     <div
       style={{
-        display: 'flex',
-        justifyContent: 'flex-start',
+        display: "flex",
+        justifyContent: "flex-start",
         marginBottom: 16,
       }}
     >
       {showTyping && (
         <div
           style={{
-            padding: '12px 20px',
+            padding: "12px 20px",
             backgroundColor: colors.background,
             border: `${borders.width}px solid ${colors.border}`,
             fontFamily: fonts.mono,
@@ -2100,7 +2148,7 @@ const ManagerReply: React.FC<{ frame: number }> = ({ frame }) => {
       {showMessage && (
         <div
           style={{
-            maxWidth: '70%',
+            maxWidth: "70%",
             padding: 16,
             backgroundColor: colors.background,
             border: `${borders.width}px solid ${colors.border}`,
@@ -2121,7 +2169,7 @@ const TypingIndicator: React.FC = () => {
   const frame = useCurrentFrame();
 
   return (
-    <div style={{ display: 'flex', gap: 4 }}>
+    <div style={{ display: "flex", gap: 4 }}>
       {[0, 1, 2].map((i) => {
         const phase = (frame + i * 5) % 20;
         const y = phase < 10 ? -phase : phase - 20;
@@ -2156,17 +2204,17 @@ const PulsingCallButton: React.FC<{ frame: number }> = ({ frame }) => {
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         bottom: 60,
         right: 60,
-        padding: '16px 32px',
+        padding: "16px 32px",
         backgroundColor: colors.accent,
         border: `${borders.width}px solid ${colors.border}`,
         fontFamily: fonts.heading,
         fontSize: 16,
         fontWeight: 700,
-        display: 'flex',
-        alignItems: 'center',
+        display: "flex",
+        alignItems: "center",
         gap: 8,
         transform: `scale(${entrance * pulse})`,
       }}
@@ -2188,6 +2236,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/scenes && git c
 ## Task 16: Create Scene6Results Component
 
 **Files:**
+
 - Create: `remotion/src/scenes/Scene6Results.tsx`
 
 **Step 1: Create the results and CTA scene**
@@ -2201,19 +2250,19 @@ import {
   useVideoConfig,
   interpolate,
   spring,
-} from 'remotion';
-import { colors, borders, animations } from '../lib/design-system';
-import { fonts } from '../lib/fonts';
-import { ProgressBar } from '../components/ProgressBar';
-import { Button } from '../components/Button';
+} from "remotion";
+import { colors, borders, animations } from "../lib/design-system";
+import { fonts } from "../lib/fonts";
+import { ProgressBar } from "../components/ProgressBar";
+import { Button } from "../components/Button";
 
 const SKILL_SCORES = [
-  { label: 'Communication', value: 87 },
-  { label: 'Problem Solving', value: 92 },
-  { label: 'AI Leverage', value: 78 },
-  { label: 'Code Quality', value: 85 },
-  { label: 'Collaboration', value: 90 },
-  { label: 'Time Management', value: 82 },
+  { label: "Communication", value: 87 },
+  { label: "Problem Solving", value: 92 },
+  { label: "AI Leverage", value: 78 },
+  { label: "Code Quality", value: 85 },
+  { label: "Collaboration", value: 90 },
+  { label: "Time Management", value: 82 },
 ];
 
 export const Scene6Results: React.FC = () => {
@@ -2259,7 +2308,7 @@ const ScoresDisplay: React.FC = () => {
           fontFamily: fonts.heading,
           fontSize: 56,
           fontWeight: 700,
-          textAlign: 'center',
+          textAlign: "center",
           marginBottom: 60,
           transform: `scale(${titleProgress})`,
         }}
@@ -2270,11 +2319,11 @@ const ScoresDisplay: React.FC = () => {
       {/* Scores grid */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
           gap: 24,
           maxWidth: 800,
-          margin: '0 auto',
+          margin: "0 auto",
         }}
       >
         {SKILL_SCORES.map((skill, i) => (
@@ -2303,15 +2352,15 @@ const CTADisplay: React.FC = () => {
 
   // URL fade in
   const urlOpacity = interpolate(frame, [2 * fps, 3 * fps], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
   });
 
   return (
     <AbsoluteFill
       style={{
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         backgroundColor: colors.background,
       }}
     >
@@ -2331,7 +2380,7 @@ const CTADisplay: React.FC = () => {
       <div style={{ transform: `scale(${buttonProgress})` }}>
         <div
           style={{
-            padding: '20px 48px',
+            padding: "20px 48px",
             backgroundColor: colors.accent,
             border: `${borders.width}px solid ${colors.border}`,
             fontFamily: fonts.heading,
@@ -2370,29 +2419,30 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src/scenes && git c
 ## Task 17: Wire Up Root.tsx with All Scenes
 
 **Files:**
+
 - Modify: `remotion/src/Root.tsx`
 
 **Step 1: Update Root.tsx to compose all scenes**
 
 ```tsx
 // remotion/src/Root.tsx
-import { Composition, Series } from 'remotion';
-import { Scene1Opening } from './scenes/Scene1Opening';
-import { Scene2CVUpload } from './scenes/Scene2CVUpload';
-import { Scene3HRInterview } from './scenes/Scene3HRInterview';
-import { Scene4SlackCollab } from './scenes/Scene4SlackCollab';
-import { Scene5SubmitPR } from './scenes/Scene5SubmitPR';
-import { Scene6Results } from './scenes/Scene6Results';
+import { Composition, Series } from "remotion";
+import { Scene1Opening } from "./scenes/Scene1Opening";
+import { Scene2CVUpload } from "./scenes/Scene2CVUpload";
+import { Scene3HRInterview } from "./scenes/Scene3HRInterview";
+import { Scene4SlackCollab } from "./scenes/Scene4SlackCollab";
+import { Scene5SubmitPR } from "./scenes/Scene5SubmitPR";
+import { Scene6Results } from "./scenes/Scene6Results";
 
 // Total: 90 seconds = 2700 frames at 30fps
 const FPS = 30;
 const DURATION = {
-  scene1: 8 * FPS,   // 240 frames
-  scene2: 12 * FPS,  // 360 frames
-  scene3: 18 * FPS,  // 540 frames
-  scene4: 22 * FPS,  // 660 frames
-  scene5: 12 * FPS,  // 360 frames
-  scene6: 18 * FPS,  // 540 frames
+  scene1: 8 * FPS, // 240 frames
+  scene2: 12 * FPS, // 360 frames
+  scene3: 18 * FPS, // 540 frames
+  scene4: 22 * FPS, // 660 frames
+  scene5: 12 * FPS, // 360 frames
+  scene6: 18 * FPS, // 540 frames
 };
 
 const TOTAL_DURATION =
@@ -2507,6 +2557,7 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src && git commit -
 ## Task 18: Create Component Index Files
 
 **Files:**
+
 - Create: `remotion/src/components/index.ts`
 - Create: `remotion/src/scenes/index.ts`
 - Create: `remotion/src/lib/index.ts`
@@ -2515,29 +2566,29 @@ cd /Users/matiashoyl/Proyectos/simulator && git add remotion/src && git commit -
 
 ```typescript
 // remotion/src/components/index.ts
-export { Avatar } from './Avatar';
-export { Button } from './Button';
-export { ChatBubble } from './ChatBubble';
-export { ProgressBar } from './ProgressBar';
-export { TextPunch } from './TextPunch';
-export { Typewriter } from './Typewriter';
-export { Waveform } from './Waveform';
+export { Avatar } from "./Avatar";
+export { Button } from "./Button";
+export { ChatBubble } from "./ChatBubble";
+export { ProgressBar } from "./ProgressBar";
+export { TextPunch } from "./TextPunch";
+export { Typewriter } from "./Typewriter";
+export { Waveform } from "./Waveform";
 ```
 
 ```typescript
 // remotion/src/scenes/index.ts
-export { Scene1Opening } from './Scene1Opening';
-export { Scene2CVUpload } from './Scene2CVUpload';
-export { Scene3HRInterview } from './Scene3HRInterview';
-export { Scene4SlackCollab } from './Scene4SlackCollab';
-export { Scene5SubmitPR } from './Scene5SubmitPR';
-export { Scene6Results } from './Scene6Results';
+export { Scene1Opening } from "./Scene1Opening";
+export { Scene2CVUpload } from "./Scene2CVUpload";
+export { Scene3HRInterview } from "./Scene3HRInterview";
+export { Scene4SlackCollab } from "./Scene4SlackCollab";
+export { Scene5SubmitPR } from "./Scene5SubmitPR";
+export { Scene6Results } from "./Scene6Results";
 ```
 
 ```typescript
 // remotion/src/lib/index.ts
-export { colors, spacing, borders, animations, timing } from './design-system';
-export { fonts } from './fonts';
+export { colors, spacing, borders, animations, timing } from "./design-system";
+export { fonts } from "./fonts";
 ```
 
 **Step 2: Commit**
@@ -2573,6 +2624,7 @@ If there are TypeScript errors or visual bugs, fix them and commit.
 ## Task 20: Add Audio Placeholder and Final Polish
 
 **Files:**
+
 - Create: `remotion/public/` directory for assets
 - Modify: Root.tsx to add audio when ready
 
@@ -2586,6 +2638,7 @@ mkdir -p /Users/matiashoyl/Proyectos/simulator/remotion/public
 
 ```markdown
 <!-- remotion/public/README.md -->
+
 # Audio Assets
 
 Place audio files here:
@@ -2638,6 +2691,7 @@ The Remotion promo video project is now set up with:
 - **Individual scene compositions** for isolated testing
 
 **Next steps to finish the video:**
+
 1. Add background music (place in `remotion/public/music.mp3`)
 2. Add sound effects (ping, whoosh, call sounds)
 3. Fine-tune animation timing to sync with music beats

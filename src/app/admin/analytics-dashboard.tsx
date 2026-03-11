@@ -132,7 +132,9 @@ export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
                 {data.phaseDurations.map((phase) => (
                   <div key={phase.phase}>
                     <div className="mb-1 flex justify-between">
-                      <span className="text-sm font-semibold">{phase.phase}</span>
+                      <span className="text-sm font-semibold">
+                        {phase.phase}
+                      </span>
                       <span className="text-sm">
                         {phase.avgDurationMinutes}m avg
                       </span>
@@ -202,9 +204,13 @@ export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
                 title={`${status.status}: ${status.count} (${status.percentage}%)`}
               >
                 {status.percentage >= 10 && (
-                  <span className={`absolute inset-0 flex items-center justify-center text-xs ${
-                    status.status === "COMPLETED" ? "text-primary-foreground" : ""
-                  }`}>
+                  <span
+                    className={`absolute inset-0 flex items-center justify-center text-xs ${
+                      status.status === "COMPLETED"
+                        ? "text-primary-foreground"
+                        : ""
+                    }`}
+                  >
                     {status.count}
                   </span>
                 )}
@@ -243,8 +249,12 @@ function StatCard({
   return (
     <Card className="shadow-sm">
       <CardContent className="p-4">
-        <p className="mb-2 text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={`text-2xl font-semibold ${highlight ? "text-primary" : ""}`}>
+        <p className="mb-2 text-xs font-medium text-muted-foreground">
+          {label}
+        </p>
+        <p
+          className={`text-2xl font-semibold ${highlight ? "text-primary" : ""}`}
+        >
           {value}
         </p>
       </CardContent>

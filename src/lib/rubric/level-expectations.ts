@@ -52,17 +52,14 @@ export const LEVEL_EXPECTATIONS: Record<TargetLevel, LevelExpectation> = {
 };
 
 export type FitLevel =
-  | "exceeds"     // Score is above expected
-  | "meets"       // Score is at expected (+/- 0.5)
-  | "below";      // Score is below expected
+  | "exceeds" // Score is above expected
+  | "meets" // Score is at expected (+/- 0.5)
+  | "below"; // Score is below expected
 
 /**
  * Determine how a score relates to the expected score for a target level.
  */
-export function getScoreFit(
-  score: number,
-  targetLevel: TargetLevel
-): FitLevel {
+export function getScoreFit(score: number, targetLevel: TargetLevel): FitLevel {
   const expected = LEVEL_EXPECTATIONS[targetLevel].expectedScore;
   const diff = score - expected;
 

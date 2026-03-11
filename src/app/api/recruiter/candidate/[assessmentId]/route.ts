@@ -4,7 +4,11 @@ import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import type { CodeReviewData } from "@/types";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
-import { getRelativeStrength, type TargetLevel, type RelativeStrength } from "@/lib/rubric/level-expectations";
+import {
+  getRelativeStrength,
+  type TargetLevel,
+  type RelativeStrength,
+} from "@/lib/rubric/level-expectations";
 
 type CandidateStrengthLevel = RelativeStrength;
 
@@ -115,20 +119,21 @@ export async function GET(
     videoAssessment?.status === VideoAssessmentStatus.COMPLETED;
 
   // Extract dimension scores
-  const dimensionScores: DimensionScoreData[] = (videoAssessment?.scores ?? []).map(
-    (score) => ({
-      dimension: score.dimension,
-      score: score.score,
-      observableBehaviors: score.observableBehaviors,
-      timestamps: (score.timestamps as string[]) ?? [],
-      trainableGap: score.trainableGap,
-    })
-  );
+  const dimensionScores: DimensionScoreData[] = (
+    videoAssessment?.scores ?? []
+  ).map((score) => ({
+    dimension: score.dimension,
+    score: score.score,
+    observableBehaviors: score.observableBehaviors,
+    timestamps: (score.timestamps as string[]) ?? [],
+    trainableGap: score.trainableGap,
+  }));
 
   // Calculate overall score from dimension scores
   const overallScore =
     dimensionScores.length > 0
-      ? dimensionScores.reduce((sum, s) => sum + s.score, 0) / dimensionScores.length
+      ? dimensionScores.reduce((sum, s) => sum + s.score, 0) /
+        dimensionScores.length
       : 0;
 
   // Get percentiles from US-001
@@ -137,7 +142,10 @@ export async function GET(
   // Get overall summary
   let overallSummary = "";
   if (hasCompletedVideoAssessment && videoAssessment.summary?.rawAiResponse) {
-    const rawResponse = videoAssessment.summary.rawAiResponse as Record<string, unknown>;
+    const rawResponse = videoAssessment.summary.rawAiResponse as Record<
+      string,
+      unknown
+    >;
     if (typeof rawResponse.overall_summary === "string") {
       overallSummary = rawResponse.overall_summary;
     }
@@ -159,7 +167,10 @@ export async function GET(
       email: assessment.user.email,
     },
     overallScore,
-    strengthLevel: getRelativeStrength(overallScore, (assessment.scenario.targetLevel || "mid") as TargetLevel),
+    strengthLevel: getRelativeStrength(
+      overallScore,
+      (assessment.scenario.targetLevel || "mid") as TargetLevel
+    ),
     dimensionScores,
     percentiles,
     videoUrl: videoAssessment?.videoUrl ?? null,

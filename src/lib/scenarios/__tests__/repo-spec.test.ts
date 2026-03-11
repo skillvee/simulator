@@ -51,7 +51,11 @@ const validSpec = {
   scaffoldId: "express-ts" as const,
   readmeContent:
     "# Payment Gateway\n\nInternal service for processing payments and delivering webhooks to merchants.\n\n## Setup\n\nnpm install && npm run dev",
-  files: [validFile, { ...validFile, path: "src/types/index.ts" }, { ...validFile, path: "docs/architecture.md", purpose: "doc" as const }],
+  files: [
+    validFile,
+    { ...validFile, path: "src/types/index.ts" },
+    { ...validFile, path: "docs/architecture.md", purpose: "doc" as const },
+  ],
   commitHistory: [
     validCommit,
     { ...validCommit, message: "feat: add webhook handler", daysAgo: 14 },
@@ -59,9 +63,23 @@ const validSpec = {
   ],
   issues: [
     validIssue,
-    { ...validIssue, title: "Add merchant onboarding API", state: "closed" as const, isMainTask: false, comments: [] },
+    {
+      ...validIssue,
+      title: "Add merchant onboarding API",
+      state: "closed" as const,
+      isMainTask: false,
+      comments: [],
+    },
   ],
-  authors: [validAuthor, { ...validAuthor, name: "Bob Martinez", email: "bob@meta.com", role: "Senior Engineer" }],
+  authors: [
+    validAuthor,
+    {
+      ...validAuthor,
+      name: "Bob Martinez",
+      email: "bob@meta.com",
+      role: "Senior Engineer",
+    },
+  ],
 };
 
 describe("authorSpecSchema", () => {
@@ -70,11 +88,15 @@ describe("authorSpecSchema", () => {
   });
 
   it("should reject empty name", () => {
-    expect(authorSpecSchema.safeParse({ ...validAuthor, name: "" }).success).toBe(false);
+    expect(
+      authorSpecSchema.safeParse({ ...validAuthor, name: "" }).success
+    ).toBe(false);
   });
 
   it("should reject invalid email", () => {
-    expect(authorSpecSchema.safeParse({ ...validAuthor, email: "not-email" }).success).toBe(false);
+    expect(
+      authorSpecSchema.safeParse({ ...validAuthor, email: "not-email" }).success
+    ).toBe(false);
   });
 });
 
@@ -84,7 +106,9 @@ describe("fileSpecSchema", () => {
   });
 
   it("should accept empty content", () => {
-    expect(fileSpecSchema.safeParse({ ...validFile, content: "" }).success).toBe(true);
+    expect(
+      fileSpecSchema.safeParse({ ...validFile, content: "" }).success
+    ).toBe(true);
   });
 
   it("should reject invalid purpose", () => {
@@ -95,9 +119,9 @@ describe("fileSpecSchema", () => {
 
   it("should accept all valid purposes", () => {
     for (const purpose of ["stub", "working", "test", "doc", "config"]) {
-      expect(
-        fileSpecSchema.safeParse({ ...validFile, purpose }).success
-      ).toBe(true);
+      expect(fileSpecSchema.safeParse({ ...validFile, purpose }).success).toBe(
+        true
+      );
     }
   });
 
@@ -150,13 +174,17 @@ describe("repoSpecSchema", () => {
 
   it("should reject invalid scaffoldId", () => {
     expect(
-      repoSpecSchema.safeParse({ ...validSpec, scaffoldId: "python-fastapi" }).success
+      repoSpecSchema.safeParse({ ...validSpec, scaffoldId: "python-fastapi" })
+        .success
     ).toBe(false);
   });
 
   it("should reject too few files", () => {
     expect(
-      repoSpecSchema.safeParse({ ...validSpec, files: [validFile, { ...validFile, path: "b.ts" }] }).success
+      repoSpecSchema.safeParse({
+        ...validSpec,
+        files: [validFile, { ...validFile, path: "b.ts" }],
+      }).success
     ).toBe(false);
   });
 
@@ -183,7 +211,8 @@ describe("repoSpecSchema", () => {
 
   it("should reject short readmeContent", () => {
     expect(
-      repoSpecSchema.safeParse({ ...validSpec, readmeContent: "Too short" }).success
+      repoSpecSchema.safeParse({ ...validSpec, readmeContent: "Too short" })
+        .success
     ).toBe(false);
   });
 });

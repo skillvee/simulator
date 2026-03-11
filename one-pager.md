@@ -2,7 +2,7 @@
 
 **Work simulation platform that lets hiring teams watch candidates do the actual job before they hire them**
 
-*Powered by Gemini's real-time voice AI for stakeholder conversations and multimodal analysis to evaluate hour-long work sessions at scale.*
+_Powered by Gemini's real-time voice AI for stakeholder conversations and multimodal analysis to evaluate hour-long work sessions at scale._
 
 ---
 
@@ -12,7 +12,7 @@
 
 The response? **More interviews.** Rounds are up 42% since 2021. Engineering teams burn 38+ hours per hire across 4-5 rounds. The process takes 6 weeks. But even interviews aren't reliable anymore—45% of candidates use AI assistance during them. You're not evaluating the person; you're evaluating their copilot.
 
-**Current tools make it worse.** HackerRank bans AI and tests trivia nobody uses at work. Take-homes? Candidates submit AI-generated code you can't distinguish from their own. None of these answer the only question that matters: *can this person actually do the job?*
+**Current tools make it worse.** HackerRank bans AI and tests trivia nobody uses at work. Take-homes? Candidates submit AI-generated code you can't distinguish from their own. None of these answer the only question that matters: _can this person actually do the job?_
 
 ---
 

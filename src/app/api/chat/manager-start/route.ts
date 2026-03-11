@@ -91,7 +91,11 @@ export async function POST(request: Request) {
   // Find the manager coworker
   const managerCoworker = findManagerCoworker(assessment.scenario.coworkers);
   if (!managerCoworker) {
-    return error("No coworkers configured for this scenario", 400, "NO_COWORKERS");
+    return error(
+      "No coworkers configured for this scenario",
+      400,
+      "NO_COWORKERS"
+    );
   }
 
   // Build list of non-manager teammates to introduce
@@ -124,11 +128,19 @@ export async function POST(request: Request) {
   // Save greeting messages to database
   if (existingConversation) {
     // Append to existing conversation
-    const existingMessages = (existingConversation.transcript as unknown as { role: string; text: string; timestamp: string }[]) || [];
+    const existingMessages =
+      (existingConversation.transcript as unknown as {
+        role: string;
+        text: string;
+        timestamp: string;
+      }[]) || [];
     await db.conversation.update({
       where: { id: existingConversation.id },
       data: {
-        transcript: [...existingMessages, ...greetingMessages] as unknown as Prisma.InputJsonValue,
+        transcript: [
+          ...existingMessages,
+          ...greetingMessages,
+        ] as unknown as Prisma.InputJsonValue,
       },
     });
   } else {

@@ -425,7 +425,13 @@ export function useVoiceBase({
 
     // Attempt reconnection
     await connect();
-  }, [categorizedError, retryCount, maxRetries, updateConnectionState, connect]);
+  }, [
+    categorizedError,
+    retryCount,
+    maxRetries,
+    updateConnectionState,
+    connect,
+  ]);
 
   // Recover session from saved progress
   const recoverSession = useCallback(() => {

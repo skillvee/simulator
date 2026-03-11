@@ -46,9 +46,7 @@ describe("validateRequest", () => {
       expect(body.success).toBe(false);
       expect(body.code).toBe("VALIDATION_ERROR");
       expect(body.details).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ path: "age" }),
-        ])
+        expect.arrayContaining([expect.objectContaining({ path: "age" })])
       );
     }
   });

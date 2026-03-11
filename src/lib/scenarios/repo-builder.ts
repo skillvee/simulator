@@ -51,9 +51,7 @@ export async function buildRepoFromSpec(
 ): Promise<string | null> {
   const scaffold = SCAFFOLDS.find((s) => s.id === spec.scaffoldId);
   if (!scaffold) {
-    console.error(
-      `${LOG_PREFIX} Unknown scaffold: ${spec.scaffoldId}`
-    );
+    console.error(`${LOG_PREFIX} Unknown scaffold: ${spec.scaffoldId}`);
     return null;
   }
 
@@ -164,7 +162,12 @@ async function updateScaffoldFiles(
 
   // Update package.json name field
   try {
-    const pkgContent = await fetchFileContent(owner, repo, "package.json", githubToken);
+    const pkgContent = await fetchFileContent(
+      owner,
+      repo,
+      "package.json",
+      githubToken
+    );
     if (pkgContent) {
       const pkg = JSON.parse(pkgContent.content);
       pkg.name = spec.projectName;
@@ -212,7 +215,9 @@ async function createFilesWithHistory(
       { headers }
     );
     if (!headRefRes.ok) {
-      console.warn(`${LOG_PREFIX} Failed to get HEAD ref: ${headRefRes.status}`);
+      console.warn(
+        `${LOG_PREFIX} Failed to get HEAD ref: ${headRefRes.status}`
+      );
       return;
     }
     let currentCommitSha = (await headRefRes.json()).object.sha;
@@ -422,17 +427,14 @@ async function createIssues(
     // Create labels first
     const allLabels = new Set(spec.issues.flatMap((i) => i.labels));
     for (const label of allLabels) {
-      await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/labels`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            name: label,
-            color: generateLabelColor(label),
-          }),
-        }
-      );
+      await fetch(`https://api.github.com/repos/${owner}/${repo}/labels`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: label,
+          color: generateLabelColor(label),
+        }),
+      });
       // Ignore errors — label may already exist
     }
 
@@ -487,9 +489,7 @@ async function createIssues(
       }
     }
 
-    console.log(
-      `${LOG_PREFIX} Created ${spec.issues.length} issues`
-    );
+    console.log(`${LOG_PREFIX} Created ${spec.issues.length} issues`);
   } catch (err) {
     console.warn(`${LOG_PREFIX} Error creating issues:`, err);
   }
@@ -583,9 +583,7 @@ async function updateFile(
   );
 
   if (!res.ok) {
-    console.warn(
-      `${LOG_PREFIX} Failed to update ${path}: ${res.status}`
-    );
+    console.warn(`${LOG_PREFIX} Failed to update ${path}: ${res.status}`);
   }
 
   return res.ok;

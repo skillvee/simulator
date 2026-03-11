@@ -100,11 +100,11 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
       : "text-yellow-700 dark:text-yellow-300";
 
   return (
-    <div className="flex flex-col min-h-0 h-full">
-      <div className="flex-1 min-h-0 bg-background rounded-2xl shadow-sm border border-border flex flex-col">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-border bg-background shadow-sm">
         {/* Header */}
-        <header className="shrink-0 flex flex-col border-b border-border">
-          <div className="h-16 flex items-center justify-between px-6">
+        <header className="flex shrink-0 flex-col border-b border-border">
+          <div className="flex h-16 items-center justify-between px-6">
             <div className="flex items-center gap-4">
               <div className="flex flex-col">
                 <h2 className="text-lg font-bold">{member.name}</h2>
@@ -117,23 +117,23 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
 
           {/* Status Banner */}
           {member.statusMessage && (
-            <div
-              className={`px-6 py-3 border-t ${statusBannerColor}`}
-            >
+            <div className={`border-t px-6 py-3 ${statusBannerColor}`}>
               <p className={`text-sm font-medium ${statusTextColor}`}>
-                {member.name} is {member.availability === "in-meeting" ? "in a meeting" : "away"} - {member.statusMessage}
+                {member.name} is{" "}
+                {member.availability === "in-meeting" ? "in a meeting" : "away"}{" "}
+                - {member.statusMessage}
               </p>
             </div>
           )}
         </header>
 
         {/* Messages area */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6">
-          <div className="py-6 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6">
+          <div className="space-y-6 py-6">
             {messages.length === 0 ? (
-              <div className="flex h-full flex-col items-center justify-center text-center py-20">
+              <div className="flex h-full flex-col items-center justify-center py-20 text-center">
                 <div className="mb-4">
-                  <div className="h-16 w-16 rounded-full bg-muted border-2 border-border shadow-md flex items-center justify-center mx-auto">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-border bg-muted shadow-md">
                     <span className="text-xl font-medium text-muted-foreground">
                       {initials}
                     </span>
@@ -145,9 +145,9 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
                 <p className="max-w-md text-sm text-muted-foreground">
                   {member.statusMessage || "This team member is away."}
                 </p>
-                <p className="max-w-md text-sm text-muted-foreground mt-2">
-                  You can still send them a message and they&apos;ll respond when
-                  available.
+                <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                  You can still send them a message and they&apos;ll respond
+                  when available.
                 </p>
               </div>
             ) : (
@@ -161,13 +161,13 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
                     >
                       {/* Avatar */}
                       {isMe ? (
-                        <Avatar className="h-10 w-10 mt-1 shadow-sm border border-border">
-                          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                        <Avatar className="mt-1 h-10 w-10 border border-border shadow-sm">
+                          <AvatarFallback className="bg-primary text-sm font-medium text-primary-foreground">
                             You
                           </AvatarFallback>
                         </Avatar>
                       ) : (
-                        <div className="h-10 w-10 mt-1 rounded-full bg-muted border border-border shadow-sm flex items-center justify-center">
+                        <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted shadow-sm">
                           <span className="text-xs font-medium text-muted-foreground">
                             {initials}
                           </span>
@@ -176,18 +176,18 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
 
                       {/* Message content */}
                       <div
-                        className={`flex flex-col max-w-[60%] ${isMe ? "items-end" : "items-start"}`}
+                        className={`flex max-w-[60%] flex-col ${isMe ? "items-end" : "items-start"}`}
                       >
                         <div
-                          className={`px-5 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
+                          className={`rounded-2xl px-5 py-3 text-[15px] leading-relaxed shadow-sm ${
                             isMe
-                              ? "bg-primary text-primary-foreground rounded-br-sm"
-                              : "bg-muted text-foreground rounded-bl-sm"
+                              ? "rounded-br-sm bg-primary text-primary-foreground"
+                              : "rounded-bl-sm bg-muted text-foreground"
                           }`}
                         >
                           {message.text}
                         </div>
-                        <span className="text-xs text-muted-foreground mt-1.5 font-medium px-1">
+                        <span className="mt-1.5 px-1 text-xs font-medium text-muted-foreground">
                           {formatTimestamp(message.timestamp)}
                         </span>
                       </div>
@@ -198,7 +198,7 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
                 {/* Typing indicator */}
                 {isTyping && (
                   <div className="flex gap-4">
-                    <div className="h-10 w-10 mt-1 rounded-full bg-muted border border-border shadow-sm flex items-center justify-center">
+                    <div className="mt-1 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted shadow-sm">
                       <span className="text-xs font-medium text-muted-foreground">
                         {initials}
                       </span>
@@ -212,7 +212,7 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
                 {/* Unavailable note after first response */}
                 {hasResponded && !isTyping && messages.length > 1 && (
                   <div className="flex justify-center">
-                    <div className="text-xs text-muted-foreground bg-muted/50 border border-border rounded-full px-4 py-1.5">
+                    <div className="rounded-full border border-border bg-muted/50 px-4 py-1.5 text-xs text-muted-foreground">
                       {member.name} is currently unavailable
                     </div>
                   </div>
@@ -225,8 +225,8 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
         </div>
 
         {/* Input area */}
-        <div className="shrink-0 p-4 border-t border-border">
-          <div className="flex items-center gap-2 bg-muted p-2 pl-4 rounded-full border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/30 transition-all">
+        <div className="shrink-0 border-t border-border p-4">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-muted p-2 pl-4 transition-all focus-within:border-primary/30 focus-within:ring-2 focus-within:ring-primary/20">
             <input
               ref={inputRef}
               type="text"
@@ -234,7 +234,7 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type a message..."
-              className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-muted-foreground"
+              className="flex-1 border-none bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground"
             />
             <Button
               size="icon"
@@ -254,7 +254,7 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
 // Typing indicator component - matches bubble style
 function TypingIndicator() {
   return (
-    <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl rounded-bl-sm bg-muted shadow-sm">
+    <div className="inline-flex items-center gap-2 rounded-2xl rounded-bl-sm bg-muted px-5 py-3 shadow-sm">
       <div className="flex gap-1">
         <span
           className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground/60"

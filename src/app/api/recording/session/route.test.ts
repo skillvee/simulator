@@ -40,7 +40,8 @@ vi.mock("@/server/db", () => ({
     segmentAnalysis: {
       upsert: (...args: unknown[]) => mockSegmentAnalysisUpsert(...args),
     },
-    $transaction: (fn: (tx: unknown) => Promise<unknown>) => mockTransaction(fn),
+    $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
+      mockTransaction(fn),
   },
 }));
 
@@ -464,8 +465,12 @@ describe("POST /api/recording/session", () => {
         $queryRaw: vi.fn().mockResolvedValue([]), // FOR UPDATE lock
         recordingSegment: {
           updateMany: mockSegmentUpdateMany.mockResolvedValue({ count: 1 }),
-          findFirst: mockSegmentFindFirst.mockResolvedValue({ segmentIndex: 0 }),
-          create: mockSegmentCreate.mockRejectedValue(new Error("Create failed")),
+          findFirst: mockSegmentFindFirst.mockResolvedValue({
+            segmentIndex: 0,
+          }),
+          create: mockSegmentCreate.mockRejectedValue(
+            new Error("Create failed")
+          ),
         },
       };
       // This will throw, simulating transaction rollback
@@ -511,15 +516,17 @@ describe("POST /api/recording/session", () => {
             operations.push("findFirst");
             return Promise.resolve({ segmentIndex: 4 }); // Last segment was index 4
           }),
-          create: vi.fn().mockImplementation((args: { data: { segmentIndex: number } }) => {
-            operations.push("create");
-            // Verify the new segment index is last + 1
-            expect(args.data.segmentIndex).toBe(5);
-            return Promise.resolve({
-              id: "segment-5",
-              segmentIndex: 5,
-            });
-          }),
+          create: vi
+            .fn()
+            .mockImplementation((args: { data: { segmentIndex: number } }) => {
+              operations.push("create");
+              // Verify the new segment index is last + 1
+              expect(args.data.segmentIndex).toBe(5);
+              return Promise.resolve({
+                id: "segment-5",
+                segmentIndex: 5,
+              });
+            }),
         },
       };
       return fn(tx);
@@ -536,7 +543,12 @@ describe("POST /api/recording/session", () => {
     expect(data.segmentIndex).toBe(5);
 
     // Verify operations happened in correct order (FOR UPDATE lock first for race condition prevention)
-    expect(operations).toEqual(["forUpdateLock", "updateMany", "findFirst", "create"]);
+    expect(operations).toEqual([
+      "forUpdateLock",
+      "updateMany",
+      "findFirst",
+      "create",
+    ]);
   });
 
   // ============================================================================

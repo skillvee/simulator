@@ -196,9 +196,14 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
     avatarUrl: "/avatars/maya-torres.jpg",
     statusMessage: "In a design review",
     availability: "in-meeting",
-    cannedResponse: "Hey! I'm in a design review right now. I'll be free in about 30 min - ping me then! In the meantime, {managerName} should be able to help.",
+    cannedResponse:
+      "Hey! I'm in a design review right now. I'll be free in about 30 min - ping me then! In the meantime, {managerName} should be able to help.",
     statusSchedule: [
-      { status: "in-meeting", statusMessage: "In a design review", startMinutes: 0 },
+      {
+        status: "in-meeting",
+        statusMessage: "In a design review",
+        startMinutes: 0,
+      },
       { status: "online", statusMessage: "", startMinutes: 20 },
       { status: "away", statusMessage: "Lunch break", startMinutes: 50 },
     ],
@@ -209,7 +214,8 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
     avatarUrl: "/avatars/derek-washington.jpg",
     statusMessage: "Heads down on a data pipeline",
     availability: "online",
-    cannedResponse: "Hey! I'm swamped right now working on a data pipeline, but {managerName} might be able to help with that. I'll ping you when I'm free!",
+    cannedResponse:
+      "Hey! I'm swamped right now working on a data pipeline, but {managerName} might be able to help with that. I'll ping you when I'm free!",
     statusSchedule: [
       { status: "online", statusMessage: "", startMinutes: 0 },
       { status: "in-meeting", statusMessage: "Team sync", startMinutes: 30 },
@@ -222,11 +228,20 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
     avatarUrl: "/avatars/priya-sharma.jpg",
     statusMessage: "Deploying to staging",
     availability: "away",
-    cannedResponse: "Hey! I'm in the middle of a staging deployment right now. {managerName} should be able to help in the meantime. I'll reach out once this is done!",
+    cannedResponse:
+      "Hey! I'm in the middle of a staging deployment right now. {managerName} should be able to help in the meantime. I'll reach out once this is done!",
     statusSchedule: [
-      { status: "away", statusMessage: "Deploying to staging", startMinutes: 0 },
+      {
+        status: "away",
+        statusMessage: "Deploying to staging",
+        startMinutes: 0,
+      },
       { status: "online", statusMessage: "", startMinutes: 10 },
-      { status: "in-meeting", statusMessage: "Planning meeting", startMinutes: 35 },
+      {
+        status: "in-meeting",
+        statusMessage: "Planning meeting",
+        startMinutes: 35,
+      },
       { status: "online", statusMessage: "", startMinutes: 50 },
     ],
   },
@@ -236,7 +251,8 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
     avatarUrl: "/avatars/marcus-lee.jpg",
     statusMessage: "",
     availability: "online",
-    cannedResponse: "Hey! I'm in our team standup at the moment. Should be done in about 15 minutes. Check with {managerName} if it's urgent, otherwise I'll catch up with you after!",
+    cannedResponse:
+      "Hey! I'm in our team standup at the moment. Should be done in about 15 minutes. Check with {managerName} if it's urgent, otherwise I'll catch up with you after!",
     statusSchedule: [
       { status: "online", statusMessage: "", startMinutes: 0 },
       { status: "away", statusMessage: "Grabbing coffee", startMinutes: 15 },
@@ -249,9 +265,14 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
     avatarUrl: "/avatars/sofia-andersson.jpg",
     statusMessage: "Running user interviews",
     availability: "in-meeting",
-    cannedResponse: "Hey! I'm running user interviews all morning. {managerName} can probably help you out. I'll be available this afternoon if you still need me!",
+    cannedResponse:
+      "Hey! I'm running user interviews all morning. {managerName} can probably help you out. I'll be available this afternoon if you still need me!",
     statusSchedule: [
-      { status: "in-meeting", statusMessage: "User interviews", startMinutes: 0 },
+      {
+        status: "in-meeting",
+        statusMessage: "User interviews",
+        startMinutes: 0,
+      },
       { status: "online", statusMessage: "", startMinutes: 30 },
     ],
   },
@@ -261,10 +282,15 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
     avatarUrl: "/avatars/james-obrien.jpg",
     statusMessage: "",
     availability: "online",
-    cannedResponse: "Hey! I'm swamped debugging a production issue right now, but {managerName} might be able to help with that. I'll ping you when I'm free!",
+    cannedResponse:
+      "Hey! I'm swamped debugging a production issue right now, but {managerName} might be able to help with that. I'll ping you when I'm free!",
     statusSchedule: [
       { status: "online", statusMessage: "", startMinutes: 0 },
-      { status: "away", statusMessage: "Debugging prod issue", startMinutes: 20 },
+      {
+        status: "away",
+        statusMessage: "Debugging prod issue",
+        startMinutes: 20,
+      },
       { status: "online", statusMessage: "", startMinutes: 40 },
     ],
   },
@@ -274,7 +300,8 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
     avatarUrl: "/avatars/nina-volkov.jpg",
     statusMessage: "",
     availability: "online",
-    cannedResponse: "Hey! I'm in a 1:1 right now. {managerName} should be able to help you out. I'll be free in about 20 minutes if you need me after!",
+    cannedResponse:
+      "Hey! I'm in a 1:1 right now. {managerName} should be able to help you out. I'll be free in about 20 minutes if you need me after!",
     statusSchedule: [
       { status: "online", statusMessage: "", startMinutes: 0 },
       { status: "in-meeting", statusMessage: "1:1 meeting", startMinutes: 25 },
@@ -288,10 +315,15 @@ export const DECORATIVE_TEAM_MEMBERS: DecorativeTeamMember[] = [
     avatarUrl: "/avatars/carlos-mendez.jpg",
     statusMessage: "",
     availability: "online",
-    cannedResponse: "Hey! I'm monitoring a model training run right now and pretty heads down. {managerName} might be able to help with that. I'll ping you when I'm free!",
+    cannedResponse:
+      "Hey! I'm monitoring a model training run right now and pretty heads down. {managerName} might be able to help with that. I'll ping you when I'm free!",
     statusSchedule: [
       { status: "online", statusMessage: "", startMinutes: 0 },
-      { status: "away", statusMessage: "Training model - AFK", startMinutes: 15 },
+      {
+        status: "away",
+        statusMessage: "Training model - AFK",
+        startMinutes: 15,
+      },
       { status: "online", statusMessage: "", startMinutes: 45 },
     ],
   },
@@ -386,7 +418,9 @@ export const GENERAL_CHANNEL_MESSAGES: ChannelMessage[] = [
  * Ambient messages that appear periodically during the assessment
  * to make the team feel alive
  */
-export const AMBIENT_MESSAGES: Array<ChannelMessage & { delayMinutes: number }> = [
+export const AMBIENT_MESSAGES: Array<
+  ChannelMessage & { delayMinutes: number }
+> = [
   {
     senderName: "Priya Sharma",
     senderRole: "DevOps Engineer",
@@ -462,10 +496,15 @@ export function getProactiveMessages(
   }
 
   // DevOps/Infrastructure Engineers
-  if (role.includes("devops") || role.includes("infrastructure") || role.includes("sre")) {
+  if (
+    role.includes("devops") ||
+    role.includes("infrastructure") ||
+    role.includes("sre")
+  ) {
     return [
       {
-        message: "Hey, just a heads up - CI is running a bit slow today, deploys are taking ~5 min extra. Nothing to worry about though!",
+        message:
+          "Hey, just a heads up - CI is running a bit slow today, deploys are taking ~5 min extra. Nothing to worry about though!",
         delayMinutes: 15,
         condition: "always",
       },
@@ -476,7 +515,8 @@ export function getProactiveMessages(
   if (role.includes("frontend") || role.includes("front-end")) {
     return [
       {
-        message: "Welcome to the team! If you need any help navigating the frontend codebase, feel free to ask. The component library docs are in /docs/components 👋",
+        message:
+          "Welcome to the team! If you need any help navigating the frontend codebase, feel free to ask. The component library docs are in /docs/components 👋",
         delayMinutes: 20,
         condition: "always",
       },
@@ -487,7 +527,8 @@ export function getProactiveMessages(
   if (role.includes("backend") || role.includes("back-end")) {
     return [
       {
-        message: "Hey! The auth module has some quirks - happy to walk you through it if you need. Just ping me!",
+        message:
+          "Hey! The auth module has some quirks - happy to walk you through it if you need. Just ping me!",
         delayMinutes: 25,
         condition: "always",
       },
@@ -495,10 +536,15 @@ export function getProactiveMessages(
   }
 
   // UX/UI Designers or Researchers
-  if (role.includes("ux") || role.includes("designer") || role.includes("research")) {
+  if (
+    role.includes("ux") ||
+    role.includes("designer") ||
+    role.includes("research")
+  ) {
     return [
       {
-        message: "Hi! I shared some wireframes in Figma earlier this week - they might be relevant to your task. Let me know if you need the link!",
+        message:
+          "Hi! I shared some wireframes in Figma earlier this week - they might be relevant to your task. Let me know if you need the link!",
         delayMinutes: 30,
         condition: "always",
       },
@@ -506,10 +552,15 @@ export function getProactiveMessages(
   }
 
   // QA/Test Engineers
-  if (role.includes("qa") || role.includes("test") || role.includes("quality")) {
+  if (
+    role.includes("qa") ||
+    role.includes("test") ||
+    role.includes("quality")
+  ) {
     return [
       {
-        message: "Hey, welcome aboard! Just a heads up - our staging environment refreshes every night at midnight, so any test data gets wiped. Let me know if you need help setting up test accounts!",
+        message:
+          "Hey, welcome aboard! Just a heads up - our staging environment refreshes every night at midnight, so any test data gets wiped. Let me know if you need help setting up test accounts!",
         delayMinutes: 18,
         condition: "always",
       },
@@ -520,7 +571,8 @@ export function getProactiveMessages(
   if (role.includes("product") && !role.includes("engineer")) {
     return [
       {
-        message: "Hey! Quick reminder that users have been asking for better error messages on this flow. Might be worth keeping that in mind for your task 🙂",
+        message:
+          "Hey! Quick reminder that users have been asking for better error messages on this flow. Might be worth keeping that in mind for your task 🙂",
         delayMinutes: 22,
         condition: "always",
       },
@@ -528,10 +580,16 @@ export function getProactiveMessages(
   }
 
   // Data Scientists/Analysts
-  if (role.includes("data") || role.includes("analyst") || role.includes("ml") || role.includes("machine learning")) {
+  if (
+    role.includes("data") ||
+    role.includes("analyst") ||
+    role.includes("ml") ||
+    role.includes("machine learning")
+  ) {
     return [
       {
-        message: "Welcome! If you need any user behavior data or analytics for your task, I can pull that for you. Just let me know!",
+        message:
+          "Welcome! If you need any user behavior data or analytics for your task, I can pull that for you. Just let me know!",
         delayMinutes: 28,
         condition: "always",
       },
@@ -541,7 +599,8 @@ export function getProactiveMessages(
   // Generic software engineer or other roles - friendly welcome
   return [
     {
-      message: "Hey, welcome to the team! Let me know if you have any questions - happy to help! 😊",
+      message:
+        "Hey, welcome to the team! Let me know if you have any questions - happy to help! 😊",
       delayMinutes: 20,
       condition: "always",
     },

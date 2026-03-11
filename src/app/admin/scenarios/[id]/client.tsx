@@ -189,7 +189,10 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
   };
 
   // Update coworker voice
-  const updateCoworkerVoice = async (coworkerId: string, voiceName: string | null) => {
+  const updateCoworkerVoice = async (
+    coworkerId: string,
+    voiceName: string | null
+  ) => {
     setUpdatingVoice(coworkerId);
     setError(null);
     try {
@@ -289,9 +292,7 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
           {repoStatus && (
             <div
               className={`mt-4 rounded-lg p-4 ${
-                repoStatus.accessible
-                  ? "bg-green-500/10"
-                  : "bg-destructive/10"
+                repoStatus.accessible ? "bg-green-500/10" : "bg-destructive/10"
               }`}
             >
               <div className="mb-2 flex items-center gap-2">
@@ -442,8 +443,8 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
         <CardContent>
           {coworkers.length === 0 ? (
             <p className="text-muted-foreground">
-              No coworkers configured. Add coworkers to enable team collaboration
-              testing.
+              No coworkers configured. Add coworkers to enable team
+              collaboration testing.
             </p>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -479,10 +480,7 @@ export function ScenarioDetailClient({ scenario }: ScenarioDetailClientProps) {
                     <select
                       value={coworker.voiceName || ""}
                       onChange={(e) =>
-                        updateCoworkerVoice(
-                          coworker.id,
-                          e.target.value || null
-                        )
+                        updateCoworkerVoice(coworker.id, e.target.value || null)
                       }
                       disabled={updatingVoice === coworker.id}
                       className="w-full rounded-md border bg-background px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"

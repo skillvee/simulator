@@ -7,10 +7,7 @@
  * @since 2026-02-06
  */
 
-import type {
-  ArchetypeFitResult,
-  ArchetypeSeniorityLevel,
-} from "@/types";
+import type { ArchetypeFitResult, ArchetypeSeniorityLevel } from "@/types";
 
 // ============================================================================
 // Types
@@ -102,9 +99,7 @@ export function calculateArchetypeFit(
   }
 
   const fitScore =
-    maxPossible > 0
-      ? Math.round((weightedSum / maxPossible) * 1000) / 10
-      : 0;
+    maxPossible > 0 ? Math.round((weightedSum / maxPossible) * 1000) / 10 : 0;
 
   // Check seniority gates
   const seniorityLevels: ArchetypeSeniorityLevel[] = [
@@ -144,9 +139,7 @@ export function calculateArchetypeFit(
   const sortedByWeightedScore = [...scored].sort(
     (a, b) => b.weightedScore - a.weightedScore
   );
-  const sortedByGap = [...scored].sort(
-    (a, b) => a.rawScore - b.rawScore
-  );
+  const sortedByGap = [...scored].sort((a, b) => a.rawScore - b.rawScore);
 
   const roleRelevantStrengths = sortedByWeightedScore
     .slice(0, 3)

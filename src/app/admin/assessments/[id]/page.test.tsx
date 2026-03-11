@@ -601,7 +601,9 @@ describe("AssessmentTimelineClient", () => {
 
       const durationMarker = screen.getByTestId("duration-marker-log-2");
       // Use querySelector to find element with amber border class
-      const amberBadge = durationMarker.querySelector('[class*="border-amber"]');
+      const amberBadge = durationMarker.querySelector(
+        '[class*="border-amber"]'
+      );
       expect(amberBadge).toBeInTheDocument();
     });
   });
