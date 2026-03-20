@@ -126,9 +126,9 @@ describe("POST /api/admin/scenarios/[id]/preview", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.assessment).toBeDefined();
-    expect(data.assessment.id).toBe("preview-assessment-123");
-    expect(data.previewUrl).toContain("/assessments/preview-assessment-123");
+    expect(data.data.assessment).toBeDefined();
+    expect(data.data.assessment.id).toBe("preview-assessment-123");
+    expect(data.data.previewUrl).toContain("/assessments/preview-assessment-123");
     expect(mockAssessmentCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: "admin-123",
@@ -168,7 +168,7 @@ describe("POST /api/admin/scenarios/[id]/preview", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.assessment.id).toBe("preview-assessment-456");
+    expect(data.data.assessment.id).toBe("preview-assessment-456");
   });
 
   it("allows skipping directly to coworker testing", async () => {
@@ -204,6 +204,6 @@ describe("POST /api/admin/scenarios/[id]/preview", () => {
 
     expect(response.status).toBe(200);
     // skipTo is now unused, always goes to /work
-    expect(data.previewUrl).toContain("/work");
+    expect(data.data.previewUrl).toContain("/work");
   });
 });

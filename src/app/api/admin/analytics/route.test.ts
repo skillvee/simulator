@@ -154,8 +154,8 @@ describe("GET /api/admin/analytics", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.overview.totalUsers).toBe(100);
-    expect(data.period).toBe("last30days");
+    expect(data.data.overview.totalUsers).toBe(100);
+    expect(data.data.period).toBe("last30days");
     expect(mockGetAnalytics).toHaveBeenCalledWith("last30days");
   });
 

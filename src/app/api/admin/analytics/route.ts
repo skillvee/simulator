@@ -1,11 +1,11 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { NextResponse } from "next/server";
 import {
   getAnalytics,
   TimePeriodSchema,
   type TimePeriod,
 } from "@/lib/core";
+import { success, error } from "@/lib/api";
 
 /**
  * GET /api/admin/analytics
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   // Check authentication
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   // Check admin role
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   });
 
   if (user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return error("Forbidden", 403);
   }
 
   // Parse query parameters
@@ -39,12 +39,9 @@ export async function GET(request: Request) {
   // Validate period
   const periodResult = TimePeriodSchema.safeParse(periodParam);
   if (!periodResult.success) {
-    return NextResponse.json(
-      {
-        error:
-          "Invalid period. Must be one of: today, yesterday, last7days, last30days, last90days, all",
-      },
-      { status: 400 }
+    return error(
+      "Invalid period. Must be one of: today, yesterday, last7days, last30days, last90days, all",
+      400
     );
   }
 
@@ -52,12 +49,9 @@ export async function GET(request: Request) {
 
   try {
     const analytics = await getAnalytics(period);
-    return NextResponse.json(analytics);
-  } catch (error) {
-    console.error("[Analytics API Error]", error);
-    return NextResponse.json(
-      { error: "Failed to fetch analytics" },
-      { status: 500 }
-    );
+    return success(analytics);
+  } catch (err) {
+    console.error("[Analytics API Error]", err);
+    return error("Failed to fetch analytics", 500);
   }
 }

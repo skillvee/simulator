@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { success, error } from "@/lib/api";
 
 interface SessionUser {
   id: string;
@@ -21,15 +21,12 @@ export async function GET(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id: scenarioId } = await context.params;
@@ -40,7 +37,7 @@ export async function GET(request: Request, context: RouteContext) {
   });
 
   if (!scenario) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
   const coworkers = await db.coworker.findMany({
@@ -48,7 +45,7 @@ export async function GET(request: Request, context: RouteContext) {
     orderBy: { createdAt: "asc" },
   });
 
-  return NextResponse.json({ coworkers });
+  return success({ coworkers });
 }
 
 /**
@@ -59,15 +56,12 @@ export async function POST(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id: scenarioId } = await context.params;
@@ -78,7 +72,7 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   if (!scenario) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
   const body = await request.json();
@@ -86,10 +80,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   // Validate required fields
   if (!name || !role || !personaStyle) {
-    return NextResponse.json(
-      { error: "Missing required fields: name, role, personaStyle" },
-      { status: 400 }
-    );
+    return error("Missing required fields: name, role, personaStyle", 400);
   }
 
   const coworker = await db.coworker.create({
@@ -105,5 +96,5 @@ export async function POST(request: Request, context: RouteContext) {
     },
   });
 
-  return NextResponse.json({ coworker }, { status: 201 });
+  return success({ coworker }, 201);
 }

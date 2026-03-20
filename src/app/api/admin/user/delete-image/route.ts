@@ -5,23 +5,16 @@
  * Deletes a user's profile photo from storage and clears the image field.
  */
 
-import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/core";
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
+import { success, error } from "@/lib/api";
 
 interface DeleteImageRequest {
   userId: string;
 }
 
-interface DeleteImageResponse {
-  success: boolean;
-  message: string;
-}
-
-export async function POST(
-  request: Request
-): Promise<NextResponse<DeleteImageResponse>> {
+export async function POST(request: Request) {
   try {
     await requireAdmin();
 
@@ -29,10 +22,7 @@ export async function POST(
     const { userId } = body as DeleteImageRequest;
 
     if (!userId) {
-      return NextResponse.json(
-        { success: false, message: "User ID is required" },
-        { status: 400 }
-      );
+      return error("User ID is required", 400);
     }
 
     const user = await db.user.findUnique({
@@ -41,17 +31,11 @@ export async function POST(
     });
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: "User not found" },
-        { status: 404 }
-      );
+      return error("User not found", 404);
     }
 
     if (!user.image) {
-      return NextResponse.json(
-        { success: false, message: "User has no profile image" },
-        { status: 400 }
-      );
+      return error("User has no profile image", 400);
     }
 
     // Delete from avatars bucket
@@ -76,23 +60,16 @@ export async function POST(
 
     console.log(`[Admin] Deleted profile image for user ${user.email}`);
 
-    return NextResponse.json({
-      success: true,
+    return success({
       message: "Profile image deleted successfully.",
     });
-  } catch (error) {
-    console.error("Error deleting user image:", error);
+  } catch (err) {
+    console.error("Error deleting user image:", err);
 
-    if (error instanceof Error && error.message.includes("Unauthorized")) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - Admin access required" },
-        { status: 401 }
-      );
+    if (err instanceof Error && err.message.includes("Unauthorized")) {
+      return error("Unauthorized - Admin access required", 401);
     }
 
-    return NextResponse.json(
-      { success: false, message: "Failed to delete user image" },
-      { status: 500 }
-    );
+    return error("Failed to delete user image", 500);
   }
 }

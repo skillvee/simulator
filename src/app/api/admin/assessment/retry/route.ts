@@ -8,7 +8,6 @@
  * @since 2026-01-17
  */
 
-import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/core";
 import { db } from "@/server/db";
 import { AssessmentStatus, Prisma } from "@prisma/client";
@@ -16,6 +15,7 @@ import {
   triggerVideoAssessment,
   type TriggerVideoAssessmentResult,
 } from "@/lib/analysis";
+import { success, error } from "@/lib/api";
 
 // Allowed statuses for reassessment
 const RETRIABLE_STATUSES: AssessmentStatus[] = [
@@ -24,17 +24,6 @@ const RETRIABLE_STATUSES: AssessmentStatus[] = [
 
 export interface RetryAssessmentRequest {
   assessmentId: string;
-}
-
-export interface RetryAssessmentResponse {
-  success: boolean;
-  newAssessmentId?: string;
-  oldAssessmentId?: string;
-  message: string;
-  videoAssessment?: {
-    triggered: boolean;
-    videoAssessmentId: string | null;
-  };
 }
 
 /**
@@ -46,9 +35,7 @@ export interface RetryAssessmentResponse {
  *
  * The new assessment logs will include "triggered_by: admin_retry" in metadata.
  */
-export async function POST(
-  request: Request
-): Promise<NextResponse<RetryAssessmentResponse>> {
+export async function POST(request: Request) {
   try {
     // Verify admin access
     await requireAdmin();
@@ -57,10 +44,7 @@ export async function POST(
     const { assessmentId } = body as RetryAssessmentRequest;
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { success: false, message: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     // Fetch the original assessment with all required data for recreation
@@ -81,10 +65,7 @@ export async function POST(
     });
 
     if (!originalAssessment) {
-      return NextResponse.json(
-        { success: false, message: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     // Check if assessment has errors (for visibility) or is completed
@@ -94,12 +75,9 @@ export async function POST(
 
     // Validate status - only allow retry for failed or completed assessments
     if (!RETRIABLE_STATUSES.includes(originalAssessment.status) && !hasErrors) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Cannot retry assessment with status ${originalAssessment.status}. Retry is only available for completed or failed assessments.`,
-        },
-        { status: 400 }
+      return error(
+        `Cannot retry assessment with status ${originalAssessment.status}. Retry is only available for completed or failed assessments.`,
+        400
       );
     }
 
@@ -163,10 +141,10 @@ export async function POST(
             videoAssessmentResult.error
           );
         }
-      } catch (error) {
+      } catch (err) {
         console.warn(
           `Video assessment trigger error for retry ${newAssessment.id}:`,
-          error
+          err
         );
         // Don't fail the reassessment if video assessment trigger fails
       }
@@ -176,8 +154,7 @@ export async function POST(
       `[Admin] Assessment retry initiated: ${assessmentId} -> ${newAssessment.id}`
     );
 
-    return NextResponse.json({
-      success: true,
+    return success({
       newAssessmentId: newAssessment.id,
       oldAssessmentId: assessmentId,
       message: "Reassessment queued successfully",
@@ -191,20 +168,14 @@ export async function POST(
             videoAssessmentId: null,
           },
     });
-  } catch (error) {
-    console.error("Error creating reassessment:", error);
+  } catch (err) {
+    console.error("Error creating reassessment:", err);
 
     // Check if it's an auth error from requireAdmin
-    if (error instanceof Error && error.message.includes("Unauthorized")) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - Admin access required" },
-        { status: 401 }
-      );
+    if (err instanceof Error && err.message.includes("Unauthorized")) {
+      return error("Unauthorized - Admin access required", 401);
     }
 
-    return NextResponse.json(
-      { success: false, message: "Failed to create reassessment" },
-      { status: 500 }
-    );
+    return error("Failed to create reassessment", 500);
   }
 }

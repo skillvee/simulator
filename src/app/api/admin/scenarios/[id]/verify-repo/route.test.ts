@@ -25,12 +25,15 @@ vi.mock("@/lib/core", () => ({
 
 // Mock global fetch
 const originalFetch = global.fetch;
+const originalEnv = process.env.GITHUB_ORG_TOKEN;
 beforeEach(() => {
   global.fetch = mockFetch;
+  process.env.GITHUB_ORG_TOKEN = "mock-github-token";
 });
 
 afterEach(() => {
   global.fetch = originalFetch;
+  process.env.GITHUB_ORG_TOKEN = originalEnv;
 });
 
 // Import after mocks
@@ -118,9 +121,9 @@ describe("GET /api/admin/scenarios/[id]/verify-repo", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.accessible).toBe(true);
-    expect(data.repoInfo.fullName).toBe("skillvee/flowboard-task");
-    expect(data.repoInfo.isPrivate).toBe(false);
+    expect(data.data.accessible).toBe(true);
+    expect(data.data.repoInfo.fullName).toBe("skillvee/flowboard-task");
+    expect(data.data.repoInfo.isPrivate).toBe(false);
   });
 
   it("returns failure for inaccessible repo", async () => {
@@ -148,8 +151,8 @@ describe("GET /api/admin/scenarios/[id]/verify-repo", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.accessible).toBe(false);
-    expect(data.error).toContain("404");
+    expect(data.data.accessible).toBe(false);
+    expect(data.data.error).toContain("404");
   });
 
   it("handles non-GitHub URLs gracefully", async () => {
@@ -170,8 +173,8 @@ describe("GET /api/admin/scenarios/[id]/verify-repo", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.accessible).toBe(false);
-    expect(data.error).toContain("GitHub");
+    expect(data.data.accessible).toBe(false);
+    expect(data.data.error).toContain("GitHub");
   });
 
   it("checks for README.md existence", async () => {
@@ -210,7 +213,7 @@ describe("GET /api/admin/scenarios/[id]/verify-repo", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.accessible).toBe(true);
-    expect(data.hasReadme).toBe(true);
+    expect(data.data.accessible).toBe(true);
+    expect(data.data.hasReadme).toBe(true);
   });
 });

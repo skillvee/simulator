@@ -81,7 +81,7 @@ describe("POST /api/admin/assessment/retry", () => {
 
     expect(response.status).toBe(400);
     expect(data.success).toBe(false);
-    expect(data.message).toBe("Assessment ID is required");
+    expect(data.error).toBe("Assessment ID is required");
   });
 
   it("returns 404 when assessment is not found", async () => {
@@ -93,7 +93,7 @@ describe("POST /api/admin/assessment/retry", () => {
 
     expect(response.status).toBe(404);
     expect(data.success).toBe(false);
-    expect(data.message).toBe("Assessment not found");
+    expect(data.error).toBe("Assessment not found");
   });
 
   it("returns 400 when assessment status is not retriable and has no errors", async () => {
@@ -110,7 +110,7 @@ describe("POST /api/admin/assessment/retry", () => {
 
     expect(response.status).toBe(400);
     expect(data.success).toBe(false);
-    expect(data.message).toContain("Cannot retry assessment with status");
+    expect(data.error).toContain("Cannot retry assessment with status");
   });
 
   it("allows retry for COMPLETED assessments", async () => {
@@ -124,9 +124,9 @@ describe("POST /api/admin/assessment/retry", () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(data.newAssessmentId).toBe("assess-2");
-    expect(data.oldAssessmentId).toBe("assess-1");
-    expect(data.message).toBe("Reassessment queued successfully");
+    expect(data.data.newAssessmentId).toBe("assess-2");
+    expect(data.data.oldAssessmentId).toBe("assess-1");
+    expect(data.data.message).toBe("Reassessment queued successfully");
   });
 
   it("allows retry for assessments with ERROR logs", async () => {
@@ -227,7 +227,7 @@ describe("POST /api/admin/assessment/retry", () => {
     const data = await response.json();
 
     expect(triggerVideoAssessment).not.toHaveBeenCalled();
-    expect(data.videoAssessment.triggered).toBe(false);
+    expect(data.data.videoAssessment.triggered).toBe(false);
   });
 
   it("returns video assessment info in response", async () => {
@@ -239,7 +239,7 @@ describe("POST /api/admin/assessment/retry", () => {
     const response = await POST(request);
     const data = await response.json();
 
-    expect(data.videoAssessment).toEqual({
+    expect(data.data.videoAssessment).toEqual({
       triggered: true,
       videoAssessmentId: "va-1",
     });
@@ -273,7 +273,7 @@ describe("POST /api/admin/assessment/retry", () => {
 
     expect(response.status).toBe(401);
     expect(data.success).toBe(false);
-    expect(data.message).toContain("Unauthorized");
+    expect(data.error).toContain("Unauthorized");
   });
 
   it("returns 500 when database error occurs", async () => {
@@ -288,6 +288,6 @@ describe("POST /api/admin/assessment/retry", () => {
 
     expect(response.status).toBe(500);
     expect(data.success).toBe(false);
-    expect(data.message).toBe("Failed to create reassessment");
+    expect(data.error).toBe("Failed to create reassessment");
   });
 });

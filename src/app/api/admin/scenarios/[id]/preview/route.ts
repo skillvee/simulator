@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { success, error } from "@/lib/api";
 
 interface SessionUser {
   id: string;
@@ -22,15 +22,12 @@ export async function POST(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id } = await context.params;
@@ -42,7 +39,7 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   if (!scenario) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
   // Parse request body for optional skipTo parameter
@@ -69,7 +66,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   const previewUrl = `/assessments/${assessment.id}/work`;
 
-  return NextResponse.json({
+  return success({
     assessment,
     previewUrl,
     scenario: {

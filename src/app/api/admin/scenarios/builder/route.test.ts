@@ -67,8 +67,8 @@ describe("GET /api/admin/scenarios/builder", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.greeting).toBe("Hello! Welcome to the scenario builder.");
-    expect(data.timestamp).toBeDefined();
+    expect(data.data.greeting).toBe("Hello! Welcome to the scenario builder.");
+    expect(data.data.timestamp).toBeDefined();
   });
 
   it("returns fallback greeting on Gemini error", async () => {
@@ -82,8 +82,8 @@ describe("GET /api/admin/scenarios/builder", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.greeting).toContain("Hello!");
-    expect(data.timestamp).toBeDefined();
+    expect(data.data.greeting).toContain("Hello!");
+    expect(data.data.timestamp).toBeDefined();
   });
 });
 
@@ -179,8 +179,8 @@ describe("POST /api/admin/scenarios/builder", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.response).toBe("Great! Let's call your company TechFlow.");
-    expect(data.timestamp).toBeDefined();
+    expect(data.data.response).toBe("Great! Let's call your company TechFlow.");
+    expect(data.data.timestamp).toBeDefined();
     expect(mockGenerateContent).toHaveBeenCalled();
   });
 
@@ -293,9 +293,9 @@ describe("POST /api/admin/scenarios/builder", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.scenarioData).toBeDefined();
+    expect(data.data.scenarioData).toBeDefined();
     // Since applyExtraction is mocked to return the same data
-    expect(data.scenarioData.companyName).toBe("TechFlow");
+    expect(data.data.scenarioData.companyName).toBe("TechFlow");
   });
 
   it("handles empty history gracefully", async () => {

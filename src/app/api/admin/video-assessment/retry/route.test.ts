@@ -54,8 +54,8 @@ describe("POST /api/admin/video-assessment/retry", () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.videoAssessmentId).toBe("video-123");
-    expect(data.message).toBe("Video assessment retry initiated");
+    expect(data.data.videoAssessmentId).toBe("video-123");
+    expect(data.data.message).toBe("Video assessment retry initiated");
   });
 
   it("should force retry when force=true", async () => {
@@ -77,8 +77,8 @@ describe("POST /api/admin/video-assessment/retry", () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.videoAssessmentId).toBe("video-123");
-    expect(data.message).toBe(
+    expect(data.data.videoAssessmentId).toBe("video-123");
+    expect(data.data.message).toBe(
       "Video assessment force-retry initiated (retry count reset)"
     );
 
@@ -191,10 +191,10 @@ describe("GET /api/admin/video-assessment/retry", () => {
     expect(response.status).toBe(200);
 
     const data = await response.json();
-    expect(data.count).toBe(2);
-    expect(data.failedAssessments).toHaveLength(2);
+    expect(data.data.count).toBe(2);
+    expect(data.data.failedAssessments).toHaveLength(2);
 
-    expect(data.failedAssessments[0]).toEqual({
+    expect(data.data.failedAssessments[0]).toEqual({
       id: "video-1",
       candidateId: "user-1",
       candidateName: "John Doe",
@@ -211,10 +211,10 @@ describe("GET /api/admin/video-assessment/retry", () => {
     });
 
     // Second assessment has no logs and no scenario, but can auto-retry
-    expect(data.failedAssessments[1].lastError).toBeUndefined();
-    expect(data.failedAssessments[1].scenarioName).toBeUndefined();
-    expect(data.failedAssessments[1].canAutoRetry).toBe(true); // retryCount < 3
-    expect(data.failedAssessments[1].retryCount).toBe(1);
+    expect(data.data.failedAssessments[1].lastError).toBeUndefined();
+    expect(data.data.failedAssessments[1].scenarioName).toBeUndefined();
+    expect(data.data.failedAssessments[1].canAutoRetry).toBe(true); // retryCount < 3
+    expect(data.data.failedAssessments[1].retryCount).toBe(1);
   });
 
   it("should return empty list when no failed assessments", async () => {
@@ -224,8 +224,8 @@ describe("GET /api/admin/video-assessment/retry", () => {
     expect(response.status).toBe(200);
 
     const data = await response.json();
-    expect(data.count).toBe(0);
-    expect(data.failedAssessments).toHaveLength(0);
+    expect(data.data.count).toBe(0);
+    expect(data.data.failedAssessments).toHaveLength(0);
   });
 
   it("should query for FAILED status only", async () => {

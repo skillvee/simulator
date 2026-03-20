@@ -132,8 +132,8 @@ describe("GET /api/admin/scenarios/[id]/coworkers/[coworkerId]", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.coworker.name).toBe("Alex Chen");
-    expect(data.coworker.knowledge).toEqual({
+    expect(data.data.coworker.name).toBe("Alex Chen");
+    expect(data.data.coworker.knowledge).toEqual({
       expertise: ["team structure", "processes"],
     });
   });
@@ -256,8 +256,8 @@ describe("PUT /api/admin/scenarios/[id]/coworkers/[coworkerId]", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.coworker.name).toBe("Alex Chen Updated");
-    expect(data.coworker.role).toBe("Director of Engineering");
+    expect(data.data.coworker.name).toBe("Alex Chen Updated");
+    expect(data.data.coworker.role).toBe("Director of Engineering");
   });
 
   it("only updates provided fields", async () => {
@@ -390,7 +390,7 @@ describe("DELETE /api/admin/scenarios/[id]/coworkers/[coworkerId]", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.message).toBe("Coworker deleted");
+    expect(data.data.message).toBe("Coworker deleted");
     expect(mockCoworkerDelete).toHaveBeenCalledWith({
       where: { id: "coworker-1" },
     });

@@ -111,8 +111,8 @@ describe("GET /api/admin/scenarios/[id]/coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.coworkers).toHaveLength(2);
-    expect(data.coworkers[0].name).toBe("Alex Chen");
+    expect(data.data.coworkers).toHaveLength(2);
+    expect(data.data.coworkers[0].name).toBe("Alex Chen");
     expect(mockCoworkerFindMany).toHaveBeenCalledWith({
       where: { scenarioId: "scenario-1" },
       orderBy: { createdAt: "asc" },
@@ -228,14 +228,15 @@ describe("POST /api/admin/scenarios/[id]/coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(201);
-    expect(data.coworker.name).toBe("Sam Patel");
-    expect(data.coworker.role).toBe("Product Manager");
+    expect(data.data.coworker.name).toBe("Sam Patel");
+    expect(data.data.coworker.role).toBe("Product Manager");
     expect(mockCoworkerCreate).toHaveBeenCalledWith({
       data: {
         scenarioId: "scenario-1",
         name: "Sam Patel",
         role: "Product Manager",
         personaStyle: "friendly and casual",
+        personality: null,
         knowledge: { expertise: ["requirements", "user research"] },
         avatarUrl: undefined,
         voiceName: null,

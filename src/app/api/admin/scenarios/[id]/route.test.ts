@@ -110,8 +110,8 @@ describe("GET /api/admin/scenarios/[id]", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.scenario.name).toBe("Test Scenario");
-    expect(data.scenario.coworkers).toHaveLength(1);
+    expect(data.data.scenario.name).toBe("Test Scenario");
+    expect(data.data.scenario.coworkers).toHaveLength(1);
     expect(mockFindUnique).toHaveBeenCalledWith({
       where: { id: "scenario-1" },
       include: { coworkers: true },
@@ -220,8 +220,8 @@ describe("PUT /api/admin/scenarios/[id]", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.scenario.name).toBe("Updated Scenario");
-    expect(data.scenario.isPublished).toBe(true);
+    expect(data.data.scenario.name).toBe("Updated Scenario");
+    expect(data.data.scenario.isPublished).toBe(true);
   });
 
   it("only updates provided fields", async () => {
@@ -366,7 +366,7 @@ describe("DELETE /api/admin/scenarios/[id]", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.message).toBe("Scenario deleted");
+    expect(data.data.message).toBe("Scenario deleted");
     expect(mockDelete).toHaveBeenCalledWith({
       where: { id: "scenario-1" },
     });

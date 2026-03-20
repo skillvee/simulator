@@ -173,6 +173,7 @@ describe("POST /api/admin/scenarios", () => {
         taskDescription: "Build a feature",
         repoUrl: "https://github.com/test/repo",
         techStack: ["typescript", "react"],
+        archetypeId: "archetype-1",
       }),
     });
 
@@ -236,6 +237,7 @@ describe("POST /api/admin/scenarios", () => {
         taskDescription: "Task",
         repoUrl: "https://github.com/test/repo",
         techStack: ["typescript"],
+        archetypeId: "archetype-1",
       }),
     });
 

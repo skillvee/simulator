@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { gemini } from "@/lib/ai/gemini";
 import {
@@ -8,6 +7,7 @@ import {
   applyExtraction,
   type ScenarioBuilderData,
 } from "@/lib/scenarios";
+import { success, error } from "@/lib/api";
 
 interface SessionUser {
   id: string;
@@ -33,15 +33,12 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const body = await request.json();
@@ -52,10 +49,7 @@ export async function POST(request: Request) {
   };
 
   if (!message) {
-    return NextResponse.json(
-      { error: "Missing required field: message" },
-      { status: 400 }
-    );
+    return error("Missing required field: message", 400);
   }
 
   // Build the system prompt with current scenario state
@@ -109,18 +103,15 @@ export async function POST(request: Request) {
       ? applyExtraction(scenarioData || {}, extraction)
       : scenarioData || {};
 
-    return NextResponse.json({
+    return success({
       response: cleanedResponse,
       timestamp,
       scenarioData: updatedScenarioData,
       extraction,
     });
-  } catch (error) {
-    console.error("Gemini API error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate response" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Gemini API error:", err);
+    return error("Failed to generate response", 500);
   }
 }
 
@@ -132,15 +123,12 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const systemPrompt = buildCompleteSystemPrompt({});
@@ -166,14 +154,14 @@ export async function GET() {
       "Hello! I'm here to help you create a new assessment scenario. What kind of scenario would you like to build?";
     const cleanedResponse = cleanResponseForDisplay(responseText);
 
-    return NextResponse.json({
+    return success({
       greeting: cleanedResponse,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error("Gemini API error:", error);
+  } catch (err) {
+    console.error("Gemini API error:", err);
     // Return a fallback greeting
-    return NextResponse.json({
+    return success({
       greeting:
         "Hello! I'm here to help you create a new assessment scenario. Let's start with the basics - what's the name for this scenario and what company will candidates be 'joining'?",
       timestamp: new Date().toISOString(),

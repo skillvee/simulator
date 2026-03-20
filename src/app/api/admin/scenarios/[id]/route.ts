@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { validateRequest } from "@/lib/api";
+import { success, error, validateRequest } from "@/lib/api";
 import { ScenarioUpdateSchema } from "@/lib/schemas";
 
 interface SessionUser {
@@ -23,15 +22,12 @@ export async function GET(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id } = await context.params;
@@ -42,10 +38,10 @@ export async function GET(request: Request, context: RouteContext) {
   });
 
   if (!scenario) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
-  return NextResponse.json({ scenario });
+  return success({ scenario });
 }
 
 /**
@@ -56,15 +52,12 @@ export async function PUT(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id } = await context.params;
@@ -75,7 +68,7 @@ export async function PUT(request: Request, context: RouteContext) {
   });
 
   if (!existing) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
   // Validate request body using Zod schema
@@ -98,7 +91,7 @@ export async function PUT(request: Request, context: RouteContext) {
     data: updateData,
   });
 
-  return NextResponse.json({ scenario });
+  return success({ scenario });
 }
 
 /**
@@ -109,15 +102,12 @@ export async function DELETE(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id } = await context.params;
@@ -128,12 +118,12 @@ export async function DELETE(request: Request, context: RouteContext) {
   });
 
   if (!existing) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
   await db.scenario.delete({
     where: { id },
   });
 
-  return NextResponse.json({ message: "Scenario deleted" });
+  return success({ message: "Scenario deleted" });
 }

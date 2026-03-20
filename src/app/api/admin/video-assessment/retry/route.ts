@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/core";
 import { db } from "@/server/db";
 import {
@@ -6,6 +5,7 @@ import {
   forceRetryVideoAssessment,
 } from "@/lib/analysis";
 import { VideoAssessmentStatus } from "@prisma/client";
+import { success, error } from "@/lib/api";
 
 /**
  * POST /api/admin/video-assessment/retry
@@ -25,10 +25,7 @@ export async function POST(request: Request) {
     const { videoAssessmentId, force } = body;
 
     if (!videoAssessmentId) {
-      return NextResponse.json(
-        { error: "videoAssessmentId is required" },
-        { status: 400 }
-      );
+      return error("videoAssessmentId is required", 400);
     }
 
     // Use force retry if requested (resets retry count, allows retry after 3 failures)
@@ -37,25 +34,18 @@ export async function POST(request: Request) {
       : await retryVideoAssessment(videoAssessmentId);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || "Failed to retry assessment" },
-        { status: 400 }
-      );
+      return error(result.error || "Failed to retry assessment", 400);
     }
 
-    return NextResponse.json({
-      success: true,
+    return success({
       videoAssessmentId: result.videoAssessmentId,
       message: force
         ? "Video assessment force-retry initiated (retry count reset)"
         : "Video assessment retry initiated",
     });
-  } catch (error) {
-    console.error("Error retrying video assessment:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error retrying video assessment:", err);
+    return error("Internal server error", 500);
   }
 }
 
@@ -120,7 +110,7 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({
+    return success({
       failedAssessments: failedAssessments.map((assessment) => ({
         id: assessment.id,
         candidateId: assessment.candidateId,
@@ -138,11 +128,8 @@ export async function GET() {
       })),
       count: failedAssessments.length,
     });
-  } catch (error) {
-    console.error("Error listing failed video assessments:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error listing failed video assessments:", err);
+    return error("Internal server error", 500);
   }
 }

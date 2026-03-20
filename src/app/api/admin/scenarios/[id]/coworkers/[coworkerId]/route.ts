@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { success, error } from "@/lib/api";
 
 interface SessionUser {
   id: string;
@@ -21,15 +21,12 @@ export async function GET(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id: scenarioId, coworkerId } = await context.params;
@@ -39,17 +36,14 @@ export async function GET(request: Request, context: RouteContext) {
   });
 
   if (!coworker) {
-    return NextResponse.json({ error: "Coworker not found" }, { status: 404 });
+    return error("Coworker not found", 404);
   }
 
   if (coworker.scenarioId !== scenarioId) {
-    return NextResponse.json(
-      { error: "Coworker not found in this scenario" },
-      { status: 404 }
-    );
+    return error("Coworker not found in this scenario", 404);
   }
 
-  return NextResponse.json({ coworker });
+  return success({ coworker });
 }
 
 /**
@@ -60,15 +54,12 @@ export async function PUT(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id: scenarioId, coworkerId } = await context.params;
@@ -79,14 +70,11 @@ export async function PUT(request: Request, context: RouteContext) {
   });
 
   if (!existing) {
-    return NextResponse.json({ error: "Coworker not found" }, { status: 404 });
+    return error("Coworker not found", 404);
   }
 
   if (existing.scenarioId !== scenarioId) {
-    return NextResponse.json(
-      { error: "Coworker not found in this scenario" },
-      { status: 404 }
-    );
+    return error("Coworker not found in this scenario", 404);
   }
 
   const body = await request.json();
@@ -107,7 +95,7 @@ export async function PUT(request: Request, context: RouteContext) {
     data: updateData,
   });
 
-  return NextResponse.json({ coworker });
+  return success({ coworker });
 }
 
 /**
@@ -118,15 +106,12 @@ export async function DELETE(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id: scenarioId, coworkerId } = await context.params;
@@ -137,19 +122,16 @@ export async function DELETE(request: Request, context: RouteContext) {
   });
 
   if (!existing) {
-    return NextResponse.json({ error: "Coworker not found" }, { status: 404 });
+    return error("Coworker not found", 404);
   }
 
   if (existing.scenarioId !== scenarioId) {
-    return NextResponse.json(
-      { error: "Coworker not found in this scenario" },
-      { status: 404 }
-    );
+    return error("Coworker not found in this scenario", 404);
   }
 
   await db.coworker.delete({
     where: { id: coworkerId },
   });
 
-  return NextResponse.json({ message: "Coworker deleted" });
+  return success({ message: "Coworker deleted" });
 }

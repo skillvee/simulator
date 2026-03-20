@@ -6,23 +6,13 @@
  * The user account itself is preserved.
  */
 
-import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/core";
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
+import { success, error } from "@/lib/api";
 
 interface ResetRequest {
   userId: string;
-}
-
-interface ResetResponse {
-  success: boolean;
-  message: string;
-  deletedCounts?: {
-    assessments: number;
-    videoAssessments: number;
-    storageFiles: number;
-  };
 }
 
 /**
@@ -49,9 +39,7 @@ function extractStoragePath(urlOrPath: string): string {
   return urlOrPath;
 }
 
-export async function POST(
-  request: Request
-): Promise<NextResponse<ResetResponse>> {
+export async function POST(request: Request) {
   try {
     await requireAdmin();
 
@@ -59,10 +47,7 @@ export async function POST(
     const { userId } = body as ResetRequest;
 
     if (!userId) {
-      return NextResponse.json(
-        { success: false, message: "User ID is required" },
-        { status: 400 }
-      );
+      return error("User ID is required", 400);
     }
 
     // Verify user exists
@@ -72,10 +57,7 @@ export async function POST(
     });
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: "User not found" },
-        { status: 404 }
-      );
+      return error("User not found", 404);
     }
 
     // Step 1: Collect storage file paths before deleting DB records
@@ -136,47 +118,40 @@ export async function POST(
       .map(extractStoragePath)
       .filter(Boolean);
     if (cleanRecordingPaths.length > 0) {
-      const { error } = await supabaseAdmin.storage
+      const { error: storageErr } = await supabaseAdmin.storage
         .from(STORAGE_BUCKETS.RECORDINGS)
         .remove(cleanRecordingPaths);
-      if (!error) storageFilesDeleted += cleanRecordingPaths.length;
+      if (!storageErr) storageFilesDeleted += cleanRecordingPaths.length;
     }
 
     const cleanScreenshotPaths = screenshotPaths
       .map(extractStoragePath)
       .filter(Boolean);
     if (cleanScreenshotPaths.length > 0) {
-      const { error } = await supabaseAdmin.storage
+      const { error: storageErr } = await supabaseAdmin.storage
         .from(STORAGE_BUCKETS.SCREENSHOTS)
         .remove(cleanScreenshotPaths);
-      if (!error) storageFilesDeleted += cleanScreenshotPaths.length;
+      if (!storageErr) storageFilesDeleted += cleanScreenshotPaths.length;
     }
 
     console.log(
       `[Admin] Reset user ${user.email}: ${counts.assessments} assessments, ${counts.videoAssessments} video assessments, ${storageFilesDeleted} storage files deleted`
     );
 
-    return NextResponse.json({
-      success: true,
+    return success({
       message: `Reset complete. Deleted ${counts.assessments} assessment(s).`,
       deletedCounts: {
         ...counts,
         storageFiles: storageFilesDeleted,
       },
     });
-  } catch (error) {
-    console.error("Error resetting user data:", error);
+  } catch (err) {
+    console.error("Error resetting user data:", err);
 
-    if (error instanceof Error && error.message.includes("Unauthorized")) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized - Admin access required" },
-        { status: 401 }
-      );
+    if (err instanceof Error && err.message.includes("Unauthorized")) {
+      return error("Unauthorized - Admin access required", 401);
     }
 
-    return NextResponse.json(
-      { success: false, message: "Failed to reset user data" },
-      { status: 500 }
-    );
+    return error("Failed to reset user data", 500);
   }
 }

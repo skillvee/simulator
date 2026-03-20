@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { success, error } from "@/lib/api";
 
 interface SessionUser {
   id: string;
@@ -63,15 +63,12 @@ export async function GET(request: Request, context: RouteContext) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 }
-    );
+    return error("Admin access required", 403);
   }
 
   const { id } = await context.params;
@@ -82,7 +79,7 @@ export async function GET(request: Request, context: RouteContext) {
   });
 
   if (!scenario) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
   const result: VerifyResult = {
@@ -92,14 +89,14 @@ export async function GET(request: Request, context: RouteContext) {
 
   // Parse the GitHub URL
   if (!scenario.repoUrl) {
-    return NextResponse.json({
+    return success({
       ...result,
       error: "No repository URL set for this scenario",
     });
   }
   const parsed = parseGitHubRepoUrl(scenario.repoUrl);
   if (!parsed) {
-    return NextResponse.json({
+    return success({
       ...result,
       error:
         "Only GitHub repositories are currently supported for verification",
@@ -111,7 +108,7 @@ export async function GET(request: Request, context: RouteContext) {
   const token = process.env.GITHUB_ORG_TOKEN;
 
   if (!token) {
-    return NextResponse.json({
+    return success({
       ...result,
       error: "GITHUB_ORG_TOKEN is not configured. Cannot verify private repositories.",
     });
@@ -131,7 +128,7 @@ export async function GET(request: Request, context: RouteContext) {
     );
 
     if (!repoResponse.ok) {
-      return NextResponse.json({
+      return success({
         ...result,
         error: `Repository not accessible: ${repoResponse.status} ${repoResponse.statusText}`,
       });
@@ -165,12 +162,12 @@ export async function GET(request: Request, context: RouteContext) {
       result.hasReadme = false;
     }
 
-    return NextResponse.json(result);
-  } catch (error) {
-    return NextResponse.json({
+    return success(result);
+  } catch (err) {
+    return success({
       ...result,
       error:
-        error instanceof Error ? error.message : "Failed to verify repository",
+        err instanceof Error ? err.message : "Failed to verify repository",
     });
   }
 }
