@@ -16,17 +16,17 @@ RALPH_POLL_INTERVAL=30 ./ralph/ralph.sh
 
 ## Setup
 
-1. Create issues in the repo
+1. Create issues in the repo with the `task` label
 2. Each issue = one bite-sized task
 3. Run ralph - it processes issues continuously
 
 ## How It Works
 
-1. Fetches highest priority open issue (P0 → P1 → P2 → no label), oldest first within each priority
+1. Fetches highest priority open issue with `task` label (P0 → P1 → P2 → no priority), oldest first within each priority
 2. Spawns fresh Claude instance with issue context
 3. Claude implements, tests, and commits
 4. Commit message `Closes #N` auto-closes issue
-5. Learnings saved to `progress.md`
+5. Learnings saved as structured comments on the issue
 6. Polls for new issues (configurable interval)
 7. Runs forever until stopped with Ctrl+C
 
@@ -34,7 +34,6 @@ RALPH_POLL_INTERVAL=30 ./ralph/ralph.sh
 
 - `ralph.sh` - Main orchestrator
 - `prompt.md` - Instructions for each Claude iteration
-- `progress.md` - Cumulative learnings across iterations
 
 ## Available Tools
 
@@ -42,25 +41,18 @@ Ralph has access to the following skills and tools:
 
 ### Frontend Design
 
-When building UI components, the `frontend-design` skill activates automatically. It creates distinctive interfaces that avoid generic AI aesthetics (no Inter font, no purple gradients on white).
-
-### Superpowers (TDD & Planning)
-
-For complex tasks, use the superpowers workflow:
-
-- Write tests first (RED), make them pass (GREEN), then refactor
-- Use `/superpowers:brainstorm` before implementing new features
+When building UI components, the `frontend-design` skill activates automatically. It creates distinctive interfaces using the modern blue theme with shadcn/ui.
 
 ### Agent-Browser (Visual Testing)
 
-For tasks involving web UIs, use agent-browser for E2E and visual testing:
+For tasks involving web UIs, use agent-browser for E2E and visual testing. See `.claude/skills/agent-browser/SKILL.md` for full documentation.
 
 ```bash
 agent-browser open "http://localhost:3000"
-agent-browser screenshot ./tests/screenshot.png
+agent-browser screenshot ./screenshots/page.png
 agent-browser snapshot  # Get accessibility tree
 agent-browser click "button.submit"
 agent-browser fill "#input" "text"
 ```
 
-Use this to verify UI changes work correctly and capture visual evidence.
+Use `--session "ralph"` flag across commands to maintain browser state (login sessions, etc.).
