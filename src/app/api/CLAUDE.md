@@ -127,3 +127,6 @@ handled within the Slack interface using the call/ routes after RF-012.
 - GitHub API can't DELETE PRs - use PATCH with `state: "closed"`
 - Test redirects/notFound by mocking next/navigation and expecting throws
 - Rename `error` variable in catch blocks to `err` to avoid conflict with `error` helper
+- `session.user.id` can be undefined even in auth'd routes — always check `user?.id` even after `requireAuth()`
+- Assessment finalization must be idempotent — use `upsert`, check flags before triggering side effects (video analysis, PR cleanup)
+- Use `router.replace(url, { scroll: false })` to update URL params without page jumping to top

@@ -30,7 +30,23 @@ Each has its own CLAUDE.md with specific patterns and gotchas.
 **Key docs:**
 
 - `docs/prd.md` - PRD summary
-- `ralph/progress.md` - Learnings from 83+ issues
+- Closed GitHub issues - Learnings from 83+ Ralph iterations (in issue comments)
+
+## Assessment Flow
+
+The assessment lifecycle is **WELCOME → WORKING → COMPLETED**. No intermediate states — HR_INTERVIEW, ONBOARDING, FINAL_DEFENSE, and PROCESSING were all removed. Some old code may still reference them.
+
+## Prisma Enums
+
+Import Prisma enums from `@prisma/client`, not `@/types`:
+
+```typescript
+import { AssessmentDimension } from "@prisma/client";
+```
+
+## Auth Security
+
+When handling redirect callbacks, validate `url.startsWith("/")` BEFORE checking `url.startsWith(baseUrl)` to prevent open redirects. Relative URLs don't start with baseUrl, so order matters.
 
 ## CLIs
 

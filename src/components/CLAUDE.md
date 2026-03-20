@@ -47,3 +47,5 @@ Server components fetch data and pass serialized (JSON-safe) props to client com
 - Use `e.stopPropagation()` on nested click handlers
 - `redirect()` from next/navigation throws (not returns)
 - Test files should mock relative imports when testing intra-directory dependencies
+- Sticky positioning requires opaque background (`bg-white`) — without it, content bleeds through when scrolling under sticky elements
+- Radix tooltip testing: use `findAllByText`, not `findByText` — Radix renders tooltips in a portal outside the component tree

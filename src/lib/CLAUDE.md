@@ -74,8 +74,13 @@ try {
 }
 ```
 
+## Prisma Tips
+
+- Use `_count` for related record counts instead of fetching full nested objects: `_count: { assessments: true }`
+
 ## Testing
 
 - Define mocks INSIDE `vi.mock()` factory (Vitest hoisting)
 - MediaRecorder doesn't exist in Node.js - mock it
 - jsdom File/Blob `arrayBuffer()` hangs with large files
+- `agent-browser fill` doesn't work reliably with React controlled inputs (doesn't trigger onChange) — use `type` command instead

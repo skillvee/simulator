@@ -14,3 +14,5 @@ Use filler words ("um", "so"), react naturally ("mm-hmm", "gotcha"), keep turns 
 
 - `systemInstruction` not supported for text chat - use first user/model message pair
 - Clean JSON markdown (```json) from Gemini responses before parsing
+- Defense prompt aggregates all coworker chat history via `formatConversationsForSummary()` from `conversation-memory.ts`
+- Hiring signals fields (`greenFlags`, `redFlags`, `hiringSignals`) — code extracts them from `rawAiResponse` but the video evaluation prompt never generates them. Update the prompt if bringing these back

@@ -67,6 +67,11 @@ const { connectionState, connect, disconnect, transcript } = useVoiceConversatio
 - Use `sessionConnected` flag in callbacks - refs can be stale in closures
 - Audio: 16kHz input (to Gemini), 24kHz output (from Gemini)
 
+## Gotchas
+
+- `historyLoadedRef` (or similar refs guarding against duplicate loads) must reset to `false` on error — otherwise failed loads can't be retried
+- Manager auto-start messages need assessment-level dedup (`assessment.managerGreetingDelivered` flag), not conversation-level checks, to prevent race conditions with concurrent updates
+
 ## Cleanup
 
 Always stop MediaStream tracks and close WebSocket connections in useEffect cleanup.
