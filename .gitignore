@@ -39,5 +39,7 @@ next-env.d.ts
 prisma/migrations/**/migration_lock.toml
 supabase/.temp/
 .env*.local
-# Nightshift plan artifacts (keep out of version control)
+# Plan artifacts
 .nightshift-plan
+.claude/plans/
+docs/plans/
