@@ -2,249 +2,20 @@ import { auth } from "@/auth";
 import { success, error } from "@/lib/api";
 import { db } from "@/server/db";
 import { createLogger } from "@/lib/core";
-import { VideoAssessmentStatus } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
-import type { AssessmentReport, SkillScore, ScoreLevel, RubricAssessmentOutput } from "@/types";
 import { sendReportEmail, isEmailServiceConfigured } from "@/lib/external";
-import { getEvaluationResults, evaluateVideo } from "@/lib/analysis";
-import { RUBRIC_TO_ASSESSMENT_DIMENSION } from "@/lib/rubric/dimension-mapping";
+import {
+  fetchAssessmentForReport,
+  resolveVideoEvaluation,
+  calculateTiming,
+  countUniqueCoworkers,
+  convertRubricToReport,
+  reportToPrismaJson,
+} from "@/lib/analysis";
+import type { AssessmentReport } from "@/types";
 
 const logger = createLogger("api:assessment:report");
 
-/** Shape of a legacy v1 red/green flag entry */
-interface LegacyFlag {
-  signal?: string;
-  evidence?: string;
-}
-
-/** Shape of a legacy v1 skill score entry */
-interface LegacySkillScore {
-  score?: number | null;
-  rationale?: string;
-}
-
-/**
- * Legacy VideoEvaluationOutput format detection and migration
- * Converts v1.x format to v3.0.0 RubricAssessmentOutput format
- */
-function migrateVideoEvaluationToRubric(data: unknown): RubricAssessmentOutput | null {
-  // Narrow to record so we can access properties safely
-  if (!data || typeof data !== 'object') return null;
-  const record = data as Record<string, unknown>;
-
-  // Check if it's already in v3 format (has dimensionScores array)
-  if (record.dimensionScores && Array.isArray(record.dimensionScores)) {
-    return data as RubricAssessmentOutput;
-  }
-
-  // Check if it's legacy v1 format (has skill_scores object)
-  if (record.skill_scores && typeof record.skill_scores === 'object') {
-    const overallScore = record.overall_score as { score?: number } | undefined;
-    const redFlags = record.red_flags as (LegacyFlag | string)[] | undefined;
-    const greenFlags = record.green_flags as (LegacyFlag | string)[] | undefined;
-    const areasForImprovement = record.areas_for_improvement as string[] | undefined;
-    const skillScores = record.skill_scores as Record<string, LegacySkillScore>;
-
-    const migrated: RubricAssessmentOutput = {
-      evaluationVersion: "3.0.0",
-      roleFamilySlug: "engineering",  // Default to engineering for legacy data
-      overallScore: overallScore?.score || 2.0,
-      dimensionScores: [],
-      detectedRedFlags: redFlags?.map((rf) => {
-        const signal = typeof rf === 'string' ? rf : rf.signal || '';
-        const evidence = typeof rf === 'string' ? '' : rf.evidence || '';
-        return {
-          slug: signal.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-          name: signal,
-          description: signal,
-          evidence,
-          timestamps: [],
-        };
-      }) || [],
-      topStrengths: greenFlags?.map((gf) => ({
-        dimension: "general",
-        score: 3.0,
-        description: typeof gf === 'string' ? gf : gf.signal || '',
-        evidence: []
-      })) || [],
-      growthAreas: areasForImprovement?.map((area) => ({
-        dimension: "general",
-        score: 2.0,
-        description: area,
-        suggestion: ""
-      })) || [],
-      overallSummary: (record.overall_summary as string) || "",
-      evaluationConfidence: "medium" as const,
-      insufficientEvidenceNotes: null
-    };
-
-    // Migrate skill scores to dimension scores
-    Object.entries(skillScores).forEach(([key, value]) => {
-      migrated.dimensionScores.push({
-        dimensionSlug: key.toLowerCase().replace(/_/g, '-'),
-        dimensionName: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        score: value.score ?? null,
-        summary: `Performance in ${key.replace(/_/g, ' ')}`,
-        confidence: "medium" as const,
-        rationale: value.rationale || "",
-        observableBehaviors: [],
-        timestamps: [],
-        trainableGap: (value.score != null && value.score < 3.0) || false,
-        greenFlags: [],
-        redFlags: []
-      });
-    });
-
-    return migrated;
-  }
-
-  // Unknown format
-  logger.warn("Unknown video evaluation format, cannot migrate", { data: String(data) });
-  return null;
-}
-
-/**
- * Maps assessment dimension keys to report skill categories.
- * Assessment dimensions (UPPERCASE) → report categories (lowercase).
- */
-const ASSESSMENT_DIM_TO_CATEGORY: Record<string, string> = {
-  COMMUNICATION: "communication",
-  PROBLEM_SOLVING: "problem_decomposition",
-  TECHNICAL_KNOWLEDGE: "code_quality",
-  COLLABORATION: "xfn_collaboration",
-  ADAPTABILITY: "technical_decision_making",
-  LEADERSHIP: "presentation",
-  CREATIVITY: "ai_leverage",
-  TIME_MANAGEMENT: "time_management",
-};
-
-/**
- * Maps a score (1-4 rubric scale) to a level label
- */
-function scoreToLevel(score: number): ScoreLevel {
-  if (score >= 3.5) return "exceptional";
-  if (score >= 2.5) return "strong";
-  if (score >= 1.5) return "adequate";
-  return "needs_improvement";
-}
-
-/**
- * Converts rubric assessment output (v3) to assessment report format.
- *
- * The v3 rubric system stores dimension scores using role-family-specific slugs
- * (e.g., "technical_execution", "problem_decomposition_design"). This function
- * maps them through RUBRIC_TO_ASSESSMENT_DIMENSION → ASSESSMENT_DIM_TO_CATEGORY
- * to produce the report's skill categories.
- */
-function convertRubricToReport(
-  rubricResult: RubricAssessmentOutput,
-  assessmentId: string,
-  candidateName?: string,
-  timing?: { totalDurationMinutes: number | null; workingPhaseMinutes: number | null },
-  coworkersContacted?: number
-): AssessmentReport {
-  const skillScores: SkillScore[] = [];
-
-  // Track best score per assessment dimension (multiple rubric dims may map to same one)
-  const bestByCategory: Record<string, SkillScore> = {};
-
-  for (const dimScore of rubricResult.dimensionScores) {
-    if (dimScore.score === null) continue;
-
-    // Map rubric slug → assessment dimension → report category
-    const assessmentDim = RUBRIC_TO_ASSESSMENT_DIMENSION[dimScore.dimensionSlug];
-    const category = assessmentDim
-      ? ASSESSMENT_DIM_TO_CATEGORY[assessmentDim]
-      : dimScore.dimensionSlug; // Fall back to slug itself if no mapping
-
-    if (!category) continue;
-
-    const evidence: string[] = [
-      ...dimScore.greenFlags.map(f => `+ ${f}`),
-      ...dimScore.redFlags.map(f => `- ${f}`),
-    ];
-
-    const candidate: SkillScore = {
-      category: category as SkillScore["category"],
-      score: dimScore.score,
-      level: scoreToLevel(dimScore.score),
-      evidence,
-      notes: dimScore.rationale,
-    };
-
-    // Keep the higher-scoring entry when multiple rubric dims map to same category
-    const existing = bestByCategory[category];
-    if (!existing || dimScore.score > existing.score) {
-      bestByCategory[category] = candidate;
-    }
-  }
-
-  skillScores.push(...Object.values(bestByCategory));
-
-  // Build narrative from v3 fields (topStrengths / growthAreas / detectedRedFlags)
-  const strengths = rubricResult.topStrengths.map(s => s.description);
-  const areasForImprovement = rubricResult.growthAreas.map(g => g.description);
-
-  // Add detected red flags to areas for improvement
-  for (const rf of rubricResult.detectedRedFlags) {
-    areasForImprovement.push(`Red flag: ${rf.evidence}`);
-  }
-
-  // Build notable observations from highest-scoring dimension behaviors
-  const notableObservations: string[] = rubricResult.dimensionScores
-    .filter(d => d.score !== null && d.score >= 3)
-    .flatMap(d => d.observableBehaviors.slice(0, 1).map(b => `[${b.timestamp}] ${b.behavior}`))
-    .slice(0, 5);
-
-  return {
-    generatedAt: new Date().toISOString(),
-    assessmentId,
-    candidateName,
-    overallScore: rubricResult.overallScore,
-    overallLevel: scoreToLevel(rubricResult.overallScore),
-    skillScores,
-    narrative: {
-      overallSummary: rubricResult.overallSummary,
-      strengths,
-      areasForImprovement,
-      notableObservations,
-    },
-    recommendations: skillScores
-      .filter(s => s.score <= 2)
-      .slice(0, 3)
-      .map((skill) => ({
-        category: skill.category,
-        priority: skill.score <= 1 ? "high" : "medium" as const,
-        title: `Improve ${skill.category.replace(/_/g, " ")}`,
-        description: skill.notes,
-        actionableSteps: skill.evidence
-          .filter(e => e.startsWith("- "))
-          .map(e => `Address: ${e.slice(2)}`)
-          .slice(0, 3),
-      })),
-    metrics: {
-      totalDurationMinutes: timing?.totalDurationMinutes ?? null,
-      workingPhaseMinutes: timing?.workingPhaseMinutes ?? null,
-      coworkersContacted: coworkersContacted ?? 0,
-      aiToolsUsed: true,
-      testsStatus: "unknown",
-      codeReviewScore: null,
-    },
-    version: rubricResult.evaluationVersion,
-  };
-}
-
-/**
- * Convert report to Prisma JSON format
- */
-function reportToPrismaJson(report: AssessmentReport): Prisma.InputJsonValue {
-  return report as unknown as Prisma.InputJsonValue;
-}
-
-/**
- * POST /api/assessment/report
- * Generates the final assessment report from video evaluation
- */
+/** POST /api/assessment/report — Generate final assessment report */
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -259,34 +30,7 @@ export async function POST(request: Request) {
       return error("Assessment ID is required", 400);
     }
 
-    // Verify assessment exists and belongs to user
-    const assessment = await db.assessment.findUnique({
-      where: { id: assessmentId },
-      select: {
-        id: true,
-        userId: true,
-        status: true,
-        report: true,
-        startedAt: true,
-        completedAt: true,
-        user: {
-          select: { name: true, email: true },
-        },
-        conversations: {
-          select: { coworkerId: true },
-          where: { coworkerId: { not: null } },
-        },
-        recordings: {
-          where: { type: "screen" },
-          select: { storageUrl: true },
-          take: 1,
-        },
-        scenario: {
-          select: { taskDescription: true },
-        },
-      },
-    });
-
+    const assessment = await fetchAssessmentForReport(assessmentId);
     if (!assessment) {
       return error("Assessment not found", 404);
     }
@@ -295,174 +39,67 @@ export async function POST(request: Request) {
       return error("Unauthorized to access this assessment", 403);
     }
 
-    // Check if we should return existing report
+    // Return cached report if available
     if (assessment.report && !forceRegenerate) {
-      return success({
-        report: assessment.report,
-        cached: true,
-      });
+      return success({ report: assessment.report, cached: true });
     }
 
-    // Check if video recording exists
     const videoUrl = assessment.recordings[0]?.storageUrl;
     if (!videoUrl) {
       return error("No video recording found for this assessment. Video evaluation cannot proceed without a recording.", 400);
     }
-
-    // Check if video assessment exists and get results
-    const videoAssessment = await db.videoAssessment.findUnique({
-      where: { assessmentId },
-      select: {
-        id: true,
-        status: true,
-        summary: {
-          select: { rawAiResponse: true },
-        },
-      },
-    });
-
-    let videoResult: RubricAssessmentOutput | null = null;
-
-    if (videoAssessment?.status === VideoAssessmentStatus.COMPLETED && videoAssessment.summary?.rawAiResponse) {
-      // Use existing video evaluation result - migrate if needed from v1 to v3 format
-      videoResult = migrateVideoEvaluationToRubric(videoAssessment.summary.rawAiResponse);
-      if (!videoResult) {
-        logger.error("Failed to migrate video evaluation format", { assessmentId });
-      }
-    } else if (!videoAssessment || videoAssessment.status === VideoAssessmentStatus.PENDING ||
-               videoAssessment.status === VideoAssessmentStatus.FAILED) {
-      // Trigger video evaluation and wait for it
-      try {
-        // Create video assessment record if it doesn't exist
-        let videoAssessmentId: string;
-
-        if (!videoAssessment) {
-          const newVideoAssessment = await db.videoAssessment.create({
-            data: {
-              candidateId: session.user.id,
-              assessmentId,
-              videoUrl,
-              status: VideoAssessmentStatus.PENDING,
-            },
-          });
-          videoAssessmentId = newVideoAssessment.id;
-        } else {
-          videoAssessmentId = videoAssessment.id;
-          // Reset status for retry
-          await db.videoAssessment.update({
-            where: { id: videoAssessmentId },
-            data: { status: VideoAssessmentStatus.PENDING },
-          });
-        }
-
-        // Run evaluation synchronously
-        const evalResult = await evaluateVideo({
-          assessmentId: videoAssessmentId,
-          videoUrl,
-          taskDescription: assessment.scenario.taskDescription,
-        });
-
-        if (!evalResult.success) {
-          logger.error("Video evaluation failed", { error: evalResult.error });
-          return error("Video evaluation failed", 500);
-        }
-
-        // Fetch the results
-        const results = await getEvaluationResults(videoAssessmentId);
-        if (results.summary?.rawAiResponse) {
-          videoResult = migrateVideoEvaluationToRubric(results.summary.rawAiResponse);
-          if (!videoResult) {
-            logger.error("Failed to migrate newly evaluated video format", { assessmentId });
-          }
-        }
-      } catch (err) {
-        logger.error("Error running video evaluation", { error: String(err) });
-        return error("Failed to evaluate video", 500);
-      }
-    } else if (videoAssessment.status === VideoAssessmentStatus.PROCESSING) {
-      return error("Video evaluation is still in progress. Please try again later.", 202);
-    }
-
-    if (!videoResult) {
-      return error("Could not retrieve video evaluation results", 500);
-    }
-
-    // Calculate timing
-    const completedAt = assessment.completedAt || new Date();
-    const totalDurationMs = completedAt.getTime() - assessment.startedAt.getTime();
-    const totalDurationMinutes = Math.floor(totalDurationMs / 60000);
-
-    // Count unique coworkers contacted
-    const uniqueCoworkerIds = new Set(
-      assessment.conversations
-        .map(c => c.coworkerId)
-        .filter((id): id is string => id !== null)
+    const videoResult = await resolveVideoEvaluation(
+      assessmentId, videoUrl, assessment.scenario.taskDescription, session.user.id
     );
 
-    // Convert rubric evaluation to report format
+    if (videoResult.status === "processing")
+      return error("Video evaluation is still in progress. Please try again later.", 202);
+    if (videoResult.status === "error")
+      return error(videoResult.message, 500);
+
+    const timing = calculateTiming(assessment.startedAt, assessment.completedAt);
+    const coworkersContacted = countUniqueCoworkers(assessment.conversations);
+
     const report = convertRubricToReport(
-      videoResult,
+      videoResult.data,
       assessmentId,
       assessment.user?.name || undefined,
-      {
-        totalDurationMinutes,
-        workingPhaseMinutes: totalDurationMinutes,
-      },
-      uniqueCoworkerIds.size
+      timing,
+      coworkersContacted
     );
 
-    // Store the report in the database
+    // Store report
     await db.assessment.update({
       where: { id: assessmentId },
-      data: {
-        report: reportToPrismaJson(report),
-      },
+      data: { report: reportToPrismaJson(report) },
     });
 
-    // Send email notification if email service is configured
-    let emailResult: { success: boolean; error?: string } = { success: false };
-    if (isEmailServiceConfigured() && assessment.user?.email) {
+    // Send email notification asynchronously (fire-and-forget)
+    const emailSent = isEmailServiceConfigured() && !!assessment.user?.email;
+    if (emailSent) {
       const host = request.headers.get("host") || "localhost:3000";
       const protocol = host.includes("localhost") ? "http" : "https";
-      const appBaseUrl = `${protocol}://${host}`;
-
-      // Send email asynchronously (don't block response)
       sendReportEmail({
-        to: assessment.user.email,
+        to: assessment.user!.email!,
         candidateName: assessment.user.name || undefined,
         assessmentId,
         report: report as AssessmentReport,
-        appBaseUrl,
+        appBaseUrl: `${protocol}://${host}`,
       })
-        .then((result) => {
-          if (result.success) {
-            logger.info("Report email sent", { email: assessment.user?.email });
-          } else {
-            logger.warn("Failed to send report email", { error: result.error });
-          }
-        })
-        .catch((err) => {
-          logger.error("Error sending report email", { error: String(err) });
-        });
-
-      emailResult = { success: true };
+        .then((r) => r.success
+          ? logger.info("Report email sent", { email: assessment.user?.email })
+          : logger.warn("Failed to send report email", { error: r.error }))
+        .catch((err) => logger.error("Error sending report email", { error: String(err) }));
     }
 
-    return success({
-      report,
-      cached: false,
-      emailSent: emailResult.success,
-    });
+    return success({ report, cached: false, emailSent });
   } catch (err) {
     logger.error("Error generating assessment report", { error: String(err) });
     return error("Failed to generate assessment report", 500);
   }
 }
 
-/**
- * GET /api/assessment/report?assessmentId=xxx
- * Retrieves an existing assessment report
- */
+/** GET /api/assessment/report?assessmentId=xxx — Retrieve existing report */
 export async function GET(request: Request) {
   try {
     const session = await auth();
@@ -484,9 +121,7 @@ export async function GET(request: Request) {
         userId: true,
         status: true,
         report: true,
-        user: {
-          select: { name: true },
-        },
+        user: { select: { name: true } },
       },
     });
 

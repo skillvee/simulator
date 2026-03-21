@@ -32,8 +32,9 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock analysis module
-vi.mock("@/lib/analysis", () => ({
+// Mock analysis module — keep real implementations for report-data/scoring/migration,
+// only mock video-evaluation functions
+vi.mock("@/lib/analysis/video-evaluation", () => ({
   evaluateVideo: (...args: unknown[]) => mockEvaluateVideo(...args),
   getEvaluationResults: (...args: unknown[]) => mockGetEvaluationResults(...args),
 }));
@@ -44,102 +45,45 @@ vi.mock("@/lib/external", () => ({
   isEmailServiceConfigured: vi.fn().mockReturnValue(false),
 }));
 
-// Sample video evaluation output
+// Sample video evaluation output in v3 (RubricAssessmentOutput) format
 const sampleVideoEvaluationOutput = {
-  evaluation_version: "1.1.0",
-  overall_score: 4.0,
-  dimension_scores: {
-    COMMUNICATION: {
+  evaluationVersion: "3.0.0",
+  roleFamilySlug: "engineering",
+  overallScore: 4.0,
+  dimensionScores: [
+    {
+      dimensionSlug: "communication_clarity",
+      dimensionName: "Communication Clarity",
       score: 4,
+      summary: "Clear communication throughout",
+      confidence: "high" as const,
       rationale: "Clear communication throughout",
+      observableBehaviors: [{ timestamp: "00:30", behavior: "Spoke clearly" }],
+      timestamps: ["00:30"],
+      trainableGap: false,
       greenFlags: ["Articulate explanations"],
       redFlags: [],
-      observable_behaviors: "Spoke clearly",
-      timestamps: ["00:30"],
-      trainable_gap: false,
     },
-    PROBLEM_SOLVING: {
+    {
+      dimensionSlug: "problem_decomposition_design",
+      dimensionName: "Problem Decomposition",
       score: 4,
+      summary: "Good analytical approach",
+      confidence: "high" as const,
       rationale: "Good analytical approach",
+      observableBehaviors: [{ timestamp: "01:00", behavior: "Broke down the problem" }],
+      timestamps: ["01:00"],
+      trainableGap: false,
       greenFlags: ["Systematic debugging"],
       redFlags: [],
-      observable_behaviors: "Broke down the problem",
-      timestamps: ["01:00"],
-      trainable_gap: false,
-    },
-    TECHNICAL_KNOWLEDGE: {
-      score: 3,
-      rationale: "Solid fundamentals",
-      greenFlags: [],
-      redFlags: ["Some gaps in advanced topics"],
-      observable_behaviors: "Used basic patterns",
-      timestamps: ["02:00"],
-      trainable_gap: true,
-    },
-    COLLABORATION: {
-      score: 4,
-      rationale: "Good teamwork",
-      greenFlags: ["Sought feedback"],
-      redFlags: [],
-      observable_behaviors: "Asked questions",
-      timestamps: ["03:00"],
-      trainable_gap: false,
-    },
-    ADAPTABILITY: {
-      score: 4,
-      rationale: "Handled changes well",
-      greenFlags: ["Quick pivots"],
-      redFlags: [],
-      observable_behaviors: "Adjusted approach",
-      timestamps: ["04:00"],
-      trainable_gap: false,
-    },
-    LEADERSHIP: {
-      score: 3,
-      rationale: "Showed some initiative",
-      greenFlags: [],
-      redFlags: ["Could be more proactive"],
-      observable_behaviors: "Followed guidance",
-      timestamps: ["05:00"],
-      trainable_gap: true,
-    },
-    CREATIVITY: {
-      score: 4,
-      rationale: "Creative solutions",
-      greenFlags: ["Novel approach"],
-      redFlags: [],
-      observable_behaviors: "Tried different methods",
-      timestamps: ["06:00"],
-      trainable_gap: false,
-    },
-    TIME_MANAGEMENT: {
-      score: 4,
-      rationale: "Good time usage",
-      greenFlags: ["Prioritized well"],
-      redFlags: [],
-      observable_behaviors: "Stayed focused",
-      timestamps: ["07:00"],
-      trainable_gap: false,
-    },
-  },
-  hiringSignals: {
-    overallGreenFlags: ["Strong communicator", "Collaborative"],
-    overallRedFlags: ["Technical gaps in advanced areas"],
-    recommendation: "hire" as const,
-    recommendationRationale: "Strong candidate with good fundamentals",
-  },
-  key_highlights: [
-    {
-      timestamp: "00:30",
-      type: "positive" as const,
-      dimension: "COMMUNICATION",
-      description: "Clear explanation of approach",
-      quote: null,
     },
   ],
-  overall_summary: "Strong candidate with good communication and problem-solving skills.",
-  evaluation_confidence: "high" as const,
-  insufficient_evidence_notes: null,
+  detectedRedFlags: [],
+  topStrengths: [{ dimension: "communication", score: 4, description: "Strong communicator" }],
+  growthAreas: [],
+  overallSummary: "Strong candidate with good communication and problem-solving skills.",
+  evaluationConfidence: "high" as const,
+  insufficientEvidenceNotes: null,
 };
 
 describe("Assessment Report API", () => {
