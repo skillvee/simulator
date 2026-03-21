@@ -100,6 +100,8 @@ model Coworker {
   personality   Json?
   conversations Conversation[]
   scenario      Scenario       @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
 }
 
 model Assessment {
@@ -128,6 +130,9 @@ model Assessment {
   conversations          Conversation[]
   recordings             Recording[]
   videoAssessment        VideoAssessment?
+
+  @@index([userId])
+  @@index([scenarioId, userId])
 }
 
 model Conversation {
@@ -153,6 +158,8 @@ model Recording {
   createdAt    DateTime           @default(now())
   assessment   Assessment         @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   segments     RecordingSegment[]
+
+  @@index([assessmentId])
 }
 
 model RecordingSegment {
