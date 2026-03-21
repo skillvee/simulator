@@ -44,6 +44,7 @@ export default async function AssessmentTimelinePage({
           responseTokens: true,
           promptText: true,
           responseText: true,
+          promptType: true,
         },
       },
       recordings: {
@@ -87,6 +88,22 @@ export default async function AssessmentTimelinePage({
   if (!assessment) {
     notFound();
   }
+
+  // Fetch client errors for this assessment
+  const clientErrors = await db.clientError.findMany({
+    where: { assessmentId: id },
+    orderBy: { timestamp: "asc" },
+    select: {
+      id: true,
+      errorType: true,
+      message: true,
+      stackTrace: true,
+      componentName: true,
+      url: true,
+      timestamp: true,
+      metadata: true,
+    },
+  });
 
   // Fetch coworker info for voice sessions (VoiceSession has no Coworker relation)
   const voiceCoworkerIds = [
@@ -140,5 +157,16 @@ export default async function AssessmentTimelinePage({
     })),
   };
 
-  return <AssessmentTimelineClient assessment={serializedAssessment} />;
+  const serializedClientErrors = clientErrors.map((err) => ({
+    ...err,
+    timestamp: err.timestamp.toISOString(),
+    createdAt: undefined,
+  }));
+
+  return (
+    <AssessmentTimelineClient
+      assessment={serializedAssessment}
+      clientErrors={serializedClientErrors}
+    />
+  );
 }

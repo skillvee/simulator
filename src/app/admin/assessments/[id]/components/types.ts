@@ -1,4 +1,8 @@
-import type { AssessmentStatus, AssessmentLogEventType } from "@prisma/client";
+import type {
+  AssessmentStatus,
+  AssessmentLogEventType,
+  ClientErrorType,
+} from "@prisma/client";
 
 // Serialized types from server (dates as strings)
 export interface SerializedLog {
@@ -22,6 +26,7 @@ export interface SerializedApiCall {
   responseTokens: number | null;
   promptText: string;
   responseText: string | null;
+  promptType: string | null;
 }
 
 export interface SerializedRecording {
@@ -112,6 +117,43 @@ export interface SerializedVoiceSession {
     role: string;
   };
 }
+
+// Serialized client error from server
+export interface SerializedClientError {
+  id: string;
+  errorType: ClientErrorType;
+  message: string;
+  stackTrace: string | null;
+  componentName: string | null;
+  url: string;
+  timestamp: string;
+  metadata: unknown;
+}
+
+// Unified error entry for the Errors tab
+export type ErrorEntry =
+  | {
+      source: "client";
+      id: string;
+      timestamp: string;
+      message: string;
+      stackTrace: string | null;
+      errorType: ClientErrorType;
+      componentName: string | null;
+      url: string;
+      metadata: unknown;
+    }
+  | {
+      source: "api";
+      id: string;
+      timestamp: string;
+      message: string;
+      stackTrace: string | null;
+      endpoint: string | null;
+      statusCode: number | null;
+      modelVersion: string;
+      promptType: string | null;
+    };
 
 // Toast notification type
 export interface Toast {

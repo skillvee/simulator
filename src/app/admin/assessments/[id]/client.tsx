@@ -12,6 +12,7 @@ import {
   Loader2,
   MessageSquare,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   type SerializedAssessment,
+  type SerializedClientError,
   type TimelineEvent,
   type Toast,
   formatDuration,
@@ -30,6 +32,7 @@ import {
   ToastNotification,
   TimelineEventItem,
   ConversationsTab,
+  ErrorsTab,
 } from "./components";
 
 // Re-export formatDuration for backwards compatibility (used in tests)
@@ -37,10 +40,12 @@ export { formatDuration } from "./components";
 
 interface AssessmentTimelineClientProps {
   assessment: SerializedAssessment;
+  clientErrors: SerializedClientError[];
 }
 
 export function AssessmentTimelineClient({
   assessment,
+  clientErrors,
 }: AssessmentTimelineClientProps) {
   const router = useRouter();
   // Track expanded API call events (for showing details)
@@ -99,6 +104,12 @@ export function AssessmentTimelineClient({
 
   // Check if assessment has errors
   const hasErrors = timelineEvents.some((e) => e.isError);
+
+  // Total error count for the Errors tab badge
+  const apiErrorCount = assessment.apiCalls.filter(
+    (c) => c.errorMessage !== null
+  ).length;
+  const totalErrorCount = clientErrors.length + apiErrorCount;
 
   // Get screen recording
   const screenRecording = assessment.recordings.find(
@@ -426,6 +437,16 @@ export function AssessmentTimelineClient({
               {assessment.conversations.length + assessment.voiceSessions.length}
             </Badge>
           </TabsTrigger>
+          <TabsTrigger value="errors" className="gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            Errors
+            <Badge
+              variant={totalErrorCount > 0 ? "destructive" : "secondary"}
+              className="ml-1 text-xs"
+            >
+              {totalErrorCount}
+            </Badge>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="timeline">
@@ -479,6 +500,13 @@ export function AssessmentTimelineClient({
           <ConversationsTab
             conversations={assessment.conversations}
             voiceSessions={assessment.voiceSessions}
+          />
+        </TabsContent>
+
+        <TabsContent value="errors">
+          <ErrorsTab
+            clientErrors={clientErrors}
+            apiCalls={assessment.apiCalls}
           />
         </TabsContent>
       </Tabs>

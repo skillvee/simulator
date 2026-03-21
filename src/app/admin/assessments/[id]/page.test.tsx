@@ -35,6 +35,9 @@ vi.mock("@/server/db", () => ({
     coworker: {
       findMany: vi.fn().mockResolvedValue([]),
     },
+    clientError: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 
@@ -113,6 +116,7 @@ const mockAssessment = {
       responseTokens: 50,
       promptText: "You are a helpful assistant evaluating a candidate.",
       responseText: '{"result": "success", "score": 85}',
+      promptType: null,
     },
   ],
   recordings: [
@@ -163,6 +167,7 @@ const mockAssessmentWithError = {
       responseTokens: null,
       promptText: "You are a helpful assistant evaluating a candidate.",
       responseText: null,
+      promptType: null,
     },
   ],
   recordings: [],
@@ -210,6 +215,7 @@ describe("AssessmentTimelinePage", () => {
             responseTokens: true,
             promptText: true,
             responseText: true,
+            promptType: true,
           },
         },
         recordings: {
@@ -322,12 +328,12 @@ describe("AssessmentTimelineClient", () => {
 
   describe("Page Header", () => {
     it("renders the page title", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       expect(screen.getByText("Assessment Timeline")).toBeInTheDocument();
     });
 
     it("renders back link to assessments list", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       const backLink = screen.getByTestId("back-link");
       expect(backLink).toHaveAttribute("href", "/admin/assessments");
     });
@@ -335,21 +341,21 @@ describe("AssessmentTimelineClient", () => {
 
   describe("Candidate Info Section", () => {
     it("displays candidate name", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       expect(screen.getByTestId("candidate-name")).toHaveTextContent(
         "John Doe"
       );
     });
 
     it("displays candidate email", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       expect(screen.getByTestId("candidate-email")).toHaveTextContent(
         "john@example.com"
       );
     });
 
     it("displays completion date", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       const completionDate = screen.getByTestId("completion-date");
       expect(completionDate).toBeInTheDocument();
       expect(completionDate).not.toHaveTextContent("In Progress");
@@ -357,7 +363,7 @@ describe("AssessmentTimelineClient", () => {
 
     it("shows 'In Progress' when not completed", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
       expect(screen.getByTestId("completion-date")).toHaveTextContent(
         "In Progress"
@@ -369,7 +375,7 @@ describe("AssessmentTimelineClient", () => {
         ...serializedAssessment,
         user: { ...serializedAssessment.user, name: null },
       };
-      render(<AssessmentTimelineClient assessment={anonymousAssessment} />);
+      render(<AssessmentTimelineClient assessment={anonymousAssessment} clientErrors={[]} />);
       expect(screen.getByTestId("candidate-name")).toHaveTextContent(
         "Anonymous"
       );
@@ -378,13 +384,13 @@ describe("AssessmentTimelineClient", () => {
 
   describe("Total Duration Card", () => {
     it("displays total duration prominently", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       expect(screen.getByTestId("total-duration")).toHaveTextContent("90m");
     });
 
     it("shows 'In Progress' when no completion time", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
       expect(screen.getByTestId("total-duration")).toHaveTextContent(
         "In Progress"
@@ -392,20 +398,20 @@ describe("AssessmentTimelineClient", () => {
     });
 
     it("displays status badge", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       expect(screen.getByTestId("status-badge")).toHaveTextContent("COMPLETED");
     });
 
     it("shows error indicator when assessment has errors", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
       expect(screen.getByText("HAS ERRORS")).toBeInTheDocument();
     });
 
     it("has red styling when assessment has errors", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
       const card = screen.getByTestId("total-duration-card");
       // Modern design uses Tailwind's destructive color class
@@ -415,12 +421,12 @@ describe("AssessmentTimelineClient", () => {
 
   describe("Video Recording Link", () => {
     it("displays video recording link when recording exists", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       expect(screen.getByTestId("video-recording-link")).toBeInTheDocument();
     });
 
     it("has correct recording URL", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       const button = screen.getByTestId("view-recording-button");
       expect(button).toHaveAttribute(
         "href",
@@ -430,7 +436,7 @@ describe("AssessmentTimelineClient", () => {
 
     it("does not display recording link when no recording", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
       expect(
         screen.queryByTestId("video-recording-link")
@@ -440,19 +446,19 @@ describe("AssessmentTimelineClient", () => {
 
   describe("Assessment Info Section", () => {
     it("displays assessment ID", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       const info = screen.getByTestId("assessment-info");
       expect(within(info).getByText("assess-1")).toBeInTheDocument();
     });
 
     it("displays scenario name", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       const info = screen.getByTestId("assessment-info");
       expect(within(info).getByText("Frontend Developer")).toBeInTheDocument();
     });
 
     it("displays event count", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       const info = screen.getByTestId("assessment-info");
       // 4 logs + 1 API call = 5 events
       expect(within(info).getByText("5 total")).toBeInTheDocument();
@@ -461,7 +467,7 @@ describe("AssessmentTimelineClient", () => {
 
   describe("Timeline Events", () => {
     it("renders all timeline events", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       const timeline = screen.getByTestId("timeline");
       // 4 logs + 1 API call = 5 events
       expect(
@@ -478,14 +484,14 @@ describe("AssessmentTimelineClient", () => {
     });
 
     it("displays event times", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       // Events should have time displayed
       const event = screen.getByTestId("timeline-event-log-1");
       expect(event).toBeInTheDocument();
     });
 
     it("shows duration between events", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       // Duration markers should appear between events
       const durationMarker = screen.getByTestId("duration-marker-log-2");
       expect(durationMarker).toBeInTheDocument();
@@ -493,14 +499,14 @@ describe("AssessmentTimelineClient", () => {
     });
 
     it("displays API call model version", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       expect(
         screen.getByText("Model: gemini-3-flash-preview")
       ).toBeInTheDocument();
     });
 
     it("displays API call token count", () => {
-      render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+      render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
       // 100 + 50 = 150 tokens
       expect(screen.getByText("Tokens: 150")).toBeInTheDocument();
     });
@@ -511,7 +517,7 @@ describe("AssessmentTimelineClient", () => {
         logs: [],
         apiCalls: [],
       };
-      render(<AssessmentTimelineClient assessment={emptyAssessment} />);
+      render(<AssessmentTimelineClient assessment={emptyAssessment} clientErrors={[]} />);
       expect(
         screen.getByText("No events recorded for this assessment")
       ).toBeInTheDocument();
@@ -521,7 +527,7 @@ describe("AssessmentTimelineClient", () => {
   describe("Error Handling", () => {
     it("highlights error events in red", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
       // Check the error event container has destructive (red) styling
       const errorEvent = screen.getByTestId("timeline-event-log-2");
@@ -532,7 +538,7 @@ describe("AssessmentTimelineClient", () => {
 
     it("shows error label in event title", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
       // The ERROR event should show "Error" as its label
       const timeline = screen.getByTestId("timeline");
@@ -541,7 +547,7 @@ describe("AssessmentTimelineClient", () => {
 
     it("expands error details when clicked", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
 
       // Click on the error log event (which has metadata)
@@ -558,7 +564,7 @@ describe("AssessmentTimelineClient", () => {
 
     it("displays error message in expanded view", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
 
       // Click to expand the API call error (which has errorMessage)
@@ -573,7 +579,7 @@ describe("AssessmentTimelineClient", () => {
 
     it("displays stack trace in expanded view", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
 
       // Click to expand the API call error
@@ -588,7 +594,7 @@ describe("AssessmentTimelineClient", () => {
 
     it("collapses error details when clicked again", () => {
       render(
-        <AssessmentTimelineClient assessment={serializedErrorAssessment} />
+        <AssessmentTimelineClient assessment={serializedErrorAssessment} clientErrors={[]} />
       );
 
       // For log events with errors, use error-details
@@ -628,7 +634,7 @@ describe("AssessmentTimelineClient", () => {
         apiCalls: [],
       };
 
-      render(<AssessmentTimelineClient assessment={longDurationAssessment} />);
+      render(<AssessmentTimelineClient assessment={longDurationAssessment} clientErrors={[]} />);
 
       const durationMarker = screen.getByTestId("duration-marker-log-2");
       // Use querySelector to find element with amber border class
@@ -682,7 +688,7 @@ describe("API Call Details", () => {
   };
 
   it("shows API calls as expandable events", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     expect(apiEvent).toBeInTheDocument();
     // Should have cursor pointer because it has expandable content
@@ -691,7 +697,7 @@ describe("API Call Details", () => {
   });
 
   it("expands API call details when clicked", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -701,7 +707,7 @@ describe("API Call Details", () => {
   });
 
   it("displays model version in expanded details", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -713,7 +719,7 @@ describe("API Call Details", () => {
   });
 
   it("displays status code in expanded details", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -723,7 +729,7 @@ describe("API Call Details", () => {
   });
 
   it("displays token counts in expanded details", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -734,7 +740,7 @@ describe("API Call Details", () => {
   });
 
   it("displays collapsible prompt section", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -745,7 +751,7 @@ describe("API Call Details", () => {
   });
 
   it("displays collapsible response section", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -756,7 +762,7 @@ describe("API Call Details", () => {
   });
 
   it("shows copy button for prompt text", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -765,7 +771,7 @@ describe("API Call Details", () => {
   });
 
   it("shows copy button for response JSON", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -776,7 +782,7 @@ describe("API Call Details", () => {
   });
 
   it("expands prompt text when header is clicked", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -791,7 +797,7 @@ describe("API Call Details", () => {
   });
 
   it("expands response JSON when header is clicked", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -805,7 +811,7 @@ describe("API Call Details", () => {
   });
 
   it("collapses API call details when clicked again", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
 
@@ -821,7 +827,7 @@ describe("API Call Details", () => {
   });
 
   it("displays request and response timestamps", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -832,7 +838,7 @@ describe("API Call Details", () => {
   });
 
   it("displays duration in expanded details", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -842,7 +848,7 @@ describe("API Call Details", () => {
   });
 
   it("formats response as JSON with syntax highlighting", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     const apiEvent = screen.getByTestId("timeline-event-api-1");
     const clickableDiv = apiEvent.querySelector('[class*="cursor-pointer"]');
     fireEvent.click(clickableDiv!);
@@ -903,14 +909,14 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
   });
 
   it("shows retry assessment button for completed assessment", () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
     expect(screen.getByTestId("retry-assessment-card")).toBeInTheDocument();
     expect(screen.getByTestId("retry-assessment-button")).toBeInTheDocument();
   });
 
   it("shows retry assessment button for assessment with errors", () => {
     render(
-      <AssessmentTimelineClient assessment={serializedAssessmentWithError} />
+      <AssessmentTimelineClient assessment={serializedAssessmentWithError} clientErrors={[]} />
     );
     expect(screen.getByTestId("retry-assessment-card")).toBeInTheDocument();
   });
@@ -920,7 +926,7 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
       ...serializedAssessment,
       supersededBy: "assess-3",
     };
-    render(<AssessmentTimelineClient assessment={supersededAssessment} />);
+    render(<AssessmentTimelineClient assessment={supersededAssessment} clientErrors={[]} />);
     expect(
       screen.queryByTestId("retry-assessment-card")
     ).not.toBeInTheDocument();
@@ -931,13 +937,13 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
       ...serializedAssessment,
       supersededBy: "assess-3",
     };
-    render(<AssessmentTimelineClient assessment={supersededAssessment} />);
+    render(<AssessmentTimelineClient assessment={supersededAssessment} clientErrors={[]} />);
     expect(screen.getByTestId("superseded-notice")).toBeInTheDocument();
     expect(screen.getByText("View new assessment")).toBeInTheDocument();
   });
 
   it("opens confirmation dialog when retry button is clicked", async () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
 
     const retryButton = screen.getByTestId("retry-assessment-button");
     fireEvent.click(retryButton);
@@ -949,7 +955,7 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
   });
 
   it("closes confirmation dialog when cancel is clicked", async () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
 
     const retryButton = screen.getByTestId("retry-assessment-button");
     fireEvent.click(retryButton);
@@ -963,7 +969,7 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
   });
 
   it("closes confirmation dialog when overlay is clicked", async () => {
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
 
     const retryButton = screen.getByTestId("retry-assessment-button");
     fireEvent.click(retryButton);
@@ -977,7 +983,7 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
   it("shows loading state when retrying", async () => {
     (global.fetch as Mock).mockImplementation(() => new Promise(() => {})); // Never resolves
 
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
 
     const retryButton = screen.getByTestId("retry-assessment-button");
     fireEvent.click(retryButton);
@@ -1003,7 +1009,7 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
         }),
     });
 
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
 
     const retryButton = screen.getByTestId("retry-assessment-button");
     fireEvent.click(retryButton);
@@ -1030,7 +1036,7 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
         }),
     });
 
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
 
     const retryButton = screen.getByTestId("retry-assessment-button");
     fireEvent.click(retryButton);
@@ -1057,7 +1063,7 @@ describe("AssessmentTimelineClient - Retry Assessment", () => {
     });
 
     vi.useFakeTimers();
-    render(<AssessmentTimelineClient assessment={serializedAssessment} />);
+    render(<AssessmentTimelineClient assessment={serializedAssessment} clientErrors={[]} />);
 
     const retryButton = screen.getByTestId("retry-assessment-button");
     fireEvent.click(retryButton);

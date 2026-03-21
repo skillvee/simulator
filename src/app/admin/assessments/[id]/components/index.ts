@@ -6,6 +6,8 @@ export type {
   SerializedConversation,
   SerializedVoiceSession,
   SerializedAssessment,
+  SerializedClientError,
+  ErrorEntry,
   TimelineEventType,
   TimelineEvent,
   Toast,
@@ -30,3 +32,4 @@ export { ToastNotification } from "./toast-notification";
 export { CandidateInfoCard } from "./candidate-info-card";
 export { TimelineEvent as TimelineEventItem } from "./timeline-event";
 export { ConversationsTab } from "./conversations-tab";
+export { ErrorsTab } from "./errors-tab";
