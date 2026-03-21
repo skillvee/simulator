@@ -436,6 +436,11 @@ export function Chat({
           }
           return prev;
         });
+
+        // Enable defense mode when PR is submitted — disables text input
+        if (doneData.prSubmitted || doneData.defenseCallRequired) {
+          setDefenseCallRequired(true);
+        }
       }
 
       // Ensure typing is stopped
@@ -471,10 +476,6 @@ export function Chat({
         }, reactionDelay);
       }
 
-      // Enable defense mode when PR is submitted — disables text input
-      if (doneData?.prSubmitted || doneData?.defenseCallRequired) {
-        setDefenseCallRequired(true);
-      }
     } catch (err) {
       // Remove the optimistic user message and any partial streaming message
       setMessages((prev) => prev.filter(
