@@ -12,6 +12,7 @@ import { parseCoworkerKnowledge } from "@/lib/ai";
 import { inferDemographics } from "@/lib/avatar";
 import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
 import { buildVoicePrompt, buildDefensePrompt, type DefenseContext, buildKickoffVoicePrompt } from "@/prompts";
+import { AssessmentStatus } from "@prisma/client";
 import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
@@ -50,6 +51,11 @@ export async function POST(request: Request) {
 
     if (!assessment) {
       return error("Assessment not found", 404, "NOT_FOUND");
+    }
+
+    // Reject calls for completed assessments
+    if (assessment.status === AssessmentStatus.COMPLETED) {
+      return error("Assessment is completed", 400);
     }
 
     // Get coworker persona

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { AssessmentStatus } from "@prisma/client";
 import { supabaseAdmin } from "@/lib/external";
 import { STORAGE_BUCKETS } from "@/lib/external";
 import { success, error } from "@/lib/api";
@@ -48,6 +49,11 @@ export async function POST(request: NextRequest) {
 
     if (!assessment) {
       return error("Assessment not found", 404, "NOT_FOUND");
+    }
+
+    // Reject uploads for completed assessments
+    if (assessment.status === AssessmentStatus.COMPLETED) {
+      return error("Assessment is completed", 400);
     }
 
     // Validate file size

@@ -58,6 +58,7 @@ vi.mock("@/lib/ai", () => ({
 }));
 
 import { POST, GET } from "./route";
+import { AssessmentStatus } from "@prisma/client";
 
 // Helper: create an async iterable that yields chunks for generateContentStream
 function createMockStream(texts: string[]) {
@@ -145,6 +146,7 @@ describe("POST /api/chat", () => {
     mockAssessmentFindFirst.mockResolvedValue({
       id: "assessment-1",
       userId: "user-1",
+      status: AssessmentStatus.WORKING,
       scenario: {
         companyName: "Test Corp",
         taskDescription: "Build a feature",
@@ -173,6 +175,7 @@ describe("POST /api/chat", () => {
     mockAssessmentFindFirst.mockResolvedValue({
       id: "assessment-1",
       userId: "user-1",
+      status: AssessmentStatus.WORKING,
       scenarioId: "scenario-1",
       scenario: {
         companyName: "Test Corp",
@@ -225,6 +228,7 @@ describe("POST /api/chat", () => {
     mockAssessmentFindFirst.mockResolvedValue({
       id: "assessment-1",
       userId: "user-1",
+      status: AssessmentStatus.WORKING,
       scenarioId: "scenario-1",
       scenario: {
         companyName: "Test Corp",
@@ -328,6 +332,7 @@ describe("POST /api/chat", () => {
     mockAssessmentFindFirst.mockResolvedValue({
       id: "assessment-1",
       userId: "user-1",
+      status: AssessmentStatus.WORKING,
       scenarioId: "scenario-1",
       scenario: {
         companyName: "Test Corp",

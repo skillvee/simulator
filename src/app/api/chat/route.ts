@@ -129,6 +129,14 @@ export async function POST(request: Request) {
     return error("Assessment not found", 404, "NOT_FOUND");
   }
 
+  // Only allow chat during WORKING status
+  if (assessment.status !== AssessmentStatus.WORKING) {
+    return error(
+      `Cannot chat when assessment is in ${assessment.status} status`,
+      400
+    );
+  }
+
   // Coworker query needs scenarioId from assessment — runs after first batch
   const coworker = await db.coworker.findFirst({
     where: {
