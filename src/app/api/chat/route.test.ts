@@ -13,6 +13,8 @@ const mockConversationFindFirst = vi.fn();
 const mockConversationFindMany = vi.fn();
 const mockConversationCreate = vi.fn();
 const mockConversationUpdate = vi.fn();
+const mockAssessmentApiCallCreate = vi.fn();
+const mockAssessmentApiCallUpdate = vi.fn();
 vi.mock("@/server/db", () => ({
   db: {
     assessment: {
@@ -26,6 +28,10 @@ vi.mock("@/server/db", () => ({
       findMany: (...args: unknown[]) => mockConversationFindMany(...args),
       create: (...args: unknown[]) => mockConversationCreate(...args),
       update: (...args: unknown[]) => mockConversationUpdate(...args),
+    },
+    assessmentApiCall: {
+      create: (...args: unknown[]) => mockAssessmentApiCallCreate(...args),
+      update: (...args: unknown[]) => mockAssessmentApiCallUpdate(...args),
     },
   },
 }));
@@ -95,6 +101,9 @@ async function readSSEResponse(response: Response): Promise<Array<{ type: string
 describe("POST /api/chat", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: logAICall creates an API call record
+    mockAssessmentApiCallCreate.mockResolvedValue({ id: "api-call-1" });
+    mockAssessmentApiCallUpdate.mockResolvedValue({});
   });
 
   it("should return 401 when not authenticated", async () => {
@@ -687,6 +696,228 @@ describe("POST /api/chat", () => {
         ]),
       }),
     });
+  });
+
+  it("should log successful AI call to AssessmentApiCall", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Jordan Rivera",
+      role: "Senior Engineer",
+      personaStyle: "Technical and helpful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["Hello!"])
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    await readSSEResponse(response);
+
+    // Verify API call was logged
+    expect(mockAssessmentApiCallCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          assessmentId: "assessment-1",
+          modelVersion: "gemini-3-flash-preview",
+          promptType: "CHAT",
+        }),
+      })
+    );
+    // Verify completion was logged (update with responseText)
+    expect(mockAssessmentApiCallUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          responseText: "Hello!",
+          statusCode: 200,
+        }),
+      })
+    );
+  });
+
+  it("should log Gemini stream error with tracker.fail()", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Jordan Rivera",
+      role: "Senior Engineer",
+      personaStyle: "Technical and helpful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    mockGenerateContentStream.mockResolvedValue(
+      (async function* () {
+        throw new Error("Internal server error");
+      })()
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    await readSSEResponse(response);
+
+    // Verify failure was logged
+    expect(mockAssessmentApiCallUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          errorMessage: "Internal server error",
+          statusCode: 500,
+        }),
+      })
+    );
+  });
+
+  it("should log RATE_LIMITED when Gemini returns 429", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Jordan Rivera",
+      role: "Senior Engineer",
+      personaStyle: "Technical and helpful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    mockGenerateContentStream.mockResolvedValue(
+      (async function* () {
+        throw new Error("429 Too Many Requests");
+      })()
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    await readSSEResponse(response);
+
+    // Verify rate limit was logged with RATE_LIMITED error message
+    expect(mockAssessmentApiCallUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          errorMessage: "RATE_LIMITED",
+          statusCode: 500,
+        }),
+      })
+    );
+  });
+
+  it("should log empty response from Gemini stream", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Jordan Rivera",
+      role: "Senior Engineer",
+      personaStyle: "Technical and helpful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    mockGenerateContentStream.mockResolvedValue(
+      (async function* () {
+        yield { text: "" };
+        yield { text: null };
+      })()
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    await readSSEResponse(response);
+
+    // Verify empty response was logged with descriptive error
+    expect(mockAssessmentApiCallUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          responseText: "",
+          statusCode: 200,
+          errorMessage: expect.stringContaining("Empty response"),
+        }),
+      })
+    );
   });
 });
 

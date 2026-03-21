@@ -23,6 +23,7 @@ import { isValidPrUrl } from "@/lib/external";
 import { sanitizeForStorage } from "@/lib/sanitization";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
+import { logAICall } from "@/lib/analysis";
 
 const logger = createLogger("server:api:chat");
 
@@ -278,6 +279,19 @@ export async function POST(request: Request) {
   }
 
   const contents = buildGeminiContents(systemPrompt, history, message, extraTurns);
+
+  // Start AI call tracking for observability
+  const promptText = contents.map(c => c.parts.map(p => p.text).join("")).join("\n");
+  const tracker = await logAICall({
+    assessmentId,
+    endpoint: "/api/chat",
+    promptText,
+    modelVersion: CHAT_MODEL,
+    promptType: "CHAT",
+    promptVersion: "1.0",
+    modelUsed: CHAT_MODEL,
+  });
+
   const timestamp = new Date().toISOString();
 
   const userMessage: ChatMessage = {
@@ -292,6 +306,8 @@ export async function POST(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       let responseText = "";
+
+      let streamFailed = false;
 
       try {
         const streamIterator = await gemini.models.generateContentStream({
@@ -311,16 +327,51 @@ export async function POST(request: Request) {
         }
       } catch (err) {
         logger.error("Gemini stream error", { err });
+        streamFailed = true;
+
+        // Detect rate limiting (429) from Gemini
+        const isRateLimited =
+          err instanceof Error &&
+          (err.message.includes("429") ||
+            err.message.toLowerCase().includes("rate") ||
+            err.message.toLowerCase().includes("resource_exhausted"));
+
+        const streamError = err instanceof Error ? err : new Error(String(err));
+        if (isRateLimited) {
+          streamError.message = "RATE_LIMITED";
+        }
+        await tracker.fail(streamError).catch((logErr: unknown) =>
+          logger.error("Failed to log AI call failure", { logErr })
+        );
+
         if (!responseText) {
           responseText = "Sorry, I couldn't respond right now. Try again?";
         }
       }
 
-      // If no text was generated, use fallback
+      // If no text was generated, use fallback and log empty response
       if (!responseText) {
         responseText = "I'm sorry, I couldn't generate a response.";
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ type: "chunk", text: responseText })}\n\n`)
+        );
+
+        if (!streamFailed) {
+          await tracker.complete({
+            responseText: "",
+            statusCode: 200,
+            errorMessage: "Empty response from Gemini stream — no text chunks received",
+          }).catch((logErr: unknown) =>
+            logger.error("Failed to log AI call empty response", { logErr })
+          );
+        }
+      } else if (!streamFailed) {
+        // Success path — log the completed call
+        await tracker.complete({
+          responseText,
+          statusCode: 200,
+        }).catch((logErr: unknown) =>
+          logger.error("Failed to log AI call completion", { logErr })
         );
       }
 
