@@ -13,12 +13,15 @@
  * AI generates all domain-specific content on top.
  */
 
+import { createLogger } from "@/lib/core";
 import { generateRepoSpec } from "./repo-spec-generator";
 import { buildRepoFromSpec } from "./repo-builder";
 import {
   needsRepo as needsRepoCheck,
   type ScenarioMetadata,
 } from "./repo-spec";
+
+const logger = createLogger("lib:scenarios:repo-templates");
 
 // Re-export for backward compatibility with existing imports
 export { needsRepoCheck as needsRepo };
@@ -46,36 +49,30 @@ export async function provisionRepo(
 
   if (!githubToken) {
     const error = "GITHUB_ORG_TOKEN not set. Add it to .env.local to enable repo provisioning.";
-    console.error(`[provisionRepo] ERROR: ${error}`);
+    logger.error("GITHUB_ORG_TOKEN not set", { error });
     throw new Error(error);
   }
 
   try {
     // Phase 1: Generate repo spec from scenario metadata
-    console.log(
-      `[provisionRepo] Starting provisioning for scenario ${scenarioId} - "${metadata.companyName}"...`
-    );
+    logger.info("Starting provisioning", { scenarioId, companyName: metadata.companyName });
     const { spec } = await generateRepoSpec(metadata);
-    console.log(
-      `[provisionRepo] Generated spec: ${spec.projectName} (${spec.files.length} files, ${spec.commitHistory.length} commits)`
-    );
+    logger.info("Generated spec", { projectName: spec.projectName, fileCount: spec.files.length, commitCount: spec.commitHistory.length });
 
     // Phase 2: Build the repo on GitHub
-    console.log(
-      `[provisionRepo] Creating GitHub repository...`
-    );
+    logger.info("Creating GitHub repository", { scenarioId });
     const repoUrl = await buildRepoFromSpec(scenarioId, spec, githubToken);
 
     if (!repoUrl) {
       const error = "GitHub repo creation failed — check GITHUB_ORG_TOKEN permissions and GitHub API status";
-      console.error(`[provisionRepo] ERROR: ${error}`);
+      logger.error("GitHub repo creation failed", { scenarioId, error });
       throw new Error(error);
     }
 
-    console.log(`[provisionRepo] SUCCESS: Repository provisioned at ${repoUrl}`);
+    logger.info("Repository provisioned", { repoUrl });
     return { repoUrl, repoSpec: spec };
   } catch (error) {
-    console.error(`[provisionRepo] FATAL ERROR for scenario ${scenarioId}:`, error);
+    logger.error("Fatal error", { scenarioId, error: String(error) });
     throw error;
   }
 }
@@ -111,7 +108,6 @@ async function replayCommitHistory(
   targetRepoUrl: string,
   githubToken: string
 ): Promise<void> {
-  const LOG_PREFIX = "[replayCommitHistory]";
   const headers = GITHUB_API_HEADERS(githubToken);
 
   try {
@@ -124,27 +120,21 @@ async function replayCommitHistory(
     );
 
     if (!commitsRes.ok) {
-      console.warn(
-        `${LOG_PREFIX} Failed to fetch commits from ${sourceOwnerRepo}: ${commitsRes.status}`
-      );
+      logger.warn("Failed to fetch commits", { sourceOwnerRepo, status: commitsRes.status });
       return;
     }
 
     const commits = (await commitsRes.json()).reverse(); // Oldest first
 
     if (commits.length < 2) {
-      console.log(
-        `${LOG_PREFIX} Source has ${commits.length} commits, nothing to replay`
-      );
+      logger.info("Source has few commits, nothing to replay", { commitCount: commits.length });
       return;
     }
 
     // Skip the first commit (initial setup) — target already has those files
     const commitsToReplay = commits.slice(1);
 
-    console.log(
-      `${LOG_PREFIX} Replaying ${commitsToReplay.length} commits from ${sourceOwnerRepo} to ${targetOwner}/${targetRepo}`
-    );
+    logger.info("Replaying commits", { commitCount: commitsToReplay.length, sourceOwnerRepo, targetOwner, targetRepo });
 
     const headRefRes = await fetch(
       `https://api.github.com/repos/${targetOwner}/${targetRepo}/git/ref/heads/main`,
@@ -152,7 +142,7 @@ async function replayCommitHistory(
     );
 
     if (!headRefRes.ok) {
-      console.warn(`${LOG_PREFIX} Failed to get HEAD ref: ${headRefRes.status}`);
+      logger.warn("Failed to get HEAD ref", { status: headRefRes.status });
       return;
     }
 
@@ -164,9 +154,7 @@ async function replayCommitHistory(
     );
 
     if (!headCommitRes.ok) {
-      console.warn(
-        `${LOG_PREFIX} Failed to get HEAD commit: ${headCommitRes.status}`
-      );
+      logger.warn("Failed to get HEAD commit", { status: headCommitRes.status });
       return;
     }
 
@@ -179,9 +167,7 @@ async function replayCommitHistory(
       );
 
       if (!diffRes.ok) {
-        console.warn(
-          `${LOG_PREFIX} Failed to fetch commit diff ${commit.sha.slice(0, 7)}: ${diffRes.status}`
-        );
+        logger.warn("Failed to fetch commit diff", { commitSha: commit.sha.slice(0, 7), status: diffRes.status });
         continue;
       }
 
@@ -276,9 +262,7 @@ async function replayCommitHistory(
       );
 
       if (!createTreeRes.ok) {
-        console.warn(
-          `${LOG_PREFIX} Failed to create tree for "${commit.commit.message.split("\n")[0]}": ${createTreeRes.status}`
-        );
+        logger.warn("Failed to create tree", { commitMessage: commit.commit.message.split("\n")[0], status: createTreeRes.status });
         continue;
       }
 
@@ -300,9 +284,7 @@ async function replayCommitHistory(
       );
 
       if (!createCommitRes.ok) {
-        console.warn(
-          `${LOG_PREFIX} Failed to create commit "${commit.commit.message.split("\n")[0]}": ${createCommitRes.status}`
-        );
+        logger.warn("Failed to create commit", { commitMessage: commit.commit.message.split("\n")[0], status: createCommitRes.status });
         continue;
       }
 
@@ -321,14 +303,12 @@ async function replayCommitHistory(
     );
 
     if (updateRefRes.ok) {
-      console.log(
-        `${LOG_PREFIX} Successfully replayed ${commitsToReplay.length} commits to ${targetOwner}/${targetRepo}`
-      );
+      logger.info("Successfully replayed commits", { commitCount: commitsToReplay.length, targetOwner, targetRepo });
     } else {
-      console.warn(`${LOG_PREFIX} Failed to update ref: ${updateRefRes.status}`);
+      logger.warn("Failed to update ref", { status: updateRefRes.status });
     }
   } catch (err) {
-    console.warn(`${LOG_PREFIX} Error:`, err);
+    logger.warn("Error replaying commit history", { error: String(err) });
   }
 }
 
@@ -351,9 +331,7 @@ async function copyIssuesFromTemplate(
     );
 
     if (!issuesRes.ok) {
-      console.warn(
-        `[copyIssuesFromTemplate] Failed to fetch issues from ${sourceOwnerRepo}: ${issuesRes.status}`
-      );
+      logger.warn("Failed to fetch issues", { sourceOwnerRepo, status: issuesRes.status });
       return;
     }
 
@@ -362,9 +340,7 @@ async function copyIssuesFromTemplate(
       (issue: { pull_request?: unknown }) => !issue.pull_request
     );
 
-    console.log(
-      `[copyIssuesFromTemplate] Copying ${realIssues.length} issues from ${sourceOwnerRepo} to ${targetOwner}/${targetRepo}`
-    );
+    logger.info("Copying issues", { issueCount: realIssues.length, sourceOwnerRepo, targetOwner, targetRepo });
 
     for (const issue of realIssues) {
       const createRes = await fetch(
@@ -382,9 +358,7 @@ async function copyIssuesFromTemplate(
       );
 
       if (!createRes.ok) {
-        console.warn(
-          `[copyIssuesFromTemplate] Failed to create issue "${issue.title}": ${createRes.status}`
-        );
+        logger.warn("Failed to create issue", { issueTitle: issue.title, status: createRes.status });
         continue;
       }
 
@@ -423,11 +397,9 @@ async function copyIssuesFromTemplate(
       }
     }
 
-    console.log(
-      `[copyIssuesFromTemplate] Successfully copied ${realIssues.length} issues to ${targetOwner}/${targetRepo}`
-    );
+    logger.info("Successfully copied issues", { issueCount: realIssues.length, targetOwner, targetRepo });
   } catch (err) {
-    console.warn("[copyIssuesFromTemplate] Error:", err);
+    logger.warn("Error copying issues", { error: String(err) });
   }
 }
 
@@ -446,9 +418,7 @@ export async function provisionAssessmentRepo(
   const githubToken = process.env.GITHUB_ORG_TOKEN;
 
   if (!githubToken) {
-    console.error(
-      "[provisionAssessmentRepo] GITHUB_ORG_TOKEN not set. Cannot provision repo."
-    );
+    logger.error("GITHUB_ORG_TOKEN not set, cannot provision repo", { assessmentId });
     return null;
   }
 
@@ -458,9 +428,7 @@ export async function provisionAssessmentRepo(
 
     const repoName = `assessment-${assessmentId.slice(0, 12)}`;
 
-    console.log(
-      `[provisionAssessmentRepo] Creating repo ${repoName} from template ${owner}/${templateRepo}`
-    );
+    logger.info("Creating repo from template", { repoName, owner, templateRepo });
 
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${templateRepo}/generate`,
@@ -479,19 +447,14 @@ export async function provisionAssessmentRepo(
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error(
-        `[provisionAssessmentRepo] GitHub API error: ${response.status}`,
-        errorData
-      );
+      logger.error("GitHub API error", { status: response.status, errorData: JSON.stringify(errorData) });
       return null;
     }
 
     const data = await response.json();
     const repoUrl = data.html_url;
 
-    console.log(
-      `[provisionAssessmentRepo] Successfully created repo: ${repoUrl}`
-    );
+    logger.info("Successfully created repo", { repoUrl });
 
     // Replay commit history (template generation squashes to one commit)
     await replayCommitHistory(
@@ -509,10 +472,7 @@ export async function provisionAssessmentRepo(
 
     return repoUrl;
   } catch (error) {
-    console.error(
-      "[provisionAssessmentRepo] Failed to provision repo:",
-      error
-    );
+    logger.error("Failed to provision repo", { assessmentId, error: String(error) });
     return null;
   }
 }

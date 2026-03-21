@@ -1,5 +1,9 @@
 // Video recording utilities for continuous screen capture
 
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("client:media:video-recorder");
+
 export interface RecordingConfig {
   // Video bitrate in bits per second (default: 1Mbps for compressed video)
   videoBitsPerSecond?: number;
@@ -260,7 +264,7 @@ export class VideoRecorder {
       this.callbacks.onScreenshot?.(screenshot);
     } catch (error) {
       // Don't fail the whole recording if screenshot fails
-      console.warn("Failed to capture screenshot:", error);
+      logger.warn("Failed to capture screenshot", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 }

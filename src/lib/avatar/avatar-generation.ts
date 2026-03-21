@@ -12,9 +12,11 @@
  */
 
 import { GoogleGenAI } from "@google/genai";
-import { env } from "@/lib/core";
+import { env, createLogger } from "@/lib/core";
 import { supabaseAdmin } from "@/lib/external/supabase";
 import { db } from "@/server/db";
+
+const logger = createLogger("lib:avatar:avatar-generation");
 
 // Constants
 const AVATAR_BUCKET = "avatars";
@@ -223,7 +225,7 @@ async function generateAvatarWithRetry(
         data: { avatarUrl },
       });
 
-      console.log(`[Avatar] Generated avatar for ${coworker.name}`);
+      logger.info("Generated avatar", { coworkerName: coworker.name });
 
       return {
         coworkerId: coworker.id,
@@ -232,10 +234,12 @@ async function generateAvatarWithRetry(
       };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
-      console.error(
-        `[Avatar] Attempt ${attempt + 1}/${MAX_RETRIES} failed for ${coworker.name}:`,
-        lastError.message
-      );
+      logger.error("Attempt failed", {
+        attempt: attempt + 1,
+        maxRetries: MAX_RETRIES,
+        coworkerName: coworker.name,
+        error: lastError.message,
+      });
 
       // Exponential backoff before retry
       if (attempt < MAX_RETRIES - 1) {
@@ -246,10 +250,10 @@ async function generateAvatarWithRetry(
   }
 
   // All retries failed
-  console.error(
-    `[Avatar] All retries failed for ${coworker.name}:`,
-    lastError?.message
-  );
+  logger.error("All retries failed", {
+    coworkerName: coworker.name,
+    error: lastError?.message ?? "Unknown error",
+  });
   return {
     coworkerId: coworker.id,
     success: false,
@@ -280,13 +284,14 @@ export async function generateAvatarsForScenario(
   });
 
   if (coworkers.length === 0) {
-    console.log(`[Avatar] No coworkers need avatars for scenario ${scenarioId}`);
+    logger.info("No coworkers need avatars", { scenarioId });
     return [];
   }
 
-  console.log(
-    `[Avatar] Generating avatars for ${coworkers.length} coworkers in scenario ${scenarioId}`
-  );
+  logger.info("Generating avatars for coworkers", {
+    count: coworkers.length,
+    scenarioId,
+  });
 
   // Generate avatars sequentially to avoid rate limits
   const results: GenerationResult[] = [];
@@ -297,9 +302,7 @@ export async function generateAvatarsForScenario(
 
   const successful = results.filter((r) => r.success).length;
   const failed = results.filter((r) => !r.success).length;
-  console.log(
-    `[Avatar] Generation complete: ${successful} succeeded, ${failed} failed`
-  );
+  logger.info("Generation complete", { successful, failed });
 
   return results;
 }

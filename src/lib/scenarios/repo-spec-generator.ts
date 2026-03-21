@@ -19,6 +19,9 @@ import {
   type RepoSpec,
   type ScenarioMetadata,
 } from "./repo-spec";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:scenarios:repo-spec-generator");
 
 const GENERATION_MODEL = "gemini-3-flash-preview";
 const MAX_GENERATION_ATTEMPTS = 2;
@@ -48,9 +51,11 @@ export async function generateRepoSpec(
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
-      console.log(
-        `[generateRepoSpec] Attempt ${attempt}/${MAX_GENERATION_ATTEMPTS} for "${metadata.companyName}"`
-      );
+      logger.info("Generation attempt started", {
+        attempt,
+        maxAttempts: MAX_GENERATION_ATTEMPTS,
+        companyName: metadata.companyName,
+      });
 
       const response = await gemini.models.generateContent({
         model: GENERATION_MODEL,
@@ -76,9 +81,11 @@ export async function generateRepoSpec(
       // Additional consistency checks
       validateInternalConsistency(spec);
 
-      console.log(
-        `[generateRepoSpec] Success: ${spec.files.length} files, ${spec.commitHistory.length} commits, ${spec.issues.length} issues`
-      );
+      logger.info("Generation succeeded", {
+        fileCount: spec.files.length,
+        commitCount: spec.commitHistory.length,
+        issueCount: spec.issues.length,
+      });
 
       return {
         spec,
@@ -97,9 +104,10 @@ export async function generateRepoSpec(
             : new Error(String(error));
 
       if (attempt < MAX_GENERATION_ATTEMPTS) {
-        console.warn(
-          `[generateRepoSpec] Attempt ${attempt} failed: ${lastError.message}, retrying...`
-        );
+        logger.warn("Generation attempt failed, retrying", {
+          attempt,
+          error: lastError.message,
+        });
         continue;
       }
     }
@@ -225,7 +233,7 @@ function validateInternalConsistency(spec: RepoSpec): void {
     if (!filePaths.has(ref)) {
       // Special handling for .env.example - auto-create if referenced in README
       if (ref === ".env.example") {
-        console.log("[validateInternalConsistency] Auto-adding missing .env.example referenced in README");
+        logger.info("Auto-adding missing .env.example referenced in README");
         spec.files.push({
           path: ".env.example",
           content: "# Environment Variables\n\n# Database\nDATABASE_URL=postgresql://user:password@localhost:5432/dbname\n\n# Redis\nREDIS_URL=redis://localhost:6379\n\n# API Keys\n# API_KEY=your-api-key-here\n\n# Feature Flags\nENABLE_FEATURE_X=false\n",
@@ -300,7 +308,7 @@ function validateInternalConsistency(spec: RepoSpec): void {
       if (!withExt.some((p) => filePaths.has(p))) {
         // Special handling for common database client files - auto-create if missing
         if (aliasPath === "src/lib/prisma" || aliasPath === "src/lib/db") {
-          console.log(`[validateInternalConsistency] Auto-adding missing ${aliasPath}.ts for database client`);
+          logger.info("Auto-adding missing database client file", { path: `${aliasPath}.ts` });
           spec.files.push({
             path: `${aliasPath}.ts`,
             content: `// Database client configuration

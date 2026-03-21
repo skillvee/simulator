@@ -15,6 +15,12 @@ vi.mock("@/lib/core", () => ({
   env: {
     GITHUB_TOKEN: "mock-token",
   },
+  createLogger: () => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 describe("parseGitHubPrUrl", () => {

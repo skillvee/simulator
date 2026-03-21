@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/lib/external/supabase";
 import { STORAGE_BUCKETS } from "@/lib/external";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:candidate:cv-parser");
 
 // ============================================================================
 // CV Profile Schemas
@@ -241,7 +244,7 @@ export async function fetchCvContent(cvUrl: string): Promise<string> {
 
     return `[BASE64_FILE:${contentType}:${base64}]`;
   } catch (error) {
-    console.error("Error fetching CV content:", error);
+    logger.error("Error fetching CV content", { error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 }
@@ -343,8 +346,8 @@ export async function parseCv(cvUrl: string): Promise<ParsedProfile> {
     const validated = parsedProfileSchema.parse(parsed);
     return validated;
   } catch (error) {
-    console.error("Error parsing Gemini response:", error);
-    console.error("Raw response:", responseText);
+    logger.error("Error parsing Gemini response", { error: error instanceof Error ? error.message : String(error) });
+    logger.error("Raw response from Gemini", { responseText });
 
     // Return a minimal profile if parsing fails
     return {
@@ -540,7 +543,7 @@ export function profileFromPrismaJson(
   try {
     return parsedProfileSchema.parse(json);
   } catch {
-    console.warn("Invalid parsed profile data in database");
+    logger.warn("Invalid parsed profile data in database");
     return null;
   }
 }

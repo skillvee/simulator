@@ -10,7 +10,9 @@
 
 import { gemini } from "@/lib/ai/gemini";
 import { db } from "@/server/db";
-import { withRetry } from "@/lib/core";
+import { withRetry, createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:candidate:embeddings");
 import { AssessmentDimension, VideoAssessmentStatus } from "@prisma/client";
 
 // ============================================================================
@@ -277,9 +279,7 @@ export async function generateAndStoreEmbeddings(
       RETURNING "id"
     `;
 
-    console.log(
-      `[Embeddings] Generated and stored embedding for video assessment ${videoAssessmentId}`
-    );
+    logger.info("Generated and stored embedding for video assessment", { videoAssessmentId });
 
     return {
       success: true,
@@ -287,10 +287,7 @@ export async function generateAndStoreEmbeddings(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(
-      `[Embeddings] Failed to generate embeddings for ${videoAssessmentId}:`,
-      message
-    );
+    logger.error("Failed to generate embeddings", { videoAssessmentId, error: message });
 
     return {
       success: false,

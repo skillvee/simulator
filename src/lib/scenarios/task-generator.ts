@@ -10,6 +10,9 @@ import {
   TASK_GENERATOR_PROMPT_VERSION,
 } from "@/prompts/recruiter/task-generator";
 import { z } from "zod";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:scenarios:task-generator");
 
 const GENERATION_MODEL = "gemini-3-flash-preview";
 const MAX_GENERATION_ATTEMPTS = 3; // Increased for better resilience against transient failures
@@ -152,9 +155,7 @@ export async function generateCodingTask(
             : new Error(String(error));
 
       if (attempt < MAX_GENERATION_ATTEMPTS) {
-        console.warn(
-          `Task generation attempt ${attempt} failed: ${lastError.message}, retrying...`
-        );
+        logger.warn("Task generation attempt failed, retrying", { attempt, error: lastError.message });
         continue;
       }
     }

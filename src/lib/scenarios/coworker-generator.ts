@@ -5,11 +5,14 @@
  */
 
 import { gemini } from "@/lib/ai/gemini";
+import { createLogger } from "@/lib/core";
 import {
   COWORKER_GENERATOR_PROMPT_V1,
   COWORKER_GENERATOR_PROMPT_VERSION,
 } from "@/prompts/recruiter/coworker-generator";
 import { type CoworkerBuilderData, coworkerBuilderSchema } from "./scenario-builder";
+
+const logger = createLogger("lib:scenarios:coworker-generator");
 
 const GENERATION_MODEL = "gemini-3-flash-preview";
 
@@ -80,7 +83,7 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
   }
 
   if (coworkers.length > 3) {
-    console.warn(`Got ${coworkers.length} coworkers, trimming to 3`);
+    logger.warn("Too many coworkers generated, trimming to 3", { count: coworkers.length });
     coworkers.length = 3; // Trim to max 3
   }
 
@@ -106,9 +109,11 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
           .replace(/src\/services\/[\w\/-]+\.\w+/g, "the service layer")
           .replace(/(?:src|lib|pages|api|components|stores|services)\/[\w\/-]+\.\w+/g, "the relevant files in the codebase");
 
-        console.warn(
-          `Fixed specific file path in ${coworker.name}'s knowledge: "${originalResponse}" → "${knowledge.response}"`
-        );
+        logger.warn("Fixed specific file path in coworker knowledge", {
+          coworkerName: coworker.name,
+          originalResponse,
+          fixedResponse: knowledge.response,
+        });
       }
     }
   }
@@ -168,16 +173,12 @@ export async function generateCoworkers(
       const hasManager = coworkers.some((c) => isEngineeringManagerRole(c.role));
       if (!hasManager) {
         if (attempt < MAX_GENERATION_ATTEMPTS) {
-          console.warn(
-            `Attempt ${attempt}: No Engineering Manager found in generated coworkers, retrying...`
-          );
+          logger.warn("No Engineering Manager found in generated coworkers, retrying", { attempt });
           lastError = new Error("Generated coworkers must include an Engineering Manager");
           continue;
         }
         // Final attempt: patch the first coworker's role to Engineering Manager
-        console.warn(
-          "Engineering Manager missing after all attempts, patching first coworker"
-        );
+        logger.warn("Engineering Manager missing after all attempts, patching first coworker");
         coworkers[0] = {
           ...coworkers[0],
           role: "Engineering Manager",
@@ -200,9 +201,7 @@ export async function generateCoworkers(
             : new Error(String(error));
 
       if (attempt < MAX_GENERATION_ATTEMPTS) {
-        console.warn(
-          `Attempt ${attempt} failed: ${lastError.message}, retrying...`
-        );
+        logger.warn("Generation attempt failed, retrying", { attempt, error: lastError.message });
         continue;
       }
     }

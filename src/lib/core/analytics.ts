@@ -7,6 +7,9 @@
 import { z } from "zod";
 import { db } from "@/server/db";
 import type { AssessmentStatus } from "@prisma/client";
+import { createLogger } from "./logger";
+
+const logger = createLogger("lib:core:analytics");
 
 // ============================================================================
 // SCHEMAS
@@ -636,5 +639,5 @@ export function logAnalyticsEvent(
   };
 
   // Log to console in structured format for log aggregation tools
-  console.log(`[ANALYTICS] ${JSON.stringify(logEntry)}`);
+  logger.info("Analytics event", logEntry as unknown as Record<string, unknown>);
 }

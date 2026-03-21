@@ -11,7 +11,7 @@
 
 import { gemini } from "@/lib/ai/gemini";
 import { db } from "@/server/db";
-import { withRetry } from "@/lib/core";
+import { withRetry, createLogger } from "@/lib/core";
 import { createVideoAssessmentLogger } from "@/lib/analysis";
 import { generateAndStoreEmbeddings } from "@/lib/candidate";
 import { loadRubricForRoleFamily } from "@/lib/rubric";
@@ -26,6 +26,8 @@ import {
 } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import type { RubricAssessmentOutput, TimestampedBehavior, DimensionConfidence } from "@/types";
+
+const logger = createLogger("lib:analysis:video-evaluation");
 
 // Model for video evaluation (Gemini 3 Pro)
 const VIDEO_EVALUATION_MODEL = "gemini-3-pro-preview";
@@ -227,10 +229,10 @@ export async function evaluateVideo(
   const jobId = `job-${assessmentId}-${Date.now()}`;
 
   // Create logger for this assessment
-  const logger = createVideoAssessmentLogger(assessmentId);
+  const assessmentLogger = createVideoAssessmentLogger(assessmentId);
 
   // Log: Job started
-  await logger.logEvent(AssessmentLogEventType.STARTED, { job_id: jobId });
+  await assessmentLogger.logEvent(AssessmentLogEventType.STARTED, { job_id: jobId });
 
   // Update status to PROCESSING
   await db.videoAssessment.update({
@@ -244,9 +246,10 @@ export async function evaluateVideo(
     try {
       rubricInput = await loadRubricForRoleFamily(db, roleFamilySlug);
     } catch {
-      console.warn(
-        `[VideoEvaluation] Role family "${roleFamilySlug}" not found, falling back to "${DEFAULT_ROLE_FAMILY_SLUG}"`
-      );
+      logger.warn("Role family not found, falling back to default", {
+        roleFamilySlug,
+        fallback: DEFAULT_ROLE_FAMILY_SLUG,
+      });
       rubricInput = await loadRubricForRoleFamily(db, DEFAULT_ROLE_FAMILY_SLUG);
     }
 
@@ -263,13 +266,13 @@ export async function evaluateVideo(
     const prompt = buildRubricEvaluationPrompt(rubricInput);
 
     // Log: Prompt sent
-    await logger.logEvent(AssessmentLogEventType.PROMPT_SENT, {
+    await assessmentLogger.logEvent(AssessmentLogEventType.PROMPT_SENT, {
       prompt_length: prompt.length,
       role_family: roleFamilySlug,
     });
 
     // Start API call tracking
-    const apiCallTracker = logger.startApiCall(prompt, VIDEO_EVALUATION_MODEL);
+    const apiCallTracker = assessmentLogger.startApiCall(prompt, VIDEO_EVALUATION_MODEL);
 
     let responseText: string;
     try {
@@ -306,14 +309,16 @@ export async function evaluateVideo(
           baseDelayMs: 1000,
           maxDelayMs: 30000,
           onRetry: (attempt, error, delay) => {
-            console.warn(
-              `[VideoEvaluation] Retry ${attempt} after ${delay}ms: ${error.message}`
-            );
+            logger.warn("Retrying Gemini API call", {
+              attempt: String(attempt),
+              delayMs: String(delay),
+              error: error.message,
+            });
           },
         }
       );
 
-      await logger.logEvent(AssessmentLogEventType.RESPONSE_RECEIVED, {
+      await assessmentLogger.logEvent(AssessmentLogEventType.RESPONSE_RECEIVED, {
         response_length: responseText.length,
         status_code: 200,
       });
@@ -329,7 +334,7 @@ export async function evaluateVideo(
       throw apiError;
     }
 
-    await logger.logEvent(AssessmentLogEventType.PARSING_STARTED);
+    await assessmentLogger.logEvent(AssessmentLogEventType.PARSING_STARTED);
 
     // Parse the response
     const evaluation = parseEvaluationResponse(responseText);
@@ -338,7 +343,7 @@ export async function evaluateVideo(
       (d) => d.score !== null
     ).length;
 
-    await logger.logEvent(AssessmentLogEventType.PARSING_COMPLETED, {
+    await assessmentLogger.logEvent(AssessmentLogEventType.PARSING_COMPLETED, {
       parsed_dimension_count: dimensionCount,
     });
 
@@ -403,26 +408,25 @@ export async function evaluateVideo(
       });
     });
 
-    await logger.logEvent(AssessmentLogEventType.COMPLETED);
+    await assessmentLogger.logEvent(AssessmentLogEventType.COMPLETED);
 
     // Generate and store embeddings for semantic search (async)
     generateAndStoreEmbeddings(assessmentId)
       .then((embeddingResult) => {
         if (embeddingResult.success) {
-          console.log(
-            `[VideoEvaluation] Successfully generated embeddings for ${assessmentId}`
-          );
+          logger.info("Successfully generated embeddings", { assessmentId });
         } else {
-          console.warn(
-            `[VideoEvaluation] Failed to generate embeddings for ${assessmentId}: ${embeddingResult.error}`
-          );
+          logger.warn("Failed to generate embeddings", {
+            assessmentId,
+            error: embeddingResult.error ?? "unknown",
+          });
         }
       })
       .catch((error) => {
-        console.error(
-          `[VideoEvaluation] Embedding generation error for ${assessmentId}:`,
-          error
-        );
+        logger.error("Embedding generation error", {
+          assessmentId,
+          error: error instanceof Error ? error.message : String(error),
+        });
       });
 
     return {
@@ -435,10 +439,10 @@ export async function evaluateVideo(
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    console.error("[VideoEvaluation] Evaluation failed:", error);
+    logger.error("Evaluation failed", { error: error instanceof Error ? error.message : String(error) });
 
     const errorObj = error instanceof Error ? error : new Error(String(error));
-    await logger.logEvent(AssessmentLogEventType.ERROR, {
+    await assessmentLogger.logEvent(AssessmentLogEventType.ERROR, {
       error_message: errorObj.message,
       error_name: errorObj.name,
       stack_trace: errorObj.stack,
@@ -461,16 +465,18 @@ export async function evaluateVideo(
       },
     });
 
-    console.error(
-      `[ASSESSMENT FAILURE ALERT] Video assessment ${assessmentId} failed ` +
-        `(attempt ${newRetryCount}/3). Reason: ${errorMessage}`
-    );
+    logger.error("Video assessment failed", {
+      assessmentId,
+      attempt: String(newRetryCount),
+      maxAttempts: "3",
+      reason: errorMessage,
+    });
 
     if (newRetryCount >= 3) {
-      console.error(
-        `[ASSESSMENT FAILURE ALERT] Video assessment ${assessmentId} has failed 3 times ` +
-          `and will not be automatically retried. Admin intervention required.`
-      );
+      logger.error("Video assessment exhausted all retries, admin intervention required", {
+        assessmentId,
+        retryCount: String(newRetryCount),
+      });
     }
 
     return {
@@ -624,10 +630,10 @@ export async function triggerVideoAssessment(
         taskDescription,
         roleFamilySlug,
       }).catch((error) => {
-        console.error(
-          `[VideoEvaluation] Background evaluation failed for ${videoAssessment.id}:`,
-          error
-        );
+        logger.error("Background evaluation failed", {
+          videoAssessmentId: videoAssessment.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
       });
 
       return { success: true, videoAssessmentId: videoAssessment.id };
@@ -646,15 +652,17 @@ export async function triggerVideoAssessment(
       taskDescription,
       roleFamilySlug,
     }).catch((error) => {
-      console.error(
-        `[VideoEvaluation] Background evaluation failed for ${videoAssessment.id}:`,
-        error
-      );
+      logger.error("Background evaluation failed", {
+        videoAssessmentId: videoAssessment.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
     });
 
     return { success: true, videoAssessmentId: videoAssessment.id };
   } catch (error) {
-    console.error("[VideoEvaluation] Failed to trigger video assessment:", error);
+    logger.error("Failed to trigger video assessment", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       success: false,
       videoAssessmentId: null,
@@ -723,12 +731,18 @@ export async function retryVideoAssessment(
       videoUrl: videoAssessment.videoUrl,
       taskDescription: videoAssessment.assessment?.scenario?.taskDescription,
     }).catch((error) => {
-      console.error(`[VideoEvaluation] Retry failed for ${videoAssessmentId}:`, error);
+      logger.error("Retry failed", {
+        videoAssessmentId,
+        error: error instanceof Error ? error.message : String(error),
+      });
     });
 
     return { success: true, videoAssessmentId };
   } catch (error) {
-    console.error("[VideoEvaluation] Failed to retry:", error);
+    logger.error("Failed to retry", {
+      videoAssessmentId,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       success: false,
       videoAssessmentId,
@@ -761,19 +775,24 @@ export async function forceRetryVideoAssessment(
       data: { status: VideoAssessmentStatus.PENDING, retryCount: 0, lastFailureReason: null },
     });
 
-    console.log(`[VideoEvaluation] Admin force-retry for ${videoAssessmentId}`);
+    logger.info("Admin force-retry initiated", { videoAssessmentId });
 
     evaluateVideo({
       assessmentId: videoAssessmentId,
       videoUrl: videoAssessment.videoUrl,
       taskDescription: videoAssessment.assessment?.scenario?.taskDescription,
     }).catch((error) => {
-      console.error(`[VideoEvaluation] Force retry failed for ${videoAssessmentId}:`, error);
+      logger.error("Force retry failed", {
+        videoAssessmentId,
+        error: error instanceof Error ? error.message : String(error),
+      });
     });
 
     return { success: true, videoAssessmentId };
   } catch (error) {
-    console.error("[VideoEvaluation] Failed to force retry:", error);
+    logger.error("Failed to force retry", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       success: false,
       videoAssessmentId,

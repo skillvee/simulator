@@ -26,6 +26,12 @@ vi.mock("@/lib/core", () => ({
       },
     }
   ),
+  createLogger: () => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 // Mock the Resend constructor - returns object with emails.send

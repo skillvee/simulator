@@ -6,11 +6,13 @@
  */
 
 import { Resend } from "resend";
-import { env } from "@/lib/core";
+import { env, createLogger } from "@/lib/core";
 import type {
   AssessmentReport,
   ReportSkillCategory as SkillCategory,
 } from "@/types";
+
+const logger = createLogger("lib:external:email");
 
 // ============================================================================
 // Resend Client
@@ -430,7 +432,7 @@ export async function sendEmail(params: SendEmailParams): Promise<EmailResult> {
   const resend = getResendClient();
 
   if (!resend) {
-    console.warn("Email service not configured (RESEND_API_KEY not set)");
+    logger.warn("Email service not configured (RESEND_API_KEY not set)");
     return {
       success: false,
       error: "Email service not configured",
@@ -452,7 +454,7 @@ export async function sendEmail(params: SendEmailParams): Promise<EmailResult> {
     });
 
     if (error) {
-      console.error("Resend API error:", error);
+      logger.error("Resend API error", { error: error.message });
       return {
         success: false,
         error: error.message,
@@ -464,7 +466,7 @@ export async function sendEmail(params: SendEmailParams): Promise<EmailResult> {
       messageId: data?.id,
     };
   } catch (error) {
-    console.error("Failed to send email:", error);
+    logger.error("Failed to send email", { error: error instanceof Error ? error.message : String(error) });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

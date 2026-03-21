@@ -11,6 +11,9 @@ import type {
   ConversationWithMeta,
   CoworkerMemory,
 } from "@/types";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:ai:conversation-memory");
 
 // Re-export types for backwards compatibility
 export type { ChatMessage, ConversationWithMeta, CoworkerMemory } from "@/types";
@@ -145,7 +148,7 @@ async function summarizeConversation(
 
     return response.text || "";
   } catch (error) {
-    console.error("Error summarizing conversation:", error);
+    logger.error("Error summarizing conversation", { error: error instanceof Error ? error.message : String(error) });
     // Fallback: return a basic summary
     return `We have had ${messages.length} previous exchanges.`;
   }

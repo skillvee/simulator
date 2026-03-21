@@ -413,33 +413,44 @@ describe("Analytics Queries", () => {
 
 describe("logAnalyticsEvent", () => {
   it("logs event without PII", () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "info").mockImplementation(() => {});
 
     logAnalyticsEvent("signup");
 
-    expect(consoleSpy).toHaveBeenCalledTimes(1);
-    const logCall = consoleSpy.mock.calls[0][0];
-    expect(logCall).toContain("[ANALYTICS]");
-    expect(logCall).toContain("signup");
+    expect(consoleSpy).toHaveBeenCalled();
+    // Structured logger passes (prefix, message, data) as separate args
+    const analyticsCall = consoleSpy.mock.calls.find((call) =>
+      call.some((arg) => String(arg).includes("Analytics event"))
+    );
+    expect(analyticsCall).toBeDefined();
+    // The data arg contains the event info
+    const dataArg = analyticsCall!.find((arg) => typeof arg === "object" && arg !== null);
+    expect(dataArg).toBeDefined();
+    expect((dataArg as Record<string, unknown>).event).toBe("signup");
 
     consoleSpy.mockRestore();
   });
 
   it("logs event with metadata (no PII)", () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "info").mockImplementation(() => {});
 
     logAnalyticsEvent("phase_transition", {
       phase: "WORKING",
       scenarioId: "scenario-123",
     });
 
-    expect(consoleSpy).toHaveBeenCalledTimes(1);
-    const logCall = consoleSpy.mock.calls[0][0];
-    expect(logCall).toContain("phase_transition");
-    expect(logCall).toContain("WORKING");
-    expect(logCall).toContain("scenario-123");
+    expect(consoleSpy).toHaveBeenCalled();
+    const analyticsCall = consoleSpy.mock.calls.find((call) =>
+      call.some((arg) => String(arg).includes("Analytics event"))
+    );
+    expect(analyticsCall).toBeDefined();
+    const dataArg = analyticsCall!.find((arg) => typeof arg === "object" && arg !== null) as Record<string, unknown>;
+    expect(dataArg).toBeDefined();
+    expect(dataArg.event).toBe("phase_transition");
+    expect(dataArg.phase).toBe("WORKING");
+    expect(dataArg.scenarioId).toBe("scenario-123");
     // Should NOT contain PII like email, name, etc.
-    expect(logCall).not.toContain("@");
+    expect(JSON.stringify(dataArg)).not.toContain("@");
 
     consoleSpy.mockRestore();
   });

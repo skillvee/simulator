@@ -1,5 +1,9 @@
 // Audio utilities for capturing and playing audio in the browser
 
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("client:media:audio");
+
 export type AudioPermissionState =
   | "prompt"
   | "granted"
@@ -170,7 +174,7 @@ export class AudioStreamer {
         this.scheduleNextBuffer();
       }
     } catch (error) {
-      console.error("Audio processing error:", error);
+      logger.error("Audio processing error", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -218,7 +222,7 @@ export class AudioStreamer {
         this.isPlaying = false;
       }
     } catch (error) {
-      console.error("Audio scheduling error:", error);
+      logger.error("Audio scheduling error", { error: error instanceof Error ? error.message : String(error) });
       this.isPlaying = false;
     }
   }

@@ -9,6 +9,9 @@
  */
 
 import { z } from "zod";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:scenarios:repo-spec");
 
 // ---------------------------------------------------------------------------
 // Scaffold definitions
@@ -152,7 +155,7 @@ export interface ScenarioMetadata {
  */
 export function selectScaffold(techStack: string[]): Scaffold {
   if (!techStack || techStack.length === 0) {
-    console.warn("[selectScaffold] No tech stack provided, using fallback");
+    logger.warn("No tech stack provided, using fallback");
     return SCAFFOLDS[0];
   }
 
@@ -170,15 +173,11 @@ export function selectScaffold(techStack: string[]): Scaffold {
   scores.sort((a, b) => b.matchCount - a.matchCount);
 
   if (scores[0].matchCount === 0) {
-    console.warn(
-      `[selectScaffold] No scaffold matches for tech stack: ${techStack.join(", ")}. Using fallback.`
-    );
+    logger.warn("No scaffold matches for tech stack, using fallback", { techStack: techStack.join(", ") });
     return SCAFFOLDS[0];
   }
 
-  console.log(
-    `[selectScaffold] Selected ${scores[0].scaffold.name} (${scores[0].matchCount} matches) for tech stack: ${techStack.join(", ")}`
-  );
+  logger.info("Selected scaffold for tech stack", { scaffold: scores[0].scaffold.name, matchCount: scores[0].matchCount, techStack: techStack.join(", ") });
 
   return scores[0].scaffold;
 }

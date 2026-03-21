@@ -13,6 +13,9 @@ import {
   type GreetingPromptContext,
   type TeamMemberIntro,
 } from "@/prompts/manager/greeting";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:chat:greeting-generator");
 
 /**
  * Context required to generate manager greeting messages
@@ -112,10 +115,7 @@ export async function generateManagerGreetings(
 
     return staggered;
   } catch (err) {
-    console.warn(
-      "[generateManagerGreetings] Gemini failed, using fallback:",
-      err
-    );
+    logger.warn("Gemini failed, using fallback", { error: err instanceof Error ? err.message : String(err) });
     return generateFallbackGreetings(context);
   }
 }

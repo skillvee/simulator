@@ -3,6 +3,10 @@
  * Uses Web Audio API for programmatic sound generation (no external files needed)
  */
 
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("client:sounds");
+
 let audioContext: AudioContext | null = null;
 let userHasInteracted = false;
 
@@ -18,7 +22,7 @@ export function markUserInteraction() {
     try {
       audioContext = new AudioContext();
     } catch (error) {
-      console.warn('Failed to initialize AudioContext:', error);
+      logger.warn('Failed to initialize AudioContext', { error: error instanceof Error ? error.message : String(error) });
     }
   }
 }
@@ -56,7 +60,7 @@ export function playMessageSound() {
     oscillator.start(currentTime);
     oscillator.stop(currentTime + 0.15);
   } catch (error) {
-    console.warn('Failed to play message sound:', error);
+    logger.warn('Failed to play message sound', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -109,7 +113,7 @@ export function playCallRingSound(): { stop: () => void } {
         timeoutId = setTimeout(playRingTone, 1500);
       }
     } catch (error) {
-      console.warn('Failed to play ring sound:', error);
+      logger.warn('Failed to play ring sound', { error: error instanceof Error ? error.message : String(error) });
     }
   };
 
@@ -137,7 +141,7 @@ export function cleanupAudio() {
     try {
       audioContext.close();
     } catch (error) {
-      console.warn('Failed to close AudioContext:', error);
+      logger.warn('Failed to close AudioContext', { error: error instanceof Error ? error.message : String(error) });
     }
   }
   audioContext = null;

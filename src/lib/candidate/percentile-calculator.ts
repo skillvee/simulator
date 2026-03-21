@@ -12,6 +12,9 @@
 
 import { db } from "@/server/db";
 import { VideoAssessmentStatus } from "@prisma/client";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:candidate:percentile-calculator");
 
 // ============================================================================
 // Types
@@ -318,9 +321,7 @@ export async function recalculateAllPercentiles(): Promise<number> {
       updatedCount++;
     } catch {
       // Skip assessments that fail (e.g., no scores)
-      console.warn(
-        `Failed to calculate percentiles for assessment ${assessment.id}`
-      );
+      logger.warn("Failed to calculate percentiles for assessment", { assessmentId: assessment.id });
     }
   }
 

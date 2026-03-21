@@ -1,5 +1,8 @@
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
+import { createLogger } from "./logger";
+
+const logger = createLogger("lib:core:data-deletion");
 
 /**
  * Result of a data deletion operation
@@ -238,7 +241,7 @@ export async function deleteUserData(userId: string): Promise<DeletionResult> {
     const message =
       error instanceof Error ? error.message : "Unknown error during deletion";
     result.errors.push(message);
-    console.error("Error deleting user data:", error);
+    logger.error("Error deleting user data", { error: error instanceof Error ? error.message : String(error) });
   }
 
   return result;

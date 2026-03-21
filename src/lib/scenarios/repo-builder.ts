@@ -16,8 +16,9 @@
 
 import type { RepoSpec, FileSpec, Scaffold } from "./repo-spec";
 import { SCAFFOLDS } from "./repo-spec";
+import { createLogger } from "@/lib/core";
 
-const LOG_PREFIX = "[RepoBuilder]";
+const logger = createLogger("lib:scenarios:repo-builder");
 
 const GITHUB_API_HEADERS = (token: string) => ({
   Accept: "application/vnd.github+json",
@@ -51,9 +52,7 @@ export async function buildRepoFromSpec(
 ): Promise<string | null> {
   const scaffold = SCAFFOLDS.find((s) => s.id === spec.scaffoldId);
   if (!scaffold) {
-    console.error(
-      `${LOG_PREFIX} Unknown scaffold: ${spec.scaffoldId}`
-    );
+    logger.error("Unknown scaffold", { scaffoldId: spec.scaffoldId });
     return null;
   }
 
@@ -83,9 +82,12 @@ export async function buildRepoFromSpec(
   // Step 5: Mark repo as template for per-assessment forking
   await markRepoAsTemplate(owner, repo, githubToken);
 
-  console.log(
-    `${LOG_PREFIX} Successfully built repo: ${repoUrl} (${spec.files.length} files, ${spec.commitHistory.length} commits, ${spec.issues.length} issues)`
-  );
+  logger.info("Successfully built repo", {
+    repoUrl,
+    fileCount: spec.files.length,
+    commitCount: spec.commitHistory.length,
+    issueCount: spec.issues.length,
+  });
 
   return repoUrl;
 }
@@ -103,9 +105,7 @@ async function createRepoFromScaffold(
   const [owner, templateRepo] = scaffold.repoTemplate.split("/");
   const repoName = `simulation-${scenarioId}`;
 
-  console.log(
-    `${LOG_PREFIX} Creating repo ${repoName} from scaffold ${scaffold.repoTemplate}`
-  );
+  logger.info("Creating repo from scaffold", { repoName, scaffold: scaffold.repoTemplate });
 
   try {
     const response = await fetch(
@@ -125,18 +125,18 @@ async function createRepoFromScaffold(
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error(
-        `${LOG_PREFIX} GitHub API error creating repo: ${response.status}`,
-        errorData
-      );
+      logger.error("GitHub API error creating repo", {
+        status: response.status,
+        errorData: JSON.stringify(errorData),
+      });
       return null;
     }
 
     const data = await response.json();
-    console.log(`${LOG_PREFIX} Created repo: ${data.html_url}`);
+    logger.info("Created repo", { repoUrl: data.html_url });
     return data.html_url;
   } catch (err) {
-    console.error(`${LOG_PREFIX} Failed to create repo:`, err);
+    logger.error("Failed to create repo", { error: String(err) });
     return null;
   }
 }
@@ -180,7 +180,7 @@ async function updateScaffoldFiles(
       );
     }
   } catch (err) {
-    console.warn(`${LOG_PREFIX} Failed to update package.json:`, err);
+    logger.warn("Failed to update package.json", { error: String(err) });
   }
 }
 
@@ -212,7 +212,7 @@ async function createFilesWithHistory(
       { headers }
     );
     if (!headRefRes.ok) {
-      console.warn(`${LOG_PREFIX} Failed to get HEAD ref: ${headRefRes.status}`);
+      logger.warn("Failed to get HEAD ref", { status: headRefRes.status });
       return;
     }
     let currentCommitSha = (await headRefRes.json()).object.sha;
@@ -223,9 +223,7 @@ async function createFilesWithHistory(
       { headers }
     );
     if (!headCommitRes.ok) {
-      console.warn(
-        `${LOG_PREFIX} Failed to get HEAD commit: ${headCommitRes.status}`
-      );
+      logger.warn("Failed to get HEAD commit", { status: headCommitRes.status });
       return;
     }
     let currentTreeSha = (await headCommitRes.json()).tree.sha;
@@ -302,9 +300,7 @@ async function createFilesWithHistory(
         );
 
         if (!blobRes.ok) {
-          console.warn(
-            `${LOG_PREFIX} Failed to create blob for ${file.path}: ${blobRes.status}`
-          );
+          logger.warn("Failed to create blob", { path: file.path, status: blobRes.status });
           continue;
         }
 
@@ -333,9 +329,7 @@ async function createFilesWithHistory(
       );
 
       if (!treeRes.ok) {
-        console.warn(
-          `${LOG_PREFIX} Failed to create tree for commit "${commit.message}": ${treeRes.status}`
-        );
+        logger.warn("Failed to create tree for commit", { message: commit.message, status: treeRes.status });
         continue;
       }
 
@@ -371,9 +365,7 @@ async function createFilesWithHistory(
       );
 
       if (!commitRes.ok) {
-        console.warn(
-          `${LOG_PREFIX} Failed to create commit "${commit.message}": ${commitRes.status}`
-        );
+        logger.warn("Failed to create commit", { message: commit.message, status: commitRes.status });
         continue;
       }
 
@@ -393,16 +385,15 @@ async function createFilesWithHistory(
     );
 
     if (updateRefRes.ok) {
-      console.log(
-        `${LOG_PREFIX} Successfully created ${spec.commitHistory.length} commits with ${spec.files.length} files`
-      );
+      logger.info("Successfully created commits with files", {
+        commitCount: spec.commitHistory.length,
+        fileCount: spec.files.length,
+      });
     } else {
-      console.warn(
-        `${LOG_PREFIX} Failed to update ref: ${updateRefRes.status}`
-      );
+      logger.warn("Failed to update ref", { status: updateRefRes.status });
     }
   } catch (err) {
-    console.warn(`${LOG_PREFIX} Error creating files with history:`, err);
+    logger.warn("Error creating files with history", { error: String(err) });
   }
 }
 
@@ -452,9 +443,7 @@ async function createIssues(
       );
 
       if (!createRes.ok) {
-        console.warn(
-          `${LOG_PREFIX} Failed to create issue "${issue.title}": ${createRes.status}`
-        );
+        logger.warn("Failed to create issue", { title: issue.title, status: createRes.status });
         continue;
       }
 
@@ -487,11 +476,9 @@ async function createIssues(
       }
     }
 
-    console.log(
-      `${LOG_PREFIX} Created ${spec.issues.length} issues`
-    );
+    logger.info("Created issues", { issueCount: spec.issues.length });
   } catch (err) {
-    console.warn(`${LOG_PREFIX} Error creating issues:`, err);
+    logger.warn("Error creating issues", { error: String(err) });
   }
 }
 
@@ -515,14 +502,12 @@ async function markRepoAsTemplate(
     );
 
     if (response.ok) {
-      console.log(`${LOG_PREFIX} Marked ${owner}/${repo} as template`);
+      logger.info("Marked repo as template", { owner, repo });
     } else {
-      console.warn(
-        `${LOG_PREFIX} Failed to mark as template: ${response.status}`
-      );
+      logger.warn("Failed to mark as template", { status: response.status });
     }
   } catch (err) {
-    console.warn(`${LOG_PREFIX} Error marking as template:`, err);
+    logger.warn("Error marking as template", { error: String(err) });
   }
 }
 
@@ -583,9 +568,7 @@ async function updateFile(
   );
 
   if (!res.ok) {
-    console.warn(
-      `${LOG_PREFIX} Failed to update ${path}: ${res.status}`
-    );
+    logger.warn("Failed to update file", { path, status: res.status });
   }
 
   return res.ok;

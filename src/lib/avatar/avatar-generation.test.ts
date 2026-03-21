@@ -25,6 +25,12 @@ vi.mock("@/lib/core", () => ({
   env: {
     GEMINI_API_KEY: "test-api-key",
   },
+  createLogger: () => ({
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  }),
 }));
 
 const mockStorageFrom = vi.fn();

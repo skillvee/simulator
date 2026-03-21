@@ -1,7 +1,9 @@
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
 import { GoogleGenAI } from "@google/genai";
-import { env } from "@/lib/core";
+import { env, createLogger } from "@/lib/core";
+
+const logger = createLogger("lib:candidate:profile-photo");
 
 const gemini = new GoogleGenAI({
   apiKey: env.GEMINI_API_KEY,
@@ -58,10 +60,7 @@ export async function generateProfilePhoto(
     try {
       processedImageBuffer = await editWebcamToHeadshot(snapshotBuffer);
     } catch (genError) {
-      console.error(
-        "[ProfilePhoto] AI headshot editing failed, using raw snapshot:",
-        genError
-      );
+      logger.error("AI headshot editing failed, using raw snapshot", { error: genError instanceof Error ? genError.message : String(genError) });
       processedImageBuffer = snapshotBuffer;
     }
 
@@ -105,7 +104,7 @@ export async function generateProfilePhoto(
     return { success: true, imageUrl: urlData.signedUrl };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[ProfilePhoto] Error:", err);
+    logger.error("Error generating profile photo", { error: err instanceof Error ? err.message : String(err) });
     return { success: false, imageUrl: null, error: message };
   }
 }

@@ -5,6 +5,10 @@
  * across the application, especially for Gemini API and voice conversations.
  */
 
+import { createLogger } from "./logger";
+
+const logger = createLogger("lib:core:error-recovery");
+
 // Error categories for different handling strategies
 export type ErrorCategory =
   | "network" // Transient network issues - retry with backoff
@@ -325,7 +329,7 @@ export function saveProgress(
     };
     localStorage.setItem(key, JSON.stringify(progress));
   } catch (error) {
-    console.error("Failed to save progress:", error);
+    logger.error("Failed to save progress", { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
@@ -342,7 +346,7 @@ export function loadProgress(
     if (!stored) return null;
     return JSON.parse(stored) as SessionProgress;
   } catch (error) {
-    console.error("Failed to load progress:", error);
+    logger.error("Failed to load progress", { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -355,7 +359,7 @@ export function clearProgress(assessmentId: string, type: string): void {
     const key = getProgressStorageKey(assessmentId, type);
     localStorage.removeItem(key);
   } catch (error) {
-    console.error("Failed to clear progress:", error);
+    logger.error("Failed to clear progress", { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
