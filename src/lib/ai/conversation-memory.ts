@@ -232,18 +232,9 @@ export function buildCrossCoworkerContext(
     const messageCount = conv.messages.length;
 
     if (messageCount > 0) {
-      // Get the last topic discussed (simplified)
-      const lastUserMessage = [...conv.messages]
-        .reverse()
-        .find((m) => m.role === "user");
-      if (lastUserMessage) {
-        const preview =
-          lastUserMessage.text.slice(0, 60) +
-          (lastUserMessage.text.length > 60 ? "..." : "");
-        otherInteractions.push(
-          `- The candidate has talked with ${coworkerName} (${messageCount} messages). Last topic hint: "${preview}"`
-        );
-      }
+      otherInteractions.push(
+        `- The candidate has chatted with ${coworkerName} (${messageCount} messages).`
+      );
     }
   }
 
@@ -258,6 +249,7 @@ ${otherInteractions.join("\n")}
 **IMPORTANT RULES about cross-coworker awareness:**
 - You can acknowledge that the candidate has been talking to specific coworkers listed above (e.g., "I heard you were talking to Alex")
 - If the candidate ASKS "who have I been chatting with?" — ONLY list the coworkers named above. Do NOT list team members they haven't talked to
+- Do NOT assume you know what the candidate discussed with other team members. If they mention talking to someone, ask what came up rather than guessing.
 - Do NOT independently confirm specific technical details from another person's private conversation. If the candidate says "Alex told me about X", you may acknowledge they talked, but share your OWN perspective on X (not echoing what Alex said)
 - Do NOT pry into their conversations with others`;
 }

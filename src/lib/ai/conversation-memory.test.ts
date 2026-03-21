@@ -236,7 +236,9 @@ describe("conversation-memory", () => {
       expect(result).toContain("## Context About Other Conversations");
       expect(result).toContain("Jordan Rivera");
       expect(result).toContain("2 messages");
-      expect(result).toContain("How do I run tests?");
+      // Should NOT contain topic hints or message previews
+      expect(result).not.toContain("How do I run tests?");
+      expect(result).not.toContain("Last topic hint");
     });
 
     it("should exclude HR interview conversations (null coworkerId)", () => {
@@ -261,12 +263,11 @@ describe("conversation-memory", () => {
       expect(result).not.toContain("HR interview");
     });
 
-    it("should truncate long message previews", () => {
+    it("should not include topic hints or message content", () => {
       const currentCoworkerId = "coworker-1";
-      const longMessage = "A".repeat(200);
       const conversations = [
         createConversation("text", "coworker-2", [
-          createMessage("user", longMessage),
+          createMessage("user", "Secret implementation details"),
         ]),
       ];
       const coworkerMap = new Map([["coworker-2", "Jordan Rivera"]]);
@@ -277,10 +278,10 @@ describe("conversation-memory", () => {
         coworkerMap
       );
 
-      // The preview should be truncated (100 chars + "...")
-      expect(result).toContain("...");
-      // Should NOT contain the full 200-char message
-      expect(result).not.toContain(longMessage);
+      expect(result).toContain("Jordan Rivera");
+      expect(result).toContain("1 messages");
+      expect(result).not.toContain("Secret implementation details");
+      expect(result).not.toContain("Last topic hint");
     });
 
     it("should handle conversations with empty messages", () => {
@@ -313,6 +314,26 @@ describe("conversation-memory", () => {
       );
 
       expect(result).toContain("Do NOT pry into their conversations with others");
+    });
+
+    it("should include rule about not assuming conversation topics", () => {
+      const currentCoworkerId = "coworker-1";
+      const conversations = [
+        createConversation("text", "coworker-2", [
+          createMessage("user", "Hello"),
+        ]),
+      ];
+      const coworkerMap = new Map([["coworker-2", "Jordan Rivera"]]);
+
+      const result = buildCrossCoworkerContext(
+        conversations,
+        currentCoworkerId,
+        coworkerMap
+      );
+
+      expect(result).toContain(
+        "Do NOT assume you know what the candidate discussed with other team members"
+      );
     });
   });
 });
