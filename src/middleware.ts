@@ -102,9 +102,47 @@ function isAdminPageRoute(pathname: string): boolean {
 }
 
 /**
+ * Base security headers applied to all responses.
+ */
+const BASE_SECURITY_HEADERS: Record<string, string> = {
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  "X-XSS-Protection": "0",
+};
+
+/**
+ * Assessment routes need camera and microphone for webcam recording.
+ */
+const ASSESSMENT_SECURITY_HEADERS: Record<string, string> = {
+  ...BASE_SECURITY_HEADERS,
+  "Permissions-Policy": "camera=(self), microphone=(self), geolocation=()",
+};
+
+/**
+ * Apply security headers to a NextResponse.
+ */
+function applySecurityHeaders(
+  response: NextResponse,
+  pathname: string
+): NextResponse {
+  const headers = pathname.startsWith("/assessments/")
+    ? ASSESSMENT_SECURITY_HEADERS
+    : BASE_SECURITY_HEADERS;
+
+  for (const [key, value] of Object.entries(headers)) {
+    response.headers.set(key, value);
+  }
+
+  return response;
+}
+
+/**
  * Centralized authentication middleware for API and page routes.
  *
  * This middleware:
+ * - Adds security headers to all responses
  * - Protects all /api/* routes except /api/auth/* and PUBLIC_API_ROUTES
  * - Requires ADMIN role for /api/admin/* routes
  * - Requires RECRUITER or ADMIN role for /api/recruiter/* routes
@@ -117,6 +155,7 @@ function isAdminPageRoute(pathname: string): boolean {
  *
  * @see Issue #160: SEC-001 - Security audit finding #5 (HIGH severity)
  * @see Issue #187: RF-019 - Update middleware for new routes
+ * @see Issue #264: AUDIT-010 - Security headers
  * @see Run 010: Admin route protection fix
  */
 export default auth((req) => {
@@ -126,12 +165,12 @@ export default auth((req) => {
 
   // Skip auth routes (handled by NextAuth)
   if (isAuthRoute(pathname)) {
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
 
   // Allow public page routes without authentication
   if (isPublicPageRoute(pathname)) {
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
 
   // Handle API routes
@@ -141,20 +180,23 @@ export default auth((req) => {
     if (pathname.startsWith("/api/chat")) {
       const { limited, remaining } = applyRateLimit(req, aiChatLimiter);
       if (limited) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Rate limit exceeded. Please try again later.",
-            retryAfter: 60
-          },
-          {
-            status: 429,
-            headers: {
-              'X-RateLimit-Limit': '30',
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+        return applySecurityHeaders(
+          NextResponse.json(
+            {
+              success: false,
+              error: "Rate limit exceeded. Please try again later.",
+              retryAfter: 60
+            },
+            {
+              status: 429,
+              headers: {
+                'X-RateLimit-Limit': '30',
+                'X-RateLimit-Remaining': remaining.toString(),
+                'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+              }
             }
-          }
+          ),
+          pathname
         );
       }
     } else if (
@@ -163,20 +205,23 @@ export default auth((req) => {
     ) {
       const { limited, remaining } = applyRateLimit(req, aiGenerationLimiter);
       if (limited) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Rate limit exceeded for generation. Please wait before trying again.",
-            retryAfter: 60
-          },
-          {
-            status: 429,
-            headers: {
-              'X-RateLimit-Limit': '5',
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+        return applySecurityHeaders(
+          NextResponse.json(
+            {
+              success: false,
+              error: "Rate limit exceeded for generation. Please wait before trying again.",
+              retryAfter: 60
+            },
+            {
+              status: 429,
+              headers: {
+                'X-RateLimit-Limit': '5',
+                'X-RateLimit-Remaining': remaining.toString(),
+                'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+              }
             }
-          }
+          ),
+          pathname
         );
       }
     } else if (
@@ -185,43 +230,52 @@ export default auth((req) => {
     ) {
       const { limited, remaining } = applyRateLimit(req, aiAnalysisLimiter);
       if (limited) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Rate limit exceeded for analysis. Please wait before trying again.",
-            retryAfter: 60
-          },
-          {
-            status: 429,
-            headers: {
-              'X-RateLimit-Limit': '10',
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+        return applySecurityHeaders(
+          NextResponse.json(
+            {
+              success: false,
+              error: "Rate limit exceeded for analysis. Please wait before trying again.",
+              retryAfter: 60
+            },
+            {
+              status: 429,
+              headers: {
+                'X-RateLimit-Limit': '10',
+                'X-RateLimit-Remaining': remaining.toString(),
+                'X-RateLimit-Reset': new Date(Date.now() + 60000).toISOString()
+              }
             }
-          }
+          ),
+          pathname
         );
       }
     }
 
     // Allow public API routes without authentication
     if (isPublicApiRoute(pathname)) {
-      return NextResponse.next();
+      return applySecurityHeaders(NextResponse.next(), pathname);
     }
 
     // Check authentication for protected API routes
     if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
+      return applySecurityHeaders(
+        NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        ),
+        pathname
       );
     }
 
     // Check admin role for admin API routes
     if (isAdminApiRoute(pathname)) {
       if (user?.role !== "ADMIN") {
-        return NextResponse.json(
-          { success: false, error: "Admin access required" },
-          { status: 403 }
+        return applySecurityHeaders(
+          NextResponse.json(
+            { success: false, error: "Admin access required" },
+            { status: 403 }
+          ),
+          pathname
         );
       }
     }
@@ -229,14 +283,17 @@ export default auth((req) => {
     // Check recruiter role for recruiter API routes (RECRUITER or ADMIN allowed)
     if (isRecruiterApiRoute(pathname)) {
       if (user?.role !== "RECRUITER" && user?.role !== "ADMIN") {
-        return NextResponse.json(
-          { success: false, error: "Recruiter access required" },
-          { status: 403 }
+        return applySecurityHeaders(
+          NextResponse.json(
+            { success: false, error: "Recruiter access required" },
+            { status: 403 }
+          ),
+          pathname
         );
       }
     }
 
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
 
   // Handle candidate dashboard routes (any authenticated user)
@@ -244,9 +301,9 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname);
     }
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
 
   // Handle recruiter page routes
@@ -255,16 +312,16 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname);
     }
 
     // Check recruiter role (RECRUITER or ADMIN allowed)
     if (user?.role !== "RECRUITER" && user?.role !== "ADMIN") {
       // Redirect candidates to their own dashboard instead of showing an error
-      return NextResponse.redirect(new URL("/candidate/dashboard", req.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname);
     }
 
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
 
   // Handle assessment page routes
@@ -273,12 +330,12 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname);
     }
 
     // Note: Assessment ownership is verified at the page level, not middleware
     // This is because middleware doesn't have access to database queries
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
 
   // Handle admin page routes
@@ -287,36 +344,36 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname);
     }
 
     // Check admin role (only ADMIN allowed)
     if (user?.role !== "ADMIN") {
       // Redirect to the user's appropriate dashboard
       if (user?.role === "RECRUITER") {
-        return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
+        return applySecurityHeaders(NextResponse.redirect(new URL("/recruiter/dashboard", req.url)), pathname);
       }
-      return NextResponse.redirect(new URL("/candidate/dashboard", req.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname);
     }
 
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next(), pathname);
   }
 
   // Redirect authenticated users from home page to their dashboard
   if (pathname === "/") {
     if (session?.user) {
       if (user?.role === "ADMIN") {
-        return NextResponse.redirect(new URL("/admin", req.url));
+        return applySecurityHeaders(NextResponse.redirect(new URL("/admin", req.url)), pathname);
       }
       if (user?.role === "RECRUITER") {
-        return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
+        return applySecurityHeaders(NextResponse.redirect(new URL("/recruiter/dashboard", req.url)), pathname);
       }
       // Candidates (USER role) go to candidate dashboard
-      return NextResponse.redirect(new URL("/candidate/dashboard", req.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname);
     }
   }
 
-  return NextResponse.next();
+  return applySecurityHeaders(NextResponse.next(), pathname);
 });
 
 /**
