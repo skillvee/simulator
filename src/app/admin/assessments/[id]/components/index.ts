@@ -3,6 +3,7 @@ export type {
   SerializedLog,
   SerializedApiCall,
   SerializedRecording,
+  SerializedRecordingSegment,
   SerializedConversation,
   SerializedVoiceSession,
   SerializedAssessment,
@@ -38,3 +39,4 @@ export { ConversationsTab } from "./conversations-tab";
 export { ErrorsTab } from "./errors-tab";
 export { ApiCallsTab } from "./api-calls-tab";
 export { TimelineTab } from "./timeline-tab";
+export { RecordingTab } from "./recording-tab";

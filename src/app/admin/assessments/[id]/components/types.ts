@@ -31,12 +31,22 @@ export interface SerializedApiCall {
   traceId: string | null;
 }
 
+export interface SerializedRecordingSegment {
+  id: string;
+  segmentIndex: number;
+  startTime: string;
+  endTime: string | null;
+  status: string;
+  chunkPaths: string[];
+}
+
 export interface SerializedRecording {
   id: string;
   type: string;
   storageUrl: string;
   startTime: string;
   endTime: string | null;
+  segments: SerializedRecordingSegment[];
 }
 
 export interface SerializedAssessment {

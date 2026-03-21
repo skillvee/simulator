@@ -35,6 +35,7 @@ import {
   ErrorsTab,
   ApiCallsTab,
   TimelineTab,
+  RecordingTab,
 } from "./components";
 
 // Re-export formatDuration for backwards compatibility (used in tests)
@@ -462,6 +463,10 @@ export function AssessmentTimelineClient({
               {totalErrorCount}
             </Badge>
           </TabsTrigger>
+          <TabsTrigger value="recording" className="gap-2">
+            <Video className="h-4 w-4" />
+            Recording
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="timeline">
@@ -487,6 +492,14 @@ export function AssessmentTimelineClient({
           <ErrorsTab
             clientErrors={clientErrors}
             apiCalls={assessment.apiCalls}
+          />
+        </TabsContent>
+
+        <TabsContent value="recording">
+          <RecordingTab
+            assessment={assessment}
+            clientErrors={clientErrors}
+            candidateEvents={candidateEvents}
           />
         </TabsContent>
       </Tabs>

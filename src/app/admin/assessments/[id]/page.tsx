@@ -56,6 +56,17 @@ export default async function AssessmentTimelinePage({
           storageUrl: true,
           startTime: true,
           endTime: true,
+          segments: {
+            orderBy: { segmentIndex: "asc" as const },
+            select: {
+              id: true,
+              segmentIndex: true,
+              startTime: true,
+              endTime: true,
+              status: true,
+              chunkPaths: true,
+            },
+          },
         },
       },
       conversations: {
@@ -153,6 +164,11 @@ export default async function AssessmentTimelinePage({
       ...rec,
       startTime: rec.startTime.toISOString(),
       endTime: rec.endTime?.toISOString() ?? null,
+      segments: rec.segments.map((seg) => ({
+        ...seg,
+        startTime: seg.startTime.toISOString(),
+        endTime: seg.endTime?.toISOString() ?? null,
+      })),
     })),
     conversations: assessment.conversations.map((conv) => ({
       ...conv,

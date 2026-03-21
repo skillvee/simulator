@@ -131,6 +131,7 @@ const mockAssessment = {
       storageUrl: "https://storage.example.com/video.webm",
       startTime: new Date("2024-01-15T10:00:00Z"),
       endTime: new Date("2024-01-15T11:30:00Z"),
+      segments: [],
     },
   ],
   conversations: [],
@@ -234,6 +235,17 @@ describe("AssessmentTimelinePage", () => {
             storageUrl: true,
             startTime: true,
             endTime: true,
+            segments: {
+              orderBy: { segmentIndex: "asc" },
+              select: {
+                id: true,
+                segmentIndex: true,
+                startTime: true,
+                endTime: true,
+                status: true,
+                chunkPaths: true,
+              },
+            },
           },
         },
         conversations: {
