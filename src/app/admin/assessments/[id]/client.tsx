@@ -23,18 +23,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   type SerializedAssessment,
   type SerializedClientError,
+  type SerializedCandidateEvent,
   type TimelineEvent,
   type Toast,
   formatDuration,
   formatDate,
-  calculateDurationBetweenEvents,
   CandidateInfoCard,
   ConfirmationDialog,
   ToastNotification,
-  TimelineEventItem,
   ConversationsTab,
   ErrorsTab,
   ApiCallsTab,
+  TimelineTab,
 } from "./components";
 
 // Re-export formatDuration for backwards compatibility (used in tests)
@@ -43,11 +43,13 @@ export { formatDuration } from "./components";
 interface AssessmentTimelineClientProps {
   assessment: SerializedAssessment;
   clientErrors: SerializedClientError[];
+  candidateEvents: SerializedCandidateEvent[];
 }
 
 export function AssessmentTimelineClient({
   assessment,
   clientErrors,
+  candidateEvents,
 }: AssessmentTimelineClientProps) {
   const router = useRouter();
   // Track expanded API call events (for showing details)
@@ -429,7 +431,11 @@ export function AssessmentTimelineClient({
             <Clock className="h-4 w-4" />
             Timeline
             <Badge variant="secondary" className="ml-1 text-xs">
-              {timelineEvents.length}
+              {timelineEvents.length +
+                assessment.conversations.length +
+                assessment.voiceSessions.length +
+                clientErrors.length +
+                candidateEvents.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="conversations" className="gap-2">
@@ -459,50 +465,11 @@ export function AssessmentTimelineClient({
         </TabsList>
 
         <TabsContent value="timeline">
-          <Card data-testid="timeline">
-            <div className="border-b border-border bg-muted/10 p-4">
-              <h2 className="text-xs font-medium text-muted-foreground">
-                EVENT TIMELINE ({timelineEvents.length} events)
-              </h2>
-            </div>
-
-            {timelineEvents.length === 0 ? (
-              <div className="p-6 text-center text-muted-foreground">
-                No events recorded for this assessment
-              </div>
-            ) : (
-              <div className="relative">
-                {/* Vertical timeline line */}
-                <div className="absolute bottom-0 left-8 top-0 w-0.5 bg-border" />
-
-                {timelineEvents.map((event, index) => {
-                  const previousEvent =
-                    index > 0 ? timelineEvents[index - 1] : null;
-                  const durationFromPrevious = previousEvent
-                    ? calculateDurationBetweenEvents(
-                        event.timestamp,
-                        previousEvent.timestamp
-                      )
-                    : null;
-
-                  return (
-                    <TimelineEventItem
-                      key={event.id}
-                      event={event}
-                      index={index}
-                      durationFromPrevious={durationFromPrevious}
-                      isErrorExpanded={expandedErrors.has(event.id)}
-                      isApiCallExpanded={expandedApiCalls.has(event.id)}
-                      expandedCodeSections={expandedCodeSections}
-                      onToggleErrorExpansion={toggleErrorExpansion}
-                      onToggleApiCallExpansion={toggleApiCallExpansion}
-                      onToggleCodeSection={toggleCodeSection}
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </Card>
+          <TimelineTab
+            assessment={assessment}
+            clientErrors={clientErrors}
+            candidateEvents={candidateEvents}
+          />
         </TabsContent>
 
         <TabsContent value="api-calls">

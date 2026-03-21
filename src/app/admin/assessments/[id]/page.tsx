@@ -91,6 +91,18 @@ export default async function AssessmentTimelinePage({
     notFound();
   }
 
+  // Fetch candidate events for this assessment
+  const candidateEvents = await db.candidateEvent.findMany({
+    where: { assessmentId: id },
+    orderBy: { timestamp: "asc" },
+    select: {
+      id: true,
+      eventType: true,
+      timestamp: true,
+      metadata: true,
+    },
+  });
+
   // Fetch client errors for this assessment
   const clientErrors = await db.clientError.findMany({
     where: { assessmentId: id },
@@ -165,10 +177,16 @@ export default async function AssessmentTimelinePage({
     createdAt: undefined,
   }));
 
+  const serializedCandidateEvents = candidateEvents.map((evt) => ({
+    ...evt,
+    timestamp: evt.timestamp.toISOString(),
+  }));
+
   return (
     <AssessmentTimelineClient
       assessment={serializedAssessment}
       clientErrors={serializedClientErrors}
+      candidateEvents={serializedCandidateEvents}
     />
   );
 }

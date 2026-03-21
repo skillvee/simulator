@@ -66,7 +66,13 @@ export interface SerializedAssessment {
 }
 
 // Event types for unified timeline
-export type TimelineEventType = "log" | "apiCall";
+export type TimelineEventType =
+  | "log"
+  | "apiCall"
+  | "conversation"
+  | "voiceSession"
+  | "clientError"
+  | "candidateEvent";
 
 export interface TimelineEvent {
   id: string;
@@ -85,6 +91,25 @@ export interface TimelineEvent {
   promptText?: string;
   responseText?: string | null;
   responseTimestamp?: string | null;
+  // Conversation/voice fields
+  coworkerName?: string;
+  coworkerRole?: string;
+  messageCount?: number;
+  conversationType?: string;
+  // Client error fields
+  clientErrorType?: ClientErrorType;
+  componentName?: string | null;
+  url?: string;
+  // Candidate event fields
+  candidateEventType?: string;
+}
+
+// Serialized candidate event from server
+export interface SerializedCandidateEvent {
+  id: string;
+  eventType: string;
+  timestamp: string;
+  metadata: unknown;
 }
 
 // Serialized conversation from server

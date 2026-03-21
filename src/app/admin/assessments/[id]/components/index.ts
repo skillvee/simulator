@@ -7,6 +7,7 @@ export type {
   SerializedVoiceSession,
   SerializedAssessment,
   SerializedClientError,
+  SerializedCandidateEvent,
   ErrorEntry,
   TimelineEventType,
   TimelineEvent,
@@ -21,6 +22,8 @@ export {
   calculateDurationBetweenEvents,
   EVENT_TYPE_LABELS,
   getEventIcon,
+  getTimelineEventColor,
+  CANDIDATE_EVENT_LABELS,
 } from "./utils";
 
 // Components
@@ -34,3 +37,4 @@ export { TimelineEvent as TimelineEventItem } from "./timeline-event";
 export { ConversationsTab } from "./conversations-tab";
 export { ErrorsTab } from "./errors-tab";
 export { ApiCallsTab } from "./api-calls-tab";
+export { TimelineTab } from "./timeline-tab";
