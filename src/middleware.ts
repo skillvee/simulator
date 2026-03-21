@@ -26,6 +26,7 @@ interface ExtendedSessionUser {
 const PUBLIC_API_ROUTES = [
   "/api/search/extract",
   "/api/search/parse-feedback",
+  "/api/errors",
 ];
 
 /**

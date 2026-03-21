@@ -188,6 +188,27 @@ export const CandidateEventBatchSchema = z.object({
 });
 export type CandidateEventBatch = z.infer<typeof CandidateEventBatchSchema>;
 
+/**
+ * POST /api/errors - Report a client-side error
+ */
+export const ClientErrorReportSchema = z.object({
+  assessmentId: z.string().optional(),
+  userId: z.string().optional(),
+  errorType: z.enum([
+    "UNHANDLED_EXCEPTION",
+    "CONSOLE_ERROR",
+    "CONSOLE_WARN",
+    "CONSOLE_LOG",
+    "REACT_BOUNDARY",
+  ]),
+  message: z.string().min(1, "Message is required"),
+  stackTrace: z.string().optional(),
+  componentName: z.string().optional(),
+  url: z.string().min(1, "URL is required"),
+  metadata: z.record(z.unknown()).optional(),
+});
+export type ClientErrorReport = z.infer<typeof ClientErrorReportSchema>;
+
 // ─── Response Schemas (API Contracts) ───────────────────────────────────────
 
 /**

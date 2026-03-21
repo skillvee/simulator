@@ -107,6 +107,7 @@ class RateLimiter {
 export const aiChatLimiter = new RateLimiter(60000, 30);  // 30 requests per minute for chat
 export const aiGenerationLimiter = new RateLimiter(60000, 5);  // 5 requests per minute for generation
 export const aiAnalysisLimiter = new RateLimiter(60000, 10);  // 10 requests per minute for analysis
+export const clientErrorLimiter = new RateLimiter(60000, 50);  // 50 errors per assessment per minute
 
 /**
  * Get the client IP address from the request

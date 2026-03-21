@@ -30,6 +30,8 @@ export {
   type VoiceSessionLog,
   CandidateEventBatchSchema,
   type CandidateEventBatch,
+  ClientErrorReportSchema,
+  type ClientErrorReport,
   // Response schemas (API contracts)
   apiSuccessSchema,
   ApiErrorResponseSchema,
