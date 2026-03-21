@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useManagerAutoStart } from "@/hooks";
 import { playMessageSound, markUserInteraction } from "@/lib/sounds";
 import type { ChatMessage, MessageReaction } from "@/types";
+import { isManager } from "@/lib/utils/coworker";
 
 // Track which coworkers have already had sequential message reveal
 // Module-level so it persists across remounts within the same session
@@ -87,7 +88,7 @@ export function Chat({
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Defense mode: disable text input when PR submitted and coworker is manager
-  const isManagerCoworker = coworker.role.toLowerCase().includes("manager");
+  const isManagerCoworker = isManager(coworker.role);
   const isDefenseMode = defenseCallRequired || !!(initialPrUrl && isManagerCoworker);
   const isInputDisabled = isDefenseMode;
 

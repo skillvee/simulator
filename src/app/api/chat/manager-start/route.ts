@@ -16,18 +16,12 @@ import { success, error, validateRequest } from "@/lib/api";
 import { z } from "zod";
 import type { CoworkerPersonality } from "@/types";
 import type { Prisma } from "@prisma/client";
+import { isManager } from "@/lib/utils/coworker";
 
 const ManagerStartRequestSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
   postVoiceKickoff: z.boolean().optional().default(false),
 });
-
-/**
- * Check if a coworker is a manager based on role
- */
-function isManager(role: string): boolean {
-  return role.toLowerCase().includes("manager");
-}
 
 /**
  * Find the manager coworker from a list of coworkers.

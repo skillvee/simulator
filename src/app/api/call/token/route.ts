@@ -14,11 +14,7 @@ import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types
 import { buildVoicePrompt, buildDefensePrompt, type DefenseContext, buildKickoffVoicePrompt } from "@/prompts";
 import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
-
-// Check if a coworker is a manager based on role
-function isManager(role: string): boolean {
-  return role.toLowerCase().includes("manager");
-}
+import { isManager } from "@/lib/utils/coworker";
 
 export async function POST(request: Request) {
   const session = await auth();

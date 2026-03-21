@@ -21,14 +21,10 @@ import { success, error, validateRequest } from "@/lib/api";
 import { ChatRequestSchema } from "@/lib/schemas";
 import { isValidPrUrl } from "@/lib/external";
 import { sanitizeForStorage } from "@/lib/sanitization";
+import { isManager } from "@/lib/utils/coworker";
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
-
-// Check if a coworker is a manager based on role
-function isManager(role: string): boolean {
-  return role.toLowerCase().includes("manager");
-}
 
 // Extract potential PR URL from a message
 function extractPrUrl(message: string): string | null {

@@ -13,6 +13,7 @@ import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
 import { playMessageSound } from "@/lib/sounds";
 import type { ChatMessage } from "@/types";
 import type { ChannelMessage } from "@/lib/ai/coworker-persona";
+import { isManager } from "@/lib/utils/coworker";
 
 interface Coworker {
   id: string;
@@ -46,7 +47,7 @@ export function WorkPageClient({
 
   // Manager reference for name substitution
   const manager = useMemo(
-    () => coworkers.find((c) => c.role.toLowerCase().includes("manager")),
+    () => coworkers.find((c) => isManager(c.role)),
     [coworkers]
   );
 

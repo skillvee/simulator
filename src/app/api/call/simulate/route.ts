@@ -22,6 +22,7 @@ import { buildVoicePrompt, buildDefensePrompt, type DefenseContext } from "@/pro
 import { success, error, validateRequest } from "@/lib/api";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
+import { isManager } from "@/lib/utils/coworker";
 
 const CHAT_MODEL = "gemini-3-flash-preview";
 
@@ -30,10 +31,6 @@ const SimulateCallSchema = z.object({
   coworkerId: z.string().min(1, "Coworker ID is required"),
   message: z.string().min(1, "Message is required"),
 });
-
-function isManager(role: string): boolean {
-  return role.toLowerCase().includes("manager");
-}
 
 export async function POST(request: Request) {
   const session = await auth();
