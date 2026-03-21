@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { success, error, validateRequest } from "@/lib/api";
 import { AssessmentFinalizeSchema } from "@/lib/schemas";
 import { db } from "@/server/db";
+import { createLogger } from "@/lib/core";
 import { AssessmentStatus, Prisma } from "@prisma/client";
 import {
   cleanupPrAfterAssessment,
@@ -17,6 +18,8 @@ import {
   generateProfilePhoto,
   type GenerateProfilePhotoResult,
 } from "@/lib/candidate";
+
+const logger = createLogger("api:assessment:finalize");
 
 /**
  * POST /api/assessment/finalize
@@ -90,10 +93,7 @@ export async function POST(request: Request) {
       try {
         finalCiStatus = await fetchPrCiStatus(assessment.prUrl);
       } catch (err) {
-        console.warn(
-          `CI status fetch warning for assessment ${assessmentId}:`,
-          err
-        );
+        logger.warn("CI status fetch failed", { assessmentId, error: String(err) });
         // Continue without CI status - don't block finalization
       }
     }
@@ -105,16 +105,10 @@ export async function POST(request: Request) {
       try {
         prCleanupResult = await cleanupPrAfterAssessment(assessment.prUrl);
         if (!prCleanupResult.success) {
-          console.warn(
-            `PR cleanup warning for assessment ${assessmentId}:`,
-            prCleanupResult.message
-          );
+          logger.warn("PR cleanup warning", { assessmentId, message: prCleanupResult.message });
         }
       } catch (err) {
-        console.error(
-          `PR cleanup error for assessment ${assessmentId}:`,
-          err
-        );
+        logger.error("PR cleanup error", { assessmentId, error: String(err) });
         // Don't fail the finalization if PR cleanup fails
       }
     }
@@ -160,16 +154,10 @@ export async function POST(request: Request) {
         });
 
         if (!videoAssessmentResult.success) {
-          console.warn(
-            `Video assessment trigger warning for ${assessmentId}:`,
-            videoAssessmentResult.error
-          );
+          logger.warn("Video assessment trigger warning", { assessmentId, error: videoAssessmentResult.error });
         }
       } catch (err) {
-        console.warn(
-          `Video assessment trigger error for ${assessmentId}:`,
-          err
-        );
+        logger.warn("Video assessment trigger error", { assessmentId, error: String(err) });
         // Don't fail the finalization if video assessment trigger fails
       }
     }
@@ -183,16 +171,10 @@ export async function POST(request: Request) {
       });
 
       if (!profilePhotoResult.success) {
-        console.warn(
-          `Profile photo generation warning for ${assessmentId}:`,
-          profilePhotoResult.error
-        );
+        logger.warn("Profile photo generation warning", { assessmentId, error: profilePhotoResult.error });
       }
     } catch (err) {
-      console.warn(
-        `Profile photo generation error for ${assessmentId}:`,
-        err
-      );
+      logger.warn("Profile photo generation error", { assessmentId, error: String(err) });
       // Don't fail the finalization if profile photo generation fails
     }
 
@@ -241,7 +223,7 @@ export async function POST(request: Request) {
           },
     });
   } catch (err) {
-    console.error("Error finalizing assessment:", err);
+    logger.error("Error finalizing assessment", { error: String(err) });
     return error("Failed to finalize assessment", 500);
   }
 }

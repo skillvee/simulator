@@ -3,6 +3,9 @@ import { db } from "@/server/db";
 import { provisionAssessmentRepo } from "@/lib/scenarios/repo-templates";
 import { success, error, validateRequest } from "@/lib/api";
 import { AssessmentCreateSchema } from "@/lib/schemas";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("api:assessment:create");
 
 /**
  * POST /api/assessment/create
@@ -87,9 +90,7 @@ export async function POST(request: Request) {
               where: { id: assessment.id },
               data: { repoUrl, repoStatus: "ready" },
             });
-            console.log(
-              `[assessment/create] Repo provisioned for assessment ${assessment.id}: ${repoUrl}`
-            );
+            logger.info("Repo provisioned", { assessmentId: assessment.id, repoUrl });
           } else {
             await db.assessment.update({
               where: { id: assessment.id },
@@ -98,10 +99,7 @@ export async function POST(request: Request) {
           }
         })
         .catch((err) => {
-          console.error(
-            `[assessment/create] Repo provision failed for ${assessment.id}:`,
-            err
-          );
+          logger.error("Repo provision failed", { assessmentId: assessment.id, error: String(err) });
           db.assessment
             .update({
               where: { id: assessment.id },
@@ -119,7 +117,7 @@ export async function POST(request: Request) {
       201
     );
   } catch (err) {
-    console.error("[assessment/create] Unexpected error:", err);
+    logger.error("Unexpected error", { error: String(err) });
     return error("Failed to create assessment", 500);
   }
 }

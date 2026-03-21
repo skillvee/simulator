@@ -4,6 +4,9 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { supabaseAdmin } from "@/lib/external";
 import { STORAGE_BUCKETS } from "@/lib/external";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("api:recording:stitch");
 
 // GET /api/recording/stitch - Get all recording segments with signed URLs for stitching
 export async function GET(request: NextRequest) {
@@ -132,7 +135,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("Recording stitch error:", err);
+    logger.error("Recording stitch error", { error: String(err) });
     return error("Internal server error", 500);
   }
 }

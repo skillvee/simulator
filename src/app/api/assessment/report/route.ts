@@ -1,12 +1,15 @@
 import { auth } from "@/auth";
 import { success, error } from "@/lib/api";
 import { db } from "@/server/db";
+import { createLogger } from "@/lib/core";
 import { VideoAssessmentStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
 import type { AssessmentReport, SkillScore, ScoreLevel, RubricAssessmentOutput } from "@/types";
 import { sendReportEmail, isEmailServiceConfigured } from "@/lib/external";
 import { getEvaluationResults, evaluateVideo } from "@/lib/analysis";
 import { RUBRIC_TO_ASSESSMENT_DIMENSION } from "@/lib/rubric/dimension-mapping";
+
+const logger = createLogger("api:assessment:report");
 
 /** Shape of a legacy v1 red/green flag entry */
 interface LegacyFlag {
@@ -96,7 +99,7 @@ function migrateVideoEvaluationToRubric(data: unknown): RubricAssessmentOutput |
   }
 
   // Unknown format
-  console.warn("Unknown video evaluation format, cannot migrate:", data);
+  logger.warn("Unknown video evaluation format, cannot migrate", { data: String(data) });
   return null;
 }
 
@@ -324,7 +327,7 @@ export async function POST(request: Request) {
       // Use existing video evaluation result - migrate if needed from v1 to v3 format
       videoResult = migrateVideoEvaluationToRubric(videoAssessment.summary.rawAiResponse);
       if (!videoResult) {
-        console.error("Failed to migrate video evaluation format for assessment", assessmentId);
+        logger.error("Failed to migrate video evaluation format", { assessmentId });
       }
     } else if (!videoAssessment || videoAssessment.status === VideoAssessmentStatus.PENDING ||
                videoAssessment.status === VideoAssessmentStatus.FAILED) {
@@ -360,7 +363,7 @@ export async function POST(request: Request) {
         });
 
         if (!evalResult.success) {
-          console.error("Video evaluation failed:", evalResult.error);
+          logger.error("Video evaluation failed", { error: evalResult.error });
           return error("Video evaluation failed", 500);
         }
 
@@ -369,11 +372,11 @@ export async function POST(request: Request) {
         if (results.summary?.rawAiResponse) {
           videoResult = migrateVideoEvaluationToRubric(results.summary.rawAiResponse);
           if (!videoResult) {
-            console.error("Failed to migrate newly evaluated video format for assessment", assessmentId);
+            logger.error("Failed to migrate newly evaluated video format", { assessmentId });
           }
         }
       } catch (err) {
-        console.error("Error running video evaluation:", err);
+        logger.error("Error running video evaluation", { error: String(err) });
         return error("Failed to evaluate video", 500);
       }
     } else if (videoAssessment.status === VideoAssessmentStatus.PROCESSING) {
@@ -433,15 +436,13 @@ export async function POST(request: Request) {
       })
         .then((result) => {
           if (result.success) {
-            console.log(
-              `Report email sent successfully to ${assessment.user?.email}`
-            );
+            logger.info("Report email sent", { email: assessment.user?.email });
           } else {
-            console.warn(`Failed to send report email: ${result.error}`);
+            logger.warn("Failed to send report email", { error: result.error });
           }
         })
         .catch((err) => {
-          console.error("Error sending report email:", err);
+          logger.error("Error sending report email", { error: String(err) });
         });
 
       emailResult = { success: true };
@@ -453,7 +454,7 @@ export async function POST(request: Request) {
       emailSent: emailResult.success,
     });
   } catch (err) {
-    console.error("Error generating assessment report:", err);
+    logger.error("Error generating assessment report", { error: String(err) });
     return error("Failed to generate assessment report", 500);
   }
 }
@@ -506,7 +507,7 @@ export async function GET(request: Request) {
       assessmentStatus: assessment.status,
     });
   } catch (err) {
-    console.error("Error fetching assessment report:", err);
+    logger.error("Error fetching assessment report", { error: String(err) });
     return error("Failed to fetch assessment report", 500);
   }
 }

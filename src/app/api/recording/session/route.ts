@@ -1,9 +1,11 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { shouldAllowTestModeRecording } from "@/lib/core";
+import { shouldAllowTestModeRecording, createLogger } from "@/lib/core";
 import { success, error, validateRequest } from "@/lib/api";
 import { RecordingSessionSchema } from "@/lib/schemas";
+
+const logger = createLogger("api:recording:session");
 
 // Note: Screenshot analysis was removed as part of assessment simplification (RF-022).
 // The new system uses only video evaluation instead of screenshot-by-screenshot analysis.
@@ -228,7 +230,7 @@ export async function POST(request: NextRequest) {
         return error(`Unknown action: ${action}`, 400);
     }
   } catch (err) {
-    console.error("Recording session error:", err);
+    logger.error("Recording session error", { error: String(err) });
     return error("Internal server error", 500);
   }
 }
@@ -324,7 +326,7 @@ export async function GET(request: NextRequest) {
       totalScreenshots,
     });
   } catch (err) {
-    console.error("Recording session fetch error:", err);
+    logger.error("Recording session fetch error", { error: String(err) });
     return error("Internal server error", 500);
   }
 }

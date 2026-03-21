@@ -4,6 +4,9 @@ import { db } from "@/server/db";
 import { supabaseAdmin } from "@/lib/external";
 import { STORAGE_BUCKETS } from "@/lib/external";
 import { success, error } from "@/lib/api";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("api:recording");
 
 // Maximum file sizes
 const MAX_VIDEO_CHUNK_SIZE = 50 * 1024 * 1024; // 50MB per chunk
@@ -82,7 +85,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("Supabase upload error:", uploadError);
+      logger.error("Supabase upload error", { error: String(uploadError) });
       return error("Failed to upload file", 500);
     }
 
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
         .createSignedUrl(path, 60 * 60 * 24 * 365); // 1 year expiry
 
     if (signedUrlError) {
-      console.error("Signed URL error:", signedUrlError);
+      logger.error("Signed URL error", { error: String(signedUrlError) });
     }
 
     const storageUrl = signedUrlData?.signedUrl || path;
@@ -156,7 +159,7 @@ export async function POST(request: NextRequest) {
       segmentId,
     });
   } catch (err) {
-    console.error("Recording upload error:", err);
+    logger.error("Recording upload error", { error: String(err) });
     return error("Internal server error", 500);
   }
 }
@@ -199,7 +202,7 @@ export async function GET(request: NextRequest) {
 
     return success({ recordings: assessment.recordings });
   } catch (err) {
-    console.error("Recording fetch error:", err);
+    logger.error("Recording fetch error", { error: String(err) });
     return error("Internal server error", 500);
   }
 }

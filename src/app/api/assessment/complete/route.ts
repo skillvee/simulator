@@ -3,6 +3,9 @@ import { db } from "@/server/db";
 import { AssessmentStatus } from "@prisma/client";
 import { isValidPrUrl } from "@/lib/external";
 import { success, error } from "@/lib/api";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("api:assessment:complete");
 
 /**
  * POST /api/assessment/complete
@@ -94,7 +97,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    console.error("Error completing assessment:", err);
+    logger.error("Error completing assessment", { error: String(err) });
     return error("Failed to complete assessment", 500);
   }
 }
@@ -155,7 +158,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (err) {
-    console.error("Error getting assessment status:", err);
+    logger.error("Error getting assessment status", { error: String(err) });
     return error("Failed to get assessment status", 500);
   }
 }

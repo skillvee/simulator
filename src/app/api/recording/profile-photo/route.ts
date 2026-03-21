@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 import { generateProfilePhoto } from "@/lib/candidate";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("api:recording:profile-photo");
 
 /**
  * POST /api/recording/profile-photo
@@ -56,7 +59,7 @@ export async function POST(request: NextRequest) {
       path: `candidates/${session.user.id}.jpg`,
     });
   } catch (err) {
-    console.error("[ProfilePhoto] Error:", err);
+    logger.error("Error generating profile photo", { error: String(err) });
     return error("Internal server error", 500);
   }
 }
