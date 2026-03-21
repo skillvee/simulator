@@ -78,7 +78,8 @@ describe("POST /api/assessment/finalize", () => {
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.error).toBe("Assessment ID is required");
+    expect(data.error).toBe("Validation failed");
+    expect(data.code).toBe("VALIDATION_ERROR");
   });
 
   it("should return 404 when assessment not found", async () => {

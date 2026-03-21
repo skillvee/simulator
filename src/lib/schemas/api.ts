@@ -79,3 +79,65 @@ export const ScenarioUpdateSchema = z.object({
   isPublished: z.boolean().optional(),
 });
 export type ScenarioUpdate = z.infer<typeof ScenarioUpdateSchema>;
+
+/**
+ * POST /api/assessment/create - Create a new assessment
+ */
+export const AssessmentCreateSchema = z.object({
+  scenarioId: z.string().min(1, "Scenario ID is required"),
+});
+export type AssessmentCreate = z.infer<typeof AssessmentCreateSchema>;
+
+/**
+ * POST /api/assessment/finalize - Finalize an assessment
+ */
+export const AssessmentFinalizeSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+});
+export type AssessmentFinalize = z.infer<typeof AssessmentFinalizeSchema>;
+
+/**
+ * POST /api/recording/session - Recording session actions
+ */
+export const RecordingSessionSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  action: z.enum(
+    ["start", "addChunk", "addScreenshot", "complete", "interrupt"],
+    { errorMap: () => ({ message: "Invalid action" }) }
+  ),
+  segmentId: z.string().optional(),
+  chunkPath: z.string().optional(),
+  screenshotPath: z.string().optional(),
+  testMode: z.boolean().optional(),
+});
+export type RecordingSession = z.infer<typeof RecordingSessionSchema>;
+
+/**
+ * POST /api/admin/scenarios/builder - Send message to scenario builder AI
+ * POST /api/recruiter/simulations/builder - Send message to simulation builder AI
+ */
+export const ScenarioBuilderRequestSchema = z.object({
+  message: z.string().min(1, "Message is required"),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "model"]),
+        text: z.string(),
+        timestamp: z.string(),
+      })
+    )
+    .optional()
+    .default([]),
+  scenarioData: z.record(z.unknown()).optional().default({}),
+});
+export type ScenarioBuilderRequest = z.infer<
+  typeof ScenarioBuilderRequestSchema
+>;
+
+/**
+ * POST /api/avatar/generate - Generate avatars for a scenario
+ */
+export const AvatarGenerateSchema = z.object({
+  scenarioId: z.string().min(1, "Scenario ID is required"),
+});
+export type AvatarGenerate = z.infer<typeof AvatarGenerateSchema>;

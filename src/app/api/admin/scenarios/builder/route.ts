@@ -7,19 +7,14 @@ import {
   applyExtraction,
   type ScenarioBuilderData,
 } from "@/lib/scenarios";
-import { success, error } from "@/lib/api";
+import { success, error, validateRequest } from "@/lib/api";
+import { ScenarioBuilderRequestSchema } from "@/lib/schemas";
 
 interface SessionUser {
   id: string;
   email?: string | null;
   name?: string | null;
   role?: string;
-}
-
-interface ChatMessage {
-  role: "user" | "model";
-  text: string;
-  timestamp: string;
 }
 
 // Gemini Flash model for text chat
@@ -41,19 +36,13 @@ export async function POST(request: Request) {
     return error("Admin access required", 403);
   }
 
-  const body = await request.json();
-  const { message, history, scenarioData } = body as {
-    message: string;
-    history: ChatMessage[];
-    scenarioData: ScenarioBuilderData;
-  };
-
-  if (!message) {
-    return error("Missing required field: message", 400);
-  }
+  const validated = await validateRequest(request, ScenarioBuilderRequestSchema);
+  if ("error" in validated) return validated.error;
+  const { message, history, scenarioData } = validated.data;
 
   // Build the system prompt with current scenario state
-  const systemPrompt = buildCompleteSystemPrompt(scenarioData || {});
+  const builderData = (scenarioData || {}) as ScenarioBuilderData;
+  const systemPrompt = buildCompleteSystemPrompt(builderData);
 
   // Build conversation history for Gemini
   const conversationHistory = (history || []).map((msg) => ({
@@ -100,8 +89,8 @@ export async function POST(request: Request) {
 
     // Apply extracted data to get updated scenario state
     const updatedScenarioData = extraction
-      ? applyExtraction(scenarioData || {}, extraction)
-      : scenarioData || {};
+      ? applyExtraction(builderData, extraction)
+      : builderData;
 
     return success({
       response: cleanedResponse,

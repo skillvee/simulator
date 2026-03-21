@@ -150,7 +150,8 @@ describe("POST /api/admin/scenarios/builder", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Missing required field: message");
+    expect(data.error).toBe("Validation failed");
+    expect(data.code).toBe("VALIDATION_ERROR");
   });
 
   it("sends message to Gemini and returns response", async () => {

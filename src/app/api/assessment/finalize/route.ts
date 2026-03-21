@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
-import { success, error } from "@/lib/api";
+import { success, error, validateRequest } from "@/lib/api";
+import { AssessmentFinalizeSchema } from "@/lib/schemas";
 import { db } from "@/server/db";
 import { AssessmentStatus, Prisma } from "@prisma/client";
 import {
@@ -32,12 +33,9 @@ export async function POST(request: Request) {
       return error("Unauthorized", 401);
     }
 
-    const body = await request.json();
-    const { assessmentId } = body;
-
-    if (!assessmentId) {
-      return error("Assessment ID is required", 400);
-    }
+    const validated = await validateRequest(request, AssessmentFinalizeSchema);
+    if ("error" in validated) return validated.error;
+    const { assessmentId } = validated.data;
 
     // Verify assessment exists and belongs to user
     const assessment = await db.assessment.findUnique({

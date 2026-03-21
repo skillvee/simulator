@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { shouldAllowTestModeRecording } from "@/lib/core";
-import { success, error } from "@/lib/api";
+import { success, error, validateRequest } from "@/lib/api";
+import { RecordingSessionSchema } from "@/lib/schemas";
 
 // Note: Screenshot analysis was removed as part of assessment simplification (RF-022).
 // The new system uses only video evaluation instead of screenshot-by-screenshot analysis.
@@ -15,12 +16,9 @@ export async function POST(request: NextRequest) {
       return error("Unauthorized", 401);
     }
 
-    const body = await request.json();
-    const { assessmentId, action, segmentId, chunkPath, screenshotPath, testMode } = body;
-
-    if (!assessmentId || !action) {
-      return error("Missing required fields: assessmentId, action", 400);
-    }
+    const validated = await validateRequest(request, RecordingSessionSchema);
+    if ("error" in validated) return validated.error;
+    const { assessmentId, action, segmentId, chunkPath, screenshotPath, testMode } = validated.data;
 
     // Reject testMode requests if not in development mode (double-gate safety)
     if (testMode && !shouldAllowTestModeRecording()) {

@@ -50,6 +50,7 @@ vi.mock("@/server/db", () => ({
 // Mock isE2ETestMode and env
 const mockIsE2ETestMode = vi.fn();
 vi.mock("@/lib/core", () => ({
+  shouldAllowTestModeRecording: () => mockIsE2ETestMode(),
   isE2ETestMode: () => mockIsE2ETestMode(),
   isE2ETestModeClient: () => mockIsE2ETestMode(),
   env: {
@@ -100,7 +101,8 @@ describe("POST /api/recording/session", () => {
     const response = await POST(request);
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toContain("Missing required fields");
+    expect(data.error).toBe("Validation failed");
+    expect(data.code).toBe("VALIDATION_ERROR");
   });
 
   it("should return 404 if assessment not found", async () => {
@@ -326,7 +328,8 @@ describe("POST /api/recording/session", () => {
     const response = await POST(request);
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toContain("Unknown action");
+    expect(data.error).toBe("Validation failed");
+    expect(data.code).toBe("VALIDATION_ERROR");
   });
 
   it("should reject testMode requests when not in development", async () => {

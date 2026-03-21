@@ -11,7 +11,8 @@
 import { auth } from "@/auth";
 import { generateAvatarsForScenario } from "@/lib/avatar";
 import { db } from "@/server/db";
-import { success, error } from "@/lib/api";
+import { success, error, validateRequest } from "@/lib/api";
+import { AvatarGenerateSchema } from "@/lib/schemas";
 
 interface SessionUser {
   id: string;
@@ -35,19 +36,10 @@ export async function POST(request: Request) {
     return error("Recruiter access required", 403);
   }
 
-  // Parse request body
-  let body: { scenarioId: string };
-  try {
-    body = await request.json();
-  } catch {
-    return error("Invalid request body", 400);
-  }
-
-  const { scenarioId } = body;
-
-  if (!scenarioId) {
-    return error("scenarioId is required", 400);
-  }
+  // Validate request body
+  const validated = await validateRequest(request, AvatarGenerateSchema);
+  if ("error" in validated) return validated.error;
+  const { scenarioId } = validated.data;
 
   // Verify scenario exists and user has access
   const scenario = await db.scenario.findUnique({

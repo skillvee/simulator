@@ -1,7 +1,8 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { provisionAssessmentRepo } from "@/lib/scenarios/repo-templates";
-import { success, error } from "@/lib/api";
+import { success, error, validateRequest } from "@/lib/api";
+import { AssessmentCreateSchema } from "@/lib/schemas";
 
 /**
  * POST /api/assessment/create
@@ -22,18 +23,10 @@ export async function POST(request: Request) {
 
   const userId = session.user.id;
 
-  // Parse request body
-  let scenarioId: string;
-  try {
-    const body = await request.json();
-    scenarioId = body.scenarioId;
-
-    if (!scenarioId || typeof scenarioId !== "string") {
-      return error("scenarioId is required", 400);
-    }
-  } catch {
-    return error("Invalid request body", 400);
-  }
+  // Validate request body
+  const validated = await validateRequest(request, AssessmentCreateSchema);
+  if ("error" in validated) return validated.error;
+  const { scenarioId } = validated.data;
 
   try {
     // Fetch the scenario (include repoUrl for per-assessment repo provisioning)
