@@ -13,7 +13,7 @@ import {
   type WorkExperience,
   type Education,
   type Skill,
-} from "./cv-parser";
+} from ".";
 
 // Mock gemini module (now in @/lib/ai)
 vi.mock("@/lib/ai", () => ({
