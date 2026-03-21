@@ -130,3 +130,5 @@ handled within the Slack interface using the call/ routes after RF-012.
 - `session.user.id` can be undefined even in auth'd routes — always check `user?.id` even after `requireAuth()`
 - Assessment finalization must be idempotent — use `upsert`, check flags before triggering side effects (video analysis, PR cleanup)
 - Use `router.replace(url, { scroll: false })` to update URL params without page jumping to top
+- Fire-and-forget operations (e.g., `provisionAssessmentRepo`) must be mocked in tests to prevent unhandled promise issues
+- All DB calls inside `ReadableStream.start()` callbacks must be `.catch()`-wrapped to prevent unhandled rejections from killing SSE streams

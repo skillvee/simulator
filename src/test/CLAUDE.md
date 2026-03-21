@@ -299,3 +299,11 @@ the Slack interface (to be implemented in RF-012).
 5. **Provider wrapping**: Use `renderWithProviders`, not bare `render`
 6. **Screen recording bypass**: Use `NEXT_PUBLIC_SKIP_SCREEN_RECORDING=true` or `NEXT_PUBLIC_E2E_TEST_MODE=true`
 7. **Test fixtures**: Import from `@/test/fixtures` for consistent test data constants
+8. **`vi.hoisted()` for mock refs**: When mock functions need to be referenced inside `vi.mock()` factories, declare them with `vi.hoisted()` — `vi.mock` calls are hoisted above regular variable declarations
+9. **`success()` response shape**: Routes using `success()` wrapper return `{ success: true, data: {...} }` — tests need `response.data.field`, not `response.field`
+10. **`createLogger` mock**: When tests mock `@/lib/core`, must include `createLogger` returning a stub logger object (`{ info: vi.fn(), warn: vi.fn(), error: vi.fn() }`)
+11. **`validationError()` message**: Returns `"Validation failed"` — not `"Invalid request body"` or `"Invalid request"`
+12. **formData in jsdom**: Mock `request.formData()` entirely for upload route tests — constructing real FormData with File objects hangs in jsdom
+13. **`vi.stubEnv()`**: Use for `process.env` changes in tests, with `vi.unstubAllEnvs()` in afterEach for cleanup
+14. **Duplicate text in responsive layouts**: Use `getAllByText` not `getByText` when values appear in both mobile and desktop CSS-toggled layouts
+15. **Barrel import side effects**: Barrel imports that transitively pull in server modules (Prisma client, Gemini SDK) can hang vitest workers — module initialization runs before mocks apply, even with `vi.mock()`

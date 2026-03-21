@@ -78,6 +78,15 @@ try {
 
 - Use `_count` for related record counts instead of fetching full nested objects: `_count: { assessments: true }`
 
+## Logger
+
+- `createLogger("module-name")` returns `{ info, warn, error }` — use instead of `console.log`
+- Data param expects `Record<string, unknown>` — pass `{ err: String(error) }` not raw error objects
+
+## Browser APIs
+
+- `navigator.sendBeacon` is required for `beforeunload` events — regular `fetch` gets cancelled during page teardown
+
 ## Testing
 
 - Define mocks INSIDE `vi.mock()` factory (Vitest hoisting)

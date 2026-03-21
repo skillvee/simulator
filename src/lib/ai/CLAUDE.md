@@ -61,6 +61,11 @@ try {
 - `promptVersion` - Version of the prompt (e.g., "1.0", "2024-01")
 - `originalError` - The original error that was caught (if it was an Error instance)
 
+### logAICall Tips
+
+- `tracker.fail(error)` internally calls `.complete()` with statusCode 500 — don't set statusCode manually
+- All tracker DB calls inside `ReadableStream.start()` must be `.catch()`-wrapped to prevent unhandled rejections
+
 ### Prompt Types
 
 Use descriptive names for `promptType` that match the operation:

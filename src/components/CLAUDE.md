@@ -49,3 +49,5 @@ Server components fetch data and pass serialized (JSON-safe) props to client com
 - Test files should mock relative imports when testing intra-directory dependencies
 - Sticky positioning requires opaque background (`bg-white`) — without it, content bleeds through when scrolling under sticky elements
 - Radix tooltip testing: use `findAllByText`, not `findByText` — Radix renders tooltips in a portal outside the component tree
+- Next.js error boundaries don't receive route params — extract IDs from `window.location.pathname`
+- Error reporting in boundaries uses fire-and-forget `fetch().catch(() => {})` to prevent infinite error loops

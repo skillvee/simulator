@@ -30,3 +30,4 @@ COMMUNICATION, PROBLEM_SOLVING, TECHNICAL_KNOWLEDGE, COLLABORATION, ADAPTABILITY
 ## Migrations
 
 - `prisma db push` fails when changing enums or adding constraints with existing data — use raw SQL via `prisma db execute --stdin` instead
+- `prisma migrate dev` fails with shadow database enum issues (P3006) — for additive changes use `prisma db push`, then create migration SQL manually and run `prisma migrate resolve --applied`
