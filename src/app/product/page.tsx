@@ -17,10 +17,10 @@ import {
   XCircle,
   Code,
 } from "lucide-react";
-import Footer from "@/components/landing/Footer";
-import Navigation from "@/components/landing/Navigation";
-import { SectionReveal } from "@/components/landing/SectionReveal";
-import { CurveDivider } from "@/components/landing/SectionDivider";
+import Footer from "@/components/landing/footer";
+import Navigation from "@/components/landing/navigation";
+import { SectionReveal } from "@/components/landing/section-reveal";
+import { CurveDivider } from "@/components/landing/section-divider";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 

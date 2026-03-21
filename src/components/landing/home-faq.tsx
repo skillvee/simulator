@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { SectionReveal, StaggerReveal } from "./SectionReveal";
+import { SectionReveal, StaggerReveal } from "./section-reveal";
 
 interface FAQItem {
   question: string;

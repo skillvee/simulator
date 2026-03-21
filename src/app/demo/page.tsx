@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, ArrowRight, Clock, Users, Calendar, TrendingDown, Brain, DollarSign } from "lucide-react";
-import Navigation from "@/components/landing/Navigation";
-import Footer from "@/components/landing/Footer";
+import Navigation from "@/components/landing/navigation";
+import Footer from "@/components/landing/footer";
 
 // TODO: Replace with your actual Calendly URL
 const CALENDLY_URL = "https://calendly.com/german-skillvee/30min";

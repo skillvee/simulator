@@ -22,8 +22,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import Footer from "@/components/landing/Footer";
-import Navigation from "@/components/landing/Navigation";
+import Footer from "@/components/landing/footer";
+import Navigation from "@/components/landing/navigation";
 
 interface FAQItem {
   question: string;

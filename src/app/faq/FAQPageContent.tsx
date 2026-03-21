@@ -5,8 +5,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, MessageSquare, BookOpen, Users, Shield, ArrowRight } from "lucide-react";
-import Navigation from "@/components/landing/Navigation";
-import Footer from "@/components/landing/Footer";
+import Navigation from "@/components/landing/navigation";
+import Footer from "@/components/landing/footer";
 
 interface FAQItem {
   question: string;
