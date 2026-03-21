@@ -8,7 +8,7 @@ import {
   formatCiStatusForPrompt,
   type PrCiStatus,
   type CheckRun,
-} from "./github";
+} from "./index";
 
 // Mock env module (now in @/lib/core)
 vi.mock("@/lib/core", () => ({
@@ -343,7 +343,7 @@ describe("fetchGitHubPrContent without token", () => {
     }));
 
     const { fetchGitHubPrContent: fetchWithoutToken } =
-      await import("./github");
+      await import("./pr");
     const result = await fetchWithoutToken(
       "https://github.com/owner/repo/pull/123"
     );
