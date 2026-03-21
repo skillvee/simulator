@@ -32,6 +32,9 @@ vi.mock("@/server/db", () => ({
     assessment: {
       findUnique: vi.fn(),
     },
+    coworker: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
   },
 }));
 
@@ -121,6 +124,8 @@ const mockAssessment = {
       endTime: new Date("2024-01-15T11:30:00Z"),
     },
   ],
+  conversations: [],
+  voiceSessions: [],
 };
 
 const mockAssessmentWithError = {
@@ -214,6 +219,32 @@ describe("AssessmentTimelinePage", () => {
             storageUrl: true,
             startTime: true,
             endTime: true,
+          },
+        },
+        conversations: {
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true,
+            coworkerId: true,
+            type: true,
+            transcript: true,
+            createdAt: true,
+            updatedAt: true,
+            coworker: { select: { id: true, name: true, role: true } },
+          },
+        },
+        voiceSessions: {
+          orderBy: { startTime: "asc" },
+          select: {
+            id: true,
+            coworkerId: true,
+            startTime: true,
+            endTime: true,
+            durationMs: true,
+            transcript: true,
+            connectionEvents: true,
+            tokenName: true,
+            errorMessage: true,
           },
         },
       },

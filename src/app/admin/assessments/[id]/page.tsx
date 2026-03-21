@@ -55,12 +55,51 @@ export default async function AssessmentTimelinePage({
           endTime: true,
         },
       },
+      conversations: {
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          coworkerId: true,
+          type: true,
+          transcript: true,
+          createdAt: true,
+          updatedAt: true,
+          coworker: { select: { id: true, name: true, role: true } },
+        },
+      },
+      voiceSessions: {
+        orderBy: { startTime: "asc" },
+        select: {
+          id: true,
+          coworkerId: true,
+          startTime: true,
+          endTime: true,
+          durationMs: true,
+          transcript: true,
+          connectionEvents: true,
+          tokenName: true,
+          errorMessage: true,
+        },
+      },
     },
   });
 
   if (!assessment) {
     notFound();
   }
+
+  // Fetch coworker info for voice sessions (VoiceSession has no Coworker relation)
+  const voiceCoworkerIds = [
+    ...new Set(assessment.voiceSessions.map((vs) => vs.coworkerId)),
+  ];
+  const voiceCoworkers =
+    voiceCoworkerIds.length > 0
+      ? await db.coworker.findMany({
+          where: { id: { in: voiceCoworkerIds } },
+          select: { id: true, name: true, role: true },
+        })
+      : [];
+  const coworkerMap = new Map(voiceCoworkers.map((c) => [c.id, c]));
 
   // Serialize dates for client component
   const serializedAssessment = {
@@ -83,6 +122,21 @@ export default async function AssessmentTimelinePage({
       ...rec,
       startTime: rec.startTime.toISOString(),
       endTime: rec.endTime?.toISOString() ?? null,
+    })),
+    conversations: assessment.conversations.map((conv) => ({
+      ...conv,
+      createdAt: conv.createdAt.toISOString(),
+      updatedAt: conv.updatedAt.toISOString(),
+    })),
+    voiceSessions: assessment.voiceSessions.map((vs) => ({
+      ...vs,
+      startTime: vs.startTime.toISOString(),
+      endTime: vs.endTime?.toISOString() ?? null,
+      coworker: coworkerMap.get(vs.coworkerId) ?? {
+        id: vs.coworkerId,
+        name: "Unknown",
+        role: "Unknown",
+      },
     })),
   };
 

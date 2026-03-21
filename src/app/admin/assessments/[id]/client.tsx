@@ -10,11 +10,14 @@ import {
   Play,
   RefreshCw,
   Loader2,
+  MessageSquare,
+  Clock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   type SerializedAssessment,
   type TimelineEvent,
@@ -26,6 +29,7 @@ import {
   ConfirmationDialog,
   ToastNotification,
   TimelineEventItem,
+  ConversationsTab,
 } from "./components";
 
 // Re-export formatDuration for backwards compatibility (used in tests)
@@ -405,51 +409,79 @@ export function AssessmentTimelineClient({
         </CardContent>
       </Card>
 
-      {/* Timeline */}
-      <Card data-testid="timeline">
-        <div className="border-b border-border bg-muted/10 p-4">
-          <h2 className="text-xs font-medium text-muted-foreground">
-            EVENT TIMELINE ({timelineEvents.length} events)
-          </h2>
-        </div>
+      {/* Tabs: Timeline & Conversations */}
+      <Tabs defaultValue="timeline" data-testid="assessment-tabs">
+        <TabsList className="mb-6">
+          <TabsTrigger value="timeline" className="gap-2">
+            <Clock className="h-4 w-4" />
+            Timeline
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {timelineEvents.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="conversations" className="gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Conversations
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {assessment.conversations.length + assessment.voiceSessions.length}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
 
-        {timelineEvents.length === 0 ? (
-          <div className="p-6 text-center text-muted-foreground">
-            No events recorded for this assessment
-          </div>
-        ) : (
-          <div className="relative">
-            {/* Vertical timeline line */}
-            <div className="absolute bottom-0 left-8 top-0 w-0.5 bg-border" />
+        <TabsContent value="timeline">
+          <Card data-testid="timeline">
+            <div className="border-b border-border bg-muted/10 p-4">
+              <h2 className="text-xs font-medium text-muted-foreground">
+                EVENT TIMELINE ({timelineEvents.length} events)
+              </h2>
+            </div>
 
-            {timelineEvents.map((event, index) => {
-              const previousEvent =
-                index > 0 ? timelineEvents[index - 1] : null;
-              const durationFromPrevious = previousEvent
-                ? calculateDurationBetweenEvents(
-                    event.timestamp,
-                    previousEvent.timestamp
-                  )
-                : null;
+            {timelineEvents.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground">
+                No events recorded for this assessment
+              </div>
+            ) : (
+              <div className="relative">
+                {/* Vertical timeline line */}
+                <div className="absolute bottom-0 left-8 top-0 w-0.5 bg-border" />
 
-              return (
-                <TimelineEventItem
-                  key={event.id}
-                  event={event}
-                  index={index}
-                  durationFromPrevious={durationFromPrevious}
-                  isErrorExpanded={expandedErrors.has(event.id)}
-                  isApiCallExpanded={expandedApiCalls.has(event.id)}
-                  expandedCodeSections={expandedCodeSections}
-                  onToggleErrorExpansion={toggleErrorExpansion}
-                  onToggleApiCallExpansion={toggleApiCallExpansion}
-                  onToggleCodeSection={toggleCodeSection}
-                />
-              );
-            })}
-          </div>
-        )}
-      </Card>
+                {timelineEvents.map((event, index) => {
+                  const previousEvent =
+                    index > 0 ? timelineEvents[index - 1] : null;
+                  const durationFromPrevious = previousEvent
+                    ? calculateDurationBetweenEvents(
+                        event.timestamp,
+                        previousEvent.timestamp
+                      )
+                    : null;
+
+                  return (
+                    <TimelineEventItem
+                      key={event.id}
+                      event={event}
+                      index={index}
+                      durationFromPrevious={durationFromPrevious}
+                      isErrorExpanded={expandedErrors.has(event.id)}
+                      isApiCallExpanded={expandedApiCalls.has(event.id)}
+                      expandedCodeSections={expandedCodeSections}
+                      onToggleErrorExpansion={toggleErrorExpansion}
+                      onToggleApiCallExpansion={toggleApiCallExpansion}
+                      onToggleCodeSection={toggleCodeSection}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="conversations">
+          <ConversationsTab
+            conversations={assessment.conversations}
+            voiceSessions={assessment.voiceSessions}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog

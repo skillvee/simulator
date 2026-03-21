@@ -54,6 +54,8 @@ export interface SerializedAssessment {
   logs: SerializedLog[];
   apiCalls: SerializedApiCall[];
   recordings: SerializedRecording[];
+  conversations: SerializedConversation[];
+  voiceSessions: SerializedVoiceSession[];
 }
 
 // Event types for unified timeline
@@ -76,6 +78,39 @@ export interface TimelineEvent {
   promptText?: string;
   responseText?: string | null;
   responseTimestamp?: string | null;
+}
+
+// Serialized conversation from server
+export interface SerializedConversation {
+  id: string;
+  coworkerId: string | null;
+  type: string;
+  transcript: unknown;
+  createdAt: string;
+  updatedAt: string;
+  coworker: {
+    id: string;
+    name: string;
+    role: string;
+  } | null;
+}
+
+// Serialized voice session from server
+export interface SerializedVoiceSession {
+  id: string;
+  coworkerId: string;
+  startTime: string;
+  endTime: string | null;
+  durationMs: number | null;
+  transcript: unknown;
+  connectionEvents: unknown;
+  tokenName: string | null;
+  errorMessage: string | null;
+  coworker: {
+    id: string;
+    name: string;
+    role: string;
+  };
 }
 
 // Toast notification type

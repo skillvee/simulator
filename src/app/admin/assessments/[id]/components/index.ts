@@ -3,6 +3,8 @@ export type {
   SerializedLog,
   SerializedApiCall,
   SerializedRecording,
+  SerializedConversation,
+  SerializedVoiceSession,
   SerializedAssessment,
   TimelineEventType,
   TimelineEvent,
@@ -27,3 +29,4 @@ export { ConfirmationDialog } from "./confirmation-dialog";
 export { ToastNotification } from "./toast-notification";
 export { CandidateInfoCard } from "./candidate-info-card";
 export { TimelineEvent as TimelineEventItem } from "./timeline-event";
+export { ConversationsTab } from "./conversations-tab";
