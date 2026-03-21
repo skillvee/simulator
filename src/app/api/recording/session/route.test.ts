@@ -154,8 +154,8 @@ describe("POST /api/recording/session", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.segmentId).toBe("segment-1");
-    expect(data.segmentIndex).toBe(0);
+    expect(data.data.segmentId).toBe("segment-1");
+    expect(data.data.segmentIndex).toBe(0);
   });
 
   it("should mark previous segment as interrupted on start action", async () => {
@@ -195,7 +195,7 @@ describe("POST /api/recording/session", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.segmentIndex).toBe(1);
+    expect(data.data.segmentIndex).toBe(1);
     expect(mockSegmentUpdateMany).toHaveBeenCalledWith({
       where: {
         recordingId: "assessment-1-screen",
@@ -301,7 +301,7 @@ describe("POST /api/recording/session", () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     // Note: analysisTriggered field was removed in RF-022 (screenshot analysis removed)
-    expect(data.success).toBe(true);
+    expect(data.success).toBe(true); // outer wrapper success field
   });
 
   it("should return 400 for unknown action", async () => {
@@ -391,8 +391,8 @@ describe("POST /api/recording/session", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.segmentId).toBe("test-segment-1");
-    expect(data.testMode).toBe(true);
+    expect(data.data.segmentId).toBe("test-segment-1");
+    expect(data.data.testMode).toBe(true);
 
     // Verify segment was created with completed status and empty paths
     expect(mockSegmentCreate).toHaveBeenCalledWith({
@@ -533,7 +533,7 @@ describe("POST /api/recording/session", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.segmentIndex).toBe(5);
+    expect(data.data.segmentIndex).toBe(5);
 
     // Verify operations happened in correct order (FOR UPDATE lock first for race condition prevention)
     expect(operations).toEqual(["forUpdateLock", "updateMany", "findFirst", "create"]);
@@ -685,7 +685,7 @@ describe("GET /api/recording/session", () => {
     const response = await GET(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.hasRecording).toBe(false);
+    expect(data.data.hasRecording).toBe(false);
   });
 
   it("should return session status with segments", async () => {
@@ -729,10 +729,10 @@ describe("GET /api/recording/session", () => {
     const response = await GET(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.hasRecording).toBe(true);
-    expect(data.totalChunks).toBe(3);
-    expect(data.totalScreenshots).toBe(1);
-    expect(data.activeSegment?.id).toBe("segment-2");
-    expect(data.segments.length).toBe(2);
+    expect(data.data.hasRecording).toBe(true);
+    expect(data.data.totalChunks).toBe(3);
+    expect(data.data.totalScreenshots).toBe(1);
+    expect(data.data.activeSegment?.id).toBe("segment-2");
+    expect(data.data.segments.length).toBe(2);
   });
 });

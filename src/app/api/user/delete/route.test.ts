@@ -126,8 +126,8 @@ describe("/api/user/delete", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.message).toContain("deleted");
-      expect(data.deletedItems.assessments).toBe(2);
+      expect(data.data.message).toContain("deleted");
+      expect(data.data.deletedItems.assessments).toBe(2);
       expect(mockProcessImmediateDeletion).toHaveBeenCalledWith("user-123");
     });
 
@@ -157,7 +157,6 @@ describe("/api/user/delete", () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe("Deletion partially failed");
-      expect(data.details).toContain("Database error");
     });
 
     it("handles exceptions gracefully", async () => {

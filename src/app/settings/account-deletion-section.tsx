@@ -57,8 +57,8 @@ export function AccountDeletionSection({
       }
 
       setHasPendingRequest(true);
-      setRequestDate(new Date(data.requestedAt));
-      setSuccess(data.message);
+      setRequestDate(new Date(data.data.requestedAt));
+      setSuccess(data.data.message);
       setShowConfirmation(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");

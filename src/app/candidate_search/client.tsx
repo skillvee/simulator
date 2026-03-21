@@ -444,7 +444,8 @@ export function CandidateSearchClient() {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        const json = await response.json();
+        const result = json.data;
 
         // Update the query with new constraints (for display purposes)
         if (result.constraints && result.constraints.length > 0) {

@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { provisionAssessmentRepo } from "@/lib/scenarios/repo-templates";
+import { success, error } from "@/lib/api";
 
 /**
  * POST /api/assessment/create
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const userId = session.user.id;
@@ -29,13 +29,10 @@ export async function POST(request: Request) {
     scenarioId = body.scenarioId;
 
     if (!scenarioId || typeof scenarioId !== "string") {
-      return NextResponse.json(
-        { error: "scenarioId is required" },
-        { status: 400 }
-      );
+      return error("scenarioId is required", 400);
     }
   } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    return error("Invalid request body", 400);
   }
 
   try {
@@ -51,15 +48,12 @@ export async function POST(request: Request) {
     });
 
     if (!scenario) {
-      return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+      return error("Scenario not found", 404);
     }
 
     // Only allow creating assessments for published scenarios
     if (!scenario.isPublished) {
-      return NextResponse.json(
-        { error: "Scenario is not available" },
-        { status: 400 }
-      );
+      return error("Scenario is not available", 400);
     }
 
     // Check for existing assessment for this user and scenario
@@ -75,7 +69,7 @@ export async function POST(request: Request) {
 
     if (existingAssessment) {
       // Return existing assessment instead of creating a new one
-      return NextResponse.json({
+      return success({
         assessment: existingAssessment,
         isExisting: true,
       });
@@ -124,18 +118,15 @@ export async function POST(request: Request) {
         });
     }
 
-    return NextResponse.json(
+    return success(
       {
         assessment,
         isExisting: false,
       },
-      { status: 201 }
+      201
     );
-  } catch (error) {
-    console.error("[assessment/create] Unexpected error:", error);
-    return NextResponse.json(
-      { error: "Failed to create assessment" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("[assessment/create] Unexpected error:", err);
+    return error("Failed to create assessment", 500);
   }
 }

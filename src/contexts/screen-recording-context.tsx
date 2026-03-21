@@ -118,7 +118,7 @@ async function startRecordingSession(
     });
     if (!response.ok) return null;
     const data = await response.json();
-    return { segmentId: data.segmentId, segmentIndex: data.segmentIndex };
+    return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
   } catch {
     return null;
   }
@@ -173,7 +173,8 @@ async function getSessionStatus(
       `/api/recording/session?assessmentId=${assessmentId}`
     );
     if (!response.ok) return null;
-    return await response.json();
+    const data = await response.json();
+    return data.data;
   } catch {
     return null;
   }
@@ -191,7 +192,7 @@ async function startFakeRecordingSession(
     });
     if (!response.ok) return null;
     const data = await response.json();
-    return { segmentId: data.segmentId, segmentIndex: data.segmentIndex };
+    return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
   } catch {
     return null;
   }

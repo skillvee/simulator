@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { shouldAllowTestModeRecording } from "@/lib/core";
+import { success, error } from "@/lib/api";
 
 // Note: Screenshot analysis was removed as part of assessment simplification (RF-022).
 // The new system uses only video evaluation instead of screenshot-by-screenshot analysis.
@@ -11,25 +12,19 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const body = await request.json();
     const { assessmentId, action, segmentId, chunkPath, screenshotPath, testMode } = body;
 
     if (!assessmentId || !action) {
-      return NextResponse.json(
-        { error: "Missing required fields: assessmentId, action" },
-        { status: 400 }
-      );
+      return error("Missing required fields: assessmentId, action", 400);
     }
 
     // Reject testMode requests if not in development mode (double-gate safety)
     if (testMode && !shouldAllowTestModeRecording()) {
-      return NextResponse.json(
-        { error: "Test mode is only available in development environment" },
-        { status: 403 }
-      );
+      return error("Test mode is only available in development environment", 403);
     }
 
     // Verify the assessment belongs to the user
@@ -41,10 +36,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     const recordingId = `${assessmentId}-screen`;
@@ -133,15 +125,12 @@ export async function POST(request: NextRequest) {
           };
         });
 
-        return NextResponse.json(segmentResult);
+        return success(segmentResult);
       }
 
       case "addChunk": {
         if (!segmentId || !chunkPath) {
-          return NextResponse.json(
-            { error: "segmentId and chunkPath required for addChunk" },
-            { status: 400 }
-          );
+          return error("segmentId and chunkPath required for addChunk", 400);
         }
 
         const segment = await db.recordingSegment.findUnique({
@@ -149,10 +138,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!segment) {
-          return NextResponse.json(
-            { error: "Segment not found" },
-            { status: 404 }
-          );
+          return error("Segment not found", 404);
         }
 
         await db.recordingSegment.update({
@@ -162,17 +148,12 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        return NextResponse.json({ success: true });
+        return success({});
       }
 
       case "addScreenshot": {
         if (!segmentId || !screenshotPath) {
-          return NextResponse.json(
-            {
-              error: "segmentId and screenshotPath required for addScreenshot",
-            },
-            { status: 400 }
-          );
+          return error("segmentId and screenshotPath required for addScreenshot", 400);
         }
 
         const segment = await db.recordingSegment.findUnique({
@@ -180,10 +161,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!segment) {
-          return NextResponse.json(
-            { error: "Segment not found" },
-            { status: 404 }
-          );
+          return error("Segment not found", 404);
         }
 
         await db.recordingSegment.update({
@@ -193,15 +171,12 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        return NextResponse.json({ success: true });
+        return success({});
       }
 
       case "complete": {
         if (!segmentId) {
-          return NextResponse.json(
-            { error: "segmentId required for complete" },
-            { status: 400 }
-          );
+          return error("segmentId required for complete", 400);
         }
 
         // Get segment to access screenshot paths for analysis
@@ -210,10 +185,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!segmentToComplete) {
-          return NextResponse.json(
-            { error: "Segment not found" },
-            { status: 404 }
-          );
+          return error("Segment not found", 404);
         }
 
         const endTime = new Date();
@@ -235,17 +207,12 @@ export async function POST(request: NextRequest) {
         // Note: Incremental screenshot analysis was removed (RF-022).
         // Video evaluation now happens after assessment completion.
 
-        return NextResponse.json({
-          success: true,
-        });
+        return success({});
       }
 
       case "interrupt": {
         if (!segmentId) {
-          return NextResponse.json(
-            { error: "segmentId required for interrupt" },
-            { status: 400 }
-          );
+          return error("segmentId required for interrupt", 400);
         }
 
         await db.recordingSegment.update({
@@ -256,21 +223,15 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        return NextResponse.json({ success: true });
+        return success({});
       }
 
       default:
-        return NextResponse.json(
-          { error: `Unknown action: ${action}` },
-          { status: 400 }
-        );
+        return error(`Unknown action: ${action}`, 400);
     }
-  } catch (error) {
-    console.error("Recording session error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Recording session error:", err);
+    return error("Internal server error", 500);
   }
 }
 
@@ -279,17 +240,14 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const { searchParams } = new URL(request.url);
     const assessmentId = searchParams.get("assessmentId");
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "assessmentId is required" },
-        { status: 400 }
-      );
+      return error("assessmentId is required", 400);
     }
 
     // Verify the assessment belongs to the user
@@ -301,10 +259,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     const recordingId = `${assessmentId}-screen`;
@@ -320,7 +275,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!recording) {
-      return NextResponse.json({
+      return success({
         hasRecording: false,
         activeSegment: null,
         segments: [],
@@ -344,7 +299,7 @@ export async function GET(request: NextRequest) {
       0
     );
 
-    return NextResponse.json({
+    return success({
       hasRecording: true,
       recordingId: recording.id,
       startTime: recording.startTime,
@@ -370,11 +325,8 @@ export async function GET(request: NextRequest) {
       totalChunks,
       totalScreenshots,
     });
-  } catch (error) {
-    console.error("Recording session fetch error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Recording session fetch error:", err);
+    return error("Internal server error", 500);
   }
 }

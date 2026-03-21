@@ -130,8 +130,8 @@ describe("GET /api/ci/status", () => {
     const response = await GET(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.cached).toBe(true);
-    expect(data.ciStatus.overallStatus).toBe("success");
+    expect(data.data.cached).toBe(true);
+    expect(data.data.ciStatus.overallStatus).toBe("success");
     expect(mockFetchPrCiStatus).not.toHaveBeenCalled();
   });
 
@@ -176,8 +176,8 @@ describe("GET /api/ci/status", () => {
     const response = await GET(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.cached).toBe(false);
-    expect(data.ciStatus.overallStatus).toBe("success");
+    expect(data.data.cached).toBe(false);
+    expect(data.data.ciStatus.overallStatus).toBe("success");
     expect(mockFetchPrCiStatus).toHaveBeenCalledWith(
       "https://github.com/owner/repo/pull/123"
     );
@@ -212,7 +212,7 @@ describe("GET /api/ci/status", () => {
     const response = await GET(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.cached).toBe(false);
+    expect(data.data.cached).toBe(false);
     expect(mockFetchPrCiStatus).toHaveBeenCalled();
     expect(mockAssessmentUpdate).toHaveBeenCalled();
   });
@@ -278,8 +278,8 @@ describe("POST /api/ci/status", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
     const data = await response.json();
-    expect(data.refreshed).toBe(true);
-    expect(data.ciStatus.overallStatus).toBe("failure");
+    expect(data.data.refreshed).toBe(true);
+    expect(data.data.ciStatus.overallStatus).toBe("failure");
     expect(mockFetchPrCiStatus).toHaveBeenCalled();
     expect(mockAssessmentUpdate).toHaveBeenCalled();
   });

@@ -8,10 +8,10 @@
  * to avoid blocking the save operation.
  */
 
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { generateAvatarsForScenario } from "@/lib/avatar";
 import { db } from "@/server/db";
+import { success, error } from "@/lib/api";
 
 interface SessionUser {
   id: string;
@@ -25,17 +25,14 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
 
   // Only allow recruiters and admins
   if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Recruiter access required" },
-      { status: 403 }
-    );
+    return error("Recruiter access required", 403);
   }
 
   // Parse request body
@@ -43,19 +40,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid request body" },
-      { status: 400 }
-    );
+    return error("Invalid request body", 400);
   }
 
   const { scenarioId } = body;
 
   if (!scenarioId) {
-    return NextResponse.json(
-      { error: "scenarioId is required" },
-      { status: 400 }
-    );
+    return error("scenarioId is required", 400);
   }
 
   // Verify scenario exists and user has access
@@ -65,15 +56,12 @@ export async function POST(request: Request) {
   });
 
   if (!scenario) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
   // Security: Only allow the scenario owner (or admin) to trigger generation
   if (scenario.createdById !== user.id && user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Not authorized to modify this scenario" },
-      { status: 403 }
-    );
+    return error("Not authorized to modify this scenario", 403);
   }
 
   // Generate avatars (this runs in the background)
@@ -89,19 +77,12 @@ export async function POST(request: Request) {
     const successful = results.filter((r) => r.success).length;
     const failed = results.filter((r) => !r.success).length;
 
-    return NextResponse.json({
-      success: true,
+    return success({
       message: `Generated ${successful} avatars, ${failed} failed`,
       results,
     });
-  } catch (error) {
-    console.error("[Avatar API] Generation failed:", error);
-    return NextResponse.json(
-      {
-        error: "Avatar generation failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("[Avatar API] Generation failed:", err);
+    return error("Avatar generation failed", 500);
   }
 }

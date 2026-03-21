@@ -8,7 +8,8 @@
  * @see Issue #72: US-007
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { success, error } from "@/lib/api";
 import {
   extractEntities,
   mapJobTitleToArchetype,
@@ -35,10 +36,7 @@ export async function POST(request: NextRequest) {
     const { query } = body;
 
     if (typeof query !== "string") {
-      return NextResponse.json(
-        { error: "Invalid request body", details: "query must be a string" },
-        { status: 400 }
-      );
+      return error("Invalid request body", 400);
     }
 
     const result = await extractEntities(query);
@@ -46,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (!result.success) {
       // Try to extract entities from the query using simple pattern matching as fallback
       const fallbackIntent = extractFallbackEntities(query);
-      return NextResponse.json({
+      return success({
         intent: fallbackIntent.intent,
         archetype: fallbackIntent.archetype,
         seniority: fallbackIntent.seniority,
@@ -55,18 +53,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
+    return success({
       intent: result.intent,
       archetype: result.archetype,
       seniority: result.seniority,
       processingTimeMs: result.processingTimeMs,
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json(
-      { error: "Internal server error", details: message },
-      { status: 500 }
-    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return error(`Internal server error: ${message}`, 500);
   }
 }
 

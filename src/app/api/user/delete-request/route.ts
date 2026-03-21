@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { success, error } from "@/lib/api";
 
 /**
  * POST /api/user/delete-request
@@ -10,7 +10,7 @@ export async function POST() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   try {
@@ -25,19 +25,15 @@ export async function POST() {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return error("User not found", 404);
     }
 
     if (user.deletedAt) {
-      return NextResponse.json(
-        { error: "Account has already been deleted" },
-        { status: 400 }
-      );
+      return error("Account has already been deleted", 400);
     }
 
     if (user.dataDeleteRequestedAt) {
-      return NextResponse.json({
-        success: true,
+      return success({
         message: "Data deletion request already submitted",
         requestedAt: user.dataDeleteRequestedAt,
         status: "pending",
@@ -55,19 +51,15 @@ export async function POST() {
     // 2. Send a confirmation email
     // 3. Delete data after a grace period (e.g., 30 days)
 
-    return NextResponse.json({
-      success: true,
+    return success({
       message:
         "Data deletion request submitted. Your data will be deleted within 30 days.",
       requestedAt: updated.dataDeleteRequestedAt,
       status: "pending",
     });
-  } catch (error) {
-    console.error("Error processing deletion request:", error);
-    return NextResponse.json(
-      { error: "Failed to process deletion request" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error processing deletion request:", err);
+    return error("Failed to process deletion request", 500);
   }
 }
 
@@ -79,7 +71,7 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   try {
@@ -92,33 +84,30 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return error("User not found", 404);
     }
 
     if (user.deletedAt) {
-      return NextResponse.json({
+      return success({
         status: "deleted",
         deletedAt: user.deletedAt,
       });
     }
 
     if (user.dataDeleteRequestedAt) {
-      return NextResponse.json({
+      return success({
         status: "pending",
         requestedAt: user.dataDeleteRequestedAt,
       });
     }
 
-    return NextResponse.json({
+    return success({
       status: "none",
       message: "No deletion request on file",
     });
-  } catch (error) {
-    console.error("Error checking deletion status:", error);
-    return NextResponse.json(
-      { error: "Failed to check deletion status" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error checking deletion status:", err);
+    return error("Failed to check deletion status", 500);
   }
 }
 
@@ -130,7 +119,7 @@ export async function DELETE() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   try {
@@ -143,21 +132,15 @@ export async function DELETE() {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return error("User not found", 404);
     }
 
     if (user.deletedAt) {
-      return NextResponse.json(
-        { error: "Account has already been deleted" },
-        { status: 400 }
-      );
+      return error("Account has already been deleted", 400);
     }
 
     if (!user.dataDeleteRequestedAt) {
-      return NextResponse.json(
-        { error: "No deletion request to cancel" },
-        { status: 400 }
-      );
+      return error("No deletion request to cancel", 400);
     }
 
     // Cancel the deletion request
@@ -166,15 +149,11 @@ export async function DELETE() {
       data: { dataDeleteRequestedAt: null },
     });
 
-    return NextResponse.json({
-      success: true,
+    return success({
       message: "Data deletion request cancelled",
     });
-  } catch (error) {
-    console.error("Error cancelling deletion request:", error);
-    return NextResponse.json(
-      { error: "Failed to cancel deletion request" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error cancelling deletion request:", err);
+    return error("Failed to cancel deletion request", 500);
   }
 }

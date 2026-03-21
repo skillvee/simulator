@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { success, error } from "@/lib/api";
 import { db } from "@/server/db";
 import { VideoAssessmentStatus } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
@@ -246,17 +246,14 @@ export async function POST(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const body = await request.json();
     const { assessmentId, forceRegenerate = false } = body;
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     // Verify assessment exists and belongs to user
@@ -288,23 +285,16 @@ export async function POST(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     if (assessment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized to access this assessment" },
-        { status: 403 }
-      );
+      return error("Unauthorized to access this assessment", 403);
     }
 
     // Check if we should return existing report
     if (assessment.report && !forceRegenerate) {
-      return NextResponse.json({
-        success: true,
+      return success({
         report: assessment.report,
         cached: true,
       });
@@ -313,10 +303,7 @@ export async function POST(request: Request) {
     // Check if video recording exists
     const videoUrl = assessment.recordings[0]?.storageUrl;
     if (!videoUrl) {
-      return NextResponse.json(
-        { error: "No video recording found for this assessment. Video evaluation cannot proceed without a recording." },
-        { status: 400 }
-      );
+      return error("No video recording found for this assessment. Video evaluation cannot proceed without a recording.", 400);
     }
 
     // Check if video assessment exists and get results
@@ -373,10 +360,7 @@ export async function POST(request: Request) {
         });
 
         if (!evalResult.success) {
-          return NextResponse.json(
-            { error: `Video evaluation failed: ${evalResult.error}` },
-            { status: 500 }
-          );
+          return error(`Video evaluation failed: ${evalResult.error}`, 500);
         }
 
         // Fetch the results
@@ -387,25 +371,16 @@ export async function POST(request: Request) {
             console.error("Failed to migrate newly evaluated video format for assessment", assessmentId);
           }
         }
-      } catch (error) {
-        console.error("Error running video evaluation:", error);
-        return NextResponse.json(
-          { error: "Failed to evaluate video" },
-          { status: 500 }
-        );
+      } catch (err) {
+        console.error("Error running video evaluation:", err);
+        return error("Failed to evaluate video", 500);
       }
     } else if (videoAssessment.status === VideoAssessmentStatus.PROCESSING) {
-      return NextResponse.json(
-        { error: "Video evaluation is still in progress. Please try again later." },
-        { status: 202 }
-      );
+      return error("Video evaluation is still in progress. Please try again later.", 202);
     }
 
     if (!videoResult) {
-      return NextResponse.json(
-        { error: "Could not retrieve video evaluation results" },
-        { status: 500 }
-      );
+      return error("Could not retrieve video evaluation results", 500);
     }
 
     // Calculate timing
@@ -471,18 +446,14 @@ export async function POST(request: Request) {
       emailResult = { success: true };
     }
 
-    return NextResponse.json({
-      success: true,
+    return success({
       report,
       cached: false,
       emailSent: emailResult.success,
     });
-  } catch (error) {
-    console.error("Error generating assessment report:", error);
-    return NextResponse.json(
-      { error: "Failed to generate assessment report" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error generating assessment report:", err);
+    return error("Failed to generate assessment report", 500);
   }
 }
 
@@ -494,17 +465,14 @@ export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const { searchParams } = new URL(request.url);
     const assessmentId = searchParams.get("assessmentId");
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     const assessment = await db.assessment.findUnique({
@@ -521,36 +489,23 @@ export async function GET(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     if (assessment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized to access this assessment" },
-        { status: 403 }
-      );
+      return error("Unauthorized to access this assessment", 403);
     }
 
     if (!assessment.report) {
-      return NextResponse.json(
-        { error: "No report generated yet" },
-        { status: 404 }
-      );
+      return error("No report generated yet", 404);
     }
 
-    return NextResponse.json({
-      success: true,
+    return success({
       report: assessment.report,
       assessmentStatus: assessment.status,
     });
-  } catch (error) {
-    console.error("Error fetching assessment report:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch assessment report" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error fetching assessment report:", err);
+    return error("Failed to fetch assessment report", 500);
   }
 }

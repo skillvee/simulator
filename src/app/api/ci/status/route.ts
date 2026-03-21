@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { success, error } from "@/lib/api";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { fetchPrCiStatus, type PrCiStatus } from "@/lib/external";
@@ -14,17 +14,14 @@ export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const { searchParams } = new URL(request.url);
     const assessmentId = searchParams.get("assessmentId");
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     // Verify assessment exists and belongs to user
@@ -39,24 +36,15 @@ export async function GET(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     if (assessment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized to access this assessment" },
-        { status: 403 }
-      );
+      return error("Unauthorized to access this assessment", 403);
     }
 
     if (!assessment.prUrl) {
-      return NextResponse.json(
-        { error: "No PR URL found for this assessment" },
-        { status: 400 }
-      );
+      return error("No PR URL found for this assessment", 400);
     }
 
     // Check if we have a recent cached status (less than 30 seconds old)
@@ -65,7 +53,7 @@ export async function GET(request: Request) {
       const fetchedAt = new Date(cachedStatus.fetchedAt);
       const ageSeconds = (Date.now() - fetchedAt.getTime()) / 1000;
       if (ageSeconds < 30) {
-        return NextResponse.json({
+        return success({
           ciStatus: cachedStatus,
           cached: true,
           cacheAge: Math.round(ageSeconds),
@@ -84,16 +72,13 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json({
+    return success({
       ciStatus,
       cached: false,
     });
-  } catch (error) {
-    console.error("Error fetching CI status:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch CI status" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error fetching CI status:", err);
+    return error("Failed to fetch CI status", 500);
   }
 }
 
@@ -106,17 +91,14 @@ export async function POST(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const body = await request.json();
     const { assessmentId } = body;
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     // Verify assessment exists and belongs to user
@@ -130,24 +112,15 @@ export async function POST(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     if (assessment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized to access this assessment" },
-        { status: 403 }
-      );
+      return error("Unauthorized to access this assessment", 403);
     }
 
     if (!assessment.prUrl) {
-      return NextResponse.json(
-        { error: "No PR URL found for this assessment" },
-        { status: 400 }
-      );
+      return error("No PR URL found for this assessment", 400);
     }
 
     // Force fetch fresh status from GitHub
@@ -161,15 +134,12 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({
+    return success({
       ciStatus,
       refreshed: true,
     });
-  } catch (error) {
-    console.error("Error refreshing CI status:", error);
-    return NextResponse.json(
-      { error: "Failed to refresh CI status" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error refreshing CI status:", err);
+    return error("Failed to refresh CI status", 500);
   }
 }

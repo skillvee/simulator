@@ -303,7 +303,7 @@ describe("GET /api/call/transcript", () => {
     expect(response.status).toBe(200);
 
     const data = await response.json();
-    expect(data.transcript).toHaveLength(2);
+    expect(data.data.transcript).toHaveLength(2);
   });
 
   it("should return empty transcript when no conversation exists", async () => {
@@ -323,6 +323,6 @@ describe("GET /api/call/transcript", () => {
     expect(response.status).toBe(200);
 
     const data = await response.json();
-    expect(data.transcript).toEqual([]);
+    expect(data.data.transcript).toEqual([]);
   });
 });

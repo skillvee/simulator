@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { processImmediateDeletion } from "@/lib/core/data-deletion";
+import { success, error } from "@/lib/api";
 
 /**
  * POST /api/user/delete
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   try {
@@ -28,14 +29,7 @@ export async function POST(request: NextRequest) {
     const { confirm } = body;
 
     if (confirm !== "DELETE MY ACCOUNT") {
-      return NextResponse.json(
-        {
-          error: "Confirmation required",
-          message:
-            'Please confirm deletion by sending { "confirm": "DELETE MY ACCOUNT" }',
-        },
-        { status: 400 }
-      );
+      return error("Confirmation required", 400);
     }
 
     // Check user exists and isn't already deleted
@@ -48,14 +42,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return error("User not found", 404);
     }
 
     if (user.deletedAt) {
-      return NextResponse.json(
-        { error: "Account has already been deleted" },
-        { status: 400 }
-      );
+      return error("Account has already been deleted", 400);
     }
 
     // Execute deletion
@@ -63,28 +54,15 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       console.error("Deletion errors:", result.errors);
-      return NextResponse.json(
-        {
-          error: "Deletion partially failed",
-          message:
-            "Some data may not have been deleted. Please contact support.",
-          details: result.errors,
-          deletedItems: result.deletedItems,
-        },
-        { status: 500 }
-      );
+      return error("Deletion partially failed", 500);
     }
 
-    return NextResponse.json({
-      success: true,
+    return success({
       message: "Your account and all associated data have been deleted.",
       deletedItems: result.deletedItems,
     });
-  } catch (error) {
-    console.error("Error executing deletion:", error);
-    return NextResponse.json(
-      { error: "Failed to delete account" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error executing deletion:", err);
+    return error("Failed to delete account", 500);
   }
 }

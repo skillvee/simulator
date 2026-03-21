@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { success, error } from "@/lib/api";
 import { auth } from "@/auth";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { env } from "@/lib/core";
@@ -8,7 +8,7 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const diagnostics: Record<string, unknown> = {
@@ -28,12 +28,12 @@ export async function GET() {
           : "GEMINI_API_KEY is missing",
       },
     };
-  } catch (error) {
+  } catch (err) {
     diagnostics.tests = {
       ...(diagnostics.tests as object),
       apiKeyConfigured: {
         passed: false,
-        message: `Error checking API key: ${error}`,
+        message: `Error checking API key: ${err}`,
       },
     };
   }
@@ -144,5 +144,5 @@ export async function GET() {
   const allPassed = Object.values(tests).every((t) => t.passed);
   diagnostics.status = allPassed ? "healthy" : "issues_detected";
 
-  return NextResponse.json(diagnostics);
+  return success(diagnostics);
 }

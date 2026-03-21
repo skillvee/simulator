@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { success, error } from "@/lib/api";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { z } from "zod";
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   try {
@@ -28,10 +28,7 @@ export async function POST(request: Request) {
     const parsed = transcriptSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: parsed.error.errors },
-        { status: 400 }
-      );
+      return error("Invalid request body", 400);
     }
 
     const { assessmentId, coworkerId, transcript } = parsed.data;
@@ -45,10 +42,7 @@ export async function POST(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     // Verify coworker exists for this assessment's scenario
@@ -60,10 +54,7 @@ export async function POST(request: Request) {
     });
 
     if (!coworker) {
-      return NextResponse.json(
-        { error: "Coworker not found" },
-        { status: 404 }
-      );
+      return error("Coworker not found", 404);
     }
 
     // Check if there's already a voice conversation for this coworker
@@ -109,13 +100,10 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error saving transcript:", error);
-    return NextResponse.json(
-      { error: "Failed to save transcript" },
-      { status: 500 }
-    );
+    return success({});
+  } catch (err) {
+    console.error("Error saving transcript:", err);
+    return error("Failed to save transcript", 500);
   }
 }
 
@@ -123,7 +111,7 @@ export async function GET(request: Request) {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const { searchParams } = new URL(request.url);
@@ -131,10 +119,7 @@ export async function GET(request: Request) {
   const coworkerId = searchParams.get("coworkerId");
 
   if (!assessmentId || !coworkerId) {
-    return NextResponse.json(
-      { error: "Assessment ID and Coworker ID are required" },
-      { status: 400 }
-    );
+    return error("Assessment ID and Coworker ID are required", 400);
   }
 
   try {
@@ -147,10 +132,7 @@ export async function GET(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     // Get the voice conversation
@@ -162,14 +144,11 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json({
+    return success({
       transcript: conversation?.transcript || [],
     });
-  } catch (error) {
-    console.error("Error fetching transcript:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch transcript" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error fetching transcript:", err);
+    return error("Failed to fetch transcript", 500);
   }
 }

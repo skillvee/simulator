@@ -182,17 +182,17 @@ describe("POST /api/assessment/finalize", () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
-    expect(data.timing.startedAt).toBe(startedAt.toISOString());
-    expect(data.timing.completedAt).toBeDefined();
-    expect(data.timing.totalDurationSeconds).toBeGreaterThan(0);
-    expect(data.prCleanup).toBeNull(); // No PR to clean up
-    expect(data.videoAssessment).toEqual({
+    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.data.timing.startedAt).toBe(startedAt.toISOString());
+    expect(data.data.timing.completedAt).toBeDefined();
+    expect(data.data.timing.totalDurationSeconds).toBeGreaterThan(0);
+    expect(data.data.prCleanup).toBeNull(); // No PR to clean up
+    expect(data.data.videoAssessment).toEqual({
       triggered: false,
       videoAssessmentId: null,
       hasRecording: false,
     });
-    expect(data.profilePhoto).toBeDefined();
+    expect(data.data.profilePhoto).toBeDefined();
 
     // Should not call cleanup when no PR URL
     expect(mockCleanupPrAfterAssessment).not.toHaveBeenCalled();
@@ -247,7 +247,7 @@ describe("POST /api/assessment/finalize", () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.prCleanup).toEqual({
+    expect(data.data.prCleanup).toEqual({
       success: true,
       action: "closed",
       message: "Successfully closed PR #123",
@@ -315,9 +315,9 @@ describe("POST /api/assessment/finalize", () => {
     const data = await response.json();
     // Finalization should succeed even if cleanup failed
     expect(data.success).toBe(true);
-    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
-    expect(data.prCleanup.success).toBe(false);
-    expect(data.prCleanup.action).toBe("error");
+    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.data.prCleanup.success).toBe(false);
+    expect(data.data.prCleanup.action).toBe("error");
   });
 
   it("should finalize even if PR cleanup throws", async () => {
@@ -356,9 +356,9 @@ describe("POST /api/assessment/finalize", () => {
     const data = await response.json();
     // Finalization should succeed even if cleanup threw
     expect(data.success).toBe(true);
-    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
     // prCleanup will be null since the exception was caught
-    expect(data.prCleanup).toBeNull();
+    expect(data.data.prCleanup).toBeNull();
   });
 
   it("should return 500 on internal error", async () => {
@@ -442,7 +442,7 @@ describe("POST /api/assessment/finalize", () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.videoAssessment).toEqual({
+    expect(data.data.videoAssessment).toEqual({
       triggered: true,
       videoAssessmentId: "video-assessment-123",
       hasRecording: true,
@@ -497,10 +497,10 @@ describe("POST /api/assessment/finalize", () => {
     const data = await response.json();
     // Finalization should succeed even if video assessment fails
     expect(data.success).toBe(true);
-    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
     // Video assessment result should still be included
-    expect(data.videoAssessment.triggered).toBe(true);
-    expect(data.videoAssessment.hasRecording).toBe(true);
+    expect(data.data.videoAssessment.triggered).toBe(true);
+    expect(data.data.videoAssessment.hasRecording).toBe(true);
   });
 
   it("should finalize even if video assessment trigger throws", async () => {
@@ -539,7 +539,7 @@ describe("POST /api/assessment/finalize", () => {
     const data = await response.json();
     // Finalization should succeed even if video assessment throws
     expect(data.success).toBe(true);
-    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
   });
 
   it("should trigger profile photo generation on finalization", async () => {
@@ -579,7 +579,7 @@ describe("POST /api/assessment/finalize", () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.profilePhoto).toEqual({
+    expect(data.data.profilePhoto).toEqual({
       generated: true,
       imageUrl: "https://storage.example.com/avatars/candidates/user-123.jpg",
     });
@@ -630,8 +630,8 @@ describe("POST /api/assessment/finalize", () => {
     const data = await response.json();
     // Finalization should succeed even if profile photo fails
     expect(data.success).toBe(true);
-    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
-    expect(data.profilePhoto).toEqual({
+    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.data.profilePhoto).toEqual({
       generated: false,
       imageUrl: null,
     });
@@ -672,6 +672,6 @@ describe("POST /api/assessment/finalize", () => {
     const data = await response.json();
     // Finalization should succeed even if profile photo throws
     expect(data.success).toBe(true);
-    expect(data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
   });
 });

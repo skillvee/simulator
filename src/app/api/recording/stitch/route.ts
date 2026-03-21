@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { success, error } from "@/lib/api";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { supabaseAdmin } from "@/lib/external";
@@ -9,17 +10,14 @@ export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const { searchParams } = new URL(request.url);
     const assessmentId = searchParams.get("assessmentId");
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "assessmentId is required" },
-        { status: 400 }
-      );
+      return error("assessmentId is required", 400);
     }
 
     // Verify the assessment belongs to the user
@@ -31,10 +29,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     const recordingId = `${assessmentId}-screen`;
@@ -50,7 +45,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!recording) {
-      return NextResponse.json({
+      return success({
         hasRecording: false,
         segments: [],
         stitchingOrder: [],
@@ -110,7 +105,7 @@ export async function GET(request: NextRequest) {
         }))
     );
 
-    return NextResponse.json({
+    return success({
       hasRecording: true,
       recordingId: recording.id,
       startTime: recording.startTime,
@@ -136,11 +131,8 @@ export async function GET(request: NextRequest) {
         ).length,
       },
     });
-  } catch (error) {
-    console.error("Recording stitch error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Recording stitch error:", err);
+    return error("Internal server error", 500);
   }
 }

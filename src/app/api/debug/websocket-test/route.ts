@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { success, error } from "@/lib/api";
 import { auth } from "@/auth";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { env } from "@/lib/core";
@@ -8,7 +8,7 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const results: Record<string, unknown> = {
@@ -87,8 +87,8 @@ export async function GET() {
     results.status = "diagnostics_complete";
     results.recommendation =
       "If WebSocket fails with double slash, the SDK may have a URL construction bug. Consider using direct WebSocket connection instead.";
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
     (results.steps as unknown[]).push({
       step: "error",
       name: "Error occurred",
@@ -97,5 +97,5 @@ export async function GET() {
     results.status = "error";
   }
 
-  return NextResponse.json(results);
+  return success(results);
 }

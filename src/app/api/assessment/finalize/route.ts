@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { success, error } from "@/lib/api";
 import { db } from "@/server/db";
 import { AssessmentStatus, Prisma } from "@prisma/client";
 import {
@@ -29,17 +29,14 @@ export async function POST(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return error("Unauthorized", 401);
     }
 
     const body = await request.json();
     const { assessmentId } = body;
 
     if (!assessmentId) {
-      return NextResponse.json(
-        { error: "Assessment ID is required" },
-        { status: 400 }
-      );
+      return error("Assessment ID is required", 400);
     }
 
     // Verify assessment exists and belongs to user
@@ -68,26 +65,18 @@ export async function POST(request: Request) {
     });
 
     if (!assessment) {
-      return NextResponse.json(
-        { error: "Assessment not found" },
-        { status: 404 }
-      );
+      return error("Assessment not found", 404);
     }
 
     if (assessment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "Unauthorized to modify this assessment" },
-        { status: 403 }
-      );
+      return error("Unauthorized to modify this assessment", 403);
     }
 
     // Check that assessment is in WORKING status (after PR submission, before defense)
     if (assessment.status !== AssessmentStatus.WORKING) {
-      return NextResponse.json(
-        {
-          error: `Cannot finalize assessment in ${assessment.status} status. Must be in WORKING status.`,
-        },
-        { status: 400 }
+      return error(
+        `Cannot finalize assessment in ${assessment.status} status. Must be in WORKING status.`,
+        400
       );
     }
 
@@ -102,10 +91,10 @@ export async function POST(request: Request) {
     if (assessment.prUrl) {
       try {
         finalCiStatus = await fetchPrCiStatus(assessment.prUrl);
-      } catch (error) {
+      } catch (err) {
         console.warn(
           `CI status fetch warning for assessment ${assessmentId}:`,
-          error
+          err
         );
         // Continue without CI status - don't block finalization
       }
@@ -123,10 +112,10 @@ export async function POST(request: Request) {
             prCleanupResult.message
           );
         }
-      } catch (error) {
+      } catch (err) {
         console.error(
           `PR cleanup error for assessment ${assessmentId}:`,
-          error
+          err
         );
         // Don't fail the finalization if PR cleanup fails
       }
@@ -178,10 +167,10 @@ export async function POST(request: Request) {
             videoAssessmentResult.error
           );
         }
-      } catch (error) {
+      } catch (err) {
         console.warn(
           `Video assessment trigger error for ${assessmentId}:`,
-          error
+          err
         );
         // Don't fail the finalization if video assessment trigger fails
       }
@@ -201,16 +190,15 @@ export async function POST(request: Request) {
           profilePhotoResult.error
         );
       }
-    } catch (error) {
+    } catch (err) {
       console.warn(
         `Profile photo generation error for ${assessmentId}:`,
-        error
+        err
       );
       // Don't fail the finalization if profile photo generation fails
     }
 
-    return NextResponse.json({
-      success: true,
+    return success({
       assessment: updatedAssessment,
       timing: {
         startedAt: assessment.startedAt.toISOString(),
@@ -254,11 +242,8 @@ export async function POST(request: Request) {
             imageUrl: null,
           },
     });
-  } catch (error) {
-    console.error("Error finalizing assessment:", error);
-    return NextResponse.json(
-      { error: "Failed to finalize assessment" },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Error finalizing assessment:", err);
+    return error("Failed to finalize assessment", 500);
   }
 }

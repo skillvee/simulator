@@ -57,7 +57,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       if (response.ok) {
         const data = await response.json();
-        report = data.report;
+        report = data.data.report;
       }
     } catch (error) {
       console.error("Error generating report on results page:", error);

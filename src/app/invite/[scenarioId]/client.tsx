@@ -66,7 +66,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
           return;
         }
 
-        router.push(`/assessments/${data.assessment.id}/welcome`);
+        router.push(`/assessments/${data.data.assessment.id}/welcome`);
       } catch (err) {
         console.error("[invite] Assessment create failed:", err);
         setError("An error occurred. Please try again.");

@@ -265,8 +265,8 @@ describe("Assessment Report API", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.cached).toBe(true);
-      expect(data.report).toEqual(cachedReport);
+      expect(data.data.cached).toBe(true);
+      expect(data.data.report).toEqual(cachedReport);
       // Should not call video evaluation
       expect(mockEvaluateVideo).not.toHaveBeenCalled();
     });
@@ -335,8 +335,8 @@ describe("Assessment Report API", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.cached).toBe(false);
-      expect(data.report.overallScore).toBe(4.0);
+      expect(data.data.cached).toBe(false);
+      expect(data.data.report.overallScore).toBe(4.0);
       // Should not trigger new evaluation
       expect(mockEvaluateVideo).not.toHaveBeenCalled();
     });
@@ -418,7 +418,7 @@ describe("Assessment Report API", () => {
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(mockEvaluateVideo).toHaveBeenCalled();
-      expect(data.report.overallScore).toBe(4.0);
+      expect(data.data.report.overallScore).toBe(4.0);
     });
   });
 
@@ -532,8 +532,8 @@ describe("Assessment Report API", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.report).toEqual(existingReport);
-      expect(data.assessmentStatus).toBe("COMPLETED");
+      expect(data.data.report).toEqual(existingReport);
+      expect(data.data.assessmentStatus).toBe("COMPLETED");
     });
   });
 });

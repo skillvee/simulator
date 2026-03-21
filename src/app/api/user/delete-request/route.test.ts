@@ -76,8 +76,8 @@ describe("/api/user/delete-request", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.message).toBe("Data deletion request already submitted");
-      expect(data.status).toBe("pending");
+      expect(data.data.message).toBe("Data deletion request already submitted");
+      expect(data.data.status).toBe("pending");
       expect(mockUpdate).not.toHaveBeenCalled();
     });
 
@@ -98,8 +98,8 @@ describe("/api/user/delete-request", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.message).toContain("Data deletion request submitted");
-      expect(data.status).toBe("pending");
+      expect(data.data.message).toContain("Data deletion request submitted");
+      expect(data.data.status).toBe("pending");
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: "user-123" },
         data: { dataDeleteRequestedAt: expect.any(Date) },
@@ -141,7 +141,7 @@ describe("/api/user/delete-request", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.status).toBe("deleted");
+      expect(data.data.status).toBe("deleted");
     });
 
     it("returns status: pending when deletion requested", async () => {
@@ -156,7 +156,7 @@ describe("/api/user/delete-request", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.status).toBe("pending");
+      expect(data.data.status).toBe("pending");
     });
 
     it("returns status: none when no deletion requested", async () => {
@@ -170,7 +170,7 @@ describe("/api/user/delete-request", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.status).toBe("none");
+      expect(data.data.status).toBe("none");
     });
   });
 
@@ -237,7 +237,7 @@ describe("/api/user/delete-request", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.message).toBe("Data deletion request cancelled");
+      expect(data.data.message).toBe("Data deletion request cancelled");
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: "user-123" },
         data: { dataDeleteRequestedAt: null },

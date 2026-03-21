@@ -7,7 +7,8 @@
  * @see Issue #75: US-012b
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { success, error } from "@/lib/api";
 import { parseFeedback } from "@/lib/candidate";
 
 export async function POST(request: NextRequest) {
@@ -15,20 +16,14 @@ export async function POST(request: NextRequest) {
     const { feedback } = await request.json();
 
     if (!feedback || typeof feedback !== "string") {
-      return NextResponse.json(
-        { error: "Feedback is required and must be a string" },
-        { status: 400 }
-      );
+      return error("Feedback is required and must be a string", 400);
     }
 
     const result = await parseFeedback(feedback);
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("[parse-feedback] Error:", error);
-    return NextResponse.json(
-      { error: "Failed to parse feedback" },
-      { status: 500 }
-    );
+    return success(result);
+  } catch (err) {
+    console.error("[parse-feedback] Error:", err);
+    return error("Failed to parse feedback", 500);
   }
 }
