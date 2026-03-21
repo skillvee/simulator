@@ -425,20 +425,21 @@ export function Chat({
       }
 
       // Finalize the message with the real timestamp
-      if (doneData) {
+      const finalDone = doneData;
+      if (finalDone) {
         setMessages((prev) => {
           const lastMsg = prev[prev.length - 1];
           if (lastMsg?.role === "model") {
             return [
               ...prev.slice(0, -1),
-              { role: "model" as const, text: fullText, timestamp: doneData!.timestamp },
+              { role: "model" as const, text: fullText, timestamp: finalDone.timestamp },
             ];
           }
           return prev;
         });
 
         // Enable defense mode when PR is submitted — disables text input
-        if (doneData.prSubmitted || doneData.defenseCallRequired) {
+        if (finalDone.prSubmitted || finalDone.defenseCallRequired) {
           setDefenseCallRequired(true);
         }
       }
