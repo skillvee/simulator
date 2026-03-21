@@ -19,6 +19,12 @@ vi.mock("@/server/db", () => ({
 
 vi.mock("@/lib/core", () => ({
   getAnalytics: (...args: unknown[]) => mockGetAnalytics(...args),
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
   TimePeriodSchema: {
     safeParse: (value: string) => {
       const validPeriods = [
@@ -219,8 +225,6 @@ describe("GET /api/admin/analytics", () => {
     mockUserFindUnique.mockResolvedValue({ role: "ADMIN" });
     mockGetAnalytics.mockRejectedValue(new Error("Database error"));
 
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
     const request = new Request(
       "http://localhost/api/admin/analytics?period=last30days"
     );
@@ -229,9 +233,6 @@ describe("GET /api/admin/analytics", () => {
 
     expect(response.status).toBe(500);
     expect(data.error).toBe("Failed to fetch analytics");
-    expect(consoleSpy).toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
   });
 
   it("does not expose PII in response", async () => {

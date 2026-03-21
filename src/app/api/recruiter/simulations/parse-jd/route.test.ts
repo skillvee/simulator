@@ -168,7 +168,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("returns 400 when jobDescription is empty string", async () => {
@@ -193,7 +193,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("successfully parses job description and returns structured data", async () => {
@@ -225,16 +225,16 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.roleName).toEqual({
+    expect(data.data.roleName).toEqual({
       value: "Senior Frontend Engineer",
       confidence: "high",
     });
-    expect(data.companyName).toEqual({ value: "Stripe", confidence: "high" });
-    expect(data.seniorityLevel).toEqual({ value: "senior", confidence: "high" });
-    expect(data.techStack.value).toContain("React");
-    expect(data._meta).toBeDefined();
-    expect(data._meta.promptVersion).toBe("1.1");
-    expect(data._meta.parsedAt).toBeDefined();
+    expect(data.data.companyName).toEqual({ value: "Stripe", confidence: "high" });
+    expect(data.data.seniorityLevel).toEqual({ value: "senior", confidence: "high" });
+    expect(data.data.techStack.value).toContain("React");
+    expect(data.data._meta).toBeDefined();
+    expect(data.data._meta.promptVersion).toBe("1.1");
+    expect(data.data._meta.parsedAt).toBeDefined();
   });
 
   it("handles JSON responses with markdown code fences", async () => {
@@ -266,7 +266,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.roleName.value).toBe("Senior Frontend Engineer");
+    expect(data.data.roleName.value).toBe("Senior Frontend Engineer");
   });
 
   it("returns 500 when AI response is not valid JSON", async () => {
@@ -366,8 +366,8 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     const data = await response.json();
 
     expect(response.status).toBe(500);
-    expect(data.error).toBe("Incomplete parsing result");
-    expect(data.details).toContain("Missing fields:");
+    expect(data.error).toContain("Incomplete parsing result");
+    expect(data.error).toContain("missing fields:");
   });
 
   it("handles Gemini API errors gracefully", async () => {
@@ -438,9 +438,9 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.roleName.value).toBe("Senior React Engineer");
-    expect(data.companyName.value).toBeNull();
-    expect(data.companyDescription.value).toBeNull();
+    expect(data.data.roleName.value).toBe("Senior React Engineer");
+    expect(data.data.companyName.value).toBeNull();
+    expect(data.data.companyDescription.value).toBeNull();
   });
 
   it("includes all confidence levels in response", async () => {
@@ -471,10 +471,10 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.roleName.confidence).toBe("high");
-    expect(data.companyName.confidence).toBe("high");
-    expect(data.techStack.confidence).toBe("medium");
-    expect(data.keyResponsibilities.confidence).toBe("medium");
+    expect(data.data.roleName.confidence).toBe("high");
+    expect(data.data.companyName.confidence).toBe("high");
+    expect(data.data.techStack.confidence).toBe("medium");
+    expect(data.data.keyResponsibilities.confidence).toBe("medium");
   });
 
   it("calls Gemini with correct model and prompt", async () => {

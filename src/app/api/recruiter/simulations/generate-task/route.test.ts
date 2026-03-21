@@ -123,8 +123,8 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.taskOptions).toHaveLength(2);
-    expect(data._meta.promptVersion).toBe("1.1");
+    expect(data.data.taskOptions).toHaveLength(2);
+    expect(data.data._meta.promptVersion).toBe("1.1");
   });
 
   it("allows ADMIN role", async () => {
@@ -174,7 +174,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
     expect(data.details).toBeDefined();
   });
 
@@ -201,7 +201,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("returns 400 if techStack is empty", async () => {
@@ -227,7 +227,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("returns 400 if keyResponsibilities is empty", async () => {
@@ -253,7 +253,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("returns 400 if domainContext is missing", async () => {
@@ -278,7 +278,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("returns 400 if companyName is missing", async () => {
@@ -303,7 +303,7 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("successfully generates tasks with valid input", async () => {
@@ -326,13 +326,13 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.taskOptions).toHaveLength(2);
-    expect(data.taskOptions[0].summary).toBe(
+    expect(data.data.taskOptions).toHaveLength(2);
+    expect(data.data.taskOptions[0].summary).toBe(
       "Build a transaction webhook handler with retry logic"
     );
-    expect(data.taskOptions[0].description).toContain("webhook");
-    expect(data._meta.promptVersion).toBe("1.1");
-    expect(data._meta.generatedAt).toBeDefined();
+    expect(data.data.taskOptions[0].description).toContain("webhook");
+    expect(data.data._meta.promptVersion).toBe("1.1");
+    expect(data.data._meta.generatedAt).toBeDefined();
 
     // Verify generateCodingTask was called with correct input
     expect(mockGenerateCodingTask).toHaveBeenCalledWith(validRequestBody);

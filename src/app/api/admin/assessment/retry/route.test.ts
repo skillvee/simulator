@@ -7,6 +7,12 @@ import { triggerVideoAssessment } from "@/lib/analysis";
 // Mock admin check (now in @/lib/core)
 vi.mock("@/lib/core", () => ({
   requireAdmin: vi.fn(),
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
 }));
 
 // Mock video evaluation (now in @/lib/analysis)

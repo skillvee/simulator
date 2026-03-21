@@ -50,6 +50,12 @@ vi.mock("@/server/db", () => ({
 // Mock isE2ETestMode and env
 const mockIsE2ETestMode = vi.fn();
 vi.mock("@/lib/core", () => ({
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
   shouldAllowTestModeRecording: () => mockIsE2ETestMode(),
   isE2ETestMode: () => mockIsE2ETestMode(),
   isE2ETestModeClient: () => mockIsE2ETestMode(),

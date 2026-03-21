@@ -31,11 +31,11 @@ vi.mock("@/server/db", () => ({
 }));
 
 // Mock @/lib/ai/gemini
-const mockGenerateContent = vi.fn();
+const mockGenerateContentStream = vi.fn();
 vi.mock("@/lib/ai/gemini", () => ({
   gemini: {
     models: {
-      generateContent: (...args: unknown[]) => mockGenerateContent(...args),
+      generateContentStream: (...args: unknown[]) => mockGenerateContentStream(...args),
     },
   },
 }));
@@ -58,6 +58,28 @@ vi.mock("@/lib/ai", () => ({
 }));
 
 import { POST, GET } from "./route";
+
+// Helper: create an async iterable that yields chunks for generateContentStream
+function createMockStream(texts: string[]) {
+  return (async function* () {
+    for (const text of texts) {
+      yield { text };
+    }
+  })();
+}
+
+// Helper: read an SSE stream response and parse the events
+async function readSSEResponse(response: Response): Promise<Array<{ type: string; [key: string]: unknown }>> {
+  const text = await response.text();
+  const events: Array<{ type: string; [key: string]: unknown }> = [];
+  const lines = text.split("\n");
+  for (const line of lines) {
+    if (line.startsWith("data: ")) {
+      events.push(JSON.parse(line.slice(6)));
+    }
+  }
+  return events;
+}
 
 describe("POST /api/chat", () => {
   beforeEach(() => {
@@ -144,13 +166,14 @@ describe("POST /api/chat", () => {
     expect(response.status).toBe(404);
   });
 
-  it("should send message to Gemini and return response", async () => {
+  it("should send message to Gemini and return streamed response", async () => {
     mockAuth.mockResolvedValue({
       user: { id: "user-1", name: "Test User" },
     });
     mockAssessmentFindFirst.mockResolvedValue({
       id: "assessment-1",
       userId: "user-1",
+      scenarioId: "scenario-1",
       scenario: {
         companyName: "Test Corp",
         taskDescription: "Build a feature",
@@ -167,9 +190,9 @@ describe("POST /api/chat", () => {
     // Mock findMany to return empty array (no prior conversations)
     mockConversationFindMany.mockResolvedValue([]);
     mockConversationCreate.mockResolvedValue({ id: "conv-1" });
-    mockGenerateContent.mockResolvedValue({
-      text: "Hi there! How can I help you?",
-    });
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["Hi there!", " How can I help you?"])
+    );
 
     const request = new Request("http://localhost/api/chat", {
       method: "POST",
@@ -181,12 +204,18 @@ describe("POST /api/chat", () => {
     });
 
     const response = await POST(request);
-    const json = await response.json();
-
     expect(response.status).toBe(200);
-    expect(json.success).toBe(true);
-    expect(json.data.response).toBe("Hi there! How can I help you?");
-    expect(json.data.timestamp).toBeDefined();
+    expect(response.headers.get("Content-Type")).toBe("text/event-stream");
+
+    const events = await readSSEResponse(response);
+    const chunks = events.filter((e) => e.type === "chunk");
+    const done = events.find((e) => e.type === "done");
+
+    expect(chunks.length).toBe(2);
+    expect(chunks[0].text).toBe("Hi there!");
+    expect(chunks[1].text).toBe(" How can I help you?");
+    expect(done).toBeDefined();
+    expect(done!.timestamp).toBeDefined();
   });
 
   it("should include conversation history in Gemini request", async () => {
@@ -196,6 +225,7 @@ describe("POST /api/chat", () => {
     mockAssessmentFindFirst.mockResolvedValue({
       id: "assessment-1",
       userId: "user-1",
+      scenarioId: "scenario-1",
       scenario: {
         companyName: "Test Corp",
         taskDescription: "Build a feature",
@@ -234,9 +264,9 @@ describe("POST /api/chat", () => {
       },
     ]);
     mockConversationUpdate.mockResolvedValue({});
-    mockGenerateContent.mockResolvedValue({
-      text: "Follow-up response",
-    });
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["Follow-up response"])
+    );
 
     const request = new Request("http://localhost/api/chat", {
       method: "POST",
@@ -248,10 +278,12 @@ describe("POST /api/chat", () => {
     });
 
     const response = await POST(request);
+    // Consume the stream so the mock calls complete
+    await readSSEResponse(response);
     expect(response.status).toBe(200);
 
     // Verify Gemini was called with contents including history
-    expect(mockGenerateContent).toHaveBeenCalledWith(
+    expect(mockGenerateContentStream).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "gemini-3-flash-preview",
         contents: expect.arrayContaining([
@@ -296,6 +328,7 @@ describe("POST /api/chat", () => {
     mockAssessmentFindFirst.mockResolvedValue({
       id: "assessment-1",
       userId: "user-1",
+      scenarioId: "scenario-1",
       scenario: {
         companyName: "Test Corp",
         taskDescription: "Build a feature",
@@ -312,9 +345,9 @@ describe("POST /api/chat", () => {
     // Mock findMany to return empty (no prior conversations)
     mockConversationFindMany.mockResolvedValue([]);
     mockConversationCreate.mockResolvedValue({ id: "conv-1" });
-    mockGenerateContent.mockResolvedValue({
-      text: "Response text",
-    });
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["Response text"])
+    );
 
     const request = new Request("http://localhost/api/chat", {
       method: "POST",
@@ -325,7 +358,9 @@ describe("POST /api/chat", () => {
       }),
     });
 
-    await POST(request);
+    const response = await POST(request);
+    // Consume the stream so DB save completes
+    await readSSEResponse(response);
 
     // Verify conversation was created with messages
     expect(mockConversationCreate).toHaveBeenCalledWith({

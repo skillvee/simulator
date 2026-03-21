@@ -148,8 +148,8 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.coworkers).toHaveLength(2);
-    expect(data._meta.promptVersion).toBe("1.0");
+    expect(data.data.coworkers).toHaveLength(2);
+    expect(data.data._meta.promptVersion).toBe("1.0");
   });
 
   it("allows ADMIN role", async () => {
@@ -199,7 +199,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
     expect(data.details).toBeDefined();
   });
 
@@ -226,7 +226,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("returns 400 if techStack is empty", async () => {
@@ -252,7 +252,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("returns 400 if keyResponsibilities is empty", async () => {
@@ -278,7 +278,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Invalid request body");
+    expect(data.error).toBe("Validation failed");
   });
 
   it("successfully generates coworkers with valid input", async () => {
@@ -301,12 +301,12 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data.coworkers).toHaveLength(2);
-    expect(data.coworkers[0].name).toBe("Jordan Kim");
-    expect(data.coworkers[0].role).toBe("Engineering Manager");
-    expect(data.coworkers[1].name).toBe("Aisha Patel");
-    expect(data._meta.promptVersion).toBe("1.0");
-    expect(data._meta.generatedAt).toBeDefined();
+    expect(data.data.coworkers).toHaveLength(2);
+    expect(data.data.coworkers[0].name).toBe("Jordan Kim");
+    expect(data.data.coworkers[0].role).toBe("Engineering Manager");
+    expect(data.data.coworkers[1].name).toBe("Aisha Patel");
+    expect(data.data._meta.promptVersion).toBe("1.0");
+    expect(data.data._meta.generatedAt).toBeDefined();
 
     // Verify generateCoworkers was called with correct input
     expect(mockGenerateCoworkers).toHaveBeenCalledWith(validRequestBody);

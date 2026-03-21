@@ -47,9 +47,9 @@ describe("POST /api/auth/register", () => {
     const data = await response.json();
 
     expect(response.status).toBe(201);
-    expect(data.user).toBeDefined();
-    expect(data.user.email).toBe("test@example.com");
-    expect(data.user.role).toBe("USER");
+    expect(data.data.user).toBeDefined();
+    expect(data.data.user.email).toBe("test@example.com");
+    expect(data.data.user.role).toBe("USER");
   });
 
   it("rejects registration with missing email", async () => {
@@ -373,7 +373,7 @@ describe("POST /api/auth/register", () => {
     const response = await POST(request);
     const data = await response.json();
 
-    expect(data.user.password).toBeUndefined();
+    expect(data.data.user.password).toBeUndefined();
   });
 
   it("sets emailVerified to current date for credentials registration", async () => {

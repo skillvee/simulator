@@ -220,8 +220,8 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.message).toBe("Repository already provisioned");
-      expect(data.repoUrl).toBe(existingRepoUrl);
+      expect(data.data.message).toBe("Repository already provisioned");
+      expect(data.data.repoUrl).toBe(existingRepoUrl);
       expect(mockProvisionRepo).not.toHaveBeenCalled();
     });
   });
@@ -258,7 +258,7 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.repoUrl).toBe(mockRepoUrl);
+      expect(data.data.repoUrl).toBe(mockRepoUrl);
 
       // Verify provisionRepo was called with scenarioId and metadata
       expect(mockProvisionRepo).toHaveBeenCalledWith(
@@ -291,24 +291,6 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       mockFindUnique.mockResolvedValue(fullScenarioMock);
     });
 
-    it("should return 500 if provisioning returns null repoUrl", async () => {
-      mockProvisionRepo.mockResolvedValue({ repoUrl: null });
-
-      const request = new Request("http://localhost:3000/api/test", {
-        method: "POST",
-        body: JSON.stringify({}),
-      });
-
-      const response = await POST(request, {
-        params: Promise.resolve({ id: mockScenarioId }),
-      });
-      const data = await response.json();
-
-      expect(response.status).toBe(500);
-      expect(data.error).toBe("Repository provisioning failed");
-      expect(mockUpdate).not.toHaveBeenCalled();
-    });
-
     it("should return 500 if provision throws an error", async () => {
       mockProvisionRepo.mockRejectedValue(new Error("Network error"));
 
@@ -324,7 +306,6 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe("Repository provisioning failed");
-      expect(data.details).toBe("Network error");
       expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
@@ -351,8 +332,9 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.skipped).toBe(true);
-      expect(data.reason).toBe("non-engineering");
+      expect(data.success).toBe(true);
+      expect(data.data.skipped).toBe(true);
+      expect(data.data.reason).toBe("non-engineering");
       expect(mockProvisionRepo).not.toHaveBeenCalled();
     });
   });

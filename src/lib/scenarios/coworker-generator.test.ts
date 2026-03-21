@@ -183,11 +183,11 @@ describe("generateCoworkers", () => {
     });
 
     await expect(generateCoworkers(mockInput)).rejects.toThrow(
-      "Expected 2-3 coworkers, got 1"
+      "Expected at least 2 coworkers, got 1"
     );
   });
 
-  it("throws error if more than 3 coworkers", async () => {
+  it("trims to 3 coworkers if more than 3 are generated", async () => {
     const tooManyCoworkers = [
       ...mockCoworkers,
       mockCoworkers[0],
@@ -198,9 +198,9 @@ describe("generateCoworkers", () => {
       text: JSON.stringify(tooManyCoworkers),
     });
 
-    await expect(generateCoworkers(mockInput)).rejects.toThrow(
-      "Expected 2-3 coworkers, got 4"
-    );
+    const result = await generateCoworkers(mockInput);
+
+    expect(result.coworkers).toHaveLength(3);
   });
 
   it("retries and patches first coworker if no Engineering Manager", async () => {
@@ -251,8 +251,8 @@ describe("generateCoworkers", () => {
 
     const result = await generateCoworkers(mockInput);
 
-    // Should have retried (2 calls) and patched first coworker
-    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
+    // Should have retried (3 calls = MAX_GENERATION_ATTEMPTS) and patched first coworker
+    expect(mockGenerateContent).toHaveBeenCalledTimes(3);
     expect(result.coworkers[0].role).toBe("Engineering Manager");
     expect(result.coworkers[0].name).toBe("Alice Johnson");
   });
@@ -360,8 +360,8 @@ describe("generateCoworkers", () => {
     await expect(generateCoworkers(mockInput)).rejects.toThrow(
       'Coworker "Jordan Kim" has only 1 critical knowledge items, need at least 2'
     );
-    // Should have retried
-    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
+    // Should have retried (3 calls = MAX_GENERATION_ATTEMPTS)
+    expect(mockGenerateContent).toHaveBeenCalledTimes(3);
   });
 
   it("accepts exactly 3 coworkers", async () => {

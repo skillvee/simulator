@@ -422,6 +422,10 @@ describe("evaluateVideo", () => {
     expect(mockDimensionScoreUpsert).toHaveBeenCalledTimes(7);
 
     // Verify one of the upsert calls (uses dimensionSlug mapping)
+    // observable_behaviors are v2 flat strings mapped to TimestampedBehavior[] then JSON.stringify'd
+    const expectedBehaviorsJson = JSON.stringify([
+      { timestamp: "01:23", behavior: "Clear verbal communication during explanations" },
+    ]);
     expect(mockDimensionScoreUpsert).toHaveBeenCalledWith({
       where: {
         assessmentId_dimension: {
@@ -434,7 +438,7 @@ describe("evaluateVideo", () => {
         dimension: "COMMUNICATION",
         score: 4,
         confidence: "high",
-        observableBehaviors: "Clear verbal communication during explanations",
+        observableBehaviors: expectedBehaviorsJson,
         timestamps: ["01:23", "05:45", "12:30"],
         trainableGap: false,
         rationale: "Clear communicator",
@@ -442,7 +446,7 @@ describe("evaluateVideo", () => {
       update: {
         score: 4,
         confidence: "high",
-        observableBehaviors: "Clear verbal communication during explanations",
+        observableBehaviors: expectedBehaviorsJson,
         timestamps: ["01:23", "05:45", "12:30"],
         trainableGap: false,
         rationale: "Clear communicator",

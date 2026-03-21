@@ -187,7 +187,7 @@ describe("conversation-memory", () => {
 
       expect(result).toContain("Continue the conversation naturally");
       expect(result).toContain(
-        "Don't repeat information you've already shared"
+        "Don't repeat information unless specifically asked to clarify."
       );
     });
   });
@@ -312,7 +312,7 @@ describe("conversation-memory", () => {
         coworkerMap
       );
 
-      expect(result).toContain("don't pry into their conversations");
+      expect(result).toContain("Do NOT pry into their conversations with others");
     });
   });
 });

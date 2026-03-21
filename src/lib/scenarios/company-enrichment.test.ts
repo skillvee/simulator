@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock Gemini before importing
-const mockGenerateContent = vi.fn();
+// Hoist mocks so they're available inside vi.mock factories
+const { mockGenerateContent, mockFetch } = vi.hoisted(() => ({
+  mockGenerateContent: vi.fn(),
+  mockFetch: vi.fn(),
+}));
 
 vi.mock("@/lib/ai/gemini", () => ({
   gemini: {
@@ -12,7 +15,6 @@ vi.mock("@/lib/ai/gemini", () => ({
 }));
 
 // Mock fetch globally
-const mockFetch = vi.fn();
 global.fetch = mockFetch as unknown as typeof fetch;
 
 // Import after mocks

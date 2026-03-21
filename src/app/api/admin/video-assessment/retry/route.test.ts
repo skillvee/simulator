@@ -5,6 +5,12 @@ import { VideoAssessmentStatus } from "@prisma/client";
 const mockRequireAdmin = vi.fn();
 vi.mock("@/lib/core", () => ({
   requireAdmin: () => mockRequireAdmin(),
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
 }));
 
 // Mock database

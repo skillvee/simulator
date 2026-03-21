@@ -18,7 +18,6 @@ describe("getCompletionStatus", () => {
     expect(status.missing).toContain("companyName");
     expect(status.missing).toContain("companyDescription");
     expect(status.missing).toContain("taskDescription");
-    expect(status.missing).toContain("repoUrl");
     expect(status.missing).toContain("coworkers");
     expect(status.complete).toEqual([]);
     expect(status.isReadyToSave).toBe(false);

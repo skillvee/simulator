@@ -19,7 +19,12 @@ vi.mock("@/lib/api", () => ({
 
 // Mock the useManagerAutoStart hook - source imports from @/hooks
 vi.mock("@/hooks", () => ({
-  useManagerAutoStart: vi.fn(),
+  useManagerAutoStart: vi.fn(() => ({
+    isLoading: false,
+    isTyping: false,
+    managerId: null,
+    error: null,
+  })),
 }));
 
 // Mock the useCallContext hook

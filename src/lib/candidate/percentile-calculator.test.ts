@@ -235,7 +235,7 @@ describe("calculatePercentiles", () => {
     expect(result.dimensions[AssessmentDimension.TECHNICAL_KNOWLEDGE]).toBe(0);
   });
 
-  it("should default to 50th percentile for missing dimensions", async () => {
+  it("should only include dimensions the target was scored on", async () => {
     // Target only has COMMUNICATION
     const targetAssessment = createMockVideoAssessment("va-1", "assessment-1", [
       { dimension: AssessmentDimension.COMMUNICATION, score: 4 },
@@ -254,8 +254,10 @@ describe("calculatePercentiles", () => {
 
     const result = await calculatePercentiles("assessment-1");
 
-    // PROBLEM_SOLVING not scored by target, should default to 50
-    expect(result.dimensions[AssessmentDimension.PROBLEM_SOLVING]).toBe(50);
+    // PROBLEM_SOLVING not scored by target, should not appear in results
+    expect(result.dimensions[AssessmentDimension.PROBLEM_SOLVING]).toBeUndefined();
+    // COMMUNICATION should be present
+    expect(result.dimensions[AssessmentDimension.COMMUNICATION]).toBeDefined();
   });
 
   it("should include metadata in result", async () => {

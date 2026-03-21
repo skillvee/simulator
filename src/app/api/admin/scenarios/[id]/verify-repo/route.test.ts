@@ -21,6 +21,12 @@ vi.mock("@/lib/core", () => ({
   env: {
     GITHUB_TOKEN: "mock-github-token",
   },
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
 }));
 
 // Mock global fetch
