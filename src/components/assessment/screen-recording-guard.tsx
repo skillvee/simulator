@@ -63,12 +63,16 @@ function ScreenRecordingGuardInner({
   useEffect(() => {
     if (!sessionLoaded) return;
 
-    if (state === "stopped") {
-      // Recording was previously active but stopped (page refresh, stream lost, etc.)
+    if (state === "stopped" || state === "error") {
+      // Recording was previously active but stopped, or auto-start failed (permission denied)
       setShowStoppedModal(true);
       setShowInitialModal(false);
     } else if (isRecording) {
       // Recording is active
+      setShowStoppedModal(false);
+      setShowInitialModal(false);
+    } else if (state === "requesting") {
+      // Auto-start in progress — hide all modals while browser prompts are shown
       setShowStoppedModal(false);
       setShowInitialModal(false);
     } else if (state === "idle") {

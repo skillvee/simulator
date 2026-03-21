@@ -552,19 +552,30 @@ export function ScreenRecordingProvider({
         setChunkCount(status.totalChunks);
         setScreenshotCount(status.totalScreenshots);
 
-        // DB has a prior recording — mark as stopped so the guard shows
-        // the "Recording Stopped" re-prompt instead of the initial consent.
-        setState("stopped");
-        setPermissionState("stopped");
-
         // If there was an active segment (recording interrupted mid-stream),
-        // mark it as interrupted in the DB.
+        // mark it as interrupted in the DB then auto-trigger recording.
         if (status.activeSegment) {
           await interruptRecordingSession(
             assessmentId,
             status.activeSegment.id
           );
+
+          // Auto-trigger recording — browser permission dialogs appear immediately
+          setState("requesting");
+          setSessionLoaded(true);
+          const success = await startRecording();
+          if (!success) {
+            // Permission denied or error — show retry modal via "stopped" state
+            setState("stopped");
+            setPermissionState("stopped");
+          }
+          return;
         }
+
+        // DB has a prior completed recording but no interrupted segment —
+        // mark as stopped so the guard shows the re-prompt.
+        setState("stopped");
+        setPermissionState("stopped");
       }
 
       // Also check sessionStorage for same-session interruptions
