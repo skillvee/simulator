@@ -33,3 +33,4 @@ export { CandidateInfoCard } from "./candidate-info-card";
 export { TimelineEvent as TimelineEventItem } from "./timeline-event";
 export { ConversationsTab } from "./conversations-tab";
 export { ErrorsTab } from "./errors-tab";
+export { ApiCallsTab } from "./api-calls-tab";

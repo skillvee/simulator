@@ -45,6 +45,8 @@ export default async function AssessmentTimelinePage({
           promptText: true,
           responseText: true,
           promptType: true,
+          promptVersion: true,
+          traceId: true,
         },
       },
       recordings: {

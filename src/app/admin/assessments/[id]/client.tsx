@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Clock,
   AlertTriangle,
+  Server,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,6 +34,7 @@ import {
   TimelineEventItem,
   ConversationsTab,
   ErrorsTab,
+  ApiCallsTab,
 } from "./components";
 
 // Re-export formatDuration for backwards compatibility (used in tests)
@@ -437,6 +439,13 @@ export function AssessmentTimelineClient({
               {assessment.conversations.length + assessment.voiceSessions.length}
             </Badge>
           </TabsTrigger>
+          <TabsTrigger value="api-calls" className="gap-2">
+            <Server className="h-4 w-4" />
+            API Calls
+            <Badge variant="secondary" className="ml-1 text-xs">
+              {assessment.apiCalls.length}
+            </Badge>
+          </TabsTrigger>
           <TabsTrigger value="errors" className="gap-2">
             <AlertTriangle className="h-4 w-4" />
             Errors
@@ -494,6 +503,10 @@ export function AssessmentTimelineClient({
               </div>
             )}
           </Card>
+        </TabsContent>
+
+        <TabsContent value="api-calls">
+          <ApiCallsTab apiCalls={assessment.apiCalls} />
         </TabsContent>
 
         <TabsContent value="conversations">

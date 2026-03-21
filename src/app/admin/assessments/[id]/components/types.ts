@@ -27,6 +27,8 @@ export interface SerializedApiCall {
   promptText: string;
   responseText: string | null;
   promptType: string | null;
+  promptVersion: string | null;
+  traceId: string | null;
 }
 
 export interface SerializedRecording {

@@ -57,6 +57,8 @@ const mockApiCalls: SerializedApiCall[] = [
     promptText: "prompt text",
     responseText: "response text",
     promptType: "hr_interview",
+    promptVersion: null,
+    traceId: null,
   },
   {
     id: "api-2",
@@ -72,6 +74,8 @@ const mockApiCalls: SerializedApiCall[] = [
     promptText: "prompt",
     responseText: null,
     promptType: "code_review",
+    promptVersion: null,
+    traceId: null,
   },
 ];
 
