@@ -1,8 +1,9 @@
 /**
- * API Request Schemas
+ * API Request & Response Schemas
  *
- * Zod schemas for validating API request bodies.
- * Each schema exports both the schema and the inferred TypeScript type.
+ * Zod schemas for validating API request bodies and response shapes.
+ * Response schemas serve as contracts — if a route handler changes its
+ * response shape, contract tests will fail immediately.
  */
 
 import { z } from "zod";
@@ -141,3 +142,119 @@ export const AvatarGenerateSchema = z.object({
   scenarioId: z.string().min(1, "Scenario ID is required"),
 });
 export type AvatarGenerate = z.infer<typeof AvatarGenerateSchema>;
+
+// ─── Response Schemas (API Contracts) ───────────────────────────────────────
+
+/**
+ * Wrapper for all successful API responses: { success: true, data: T }
+ */
+export function apiSuccessSchema<T extends z.ZodTypeAny>(dataSchema: T) {
+  return z.object({
+    success: z.literal(true),
+    data: dataSchema,
+  });
+}
+
+/**
+ * Standard error response shape
+ */
+export const ApiErrorResponseSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+  code: z.string().optional(),
+  details: z.unknown().optional(),
+});
+
+/**
+ * POST /api/chat — SSE stream chunk event
+ */
+export const ChatStreamChunkSchema = z.object({
+  type: z.literal("chunk"),
+  text: z.string(),
+});
+
+/**
+ * POST /api/chat — SSE stream done event
+ */
+export const ChatStreamDoneSchema = z.object({
+  type: z.literal("done"),
+  timestamp: z.string(),
+  prSubmitted: z.boolean(),
+  defenseCallRequired: z.boolean(),
+});
+
+/**
+ * GET /api/chat — response data shape
+ */
+export const ChatGetResponseSchema = apiSuccessSchema(
+  z.object({
+    messages: z.array(
+      z.object({
+        role: z.string(),
+        text: z.string(),
+        timestamp: z.string(),
+      })
+    ),
+  })
+);
+
+/**
+ * POST /api/assessment/complete — response data shape
+ */
+export const AssessmentCompleteResponseSchema = apiSuccessSchema(
+  z.object({
+    assessment: z.object({
+      id: z.string(),
+      status: z.string(),
+      prUrl: z.string().nullable(),
+      startedAt: z.union([z.string(), z.date()]),
+    }),
+    timing: z.object({
+      startedAt: z.string(),
+      completedWorkingAt: z.string(),
+      workingDurationSeconds: z.number(),
+    }),
+  })
+);
+
+/**
+ * POST /api/assessment/create — response data shape
+ */
+export const AssessmentCreateResponseSchema = apiSuccessSchema(
+  z.object({
+    assessment: z.object({
+      id: z.string(),
+      userId: z.string(),
+      scenarioId: z.string(),
+      status: z.string(),
+    }).passthrough(), // Prisma model has additional fields
+    isExisting: z.boolean(),
+  })
+);
+
+/**
+ * POST /api/call/token — response data shape
+ */
+export const CallTokenResponseSchema = apiSuccessSchema(
+  z.object({
+    token: z.string(),
+    assessmentId: z.string(),
+    coworkerId: z.string(),
+    coworkerName: z.string(),
+    coworkerRole: z.string(),
+    isDefenseCall: z.boolean(),
+  })
+);
+
+/**
+ * POST /api/recording — response data shape
+ */
+export const RecordingUploadResponseSchema = apiSuccessSchema(
+  z.object({
+    path: z.string(),
+    url: z.string(),
+    type: z.enum(["video", "screenshot"]),
+    chunkIndex: z.number().optional(),
+    segmentId: z.string().nullable().optional(),
+  })
+);

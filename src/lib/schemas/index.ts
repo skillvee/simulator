@@ -26,4 +26,14 @@ export {
   type ScenarioBuilderRequest,
   AvatarGenerateSchema,
   type AvatarGenerate,
+  // Response schemas (API contracts)
+  apiSuccessSchema,
+  ApiErrorResponseSchema,
+  ChatStreamChunkSchema,
+  ChatStreamDoneSchema,
+  ChatGetResponseSchema,
+  AssessmentCompleteResponseSchema,
+  AssessmentCreateResponseSchema,
+  CallTokenResponseSchema,
+  RecordingUploadResponseSchema,
 } from "./api";
