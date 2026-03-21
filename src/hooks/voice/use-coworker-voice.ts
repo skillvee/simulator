@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { createLogger } from "@/lib/core";
 import { useVoiceBase } from "./use-voice-base";
+
+const logger = createLogger("client:hooks:coworker-voice");
 import type { VoiceConnectionState, VoiceBaseOptions } from "./types";
 import type { AudioPermissionState } from "@/lib/media";
 import type { TranscriptMessage } from "@/lib/ai";
@@ -90,7 +93,7 @@ export function useCoworkerVoice({
         // Clear saved progress after successful completion
         base.clearSavedProgress();
       } catch (err) {
-        console.error("Error saving transcript:", err);
+        logger.error("Error saving transcript", { err });
       }
     }
   }, [assessmentId, coworkerId, base]);

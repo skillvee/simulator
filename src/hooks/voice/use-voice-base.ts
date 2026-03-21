@@ -25,12 +25,15 @@ import {
   clearProgress,
   type CategorizedError,
 } from "@/lib/core";
+import { createLogger } from "@/lib/core";
 import type {
   VoiceConnectionState,
   VoiceBaseOptions,
   VoiceBaseReturn,
   VoiceConfig,
 } from "./types";
+
+const logger = createLogger("client:hooks:voice-base");
 
 const DEFAULT_MAX_RETRIES = 3;
 
@@ -179,7 +182,7 @@ export function useVoiceBase({
         try {
           await playAudioChunk(audioData);
         } catch (err) {
-          console.error("Error playing audio:", err);
+          logger.error("Error playing audio", { err });
         }
       }
     }
@@ -261,7 +264,7 @@ export function useVoiceBase({
               },
             });
           } catch (err) {
-            console.error("Error sending audio:", err);
+            logger.error("Error sending audio", { err });
           }
         }
       };
@@ -340,7 +343,7 @@ export function useVoiceBase({
           },
           onmessage: handleServerMessage,
           onerror: (e: ErrorEvent) => {
-            console.error("Gemini Live error:", e);
+            logger.error("Gemini Live error", { error: e });
             setError(e.message || "Connection error");
             updateConnectionState("error");
             onError?.(e.message || "Connection error");
@@ -364,7 +367,7 @@ export function useVoiceBase({
         turnComplete: true,
       });
     } catch (err) {
-      console.error("Connection error:", err);
+      logger.error("Connection error", { err });
       const catError = categorizeError(err);
       setCategorizedError(catError);
       setError(catError.userMessage);

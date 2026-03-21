@@ -4,6 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import type { AnalyticsData, TimePeriod, DailyCount } from "@/lib/core";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("client:admin:analytics-dashboard");
 
 interface AnalyticsDashboardProps {
   initialData: AnalyticsData;
@@ -23,7 +26,7 @@ export function AnalyticsDashboard({ initialData }: AnalyticsDashboardProps) {
         setData(newData);
       }
     } catch (error) {
-      console.error("Failed to fetch analytics:", error);
+      logger.error("Failed to fetch analytics", { error });
     } finally {
       setIsLoading(false);
     }

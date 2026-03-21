@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { requireCandidate } from "@/lib/core";
+import { requireCandidate, createLogger } from "@/lib/core";
+
+const logger = createLogger("server:app:results-page");
 import { db } from "@/server/db";
 import { transformToCandidateResults } from "@/lib/candidate/results-transformer";
 import { CandidateSidebar } from "@/app/candidate/dashboard/components/sidebar";
@@ -60,7 +62,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         report = data.data.report;
       }
     } catch (error) {
-      console.error("Error generating report on results page:", error);
+      logger.error("Error generating report on results page", { error });
     }
   }
 

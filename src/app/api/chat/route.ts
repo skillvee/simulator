@@ -22,6 +22,9 @@ import { ChatRequestSchema } from "@/lib/schemas";
 import { isValidPrUrl } from "@/lib/external";
 import { sanitizeForStorage } from "@/lib/sanitization";
 import { isManager } from "@/lib/utils/coworker";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:chat");
 
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
@@ -293,7 +296,7 @@ export async function POST(request: Request) {
           }
         }
       } catch (err) {
-        console.error("Gemini stream error:", err);
+        logger.error("Gemini stream error", { err });
         if (!responseText) {
           responseText = "Sorry, I couldn't respond right now. Try again?";
         }
@@ -345,7 +348,7 @@ export async function POST(request: Request) {
 
       // Wait for DB save before closing the stream
       await savePromise.catch((err: unknown) =>
-        console.error("Failed to save conversation:", err)
+        logger.error("Failed to save conversation", { err })
       );
 
       controller.close();

@@ -15,6 +15,9 @@ import { buildVoicePrompt, buildDefensePrompt, type DefenseContext, buildKickoff
 import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:call:token");
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -229,7 +232,7 @@ export async function POST(request: Request) {
       isDefenseCall,
     });
   } catch (err) {
-    console.error("Error generating call token:", err);
+    logger.error("Error generating call token", { err });
     return error("Failed to initialize call", 500);
   }
 }

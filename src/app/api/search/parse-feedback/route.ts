@@ -10,6 +10,9 @@
 import { NextRequest } from "next/server";
 import { success, error } from "@/lib/api";
 import { parseFeedback } from "@/lib/candidate";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:search:parse-feedback");
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     return success(result);
   } catch (err) {
-    console.error("[parse-feedback] Error:", err);
+    logger.error("Parse feedback error", { err });
     return error("Failed to parse feedback", 500);
   }
 }

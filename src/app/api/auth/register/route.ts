@@ -3,6 +3,9 @@ import { db } from "@/server/db";
 import { Prisma } from "@prisma/client";
 import { validateRequest, success, error } from "@/lib/api";
 import { RegisterRequestSchema } from "@/lib/schemas";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:auth:register");
 
 export async function POST(request: Request) {
   // Validate request body using Zod schema
@@ -52,7 +55,7 @@ export async function POST(request: Request) {
       throw err;
     }
   } catch (err) {
-    console.error("Registration error:", err);
+    logger.error("Registration error", { err });
     return error("Internal server error", 500);
   }
 }

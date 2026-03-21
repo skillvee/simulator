@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { processImmediateDeletion } from "@/lib/core/data-deletion";
 import { success, error } from "@/lib/api";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:user:delete");
 
 /**
  * POST /api/user/delete
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
     const result = await processImmediateDeletion(session.user.id);
 
     if (!result.success) {
-      console.error("Deletion errors:", result.errors);
+      logger.error("Deletion errors", { errors: result.errors });
       return error("Deletion partially failed", 500);
     }
 
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
       deletedItems: result.deletedItems,
     });
   } catch (err) {
-    console.error("Error executing deletion:", err);
+    logger.error("Error executing deletion", { err });
     return error("Failed to delete account", 500);
   }
 }

@@ -15,7 +15,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "@/lib/api";
 import { getProactiveMessages } from "@/lib/ai/coworker-persona";
+import { createLogger } from "@/lib/core";
 import type { ChatMessage } from "@/types";
+
+const logger = createLogger("client:hooks:proactive-messages");
 
 interface Coworker {
   id: string;
@@ -72,7 +75,7 @@ export function useProactiveMessages({
 
     // Skip if user is currently chatting with this coworker
     if (selectedCoworkerId === coworkerId) {
-      console.log(`[Proactive] Skipping message from ${coworkerName} - user is already chatting with them`);
+      logger.info(`Skipping message from ${coworkerName} - user is already chatting with them`);
       return;
     }
 
@@ -102,9 +105,9 @@ export function useProactiveMessages({
       // Notify parent to update unread count and play sound
       onProactiveMessage(coworkerId, chatMessage);
 
-      console.log(`[Proactive] Delivered message from ${coworkerName}: "${messageText.slice(0, 50)}..."`);
+      logger.info(`Delivered message from ${coworkerName}: "${messageText.slice(0, 50)}..."`);
     } catch (error) {
-      console.error(`[Proactive] Failed to deliver message from ${coworkerName}:`, error);
+      logger.error(`Failed to deliver message from ${coworkerName}:`, { error });
     }
   }, [assessmentId, selectedCoworkerId, onProactiveMessage]);
 
@@ -145,7 +148,7 @@ export function useProactiveMessages({
 
     setScheduledMessages(scheduled);
 
-    console.log(`[Proactive] Scheduled ${scheduled.length} messages for delivery`);
+    logger.info(`Scheduled ${scheduled.length} messages for delivery`);
 
     return () => {
       isMountedRef.current = false;

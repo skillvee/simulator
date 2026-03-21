@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { createLogger } from "@/lib/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const logger = createLogger("client:app:invite");
 import { Bot, Sparkles, Loader2 } from "lucide-react";
 
 interface ScenarioData {
@@ -68,7 +71,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
 
         router.push(`/assessments/${data.data.assessment.id}/welcome`);
       } catch (err) {
-        console.error("[invite] Assessment create failed:", err);
+        logger.error("Assessment create failed", { err });
         setError("An error occurred. Please try again.");
         setIsLoading(false);
         hasStartedRedirect.current = false;

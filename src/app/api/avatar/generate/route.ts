@@ -13,6 +13,9 @@ import { generateAvatarsForScenario } from "@/lib/avatar";
 import { db } from "@/server/db";
 import { success, error, validateRequest } from "@/lib/api";
 import { AvatarGenerateSchema } from "@/lib/schemas";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:avatar:generate");
 
 interface SessionUser {
   id: string;
@@ -74,7 +77,7 @@ export async function POST(request: Request) {
       results,
     });
   } catch (err) {
-    console.error("[Avatar API] Generation failed:", err);
+    logger.error("Avatar generation failed", { err });
     return error("Avatar generation failed", 500);
   }
 }

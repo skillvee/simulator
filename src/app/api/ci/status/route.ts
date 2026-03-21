@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { fetchPrCiStatus, type PrCiStatus } from "@/lib/external";
 import { Prisma } from "@prisma/client";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:ci-status");
 
 /**
  * GET /api/ci/status
@@ -77,7 +80,7 @@ export async function GET(request: Request) {
       cached: false,
     });
   } catch (err) {
-    console.error("Error fetching CI status:", err);
+    logger.error("Error fetching CI status", { err });
     return error("Failed to fetch CI status", 500);
   }
 }
@@ -139,7 +142,7 @@ export async function POST(request: Request) {
       refreshed: true,
     });
   } catch (err) {
-    console.error("Error refreshing CI status:", err);
+    logger.error("Error refreshing CI status", { err });
     return error("Failed to refresh CI status", 500);
   }
 }

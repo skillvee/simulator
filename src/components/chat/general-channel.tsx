@@ -2,9 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send } from "lucide-react";
+import { createLogger } from "@/lib/core";
 import { CoworkerAvatar } from "./coworker-avatar";
 import { Button } from "@/components/ui/button";
 import { markUserInteraction } from "@/lib/sounds";
+
+const logger = createLogger("client:chat:general-channel");
 
 export interface ChannelMessage {
   senderName: string;
@@ -97,7 +100,7 @@ export function GeneralChannel({
         setIsSending(false);
       }, 1500);
     } catch (error) {
-      console.error("Failed to send message:", error);
+      logger.error("Failed to send message", { error });
       setIsSending(false);
     }
   };

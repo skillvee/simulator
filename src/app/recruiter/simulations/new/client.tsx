@@ -38,6 +38,9 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("client:recruiter:new-simulation");
 
 type Step = "entry" | "guided" | "generating" | "preview";
 
@@ -180,7 +183,7 @@ export function RecruiterScenarioBuilderClient() {
         }
       })
       .catch((err) => {
-        console.error("Failed to fetch archetypes:", err);
+        logger.error("Failed to fetch archetypes", { err });
       });
   }, []);
 
@@ -215,7 +218,7 @@ export function RecruiterScenarioBuilderClient() {
         creationLogIdRef.current = result.logId;
       }
     } catch (err) {
-      console.error("Failed to create creation log:", err);
+      logger.error("Failed to create creation log", { err });
     }
   };
 
@@ -240,7 +243,7 @@ export function RecruiterScenarioBuilderClient() {
         body: JSON.stringify({ logId, ...data }),
       });
     } catch (err) {
-      console.error("Failed to update creation log:", err);
+      logger.error("Failed to update creation log", { err });
     }
   };
 
@@ -327,7 +330,7 @@ export function RecruiterScenarioBuilderClient() {
       await generatePreviewContent(parsedData);
 
     } catch (err) {
-      console.error("Failed to parse job description:", err);
+      logger.error("Failed to parse job description", { err });
       const errorMsg = err instanceof Error ? err.message : "Failed to analyze job description";
       await updateLog({
         status: "FAILED",
@@ -447,7 +450,7 @@ export function RecruiterScenarioBuilderClient() {
       await generatePreviewContent(guidedData);
 
     } catch (err) {
-      console.error("Failed to process guided form:", err);
+      logger.error("Failed to process guided form", { err });
       const errorMsg = err instanceof Error ? err.message : "Failed to process your input";
       await updateLog({
         status: "FAILED",
@@ -540,7 +543,7 @@ export function RecruiterScenarioBuilderClient() {
         throw new Error("Failed to create team members");
       } else if (failedCoworkers.length > 0) {
         // Partial success - show warning but continue
-        console.warn(`${failedCoworkers.length} coworker(s) failed to create:`, failedCoworkers);
+        logger.warn("Some coworkers failed to create", { count: failedCoworkers.length, failedCoworkers });
       }
 
       setSaveProgress("Almost done...");
@@ -551,7 +554,7 @@ export function RecruiterScenarioBuilderClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scenarioId: scenario.id }),
       }).catch((err) => {
-        console.error("Avatar generation failed (non-blocking):", err);
+        logger.error("Avatar generation failed (non-blocking)", { err });
       });
 
       // Step 5: Trigger repo provisioning (background — errors logged)
@@ -561,13 +564,10 @@ export function RecruiterScenarioBuilderClient() {
       }).then(async (res) => {
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          console.error(
-            `Repo provisioning failed (${res.status}):`,
-            data.details || data.error || "Unknown error"
-          );
+          logger.error("Repo provisioning failed", { status: res.status, details: data.details || data.error || "Unknown error" });
         }
       }).catch((err) => {
-        console.error("Repo provisioning network error:", err);
+        logger.error("Repo provisioning network error", { err });
       });
 
       // Step 6: Mark log as completed and redirect
@@ -580,7 +580,7 @@ export function RecruiterScenarioBuilderClient() {
       router.push(`/recruiter/simulations/${scenario.id}/settings?success=true`);
 
     } catch (err) {
-      console.error("Failed to save simulation:", err);
+      logger.error("Failed to save simulation", { err });
       const errorMsg = err instanceof Error ? err.message : "Failed to save simulation. Please try again.";
       await updateLog({
         status: "FAILED",
@@ -681,7 +681,7 @@ export function RecruiterScenarioBuilderClient() {
       setStep("preview");
       setIsLoading(false);
     } catch (err) {
-      console.error("Failed to generate preview content:", err);
+      logger.error("Failed to generate preview content", { err });
       const errorMsg = err instanceof Error ? err.message : "Generation failed";
       // Only update log if it wasn't already updated by the specific failure handler above
       if (creationLogIdRef.current) {

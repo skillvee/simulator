@@ -1,6 +1,9 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:admin:verify-repo");
 
 interface SessionUser {
   id: string;
@@ -164,7 +167,7 @@ export async function GET(request: Request, context: RouteContext) {
 
     return success(result);
   } catch (err) {
-    console.error("Repository verification error:", err);
+    logger.error("Repository verification error", { err });
     return success({
       ...result,
       error: "Failed to verify repository",

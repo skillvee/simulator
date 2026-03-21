@@ -2,6 +2,9 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error, validateRequest } from "@/lib/api";
 import { ScenarioCreateSchema } from "@/lib/schemas";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:recruiter:simulations");
 
 interface SessionUser {
   id: string;
@@ -61,7 +64,7 @@ export async function GET() {
 
     return success({ simulations });
   } catch (err) {
-    console.error("Failed to fetch simulations:", err);
+    logger.error("Failed to fetch simulations", { err });
     return error("Failed to fetch simulations", 500);
   }
 }

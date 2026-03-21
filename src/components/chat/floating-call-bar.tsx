@@ -18,8 +18,11 @@ import {
 } from "@/lib/media";
 import { playCallRingSound } from "@/lib/sounds";
 import type { TranscriptMessage } from "@/lib/ai";
+import { createLogger } from "@/lib/core";
 import { CoworkerAvatar } from "./coworker-avatar";
 import { Button } from "@/components/ui/button";
+
+const logger = createLogger("client:chat:floating-call-bar");
 
 export type CallState =
   | "idle"
@@ -128,7 +131,7 @@ export function FloatingCallBar({
         try {
           await playAudioChunk(audioData);
         } catch (err) {
-          console.error("Error playing audio:", err);
+          logger.error("Error playing audio", { err });
         }
       }
     }
@@ -209,7 +212,7 @@ export function FloatingCallBar({
               },
             });
           } catch (err) {
-            console.error("Error sending audio:", err);
+            logger.error("Error sending audio", { err });
           }
         }
       };
@@ -300,7 +303,7 @@ export function FloatingCallBar({
           },
           onmessage: handleServerMessage,
           onerror: (e: ErrorEvent) => {
-            console.error("Gemini Live error:", e);
+            logger.error("Gemini Live error", { error: e });
             setError(e.message || "Connection error");
             setCallState("error");
             // Stop ring sound on error
@@ -335,7 +338,7 @@ export function FloatingCallBar({
       });
     } catch (err) {
       isConnectingRef.current = false;
-      console.error("Connection error:", err);
+      logger.error("Connection error", { err });
       const errorMessage =
         err instanceof Error ? err.message : "Connection failed";
       setError(errorMessage);
@@ -412,7 +415,7 @@ export function FloatingCallBar({
           }),
         });
       } catch (err) {
-        console.error("Error saving transcript:", err);
+        logger.error("Error saving transcript", { err });
       }
     }
 

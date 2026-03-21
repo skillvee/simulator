@@ -1,6 +1,9 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:user:delete-request");
 
 /**
  * POST /api/user/delete-request
@@ -58,7 +61,7 @@ export async function POST() {
       status: "pending",
     });
   } catch (err) {
-    console.error("Error processing deletion request:", err);
+    logger.error("Error processing deletion request", { err });
     return error("Failed to process deletion request", 500);
   }
 }
@@ -106,7 +109,7 @@ export async function GET() {
       message: "No deletion request on file",
     });
   } catch (err) {
-    console.error("Error checking deletion status:", err);
+    logger.error("Error checking deletion status", { err });
     return error("Failed to check deletion status", 500);
   }
 }
@@ -153,7 +156,7 @@ export async function DELETE() {
       message: "Data deletion request cancelled",
     });
   } catch (err) {
-    console.error("Error cancelling deletion request:", err);
+    logger.error("Error cancelling deletion request", { err });
     return error("Failed to cancel deletion request", 500);
   }
 }

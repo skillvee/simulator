@@ -26,7 +26,9 @@ import {
 } from "@/lib/media";
 import { CanvasCompositor } from "@/lib/media";
 import { VideoRecorder, checkMediaRecorderSupport } from "@/lib/media";
-import { shouldSkipScreenRecording } from "@/lib/core";
+import { shouldSkipScreenRecording, createLogger } from "@/lib/core";
+
+const logger = createLogger("client:contexts:screen-recording");
 
 export type ScreenRecordingState =
   | "idle"
@@ -95,13 +97,13 @@ async function uploadRecordingData(
 
     if (!response.ok) {
       const error = await response.json();
-      console.error("Upload failed:", error);
+      logger.error("Upload failed", { error });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("Upload error:", error);
+    logger.error("Upload error", { error });
     return false;
   }
 }
@@ -401,7 +403,7 @@ export function ScreenRecordingProvider({
           );
         })
         .catch((err) => {
-          console.warn("Failed to capture webcam profile snapshot:", err);
+          logger.warn("Failed to capture webcam profile snapshot", { err });
         });
 
       // Step 5: Create and start video recorder with the composite stream
@@ -440,7 +442,7 @@ export function ScreenRecordingProvider({
             );
           },
           onError: (err) => {
-            console.error("Video recorder error:", err);
+            logger.error("Video recorder error", { err });
           },
         }
       );

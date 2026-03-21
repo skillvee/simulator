@@ -11,9 +11,12 @@ import { DecorativeChat } from "@/components/chat/decorative-chat";
 import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
 import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
 import { playMessageSound } from "@/lib/sounds";
+import { createLogger } from "@/lib/core";
 import type { ChatMessage } from "@/types";
 import type { ChannelMessage } from "@/lib/ai/coworker-persona";
 import { isManager } from "@/lib/utils/coworker";
+
+const logger = createLogger("client:app:work-page");
 
 interface Coworker {
   id: string;
@@ -91,12 +94,12 @@ export function WorkPageClient({
     // Play notification sound
     playMessageSound();
 
-    console.log(`[WorkPage] Proactive message from ${coworkerId}: ${message.text.slice(0, 50)}...`);
+    logger.info("Proactive message received", { coworkerId, preview: message.text.slice(0, 50) });
   }, []);
 
   // Handle ambient messages in #general channel
   const handleAmbientMessage = useCallback((message: ChannelMessage) => {
-    console.log(`[WorkPage] Ambient message in #general: ${message.text.slice(0, 50)}...`);
+    logger.info("Ambient message in #general", { preview: message.text.slice(0, 50) });
 
     // Add to ambient messages state
     setAmbientMessages((prev) => [...prev, message]);
@@ -161,13 +164,13 @@ export function WorkPageClient({
       });
 
       if (!response.ok) {
-        console.error("Failed to finalize assessment:", await response.text());
+        logger.error("Failed to finalize assessment", { response: await response.text() });
       }
 
       // Navigate to results page
       router.push(`/assessments/${assessmentId}/results`);
     } catch (error) {
-      console.error("Error completing defense:", error);
+      logger.error("Error completing defense", { error });
       // Still navigate to results even if finalization fails
       // The results page will handle generating the report if needed
       router.push(`/assessments/${assessmentId}/results`);

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { createLogger } from "@/lib/core";
 import { useVoiceBase } from "./use-voice-base";
+
+const logger = createLogger("client:hooks:defense-call");
 import type { VoiceConnectionState, VoiceBaseOptions } from "./types";
 import type { AudioPermissionState } from "@/lib/media";
 import type { TranscriptMessage } from "@/lib/ai";
@@ -103,7 +106,7 @@ export function useDefenseCall({
           }),
         });
       } catch (err) {
-        console.error("Error saving transcript:", err);
+        logger.error("Error saving transcript", { err });
       }
     }
 

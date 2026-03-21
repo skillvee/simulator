@@ -46,6 +46,9 @@ import { AssessmentDimension } from "@prisma/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("client:app:candidate-search");
 
 // ============================================================================
 // Types
@@ -368,7 +371,7 @@ export function CandidateSearchClient() {
       });
       setExtraction(data);
     } catch (err) {
-      console.error("Entity extraction failed:", err);
+      logger.error("Entity extraction failed", { err });
     } finally {
       setIsExtracting(false);
     }
@@ -535,7 +538,7 @@ export function CandidateSearchClient() {
         }
       }
     } catch (error) {
-      console.error("Failed to parse feedback:", error);
+      logger.error("Failed to parse feedback", { error });
     }
 
     // Remove the rejected candidate from results

@@ -5,7 +5,10 @@ import Link from "next/link";
 import { ChevronLeft, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { createLogger } from "@/lib/core";
 import type { CandidateResultsData } from "@/types";
+
+const logger = createLogger("client:app:results");
 import { CandidateRadarChartOverview } from "./components/radar-chart-overview";
 import { CandidateStrengthsGrowthSection } from "./components/strengths-growth-section";
 import { CandidateCoreDimensionsSection } from "./components/core-dimensions-section";
@@ -78,7 +81,7 @@ export function CandidateResultsClient({
         window.location.reload();
       }
     } catch (error) {
-      console.error("Error generating report:", error);
+      logger.error("Error generating report", { error });
     } finally {
       setIsGenerating(false);
     }

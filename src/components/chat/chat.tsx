@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Headphones } from "lucide-react";
 import { api, ApiClientError } from "@/lib/api";
+import { createLogger } from "@/lib/core";
 import { useCallContext } from "./slack-layout";
 import { CoworkerAvatar } from "./coworker-avatar";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { useManagerAutoStart } from "@/hooks";
 import { playMessageSound, markUserInteraction } from "@/lib/sounds";
 import type { ChatMessage, MessageReaction } from "@/types";
 import { isManager } from "@/lib/utils/coworker";
+
+const logger = createLogger("client:chat:chat");
 
 // Track which coworkers have already had sequential message reveal
 // Module-level so it persists across remounts within the same session
@@ -283,7 +286,7 @@ export function Chat({
         }
         setIsLoading(false);
       } catch (err) {
-        console.error("Failed to load chat history:", err);
+        logger.error("Failed to load chat history", { err });
         historyLoadedRef.current = null; // Allow retry on error
         setIsLoading(false);
       }
@@ -485,9 +488,9 @@ export function Chat({
         (m) => m.timestamp !== "__streaming__" && m !== userMessage
       ));
       if (err instanceof ApiClientError) {
-        console.error("Failed to send message:", err.message);
+        logger.error("Failed to send message", { error: err.message });
       } else {
-        console.error("Failed to send message:", err);
+        logger.error("Failed to send message", { err });
       }
     } finally {
       setIsSending(false);

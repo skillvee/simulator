@@ -3,6 +3,9 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:call:transcript");
 
 const transcriptSchema = z.object({
   assessmentId: z.string(),
@@ -102,7 +105,7 @@ export async function POST(request: Request) {
 
     return success({});
   } catch (err) {
-    console.error("Error saving transcript:", err);
+    logger.error("Error saving transcript", { err });
     return error("Failed to save transcript", 500);
   }
 }
@@ -148,7 +151,7 @@ export async function GET(request: Request) {
       transcript: conversation?.transcript || [],
     });
   } catch (err) {
-    console.error("Error fetching transcript:", err);
+    logger.error("Error fetching transcript", { err });
     return error("Failed to fetch transcript", 500);
   }
 }

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("client:admin:copy-button");
 
 interface CopyButtonProps {
   text: string;
@@ -19,7 +22,7 @@ export function CopyButton({ text, label, testId }: CopyButtonProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err);
+      logger.error("Failed to copy", { err });
     }
   };
 

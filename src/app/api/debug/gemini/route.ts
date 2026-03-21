@@ -1,7 +1,9 @@
 import { success, error } from "@/lib/api";
 import { auth } from "@/auth";
 import { GoogleGenAI, Modality } from "@google/genai";
-import { env } from "@/lib/core";
+import { env, createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:debug:gemini");
 
 // Debug endpoint to test Gemini Live connection
 export async function GET() {
@@ -29,7 +31,7 @@ export async function GET() {
       },
     };
   } catch (err) {
-    console.error("Debug: API key check failed:", err);
+    logger.error("API key check failed", { err });
     diagnostics.tests = {
       ...(diagnostics.tests as object),
       apiKeyConfigured: {
@@ -81,7 +83,7 @@ export async function GET() {
         },
       };
     } catch (tokenError) {
-      console.error("Debug: Token generation failed:", tokenError);
+      logger.error("Token generation failed", { error: tokenError });
       diagnostics.tests = {
         ...(diagnostics.tests as object),
         tokenGeneration: {
@@ -91,7 +93,7 @@ export async function GET() {
       };
     }
   } catch (clientError) {
-    console.error("Debug: Client initialization failed:", clientError);
+    logger.error("Client initialization failed", { error: clientError });
     diagnostics.tests = {
       ...(diagnostics.tests as object),
       clientInitialized: {
@@ -125,7 +127,7 @@ export async function GET() {
       },
     };
   } catch (modelError) {
-    console.error("Debug: Could not list models:", modelError);
+    logger.error("Could not list models", { error: modelError });
     diagnostics.tests = {
       ...(diagnostics.tests as object),
       availableModels: {

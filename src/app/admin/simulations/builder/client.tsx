@@ -12,6 +12,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, FileQuestion } from "lucide-react";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("client:admin:simulation-builder");
 
 export function ScenarioBuilderClient() {
   const router = useRouter();
@@ -43,7 +46,7 @@ export function ScenarioBuilderClient() {
           setError("Failed to start the scenario builder");
         }
       } catch (err) {
-        console.error("Failed to load greeting:", err);
+        logger.error("Failed to load greeting", { err });
         setError("Failed to connect to the scenario builder");
       } finally {
         setIsLoading(false);
@@ -112,7 +115,7 @@ export function ScenarioBuilderClient() {
       // Remove the optimistic message on error
       setMessages((prev) => prev.slice(0, -1));
       setError("Failed to send message");
-      console.error("Failed to send message:", err);
+      logger.error("Failed to send message", { err });
     } finally {
       setIsSending(false);
     }
@@ -192,7 +195,7 @@ export function ScenarioBuilderClient() {
           );
 
           if (!coworkerResponse.ok) {
-            console.error("Failed to create coworker:", coworker.name);
+            logger.error("Failed to create coworker", { name: coworker.name });
           }
         }
       }
@@ -205,13 +208,13 @@ export function ScenarioBuilderClient() {
         body: JSON.stringify({ scenarioId: scenario.id }),
       }).catch((err) => {
         // Log but don't block navigation
-        console.error("Avatar generation trigger failed:", err);
+        logger.error("Avatar generation trigger failed", { err });
       });
 
       // Navigate to the scenario detail/edit page
       router.push(`/admin/simulations`);
     } catch (err) {
-      console.error("Failed to save scenario:", err);
+      logger.error("Failed to save scenario", { err });
       setError(err instanceof Error ? err.message : "Failed to save scenario");
     } finally {
       setIsSaving(false);

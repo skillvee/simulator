@@ -15,6 +15,9 @@ import {
   mapJobTitleToArchetype,
   inferSeniorityFromYears,
 } from "@/lib/candidate";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("server:api:search:extract");
 
 /**
  * POST /api/search/extract
@@ -60,7 +63,7 @@ export async function POST(request: NextRequest) {
       processingTimeMs: result.processingTimeMs,
     });
   } catch (err) {
-    console.error("Entity extraction error:", err);
+    logger.error("Entity extraction error", { err });
     return error("Internal server error", 500);
   }
 }
