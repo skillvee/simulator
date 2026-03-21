@@ -10,6 +10,7 @@ import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { DecorativeChat } from "@/components/chat/decorative-chat";
 import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
 import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
+import { useCandidateEvents } from "@/hooks/use-candidate-events";
 import { playMessageSound } from "@/lib/sounds";
 import { createLogger } from "@/lib/core";
 import type { ChatMessage } from "@/types";
@@ -112,6 +113,9 @@ export function WorkPageClient({
     // Play notification sound
     playMessageSound();
   }, []);
+
+  // Track candidate interactions (tab switches, paste, copy, idle)
+  useCandidateEvents(assessmentId);
 
   // Initialize proactive messages hook
   useProactiveMessages({
