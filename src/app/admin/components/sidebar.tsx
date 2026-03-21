@@ -22,6 +22,7 @@ import {
   LogOut,
   ChevronsUpDown,
   ActivitySquare,
+  AlertTriangle,
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -41,6 +42,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
     { href: "/admin/creation-logs", label: "Creation Logs", icon: ActivitySquare },
     { href: "/admin/assessments", label: "Assessments", icon: ClipboardCheck },
     { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/errors", label: "Errors", icon: AlertTriangle },
   ];
 
   const isActive = (href: string, exact?: boolean) => {
