@@ -4,7 +4,10 @@ import {
   getAnalytics,
   TimePeriodSchema,
   type TimePeriod,
+  createLogger,
 } from "@/lib/core";
+
+const logger = createLogger("api:admin:analytics");
 import { success, error } from "@/lib/api";
 
 /**
@@ -51,7 +54,7 @@ export async function GET(request: Request) {
     const analytics = await getAnalytics(period);
     return success(analytics);
   } catch (err) {
-    console.error("[Analytics API Error]", err);
+    logger.error("Analytics API error", { error: err instanceof Error ? err.message : String(err) });
     return error("Failed to fetch analytics", 500);
   }
 }

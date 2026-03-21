@@ -8,7 +8,9 @@
  * @since 2026-01-17
  */
 
-import { requireAdmin } from "@/lib/core";
+import { requireAdmin, createLogger } from "@/lib/core";
+
+const logger = createLogger("api:admin:retry");
 import { db } from "@/server/db";
 import { AssessmentStatus, Prisma } from "@prisma/client";
 import {
@@ -136,22 +138,22 @@ export async function POST(request: Request) {
         });
 
         if (!videoAssessmentResult.success) {
-          console.warn(
-            `Video assessment trigger warning for retry ${newAssessment.id}:`,
-            videoAssessmentResult.error
+          logger.warn(
+            `Video assessment trigger warning for retry ${newAssessment.id}`,
+            { error: videoAssessmentResult.error }
           );
         }
       } catch (err) {
-        console.warn(
-          `Video assessment trigger error for retry ${newAssessment.id}:`,
-          err
+        logger.warn(
+          `Video assessment trigger error for retry ${newAssessment.id}`,
+          { error: err instanceof Error ? err.message : String(err) }
         );
         // Don't fail the reassessment if video assessment trigger fails
       }
     }
 
-    console.log(
-      `[Admin] Assessment retry initiated: ${assessmentId} -> ${newAssessment.id}`
+    logger.info(
+      `Assessment retry initiated: ${assessmentId} -> ${newAssessment.id}`
     );
 
     return success({
@@ -169,7 +171,7 @@ export async function POST(request: Request) {
           },
     });
   } catch (err) {
-    console.error("Error creating reassessment:", err);
+    logger.error("Error creating reassessment", { error: err instanceof Error ? err.message : String(err) });
 
     // Check if it's an auth error from requireAdmin
     if (err instanceof Error && err.message.includes("Unauthorized")) {

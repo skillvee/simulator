@@ -1,4 +1,6 @@
-import { requireAdmin } from "@/lib/core";
+import { requireAdmin, createLogger } from "@/lib/core";
+
+const logger = createLogger("api:admin:video-retry");
 import { db } from "@/server/db";
 import {
   retryVideoAssessment,
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
         : "Video assessment retry initiated",
     });
   } catch (err) {
-    console.error("Error retrying video assessment:", err);
+    logger.error("Error retrying video assessment", { error: err instanceof Error ? err.message : String(err) });
     return error("Internal server error", 500);
   }
 }
@@ -129,7 +131,7 @@ export async function GET() {
       count: failedAssessments.length,
     });
   } catch (err) {
-    console.error("Error listing failed video assessments:", err);
+    logger.error("Error listing failed video assessments", { error: err instanceof Error ? err.message : String(err) });
     return error("Internal server error", 500);
   }
 }

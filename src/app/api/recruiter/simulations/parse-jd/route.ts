@@ -1,12 +1,15 @@
 import { z } from "zod";
 import { auth } from "@/auth";
 import { success, error, validationError } from "@/lib/api";
+import { createLogger } from "@/lib/core";
 import { gemini } from "@/lib/ai/gemini";
 import {
   JD_PARSER_PROMPT,
   JD_PARSER_PROMPT_VERSION,
 } from "@/prompts/recruiter/jd-parser";
 import type { ParseJDResponse } from "@/types";
+
+const logger = createLogger("api:recruiter:parse-jd");
 
 interface SessionUser {
   id: string;
@@ -82,8 +85,7 @@ export async function POST(request: Request) {
 
       parsedData = JSON.parse(cleanedResponse) as ParseJDResponse;
     } catch (parseErr) {
-      console.error("Failed to parse AI response as JSON:", parseErr);
-      console.error("AI response:", responseText);
+      logger.error("Failed to parse AI response as JSON", { error: parseErr instanceof Error ? parseErr.message : String(parseErr), responseText });
       return error("Failed to parse job description - invalid JSON response", 500);
     }
 
@@ -104,7 +106,7 @@ export async function POST(request: Request) {
     );
 
     if (missingFields.length > 0) {
-      console.error("Missing fields in parsed response:", missingFields);
+      logger.error("Missing fields in parsed response", { missingFields });
       return error(`Incomplete parsing result - missing fields: ${missingFields.join(", ")}`, 500);
     }
 
@@ -133,7 +135,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    console.error("Job description parsing error:", err);
+    logger.error("Job description parsing error", { error: err instanceof Error ? err.message : String(err) });
     return error("Failed to parse job description", 500);
   }
 }

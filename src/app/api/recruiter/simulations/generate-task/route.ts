@@ -7,11 +7,14 @@
 
 import { auth } from "@/auth";
 import { success, error, validationError } from "@/lib/api";
+import { createLogger } from "@/lib/core";
 import {
   generateCodingTask,
   type GenerateCodingTaskInput,
 } from "@/lib/scenarios/task-generator";
 import { z } from "zod";
+
+const logger = createLogger("api:recruiter:generate-task");
 
 interface SessionUser {
   id: string;
@@ -63,7 +66,7 @@ export async function POST(request: Request) {
 
     return success(result);
   } catch (err) {
-    console.error("Task generation error:", err);
+    logger.error("Task generation error", { error: err instanceof Error ? err.message : String(err) });
     return error("Task generation failed", 500);
   }
 }

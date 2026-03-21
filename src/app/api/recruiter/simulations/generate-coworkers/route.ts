@@ -1,10 +1,13 @@
 import { auth } from "@/auth";
 import { success, error, validationError } from "@/lib/api";
+import { createLogger } from "@/lib/core";
 import { z } from "zod";
 import {
   generateCoworkers,
   type GenerateCoworkersInput,
 } from "@/lib/scenarios/coworker-generator";
+
+const logger = createLogger("api:recruiter:generate-coworkers");
 
 interface SessionUser {
   id: string;
@@ -59,7 +62,7 @@ export async function POST(request: Request) {
 
     return success(result);
   } catch (err) {
-    console.error("Coworker generation error:", err);
+    logger.error("Coworker generation error", { error: err instanceof Error ? err.message : String(err) });
     return error("Coworker generation failed", 500);
   }
 }

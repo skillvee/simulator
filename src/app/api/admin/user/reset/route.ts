@@ -6,7 +6,9 @@
  * The user account itself is preserved.
  */
 
-import { requireAdmin } from "@/lib/core";
+import { requireAdmin, createLogger } from "@/lib/core";
+
+const logger = createLogger("api:admin:reset");
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
 import { success, error } from "@/lib/api";
@@ -134,8 +136,9 @@ export async function POST(request: Request) {
       if (!storageErr) storageFilesDeleted += cleanScreenshotPaths.length;
     }
 
-    console.log(
-      `[Admin] Reset user ${user.email}: ${counts.assessments} assessments, ${counts.videoAssessments} video assessments, ${storageFilesDeleted} storage files deleted`
+    logger.info(
+      `Reset user ${user.email}`,
+      { assessments: counts.assessments, videoAssessments: counts.videoAssessments, storageFilesDeleted }
     );
 
     return success({
@@ -146,7 +149,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    console.error("Error resetting user data:", err);
+    logger.error("Error resetting user data", { error: err instanceof Error ? err.message : String(err) });
 
     if (err instanceof Error && err.message.includes("Unauthorized")) {
       return error("Unauthorized - Admin access required", 401);

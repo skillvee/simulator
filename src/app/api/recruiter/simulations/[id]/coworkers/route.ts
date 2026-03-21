@@ -1,6 +1,9 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("api:recruiter:coworkers");
 
 interface SessionUser {
   id: string;
@@ -60,8 +63,7 @@ export async function POST(request: Request, context: RouteContext) {
     if (Array.isArray(knowledge)) {
       validatedKnowledge = knowledge;
     } else {
-      console.warn(`[Coworker Create] Knowledge is not an array for ${name}, converting to empty array`);
-      console.error(`[Coworker Create] Invalid knowledge data:`, knowledge);
+      logger.warn(`Knowledge is not an array for ${name}, converting to empty array`, { knowledge });
     }
   }
 

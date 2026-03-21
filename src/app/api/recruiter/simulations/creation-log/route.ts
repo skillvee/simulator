@@ -1,7 +1,10 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
+import { createLogger } from "@/lib/core";
 import { z } from "zod";
+
+const logger = createLogger("api:recruiter:creation-log");
 
 interface SessionUser {
   id: string;
@@ -68,7 +71,7 @@ export async function POST(request: Request) {
 
     return success({ logId: log.id }, 201);
   } catch (err) {
-    console.error("Failed to create simulation creation log:", err);
+    logger.error("Failed to create simulation creation log", { error: err instanceof Error ? err.message : String(err) });
     return error("Failed to create log entry", 500);
   }
 }
@@ -126,7 +129,7 @@ export async function PATCH(request: Request) {
 
     return success({ log });
   } catch (err) {
-    console.error("Failed to update simulation creation log:", err);
+    logger.error("Failed to update simulation creation log", { error: err instanceof Error ? err.message : String(err) });
     return error("Failed to update log entry", 500);
   }
 }

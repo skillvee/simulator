@@ -9,6 +9,9 @@ import {
 } from "@/lib/scenarios";
 import { success, error, validateRequest } from "@/lib/api";
 import { ScenarioBuilderRequestSchema } from "@/lib/schemas";
+import { createLogger } from "@/lib/core";
+
+const logger = createLogger("api:admin:scenarios-builder");
 
 interface SessionUser {
   id: string;
@@ -99,7 +102,7 @@ export async function POST(request: Request) {
       extraction,
     });
   } catch (err) {
-    console.error("Gemini API error:", err);
+    logger.error("Gemini API error", { error: err instanceof Error ? err.message : String(err) });
     return error("Failed to generate response", 500);
   }
 }
@@ -148,7 +151,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    console.error("Gemini API error:", err);
+    logger.error("Gemini API error", { error: err instanceof Error ? err.message : String(err) });
     // Return a fallback greeting
     return success({
       greeting:

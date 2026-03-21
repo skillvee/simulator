@@ -12,8 +12,11 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
+import { createLogger } from "@/lib/core";
 import { provisionRepo, needsRepo } from "@/lib/scenarios/repo-templates";
 import type { ScenarioMetadata } from "@/lib/scenarios/repo-spec";
+
+const logger = createLogger("api:recruiter:provision-repo");
 
 interface SessionUser {
   id: string;
@@ -135,7 +138,7 @@ export async function POST(
       repoUrl,
     });
   } catch (err) {
-    console.error("[Provision Repo API] Provisioning failed:", err);
+    logger.error("Provisioning failed", { error: err instanceof Error ? err.message : String(err) });
     return error("Repository provisioning failed", 500);
   }
 }

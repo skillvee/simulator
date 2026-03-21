@@ -1,4 +1,6 @@
-import { requireAdmin } from "@/lib/core";
+import { requireAdmin, createLogger } from "@/lib/core";
+
+const logger = createLogger("api:admin:simulation-logs");
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 
@@ -25,7 +27,7 @@ export async function GET() {
 
     return success({ logs });
   } catch (err) {
-    console.error("Failed to fetch simulation creation logs:", err);
+    logger.error("Failed to fetch simulation creation logs", { error: err instanceof Error ? err.message : String(err) });
     return error("Failed to fetch logs", 500);
   }
 }

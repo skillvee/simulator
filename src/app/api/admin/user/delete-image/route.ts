@@ -5,7 +5,9 @@
  * Deletes a user's profile photo from storage and clears the image field.
  */
 
-import { requireAdmin } from "@/lib/core";
+import { requireAdmin, createLogger } from "@/lib/core";
+
+const logger = createLogger("api:admin:delete-image");
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
 import { success, error } from "@/lib/api";
@@ -45,9 +47,9 @@ export async function POST(request: Request) {
       .remove([avatarPath]);
 
     if (storageError) {
-      console.error(
-        `[Admin] Failed to delete avatar from storage for ${user.email}:`,
-        storageError
+      logger.error(
+        `Failed to delete avatar from storage for ${user.email}`,
+        { error: storageError.message }
       );
       // Continue anyway — clear the DB reference even if storage delete fails
     }
@@ -58,13 +60,13 @@ export async function POST(request: Request) {
       data: { image: null },
     });
 
-    console.log(`[Admin] Deleted profile image for user ${user.email}`);
+    logger.info(`Deleted profile image for user ${user.email}`);
 
     return success({
       message: "Profile image deleted successfully.",
     });
   } catch (err) {
-    console.error("Error deleting user image:", err);
+    logger.error("Error deleting user image", { error: err instanceof Error ? err.message : String(err) });
 
     if (err instanceof Error && err.message.includes("Unauthorized")) {
       return error("Unauthorized - Admin access required", 401);
