@@ -52,6 +52,14 @@ const defaultProps = {
     assessments: [{ id: "assessment-1", name: "Test Assessment" }],
     users: [{ id: "user-1", name: "Test User" }],
   },
+  geminiHealth: {
+    modelStats: [
+      { model: "Flash", totalCalls: 100, successRate: 98.5, avgLatencyMs: 320, errorCount: 2 },
+      { model: "Live", totalCalls: 50, successRate: 92.0, avgLatencyMs: 450, errorCount: 4 },
+      { model: "Pro", totalCalls: 25, successRate: 100, avgLatencyMs: 1200, errorCount: 0 },
+    ],
+    hourlyErrors: Array.from({ length: 24 }, (_, i) => ({ hoursAgo: 23 - i, errors: i === 12 ? 3 : 0 })),
+  },
 };
 
 describe("ErrorDashboardClient", () => {
@@ -178,6 +186,53 @@ describe("ErrorDashboardClient", () => {
     };
     render(<ErrorDashboardClient {...props} />);
     expect(screen.getByText("0%")).toBeInTheDocument();
+  });
+
+  describe("Gemini Health Section", () => {
+    it("renders Gemini Health heading", () => {
+      render(<ErrorDashboardClient {...defaultProps} />);
+      expect(screen.getByText("Gemini Health")).toBeInTheDocument();
+    });
+
+    it("renders per-model stats table", () => {
+      render(<ErrorDashboardClient {...defaultProps} />);
+      expect(screen.getByText("Flash")).toBeInTheDocument();
+      expect(screen.getByText("Live")).toBeInTheDocument();
+      expect(screen.getByText("Pro")).toBeInTheDocument();
+    });
+
+    it("shows correct stats values", () => {
+      render(<ErrorDashboardClient {...defaultProps} />);
+      expect(screen.getByText("100")).toBeInTheDocument(); // Flash total calls
+      expect(screen.getByText("98.5%")).toBeInTheDocument(); // Flash success rate
+      expect(screen.getByText("320ms")).toBeInTheDocument(); // Flash avg latency
+    });
+
+    it("highlights models with success rate below 95% in red", () => {
+      render(<ErrorDashboardClient {...defaultProps} />);
+      // Live has 92% success rate - should be red
+      const liveRate = screen.getByText("92%");
+      expect(liveRate.className).toContain("text-red-600");
+      // Flash has 98.5% - should be green
+      const flashRate = screen.getByText("98.5%");
+      expect(flashRate.className).toContain("text-green-600");
+    });
+
+    it("shows empty state when no API calls", () => {
+      const props = {
+        ...defaultProps,
+        geminiHealth: { modelStats: [], hourlyErrors: [] },
+      };
+      render(<ErrorDashboardClient {...props} />);
+      expect(screen.getByText("No API calls in the last 24 hours.")).toBeInTheDocument();
+    });
+
+    it("renders hourly error bar chart", () => {
+      render(<ErrorDashboardClient {...defaultProps} />);
+      expect(screen.getByText("Error Rate by Hour (last 24h)")).toBeInTheDocument();
+      expect(screen.getByText("24h ago")).toBeInTheDocument();
+      expect(screen.getByText("now")).toBeInTheDocument();
+    });
   });
 
   it("groups errors by message signature", async () => {

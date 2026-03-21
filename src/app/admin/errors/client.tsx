@@ -13,6 +13,7 @@ import {
   List,
   ChevronDown,
   ChevronUp,
+  Activity,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,10 +61,24 @@ interface FilterOptions {
   users: { id: string; name: string }[];
 }
 
+interface GeminiModelStats {
+  model: string;
+  totalCalls: number;
+  successRate: number;
+  avgLatencyMs: number;
+  errorCount: number;
+}
+
+interface GeminiHealthData {
+  modelStats: GeminiModelStats[];
+  hourlyErrors: { hoursAgo: number; errors: number }[];
+}
+
 interface ErrorDashboardClientProps {
   errors: SerializedError[];
   summaryStats: SummaryStats;
   filterOptions: FilterOptions;
+  geminiHealth: GeminiHealthData;
 }
 
 interface GroupedError {
@@ -375,6 +390,97 @@ function GroupedErrorRow({ group }: { group: GroupedError }) {
 }
 
 // -------------------------------------------------------------------
+// Gemini Health Section
+// -------------------------------------------------------------------
+
+function GeminiHealthSection({ data }: { data: GeminiHealthData }) {
+  const maxHourlyErrors = Math.max(...data.hourlyErrors.map((h) => h.errors), 1);
+
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Activity className="h-5 w-5 text-[#237CF1]" />
+          <h2 className="text-lg font-semibold">Gemini Health</h2>
+          <span className="text-xs text-muted-foreground">(last 24h)</span>
+        </div>
+
+        {data.modelStats.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No API calls in the last 24 hours.</p>
+        ) : (
+          <>
+            {/* Per-model stats table */}
+            <div className="rounded-lg border border-border overflow-hidden mb-6">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/30 border-b border-border">
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Model</th>
+                    <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Total Calls</th>
+                    <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Success Rate</th>
+                    <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Avg Latency</th>
+                    <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">Errors</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.modelStats.map((model) => {
+                    const isUnhealthy = model.successRate < 95;
+                    return (
+                      <tr
+                        key={model.model}
+                        className={`border-b border-border last:border-b-0 ${isUnhealthy ? "bg-red-50/50" : ""}`}
+                      >
+                        <td className="px-4 py-2.5 font-medium">{model.model}</td>
+                        <td className="px-4 py-2.5 text-right font-mono">{model.totalCalls.toLocaleString()}</td>
+                        <td className={`px-4 py-2.5 text-right font-mono font-medium ${isUnhealthy ? "text-red-600" : "text-green-600"}`}>
+                          {model.successRate}%
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono text-muted-foreground">
+                          {model.avgLatencyMs > 0 ? `${model.avgLatencyMs.toLocaleString()}ms` : "—"}
+                        </td>
+                        <td className={`px-4 py-2.5 text-right font-mono ${model.errorCount > 0 ? "text-red-600 font-medium" : "text-muted-foreground"}`}>
+                          {model.errorCount}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Hourly error rate bar chart */}
+            <div>
+              <p className="text-sm font-medium text-muted-foreground mb-3">Error Rate by Hour (last 24h)</p>
+              <div className="flex items-end gap-[3px] h-[80px]">
+                {data.hourlyErrors.map((hour, idx) => {
+                  const height = maxHourlyErrors > 0 ? (hour.errors / maxHourlyErrors) * 100 : 0;
+                  const label = `${24 - hour.hoursAgo}h ago: ${hour.errors} error${hour.errors !== 1 ? "s" : ""}`;
+                  return (
+                    <div
+                      key={idx}
+                      className="flex-1 flex flex-col items-center justify-end h-full"
+                      title={label}
+                    >
+                      <div
+                        className={`w-full rounded-t-sm transition-all ${hour.errors > 0 ? "bg-red-400" : "bg-muted/40"}`}
+                        style={{ height: `${Math.max(height, 2)}%` }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[10px] text-muted-foreground">24h ago</span>
+                <span className="text-[10px] text-muted-foreground">now</span>
+              </div>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// -------------------------------------------------------------------
 // Main Component
 // -------------------------------------------------------------------
 
@@ -382,6 +488,7 @@ export function ErrorDashboardClient({
   errors,
   summaryStats,
   filterOptions,
+  geminiHealth,
 }: ErrorDashboardClientProps) {
   const [dateRange, setDateRange] = useState("7d");
   const [errorType, setErrorType] = useState("all");
@@ -485,6 +592,9 @@ export function ErrorDashboardClient({
 
       {/* Summary Cards */}
       <SummaryCards stats={summaryStats} />
+
+      {/* Gemini Health */}
+      <GeminiHealthSection data={geminiHealth} />
 
       {/* Filters */}
       <Card>

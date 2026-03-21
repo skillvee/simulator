@@ -12,7 +12,7 @@ export default async function GlobalErrorDashboardPage() {
   // Fetch client errors (last 7 days for the list, all time would be too much)
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const [clientErrors, apiErrors, clientErrorsLast24h, clientErrorsPrior24h, apiErrorsLast24h, apiErrorsPrior24h, assessments, users] = await Promise.all([
+  const [clientErrors, apiErrors, clientErrorsLast24h, clientErrorsPrior24h, apiErrorsLast24h, apiErrorsPrior24h, assessments, users, geminiCalls24h] = await Promise.all([
     // All client errors (last 7 days)
     db.clientError.findMany({
       where: { timestamp: { gte: sevenDaysAgo } },
@@ -57,6 +57,16 @@ export default async function GlobalErrorDashboardPage() {
     db.user.findMany({
       select: { id: true, name: true, email: true },
       orderBy: { name: "asc" },
+    }),
+    // Gemini API calls (last 24h) for health dashboard
+    db.assessmentApiCall.findMany({
+      where: { requestTimestamp: { gte: twentyFourHoursAgo } },
+      select: {
+        modelVersion: true,
+        durationMs: true,
+        errorMessage: true,
+        requestTimestamp: true,
+      },
     }),
   ]);
 
@@ -158,6 +168,48 @@ export default async function GlobalErrorDashboardPage() {
     mostAffectedAssessment,
   };
 
+  // Aggregate Gemini health data per model
+  const MODEL_LABELS: Record<string, string> = {
+    "gemini-3-flash-preview": "Flash",
+    "gemini-2.5-flash-native-audio-latest": "Live",
+    "gemini-3-pro-preview": "Pro",
+  };
+
+  const modelStatsMap = new Map<string, { total: number; errors: number; totalLatency: number; latencyCount: number }>();
+  const hourlyErrors = new Map<number, number>(); // hour (0-23 offset) -> error count
+
+  for (const call of geminiCalls24h) {
+    const label = MODEL_LABELS[call.modelVersion] || call.modelVersion;
+    const existing = modelStatsMap.get(label) || { total: 0, errors: 0, totalLatency: 0, latencyCount: 0 };
+    existing.total++;
+    if (call.errorMessage) existing.errors++;
+    if (call.durationMs != null) {
+      existing.totalLatency += call.durationMs;
+      existing.latencyCount++;
+    }
+    modelStatsMap.set(label, existing);
+
+    // Hourly error tracking
+    const hourOffset = Math.floor((now.getTime() - new Date(call.requestTimestamp).getTime()) / (60 * 60 * 1000));
+    if (call.errorMessage && hourOffset >= 0 && hourOffset < 24) {
+      hourlyErrors.set(hourOffset, (hourlyErrors.get(hourOffset) || 0) + 1);
+    }
+  }
+
+  const geminiHealthData = {
+    modelStats: Array.from(modelStatsMap.entries()).map(([model, stats]) => ({
+      model,
+      totalCalls: stats.total,
+      successRate: stats.total > 0 ? Math.round(((stats.total - stats.errors) / stats.total) * 1000) / 10 : 100,
+      avgLatencyMs: stats.latencyCount > 0 ? Math.round(stats.totalLatency / stats.latencyCount) : 0,
+      errorCount: stats.errors,
+    })),
+    hourlyErrors: Array.from({ length: 24 }, (_, i) => ({
+      hoursAgo: i,
+      errors: hourlyErrors.get(i) || 0,
+    })).reverse(),
+  };
+
   const filterOptions = {
     assessments: assessments.map((a) => ({
       id: a.id,
@@ -174,6 +226,7 @@ export default async function GlobalErrorDashboardPage() {
       errors={serializedErrors}
       summaryStats={summaryStats}
       filterOptions={filterOptions}
+      geminiHealth={geminiHealthData}
     />
   );
 }
