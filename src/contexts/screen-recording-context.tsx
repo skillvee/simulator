@@ -546,6 +546,8 @@ export function ScreenRecordingProvider({
         return;
       }
 
+      // Primary signal: DB state via getSessionStatus()
+      // This is reliable across browser close, crash, incognito, etc.
       const status = await getSessionStatus(assessmentId);
       if (status?.hasRecording) {
         // Update counts from database
@@ -576,15 +578,18 @@ export function ScreenRecordingProvider({
         // mark as stopped so the guard shows the re-prompt.
         setState("stopped");
         setPermissionState("stopped");
+        setSessionLoaded(true);
+        return;
       }
 
-      // Also check sessionStorage for same-session interruptions
+      // Fallback: sessionStorage for quick same-session detection
+      // Only reached when DB has no prior recording segments.
+      // Covers the edge case where recording started but no chunks were
+      // uploaded before the stream was lost (so DB has no record yet).
       const wasRecording = sessionStorage.getItem(
         `screen-recording-${assessmentId}`
       );
       if (wasRecording === "active" && state === "idle") {
-        // Session storage says we were recording but state is idle
-        // This means the stream was lost
         setState("stopped");
         setPermissionState("stopped");
       }

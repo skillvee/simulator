@@ -182,4 +182,22 @@ describe("ScreenRecordingGuard", () => {
     expect(screen.queryByText("Recording Notice")).not.toBeInTheDocument();
     expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
   });
+
+  it("shows resume modal when DB has prior recording (simulates browser close + reopen)", () => {
+    // After browser close, sessionStorage is cleared but DB state (via loadSession)
+    // sets state to "stopped" — guard should show resume modal, not initial consent
+    mockContextValue.state = "stopped";
+    mockContextValue.permissionState = "stopped";
+    mockContextValue.sessionLoaded = true;
+
+    render(
+      <ScreenRecordingGuard assessmentId="test-id">
+        <div>Assessment Content</div>
+      </ScreenRecordingGuard>
+    );
+
+    expect(screen.getByText("Recording Stopped")).toBeInTheDocument();
+    expect(screen.getByText("Resume Recording")).toBeInTheDocument();
+    expect(screen.queryByText("Recording Notice")).not.toBeInTheDocument();
+  });
 });
