@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import AdminAssessmentsPage from "./page";
 import { AssessmentsClient } from "./client";
 
@@ -279,7 +280,7 @@ describe("AssessmentsClient", () => {
     vi.clearAllMocks();
   });
 
-  function renderClient(overrides?: Partial<{ assessments: typeof serializedAssessments; stats: typeof defaultStats; scenarios: typeof defaultScenarios }>) {
+  function renderClient(overrides?: Partial<ComponentProps<typeof AssessmentsClient>>) {
     return render(
       <AssessmentsClient
         assessments={overrides?.assessments ?? serializedAssessments}
@@ -567,7 +568,7 @@ describe("AssessmentsClient", () => {
       const manyAssessments = Array.from({ length: 30 }, (_, i) => ({
         ...serializedAssessments[0],
         id: `assess-many-${i}`,
-        user: { id: `user-${i}`, name: `User ${i}` as string | null, email: `user${i}@example.com` as string | null },
+        user: { id: `user-${i}`, name: `User ${i}`, email: `user${i}@example.com` },
       }));
 
       renderClient({ assessments: manyAssessments });
@@ -580,7 +581,7 @@ describe("AssessmentsClient", () => {
       const manyAssessments = Array.from({ length: 30 }, (_, i) => ({
         ...serializedAssessments[0],
         id: `assess-many-${i}`,
-        user: { id: `user-${i}`, name: `User ${i}` as string | null, email: `user${i}@example.com` as string | null },
+        user: { id: `user-${i}`, name: `User ${i}`, email: `user${i}@example.com` },
       }));
 
       renderClient({ assessments: manyAssessments });
@@ -595,7 +596,7 @@ describe("AssessmentsClient", () => {
       const manyAssessments = Array.from({ length: 30 }, (_, i) => ({
         ...serializedAssessments[0],
         id: `assess-many-${i}`,
-        user: { id: `user-${i}`, name: `User ${i}` as string | null, email: `user${i}@example.com` as string | null },
+        user: { id: `user-${i}`, name: `User ${i}`, email: `user${i}@example.com` },
       }));
 
       renderClient({ assessments: manyAssessments });
@@ -608,7 +609,7 @@ describe("AssessmentsClient", () => {
       const manyAssessments = Array.from({ length: 30 }, (_, i) => ({
         ...serializedAssessments[0],
         id: `assess-many-${i}`,
-        user: { id: `user-${i}`, name: `User ${i}` as string | null, email: `user${i}@example.com` as string | null },
+        user: { id: `user-${i}`, name: `User ${i}`, email: `user${i}@example.com` },
       }));
 
       renderClient({ assessments: manyAssessments });

@@ -101,7 +101,7 @@ function makeJsonRequest(url: string, body: Record<string, unknown>) {
   });
 }
 
-function makeFormDataRequest(url: string, fields: Record<string, string | Blob>) {
+function _makeFormDataRequest(url: string, fields: Record<string, string | Blob>) {
   const formData = new FormData();
   for (const [key, value] of Object.entries(fields)) {
     formData.append(key, value);

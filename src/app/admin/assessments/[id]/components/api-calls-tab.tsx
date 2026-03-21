@@ -4,14 +4,11 @@ import { useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
-  AlertCircle,
-  CheckCircle2,
   Server,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CollapsibleCodeSection } from "./collapsible-code-section";
-import { CopyButton } from "./copy-button";
 import { formatDate, formatTime, formatDuration } from "./utils";
 import type { SerializedApiCall } from "./types";
 

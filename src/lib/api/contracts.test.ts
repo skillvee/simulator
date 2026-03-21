@@ -43,6 +43,8 @@ const mockConversationUpdate = vi.fn();
 const mockRecordingUpsert = vi.fn();
 const mockRecordingSegmentFindUnique = vi.fn();
 const mockRecordingSegmentUpdate = vi.fn();
+const mockAssessmentApiCallCreate = vi.fn();
+const mockAssessmentApiCallUpdate = vi.fn();
 vi.mock("@/server/db", () => ({
   db: {
     assessment: {
@@ -70,6 +72,10 @@ vi.mock("@/server/db", () => ({
     recordingSegment: {
       findUnique: (...args: unknown[]) => mockRecordingSegmentFindUnique(...args),
       update: (...args: unknown[]) => mockRecordingSegmentUpdate(...args),
+    },
+    assessmentApiCall: {
+      create: (...args: unknown[]) => mockAssessmentApiCallCreate(...args),
+      update: (...args: unknown[]) => mockAssessmentApiCallUpdate(...args),
     },
   },
 }));
@@ -208,6 +214,7 @@ describe("API Response Contract Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuth.mockResolvedValue(mockSession);
+    mockAssessmentApiCallCreate.mockResolvedValue({ id: "api-call-1" });
   });
 
   // ── POST /api/chat (SSE stream) ──────────────────────────────────────────

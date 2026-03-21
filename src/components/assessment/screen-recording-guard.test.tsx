@@ -18,14 +18,14 @@ vi.mock("@/lib/core", () => ({
 
 // Mock context values
 const mockContextValue = {
-  state: "idle" as const,
-  permissionState: "prompt" as const,
+  state: "idle" as string,
+  permissionState: "prompt" as string,
   error: null as string | null,
   isSupported: true,
   isRecording: false,
   chunkCount: 0,
   screenshotCount: 0,
-  webcamState: "idle" as const,
+  webcamState: "idle" as string,
   webcamStream: null,
   sessionLoaded: true,
   startRecording: vi.fn().mockResolvedValue(true),

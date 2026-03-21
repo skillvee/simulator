@@ -42,7 +42,7 @@ export function ScreenRecordingGuard({
 
 function ScreenRecordingGuardInner({
   children,
-  assessmentId,
+  assessmentId: _assessmentId,
   companyName = "the company",
 }: ScreenRecordingGuardProps) {
   const {

@@ -11,7 +11,7 @@ import { NextResponse } from "next/server";
 // Mock auth to pass through to the callback
 const middlewareCallback = vi.fn();
 vi.mock("@/auth", () => ({
-  auth: (cb: Function) => {
+  auth: (cb: (...args: unknown[]) => unknown) => {
     middlewareCallback.mockImplementation(cb);
     return cb;
   },

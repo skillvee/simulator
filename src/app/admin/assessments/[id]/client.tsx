@@ -53,17 +53,6 @@ export function AssessmentTimelineClient({
   candidateEvents,
 }: AssessmentTimelineClientProps) {
   const router = useRouter();
-  // Track expanded API call events (for showing details)
-  const [expandedApiCalls, setExpandedApiCalls] = useState<Set<string>>(
-    new Set()
-  );
-  // Track expanded code sections within API call details (prompt/response)
-  const [expandedCodeSections, setExpandedCodeSections] = useState<Set<string>>(
-    new Set()
-  );
-  // Track expanded error details (existing functionality)
-  const [expandedErrors, setExpandedErrors] = useState<Set<string>>(new Set());
-
   // Retry assessment state
   const [showRetryDialog, setShowRetryDialog] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -120,45 +109,6 @@ export function AssessmentTimelineClient({
   const screenRecording = assessment.recordings.find(
     (r) => r.type === "screen"
   );
-
-  // Toggle error expansion
-  const toggleErrorExpansion = (id: string) => {
-    setExpandedErrors((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
-
-  // Toggle API call details expansion
-  const toggleApiCallExpansion = (id: string) => {
-    setExpandedApiCalls((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
-
-  // Toggle code section expansion (prompt/response within API call details)
-  const toggleCodeSection = (sectionId: string) => {
-    setExpandedCodeSections((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(sectionId)) {
-        newSet.delete(sectionId);
-      } else {
-        newSet.add(sectionId);
-      }
-      return newSet;
-    });
-  };
 
   // Add toast helper
   const addToast = (message: string, type: Toast["type"]) => {
