@@ -29,11 +29,12 @@ export async function GET() {
       },
     };
   } catch (err) {
+    console.error("Debug: API key check failed:", err);
     diagnostics.tests = {
       ...(diagnostics.tests as object),
       apiKeyConfigured: {
         passed: false,
-        message: `Error checking API key: ${err}`,
+        message: "Error checking API key",
       },
     };
   }
@@ -80,26 +81,22 @@ export async function GET() {
         },
       };
     } catch (tokenError) {
-      const errorMessage =
-        tokenError instanceof Error ? tokenError.message : String(tokenError);
+      console.error("Debug: Token generation failed:", tokenError);
       diagnostics.tests = {
         ...(diagnostics.tests as object),
         tokenGeneration: {
           passed: false,
-          message: `Token generation failed: ${errorMessage}`,
-          error: errorMessage,
+          message: "Token generation failed",
         },
       };
     }
   } catch (clientError) {
-    const errorMessage =
-      clientError instanceof Error ? clientError.message : String(clientError);
+    console.error("Debug: Client initialization failed:", clientError);
     diagnostics.tests = {
       ...(diagnostics.tests as object),
       clientInitialized: {
         passed: false,
-        message: `Client initialization failed: ${errorMessage}`,
-        error: errorMessage,
+        message: "Client initialization failed",
       },
     };
   }
@@ -128,13 +125,12 @@ export async function GET() {
       },
     };
   } catch (modelError) {
-    const errorMessage =
-      modelError instanceof Error ? modelError.message : String(modelError);
+    console.error("Debug: Could not list models:", modelError);
     diagnostics.tests = {
       ...(diagnostics.tests as object),
       availableModels: {
         passed: false,
-        message: `Could not list models: ${errorMessage}`,
+        message: "Could not list models",
       },
     };
   }

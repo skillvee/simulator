@@ -396,7 +396,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     const data = await response.json();
 
     expect(response.status).toBe(500);
-    expect(data.error).toBe("Failed to parse job description: Gemini API error");
+    expect(data.error).toBe("Failed to parse job description");
   });
 
   it("handles very short job descriptions", async () => {

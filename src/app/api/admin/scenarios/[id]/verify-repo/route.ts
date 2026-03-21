@@ -164,10 +164,10 @@ export async function GET(request: Request, context: RouteContext) {
 
     return success(result);
   } catch (err) {
+    console.error("Repository verification error:", err);
     return success({
       ...result,
-      error:
-        err instanceof Error ? err.message : "Failed to verify repository",
+      error: "Failed to verify repository",
     });
   }
 }

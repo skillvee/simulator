@@ -88,11 +88,10 @@ export async function GET() {
     results.recommendation =
       "If WebSocket fails with double slash, the SDK may have a URL construction bug. Consider using direct WebSocket connection instead.";
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error("Debug: WebSocket test error:", err);
     (results.steps as unknown[]).push({
       step: "error",
       name: "Error occurred",
-      error: errorMessage,
     });
     results.status = "error";
   }

@@ -133,8 +133,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : "Unknown error";
-    console.error("Job description parsing error:", errMsg, err);
-    return error(`Failed to parse job description: ${errMsg}`, 500);
+    console.error("Job description parsing error:", err);
+    return error("Failed to parse job description", 500);
   }
 }

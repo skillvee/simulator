@@ -60,10 +60,6 @@ export async function POST(request: Request) {
     return success(result);
   } catch (err) {
     console.error("Coworker generation error:", err);
-
-    const errorMessage =
-      err instanceof Error ? err.message : "Failed to generate coworkers";
-
-    return error(`Generation failed: ${errorMessage}`, 500);
+    return error("Coworker generation failed", 500);
   }
 }

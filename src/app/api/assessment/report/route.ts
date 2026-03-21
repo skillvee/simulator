@@ -360,7 +360,8 @@ export async function POST(request: Request) {
         });
 
         if (!evalResult.success) {
-          return error(`Video evaluation failed: ${evalResult.error}`, 500);
+          console.error("Video evaluation failed:", evalResult.error);
+          return error("Video evaluation failed", 500);
         }
 
         // Fetch the results

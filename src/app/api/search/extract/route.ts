@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
       processingTimeMs: result.processingTimeMs,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return error(`Internal server error: ${message}`, 500);
+    console.error("Entity extraction error:", err);
+    return error("Internal server error", 500);
   }
 }
 

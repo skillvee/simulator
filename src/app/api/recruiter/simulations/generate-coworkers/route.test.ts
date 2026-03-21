@@ -334,8 +334,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     const data = await response.json();
 
     expect(response.status).toBe(500);
-    expect(data.error).toBe("Generation failed");
-    expect(data.message).toBe("Gemini API error");
+    expect(data.error).toBe("Coworker generation failed");
   });
 
   it("handles all seniority levels", async () => {

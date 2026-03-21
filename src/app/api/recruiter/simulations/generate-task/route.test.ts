@@ -359,7 +359,6 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
 
     expect(response.status).toBe(500);
     expect(data.error).toBe("Task generation failed");
-    expect(data.details).toBe("Gemini API error");
   });
 
   it("handles all seniority levels", async () => {

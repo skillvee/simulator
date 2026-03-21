@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error("Supabase upload error:", uploadError);
-      return error(`Failed to upload: ${uploadError.message}`, 500);
+      return error("Failed to upload file", 500);
     }
 
     // Create signed URL for access

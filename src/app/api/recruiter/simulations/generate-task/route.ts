@@ -64,10 +64,6 @@ export async function POST(request: Request) {
     return success(result);
   } catch (err) {
     console.error("Task generation error:", err);
-
-    const errorMessage =
-      err instanceof Error ? err.message : "Failed to generate tasks";
-
-    return error(`Task generation failed: ${errorMessage}`, 500);
+    return error("Task generation failed", 500);
   }
 }
