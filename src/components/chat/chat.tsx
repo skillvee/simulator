@@ -356,11 +356,12 @@ export function Chat({
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullText = "";
-      let doneData: {
+      type DoneData = {
         timestamp: string;
         prSubmitted?: boolean;
         defenseCallRequired?: boolean;
-      } | null = null;
+      };
+      let doneData: DoneData | null = null;
       let buffer = "";
       let typingStopped = false;
 
@@ -426,21 +427,21 @@ export function Chat({
       }
 
       // Finalize the message with the real timestamp
-      const finalDone = doneData;
-      if (finalDone) {
+      if (doneData !== null) {
+        const done = doneData as DoneData;
         setMessages((prev) => {
           const lastMsg = prev[prev.length - 1];
           if (lastMsg?.role === "model") {
             return [
               ...prev.slice(0, -1),
-              { role: "model" as const, text: fullText, timestamp: finalDone.timestamp },
+              { role: "model" as const, text: fullText, timestamp: done.timestamp },
             ];
           }
           return prev;
         });
 
         // Enable defense mode when PR is submitted — disables text input
-        if (finalDone.prSubmitted || finalDone.defenseCallRequired) {
+        if (done.prSubmitted || done.defenseCallRequired) {
           setDefenseCallRequired(true);
         }
       }
