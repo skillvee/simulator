@@ -171,7 +171,7 @@ export function formatMemoryForPrompt(
 
   const sections: string[] = ["\n## Prior Conversation History"];
   sections.push(
-    "You have had previous conversations with this candidate. Remember and reference these when relevant."
+    "The messages below are the ONLY interactions you have had with this candidate. Do not reference any other conversations, meetings, or discussions that are not shown here."
   );
 
   // Add summary if available
@@ -190,12 +190,12 @@ export function formatMemoryForPrompt(
 
   sections.push(
     "\n**CRITICAL INCREMENTAL SHARING RULES:**",
-    "- If the candidate asks about something you discussed before, BUILD on what you already told them",
-    "- Say things like 'As I mentioned...' or 'Building on what we discussed...' when referencing past topics",
+    "- If the candidate brings up a topic from a prior conversation, you may BUILD on what you already told them. Do NOT proactively bring up past topics — let the candidate re-engage.",
+    "- Use 'As I mentioned...' or 'Building on what we discussed...' ONLY when the candidate asks about a topic you previously discussed, NOT to proactively reference old topics",
     "- If they ask about the SAME topic again, share NEW details you didn't mention before",
     "- NEVER repeat the exact same information - always add something new or go deeper",
     "- Example: If you previously said 'We use Redis for caching', next time say 'The Redis setup I mentioned also handles our pub/sub for real-time updates'",
-    "\nContinue the conversation naturally, always building on prior discussions. Don't repeat information unless specifically asked to clarify."
+    "\nContinue the conversation naturally. Only reference prior discussions when the candidate brings up a related topic. Don't repeat information unless specifically asked to clarify."
   );
 
   return sections.join("\n");
