@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { buildTracedHeaders } from "@/lib/api/client";
 import { createLogger } from "@/lib/core";
 import { useVoiceBase } from "./use-voice-base";
 
@@ -81,7 +82,7 @@ export function useCoworkerVoice({
 
       fetch("/api/call/log", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: buildTracedHeaders(undefined, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           assessmentId,
           coworkerId,
@@ -117,7 +118,7 @@ export function useCoworkerVoice({
       try {
         await fetch("/api/call/transcript", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: buildTracedHeaders(undefined, { "Content-Type": "application/json" }),
           body: JSON.stringify({
             assessmentId,
             coworkerId,

@@ -122,11 +122,13 @@ const ASSESSMENT_SECURITY_HEADERS: Record<string, string> = {
 };
 
 /**
- * Apply security headers to a NextResponse.
+ * Apply security headers and trace ID to a NextResponse.
+ * If the request has an x-trace-id header, it is propagated; otherwise a new one is generated.
  */
 function applySecurityHeaders(
   response: NextResponse,
-  pathname: string
+  pathname: string,
+  traceId?: string
 ): NextResponse {
   const headers = pathname.startsWith("/assessments/")
     ? ASSESSMENT_SECURITY_HEADERS
@@ -134,6 +136,10 @@ function applySecurityHeaders(
 
   for (const [key, value] of Object.entries(headers)) {
     response.headers.set(key, value);
+  }
+
+  if (traceId) {
+    response.headers.set("x-trace-id", traceId);
   }
 
   return response;
@@ -164,14 +170,18 @@ export default auth((req) => {
   const session = req.auth;
   const user = session?.user as ExtendedSessionUser | undefined;
 
+  // Extract or generate trace ID for end-to-end request tracing
+  const traceId =
+    req.headers.get("x-trace-id") || crypto.randomUUID();
+
   // Skip auth routes (handled by NextAuth)
   if (isAuthRoute(pathname)) {
-    return applySecurityHeaders(NextResponse.next(), pathname);
+    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
   }
 
   // Allow public page routes without authentication
   if (isPublicPageRoute(pathname)) {
-    return applySecurityHeaders(NextResponse.next(), pathname);
+    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
   }
 
   // Handle API routes
@@ -254,7 +264,7 @@ export default auth((req) => {
 
     // Allow public API routes without authentication
     if (isPublicApiRoute(pathname)) {
-      return applySecurityHeaders(NextResponse.next(), pathname);
+      return applySecurityHeaders(NextResponse.next(), pathname, traceId);
     }
 
     // Check authentication for protected API routes
@@ -294,7 +304,7 @@ export default auth((req) => {
       }
     }
 
-    return applySecurityHeaders(NextResponse.next(), pathname);
+    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
   }
 
   // Handle candidate dashboard routes (any authenticated user)
@@ -302,9 +312,9 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
     }
-    return applySecurityHeaders(NextResponse.next(), pathname);
+    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
   }
 
   // Handle recruiter page routes
@@ -313,16 +323,16 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
     }
 
     // Check recruiter role (RECRUITER or ADMIN allowed)
     if (user?.role !== "RECRUITER" && user?.role !== "ADMIN") {
       // Redirect candidates to their own dashboard instead of showing an error
-      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname);
+      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname, traceId);
     }
 
-    return applySecurityHeaders(NextResponse.next(), pathname);
+    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
   }
 
   // Handle assessment page routes
@@ -331,12 +341,12 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
     }
 
     // Note: Assessment ownership is verified at the page level, not middleware
     // This is because middleware doesn't have access to database queries
-    return applySecurityHeaders(NextResponse.next(), pathname);
+    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
   }
 
   // Handle admin page routes
@@ -345,36 +355,36 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL("/sign-in", req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
     }
 
     // Check admin role (only ADMIN allowed)
     if (user?.role !== "ADMIN") {
       // Redirect to the user's appropriate dashboard
       if (user?.role === "RECRUITER") {
-        return applySecurityHeaders(NextResponse.redirect(new URL("/recruiter/dashboard", req.url)), pathname);
+        return applySecurityHeaders(NextResponse.redirect(new URL("/recruiter/dashboard", req.url)), pathname, traceId);
       }
-      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname);
+      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname, traceId);
     }
 
-    return applySecurityHeaders(NextResponse.next(), pathname);
+    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
   }
 
   // Redirect authenticated users from home page to their dashboard
   if (pathname === "/") {
     if (session?.user) {
       if (user?.role === "ADMIN") {
-        return applySecurityHeaders(NextResponse.redirect(new URL("/admin", req.url)), pathname);
+        return applySecurityHeaders(NextResponse.redirect(new URL("/admin", req.url)), pathname, traceId);
       }
       if (user?.role === "RECRUITER") {
-        return applySecurityHeaders(NextResponse.redirect(new URL("/recruiter/dashboard", req.url)), pathname);
+        return applySecurityHeaders(NextResponse.redirect(new URL("/recruiter/dashboard", req.url)), pathname, traceId);
       }
       // Candidates (USER role) go to candidate dashboard
-      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname);
+      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname, traceId);
     }
   }
 
-  return applySecurityHeaders(NextResponse.next(), pathname);
+  return applySecurityHeaders(NextResponse.next(), pathname, traceId);
 });
 
 /**

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Headphones } from "lucide-react";
-import { api, ApiClientError } from "@/lib/api";
+import { api, ApiClientError, buildTracedHeaders } from "@/lib/api";
 import { createLogger } from "@/lib/core";
 import { useCallContext } from "./slack-layout";
 import { CoworkerAvatar } from "./coworker-avatar";
@@ -344,7 +344,7 @@ export function Chat({
       // Start SSE stream to get chunks as Gemini generates them
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: buildTracedHeaders(undefined, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           assessmentId,
           coworkerId: coworker.id,

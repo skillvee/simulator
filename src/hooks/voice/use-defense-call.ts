@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { buildTracedHeaders } from "@/lib/api/client";
 import { createLogger } from "@/lib/core";
 import { useVoiceBase } from "./use-voice-base";
 
@@ -97,7 +98,7 @@ export function useDefenseCall({
 
       fetch("/api/call/log", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: buildTracedHeaders(undefined, { "Content-Type": "application/json" }),
         body: JSON.stringify({
           assessmentId,
           coworkerId: managerId,
@@ -133,7 +134,7 @@ export function useDefenseCall({
       try {
         await fetch(transcriptEndpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: buildTracedHeaders(undefined, { "Content-Type": "application/json" }),
           body: JSON.stringify({
             assessmentId,
             managerId,

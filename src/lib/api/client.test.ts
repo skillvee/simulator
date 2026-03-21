@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { api, ApiClientError } from "./client";
+import { api, ApiClientError, buildTracedHeaders } from "./client";
+
+// Mock the tracing module so trace IDs are predictable
+vi.mock("@/lib/tracing", () => ({
+  generateTraceId: vi.fn(() => "mock-trace-id"),
+  TRACE_ID_HEADER: "x-trace-id",
+}));
 
 describe("api-client", () => {
   const originalFetch = global.fetch;
@@ -24,7 +30,7 @@ describe("api-client", () => {
 
       expect(global.fetch).toHaveBeenCalledWith("/api/test", {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
+        headers: { "x-trace-id": "mock-trace-id", "Content-Type": "application/json" },
         body: undefined,
       });
     });
@@ -42,7 +48,7 @@ describe("api-client", () => {
 
       expect(global.fetch).toHaveBeenCalledWith("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "x-trace-id": "mock-trace-id", "Content-Type": "application/json" },
         body: JSON.stringify({ message: "hello", coworkerId: "123" }),
       });
     });
@@ -60,7 +66,7 @@ describe("api-client", () => {
 
       expect(global.fetch).toHaveBeenCalledWith("/api/user", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "x-trace-id": "mock-trace-id", "Content-Type": "application/json" },
         body: JSON.stringify({ name: "John" }),
       });
     });
@@ -75,7 +81,7 @@ describe("api-client", () => {
 
       expect(global.fetch).toHaveBeenCalledWith("/api/user/123", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { "x-trace-id": "mock-trace-id", "Content-Type": "application/json" },
         body: undefined,
       });
     });
@@ -93,7 +99,7 @@ describe("api-client", () => {
 
       expect(global.fetch).toHaveBeenCalledWith("/api/user/123", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "x-trace-id": "mock-trace-id", "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Updated" }),
       });
     });
@@ -111,6 +117,7 @@ describe("api-client", () => {
       expect(global.fetch).toHaveBeenCalledWith("/api/test", {
         method: "GET",
         headers: {
+          "x-trace-id": "mock-trace-id",
           "Content-Type": "application/json",
           Authorization: "Bearer token123",
         },
@@ -191,6 +198,26 @@ describe("api-client", () => {
       } as Response);
 
       await expect(api("/api/fail")).rejects.toThrow("Request failed");
+    });
+  });
+
+  describe("buildTracedHeaders", () => {
+    it("should include x-trace-id header with provided traceId", () => {
+      const headers = buildTracedHeaders("custom-trace-id");
+      expect(headers["x-trace-id"]).toBe("custom-trace-id");
+    });
+
+    it("should generate a trace ID when none provided", () => {
+      const headers = buildTracedHeaders();
+      expect(headers["x-trace-id"]).toBe("mock-trace-id");
+    });
+
+    it("should merge extra headers", () => {
+      const headers = buildTracedHeaders("trace-1", {
+        "Content-Type": "application/json",
+      });
+      expect(headers["x-trace-id"]).toBe("trace-1");
+      expect(headers["Content-Type"]).toBe("application/json");
     });
   });
 

@@ -327,9 +327,10 @@ export function useVoiceBase({
       updateConnectionState("connecting");
 
       // Get ephemeral token from server
+      const { buildTracedHeaders } = await import("@/lib/api/client");
       const tokenResponse = await fetch(config.tokenEndpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: buildTracedHeaders(undefined, { "Content-Type": "application/json" }),
         body: JSON.stringify({ assessmentId, ...tokenRequestBody }),
       });
 

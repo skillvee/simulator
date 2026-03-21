@@ -33,6 +33,8 @@ export interface LogAICallOptions {
   modelUsed?: string;
   /** Approximate token count for the request */
   tokenCount?: number;
+  /** Trace ID for end-to-end request tracing */
+  traceId?: string;
 }
 
 export interface AICallResult {
@@ -108,6 +110,7 @@ export async function logAICall(
     promptVersion,
     modelUsed,
     tokenCount,
+    traceId,
   } = options;
 
   const requestTimestamp = new Date();
@@ -122,6 +125,7 @@ export async function logAICall(
       promptVersion,
       modelUsed,
       tokenCount,
+      traceId,
     },
   });
 
@@ -194,6 +198,7 @@ export async function logCompletedAICall(
     promptVersion,
     modelUsed,
     tokenCount,
+    traceId,
     responseText,
     statusCode,
     errorMessage,
@@ -218,6 +223,7 @@ export async function logCompletedAICall(
       promptVersion,
       modelUsed,
       tokenCount,
+      traceId,
       responseText,
       statusCode,
       errorMessage,

@@ -3,7 +3,10 @@
  *
  * Centralized fetch wrapper with consistent error handling and headers.
  * Handles the standardized API response format (success/error structure).
+ * Automatically injects x-trace-id headers for end-to-end request tracing.
  */
+
+import { generateTraceId, TRACE_ID_HEADER } from "@/lib/tracing";
 
 /**
  * Error thrown by the API client on request failures
@@ -23,6 +26,22 @@ interface ApiOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   body?: object;
   headers?: Record<string, string>;
+  /** Trace ID to use. If not provided, one is auto-generated. */
+  traceId?: string;
+}
+
+/**
+ * Build headers with trace ID for a fetch request.
+ * If a traceId is provided it is used; otherwise a new one is generated.
+ */
+export function buildTracedHeaders(
+  traceId?: string,
+  extra?: Record<string, string>
+): Record<string, string> {
+  return {
+    [TRACE_ID_HEADER]: traceId || generateTraceId(),
+    ...extra,
+  };
 }
 
 /**
@@ -52,7 +71,10 @@ interface ApiOptions {
 export async function api<T>(endpoint: string, options?: ApiOptions): Promise<T> {
   const response = await fetch(endpoint, {
     method: options?.method ?? "GET",
-    headers: { "Content-Type": "application/json", ...options?.headers },
+    headers: buildTracedHeaders(options?.traceId, {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    }),
     body: options?.body ? JSON.stringify(options.body) : undefined,
   });
 
