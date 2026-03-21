@@ -5,4 +5,5 @@ export * from "./analytics";
 export * from "./candidate";
 export * from "./env";
 export * from "./error-recovery";
+export * from "./logger";
 export * from "./recruiter";
