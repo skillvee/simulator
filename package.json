@@ -13,6 +13,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:quick": "vitest run src/lib/api/ src/lib/core/ --testTimeout=10000",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "./tests/e2e/run-all.sh",
