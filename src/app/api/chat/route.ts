@@ -206,13 +206,20 @@ export async function POST(request: Request) {
     avatarUrl: coworker.avatarUrl,
   };
 
+  // Gate task description: managers get it as background knowledge, non-managers don't get it
+  const isCoworkerManager = isManager(coworker.role);
+  let gatedTaskDescription: string | undefined;
+  if (isCoworkerManager && assessment.scenario.taskDescription) {
+    gatedTaskDescription = `## Your Background Knowledge (NOT shared with the candidate)\nYou assigned this task to the candidate. You know the following details, but do NOT assume the candidate has read or understood any of it. Reference specific aspects ONLY when the candidate asks or brings them up.\n${assessment.scenario.taskDescription}`;
+  }
+
   // Use centralized chat prompt with Slack-like conversation guidelines
   let systemPrompt = buildChatPrompt(
     persona,
     {
       companyName: assessment.scenario.companyName,
       candidateName: session.user.name || undefined,
-      taskDescription: assessment.scenario.taskDescription,
+      taskDescription: gatedTaskDescription,
       techStack: assessment.scenario.techStack,
     },
     memoryContext,
@@ -231,8 +238,7 @@ export async function POST(request: Request) {
     parts: [{ text: msg.text }],
   }));
 
-  // Check if this is a manager and the message contains a PR link
-  const isCoworkerManager = isManager(coworker.role);
+  // Check if the message contains a PR link
   const extractedPrUrl = extractPrUrl(message);
   let prSubmitted = false;
 

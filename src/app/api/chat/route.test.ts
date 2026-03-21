@@ -57,6 +57,16 @@ vi.mock("@/lib/ai", () => ({
   parseCoworkerKnowledge: vi.fn().mockReturnValue([]),
 }));
 
+// Spy on buildChatPrompt to verify context passed
+const mockBuildChatPrompt = vi.fn().mockReturnValue("mock system prompt");
+vi.mock("@/prompts", () => ({
+  buildChatPrompt: (...args: unknown[]) => mockBuildChatPrompt(...args),
+  buildCallNudgeInstruction: vi.fn().mockReturnValue(""),
+  buildPRAcknowledgmentContext: vi.fn().mockReturnValue(""),
+  INVALID_PR_PROMPT: "invalid pr prompt",
+  DUPLICATE_PR_PROMPT: "duplicate pr prompt",
+}));
+
 import { POST, GET } from "./route";
 import { AssessmentStatus } from "@prisma/client";
 
@@ -529,6 +539,98 @@ describe("POST /api/chat", () => {
     expect(chunks.length).toBe(1);
     expect(chunks[0].text).toBe("Response text");
     expect(done).toBeDefined();
+  });
+
+  it("should wrap taskDescription with grounding instructions for manager coworkers", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Alex Chen",
+      role: "Engineering Manager",
+      personaStyle: "Supportive",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["Hello!"])
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    await readSSEResponse(response);
+
+    // Verify buildChatPrompt was called with gated task description
+    const context = mockBuildChatPrompt.mock.calls[0][1];
+    expect(context.taskDescription).toContain("Your Background Knowledge (NOT shared with the candidate)");
+    expect(context.taskDescription).toContain("Build a feature");
+    expect(context.taskDescription).toContain("do NOT assume the candidate has read or understood any of it");
+  });
+
+  it("should pass undefined taskDescription for non-manager coworkers", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Jordan Rivera",
+      role: "Senior Engineer",
+      personaStyle: "Technical and helpful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["Hello!"])
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    await readSSEResponse(response);
+
+    // Verify buildChatPrompt was called with undefined task description
+    const context = mockBuildChatPrompt.mock.calls[0][1];
+    expect(context.taskDescription).toBeUndefined();
   });
 
   it("should persist messages to conversation", async () => {
