@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   CheckCircle2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Clock,
   ExternalLink,
@@ -48,6 +53,7 @@ interface SerializedAssessment {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  errorCount: number;
   user: {
     id: string;
     name: string | null;
@@ -69,12 +75,20 @@ interface Stats {
   avgDurationMs: number | null;
 }
 
+interface ScenarioOption {
+  id: string;
+  name: string;
+}
+
 interface AssessmentsClientProps {
   assessments: SerializedAssessment[];
+  scenarios: ScenarioOption[];
   stats: Stats;
 }
 
 type DateRange = "24h" | "7d" | "30d" | "all";
+type SortColumn = "date" | "duration" | "errors" | "status";
+type SortDirection = "asc" | "desc";
 
 const STATUS_OPTIONS: AssessmentStatus[] = [
   "WELCOME",
@@ -88,6 +102,14 @@ const DATE_RANGE_OPTIONS: { value: DateRange; label: string }[] = [
   { value: "30d", label: "Last 30 days" },
   { value: "all", label: "All time" },
 ];
+
+const PAGE_SIZE = 25;
+
+const STATUS_SORT_ORDER: Record<AssessmentStatus, number> = {
+  WELCOME: 0,
+  WORKING: 1,
+  COMPLETED: 2,
+};
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
@@ -106,25 +128,118 @@ function formatDate(dateString: string): string {
   }).format(new Date(dateString));
 }
 
-function hasError(assessment: SerializedAssessment): boolean {
-  return assessment.logs.some((log) => log.eventType === "ERROR");
+function getDuration(assessment: SerializedAssessment): number | null {
+  if (!assessment.completedAt || !assessment.startedAt) return null;
+  return (
+    new Date(assessment.completedAt).getTime() -
+    new Date(assessment.startedAt).getTime()
+  );
 }
 
 export function AssessmentsClient({
   assessments,
+  scenarios,
   stats,
 }: AssessmentsClientProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<AssessmentStatus | "all">(
-    "all"
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Initialize state from URL search params
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") ?? ""
   );
-  const [dateRange, setDateRange] = useState<DateRange>("all");
+  const [statusFilter, setStatusFilter] = useState<AssessmentStatus | "all">(
+    (searchParams.get("status") as AssessmentStatus | "all") ?? "all"
+  );
+  const [dateRange, setDateRange] = useState<DateRange>(
+    (searchParams.get("dateRange") as DateRange) ?? "all"
+  );
+  const [scenarioFilter, setScenarioFilter] = useState(
+    searchParams.get("scenario") ?? "all"
+  );
+  const [hasErrorsFilter, setHasErrorsFilter] = useState(
+    searchParams.get("hasErrors") === "true"
+  );
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(
+    (searchParams.get("sortBy") as SortColumn) ?? null
+  );
+  const [sortDirection, setSortDirection] = useState<SortDirection>(
+    (searchParams.get("sortDir") as SortDirection) ?? "desc"
+  );
+  const [currentPage, setCurrentPage] = useState(
+    Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1)
+  );
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Filter assessments based on criteria
+  // Sync filter state to URL
+  const updateURL = useCallback(
+    (params: Record<string, string | null>) => {
+      const newParams = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(params)) {
+        if (value === null || value === "" || value === "all" || value === "false") {
+          newParams.delete(key);
+        } else {
+          newParams.set(key, value);
+        }
+      }
+      // Remove page param if it's 1
+      if (newParams.get("page") === "1") newParams.delete("page");
+      const qs = newParams.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    },
+    [router, pathname, searchParams]
+  );
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+    updateURL({ search: value || null, page: null });
+  };
+
+  const handleStatusChange = (value: AssessmentStatus | "all") => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+    updateURL({ status: value === "all" ? null : value, page: null });
+  };
+
+  const handleDateRangeChange = (value: DateRange) => {
+    setDateRange(value);
+    setCurrentPage(1);
+    updateURL({ dateRange: value === "all" ? null : value, page: null });
+  };
+
+  const handleScenarioChange = (value: string) => {
+    setScenarioFilter(value);
+    setCurrentPage(1);
+    updateURL({ scenario: value === "all" ? null : value, page: null });
+  };
+
+  const handleHasErrorsChange = (value: boolean) => {
+    setHasErrorsFilter(value);
+    setCurrentPage(1);
+    updateURL({ hasErrors: value ? "true" : null, page: null });
+  };
+
+  const handleSort = (column: SortColumn) => {
+    let newDirection: SortDirection = "desc";
+    if (sortColumn === column) {
+      newDirection = sortDirection === "desc" ? "asc" : "desc";
+    }
+    setSortColumn(column);
+    setSortDirection(newDirection);
+    updateURL({ sortBy: column, sortDir: newDirection });
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    updateURL({ page: page > 1 ? String(page) : null });
+  };
+
+  // Filter assessments
   const filteredAssessments = useMemo(() => {
     return assessments.filter((assessment) => {
-      // Search filter (name, email, or assessment ID)
+      // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesName = assessment.user.name?.toLowerCase().includes(query);
@@ -142,6 +257,16 @@ export function AssessmentsClient({
         return false;
       }
 
+      // Scenario filter
+      if (scenarioFilter !== "all" && assessment.scenarioId !== scenarioFilter) {
+        return false;
+      }
+
+      // Has errors filter
+      if (hasErrorsFilter && assessment.errorCount === 0) {
+        return false;
+      }
+
       // Date range filter
       if (dateRange !== "all") {
         const createdAt = new Date(assessment.createdAt);
@@ -156,7 +281,49 @@ export function AssessmentsClient({
 
       return true;
     });
-  }, [assessments, searchQuery, statusFilter, dateRange]);
+  }, [assessments, searchQuery, statusFilter, dateRange, scenarioFilter, hasErrorsFilter]);
+
+  // Sort assessments
+  const sortedAssessments = useMemo(() => {
+    if (!sortColumn) return filteredAssessments;
+
+    return [...filteredAssessments].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortColumn) {
+        case "date": {
+          comparison =
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        }
+        case "duration": {
+          const dA = getDuration(a) ?? -1;
+          const dB = getDuration(b) ?? -1;
+          comparison = dA - dB;
+          break;
+        }
+        case "errors": {
+          comparison = a.errorCount - b.errorCount;
+          break;
+        }
+        case "status": {
+          comparison =
+            STATUS_SORT_ORDER[a.status] - STATUS_SORT_ORDER[b.status];
+          break;
+        }
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [filteredAssessments, sortColumn, sortDirection]);
+
+  // Paginate
+  const totalPages = Math.max(1, Math.ceil(sortedAssessments.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedAssessments = sortedAssessments.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
@@ -202,13 +369,13 @@ export function AssessmentsClient({
             type="text"
             placeholder="Search by name, email, or ID..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10 pr-10"
             data-testid="search-input"
           />
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => handleSearchChange("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               aria-label="Clear search"
             >
@@ -221,7 +388,7 @@ export function AssessmentsClient({
         <select
           value={statusFilter}
           onChange={(e) =>
-            setStatusFilter(e.target.value as AssessmentStatus | "all")
+            handleStatusChange(e.target.value as AssessmentStatus | "all")
           }
           className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           data-testid="status-filter"
@@ -234,12 +401,39 @@ export function AssessmentsClient({
           ))}
         </select>
 
+        {/* Scenario Filter */}
+        <select
+          value={scenarioFilter}
+          onChange={(e) => handleScenarioChange(e.target.value)}
+          className="rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          data-testid="scenario-filter"
+        >
+          <option value="all">All Scenarios</option>
+          {scenarios.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Has Errors Filter */}
+        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+          <input
+            type="checkbox"
+            checked={hasErrorsFilter}
+            onChange={(e) => handleHasErrorsChange(e.target.checked)}
+            className="accent-primary"
+            data-testid="has-errors-filter"
+          />
+          Has errors
+        </label>
+
         {/* Date Range Filter */}
         <div className="flex gap-1" data-testid="date-range-filter">
           {DATE_RANGE_OPTIONS.map((option) => (
             <Button
               key={option.value}
-              onClick={() => setDateRange(option.value)}
+              onClick={() => handleDateRangeChange(option.value)}
               variant={dateRange === option.value ? "default" : "outline"}
               size="sm"
             >
@@ -251,13 +445,15 @@ export function AssessmentsClient({
 
       {/* Results count */}
       <p className="mb-4 text-sm text-muted-foreground">
-        Showing {filteredAssessments.length} of {assessments.length} assessments
+        Showing {paginatedAssessments.length} of {sortedAssessments.length} assessments
+        {sortedAssessments.length !== assessments.length &&
+          ` (filtered from ${assessments.length})`}
       </p>
 
       {/* Assessments Table */}
       <Card data-testid="assessments-table">
         <CardContent className="p-0">
-          {filteredAssessments.length === 0 ? (
+          {sortedAssessments.length === 0 ? (
             <div className="p-6 text-center text-muted-foreground">
               No assessments found matching your criteria
             </div>
@@ -269,22 +465,38 @@ export function AssessmentsClient({
                   <th className="p-4 text-left text-xs font-medium text-muted-foreground">
                     CANDIDATE
                   </th>
-                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
-                    STATUS
-                  </th>
-                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
-                    CREATED
-                  </th>
-                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
-                    DURATION
-                  </th>
-                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
-                    ERRORS
-                  </th>
+                  <SortableHeader
+                    label="STATUS"
+                    column="status"
+                    activeColumn={sortColumn}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="CREATED"
+                    column="date"
+                    activeColumn={sortColumn}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="DURATION"
+                    column="duration"
+                    activeColumn={sortColumn}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="ERRORS"
+                    column="errors"
+                    activeColumn={sortColumn}
+                    direction={sortDirection}
+                    onSort={handleSort}
+                  />
                 </tr>
               </thead>
               <tbody>
-                {filteredAssessments.map((assessment) => (
+                {paginatedAssessments.map((assessment) => (
                   <AssessmentRow
                     key={assessment.id}
                     assessment={assessment}
@@ -297,7 +509,78 @@ export function AssessmentsClient({
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div
+          className="mt-4 flex items-center justify-between"
+          data-testid="pagination"
+        >
+          <p className="text-sm text-muted-foreground">
+            Page {safePage} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(safePage - 1)}
+              disabled={safePage <= 1}
+              data-testid="pagination-prev"
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(safePage + 1)}
+              disabled={safePage >= totalPages}
+              data-testid="pagination-next"
+            >
+              Next
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function SortableHeader({
+  label,
+  column,
+  activeColumn,
+  direction,
+  onSort,
+}: {
+  label: string;
+  column: SortColumn;
+  activeColumn: SortColumn | null;
+  direction: SortDirection;
+  onSort: (column: SortColumn) => void;
+}) {
+  const isActive = activeColumn === column;
+
+  return (
+    <th
+      className="cursor-pointer select-none p-4 text-left text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+      onClick={() => onSort(column)}
+      data-testid={`sort-${column}`}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        {isActive ? (
+          direction === "asc" ? (
+            <ArrowUp className="h-3 w-3" />
+          ) : (
+            <ArrowDown className="h-3 w-3" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3 w-3 opacity-40" />
+        )}
+      </span>
+    </th>
   );
 }
 
@@ -345,12 +628,7 @@ function AssessmentRow({
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const hasErrors = hasError(assessment);
-  const duration =
-    assessment.completedAt && assessment.startedAt
-      ? new Date(assessment.completedAt).getTime() -
-        new Date(assessment.startedAt).getTime()
-      : null;
+  const duration = getDuration(assessment);
 
   return (
     <>
@@ -393,10 +671,10 @@ function AssessmentRow({
           {duration ? formatDuration(duration) : "-"}
         </td>
         <td className="p-4">
-          {hasErrors ? (
-            <Badge variant="destructive" className="gap-1">
+          {assessment.errorCount > 0 ? (
+            <Badge variant="destructive" className="gap-1" data-testid={`error-badge-${assessment.id}`}>
               <AlertCircle className="h-3 w-3" />
-              ERROR
+              {assessment.errorCount}
             </Badge>
           ) : (
             <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400">
