@@ -36,7 +36,7 @@ const MIN_MESSAGES_FOR_SUMMARY = 5;
 export async function buildCoworkerMemory(
   conversations: ConversationWithMeta[],
   coworkerName: string,
-  options?: { maxRecentMessages?: number }
+  options?: { maxRecentMessages?: number; skipSummary?: boolean }
 ): Promise<CoworkerMemory> {
   const maxRecent = options?.maxRecentMessages ?? MAX_RECENT_MESSAGES;
 
@@ -64,8 +64,10 @@ export async function buildCoworkerMemory(
   const recentMessages = allMessages.slice(-maxRecent);
 
   // If we have enough messages, generate a summary of earlier ones
+  // skipSummary: avoids a second Gemini call on the hot path (chat responses).
+  // The recent-messages window is usually sufficient context for short chats.
   let summary: string | null = null;
-  if (totalMessageCount > MIN_MESSAGES_FOR_SUMMARY) {
+  if (!options?.skipSummary && totalMessageCount > MIN_MESSAGES_FOR_SUMMARY) {
     // Messages to summarize (everything except recent)
     const messagesToSummarize = allMessages.slice(
       0,

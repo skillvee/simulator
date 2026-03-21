@@ -1395,7 +1395,7 @@ export default function PresentationPage() {
               {slide.visual === "demo-join" && <DemoJoinVisual />}
               {slide.visual === "demo-chat" && <DemoChatVisual />}
               {slide.visual === "demo-call" && <DemoCallVisual />}
-              {slide.visual === "demo-analysis" && "dimensions" in slide && <DemoAnalysisVisual dimensions={slide.dimensions} />}
+              {slide.visual === "demo-analysis" && "dimensions" in slide && slide.dimensions && <DemoAnalysisVisual dimensions={slide.dimensions} />}
               {slide.visual === "demo-dashboard" && <DemoDashboardVisual />}
               {slide.visual === "demo-scorecard" && <DemoScorecardVisual />}
               {slide.visual === "demo-compare" && <DemoCompareVisual />}

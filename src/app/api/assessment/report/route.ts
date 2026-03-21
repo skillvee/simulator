@@ -48,11 +48,14 @@ function migrateVideoEvaluationToRubric(data: unknown): RubricAssessmentOutput |
       overallScore: overallScore?.score || 2.0,
       dimensionScores: [],
       detectedRedFlags: redFlags?.map((rf) => {
-        const flag = typeof rf === 'string' ? rf : rf;
+        const signal = typeof rf === 'string' ? rf : rf.signal || '';
+        const evidence = typeof rf === 'string' ? '' : rf.evidence || '';
         return {
-          flag: typeof flag === 'string' ? flag : flag.signal || '',
-          evidence: typeof flag === 'string' ? '' : flag.evidence || '',
-          severity: "medium" as const,
+          slug: signal.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+          name: signal,
+          description: signal,
+          evidence,
+          timestamps: [],
         };
       }) || [],
       topStrengths: greenFlags?.map((gf) => ({

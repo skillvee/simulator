@@ -100,13 +100,30 @@ export async function POST(request: Request) {
     .filter((c) => c.id !== managerCoworker.id)
     .map((c) => ({ name: c.name, role: c.role }));
 
+  // Wait briefly for repo provisioning if it's still pending
+  let repoUrl = assessment.repoUrl;
+  if (!repoUrl && assessment.repoStatus === "pending") {
+    for (let i = 0; i < 5; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const updated = await db.assessment.findUnique({
+        where: { id: assessmentId },
+        select: { repoUrl: true, repoStatus: true },
+      });
+      if (updated?.repoUrl) {
+        repoUrl = updated.repoUrl;
+        break;
+      }
+      if (updated?.repoStatus === "failed") break;
+    }
+  }
+
   // Generate greeting messages (async — uses Gemini for natural phrasing)
   const greetingMessages = await generateManagerGreetings({
     userName: session.user.name || "there",
     managerName: managerCoworker.name,
     managerRole: managerCoworker.role,
     companyName: assessment.scenario.companyName,
-    repoUrl: assessment.repoUrl || assessment.scenario.repoUrl,
+    repoUrl,
     taskDescription: assessment.scenario.taskDescription,
     personaStyle: managerCoworker.personaStyle,
     personality: managerCoworker.personality as CoworkerPersonality | null,

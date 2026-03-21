@@ -471,7 +471,7 @@ export async function provisionAssessmentRepo(
           owner,
           name: repoName,
           description: `Assessment repository for ${assessmentId}`,
-          private: true,
+          private: false,
           include_all_branches: false,
         }),
       }

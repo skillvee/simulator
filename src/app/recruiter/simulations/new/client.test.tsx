@@ -287,9 +287,13 @@ describe("Simulation Save Flow (US-011)", () => {
     });
 
     it("should use generated task description when selected", () => {
-      const previewData = {
+      const previewData: {
+        selectedTask:
+          | { type: "generated"; option: { summary: string; recruiterSummary: string; description: string } }
+          | { type: "custom"; customDescription: string };
+      } = {
         selectedTask: {
-          type: "generated" as const,
+          type: "generated",
           option: {
             summary: "Implement caching",
             recruiterSummary: "The candidate implements Redis caching for API performance optimization.",

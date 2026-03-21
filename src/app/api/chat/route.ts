@@ -49,8 +49,41 @@ function extractPrUrl(message: string): string | null {
 }
 
 /**
+ * Build the Gemini contents array for a chat message.
+ * Extracts the shared pattern of system instructions + history + user message.
+ */
+function buildGeminiContents(
+  systemPrompt: string,
+  history: Array<{ role: string; parts: Array<{ text: string }> }>,
+  message: string,
+  extraTurns?: Array<{ role: string; parts: Array<{ text: string }> }>
+) {
+  return [
+    {
+      role: "user",
+      parts: [
+        {
+          text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
+        },
+      ],
+    },
+    {
+      role: "model",
+      parts: [{ text: "I understand. I'm ready to chat as this coworker." }],
+    },
+    ...history,
+    {
+      role: "user",
+      parts: [{ text: message }],
+    },
+    ...(extraTurns || []),
+  ];
+}
+
+/**
  * POST /api/chat
- * Send a message to a coworker and get a response from Gemini Flash
+ * Send a message to a coworker and get a streamed response from Gemini Flash.
+ * Returns an SSE stream so the client can show text as it arrives.
  */
 export async function POST(request: Request) {
   const session = await auth();
@@ -64,22 +97,40 @@ export async function POST(request: Request) {
   // Sanitize message to prevent XSS attacks
   const message = sanitizeForStorage(validated.data.message);
 
-  // Verify assessment belongs to user and get scenario context
-  const assessment = await db.assessment.findFirst({
-    where: {
-      id: assessmentId,
-      userId: session.user.id,
-    },
-    include: {
-      scenario: true,
-    },
-  });
+  // --- Parallel DB queries (assessment + conversations run concurrently) ---
+  const [assessment, allConversations] = await Promise.all([
+    db.assessment.findFirst({
+      where: {
+        id: assessmentId,
+        userId: session.user.id,
+      },
+      include: {
+        scenario: true,
+      },
+    }),
+    db.conversation.findMany({
+      where: {
+        assessmentId,
+      },
+      include: {
+        coworker: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    }),
+  ]);
 
   if (!assessment) {
     return error("Assessment not found", 404, "NOT_FOUND");
   }
 
-  // Get coworker persona
+  // Coworker query needs scenarioId from assessment — runs after first batch
   const coworker = await db.coworker.findFirst({
     where: {
       id: coworkerId,
@@ -90,24 +141,6 @@ export async function POST(request: Request) {
   if (!coworker) {
     return error("Coworker not found", 404, "NOT_FOUND");
   }
-
-  // Get ALL conversations for this assessment (for cross-coworker context)
-  const allConversations = await db.conversation.findMany({
-    where: {
-      assessmentId,
-    },
-    include: {
-      coworker: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
 
   // Get existing text conversation with this specific coworker
   const existingConversation = allConversations.find(
@@ -129,10 +162,11 @@ export async function POST(request: Request) {
       updatedAt: c.updatedAt,
     }));
 
-  // Build memory context for this coworker
+  // Build memory context — skipSummary avoids a second Gemini call
   const memory = await buildCoworkerMemory(
     coworkerConversations,
-    coworker.name
+    coworker.name,
+    { skipSummary: true }
   );
   const memoryContext = formatMemoryForPrompt(memory, coworker.name);
 
@@ -194,246 +228,140 @@ export async function POST(request: Request) {
   const isCoworkerManager = isManager(coworker.role);
   const extractedPrUrl = extractPrUrl(message);
   let prSubmitted = false;
-  let responseText: string;
 
   // Check if a PR URL has already been saved for this assessment
   const prAlreadySaved = !!assessment.prUrl;
 
-  // If manager and PR link detected, validate and potentially process it
-  if (isCoworkerManager && extractedPrUrl) {
-    // Check if assessment is in WORKING status
-    if (assessment.status === AssessmentStatus.WORKING) {
-      // Check if this is a duplicate PR submission
-      if (prAlreadySaved) {
-        // PR already saved - don't overwrite, respond naturally without "call me" prompt
-        const response = await gemini.models.generateContent({
-          model: CHAT_MODEL,
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
-                },
-              ],
-            },
-            {
-              role: "model",
-              parts: [
-                { text: "I understand. I'm ready to chat as this coworker." },
-              ],
-            },
-            ...history,
-            {
-              role: "user",
-              parts: [{ text: message }],
-            },
-            {
-              role: "model",
-              parts: [
-                {
-                  text: "Let me respond to this PR link they shared.",
-                },
-              ],
-            },
-            {
-              role: "user",
-              parts: [{ text: DUPLICATE_PR_PROMPT }],
-            },
-          ],
-        });
+  // Determine extra turns and PR state based on context
+  let extraTurns: Array<{ role: string; parts: Array<{ text: string }> }> | undefined;
 
-        responseText =
-          response.text ||
-          "Got it! I already have your PR - ready whenever you want to hop on a call!";
+  if (isCoworkerManager && extractedPrUrl) {
+    if (assessment.status === AssessmentStatus.WORKING) {
+      if (prAlreadySaved) {
+        extraTurns = [
+          { role: "model", parts: [{ text: "Let me respond to this PR link they shared." }] },
+          { role: "user", parts: [{ text: DUPLICATE_PR_PROMPT }] },
+        ];
       } else {
-        // First PR submission - save and trigger call prompt
         await db.assessment.update({
           where: { id: assessmentId },
-          data: {
-            prUrl: extractedPrUrl,
-          },
+          data: { prUrl: extractedPrUrl },
         });
         prSubmitted = true;
 
-        // Generate an acknowledgment response from the manager
         const prAckPrompt = buildPRAcknowledgmentContext(extractedPrUrl);
-
-        const response = await gemini.models.generateContent({
-          model: CHAT_MODEL,
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
-                },
-              ],
-            },
-            {
-              role: "model",
-              parts: [
-                { text: "I understand. I'm ready to chat as this coworker." },
-              ],
-            },
-            ...history,
-            {
-              role: "user",
-              parts: [{ text: message }],
-            },
-            {
-              role: "model",
-              parts: [
-                {
-                  text: "Let me respond appropriately to this PR submission.",
-                },
-              ],
-            },
-            {
-              role: "user",
-              parts: [{ text: prAckPrompt }],
-            },
-          ],
-        });
-
-        responseText =
-          response.text ||
-          "Awesome, thanks for submitting! Let me take a quick look at your PR and I'll call you in a moment to discuss.";
+        extraTurns = [
+          { role: "model", parts: [{ text: "Let me respond appropriately to this PR submission." }] },
+          { role: "user", parts: [{ text: prAckPrompt }] },
+        ];
       }
-    } else {
-      // Assessment not in WORKING status - can't accept PR
-      const response = await gemini.models.generateContent({
-        model: CHAT_MODEL,
-        contents: [
-          {
-            role: "user",
-            parts: [
-              {
-                text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
-              },
-            ],
-          },
-          {
-            role: "model",
-            parts: [
-              { text: "I understand. I'm ready to chat as this coworker." },
-            ],
-          },
-          ...history,
-          {
-            role: "user",
-            parts: [{ text: message }],
-          },
-        ],
-      });
-      responseText =
-        response.text || "I'm sorry, I couldn't generate a response.";
     }
+    // If not WORKING status, no extra turns — just normal response
   } else if (isCoworkerManager && message.toLowerCase().includes("pr") && message.toLowerCase().includes("http")) {
-    // User tried to submit a PR but it wasn't a valid PR URL
-    const response = await gemini.models.generateContent({
-      model: CHAT_MODEL,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
-            },
-          ],
-        },
-        {
-          role: "model",
-          parts: [
-            { text: "I understand. I'm ready to chat as this coworker." },
-          ],
-        },
-        ...history,
-        {
-          role: "user",
-          parts: [{ text: message }],
-        },
-        {
-          role: "model",
-          parts: [{ text: "Let me respond helpfully about the PR link." }],
-        },
-        {
-          role: "user",
-          parts: [{ text: INVALID_PR_PROMPT }],
-        },
-      ],
-    });
-
-    responseText =
-      response.text ||
-      "Hmm, I don't see a valid PR link there. Could you share the GitHub, GitLab, or Bitbucket pull request URL?";
-  } else {
-    // Regular message - generate normal response
-    const response = await gemini.models.generateContent({
-      model: CHAT_MODEL,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `[SYSTEM INSTRUCTIONS - Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to chat in character.`,
-            },
-          ],
-        },
-        {
-          role: "model",
-          parts: [{ text: "I understand. I'm ready to chat as this coworker." }],
-        },
-        ...history,
-        {
-          role: "user",
-          parts: [{ text: message }],
-        },
-      ],
-    });
-
-    responseText =
-      response.text || "I'm sorry, I couldn't generate a response.";
+    extraTurns = [
+      { role: "model", parts: [{ text: "Let me respond helpfully about the PR link." }] },
+      { role: "user", parts: [{ text: INVALID_PR_PROMPT }] },
+    ];
   }
 
+  const contents = buildGeminiContents(systemPrompt, history, message, extraTurns);
   const timestamp = new Date().toISOString();
 
-  // Create new messages
   const userMessage: ChatMessage = {
     role: "user",
     text: message,
     timestamp,
   };
-  const modelMessage: ChatMessage = {
-    role: "model",
-    text: responseText,
-    timestamp: new Date().toISOString(),
-  };
 
-  const newTranscript = [...existingMessages, userMessage, modelMessage];
+  // --- Stream the Gemini response via SSE ---
+  const encoder = new TextEncoder();
 
-  // Save to database
-  if (existingConversation) {
-    await db.conversation.update({
-      where: { id: existingConversation.id },
-      data: { transcript: newTranscript as unknown as Prisma.InputJsonValue },
-    });
-  } else {
-    await db.conversation.create({
-      data: {
-        assessmentId,
-        coworkerId,
-        type: "text",
-        transcript: newTranscript as unknown as Prisma.InputJsonValue,
-      },
-    });
-  }
+  const stream = new ReadableStream({
+    async start(controller) {
+      let responseText = "";
 
-  return success({
-    response: responseText,
-    timestamp: modelMessage.timestamp,
-    prSubmitted,
-    defenseCallRequired: isCoworkerManager && (prSubmitted || prAlreadySaved),
+      try {
+        const streamIterator = await gemini.models.generateContentStream({
+          model: CHAT_MODEL,
+          contents,
+        });
+
+        for await (const chunk of streamIterator) {
+          const text = chunk.text || "";
+          if (text) {
+            responseText += text;
+            // Send each chunk as an SSE data event
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: "chunk", text })}\n\n`)
+            );
+          }
+        }
+      } catch (err) {
+        console.error("Gemini stream error:", err);
+        if (!responseText) {
+          responseText = "Sorry, I couldn't respond right now. Try again?";
+        }
+      }
+
+      // If no text was generated, use fallback
+      if (!responseText) {
+        responseText = "I'm sorry, I couldn't generate a response.";
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: "chunk", text: responseText })}\n\n`)
+        );
+      }
+
+      const modelTimestamp = new Date().toISOString();
+      const modelMessage: ChatMessage = {
+        role: "model",
+        text: responseText,
+        timestamp: modelTimestamp,
+      };
+
+      const newTranscript = [...existingMessages, userMessage, modelMessage];
+
+      // Save to database (don't block the stream on this)
+      const savePromise = existingConversation
+        ? db.conversation.update({
+            where: { id: existingConversation.id },
+            data: { transcript: newTranscript as unknown as Prisma.InputJsonValue },
+          })
+        : db.conversation.create({
+            data: {
+              assessmentId,
+              coworkerId,
+              type: "text",
+              transcript: newTranscript as unknown as Prisma.InputJsonValue,
+            },
+          });
+
+      // Send the final "done" event with metadata
+      controller.enqueue(
+        encoder.encode(
+          `data: ${JSON.stringify({
+            type: "done",
+            timestamp: modelTimestamp,
+            prSubmitted,
+            defenseCallRequired: isCoworkerManager && (prSubmitted || prAlreadySaved),
+          })}\n\n`
+        )
+      );
+
+      // Wait for DB save before closing the stream
+      await savePromise.catch((err: unknown) =>
+        console.error("Failed to save conversation:", err)
+      );
+
+      controller.close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
   });
 }
 

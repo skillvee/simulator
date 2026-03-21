@@ -13,7 +13,6 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
-  Play,
   Code,
   CheckCircle,
   BarChart3,

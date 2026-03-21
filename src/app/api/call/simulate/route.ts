@@ -148,7 +148,7 @@ export async function POST(request: Request) {
       candidateName: session.user.name || undefined,
       taskDescription: assessment.scenario.taskDescription,
       techStack: assessment.scenario.techStack,
-      repoUrl: assessment.scenario.repoUrl || "",
+      repoUrl: assessment.repoUrl || "",
       prUrl: assessment.prUrl!,
       conversationSummary,
       screenAnalysisSummary: "",

@@ -37,7 +37,7 @@ export function WorkPageClient({
   coworkers,
   selectedCoworkerId: initialSelectedCoworkerId,
   assessmentStartTime,
-  managerMessagesStarted,
+  managerMessagesStarted: _managerMessagesStarted,
   prUrl,
 }: WorkPageClientProps) {
   const router = useRouter();

@@ -64,6 +64,9 @@ function SignInForm() {
           router.push("/recruiter/dashboard");
           return;
         }
+        // Candidates (USER role) go to candidate dashboard
+        router.push("/candidate/dashboard");
+        return;
       }
       router.push(callbackUrl);
     }

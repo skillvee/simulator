@@ -108,6 +108,22 @@ export async function POST(request: Request) {
       return error(`Incomplete parsing result - missing fields: ${missingFields.join(", ")}`, 500);
     }
 
+    // Check if the JD had enough content to extract anything useful
+    const hasAnyValue = expectedFields.some((field) => {
+      const entry = parsedData[field as keyof ParseJDResponse];
+      if (entry && typeof entry === "object" && "value" in entry) {
+        return entry.value !== null && entry.value !== undefined;
+      }
+      return false;
+    });
+
+    if (!hasAnyValue) {
+      return error(
+        "Could not extract job details from this text. Make sure to paste the full job description including the title and responsibilities.",
+        422
+      );
+    }
+
     // Return the parsed data with version metadata
     return success({
       ...parsedData,
@@ -117,7 +133,8 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
-    console.error("Job description parsing error:", err);
-    return error("Failed to parse job description", 500);
+    const errMsg = err instanceof Error ? err.message : "Unknown error";
+    console.error("Job description parsing error:", errMsg, err);
+    return error(`Failed to parse job description: ${errMsg}`, 500);
   }
 }

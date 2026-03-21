@@ -260,10 +260,8 @@ export default auth((req) => {
 
     // Check recruiter role (RECRUITER or ADMIN allowed)
     if (user?.role !== "RECRUITER" && user?.role !== "ADMIN") {
-      // Redirect to home with error for wrong role
-      const homeUrl = new URL("/", req.url);
-      homeUrl.searchParams.set("error", "unauthorized");
-      return NextResponse.redirect(homeUrl);
+      // Redirect candidates to their own dashboard instead of showing an error
+      return NextResponse.redirect(new URL("/candidate/dashboard", req.url));
     }
 
     return NextResponse.next();
@@ -294,10 +292,11 @@ export default auth((req) => {
 
     // Check admin role (only ADMIN allowed)
     if (user?.role !== "ADMIN") {
-      // Redirect to home with error for wrong role
-      const homeUrl = new URL("/", req.url);
-      homeUrl.searchParams.set("error", "admin_access_required");
-      return NextResponse.redirect(homeUrl);
+      // Redirect to the user's appropriate dashboard
+      if (user?.role === "RECRUITER") {
+        return NextResponse.redirect(new URL("/recruiter/dashboard", req.url));
+      }
+      return NextResponse.redirect(new URL("/candidate/dashboard", req.url));
     }
 
     return NextResponse.next();

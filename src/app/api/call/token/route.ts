@@ -161,7 +161,7 @@ export async function POST(request: Request) {
         candidateName: session.user.name || undefined,
         taskDescription: assessment.scenario.taskDescription,
         techStack: assessment.scenario.techStack,
-        repoUrl: assessment.scenario.repoUrl || "",
+        repoUrl: assessment.repoUrl || "",
         prUrl: assessment.prUrl!,
         conversationSummary,
         // Screen analysis and code review may not be available yet
@@ -189,7 +189,7 @@ export async function POST(request: Request) {
         candidateName: session.user.name || undefined,
         taskDescription: assessment.scenario.taskDescription,
         techStack: assessment.scenario.techStack,
-        repoUrl: assessment.repoUrl || assessment.scenario.repoUrl,
+        repoUrl: assessment.repoUrl || "",
         personaStyle: coworker.personaStyle,
         personality: coworker.personality as import("@/types").CoworkerPersonality | null,
         teammates,

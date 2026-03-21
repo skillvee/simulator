@@ -330,52 +330,116 @@ export function Chat({
     setIsSending(true);
 
     try {
-      // Start API call immediately (runs in background during reading delay)
-      const apiPromise = api<{
-        response: string;
-        timestamp: string;
-        prSubmitted?: boolean;
-        defenseCallRequired?: boolean;
-      }>("/api/chat", {
+      // Short "reading" delay (300-700ms) — just enough to feel natural
+      const readingDelay = 300 + Math.random() * 400;
+      await new Promise(resolve => setTimeout(resolve, readingDelay));
+
+      // Show typing indicator while we stream
+      startRealisticTyping();
+
+      // Start SSE stream to get chunks as Gemini generates them
+      const response = await fetch("/api/chat", {
         method: "POST",
-        body: {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           assessmentId,
           coworkerId: coworker.id,
           message: userMessage.text,
-        },
+        }),
       });
 
-      // Simulate "reading" delay before coworker starts typing
-      // Short delay to feel natural (0.5-1.5s)
-      const readingDelay = 500 + Math.random() * 1000;
-      await new Promise(resolve => setTimeout(resolve, readingDelay));
+      if (!response.ok || !response.body) {
+        throw new Error(`Chat request failed: ${response.status}`);
+      }
 
-      // Now start the realistic typing pattern (after they've "read" the message)
-      startRealisticTyping();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let doneData: {
+        timestamp: string;
+        prSubmitted?: boolean;
+        defenseCallRequired?: boolean;
+      } | null = null;
+      let buffer = "";
+      let typingStopped = false;
 
-      // Additional composing delay based on coworker response speed
-      const getResponseDelay = (role: string): number => {
-        const isManager = role.toLowerCase().includes("manager");
-        if (isManager) return 1000 + Math.random() * 1500;  // 1-2.5s
-        return 1500 + Math.random() * 2000;  // 1.5-3.5s
+      const processLine = (line: string) => {
+        if (!line.startsWith("data: ")) return;
+        const json = line.slice(6);
+        // Skip empty or clearly incomplete JSON
+        if (!json.startsWith("{")) return;
+
+        try {
+          const data = JSON.parse(json);
+
+          if (data.type === "chunk" && data.text) {
+            fullText += data.text;
+
+            // Stop typing indicator on first chunk — switch to showing the message
+            if (!typingStopped) {
+              typingStopped = true;
+              stopRealisticTyping();
+            }
+
+            // Update the streaming message in place
+            const streamingMessage: ChatMessage = {
+              role: "model",
+              text: fullText,
+              timestamp: new Date().toISOString(),
+            };
+            setMessages((prev) => {
+              // Replace existing streaming message or add new one
+              const lastMsg = prev[prev.length - 1];
+              if (lastMsg?.role === "model" && lastMsg.timestamp === "__streaming__") {
+                return [...prev.slice(0, -1), { ...streamingMessage, timestamp: "__streaming__" }];
+              }
+              return [...prev, { ...streamingMessage, timestamp: "__streaming__" }];
+            });
+          } else if (data.type === "done") {
+            doneData = data;
+          }
+        } catch {
+          // Skip malformed SSE lines (partial chunks reassembled next iteration)
+        }
       };
 
-      const delay = getResponseDelay(coworker.role);
-      const delayPromise = new Promise(resolve => setTimeout(resolve, delay));
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      // Wait for both API response and composing delay
-      const [data] = await Promise.all([apiPromise, delayPromise]);
+        buffer += decoder.decode(value, { stream: true });
 
-      const modelMessage: ChatMessage = {
-        role: "model",
-        text: data.response,
-        timestamp: data.timestamp,
-      };
+        // Parse SSE events from buffer
+        const lines = buffer.split("\n");
+        // Keep the last potentially incomplete line in the buffer
+        buffer = lines.pop() || "";
 
-      // Stop typing indicator before adding message
+        for (const line of lines) {
+          processLine(line);
+        }
+      }
+
+      // Process any remaining data in the buffer after stream ends
+      if (buffer.trim()) {
+        processLine(buffer);
+      }
+
+      // Finalize the message with the real timestamp
+      if (doneData) {
+        setMessages((prev) => {
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg?.role === "model") {
+            return [
+              ...prev.slice(0, -1),
+              { role: "model" as const, text: fullText, timestamp: doneData!.timestamp },
+            ];
+          }
+          return prev;
+        });
+      }
+
+      // Ensure typing is stopped
       stopRealisticTyping();
-
-      setMessages((prev) => [...prev, modelMessage]);
 
       // Play notification sound for model message
       playMessageSound();
@@ -386,17 +450,16 @@ export function Chat({
       }
 
       // Detect if reactions should be added to the user's message
-      // Count user messages before this one to detect first message
       const userMessageCountBefore = messages.filter(m => m.role === "user").length;
       const isFirstUserMessage = userMessageCountBefore === 0;
       const reactions = detectReactions(userMessage.text, coworker.name, isFirstUserMessage);
 
       // Add reactions with a delay (2-5 seconds) if any were detected
       if (reactions.length > 0) {
-        const delay = 2000 + Math.random() * 3000;
+        const reactionDelay = 2000 + Math.random() * 3000;
         setTimeout(() => {
           setMessages(prev => {
-            // Find the user message we just added (should be second to last now)
+            // Find the user message (second to last now)
             const userMsgIndex = prev.length - 2;
             if (userMsgIndex >= 0 && prev[userMsgIndex].role === "user") {
               return prev.map((msg, idx) =>
@@ -405,16 +468,18 @@ export function Chat({
             }
             return prev;
           });
-        }, delay);
+        }, reactionDelay);
       }
 
       // Enable defense mode when PR is submitted — disables text input
-      if (data.prSubmitted || data.defenseCallRequired) {
+      if (doneData?.prSubmitted || doneData?.defenseCallRequired) {
         setDefenseCallRequired(true);
       }
     } catch (err) {
-      // Remove the optimistic message on error
-      setMessages((prev) => prev.slice(0, -1));
+      // Remove the optimistic user message and any partial streaming message
+      setMessages((prev) => prev.filter(
+        (m) => m.timestamp !== "__streaming__" && m !== userMessage
+      ));
       if (err instanceof ApiClientError) {
         console.error("Failed to send message:", err.message);
       } else {
