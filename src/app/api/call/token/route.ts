@@ -206,7 +206,7 @@ export async function POST(request: Request) {
         {
           companyName: assessment.scenario.companyName,
           candidateName: session.user.name || undefined,
-          taskDescription: assessment.scenario.taskDescription,
+          taskDescription: undefined,
           techStack: assessment.scenario.techStack,
         },
         memoryContext,
