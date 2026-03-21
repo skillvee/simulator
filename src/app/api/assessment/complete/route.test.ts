@@ -187,6 +187,58 @@ describe("POST /api/assessment/complete", () => {
     expect(json.data.timing.workingDurationSeconds).toBeGreaterThanOrEqual(0);
   });
 
+  it("should reject double-completion when assessment is already COMPLETED", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-1",
+      status: AssessmentStatus.COMPLETED,
+      startedAt: new Date(),
+    });
+
+    const request = new Request("http://localhost/api/assessment/complete", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "test-id",
+        prUrl: "https://github.com/org/repo/pull/123",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toContain("Cannot complete assessment");
+    expect(data.error).toContain("COMPLETED");
+    // Should not attempt to update
+    expect(mockAssessmentUpdate).not.toHaveBeenCalled();
+  });
+
+  it("should return 500 when DB update fails mid-operation", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      startedAt: new Date(),
+    });
+    mockAssessmentUpdate.mockRejectedValue(new Error("DB connection lost"));
+
+    const request = new Request("http://localhost/api/assessment/complete", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "test-id",
+        prUrl: "https://github.com/org/repo/pull/123",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data.error).toBe("Failed to complete assessment");
+    // Should not leak internal error details
+    expect(JSON.stringify(data)).not.toContain("DB connection lost");
+  });
+
   it("should update assessment with PR URL only (no status change)", async () => {
     const startTime = new Date("2025-01-01T10:00:00Z");
     mockAuth.mockResolvedValue({ user: { id: "user-1" } });

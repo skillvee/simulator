@@ -325,6 +325,212 @@ describe("POST /api/chat", () => {
     );
   });
 
+  it("should handle Gemini returning empty text gracefully", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Jordan Rivera",
+      role: "Senior Engineer",
+      personaStyle: "Technical and helpful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    // Gemini yields chunks with empty/null text
+    mockGenerateContentStream.mockResolvedValue(
+      (async function* () {
+        yield { text: "" };
+        yield { text: null };
+        yield { text: undefined };
+      })()
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const events = await readSSEResponse(response);
+    const chunks = events.filter((e) => e.type === "chunk");
+    const done = events.find((e) => e.type === "done");
+
+    // Should send a fallback message when no text was generated
+    expect(chunks.length).toBeGreaterThanOrEqual(1);
+    expect(chunks.some((c) => (c.text as string).includes("couldn't generate"))).toBe(true);
+    expect(done).toBeDefined();
+  });
+
+  it("should handle Gemini throwing an error without leaking details", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Jordan Rivera",
+      role: "Senior Engineer",
+      personaStyle: "Technical and helpful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    // Gemini throws an API error
+    mockGenerateContentStream.mockResolvedValue(
+      (async function* () {
+        throw new Error("RATE_LIMIT_EXCEEDED: quota exhausted for model gemini-3-flash");
+      })()
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const events = await readSSEResponse(response);
+    const allText = events
+      .filter((e) => e.type === "chunk")
+      .map((e) => e.text)
+      .join("");
+
+    // Should not leak internal error details to client
+    expect(allText).not.toContain("RATE_LIMIT_EXCEEDED");
+    expect(allText).not.toContain("quota exhausted");
+    // Stream should still complete with done event
+    expect(events.find((e) => e.type === "done")).toBeDefined();
+    // Conversation should still be saved with fallback text
+    expect(mockConversationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        transcript: expect.arrayContaining([
+          expect.objectContaining({
+            role: "model",
+            text: expect.stringContaining("couldn't respond"),
+          }),
+        ]),
+      }),
+    });
+  });
+
+  it("should reject chat when assessment is in COMPLETED status", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.COMPLETED,
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toContain("COMPLETED");
+    // Should not call Gemini
+    expect(mockGenerateContentStream).not.toHaveBeenCalled();
+  });
+
+  it("should handle DB write failure after Gemini succeeds gracefully", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Jordan Rivera",
+      role: "Senior Engineer",
+      personaStyle: "Technical and helpful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    // DB create rejects
+    mockConversationCreate.mockRejectedValue(new Error("DB connection lost"));
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["Response text"])
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Hello",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const events = await readSSEResponse(response);
+    const chunks = events.filter((e) => e.type === "chunk");
+    const done = events.find((e) => e.type === "done");
+
+    // Stream should still complete with the AI response
+    expect(chunks.length).toBe(1);
+    expect(chunks[0].text).toBe("Response text");
+    expect(done).toBeDefined();
+  });
+
   it("should persist messages to conversation", async () => {
     mockAuth.mockResolvedValue({
       user: { id: "user-1", name: "Test User" },
