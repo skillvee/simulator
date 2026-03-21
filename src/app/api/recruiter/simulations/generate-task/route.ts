@@ -5,8 +5,8 @@
  * Available to RECRUITER and ADMIN roles only.
  */
 
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { success, error, validationError } from "@/lib/api";
 import {
   generateCodingTask,
   type GenerateCodingTaskInput,
@@ -39,15 +39,12 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Recruiter access required" },
-      { status: 403 }
-    );
+    return error("Recruiter access required", 403);
   }
 
   try {
@@ -56,13 +53,7 @@ export async function POST(request: Request) {
     const validationResult = requestSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request body",
-          details: validationResult.error.errors,
-        },
-        { status: 400 }
-      );
+      return validationError(validationResult.error);
     }
 
     const input: GenerateCodingTaskInput = validationResult.data;
@@ -70,16 +61,13 @@ export async function POST(request: Request) {
     // Generate task options
     const result = await generateCodingTask(input);
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("Task generation error:", error);
+    return success(result);
+  } catch (err) {
+    console.error("Task generation error:", err);
 
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to generate tasks";
+      err instanceof Error ? err.message : "Failed to generate tasks";
 
-    return NextResponse.json(
-      { error: "Task generation failed", details: errorMessage },
-      { status: 500 }
-    );
+    return error(`Task generation failed: ${errorMessage}`, 500);
   }
 }

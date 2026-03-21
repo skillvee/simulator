@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
+import { success, error, validationError } from "@/lib/api";
 import { gemini } from "@/lib/ai/gemini";
 import {
   JD_PARSER_PROMPT,
@@ -32,15 +32,12 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Recruiter access required" },
-      { status: 403 }
-    );
+    return error("Recruiter access required", 403);
   }
 
   try {
@@ -49,13 +46,7 @@ export async function POST(request: Request) {
     // Validate request body with Zod
     const validationResult = parseJDRequestSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request",
-          details: validationResult.error.flatten().fieldErrors,
-        },
-        { status: 400 }
-      );
+      return validationError(validationResult.error);
     }
 
     const { jobDescription } = validationResult.data;
@@ -77,10 +68,7 @@ export async function POST(request: Request) {
     const responseText = response.text;
 
     if (!responseText) {
-      return NextResponse.json(
-        { error: "Failed to parse job description - empty response from AI" },
-        { status: 500 }
-      );
+      return error("Failed to parse job description - empty response from AI", 500);
     }
 
     // Parse the JSON response
@@ -93,16 +81,10 @@ export async function POST(request: Request) {
         .trim();
 
       parsedData = JSON.parse(cleanedResponse) as ParseJDResponse;
-    } catch (parseError) {
-      console.error("Failed to parse AI response as JSON:", parseError);
+    } catch (parseErr) {
+      console.error("Failed to parse AI response as JSON:", parseErr);
       console.error("AI response:", responseText);
-      return NextResponse.json(
-        {
-          error: "Failed to parse job description - invalid JSON response",
-          details: responseText,
-        },
-        { status: 500 }
-      );
+      return error("Failed to parse job description - invalid JSON response", 500);
     }
 
     // Validate the parsed data structure
@@ -123,31 +105,19 @@ export async function POST(request: Request) {
 
     if (missingFields.length > 0) {
       console.error("Missing fields in parsed response:", missingFields);
-      return NextResponse.json(
-        {
-          error: "Incomplete parsing result",
-          details: `Missing fields: ${missingFields.join(", ")}`,
-        },
-        { status: 500 }
-      );
+      return error(`Incomplete parsing result - missing fields: ${missingFields.join(", ")}`, 500);
     }
 
     // Return the parsed data with version metadata
-    return NextResponse.json({
+    return success({
       ...parsedData,
       _meta: {
         promptVersion: JD_PARSER_PROMPT_VERSION,
         parsedAt: new Date().toISOString(),
       },
     });
-  } catch (error) {
-    console.error("Job description parsing error:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to parse job description",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("Job description parsing error:", err);
+    return error("Failed to parse job description", 500);
   }
 }

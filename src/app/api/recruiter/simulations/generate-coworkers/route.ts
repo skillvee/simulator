@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { success, error, validationError } from "@/lib/api";
 import { z } from "zod";
 import {
   generateCoworkers,
@@ -35,15 +35,12 @@ export async function POST(request: Request) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
   if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Recruiter access required" },
-      { status: 403 }
-    );
+    return error("Recruiter access required", 403);
   }
 
   try {
@@ -52,13 +49,7 @@ export async function POST(request: Request) {
     // Validate request body
     const validation = requestSchema.safeParse(body);
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: "Invalid request body",
-          details: validation.error.errors,
-        },
-        { status: 400 }
-      );
+      return validationError(validation.error);
     }
 
     const input: GenerateCoworkersInput = validation.data;
@@ -66,20 +57,13 @@ export async function POST(request: Request) {
     // Generate coworkers
     const result = await generateCoworkers(input);
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("Coworker generation error:", error);
+    return success(result);
+  } catch (err) {
+    console.error("Coworker generation error:", err);
 
-    // Return a more specific error message
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to generate coworkers";
+      err instanceof Error ? err.message : "Failed to generate coworkers";
 
-    return NextResponse.json(
-      {
-        error: "Generation failed",
-        message: errorMessage,
-      },
-      { status: 500 }
-    );
+    return error(`Generation failed: ${errorMessage}`, 500);
   }
 }

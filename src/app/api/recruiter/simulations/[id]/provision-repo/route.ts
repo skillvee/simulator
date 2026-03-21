@@ -9,9 +9,9 @@
  * npm install && npm run build always works.
  */
 
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
+import { success, error } from "@/lib/api";
 import { provisionRepo, needsRepo } from "@/lib/scenarios/repo-templates";
 import type { ScenarioMetadata } from "@/lib/scenarios/repo-spec";
 
@@ -31,26 +31,20 @@ export async function POST(
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return error("Unauthorized", 401);
   }
 
   const user = session.user as SessionUser;
 
   // Only allow recruiters and admins
   if (user.role !== "RECRUITER" && user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Recruiter access required" },
-      { status: 403 }
-    );
+    return error("Recruiter access required", 403);
   }
 
   const scenarioId = id;
 
   if (!scenarioId) {
-    return NextResponse.json(
-      { error: "scenarioId is required" },
-      { status: 400 }
-    );
+    return error("scenarioId is required", 400);
   }
 
   // Fetch full scenario with coworkers for AI generation
@@ -78,40 +72,29 @@ export async function POST(
   });
 
   if (!scenario) {
-    return NextResponse.json({ error: "Scenario not found" }, { status: 404 });
+    return error("Scenario not found", 404);
   }
 
   // Security: Only allow the scenario owner (or admin) to trigger provisioning
   if (scenario.createdById !== user.id && user.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Not authorized to modify this scenario" },
-      { status: 403 }
-    );
+    return error("Not authorized to modify this scenario", 403);
   }
 
   // If repo already exists, don't provision again
   if (scenario.repoUrl) {
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Repository already provisioned",
-        repoUrl: scenario.repoUrl,
-      },
-      { status: 200 }
-    );
+    return success({
+      message: "Repository already provisioned",
+      repoUrl: scenario.repoUrl,
+    });
   }
 
   // Only provision repos for engineering-related tech stacks
   if (!needsRepo(scenario.techStack)) {
-    return NextResponse.json(
-      {
-        success: true,
-        skipped: true,
-        reason: "non-engineering",
-        message: "Repository not needed for this tech stack",
-      },
-      { status: 200 }
-    );
+    return success({
+      skipped: true,
+      reason: "non-engineering",
+      message: "Repository not needed for this tech stack",
+    });
   }
 
   // Build scenario metadata for AI generation
@@ -147,19 +130,12 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({
-      success: true,
+    return success({
       message: "Repository provisioned successfully",
       repoUrl,
     });
-  } catch (error) {
-    console.error("[Provision Repo API] Provisioning failed:", error);
-    return NextResponse.json(
-      {
-        error: "Repository provisioning failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("[Provision Repo API] Provisioning failed:", err);
+    return error("Repository provisioning failed", 500);
   }
 }
