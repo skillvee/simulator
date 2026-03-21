@@ -49,6 +49,7 @@ interface ScreenRecordingContextValue {
   screenshotCount: number;
   webcamState: WebcamState;
   webcamStream: MediaStream | null;
+  sessionLoaded: boolean;
   startRecording: () => Promise<boolean>;
   stopRecording: () => void;
   retryRecording: () => Promise<boolean>;
@@ -551,16 +552,14 @@ export function ScreenRecordingProvider({
         setChunkCount(status.totalChunks);
         setScreenshotCount(status.totalScreenshots);
 
-        // Check if there was an active segment (meaning recording was interrupted)
-        // The activeSegment will only exist if status is "recording" in DB
-        // Since we're loading after a page refresh, the MediaRecorder is gone
-        // so we need to show the re-prompt modal
+        // DB has a prior recording — mark as stopped so the guard shows
+        // the "Recording Stopped" re-prompt instead of the initial consent.
+        setState("stopped");
+        setPermissionState("stopped");
+
+        // If there was an active segment (recording interrupted mid-stream),
+        // mark it as interrupted in the DB.
         if (status.activeSegment) {
-          // There was an active recording session, but browser doesn't have stream
-          // Mark as stopped to trigger re-prompt
-          setState("stopped");
-          setPermissionState("stopped");
-          // Mark the stale segment as interrupted
           await interruptRecordingSession(
             assessmentId,
             status.activeSegment.id
@@ -602,6 +601,7 @@ export function ScreenRecordingProvider({
     screenshotCount,
     webcamState,
     webcamStream,
+    sessionLoaded,
     startRecording,
     stopRecording,
     retryRecording,

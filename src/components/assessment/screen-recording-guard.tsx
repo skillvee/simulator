@@ -49,6 +49,7 @@ function ScreenRecordingGuardInner({
     state,
     permissionState,
     isRecording,
+    sessionLoaded,
     startRecording,
     retryRecording,
   } = useScreenRecordingContext();
@@ -58,29 +59,24 @@ function ScreenRecordingGuardInner({
   const [isStarting, setIsStarting] = useState(false);
 
   // Check if this is a fresh start or if recording was interrupted
+  // Gate on sessionLoaded to avoid flash of wrong modal before loadSession() completes
   useEffect(() => {
-    const wasRecording = sessionStorage.getItem(
-      `screen-recording-${assessmentId}`
-    );
+    if (!sessionLoaded) return;
 
-    if (wasRecording === "active" && state === "stopped") {
-      // Recording was active but stopped (user closed screen share or webcam disconnected)
-      setShowStoppedModal(true);
-      setShowInitialModal(false);
-    } else if (state === "stopped" && permissionState === "stopped") {
-      // Recording stopped after being active
+    if (state === "stopped") {
+      // Recording was previously active but stopped (page refresh, stream lost, etc.)
       setShowStoppedModal(true);
       setShowInitialModal(false);
     } else if (isRecording) {
       // Recording is active
       setShowStoppedModal(false);
       setShowInitialModal(false);
-    } else if (state === "idle" && !wasRecording) {
-      // Fresh start - show initial consent modal
+    } else if (state === "idle") {
+      // Fresh start - no prior recording in DB
       setShowInitialModal(true);
       setShowStoppedModal(false);
     }
-  }, [state, permissionState, isRecording, assessmentId]);
+  }, [state, permissionState, isRecording, sessionLoaded]);
 
   const handleRetry = async () => {
     setIsRetrying(true);
