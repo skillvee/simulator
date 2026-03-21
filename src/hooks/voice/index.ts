@@ -11,7 +11,11 @@ export type {
 
 // Base hook (for advanced use cases)
 export { useVoiceBase } from "./use-voice-base";
-export type { UseVoiceBaseOptions, UseVoiceBaseReturn } from "./use-voice-base";
+export type {
+  ConnectionEvent,
+  UseVoiceBaseOptions,
+  UseVoiceBaseReturn,
+} from "./use-voice-base";
 
 // Coworker call hook
 export { useCoworkerVoice } from "./use-coworker-voice";

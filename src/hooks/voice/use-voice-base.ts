@@ -45,11 +45,21 @@ export interface UseVoiceBaseOptions extends VoiceBaseOptions {
   onTokenResponse?: (data: Record<string, unknown>) => void;
 }
 
+export interface ConnectionEvent {
+  event: string;
+  timestamp: string;
+  details?: string;
+}
+
 export interface UseVoiceBaseReturn extends VoiceBaseReturn {
   /** The underlying Gemini session ref (for advanced use cases) */
   sessionRef: React.RefObject<Session | null>;
   /** The transcript ref (for access in callbacks) */
   transcriptRef: React.RefObject<TranscriptMessage[]>;
+  /** Connection events accumulated during the session */
+  connectionEventsRef: React.RefObject<ConnectionEvent[]>;
+  /** The last error message from the Live API */
+  lastErrorMessage: string | null;
   /** Update transcript manually */
   updateTranscript: (transcript: TranscriptMessage[]) => void;
   /** Add a message to the transcript */
@@ -109,6 +119,10 @@ export function useVoiceBase({
   const [retryCount, setRetryCount] = useState(0);
   const [hasRecoverableSession, setHasRecoverableSession] = useState(false);
 
+  // Session logging state
+  const connectionEventsRef = useRef<ConnectionEvent[]>([]);
+  const [lastErrorMessage, setLastErrorMessage] = useState<string | null>(null);
+
   // Refs for WebSocket and audio handling
   const sessionRef = useRef<Session | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -120,13 +134,26 @@ export function useVoiceBase({
   const audioQueueRef = useRef<string[]>([]);
   const isPlayingRef = useRef(false);
 
-  // Update connection state with callback
+  // Record a connection event for session logging
+  const recordConnectionEvent = useCallback(
+    (event: string, details?: string) => {
+      connectionEventsRef.current.push({
+        event,
+        timestamp: new Date().toISOString(),
+        details,
+      });
+    },
+    []
+  );
+
+  // Update connection state with callback and event tracking
   const updateConnectionState = useCallback(
-    (state: VoiceConnectionState) => {
+    (state: VoiceConnectionState, details?: string) => {
       setConnectionState(state);
+      recordConnectionEvent(state, details);
       onConnectionStateChange?.(state);
     },
-    [onConnectionStateChange]
+    [onConnectionStateChange, recordConnectionEvent]
   );
 
   // Update transcript with callback and optionally save progress
@@ -344,9 +371,11 @@ export function useVoiceBase({
           onmessage: handleServerMessage,
           onerror: (e: ErrorEvent) => {
             logger.error("Gemini Live error", { error: e });
-            setError(e.message || "Connection error");
-            updateConnectionState("error");
-            onError?.(e.message || "Connection error");
+            const errMsg = e.message || "Connection error";
+            setError(errMsg);
+            setLastErrorMessage(errMsg);
+            updateConnectionState("error", errMsg);
+            onError?.(errMsg);
           },
           onclose: () => {
             if (sessionConnected) {
@@ -371,13 +400,14 @@ export function useVoiceBase({
       const catError = categorizeError(err);
       setCategorizedError(catError);
       setError(catError.userMessage);
+      setLastErrorMessage(catError.userMessage);
 
       // Handle permission denied specifically
       if (catError.category === "permission") {
         setPermissionState("denied");
       }
 
-      updateConnectionState("error");
+      updateConnectionState("error", catError.userMessage);
       onError?.(catError.userMessage);
     }
   }, [
@@ -534,6 +564,10 @@ export function useVoiceBase({
     transcriptRef,
     updateTranscript,
     addToTranscript,
+
+    // Session logging
+    connectionEventsRef,
+    lastErrorMessage,
 
     // Timing
     startedAt,

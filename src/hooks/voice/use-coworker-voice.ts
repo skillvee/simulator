@@ -71,11 +71,46 @@ export function useCoworkerVoice({
     tokenRequestBody,
   });
 
+  // Fire-and-forget session log to /api/call/log
+  const logSession = useCallback(
+    (endTime: Date) => {
+      const startTime = base.startedAt;
+      if (!startTime) return;
+
+      const durationMs = endTime.getTime() - startTime.getTime();
+
+      fetch("/api/call/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assessmentId,
+          coworkerId,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          transcript: base.transcriptRef.current.map((m) => ({
+            role: m.role,
+            text: m.text,
+            timestamp: m.timestamp,
+          })),
+          connectionEvents: base.connectionEventsRef.current,
+          errorMessage: base.lastErrorMessage ?? undefined,
+          durationMs,
+        }),
+      }).catch((err) => {
+        logger.error("Error logging voice session", { err });
+      });
+    },
+    [assessmentId, coworkerId, base]
+  );
+
   // End call and save transcript
   const endCall = useCallback(async () => {
     const endTime = new Date();
     base.setEndedAt(endTime);
     base.disconnect();
+
+    // Fire-and-forget: log session data for observability
+    logSession(endTime);
 
     // Save transcript to server
     if (base.transcriptRef.current.length > 0) {
@@ -96,7 +131,7 @@ export function useCoworkerVoice({
         logger.error("Error saving transcript", { err });
       }
     }
-  }, [assessmentId, coworkerId, base]);
+  }, [assessmentId, coworkerId, base, logSession]);
 
   return {
     connectionState: base.connectionState,
