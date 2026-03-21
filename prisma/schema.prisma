@@ -135,6 +135,7 @@ model Assessment {
   voiceSessions          VoiceSession[]
   videoAssessment        VideoAssessment?
   apiRequestLogs         ApiRequestLog[]
+  candidateEvents        CandidateEvent[]
 
   @@index([userId])
   @@index([scenarioId, userId])
@@ -576,6 +577,18 @@ model VoiceSession {
   assessment       Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@index([assessmentId, startTime])
+}
+
+model CandidateEvent {
+  id           String     @id @default(cuid())
+  assessmentId String
+  eventType    String
+  timestamp    DateTime
+  metadata     Json?
+  createdAt    DateTime   @default(now())
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId, timestamp])
 }
 
 model ClientError {

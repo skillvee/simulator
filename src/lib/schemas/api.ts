@@ -171,6 +171,23 @@ export const VoiceSessionLogSchema = z.object({
 });
 export type VoiceSessionLog = z.infer<typeof VoiceSessionLogSchema>;
 
+/**
+ * POST /api/events - Log candidate events in batch
+ */
+export const CandidateEventBatchSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  events: z
+    .array(
+      z.object({
+        eventType: z.string().min(1, "Event type is required"),
+        timestamp: z.string().min(1, "Timestamp is required"),
+        metadata: z.record(z.unknown()).optional(),
+      })
+    )
+    .min(1, "At least one event is required"),
+});
+export type CandidateEventBatch = z.infer<typeof CandidateEventBatchSchema>;
+
 // ─── Response Schemas (API Contracts) ───────────────────────────────────────
 
 /**

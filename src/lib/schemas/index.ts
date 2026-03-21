@@ -28,6 +28,8 @@ export {
   type AvatarGenerate,
   VoiceSessionLogSchema,
   type VoiceSessionLog,
+  CandidateEventBatchSchema,
+  type CandidateEventBatch,
   // Response schemas (API contracts)
   apiSuccessSchema,
   ApiErrorResponseSchema,
