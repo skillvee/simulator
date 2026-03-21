@@ -60,6 +60,7 @@ model User {
   assessments            Assessment[]
   createdScenarios       Scenario[]              @relation("CreatedScenarios")
   sessions               Session[]
+  clientErrors           ClientError[]
   simulationCreationLogs SimulationCreationLog[]
   videoAssessments       VideoAssessment[]
 }
@@ -129,6 +130,7 @@ model Assessment {
   logs                   AssessmentLog[]
   conversations          Conversation[]
   recordings             Recording[]
+  clientErrors           ClientError[]
   videoAssessment        VideoAssessment?
 
   @@index([userId])
@@ -522,4 +524,31 @@ enum SimulationCreationStatus {
   SAVING
   COMPLETED
   FAILED
+}
+
+enum ClientErrorType {
+  UNHANDLED_EXCEPTION
+  CONSOLE_ERROR
+  CONSOLE_WARN
+  CONSOLE_LOG
+  REACT_BOUNDARY
+}
+
+model ClientError {
+  id            String          @id @default(cuid())
+  assessmentId  String?
+  userId        String?
+  errorType     ClientErrorType
+  message       String
+  stackTrace    String?
+  componentName String?
+  url           String
+  timestamp     DateTime
+  metadata      Json?
+  createdAt     DateTime        @default(now())
+  assessment    Assessment?     @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user          User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId, timestamp])
+  @@index([errorType, timestamp])
 }
