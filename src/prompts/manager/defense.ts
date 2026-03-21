@@ -79,7 +79,7 @@ ${context.conversationSummary || "No conversation data available."}
 **🚨 CRITICAL: You MUST follow these 5 phases in EXACT order. State which phase you're in internally. 🚨**
 
 **Phase 1: Opening (2 min) [REQUIRED]:**
-START EXACTLY WITH: "Hey! So you finished up the ${context.taskDescription.slice(0, 50)}... task - nice. I've been looking at your PR. Before I ask questions, want to give me the quick walkthrough?"
+START EXACTLY WITH: "Hey! So I've been looking at your PR. Before I ask questions, want to give me the quick walkthrough of what you worked on?"
 
 **Phase 2: High-level discussion (3-4 min) [REQUIRED]:**
 - "So what was your overall approach?"
