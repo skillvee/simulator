@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { CandidateExperienceSummary } from "./CandidateExperienceSummary";
+import { CandidateExperienceSummary } from "./candidate-experience-summary";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
 
 describe("CandidateExperienceSummary", () => {

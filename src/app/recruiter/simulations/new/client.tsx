@@ -29,7 +29,7 @@ import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-di
 import type { ParseJDResponse, InferredSeniorityLevel } from "@/types";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
 import type { TaskOption } from "@/lib/scenarios/task-generator";
-import { CandidateExperienceSummary } from "@/components/recruiter/CandidateExperienceSummary"; // eslint-disable-line no-restricted-imports -- Component import allowed for UI
+import { CandidateExperienceSummary } from "@/components/recruiter/candidate-experience-summary"; // eslint-disable-line no-restricted-imports -- Component import allowed for UI
 import {
   Sheet,
   SheetTrigger,
