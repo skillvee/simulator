@@ -14,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   Activity,
+  Clock,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -588,6 +589,14 @@ export function ErrorDashboardClient({
         <p className="text-sm text-muted-foreground mt-1">
           Cross-assessment error monitoring and analysis
         </p>
+      </div>
+
+      {/* Data Retention Notice */}
+      <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        <Clock className="h-4 w-4 shrink-0" />
+        <span>
+          Observability data (errors, voice sessions, API logs, candidate events) is retained for <strong>30 days</strong>. Core assessment data is kept indefinitely.
+        </span>
       </div>
 
       {/* Summary Cards */}
