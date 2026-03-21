@@ -131,6 +131,7 @@ model Assessment {
   conversations          Conversation[]
   recordings             Recording[]
   clientErrors           ClientError[]
+  voiceSessions          VoiceSession[]
   videoAssessment        VideoAssessment?
 
   @@index([userId])
@@ -532,6 +533,23 @@ enum ClientErrorType {
   CONSOLE_WARN
   CONSOLE_LOG
   REACT_BOUNDARY
+}
+
+model VoiceSession {
+  id               String     @id @default(cuid())
+  assessmentId     String
+  coworkerId       String
+  startTime        DateTime
+  endTime          DateTime?
+  transcript       Json
+  connectionEvents Json
+  tokenName        String?
+  errorMessage     String?
+  durationMs       Int?
+  createdAt        DateTime   @default(now())
+  assessment       Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId, startTime])
 }
 
 model ClientError {

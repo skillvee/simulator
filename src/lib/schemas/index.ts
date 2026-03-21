@@ -26,6 +26,8 @@ export {
   type ScenarioBuilderRequest,
   AvatarGenerateSchema,
   type AvatarGenerate,
+  VoiceSessionLogSchema,
+  type VoiceSessionLog,
   // Response schemas (API contracts)
   apiSuccessSchema,
   ApiErrorResponseSchema,

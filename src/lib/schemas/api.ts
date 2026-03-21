@@ -143,6 +143,34 @@ export const AvatarGenerateSchema = z.object({
 });
 export type AvatarGenerate = z.infer<typeof AvatarGenerateSchema>;
 
+/**
+ * POST /api/call/log - Log a voice session
+ */
+export const VoiceSessionLogSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  coworkerId: z.string().min(1, "Coworker ID is required"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().optional(),
+  transcript: z.array(
+    z.object({
+      role: z.string(),
+      text: z.string(),
+      timestamp: z.string(),
+    })
+  ),
+  connectionEvents: z.array(
+    z.object({
+      event: z.string(),
+      timestamp: z.string(),
+      details: z.string().optional(),
+    })
+  ),
+  tokenName: z.string().optional(),
+  errorMessage: z.string().optional(),
+  durationMs: z.number().int().optional(),
+});
+export type VoiceSessionLog = z.infer<typeof VoiceSessionLogSchema>;
+
 // ─── Response Schemas (API Contracts) ───────────────────────────────────────
 
 /**
