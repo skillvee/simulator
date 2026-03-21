@@ -63,6 +63,7 @@ model User {
   clientErrors           ClientError[]
   simulationCreationLogs SimulationCreationLog[]
   videoAssessments       VideoAssessment[]
+  apiRequestLogs         ApiRequestLog[]
 }
 
 model Scenario {
@@ -133,6 +134,7 @@ model Assessment {
   clientErrors           ClientError[]
   voiceSessions          VoiceSession[]
   videoAssessment        VideoAssessment?
+  apiRequestLogs         ApiRequestLog[]
 
   @@index([userId])
   @@index([scenarioId, userId])
@@ -256,11 +258,13 @@ model AssessmentLog {
   timestamp    DateTime               @default(now())
   durationMs   Int?
   metadata     Json?
+  traceId      String?
   assessment   Assessment             @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@index([assessmentId])
   @@index([timestamp])
   @@index([assessmentId, timestamp])
+  @@index([traceId])
 }
 
 model AssessmentApiCall {
@@ -281,11 +285,13 @@ model AssessmentApiCall {
   promptType        String?
   promptVersion     String?
   tokenCount        Int?
+  traceId           String?
   assessment        Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 
   @@index([assessmentId])
   @@index([requestTimestamp])
   @@index([assessmentId, requestTimestamp])
+  @@index([traceId])
 }
 
 model VideoAssessmentLog {
@@ -477,6 +483,26 @@ model SimulationCreationLog {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+model ApiRequestLog {
+  id           String      @id @default(cuid())
+  method       String
+  path         String
+  statusCode   Int
+  durationMs   Int
+  assessmentId String?
+  userId       String?
+  traceId      String?
+  errorMessage String?
+  requestBody  Json?
+  timestamp    DateTime
+  createdAt    DateTime    @default(now())
+  assessment   Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user         User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([traceId])
+  @@index([assessmentId, timestamp])
 }
 
 enum UserRole {
