@@ -9,7 +9,7 @@ import {
   commitSpecSchema,
   issueSpecSchema,
   authorSpecSchema,
-} from "../repo-spec";
+} from "./repo-spec";
 
 const validAuthor = {
   name: "Sarah Kim",

@@ -17,8 +17,8 @@ vi.mock("@/lib/ai/gemini", () => ({
   },
 }));
 
-import { generateRepoSpec } from "../repo-spec-generator";
-import type { ScenarioMetadata } from "../repo-spec";
+import { generateRepoSpec } from "./repo-spec-generator";
+import type { ScenarioMetadata } from "./repo-spec";
 
 const sampleMetadata: ScenarioMetadata = {
   name: "Senior Backend Engineer at Meta",

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { selectScaffold, SCAFFOLDS, needsRepo } from "../repo-spec";
+import { selectScaffold, SCAFFOLDS, needsRepo } from "./repo-spec";
 
 describe("selectScaffold", () => {
   describe("happy path", () => {
