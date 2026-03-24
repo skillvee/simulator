@@ -148,6 +148,17 @@ export function CandidateRadarChartOverview({
             {results.strengthLevel}
           </Badge>
 
+          {/* Score context */}
+          <p className="text-xs text-stone-500 text-center max-w-[200px]">
+            {results.overallScore >= 3.5
+              ? "Exceptional performance across assessed dimensions"
+              : results.overallScore >= 2.5
+                ? "Strong performance across most assessed dimensions"
+                : results.overallScore >= 1.5
+                  ? "Developing skills with room for growth"
+                  : "Early-stage skills with significant growth opportunities"}
+          </p>
+
           {/* Confidence */}
           <p className="text-xs text-stone-400">
             Evaluation confidence:{" "}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, AlertCircle } from "lucide-react";
+import { ChevronLeft, AlertCircle, Link2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { createLogger } from "@/lib/core";
@@ -122,11 +122,35 @@ export function CandidateResultsClient({
             Back to My Assessments
           </Link>
         </Button>
-        <div className="text-right">
-          <h1 className="text-sm font-semibold text-stone-900">
-            Assessment Results
-          </h1>
-          <p className="text-xs text-stone-400">{formattedDate}</p>
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-stone-500 hover:text-stone-900"
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+              }}
+              title="Copy link to results"
+            >
+              <Link2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-stone-500 hover:text-stone-900"
+              onClick={() => window.print()}
+              title="Print results"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="text-right">
+            <h1 className="text-sm font-semibold text-stone-900">
+              Assessment Results
+            </h1>
+            <p className="text-xs text-stone-400">{formattedDate}</p>
+          </div>
         </div>
       </div>
 
