@@ -229,6 +229,7 @@ export function WorkPageClient({
             cachedMessages={cachedMessagesForSelected}
             onMessagesChange={handleMessagesChange}
             initialPrUrl={prUrl}
+            managerId={manager?.id}
           />
         ) : (
           <div className="flex flex-col min-h-0 h-full">

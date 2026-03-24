@@ -34,8 +34,10 @@ interface ChatProps {
   cachedMessages?: ChatMessage[];
   /** Called whenever messages change so parent can cache them per-coworker */
   onMessagesChange?: (coworkerId: string, messages: ChatMessage[]) => void;
-  /** Initial PR URL — if set and coworker is manager, enables defense mode */
+  /** Initial PR URL — if set and coworker is the manager, enables defense mode */
   initialPrUrl?: string | null;
+  /** The manager coworker's ID — used to scope defense mode to the manager only */
+  managerId?: string | null;
 }
 
 // Note: PR submission handling and defense call flow will be implemented
@@ -43,27 +45,37 @@ interface ChatProps {
 // interface - the candidate will call the manager after submitting a PR.
 
 /**
- * Detect reactions based on user message content
- * Returns array of reactions that should be added to the user's message
+ * Detect reactions based on user message content.
+ * Reactions are probabilistic to avoid feeling mechanical.
  */
 function detectReactions(userMessage: string, coworkerName: string, isFirstMessage: boolean): MessageReaction[] {
   const reactions: MessageReaction[] = [];
   const lowerMsg = userMessage.toLowerCase();
 
-  // First message gets a wave
-  if (isFirstMessage) {
+  // First message gets a wave ~70% of the time
+  if (isFirstMessage && Math.random() < 0.7) {
     reactions.push({ emoji: "👋", reactorName: coworkerName });
-    return reactions; // Only wave on first message, skip other reactions
+    return reactions;
   }
 
-  // PR URL detection
+  // PR URL detection — always react (important moment)
   if (lowerMsg.includes("github.com") || lowerMsg.includes("gitlab.com") || lowerMsg.includes("bitbucket.org")) {
-    reactions.push({ emoji: "👀", reactorName: coworkerName });
+    const prEmojis = ["👀", "🔍", "💬"];
+    reactions.push({ emoji: prEmojis[Math.floor(Math.random() * prEmojis.length)], reactorName: coworkerName });
+    return reactions;
   }
 
-  // Thank you detection
-  if (lowerMsg.includes("thank") || lowerMsg.includes("thx") || lowerMsg.includes("thanks")) {
+  // Thank you — 60% chance
+  if ((lowerMsg.includes("thank") || lowerMsg.includes("thx") || lowerMsg.includes("thanks")) && Math.random() < 0.6) {
+    const thankEmojis = ["👍", "🙏", "💯"];
+    reactions.push({ emoji: thankEmojis[Math.floor(Math.random() * thankEmojis.length)], reactorName: coworkerName });
+    return reactions;
+  }
+
+  // Positive affirmations — 30% chance
+  if ((lowerMsg.includes("sounds good") || lowerMsg.includes("got it") || lowerMsg.includes("makes sense") || lowerMsg.includes("perfect")) && Math.random() < 0.3) {
     reactions.push({ emoji: "👍", reactorName: coworkerName });
+    return reactions;
   }
 
   return reactions;
@@ -76,6 +88,7 @@ export function Chat({
   cachedMessages,
   onMessagesChange,
   initialPrUrl,
+  managerId,
 }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(cachedMessages ?? []);
   const [input, setInput] = useState("");
@@ -90,9 +103,10 @@ export function Chat({
   const historyLoadedRef = useRef<string | null>(null);
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Defense mode: disable text input when PR submitted and coworker is manager
-  const isManagerCoworker = isManager(coworker.role);
-  const isDefenseMode = defenseCallRequired || !!(initialPrUrl && isManagerCoworker);
+  // Defense mode: disable text input when PR submitted and this is THE manager
+  // Use managerId for exact match — isManager() matches "Product Manager" too
+  const isThisTheManager = managerId ? coworker.id === managerId : isManager(coworker.role);
+  const isDefenseMode = defenseCallRequired || !!(initialPrUrl && isThisTheManager);
   const isInputDisabled = isDefenseMode;
 
   // Check if currently in a call with this coworker
