@@ -332,10 +332,14 @@ export function WelcomePageClient({
                   gather requirements.
                 </p>
 
-                <p className="text-xs text-center text-slate-500">
-                  By continuing, you agree to screen and webcam recording
-                  during this assessment.
-                </p>
+                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <Monitor className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                  <p className="text-sm text-slate-500">
+                    By continuing, you agree to{" "}
+                    <strong className="text-slate-700">screen and webcam recording</strong>{" "}
+                    during this assessment.
+                  </p>
+                </div>
 
                 <Button
                   onClick={handleStart}

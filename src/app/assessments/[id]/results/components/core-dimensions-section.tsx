@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronRight, CheckCircle2, TrendingUp } from "lucide-react";
 import { ScoreDots } from "@/components/assessment/score-dots";
 import { formatDimensionName } from "@/components/assessment/helpers";
 import type { CandidateResultsData, CandidateDimensionScore } from "@/types";
@@ -44,6 +44,22 @@ function DimensionDetailContent({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Growth opportunity for lower-scored dimensions */}
+      {dimension.score < 3 && (
+        <div>
+          <h4 className="text-xs font-semibold text-amber-700 mb-1.5">
+            Area for Growth
+          </h4>
+          <div className="text-xs text-stone-600 flex items-start gap-1.5">
+            <TrendingUp className="h-3 w-3 text-amber-600 mt-0.5 flex-shrink-0" />
+            <span>
+              This is an area where stronger demonstration could improve your overall assessment.
+              Consider being more proactive and explicit in showing this skill during work simulations.
+            </span>
+          </div>
         </div>
       )}
 
