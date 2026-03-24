@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createLogger } from "./logger";
+import { createLogger, shouldSkipScreenRecording } from "./logger";
 
 describe("createLogger", () => {
   beforeEach(() => {
@@ -220,5 +220,47 @@ describe("createLogger", () => {
       expect(console.debug).not.toHaveBeenCalled();
       expect(console.info).toHaveBeenCalled();
     });
+  });
+});
+
+describe("shouldSkipScreenRecording", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("returns false in production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_SKIP_SCREEN_RECORDING", "true");
+    expect(shouldSkipScreenRecording()).toBe(false);
+  });
+
+  it("returns true in development when SKIP_SCREEN_RECORDING is set", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_SKIP_SCREEN_RECORDING", "true");
+    expect(shouldSkipScreenRecording()).toBe(true);
+  });
+
+  it("returns true in development when E2E_TEST_MODE is set", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_E2E_TEST_MODE", "true");
+    expect(shouldSkipScreenRecording()).toBe(true);
+  });
+
+  it("returns false in development when neither flag is set", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_SKIP_SCREEN_RECORDING", "");
+    vi.stubEnv("NEXT_PUBLIC_E2E_TEST_MODE", "");
+    expect(shouldSkipScreenRecording()).toBe(false);
+  });
+});
+
+describe("core barrel export isolation", () => {
+  it("does NOT re-export env from the barrel (prevents client bundle contamination)", async () => {
+    const barrel = await import("./index");
+    // env should NOT be available through the barrel
+    expect("env" in barrel).toBe(false);
+    // But createLogger and shouldSkipScreenRecording should be
+    expect("createLogger" in barrel).toBe(true);
+    expect("shouldSkipScreenRecording" in barrel).toBe(true);
   });
 });

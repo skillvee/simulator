@@ -361,7 +361,7 @@ function SlackLayoutInner({
               width={120}
               height={32}
               className="object-contain brightness-0 invert"
-              style={{ height: "auto" }}
+              style={{ width: "auto", height: "auto" }}
               priority
             />
           </div>

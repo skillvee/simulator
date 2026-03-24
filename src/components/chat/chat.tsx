@@ -193,7 +193,7 @@ export function Chat({
     handleManagerMessages(newMessages);
   }, [coworker.id, handleManagerMessages]);
 
-  const { managerId: autoStartManagerId } = useManagerAutoStart({
+  const { managerId: autoStartManagerId, isLoading: isManagerAutoStartLoading, isTyping: isManagerAutoStartTyping } = useManagerAutoStart({
     assessmentId,
     currentCoworkerId: coworker.id,
     onMessagesReceived: handleManagerMessagesWithRevealGuard,
@@ -202,9 +202,11 @@ export function Chat({
     userHasSentMessage,
   });
 
-  // If we're viewing the manager's chat and messages haven't arrived yet,
-  // show typing indicator instead of "Start a conversation" prompt
+  // Show typing indicator in empty state ONLY while the hook is actively
+  // loading or generating messages — not when it already finished (e.g.
+  // managerMessagesStarted was true but messages weren't persisted).
   const isManagerChat = autoStartManagerId === coworker.id;
+  const showManagerTypingInEmptyState = isManagerChat && (isManagerAutoStartLoading || isManagerAutoStartTyping);
 
   // Reveal manager-only history one message at a time with typing indicator
   const revealMessagesSequentially = useCallback(
@@ -561,7 +563,7 @@ export function Chat({
                 <div style={{color: "hsl(var(--slack-text-muted))"}}>Loading...</div>
               </div>
             ) : messages.length === 0 ? (
-              isManagerChat ? (
+              showManagerTypingInEmptyState ? (
                 // Manager auto-start active — show typing indicator while first message loads
                 <div className="flex h-full flex-col justify-end pb-4">
                   <div className="flex gap-4">

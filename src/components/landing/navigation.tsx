@@ -51,7 +51,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
             width={120}
             height={32}
             className={`object-contain ${isDark ? "brightness-0 invert" : ""}`}
-            style={{ height: "auto" }}
+            style={{ width: "auto", height: "auto" }}
             priority
           />
         </Link>
