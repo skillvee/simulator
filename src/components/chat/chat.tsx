@@ -741,7 +741,8 @@ export function Chat({
 // Linkify URLs in message text
 const URL_REGEX = /https?:\/\/[^\s<>"]+/g;
 
-function MessageText({ text, isUser }: { text: string; isUser: boolean }) {
+/** @internal Exported for testing */
+export function MessageText({ text, isUser }: { text: string; isUser: boolean }) {
   const parts = text.split(URL_REGEX);
   const urls = text.match(URL_REGEX);
 

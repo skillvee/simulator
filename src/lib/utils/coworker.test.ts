@@ -19,4 +19,12 @@ describe("isManager", () => {
     expect(isManager("Designer")).toBe(false);
     expect(isManager("QA Lead")).toBe(false);
   });
+
+  it("matches any role containing 'manager' — including Product Manager", () => {
+    // IMPORTANT: isManager() is intentionally broad. For defense mode scoping,
+    // use managerId comparison instead (see chat.tsx isThisTheManager).
+    expect(isManager("Product Manager")).toBe(true);
+    expect(isManager("Account Manager")).toBe(true);
+    expect(isManager("Office Manager")).toBe(true);
+  });
 });

@@ -8,6 +8,7 @@ vi.mock("@/auth", () => ({
 
 // Mock db
 const mockAssessmentFindFirst = vi.fn();
+const mockAssessmentUpdate = vi.fn();
 const mockCoworkerFindFirst = vi.fn();
 const mockConversationFindFirst = vi.fn();
 const mockConversationFindMany = vi.fn();
@@ -19,6 +20,7 @@ vi.mock("@/server/db", () => ({
   db: {
     assessment: {
       findFirst: (...args: unknown[]) => mockAssessmentFindFirst(...args),
+      update: (...args: unknown[]) => mockAssessmentUpdate(...args),
     },
     coworker: {
       findFirst: (...args: unknown[]) => mockCoworkerFindFirst(...args),
@@ -918,6 +920,109 @@ describe("POST /api/chat", () => {
         }),
       })
     );
+  });
+
+  it("should detect PR URL, save to assessment, and set prSubmitted in done event", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      prUrl: null, // No PR saved yet
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Alex Chen",
+      role: "Engineering Manager", // Must be a manager for PR detection
+      personaStyle: "Supportive",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    mockAssessmentUpdate.mockResolvedValue({});
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["PR received! Let's discuss."])
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-1",
+        message: "Here's my PR: https://github.com/org/repo/pull/42",
+      }),
+    });
+
+    const response = await POST(request);
+    const events = await readSSEResponse(response);
+    const done = events.find((e) => e.type === "done");
+
+    // PR should be saved to assessment
+    expect(mockAssessmentUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "assessment-1" },
+        data: { prUrl: "https://github.com/org/repo/pull/42" },
+      })
+    );
+
+    // Done event should flag prSubmitted
+    expect(done).toBeDefined();
+    expect(done!.prSubmitted).toBe(true);
+  });
+
+  it("should NOT save PR URL when sent to non-manager coworker", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-1", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "assessment-1",
+      userId: "user-1",
+      status: AssessmentStatus.WORKING,
+      scenarioId: "scenario-1",
+      prUrl: null,
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["typescript", "react"],
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-2",
+      name: "Jordan Rivera",
+      role: "Senior Engineer", // NOT a manager
+      personaStyle: "Technical",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockConversationCreate.mockResolvedValue({ id: "conv-1" });
+    mockGenerateContentStream.mockResolvedValue(
+      createMockStream(["Cool, nice work!"])
+    );
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "assessment-1",
+        coworkerId: "coworker-2",
+        message: "Check out https://github.com/org/repo/pull/42",
+      }),
+    });
+
+    const response = await POST(request);
+    const events = await readSSEResponse(response);
+    const done = events.find((e) => e.type === "done");
+
+    // Assessment should NOT be updated with PR URL
+    expect(mockAssessmentUpdate).not.toHaveBeenCalled();
+    expect(done!.prSubmitted).toBeFalsy();
   });
 });
 

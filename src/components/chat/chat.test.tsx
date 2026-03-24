@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { Chat } from "./chat";
+import { Chat, MessageText } from "./chat";
 
 // Mock the API client - source imports from @/lib/api
 vi.mock("@/lib/api", () => ({
@@ -192,6 +192,85 @@ describe("Chat", () => {
       await waitFor(() => {
         expect(screen.getByText(/is a Product Manager/)).toBeInTheDocument();
       });
+    });
+  });
+
+  describe("URL linkification", () => {
+    it("renders plain text without links when no URLs present", () => {
+      const { container } = render(<MessageText text="Hello world" isUser={false} />);
+      expect(container.textContent).toBe("Hello world");
+      expect(container.querySelector("a")).toBeNull();
+    });
+
+    it("renders URLs as clickable links", () => {
+      render(<MessageText text="Check out https://github.com/org/repo/pull/42 for the PR" isUser={false} />);
+      const link = screen.getByRole("link");
+      expect(link).toHaveAttribute("href", "https://github.com/org/repo/pull/42");
+      expect(link).toHaveAttribute("target", "_blank");
+    });
+
+    it("renders multiple URLs as separate links", () => {
+      render(<MessageText text="See https://example.com and https://other.com" isUser={false} />);
+      const links = screen.getAllByRole("link");
+      expect(links).toHaveLength(2);
+      expect(links[0]).toHaveAttribute("href", "https://example.com");
+      expect(links[1]).toHaveAttribute("href", "https://other.com");
+    });
+
+    it("uses lighter color for links in user messages", () => {
+      render(<MessageText text="https://example.com" isUser={true} />);
+      const link = screen.getByRole("link");
+      expect(link.className).toContain("text-blue-200");
+    });
+
+    it("uses darker color for links in coworker messages", () => {
+      render(<MessageText text="https://example.com" isUser={false} />);
+      const link = screen.getByRole("link");
+      expect(link.className).toContain("text-blue-500");
+    });
+  });
+
+  describe("defense mode scoping", () => {
+    it("shows defense banner for the actual manager when PR submitted", () => {
+      render(
+        <Chat
+          {...defaultProps}
+          coworker={createMockCoworker({ id: "mgr-1", role: "Engineering Manager" })}
+          initialPrUrl="https://github.com/org/repo/pull/1"
+          managerId="mgr-1"
+        />
+      );
+
+      expect(screen.getByText(/Call your manager/)).toBeInTheDocument();
+      expect(screen.queryByPlaceholderText("Type a message...")).not.toBeInTheDocument();
+    });
+
+    it("does NOT show defense banner for Product Manager (non-manager coworker)", () => {
+      render(
+        <Chat
+          {...defaultProps}
+          coworker={createMockCoworker({ id: "pm-1", role: "Product Manager" })}
+          initialPrUrl="https://github.com/org/repo/pull/1"
+          managerId="mgr-1"
+        />
+      );
+
+      expect(screen.queryByText(/Call your manager/)).not.toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Type a message...")).toBeInTheDocument();
+    });
+
+    it("does NOT show defense banner for non-manager coworkers even with PR URL", () => {
+      render(
+        <Chat
+          {...defaultProps}
+          coworker={createMockCoworker({ id: "eng-1", role: "Senior Software Engineer" })}
+          initialPrUrl="https://github.com/org/repo/pull/1"
+          managerId="mgr-1"
+        />
+      );
+
+      expect(screen.queryByText(/Call your manager/)).not.toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Type a message...")).toBeInTheDocument();
     });
   });
 });
