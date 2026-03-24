@@ -59,6 +59,7 @@ export function CandidateSidebar({ user }: CandidateSidebarProps) {
               height={36}
               style={{ width: "auto", height: "auto" }}
               className="brightness-0 invert"
+              priority
             />
           </Link>
         )}

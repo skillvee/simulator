@@ -166,4 +166,32 @@ describe("Chat", () => {
       ).not.toBeInTheDocument();
     });
   });
+
+  describe("empty state grammar", () => {
+    it("uses 'an' before roles starting with a vowel", async () => {
+      render(
+        <Chat
+          {...defaultProps}
+          coworker={createMockCoworker({ role: "Engineering Manager" })}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/is an Engineering Manager/)).toBeInTheDocument();
+      });
+    });
+
+    it("uses 'a' before roles starting with a consonant", async () => {
+      render(
+        <Chat
+          {...defaultProps}
+          coworker={createMockCoworker({ role: "Product Manager" })}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/is a Product Manager/)).toBeInTheDocument();
+      });
+    });
+  });
 });

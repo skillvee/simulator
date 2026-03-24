@@ -572,7 +572,7 @@ export function Chat({
                     Start a conversation with {coworker.name}
                   </h2>
                   <p className="max-w-md text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
-                    {coworker.name} is a {coworker.role}. Ask questions about the
+                    {coworker.name} is {/^[aeiou]/i.test(coworker.role) ? "an" : "a"} {coworker.role}. Ask questions about the
                     project, codebase, or anything else you need help with.
                   </p>
                 </div>
@@ -609,7 +609,7 @@ export function Chat({
                           }`}
                           style={isMe ? {} : {background: "hsl(var(--slack-bg-surface))", color: "hsl(var(--slack-text))"}}
                         >
-                          {message.text}
+                          <MessageText text={message.text} isUser={isMe} />
                         </div>
 
                         {/* Reactions */}
@@ -721,6 +721,36 @@ export function Chat({
         </div>
       </div>
     </div>
+  );
+}
+
+// Linkify URLs in message text
+const URL_REGEX = /https?:\/\/[^\s<>"]+/g;
+
+function MessageText({ text, isUser }: { text: string; isUser: boolean }) {
+  const parts = text.split(URL_REGEX);
+  const urls = text.match(URL_REGEX);
+
+  if (!urls) return <>{text}</>;
+
+  return (
+    <>
+      {parts.map((part, i) => (
+        <span key={i}>
+          {part}
+          {urls[i] && (
+            <a
+              href={urls[i]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`underline break-all ${isUser ? "text-blue-200 hover:text-blue-100" : "text-blue-500 hover:text-blue-600"}`}
+            >
+              {urls[i]}
+            </a>
+          )}
+        </span>
+      ))}
+    </>
   );
 }
 
