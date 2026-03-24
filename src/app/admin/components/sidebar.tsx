@@ -65,6 +65,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
               alt="SkillVee"
               width={140}
               height={36}
+              style={{ height: "auto" }}
               className="brightness-0 invert"
             />
           </Link>

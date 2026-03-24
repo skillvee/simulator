@@ -14,6 +14,7 @@ export default function Footer() {
                 width={120}
                 height={32}
                 className="object-contain brightness-0 invert"
+                style={{ height: "auto" }}
               />
             </div>
             <p className="text-blue-200/80 mb-4">

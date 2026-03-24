@@ -14,7 +14,7 @@ const mockEnv = {
   RESEND_API_KEY: undefined as string | undefined,
 };
 
-vi.mock("@/lib/core", () => ({
+vi.mock("@/lib/core/env", () => ({
   env: new Proxy(
     {},
     {
@@ -26,6 +26,9 @@ vi.mock("@/lib/core", () => ({
       },
     }
   ),
+}));
+
+vi.mock("@/lib/core", () => ({
   createLogger: () => ({
     debug: vi.fn(),
     info: vi.fn(),

@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { shouldAllowTestModeRecording, createLogger } from "@/lib/core";
+import { shouldAllowTestModeRecording } from "@/lib/core/env";
+import { createLogger } from "@/lib/core";
 import { success, error, validateRequest } from "@/lib/api";
 import { RecordingSessionSchema } from "@/lib/schemas";
 

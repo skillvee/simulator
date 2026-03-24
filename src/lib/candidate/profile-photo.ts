@@ -1,7 +1,8 @@
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
 import { GoogleGenAI } from "@google/genai";
-import { env, createLogger } from "@/lib/core";
+import { env } from "@/lib/core/env";
+import { createLogger } from "@/lib/core";
 
 const logger = createLogger("lib:candidate:profile-photo");
 

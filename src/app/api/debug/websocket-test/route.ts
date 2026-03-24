@@ -1,7 +1,7 @@
 import { success, error } from "@/lib/api";
 import { auth } from "@/auth";
 import { GoogleGenAI, Modality } from "@google/genai";
-import { env } from "@/lib/core";
+import { env } from "@/lib/core/env";
 
 // Debug endpoint to test WebSocket connection details
 export async function GET() {

@@ -33,6 +33,19 @@ export interface Logger {
   error: (message: string, data?: Record<string, unknown>) => void;
 }
 
+/**
+ * Client-safe check for whether screen recording should be skipped.
+ * Uses process.env directly (not the validated env object) so it can be
+ * imported by client components without pulling in server-only env.ts.
+ */
+export function shouldSkipScreenRecording(): boolean {
+  return (
+    process.env.NODE_ENV === "development" &&
+    (process.env.NEXT_PUBLIC_SKIP_SCREEN_RECORDING === "true" ||
+      process.env.NEXT_PUBLIC_E2E_TEST_MODE === "true")
+  );
+}
+
 export function createLogger(module: string): Logger {
   const isProduction = process.env.NODE_ENV === "production";
 

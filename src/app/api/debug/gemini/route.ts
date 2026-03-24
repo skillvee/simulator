@@ -1,7 +1,8 @@
 import { success, error } from "@/lib/api";
 import { auth } from "@/auth";
 import { GoogleGenAI, Modality } from "@google/genai";
-import { env, createLogger } from "@/lib/core";
+import { env } from "@/lib/core/env";
+import { createLogger } from "@/lib/core";
 
 const logger = createLogger("server:api:debug:gemini");
 

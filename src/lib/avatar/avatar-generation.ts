@@ -12,7 +12,8 @@
  */
 
 import { GoogleGenAI } from "@google/genai";
-import { env, createLogger } from "@/lib/core";
+import { env } from "@/lib/core/env";
+import { createLogger } from "@/lib/core";
 import { supabaseAdmin } from "@/lib/external/supabase";
 import { db } from "@/server/db";
 

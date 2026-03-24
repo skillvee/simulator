@@ -1,4 +1,4 @@
-import { env } from "@/lib/core";
+import { env } from "@/lib/core/env";
 
 const GITHUB_API_VERSION = "2022-11-28";
 

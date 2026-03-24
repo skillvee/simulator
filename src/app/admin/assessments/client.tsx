@@ -652,7 +652,7 @@ function AssessmentRow({
             {assessment.user.email || "No email"}
           </p>
         </td>
-        <td className="p-4">
+        <td className="p-4 whitespace-nowrap">
           <Badge
             variant={assessment.status === "COMPLETED" ? "default" : "secondary"}
             className={

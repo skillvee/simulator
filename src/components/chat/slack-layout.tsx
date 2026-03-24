@@ -100,13 +100,23 @@ interface SlackLayoutProps {
  * Unified Slack-like layout component with sidebar (team directory) + main content.
  * Used across welcome, chat, and call pages for consistent experience.
  */
+// Default no-op context value for Suspense fallback — prevents crashes when
+// children (e.g. Chat) call useCallContext() before SlackLayoutInner mounts.
+const defaultCallContextValue: CallContextValue = {
+  activeCall: null,
+  startCall: () => {},
+  endCall: () => {},
+};
+
 export function SlackLayout(props: SlackLayoutProps) {
   return (
-    <Suspense
-      fallback={<SlackLayoutSkeleton>{props.children}</SlackLayoutSkeleton>}
-    >
-      <SlackLayoutInner {...props} />
-    </Suspense>
+    <CallContext.Provider value={defaultCallContextValue}>
+      <Suspense
+        fallback={<SlackLayoutSkeleton>{props.children}</SlackLayoutSkeleton>}
+      >
+        <SlackLayoutInner {...props} />
+      </Suspense>
+    </CallContext.Provider>
   );
 }
 

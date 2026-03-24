@@ -10,11 +10,14 @@ import {
   type CheckRun,
 } from "./index";
 
-// Mock env module (now in @/lib/core)
-vi.mock("@/lib/core", () => ({
+// Mock env module (now imported from @/lib/core/env)
+vi.mock("@/lib/core/env", () => ({
   env: {
     GITHUB_TOKEN: "mock-token",
   },
+}));
+
+vi.mock("@/lib/core", () => ({
   createLogger: () => ({
     debug: vi.fn(),
     info: vi.fn(),
@@ -336,7 +339,7 @@ describe("fetchGitHubPrContent without token", () => {
   it("should return error when GITHUB_TOKEN is not set", async () => {
     // Reset module to test without token
     vi.resetModules();
-    vi.doMock("@/lib/core", () => ({
+    vi.doMock("@/lib/core/env", () => ({
       env: {
         GITHUB_TOKEN: undefined,
       },

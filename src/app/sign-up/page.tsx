@@ -128,6 +128,7 @@ function SignUpForm() {
               alt="SkillVee"
               width={160}
               height={42}
+              style={{ height: "auto" }}
               className="mx-auto"
               priority
             />

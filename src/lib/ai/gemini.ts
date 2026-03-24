@@ -1,7 +1,7 @@
 // Server-only Gemini client and utilities
 // NOTE: Do NOT import this file in client components - use gemini-config.ts instead
 import { GoogleGenAI, Modality } from "@google/genai";
-import { env } from "@/lib/core";
+import { env } from "@/lib/core/env";
 import { LIVE_MODEL, DEFAULT_VOICE } from "./gemini-config";
 
 // Re-export client-safe config for backwards compatibility in server code

@@ -49,16 +49,8 @@ vi.mock("@/server/db", () => ({
 
 // Mock isE2ETestMode and env
 const mockIsE2ETestMode = vi.fn();
-vi.mock("@/lib/core", () => ({
-  createLogger: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  }),
+vi.mock("@/lib/core/env", () => ({
   shouldAllowTestModeRecording: () => mockIsE2ETestMode(),
-  isE2ETestMode: () => mockIsE2ETestMode(),
-  isE2ETestModeClient: () => mockIsE2ETestMode(),
   env: {
     DATABASE_URL: "postgresql://localhost:5432/test",
     DIRECT_URL: "postgresql://localhost:5432/test",
@@ -72,6 +64,17 @@ vi.mock("@/lib/core", () => ({
     E2E_TEST_MODE: false,
     NEXT_PUBLIC_E2E_TEST_MODE: false,
   },
+}));
+vi.mock("@/lib/core", () => ({
+  createLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
+  shouldSkipScreenRecording: () => mockIsE2ETestMode(),
+  isE2ETestMode: () => mockIsE2ETestMode(),
+  isE2ETestModeClient: () => mockIsE2ETestMode(),
 }));
 
 import { POST, GET } from "./route";

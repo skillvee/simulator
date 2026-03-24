@@ -6,7 +6,8 @@
  */
 
 import { Resend } from "resend";
-import { env, createLogger } from "@/lib/core";
+import { env } from "@/lib/core/env";
+import { createLogger } from "@/lib/core";
 import type {
   AssessmentReport,
   ReportSkillCategory as SkillCategory,

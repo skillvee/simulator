@@ -193,6 +193,7 @@ export default function HomePage() {
                 width={120}
                 height={28}
                 className="object-contain"
+                style={{ height: "auto" }}
               />
               <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <span className="text-amber-600 text-sm">🏆</span>
@@ -214,6 +215,7 @@ export default function HomePage() {
                 width={90}
                 height={28}
                 className="object-contain"
+                style={{ height: "auto" }}
               />
               <Image
                 src="/stanford-logo.png"
@@ -221,6 +223,7 @@ export default function HomePage() {
                 width={110}
                 height={28}
                 className="object-contain"
+                style={{ height: "auto" }}
               />
             </div>
           </motion.div>
