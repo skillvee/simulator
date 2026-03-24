@@ -210,26 +210,10 @@ export function Chat({
 
   // Reveal manager-only history one message at a time with typing indicator
   const revealMessagesSequentially = useCallback(
-    async (msgs: ChatMessage[]) => {
-      for (let i = 0; i < msgs.length; i++) {
-        // Show typing indicator before each message
-        setIsCoworkerTyping(true);
-        await new Promise((resolve) =>
-          setTimeout(resolve, 800 + Math.random() * 700) // 0.8-1.5s typing
-        );
-        setIsCoworkerTyping(false);
-
-        // Add this message
-        setMessages((prev) => [...prev, msgs[i]]);
-        playMessageSound();
-
-        // Short pause between messages (0.5-1.5s)
-        if (i < msgs.length - 1) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, 300 + Math.random() * 400)
-          );
-        }
-      }
+    (msgs: ChatMessage[]) => {
+      // Show all messages at once — no artificial staggering
+      setMessages((prev) => [...prev, ...msgs]);
+      if (msgs.length > 0) playMessageSound();
     },
     []
   );
@@ -336,10 +320,6 @@ export function Chat({
     setIsSending(true);
 
     try {
-      // Short "reading" delay (300-700ms) — just enough to feel natural
-      const readingDelay = 300 + Math.random() * 400;
-      await new Promise(resolve => setTimeout(resolve, readingDelay));
-
       // Show typing indicator while we stream
       startRealisticTyping();
 

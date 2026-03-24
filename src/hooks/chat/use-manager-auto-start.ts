@@ -46,17 +46,17 @@ interface UseManagerAutoStartReturn {
 }
 
 // Brief delay before the instant welcome message (feels natural)
-const INSTANT_MESSAGE_DELAY = 800;
+const INSTANT_MESSAGE_DELAY = 400;
 
 // Delay between follow-up messages (quick but readable)
-const MESSAGE_GAP_MIN = 500;
-const MESSAGE_GAP_MAX = 1000;
+const MESSAGE_GAP_MIN = 200;
+const MESSAGE_GAP_MAX = 400;
 
 // Typing speed for follow-up messages
-const MS_PER_WORD_MIN = 100;
-const MS_PER_WORD_MAX = 200;
-const TYPING_DURATION_FLOOR = 800;
-const TYPING_DURATION_CAP = 3000;
+const MS_PER_WORD_MIN = 30;
+const MS_PER_WORD_MAX = 60;
+const TYPING_DURATION_FLOOR = 300;
+const TYPING_DURATION_CAP = 1000;
 
 function randomDelay(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -168,7 +168,7 @@ export function useManagerAutoStart({
           // Show brief typing indicator for the welcome
           setIsTyping(true);
           onTypingStart();
-          await new Promise((resolve) => setTimeout(resolve, 1200));
+          await new Promise((resolve) => setTimeout(resolve, 500));
           if (!isMountedRef.current || cancelledRef.current) {
             setIsTyping(false);
             onTypingEnd();
