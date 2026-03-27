@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
@@ -29,8 +30,8 @@ import {
 const slides = [
   {
     id: "title",
-    title: "Skillvee",
-    subtitle: "Work simulation platform that lets hiring teams watch candidates do the actual job before they hire them.",
+    title: "Watch them work.\nThen hire.",
+    subtitle: "See exactly how candidates communicate, collaborate, and solve problems—before you make the offer. No more expensive hiring mistakes.",
     visual: "logo",
   },
   {
@@ -185,23 +186,18 @@ function LogoVisual() {
   return (
     <div className="relative flex items-center justify-center h-full">
       <motion.div
-        animate={{
-          scale: [1, 1.05, 1],
-          opacity: [0.8, 1, 0.8],
-        }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute w-96 h-96 bg-primary/30 rounded-full blur-[100px]"
-      />
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 flex flex-col items-center gap-6"
+        className="relative z-10"
       >
-        <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center text-primary font-black text-7xl shadow-2xl shadow-primary/30">
-          S
-        </div>
-        <div className="text-4xl font-bold tracking-tight text-white">SkillVee</div>
+        <Image
+          src="/skillvee-logo.png"
+          alt="SkillVee"
+          width={400}
+          height={120}
+          priority
+        />
       </motion.div>
     </div>
   );
@@ -553,9 +549,8 @@ function DemoJoinVisual() {
           {/* Left - Dark panel */}
           <div className="w-1/2 bg-[#020617] p-6 flex flex-col justify-between relative overflow-hidden">
             <div className="absolute top-[-50%] left-[-50%] w-full h-full bg-primary/20 rounded-full blur-[80px]" />
-            <div className="relative z-10 flex items-center gap-2">
-              <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center text-primary font-black text-xs">S</div>
-              <span className="text-sm font-bold text-white">SkillVee</span>
+            <div className="relative z-10">
+              <Image src="/skillvee-logo.png" alt="SkillVee" width={100} height={30} />
             </div>
             <div className="relative z-10">
               <h3 className="text-2xl font-black text-white leading-tight">YOUR<br />NEXT ROLE.</h3>
@@ -1350,12 +1345,25 @@ export default function PresentationPage() {
 
               {/* Title */}
               <h1 className="text-5xl lg:text-7xl font-black tracking-tight leading-[0.9] text-white mb-6">
-                {slide.title.split(" ").map((word, i) => (
-                  <span key={i}>
-                    {i === 0 ? <span className="text-primary">{word}</span> : word}
-                    {i < slide.title.split(" ").length - 1 ? " " : ""}
-                  </span>
-                ))}
+                {slide.title.includes("\n") ? (
+                  slide.title.split("\n").map((line, i) => (
+                    <span key={i}>
+                      {i > 0 && <br />}
+                      {i === slide.title.split("\n").length - 1 ? (
+                        <span className="text-primary">{line}</span>
+                      ) : (
+                        line
+                      )}
+                    </span>
+                  ))
+                ) : (
+                  slide.title.split(" ").map((word, i) => (
+                    <span key={i}>
+                      {i === 0 ? <span className="text-primary">{word}</span> : word}
+                      {i < slide.title.split(" ").length - 1 ? " " : ""}
+                    </span>
+                  ))
+                )}
               </h1>
 
               {/* Subtitle */}
@@ -1374,7 +1382,7 @@ export default function PresentationPage() {
         </div>
 
         {/* Right: Visual */}
-        <div className="w-1/2 p-12 lg:p-16 flex items-center justify-center">
+        <div className={`w-1/2 p-12 lg:p-16 flex items-center justify-center ${slide.visual === "logo" ? "bg-white" : ""}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={`visual-${slide.id}`}
@@ -1407,11 +1415,8 @@ export default function PresentationPage() {
       {/* Navigation bar */}
       <div className="h-20 border-t border-slate-800/50 flex items-center justify-between px-12">
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-primary font-black text-lg">
-            S
-          </div>
-          <span className="text-lg font-bold tracking-tight">SkillVee</span>
+        <div className="flex items-center">
+          <Image src="/skillvee-logo.png" alt="SkillVee" width={120} height={36} />
         </div>
 
         {/* Progress dots */}

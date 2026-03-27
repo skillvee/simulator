@@ -56,12 +56,6 @@ A candidate joins. They get a voice call from their "manager" explaining the tas
 
 ---
 
-## Traction Plan
-
-Demo video will show a candidate completing a full voice-driven assessment—high "demo magic" factor. Distribution: LinkedIn (Matias has 20K followers in AI/edtech), Twitter, relevant Discord/Slack communities. The "watch someone talk to AI coworkers" format is inherently shareable.
-
----
-
 ## Team
 
 **German Reyes (CEO)** — 2 HR Tech exits (acquired by Buk). Grew startup from $0→$1.4M ARR. GPM at Walmart eCommerce. Berkeley MBA.
