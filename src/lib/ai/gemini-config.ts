@@ -3,7 +3,7 @@
 // For the actual Gemini client, import from "./gemini" (server-only)
 
 // Model for live voice conversations
-export const LIVE_MODEL = "gemini-2.5-flash-native-audio-latest";
+export const LIVE_MODEL = "gemini-3.1-flash-live-preview";
 
 // Model for text-based AI operations (CV parsing, assessments, chat, etc.)
 export const TEXT_MODEL = "gemini-3-flash-preview";

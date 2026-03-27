@@ -78,7 +78,7 @@ Use descriptive names for `promptType` that match the operation:
 
 ## Models
 
-- `LIVE_MODEL` - For voice conversations: `gemini-2.5-flash-native-audio-latest`
+- `LIVE_MODEL` - For voice conversations: `gemini-3.1-flash-live-preview`
 - `TEXT_MODEL` - For text operations: `gemini-3-flash-preview`
 
 ## Voice Configuration

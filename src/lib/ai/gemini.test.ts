@@ -8,13 +8,13 @@ describe("Gemini Live Token Generation", () => {
 
   it("should use correct model name format", async () => {
     // The model should match an available model from Gemini API
-    const LIVE_MODEL = "gemini-2.5-flash-native-audio-latest";
+    const LIVE_MODEL = "gemini-3.1-flash-live-preview";
 
     // Check if the model name matches known available formats
     const validModelFormats = [
-      "gemini-2.5-flash-native-audio-latest",
+      "gemini-3.1-flash-live-preview",
       "gemini-2.0-flash-exp",
-      "models/gemini-2.5-flash-native-audio-latest",
+      "models/gemini-3.1-flash-live-preview",
     ];
 
     // This test documents the current model - if it fails, the model format may need updating
