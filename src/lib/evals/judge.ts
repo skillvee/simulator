@@ -28,12 +28,11 @@ function buildJudgePrompt(context: {
   userMessage: string;
   response: string;
   criteria: string;
+  isMultiTurn?: boolean;
 }): string {
   const mediaLabel = context.media === "chat" ? "Slack" : "phone call";
+  const isVoiceMultiTurn = context.isMultiTurn && context.media === "voice";
 
-  // Research: rubric at TOP, content to evaluate near BOTTOM
-  // Research: flaws-first, then reasoning, then score
-  // Research: calibration examples with low scores
   return `You are a strict evaluator of simulated workplace conversations. Your job is to find problems.
 
 ## Scoring Rubric (1-5)
@@ -98,15 +97,17 @@ Personality: ${context.coworkerPersonality}
 ${context.criteria}
 
 ## Conversation
-${context.conversationHistory ? `Prior messages:\n${context.conversationHistory}\n` : "(No prior messages — first interaction)"}
+${isVoiceMultiTurn
+  ? `This is a FULL multi-turn phone call transcript:\n\n${context.response}`
+  : `${context.conversationHistory ? `Prior messages:\n${context.conversationHistory}\n` : "(No prior messages — first interaction)"}
 ${context.userMessage.startsWith("[") ? `[System: ${context.userMessage}]` : `User: ${context.userMessage}`}
 
 **Response being evaluated:**
-${context.response}
+${context.response}`}
 
 ## Your Evaluation
 
-First, list 1-3 specific flaws or weaknesses in this response (or write "No significant flaws" if genuinely excellent). Then provide your scores.
+First, list 1-3 specific flaws or weaknesses${isVoiceMultiTurn ? " in the COWORKER's behavior across the conversation" : " in this response"} (or write "No significant flaws" if genuinely excellent). ${isVoiceMultiTurn ? "Pay special attention to the coworker's FIRST message — does it make sense as a conversation opener, or does it respond to something that wasn't said?" : ""}Then provide your scores.
 
 Respond as JSON only (no markdown fences):
 {"flaws": "...", "naturalness": N, "personaConsistency": N, "brevity": N, "conversationalFlow": N, "infoDiscipline": N, "reasoning": "1-2 sentences summarizing your assessment"}`;
@@ -126,6 +127,7 @@ export async function judgeResponse(context: {
   response: string;
   criteria: string;
   apiKey: string;
+  isMultiTurn?: boolean;
 }): Promise<Judgment[]> {
   const gemini = new GoogleGenAI({ apiKey: context.apiKey });
   const prompt = buildJudgePrompt(context);

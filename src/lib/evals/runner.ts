@@ -10,6 +10,7 @@ import { GoogleGenAI } from "@google/genai";
 import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
 import { EVAL_SCENARIOS } from "./scenarios";
 import { judgeResponse, aggregateJudgments } from "./judge";
+import { runMultiTurnConversation } from "./multi-turn";
 import type { EvalScenario, ScenarioResult, RunEvalOptions } from "./types";
 
 const GENERATION_MODEL = "gemini-3-flash-preview";
@@ -119,32 +120,48 @@ async function runSingleScenario(
         conversationHistory: scenario.conversationHistory,
         crossAgentContext: scenario.crossAgentContext,
         phase: scenario.phase,
-        phaseContext: (scenario as { phaseContext?: string }).phaseContext,
+        phaseContext: scenario.phaseContext,
         media: scenario.media,
       });
 
-  // Step 2: Generate response with production model
+  // Step 2: Generate response
   const startMs = Date.now();
+  let response: string;
+  let generationMs: number;
 
-  // Build contents — for non-greeting scenarios, add the user message as a follow-up
-  const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [
-    { role: "user", parts: [{ text: prompt }] },
-  ];
-
-  if (!scenario.userMessage.startsWith("[")) {
-    contents.push(
-      { role: "model", parts: [{ text: "I understand my role. I'm ready." }] },
-      { role: "user", parts: [{ text: scenario.userMessage }] },
+  if (scenario.multiTurn) {
+    // Multi-turn: simulate full conversation
+    const transcript = await runMultiTurnConversation(
+      prompt,
+      scenario.multiTurn,
+      config.apiKey
     );
+    // Format transcript as readable text for judging
+    response = transcript.turns
+      .map((t) => `${t.role === "candidate" ? "Candidate" : "Coworker"}: ${t.text}`)
+      .join("\n\n");
+    generationMs = transcript.durationMs;
+  } else {
+    // Single-turn: generate one response
+    const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [
+      { role: "user", parts: [{ text: prompt }] },
+    ];
+
+    if (!scenario.userMessage.startsWith("[")) {
+      contents.push(
+        { role: "model", parts: [{ text: "I understand my role. I'm ready." }] },
+        { role: "user", parts: [{ text: scenario.userMessage }] },
+      );
+    }
+
+    const result = await gemini.models.generateContent({
+      model: GENERATION_MODEL,
+      contents,
+    });
+
+    response = result.text?.trim() || "(empty response)";
+    generationMs = Date.now() - startMs;
   }
-
-  const result = await gemini.models.generateContent({
-    model: GENERATION_MODEL,
-    contents,
-  });
-
-  const response = result.text?.trim() || "(empty response)";
-  const generationMs = Date.now() - startMs;
 
   // Step 3: Judge the response with 3 independent judges
   const judgments = await judgeResponse({
@@ -158,6 +175,7 @@ async function runSingleScenario(
     response,
     criteria: scenario.criteria,
     apiKey: config.apiKey,
+    isMultiTurn: !!scenario.multiTurn,
   });
 
   // Step 4: Aggregate scores

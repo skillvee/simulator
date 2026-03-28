@@ -12,7 +12,7 @@ import type { SimulationPhase } from "@/prompts/build-agent-prompt";
 export interface EvalScenario {
   id: string;
   name: string;
-  category: "manager" | "non-manager" | "edge-case";
+  category: "manager" | "non-manager" | "edge-case" | "voice";
 
   // Inputs for buildAgentPrompt
   agent: CoworkerPersona;
@@ -26,11 +26,34 @@ export interface EvalScenario {
   phaseContext?: string;
   media: "chat" | "voice";
 
-  // The user message to generate a response to
+  // Single-turn: the user message to respond to
   userMessage: string;
+
+  // Multi-turn: config for simulated conversation (if set, userMessage is ignored)
+  multiTurn?: MultiTurnConfig;
 
   // Judge criteria — what to evaluate
   criteria: string;
+}
+
+// ─── Multi-Turn Conversation Types ───────────────────────────────────────────
+
+export interface MultiTurnConfig {
+  candidatePersona: string;
+  candidateFirstMessage?: string;
+  coworkerSpeaksFirst: boolean;
+  maxTurns: number;
+  scenarioContext: string;
+}
+
+export interface ConversationTurn {
+  role: "candidate" | "coworker";
+  text: string;
+}
+
+export interface ConversationTranscript {
+  turns: ConversationTurn[];
+  durationMs: number;
 }
 
 // ─── Judge Types ─────────────────────────────────────────────────────────────
@@ -84,7 +107,7 @@ export interface EvalRunResult {
 
 export interface RunEvalOptions {
   name?: string;
-  category?: "manager" | "non-manager" | "edge-case";
+  category?: "manager" | "non-manager" | "edge-case" | "voice";
   scenarioIds?: string[];
   verbose?: boolean;
 }

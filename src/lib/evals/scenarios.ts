@@ -428,4 +428,205 @@ You: Sure, let's do it!`,
     userMessage: "[call connected]",
     criteria: "Should speak first with a natural greeting ('hey!', 'what's up?'). Must NOT say 'no problem at all' or respond as if the user said something. Must NOT dump task information. Should sound like answering a phone call.",
   },
+
+  // ── Voice Multi-Turn Scenarios (8) ─────────────────────────────────────────
+
+  {
+    id: "voice-kickoff-nervous",
+    name: "Voice: Manager Kickoff — Nervous Candidate",
+    category: "voice",
+    agent: MANAGER_ELENA,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[call connected]",
+    multiTurn: {
+      candidatePersona: "You're a nervous new hire on your first day. You're polite but overwhelmed. You ask hesitant questions and sometimes say 'sorry' unnecessarily. You need reassurance before diving into work details.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "First kickoff call with the engineering manager. Candidate has zero context about the task.",
+    },
+    criteria: "First message must be a natural greeting (NOT 'no problem at all' or responding to something unsaid). Should be empathetic with nervous candidate. Should explain the task gradually, not dump everything. Should check in: 'does that make sense?'. Conversation should flow naturally.",
+  },
+
+  {
+    id: "voice-kickoff-confident",
+    name: "Voice: Manager Kickoff — Confident Candidate",
+    category: "voice",
+    agent: MANAGER_ELENA,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[call connected]",
+    multiTurn: {
+      candidatePersona: "You're an experienced data scientist who's confident but respectful. You ask pointed, specific questions about metrics and methodology. You push back if something doesn't make sense. You're efficient with words.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "First kickoff call. Candidate is experienced and will ask sharp questions.",
+    },
+    criteria: "First message must be a natural greeting. Should adapt to confident candidate — be more direct, less hand-holding. Should handle specific questions well. Conversation should feel like two professionals talking, not a tutorial.",
+  },
+
+  {
+    id: "voice-kickoff-vague",
+    name: "Voice: Manager Kickoff — Vague Candidate",
+    category: "voice",
+    agent: MANAGER_ELENA,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[call connected]",
+    multiTurn: {
+      candidatePersona: "You struggle to articulate what you need. You ask broad questions like 'so what's the deal with the project?' and 'how does everything work here?'. You need the manager to guide you to specifics.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "First kickoff call. Candidate asks vague questions and needs guidance.",
+    },
+    criteria: "First message must be a natural greeting. Should guide vague candidate to specifics rather than dumping everything. Should ask clarifying questions. Should not monologue when candidate is vague.",
+  },
+
+  {
+    id: "voice-engineer-technical",
+    name: "Voice: Engineer Technical Call",
+    category: "voice",
+    agent: ENGINEER_CHLOE,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "\nThe candidate has also talked to: Elena Rodriguez. Don't assume you know what they discussed.",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[call connected]",
+    multiTurn: {
+      candidatePersona: "You're an experienced data scientist calling the data engineer for help with specific tables. You have pointed questions about dim_notification_events and data pipeline latency.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 4,
+      scenarioContext: "Quick technical call. Candidate has specific data questions.",
+    },
+    criteria: "First message must be a natural greeting. Should stay in data engineer domain. Should answer technical questions concisely. Should NOT explain the business problem or task — that's the manager's job. Short, focused call.",
+  },
+
+  {
+    id: "voice-pm-quiet",
+    name: "Voice: PM with Quiet Candidate",
+    category: "voice",
+    agent: PM_ARJUN,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[call connected]",
+    multiTurn: {
+      candidatePersona: "You're introverted and prefer to listen. You give short responses ('ok', 'got it', 'makes sense'). You only ask a question when genuinely stuck. You need the coworker to check in on you.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "Call with the PM. Candidate is quiet and the PM needs to draw them out.",
+    },
+    criteria: "First message must be a natural greeting. Should NOT monologue when candidate is quiet. Should check in and ask questions. Should not dump information when getting 'ok' responses. Should adapt to the quiet communication style.",
+  },
+
+  {
+    id: "voice-defense-call",
+    name: "Voice: Defense Call (Full)",
+    category: "voice",
+    agent: MANAGER_ELENA,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Conversation History
+You: Hey! Welcome to the team!
+Candidate: Thanks Elena!
+You: We've been running a Reels notification A/B test. Check the repo: ${REPO_URL}
+Candidate: Got it, I'll look into it.
+Candidate: Here's my PR: https://github.com/skillvee/assessment-test123/pull/1
+You: Great, let's hop on a call to discuss!`,
+    crossAgentContext: "",
+    phase: "defense",
+    phaseContext: `## PR Defense Review
+Task: ${TASK_DESCRIPTION}
+Tech stack: ${TECH_STACK.join(", ")}
+Repo: ${REPO_URL}
+PR: https://github.com/skillvee/assessment-test123/pull/1
+
+## How to Run This Call
+Follow these 5 phases in order:
+Phase 1 — Opening: Ask them to walk you through what they did.
+Phase 2 — High-level: Overall approach, architecture decisions.
+Phase 3 — Technical probes: At least 3 specific questions about their code.
+Phase 4 — Process: What was hardest, AI tool usage.
+Phase 5 — Wrap up: Thank them.`,
+    media: "voice",
+    userMessage: "[call connected]",
+    multiTurn: {
+      candidatePersona: "You're a confident data scientist who completed the analysis. You can explain your approach clearly: you analyzed the Reels notification experiment data, found the 18-24 cohort push-disable rate was concerning, built retention proxy comparisons, and recommended a targeted rollout excluding that cohort.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 10,
+      scenarioContext: "PR defense call. Manager reviews the candidate's analysis work.",
+    },
+    criteria: "First message must ask candidate to walk through their PR. Should follow the 5-phase structure. Should ask at least 2-3 specific questions. Should NOT just agree with everything — should probe and dig deeper. Conversation should feel like a real code review call.",
+  },
+
+  {
+    id: "voice-cross-reference",
+    name: "Voice: Cross-Reference Call",
+    category: "voice",
+    agent: ENGINEER_CHLOE,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "\nThe candidate has also talked to: Elena Rodriguez. Don't assume you know what they discussed.",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[call connected]",
+    multiTurn: {
+      candidatePersona: "You're a nervous new hire. Elena (your manager) told you to call Chloe about the dim_notification_events table and a logging bug. You mention Elena sent you.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 4,
+      scenarioContext: "Short call. Candidate was sent by their manager to ask about data.",
+    },
+    criteria: "First message must be a natural greeting. Should acknowledge Elena naturally when mentioned. Should share technical knowledge helpfully. Short focused call.",
+  },
+
+  {
+    id: "voice-off-topic",
+    name: "Voice: Off-Topic Handling",
+    category: "voice",
+    agent: PM_ARJUN,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[call connected]",
+    multiTurn: {
+      candidatePersona: "You're friendly and chatty. You go off-topic a lot — asking about the office, team culture, lunch spots, weekend plans. Between off-topic comments, you occasionally ask a work question about Reels metrics.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "Call with PM. Candidate is chatty and goes off-topic frequently.",
+    },
+    criteria: "First message must be a natural greeting. Should handle off-topic gracefully — can be friendly but should gently redirect to work. Should not dump information. Should feel like a natural conversation with someone who likes to chat.",
+  },
 ];
