@@ -12,6 +12,7 @@ import type {
   CoworkerMemory,
 } from "@/types";
 import { createLogger } from "@/lib/core";
+import { logAICall } from "@/lib/analysis";
 
 const logger = createLogger("lib:ai:conversation-memory");
 
@@ -39,7 +40,7 @@ const MIN_MESSAGES_FOR_SUMMARY = 5;
 export async function buildCoworkerMemory(
   conversations: ConversationWithMeta[],
   coworkerName: string,
-  options?: { maxRecentMessages?: number; skipSummary?: boolean }
+  options?: { maxRecentMessages?: number; skipSummary?: boolean; assessmentId?: string }
 ): Promise<CoworkerMemory> {
   const maxRecent = options?.maxRecentMessages ?? MAX_RECENT_MESSAGES;
 
@@ -78,7 +79,7 @@ export async function buildCoworkerMemory(
     );
 
     if (messagesToSummarize.length > 0) {
-      summary = await summarizeConversation(messagesToSummarize, coworkerName);
+      summary = await summarizeConversation(messagesToSummarize, coworkerName, options?.assessmentId);
     }
   }
 
@@ -132,7 +133,8 @@ Summary:`;
  */
 async function summarizeConversation(
   messages: ChatMessage[],
-  coworkerName: string
+  coworkerName: string,
+  assessmentId?: string
 ): Promise<string> {
   const conversationText = messages
     .map((m) => `${m.role === "user" ? "Candidate" : coworkerName}: ${m.text}`)
@@ -140,15 +142,31 @@ async function summarizeConversation(
 
   const prompt = buildConversationSummaryPrompt(coworkerName, conversationText, messages.length);
 
+  // Log AI call if assessmentId is available
+  const tracker = assessmentId
+    ? await logAICall({
+        assessmentId,
+        endpoint: "conversation-memory",
+        promptText: prompt,
+        modelVersion: SUMMARY_MODEL,
+        promptType: "CONVERSATION_SUMMARY",
+        promptVersion: "1.0",
+        modelUsed: SUMMARY_MODEL,
+      }).catch(() => null)
+    : null;
+
   try {
     const response = await gemini.models.generateContent({
       model: SUMMARY_MODEL,
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
-    return response.text || "";
-  } catch (error) {
-    logger.error("Error summarizing conversation", { error: error instanceof Error ? error.message : String(error) });
+    const text = response.text || "";
+    await tracker?.complete({ responseText: text, statusCode: 200 }).catch(() => {});
+    return text;
+  } catch (err) {
+    await tracker?.fail(err instanceof Error ? err : new Error(String(err))).catch(() => {});
+    logger.error("Error summarizing conversation", { error: err instanceof Error ? err.message : String(err) });
     // Fallback: return a basic summary
     return `We have had ${messages.length} previous exchanges.`;
   }

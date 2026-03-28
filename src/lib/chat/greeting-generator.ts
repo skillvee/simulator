@@ -14,6 +14,7 @@ import {
   type TeamMemberIntro,
 } from "@/prompts/manager/greeting";
 import { createLogger } from "@/lib/core";
+import { logAICall } from "@/lib/analysis";
 
 const logger = createLogger("lib:chat:greeting-generator");
 
@@ -33,6 +34,8 @@ export interface GreetingContext {
   teammates?: TeamMemberIntro[];
   /** When true, generates a post-call written reference instead of a call invitation */
   postVoiceKickoff?: boolean;
+  /** Assessment ID for API call logging */
+  assessmentId?: string;
 }
 
 /**
@@ -72,6 +75,19 @@ export async function generateManagerGreetings(
 
     const prompt = buildGreetingPrompt(promptContext);
 
+    // Log AI call if assessmentId is available
+    const tracker = context.assessmentId
+      ? await logAICall({
+          assessmentId: context.assessmentId,
+          endpoint: "/api/chat/manager-start",
+          promptText: prompt,
+          modelVersion: TEXT_MODEL,
+          promptType: "MANAGER_GREETING",
+          promptVersion: "1.0",
+          modelUsed: TEXT_MODEL,
+        })
+      : null;
+
     const response = await gemini.models.generateContent({
       model: TEXT_MODEL,
       contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -79,6 +95,8 @@ export async function generateManagerGreetings(
 
     const text = response.text;
     if (!text) throw new Error("Empty Gemini response");
+
+    await tracker?.complete({ responseText: text, statusCode: 200 }).catch(() => {});
 
     // Strip markdown fences if present
     const cleaned = text

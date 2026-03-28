@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     const memory = await buildCoworkerMemory(
       coworkerConversations,
       coworker.name,
-      { maxRecentMessages: 20 }
+      { maxRecentMessages: 20, assessmentId }
     );
     const memoryContext = formatMemoryForPrompt(memory, coworker.name);
 

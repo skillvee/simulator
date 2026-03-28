@@ -3,6 +3,7 @@ import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
 import { GoogleGenAI } from "@google/genai";
 import { env } from "@/lib/core/env";
 import { createLogger } from "@/lib/core";
+import { logAICall } from "@/lib/analysis";
 
 const logger = createLogger("lib:candidate:profile-photo");
 
@@ -58,9 +59,20 @@ export async function generateProfilePhoto(
 
     // 2. Try AI-enhanced headshot editing; fall back to raw snapshot
     let processedImageBuffer: Buffer;
+    const tracker = await logAICall({
+      assessmentId,
+      endpoint: "profile-photo",
+      promptText: "Transform webcam photo into professional corporate headshot",
+      modelVersion: IMAGE_EDIT_MODEL,
+      promptType: "PROFILE_PHOTO",
+      promptVersion: "1.0",
+      modelUsed: IMAGE_EDIT_MODEL,
+    }).catch(() => null);
     try {
       processedImageBuffer = await editWebcamToHeadshot(snapshotBuffer);
+      await tracker?.complete({ responseText: "[image data]", statusCode: 200 }).catch(() => {});
     } catch (genError) {
+      await tracker?.fail(genError instanceof Error ? genError : new Error(String(genError))).catch(() => {});
       logger.error("AI headshot editing failed, using raw snapshot", { error: genError instanceof Error ? genError.message : String(genError) });
       processedImageBuffer = snapshotBuffer;
     }

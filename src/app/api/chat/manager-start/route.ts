@@ -123,6 +123,7 @@ export async function POST(request: Request) {
     personality: managerCoworker.personality as CoworkerPersonality | null,
     teammates,
     postVoiceKickoff: validated.data.postVoiceKickoff,
+    assessmentId,
   });
 
   // Check if conversation already exists with this manager

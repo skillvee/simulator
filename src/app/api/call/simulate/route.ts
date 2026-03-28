@@ -23,6 +23,7 @@ import { success, error, validateRequest } from "@/lib/api";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { isManager } from "@/lib/utils/coworker";
+import { logAICall } from "@/lib/analysis";
 
 const CHAT_MODEL = "gemini-3-flash-preview";
 
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
       updatedAt: c.updatedAt,
     }));
 
-  const memory = await buildCoworkerMemory(coworkerConversations, coworker.name);
+  const memory = await buildCoworkerMemory(coworkerConversations, coworker.name, { assessmentId });
   const memoryContext = formatMemoryForPrompt(memory, coworker.name);
 
   const coworkerMap = new Map<string, string>();
@@ -182,31 +183,50 @@ export async function POST(request: Request) {
     parts: [{ text: msg.text }],
   }));
 
-  // Generate response via Gemini Flash (text, not audio)
-  const response = await gemini.models.generateContent({
-    model: CHAT_MODEL,
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `[SYSTEM INSTRUCTIONS — Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to have this call in character.`,
-          },
-        ],
-      },
-      {
-        role: "model",
-        parts: [{ text: "I understand. I'm ready to have this call in character." }],
-      },
-      ...history,
-      {
-        role: "user",
-        parts: [{ text: message }],
-      },
-    ],
+  // Log AI call for observability
+  const promptText = `${systemPrompt}\n\n${history.map((h) => h.parts.map((p) => p.text).join("")).join("\n")}\n\n${message}`;
+  const tracker = await logAICall({
+    assessmentId,
+    endpoint: "/api/call/simulate",
+    promptText,
+    modelVersion: CHAT_MODEL,
+    promptType: isDefenseCall ? "DEFENSE_CALL" : "VOICE_CALL",
+    promptVersion: "1.0",
+    modelUsed: CHAT_MODEL,
   });
 
-  const responseText = response.text || "Sorry, I didn't catch that. Could you say that again?";
+  // Generate response via Gemini Flash (text, not audio)
+  let responseText: string;
+  try {
+    const response = await gemini.models.generateContent({
+      model: CHAT_MODEL,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `[SYSTEM INSTRUCTIONS — Follow these throughout the conversation]\n\n${systemPrompt}\n\n[END SYSTEM INSTRUCTIONS]\n\nPlease acknowledge you understand and are ready to have this call in character.`,
+            },
+          ],
+        },
+        {
+          role: "model",
+          parts: [{ text: "I understand. I'm ready to have this call in character." }],
+        },
+        ...history,
+        {
+          role: "user",
+          parts: [{ text: message }],
+        },
+      ],
+    });
+
+    responseText = response.text || "Sorry, I didn't catch that. Could you say that again?";
+    await tracker.complete({ responseText, statusCode: 200 }).catch(() => {});
+  } catch (err) {
+    await tracker.fail(err instanceof Error ? err : new Error(String(err))).catch(() => {});
+    responseText = "Sorry, I didn't catch that. Could you say that again?";
+  }
   const timestamp = new Date().toISOString();
 
   // Save to voice conversation

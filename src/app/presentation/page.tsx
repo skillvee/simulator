@@ -196,6 +196,7 @@ function LogoVisual() {
           alt="SkillVee"
           width={400}
           height={120}
+          style={{ width: "auto", height: "auto" }}
           priority
         />
       </motion.div>
@@ -550,7 +551,7 @@ function DemoJoinVisual() {
           <div className="w-1/2 bg-[#020617] p-6 flex flex-col justify-between relative overflow-hidden">
             <div className="absolute top-[-50%] left-[-50%] w-full h-full bg-primary/20 rounded-full blur-[80px]" />
             <div className="relative z-10">
-              <Image src="/skillvee-logo.png" alt="SkillVee" width={100} height={30} />
+              <Image src="/skillvee-logo.png" alt="SkillVee" width={100} height={30} style={{ width: "auto", height: "auto" }} />
             </div>
             <div className="relative z-10">
               <h3 className="text-2xl font-black text-white leading-tight">YOUR<br />NEXT ROLE.</h3>
@@ -1416,7 +1417,7 @@ export default function PresentationPage() {
       <div className="h-20 border-t border-slate-800/50 flex items-center justify-between px-12">
         {/* Logo */}
         <div className="flex items-center">
-          <Image src="/skillvee-logo.png" alt="SkillVee" width={120} height={36} />
+          <Image src="/skillvee-logo.png" alt="SkillVee" width={120} height={36} style={{ width: "auto", height: "auto" }} />
         </div>
 
         {/* Progress dots */}

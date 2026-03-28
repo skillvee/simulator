@@ -19,6 +19,13 @@ interface ErrorsTabProps {
   apiCalls: SerializedApiCall[];
 }
 
+/** Error types that are not actionable — dev/framework noise */
+const NOISE_ERROR_TYPES = new Set(["CONSOLE_LOG", "CONSOLE_WARN"]);
+
+function isNoiseEntry(entry: ErrorEntry): boolean {
+  return entry.source === "client" && NOISE_ERROR_TYPES.has(entry.errorType);
+}
+
 function buildErrorEntries(
   clientErrors: SerializedClientError[],
   apiCalls: SerializedApiCall[]
@@ -116,10 +123,11 @@ function getErrorTypeBadge(entry: ErrorEntry) {
 
 function ErrorItem({ entry }: { entry: ErrorEntry }) {
   const [expanded, setExpanded] = useState(false);
+  const noise = isNoiseEntry(entry);
 
   return (
     <div
-      className="border-b border-border last:border-b-0"
+      className={`border-b border-border last:border-b-0 ${noise ? "opacity-50" : ""}`}
       data-testid={`error-entry-${entry.id}`}
     >
       <button
@@ -135,7 +143,7 @@ function ErrorItem({ entry }: { entry: ErrorEntry }) {
         </div>
 
         <div className="flex-shrink-0">
-          <AlertCircle className="h-5 w-5 text-destructive" />
+          <AlertCircle className={`h-5 w-5 ${noise ? "text-muted-foreground" : "text-destructive"}`} />
         </div>
 
         <div className="min-w-0 flex-1">
@@ -255,11 +263,14 @@ export function ErrorsTab({ clientErrors, apiCalls }: ErrorsTabProps) {
     );
   }
 
+  const actionableCount = entries.filter((e) => !isNoiseEntry(e)).length;
+  const noiseCount = entries.length - actionableCount;
+
   return (
     <Card data-testid="errors-tab">
       <div className="border-b border-border bg-muted/10 p-4">
         <h2 className="text-xs font-medium text-muted-foreground">
-          ERRORS ({entries.length} total)
+          ERRORS ({actionableCount} actionable{noiseCount > 0 ? `, ${noiseCount} noise` : ""})
         </h2>
       </div>
       <div>
