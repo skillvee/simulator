@@ -47,9 +47,9 @@ export async function runEvalSuite(
   const gemini = new GoogleGenAI({ apiKey: config.apiKey });
   const promptVersion = config.promptOverride ? "custom-override" : "production";
 
-  // Run scenarios in parallel batches of 3 for speed
-  // (each scenario = 1 generation + 3 staggered judge calls)
-  const BATCH_SIZE = 3;
+  // Run scenarios in parallel batches of 5 for speed
+  // gemini-2.5-pro has 150 RPM — plenty of headroom
+  const BATCH_SIZE = 5;
   const results: ScenarioResult[] = [];
   let completed = 0;
 
@@ -88,7 +88,7 @@ export async function runEvalSuite(
           response: `Error: ${settled.reason instanceof Error ? settled.reason.message : "Unknown error"}`,
           generationMs: 0,
           judgments: [],
-          naturalness: 0, roleAccuracy: 0, brevity: 0, contextAwareness: 0, infoDiscipline: 0,
+          naturalness: 0, roleAccuracy: 0, brevity: 0, contextAwareness: 0, infoDiscipline: 0, aiIsms: 0,
           overallScore: 0,
           flagged: true,
         });

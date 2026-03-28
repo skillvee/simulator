@@ -66,6 +66,7 @@ async function runEvalsBackground(evalRunId: string, name: string) {
           brevity: result.brevity,
           contextAwareness: result.contextAwareness,
           infoDiscipline: result.infoDiscipline,
+          aiIsms: result.aiIsms,
           overallScore: result.overallScore,
           flagged: result.flagged,
         },

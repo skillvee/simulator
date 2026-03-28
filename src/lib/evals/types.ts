@@ -60,10 +60,11 @@ export interface ConversationTranscript {
 
 export interface JudgmentScores {
   naturalness: number;      // 1-5
-  roleAccuracy: number;     // 1-5
+  roleAccuracy: number;     // 1-5 (persona consistency)
   brevity: number;          // 1-5
-  contextAwareness: number; // 1-5
+  contextAwareness: number; // 1-5 (conversational flow)
   infoDiscipline: number;   // 1-5
+  aiIsms: number;           // 1-5 (absence of AI writing patterns)
   reasoning: string;
 }
 
@@ -88,6 +89,7 @@ export interface ScenarioResult {
   brevity: number;
   contextAwareness: number;
   infoDiscipline: number;
+  aiIsms: number;
   overallScore: number;
   flagged: boolean;
 }

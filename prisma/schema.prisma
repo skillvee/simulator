@@ -654,6 +654,7 @@ model EvalResult {
   brevity        Float?
   contextAwareness Float?
   infoDiscipline Float?
+  aiIsms         Float?
   overallScore   Float?
   flagged        Boolean  @default(false)
 

@@ -141,6 +141,7 @@ Options:
           brevity: result.brevity,
           contextAwareness: result.contextAwareness,
           infoDiscipline: result.infoDiscipline,
+          aiIsms: result.aiIsms,
           overallScore: result.overallScore,
           flagged: result.flagged,
         },
@@ -171,7 +172,7 @@ Options:
     console.log(`  Run ID: ${evalRun.id}`);
 
     // Per-dimension averages
-    const dims = ["naturalness", "roleAccuracy", "brevity", "contextAwareness", "infoDiscipline"] as const;
+    const dims = ["naturalness", "roleAccuracy", "brevity", "contextAwareness", "infoDiscipline", "aiIsms"] as const;
     console.log(`\n  Per-dimension averages:`);
     for (const dim of dims) {
       const avg = results.reduce((s, r) => s + (r[dim] || 0), 0) / results.length;

@@ -47,7 +47,7 @@ export async function GET(
   );
 
   // Dimension averages
-  const dims = ["naturalness", "roleAccuracy", "brevity", "contextAwareness", "infoDiscipline"] as const;
+  const dims = ["naturalness", "roleAccuracy", "brevity", "contextAwareness", "infoDiscipline", "aiIsms"] as const;
   const dimensionAverages: Record<string, number> = {};
   for (const dim of dims) {
     const values = run.results.map((r) => (r[dim] as number) || 0);
