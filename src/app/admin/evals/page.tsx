@@ -1,7 +1,8 @@
 import { db } from "@/server/db";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { RunEvalButton } from "./run-eval-button";
 
 function scoreColor(score: number | null): string {
   if (!score) return "text-muted-foreground";
@@ -38,9 +39,7 @@ export default async function EvalsPage() {
             Measure and compare simulation prompt quality
           </p>
         </div>
-        <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-          <code>npx tsx scripts/run-evals.ts --name &quot;my-eval&quot;</code>
-        </div>
+        <RunEvalButton />
       </div>
 
       {runs.length === 0 ? (
