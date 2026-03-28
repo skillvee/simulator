@@ -69,7 +69,7 @@ const mockAssessments = [
         responseTokens: 50,
       },
     ],
-    _count: { clientErrors: 0 },
+    _count: { clientErrors: 0, conversations: 2, voiceSessions: 1 },
   },
   {
     id: "assess-2",
@@ -111,7 +111,7 @@ const mockAssessments = [
         responseTokens: null,
       },
     ],
-    _count: { clientErrors: 2 },
+    _count: { clientErrors: 2, conversations: 1, voiceSessions: 0 },
   },
   {
     id: "assess-3",
@@ -126,7 +126,7 @@ const mockAssessments = [
     scenario: { id: "scenario-2", name: "Backend Engineer" },
     logs: [],
     apiCalls: [],
-    _count: { clientErrors: 0 },
+    _count: { clientErrors: 0, conversations: 0, voiceSessions: 0 },
   },
 ];
 
@@ -175,7 +175,17 @@ describe("AdminAssessmentsPage", () => {
           },
         },
         _count: {
-          select: { clientErrors: true },
+          select: {
+            clientErrors: {
+              where: {
+                errorType: { in: ["UNHANDLED_EXCEPTION", "CONSOLE_ERROR", "REACT_BOUNDARY"] },
+              },
+            },
+            conversations: {
+              where: { type: "text" },
+            },
+            voiceSessions: true,
+          },
         },
       },
     });
@@ -251,6 +261,8 @@ describe("AssessmentsClient", () => {
       createdAt: a.createdAt.toISOString(),
       updatedAt: a.updatedAt.toISOString(),
       errorCount: apiErrorCount + a._count.clientErrors,
+      textConversationCount: a._count.conversations,
+      voiceSessionCount: a._count.voiceSessions,
       logs: a.logs.map((log) => ({
         ...log,
         timestamp: log.timestamp.toISOString(),

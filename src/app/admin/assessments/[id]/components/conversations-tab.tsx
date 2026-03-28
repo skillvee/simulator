@@ -37,6 +37,7 @@ interface CoworkerGroup {
   coworkerName: string;
   coworkerRole: string;
   textConversations: SerializedConversation[];
+  voiceConversations: SerializedConversation[];
   voiceSessions: SerializedVoiceSession[];
   totalMessages: number;
 }
@@ -55,12 +56,17 @@ function groupByCoworker(
         coworkerName: conv.coworker?.name ?? "Unknown",
         coworkerRole: conv.coworker?.role ?? "",
         textConversations: [],
+        voiceConversations: [],
         voiceSessions: [],
         totalMessages: 0,
       });
     }
     const group = groups.get(key)!;
-    group.textConversations.push(conv);
+    if (conv.type === "voice") {
+      group.voiceConversations.push(conv);
+    } else {
+      group.textConversations.push(conv);
+    }
     const messages = conv.transcript as ChatMessage[];
     group.totalMessages += Array.isArray(messages) ? messages.length : 0;
   }
@@ -73,6 +79,7 @@ function groupByCoworker(
         coworkerName: vs.coworker.name,
         coworkerRole: vs.coworker.role,
         textConversations: [],
+        voiceConversations: [],
         voiceSessions: [],
         totalMessages: 0,
       });
@@ -155,19 +162,22 @@ function ConnectionEventItem({ event }: { event: ConnectionEvent }) {
   );
 }
 
-function TextConversationView({
+function ConversationView({
   conversation,
 }: {
   conversation: SerializedConversation;
 }) {
   const messages = (conversation.transcript as ChatMessage[]) ?? [];
   const duration = calculateConversationDuration(messages);
+  const isVoice = conversation.type === "voice";
+  const Icon = isVoice ? Mic : MessageSquare;
+  const label = isVoice ? "Voice conversation" : "Text conversation";
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <MessageSquare className="h-3.5 w-3.5" />
-        <span>Text conversation</span>
+        <Icon className="h-3.5 w-3.5" />
+        <span>{label}</span>
         <span>&middot;</span>
         <span>{messages.length} messages</span>
         {duration && (
@@ -274,10 +284,10 @@ function CoworkerSection({ group }: { group: CoworkerGroup }) {
                 {group.textConversations.length} text
               </Badge>
             )}
-            {group.voiceSessions.length > 0 && (
+            {(group.voiceConversations.length > 0 || group.voiceSessions.length > 0) && (
               <Badge variant="secondary" className="gap-1">
                 <Mic className="h-3 w-3" />
-                {group.voiceSessions.length} voice
+                {group.voiceConversations.length + group.voiceSessions.length} voice
               </Badge>
             )}
             <Badge variant="outline">{group.totalMessages} msgs</Badge>
@@ -293,7 +303,10 @@ function CoworkerSection({ group }: { group: CoworkerGroup }) {
       {isExpanded && (
         <CardContent className="space-y-6 p-4">
           {group.textConversations.map((conv) => (
-            <TextConversationView key={conv.id} conversation={conv} />
+            <ConversationView key={conv.id} conversation={conv} />
+          ))}
+          {group.voiceConversations.map((conv) => (
+            <ConversationView key={conv.id} conversation={conv} />
           ))}
           {group.voiceSessions.map((vs) => (
             <VoiceSessionView key={vs.id} session={vs} />
@@ -310,7 +323,9 @@ export function ConversationsTab({
 }: ConversationsTabProps) {
   const groups = groupByCoworker(conversations, voiceSessions);
   const totalMessages = groups.reduce((sum, g) => sum + g.totalMessages, 0);
-  const totalConversations = conversations.length + voiceSessions.length;
+  const textCount = conversations.filter((c) => c.type !== "voice").length;
+  const voiceCount = conversations.filter((c) => c.type === "voice").length + voiceSessions.length;
+  const totalConversations = textCount + voiceCount;
 
   return (
     <div className="space-y-6">
@@ -335,7 +350,7 @@ export function ConversationsTab({
                 TEXT / VOICE
               </p>
               <p className="text-2xl font-semibold">
-                {conversations.length} / {voiceSessions.length}
+                {textCount} / {voiceCount}
               </p>
             </div>
             <div>
