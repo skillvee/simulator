@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState, useCallback, useEffect } from "react";
-import { Video, AlertCircle, MessageSquare, Server } from "lucide-react";
+import { Video, AlertCircle, MessageSquare, Server, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type {
   SerializedAssessment,
   SerializedClientError,
@@ -138,6 +139,9 @@ export function RecordingTab({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [hoveredMarker, setHoveredMarker] = useState<string | null>(null);
+  const [merging, setMerging] = useState(false);
+  const [mergeError, setMergeError] = useState<string | null>(null);
+  const [mergedUrl, setMergedUrl] = useState<string | null>(null);
 
   const screenRecording = assessment.recordings.find(
     (r) => r.type === "screen"
@@ -148,6 +152,49 @@ export function RecordingTab({
   const markers = screenRecording
     ? buildMarkers(assessment, clientErrors, assessmentStartMs)
     : [];
+
+  // Detect if recording needs merging: has chunks but URL points to a single chunk
+  const totalChunks = screenRecording?.segments.reduce(
+    (acc, s) => acc + s.chunkPaths.length,
+    0
+  ) ?? 0;
+  const needsMerge =
+    screenRecording &&
+    totalChunks > 1 &&
+    !mergedUrl &&
+    !screenRecording.storageUrl.includes("/merged.webm");
+
+  const videoUrl = mergedUrl || screenRecording?.storageUrl || undefined;
+
+  const handleMerge = useCallback(async () => {
+    if (merging) return;
+    setMerging(true);
+    setMergeError(null);
+    try {
+      const res = await fetch("/api/admin/recording/merge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId: assessment.id }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setMergeError(json.error || "Merge failed");
+        return;
+      }
+      setMergedUrl(json.data.storageUrl);
+    } catch {
+      setMergeError("Network error during merge");
+    } finally {
+      setMerging(false);
+    }
+  }, [assessment.id, merging]);
+
+  // Auto-merge on mount when chunks need stitching
+  useEffect(() => {
+    if (needsMerge && !merging && !mergeError) {
+      handleMerge();
+    }
+  }, [needsMerge]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleTimeUpdate = useCallback(() => {
     if (videoRef.current) {
@@ -187,7 +234,7 @@ export function RecordingTab({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [duration, seekToTime]);
 
-  // No recording empty state
+  // No recording at all
   if (!screenRecording) {
     return (
       <Card data-testid="no-recording-state">
@@ -206,6 +253,43 @@ export function RecordingTab({
     );
   }
 
+  // Has chunks but needs merging — auto-merge is in progress or failed
+  if (needsMerge && !mergedUrl) {
+    return (
+      <Card data-testid="needs-merge-state">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            {mergeError ? (
+              <AlertCircle className="h-8 w-8 text-red-500" />
+            ) : (
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          {mergeError ? (
+            <>
+              <h3 className="mb-2 text-lg font-semibold">Merge failed</h3>
+              <p className="mb-4 text-sm text-red-500">{mergeError}</p>
+              <Button onClick={handleMerge} disabled={merging}>
+                Retry
+              </Button>
+            </>
+          ) : (
+            <>
+              <h3 className="mb-2 text-lg font-semibold">
+                Stitching recording...
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Merging {totalChunks} chunks across{" "}
+                {screenRecording.segments.filter((s) => s.chunkPaths.length > 0).length}{" "}
+                segments
+              </p>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
   const currentTimePercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
@@ -215,7 +299,7 @@ export function RecordingTab({
         <CardContent className="p-4">
           <video
             ref={videoRef}
-            src={screenRecording.storageUrl}
+            src={videoUrl}
             controls
             className="w-full rounded-lg bg-black"
             onTimeUpdate={handleTimeUpdate}

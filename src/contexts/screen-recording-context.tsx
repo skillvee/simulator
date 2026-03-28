@@ -23,9 +23,15 @@ import {
   isWebcamStreamActive,
   onWebcamStreamEnded,
   captureBestWebcamSnapshot,
+  requestMicrophoneAccess,
 } from "@/lib/media";
 import { CanvasCompositor } from "@/lib/media";
 import { VideoRecorder, checkMediaRecorderSupport } from "@/lib/media";
+import { createAudioMixer, type AudioMixer } from "@/lib/media/audio-mixer";
+import {
+  connectAudioStreamerToCapture,
+  disconnectAudioStreamerFromCapture,
+} from "@/lib/media";
 import { shouldSkipScreenRecording, createLogger } from "@/lib/core";
 
 const logger = createLogger("client:contexts:screen-recording");
@@ -50,6 +56,10 @@ interface ScreenRecordingContextValue {
   webcamState: WebcamState;
   webcamStream: MediaStream | null;
   sessionLoaded: boolean;
+  /** AudioContext destination node for capturing system audio in the recording.
+   *  Voice hooks should connect their audio output here (in addition to speakers)
+   *  so that AI voice responses are included in the screen recording. */
+  audioMixer: AudioMixer | null;
   startRecording: () => Promise<boolean>;
   stopRecording: () => void;
   retryRecording: () => Promise<boolean>;
@@ -221,6 +231,8 @@ export function ScreenRecordingProvider({
   const cleanupRef = useRef<(() => void) | null>(null);
   const webcamCleanupRef = useRef<(() => void) | null>(null);
   const videoRecorderRef = useRef<VideoRecorder | null>(null);
+  const audioMixerRef = useRef<AudioMixer | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
   const chunkIndexRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
   const segmentIdRef = useRef<string | null>(null);
@@ -249,6 +261,17 @@ export function ScreenRecordingProvider({
     if (compositorRef.current) {
       compositorRef.current.stop();
       compositorRef.current = null;
+    }
+
+    // Stop audio mixer
+    if (audioMixerRef.current) {
+      disconnectAudioStreamerFromCapture(audioMixerRef.current.systemAudioDestination).catch(() => {});
+      audioMixerRef.current.stop();
+      audioMixerRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
     }
 
     // Stop webcam stream
@@ -302,6 +325,15 @@ export function ScreenRecordingProvider({
       webcamStreamRef.current = null;
       setWebcamStream(null);
       setWebcamState("idle");
+    }
+    if (audioMixerRef.current) {
+      disconnectAudioStreamerFromCapture(audioMixerRef.current.systemAudioDestination).catch(() => {});
+      audioMixerRef.current.stop();
+      audioMixerRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
     }
 
     // Reset counters
@@ -361,7 +393,26 @@ export function ScreenRecordingProvider({
         return false;
       }
 
-      // Step 3: Create composite stream via canvas compositor
+      // Step 3: Request microphone for audio recording
+      let mixer: AudioMixer | null = null;
+      try {
+        const micStream = await requestMicrophoneAccess();
+        micStreamRef.current = micStream;
+        mixer = createAudioMixer(micStream);
+        audioMixerRef.current = mixer;
+        // Route AI voice responses through the mixer so they're captured in recording
+        connectAudioStreamerToCapture(mixer.systemAudioDestination).catch(
+          (err) => logger.warn("Failed to connect audio streamer to mixer", { err: String(err) })
+        );
+        logger.info("Audio mixer initialized for recording");
+      } catch (micErr) {
+        // Microphone is optional for recording — log and continue without audio
+        logger.warn("Microphone unavailable for recording, continuing without audio", {
+          err: micErr instanceof Error ? micErr.message : String(micErr),
+        });
+      }
+
+      // Step 4: Create composite stream via canvas compositor
       const compositor = new CanvasCompositor({
         webcamWidth: 320,
         webcamHeight: 240,
@@ -376,6 +427,12 @@ export function ScreenRecordingProvider({
         screenStream,
         webcamMediaStream
       );
+
+      // Add audio track to composite stream if mixer is available
+      if (mixer?.audioTrack) {
+        compositeStream.addTrack(mixer.audioTrack);
+        logger.info("Audio track added to composite stream");
+      }
 
       // Initialize start time
       startTimeRef.current = Date.now();
@@ -411,7 +468,7 @@ export function ScreenRecordingProvider({
       videoRecorderRef.current = new VideoRecorder(
         {
           videoBitsPerSecond: 1_000_000, // 1 Mbps
-          timeslice: 10_000, // 10 second chunks
+          timeslice: 60_000, // 60 second chunks
           screenshotIntervalMs: 30_000, // Screenshot every 30 seconds
         },
         {
@@ -618,6 +675,7 @@ export function ScreenRecordingProvider({
     webcamState,
     webcamStream,
     sessionLoaded,
+    audioMixer: audioMixerRef.current,
     startRecording,
     stopRecording,
     retryRecording,

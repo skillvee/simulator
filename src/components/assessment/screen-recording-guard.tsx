@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Monitor, Mic, Camera, AlertTriangle, ArrowRight } from "lucide-react";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 import { shouldSkipScreenRecording } from "@/lib/core";
@@ -47,181 +47,45 @@ function ScreenRecordingGuardInner({
 }: ScreenRecordingGuardProps) {
   const {
     state,
-    permissionState,
+    error,
     isRecording,
     sessionLoaded,
     startRecording,
     retryRecording,
   } = useScreenRecordingContext();
-  const [showStoppedModal, setShowStoppedModal] = useState(false);
-  const [showInitialModal, setShowInitialModal] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
 
-  // Check if this is a fresh start or if recording was interrupted
-  // Gate on sessionLoaded to avoid flash of wrong modal before loadSession() completes
-  useEffect(() => {
-    if (!sessionLoaded) return;
-
-    if (state === "stopped" || state === "error") {
-      // Recording was previously active but stopped, or auto-start failed (permission denied)
-      setShowStoppedModal(true);
-      setShowInitialModal(false);
-    } else if (isRecording) {
-      // Recording is active
-      setShowStoppedModal(false);
-      setShowInitialModal(false);
-    } else if (state === "requesting") {
-      // Auto-start in progress — hide all modals while browser prompts are shown
-      setShowStoppedModal(false);
-      setShowInitialModal(false);
-    } else if (state === "idle") {
-      // Fresh start - no prior recording in DB
-      setShowInitialModal(true);
-      setShowStoppedModal(false);
-    }
-  }, [state, permissionState, isRecording, sessionLoaded]);
+  // Derive blocking state directly from recording state — no useEffect race condition.
+  // Recording is mandatory: block access until actively recording.
+  const isStoppedOrError = state === "stopped" || state === "error";
+  const isRequesting = state === "requesting";
+  const shouldBlock = !isRecording && !isRequesting;
 
   const handleRetry = async () => {
     setIsRetrying(true);
-    const success = await retryRecording();
+    await retryRecording();
     setIsRetrying(false);
-    if (success) {
-      setShowStoppedModal(false);
-    }
   };
 
   const handleAcceptAndStart = async () => {
     setIsStarting(true);
-    const success = await startRecording();
+    await startRecording();
     setIsStarting(false);
-    if (success) {
-      setShowInitialModal(false);
-    }
   };
 
-  // Initial consent modal (before recording starts)
-  if (showInitialModal) {
-    return (
-      <>
-        <Dialog open={true}>
-          <DialogContent
-            className="max-w-lg"
-            onPointerDownOutside={(e) => e.preventDefault()}
-            onEscapeKeyDown={(e) => e.preventDefault()}
-          >
-            <DialogHeader>
-              {/* Icons */}
-              <div className="mb-4 flex justify-center">
-                <div className="inline-flex items-center gap-4">
-                  <div className="rounded-xl bg-primary/10 p-4">
-                    <Monitor className="h-8 w-8 text-primary" />
-                  </div>
-                  <span className="text-xl font-semibold text-muted-foreground">
-                    +
-                  </span>
-                  <div className="rounded-xl bg-primary/10 p-4">
-                    <Camera className="h-8 w-8 text-primary" />
-                  </div>
-                  <span className="text-xl font-semibold text-muted-foreground">
-                    +
-                  </span>
-                  <div className="rounded-xl bg-primary/10 p-4">
-                    <Mic className="h-8 w-8 text-primary" />
-                  </div>
-                </div>
-              </div>
-
-              <DialogTitle className="text-center text-2xl">
-                Recording Notice
-              </DialogTitle>
-              <DialogDescription className="text-center">
-                To provide you with detailed feedback on your work
-              </DialogDescription>
-            </DialogHeader>
-
-            {/* Message */}
-            <div className="rounded-lg bg-muted p-6">
-              <p className="mb-4 text-foreground">
-                We need to record the following:
-              </p>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="rounded-full bg-primary/10 p-1.5">
-                    <Monitor className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <span className="font-semibold">Screen Recording</span>
-                    <p className="text-sm text-muted-foreground">
-                      Your screen will be recorded during the work session
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="rounded-full bg-primary/10 p-1.5">
-                    <Camera className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <span className="font-semibold">Webcam Recording</span>
-                    <p className="text-sm text-muted-foreground">
-                      Your webcam will be recorded for identity verification
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="rounded-full bg-primary/10 p-1.5">
-                    <Mic className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <span className="font-semibold">Voice Recording</span>
-                    <p className="text-sm text-muted-foreground">
-                      Voice conversations will be recorded and transcribed
-                    </p>
-                  </div>
-                </li>
-              </ul>
-              <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
-                Your recordings are private and only used for assessment at{" "}
-                {companyName}.
-              </p>
-            </div>
-
-            <DialogFooter className="flex-col gap-3 sm:flex-col">
-              {/* Accept button */}
-              <Button
-                onClick={handleAcceptAndStart}
-                disabled={isStarting}
-                size="lg"
-                className="w-full"
-              >
-                {isStarting ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                    Starting Recording...
-                  </>
-                ) : (
-                  <>
-                    Accept & Continue
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </Button>
-
-              <p className="text-center text-sm text-muted-foreground">
-                You will be prompted to share your screen and enable your webcam
-              </p>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Render children behind the overlay (hidden) */}
-        <div className="pointer-events-none blur-sm">{children}</div>
-      </>
-    );
+  // While session is loading, show nothing (provider also gates on this)
+  if (!sessionLoaded) {
+    return null;
   }
 
-  // Re-prompt modal (recording stopped)
-  if (showStoppedModal) {
+  // Recording is active or browser permission dialogs are showing — allow access
+  if (!shouldBlock) {
+    return <>{children}</>;
+  }
+
+  // Recording stopped or errored — show retry modal
+  if (isStoppedOrError) {
     return (
       <>
         <Dialog open={true}>
@@ -248,13 +112,16 @@ function ScreenRecordingGuardInner({
 
             {/* Message */}
             <div className="rounded-lg bg-muted p-6">
+              {error && (
+                <p className="mb-4 font-medium text-destructive">{error}</p>
+              )}
               <p className="mb-4 text-muted-foreground">
-                To continue with the assessment, you need to share your screen
-                and enable your webcam again.
+                To continue with the assessment, you need to share your{" "}
+                <strong>entire screen</strong> and enable your webcam.
               </p>
               <p className="text-sm text-muted-foreground">
-                Both screen and webcam recording are required to capture your
-                work process and provide you with detailed feedback.
+                Sharing a single tab or window is not allowed. Full screen and
+                webcam recording are required to capture your work process.
               </p>
             </div>
 
@@ -292,5 +159,123 @@ function ScreenRecordingGuardInner({
     );
   }
 
-  return <>{children}</>;
+  // Default: initial consent modal (state === "idle" — fresh start, no prior recording)
+  return (
+    <>
+      <Dialog open={true}>
+        <DialogContent
+          className="max-w-lg"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            {/* Icons */}
+            <div className="mb-4 flex justify-center">
+              <div className="inline-flex items-center gap-4">
+                <div className="rounded-xl bg-primary/10 p-4">
+                  <Monitor className="h-8 w-8 text-primary" />
+                </div>
+                <span className="text-xl font-semibold text-muted-foreground">
+                  +
+                </span>
+                <div className="rounded-xl bg-primary/10 p-4">
+                  <Camera className="h-8 w-8 text-primary" />
+                </div>
+                <span className="text-xl font-semibold text-muted-foreground">
+                  +
+                </span>
+                <div className="rounded-xl bg-primary/10 p-4">
+                  <Mic className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+            </div>
+
+            <DialogTitle className="text-center text-2xl">
+              Recording Notice
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              To provide you with detailed feedback on your work
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Message */}
+          <div className="rounded-lg bg-muted p-6">
+            <p className="mb-4 text-foreground">
+              We need to record the following:
+            </p>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <div className="rounded-full bg-primary/10 p-1.5">
+                  <Monitor className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <span className="font-semibold">Entire Screen Recording</span>
+                  <p className="text-sm text-muted-foreground">
+                    Your full screen will be recorded — tab or window sharing
+                    is not accepted
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="rounded-full bg-primary/10 p-1.5">
+                  <Camera className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <span className="font-semibold">Webcam Recording</span>
+                  <p className="text-sm text-muted-foreground">
+                    Your webcam will be recorded for identity verification
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="rounded-full bg-primary/10 p-1.5">
+                  <Mic className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <span className="font-semibold">Voice Recording</span>
+                  <p className="text-sm text-muted-foreground">
+                    Voice conversations will be recorded and transcribed
+                  </p>
+                </div>
+              </li>
+            </ul>
+            <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
+              Your recordings are private and only used for assessment at{" "}
+              {companyName}.
+            </p>
+          </div>
+
+          <DialogFooter className="flex-col gap-3 sm:flex-col">
+            {/* Accept button */}
+            <Button
+              onClick={handleAcceptAndStart}
+              disabled={isStarting}
+              size="lg"
+              className="w-full"
+            >
+              {isStarting ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  Starting Recording...
+                </>
+              ) : (
+                <>
+                  Accept & Continue
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              You will be prompted to share your entire screen and enable
+              your webcam
+            </p>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Render children behind the overlay (hidden) */}
+      <div className="pointer-events-none blur-sm">{children}</div>
+    </>
+  );
 }

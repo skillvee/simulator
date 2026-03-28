@@ -108,6 +108,25 @@ export class AudioStreamer {
     this.gainNode.connect(this.context.destination);
   }
 
+  /**
+   * Connect the audio output to an additional destination node.
+   * Used by the screen recording mixer to capture AI voice responses.
+   */
+  connectToDestination(destination: MediaStreamAudioDestinationNode): void {
+    this.gainNode.connect(destination);
+  }
+
+  /**
+   * Disconnect from an additional destination node.
+   */
+  disconnectFromDestination(destination: MediaStreamAudioDestinationNode): void {
+    try {
+      this.gainNode.disconnect(destination);
+    } catch {
+      // Ignore if not connected
+    }
+  }
+
   async initialize(): Promise<void> {
     if (this.context.state === "suspended") {
       await this.context.resume();
@@ -280,6 +299,27 @@ export function stopAudioPlayback(): void {
   if (audioStreamer) {
     audioStreamer.stop();
   }
+}
+
+/**
+ * Connect the singleton AudioStreamer to a capture destination so that
+ * AI voice responses are included in the screen recording.
+ */
+export async function connectAudioStreamerToCapture(
+  destination: MediaStreamAudioDestinationNode
+): Promise<void> {
+  const streamer = await getAudioStreamer();
+  streamer.connectToDestination(destination);
+}
+
+/**
+ * Disconnect the singleton AudioStreamer from a capture destination.
+ */
+export async function disconnectAudioStreamerFromCapture(
+  destination: MediaStreamAudioDestinationNode
+): Promise<void> {
+  const streamer = await getAudioStreamer();
+  streamer.disconnectFromDestination(destination);
 }
 
 // Audio worklet processor for capturing audio

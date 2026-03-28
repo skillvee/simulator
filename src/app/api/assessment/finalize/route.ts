@@ -12,7 +12,7 @@ import {
 } from "@/lib/external";
 import {
   triggerVideoAssessment,
-  type TriggerVideoAssessmentResult,
+  mergeRecordingChunks,
 } from "@/lib/analysis";
 import {
   generateProfilePhoto,
@@ -140,26 +140,50 @@ export async function POST(request: Request) {
       },
     });
 
-    // Trigger video assessment if recording exists (async, non-blocking)
-    let videoAssessmentResult: TriggerVideoAssessmentResult | null = null;
+    // Merge recording chunks and trigger video assessment (async, non-blocking)
+    // The merge + Gemini upload + ACTIVE polling can take minutes for large videos,
+    // so we fire-and-forget to avoid blocking the HTTP response.
+    let videoAssessmentTriggered = false;
     const recordingUrl = assessment.recordings[0]?.storageUrl;
 
     if (recordingUrl) {
-      try {
-        videoAssessmentResult = await triggerVideoAssessment({
-          assessmentId,
-          candidateId: session.user.id,
-          videoUrl: recordingUrl,
-          taskDescription: assessment.scenario.taskDescription,
-        });
+      videoAssessmentTriggered = true;
+      const candidateId = session.user.id;
+      const taskDescription = assessment.scenario.taskDescription;
 
-        if (!videoAssessmentResult.success) {
-          logger.warn("Video assessment trigger warning", { assessmentId, error: videoAssessmentResult.error });
-        }
-      } catch (err) {
-        logger.warn("Video assessment trigger error", { assessmentId, error: String(err) });
-        // Don't fail the finalization if video assessment trigger fails
-      }
+      // Fire-and-forget: merge + evaluate in background
+      mergeRecordingChunks(assessmentId)
+        .then((mergeResult) => {
+          if (mergeResult.success && mergeResult.geminiFileUri) {
+            logger.info("Recording merged successfully", {
+              assessmentId,
+              segments: String(mergeResult.totalSegments),
+              chunks: String(mergeResult.totalChunks),
+              sizeBytes: String(mergeResult.totalSizeBytes),
+            });
+          } else {
+            logger.warn("Recording merge failed, falling back to last chunk URL", {
+              assessmentId,
+              error: mergeResult.error,
+            });
+          }
+
+          return triggerVideoAssessment({
+            assessmentId,
+            candidateId,
+            videoUrl: recordingUrl,
+            geminiFileUri: mergeResult.geminiFileUri,
+            taskDescription,
+          });
+        })
+        .then((result) => {
+          if (result && !result.success) {
+            logger.warn("Video assessment trigger warning", { assessmentId, error: result.error });
+          }
+        })
+        .catch((err) => {
+          logger.warn("Video assessment trigger error", { assessmentId, error: String(err) });
+        });
     }
 
     // Trigger profile photo generation (async, non-blocking)
@@ -201,17 +225,11 @@ export async function POST(request: Request) {
             testResults: finalCiStatus.testResults,
           }
         : null,
-      videoAssessment: videoAssessmentResult
-        ? {
-            triggered: true,
-            videoAssessmentId: videoAssessmentResult.videoAssessmentId,
-            hasRecording: !!recordingUrl,
-          }
-        : {
-            triggered: false,
-            videoAssessmentId: null,
-            hasRecording: false,
-          },
+      videoAssessment: {
+          triggered: videoAssessmentTriggered,
+          videoAssessmentId: null, // Resolved async after response
+          hasRecording: !!recordingUrl,
+        },
       profilePhoto: profilePhotoResult
         ? {
             generated: profilePhotoResult.success,

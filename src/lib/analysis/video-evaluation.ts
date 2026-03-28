@@ -51,6 +51,8 @@ export interface VideoEvaluationResult {
 export interface EvaluateVideoOptions {
   assessmentId: string;
   videoUrl: string;
+  /** Pre-uploaded Gemini File API URI (e.g. "files/abc123"). Takes priority over videoUrl. */
+  geminiFileUri?: string;
   videoDurationMinutes?: number;
   taskDescription?: string;
   expectedOutcomes?: string[];
@@ -85,7 +87,7 @@ function cleanJsonResponse(response: string): string {
 /**
  * Parses and validates the Gemini evaluation response against the rubric output schema
  */
-function parseEvaluationResponse(responseText: string): RubricAssessmentOutput {
+export function parseEvaluationResponse(responseText: string): RubricAssessmentOutput {
   const cleaned = cleanJsonResponse(responseText);
   const parsed = JSON.parse(cleaned);
 
@@ -219,6 +221,7 @@ export async function evaluateVideo(
   const {
     assessmentId,
     videoUrl,
+    geminiFileUri,
     videoDurationMinutes,
     taskDescription,
     expectedOutcomes,
@@ -286,8 +289,8 @@ export async function evaluateVideo(
                 parts: [
                   {
                     fileData: {
-                      fileUri: videoUrl,
-                      mimeType: "video/mp4",
+                      fileUri: geminiFileUri ?? videoUrl,
+                      mimeType: "video/webm",
                     },
                   },
                   {
@@ -409,6 +412,21 @@ export async function evaluateVideo(
     });
 
     await assessmentLogger.logEvent(AssessmentLogEventType.COMPLETED);
+
+    // Cleanup: delete the uploaded file from Gemini to avoid accumulation
+    if (geminiFileUri) {
+      // Extract file name from URI (e.g. "https://...googleapis.com/v1beta/files/abc" -> "files/abc")
+      const fileNameMatch = geminiFileUri.match(/files\/[^/]+$/);
+      if (fileNameMatch) {
+        gemini.files.delete({ name: fileNameMatch[0] }).catch((err) => {
+          logger.warn("Failed to delete Gemini file after evaluation", {
+            assessmentId,
+            fileName: fileNameMatch[0],
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+      }
+    }
 
     // Generate and store embeddings for semantic search (async)
     generateAndStoreEmbeddings(assessmentId)
@@ -587,6 +605,8 @@ export interface TriggerVideoAssessmentOptions {
   assessmentId: string;
   candidateId: string;
   videoUrl: string;
+  /** Pre-uploaded Gemini File API URI. Takes priority over videoUrl for evaluation. */
+  geminiFileUri?: string;
   taskDescription?: string;
   roleFamilySlug?: string;
 }
@@ -603,7 +623,7 @@ export interface TriggerVideoAssessmentResult {
 export async function triggerVideoAssessment(
   options: TriggerVideoAssessmentOptions
 ): Promise<TriggerVideoAssessmentResult> {
-  const { assessmentId, candidateId, videoUrl, taskDescription, roleFamilySlug } = options;
+  const { assessmentId, candidateId, videoUrl, geminiFileUri, taskDescription, roleFamilySlug } = options;
 
   try {
     const videoAssessment = await db.videoAssessment.upsert({
@@ -627,6 +647,7 @@ export async function triggerVideoAssessment(
       evaluateVideo({
         assessmentId: videoAssessment.id,
         videoUrl,
+        geminiFileUri,
         taskDescription,
         roleFamilySlug,
       }).catch((error) => {
@@ -649,6 +670,7 @@ export async function triggerVideoAssessment(
     evaluateVideo({
       assessmentId: videoAssessment.id,
       videoUrl,
+      geminiFileUri,
       taskDescription,
       roleFamilySlug,
     }).catch((error) => {

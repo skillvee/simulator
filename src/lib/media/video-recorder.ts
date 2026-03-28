@@ -9,7 +9,7 @@ export interface RecordingConfig {
   videoBitsPerSecond?: number;
   // MIME type for recording (default: webm with VP9 codec for better compression)
   mimeType?: string;
-  // Time slice in ms - how often to emit data chunks (default: 10s)
+  // Time slice in ms - how often to emit data chunks (default: 60s)
   timeslice?: number;
   // Screenshot interval in ms (default: 30s)
   screenshotIntervalMs?: number;
@@ -18,7 +18,7 @@ export interface RecordingConfig {
 const DEFAULT_CONFIG: Required<RecordingConfig> = {
   videoBitsPerSecond: 1_000_000, // 1 Mbps for reasonable quality + compression
   mimeType: "video/webm;codecs=vp9", // VP9 codec for better compression
-  timeslice: 10_000, // 10 seconds per chunk
+  timeslice: 60_000, // 60 seconds per chunk
   screenshotIntervalMs: 30_000, // Screenshot every 30 seconds
 };
 
