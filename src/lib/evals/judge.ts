@@ -16,7 +16,7 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Judgment, JudgmentScores } from "./types";
 
-const JUDGE_MODEL = "gemini-3.1-pro-preview";
+const JUDGE_MODEL = "gemini-2.5-pro";
 
 function buildJudgePrompt(context: {
   coworkerName: string;

@@ -83,6 +83,22 @@ Run `npx tsx prisma/seed.ts` to create test users and a fixed assessment:
 
 See `src/test/CLAUDE.md` and `.claude/skills/agent-browser/SKILL.md` for full E2E testing docs.
 
+## Prompt Evals
+
+**Run evals after any change to prompts, models, or conversation flow.** This catches regressions.
+
+```bash
+npx tsx scripts/run-evals.ts --name "description-of-change"   # Full suite (23 scenarios)
+npx tsx scripts/run-evals.ts --category voice                  # Voice only (8 multi-turn)
+npx tsx scripts/run-evals.ts --category manager                # Manager chat only (6)
+```
+
+- **23 scenarios**: 15 chat (single-turn) + 8 voice (multi-turn with simulated candidates)
+- **3 Gemini 2.5 Pro judges** per scenario, scoring: naturalness, persona consistency, brevity, conversational flow, info discipline
+- Results stored in DB, viewable at `/admin/evals` and via `GET /api/admin/evals/[id]`
+- Current baseline: **4.15/5** (strict judges)
+- Key files: `src/lib/evals/`, `src/prompts/build-agent-prompt.ts`, `scripts/run-evals.ts`
+
 ## Skills
 
 - `frontend-design` - Modern blue theme UI (auto-activates)
