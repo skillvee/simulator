@@ -118,7 +118,6 @@ function mockAssessment(status: AssessmentStatus, extra: Record<string, unknown>
     scenarioId: "scenario-1",
     startedAt: new Date("2025-01-01T10:00:00Z"),
     prUrl: null,
-    managerMessagesStarted: false,
     repoUrl: "https://github.com/org/repo",
     scenario: {
       companyName: "Test Corp",

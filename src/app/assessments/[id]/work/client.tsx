@@ -31,8 +31,6 @@ interface WorkPageClientProps {
   coworkers: Coworker[];
   selectedCoworkerId: string | null;
   assessmentStartTime: Date;
-  /** Whether the manager has already sent initial messages */
-  managerMessagesStarted: boolean;
   /** PR URL if already submitted */
   prUrl: string | null;
 }
@@ -42,7 +40,6 @@ export function WorkPageClient({
   coworkers,
   selectedCoworkerId: initialSelectedCoworkerId,
   assessmentStartTime,
-  managerMessagesStarted: _managerMessagesStarted,
   prUrl,
 }: WorkPageClientProps) {
   const router = useRouter();

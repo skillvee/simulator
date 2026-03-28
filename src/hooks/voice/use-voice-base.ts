@@ -357,7 +357,7 @@ export function useVoiceBase({
 
       let sessionConnected = false;
       const session = await ai.live.connect({
-        model: "gemini-3.1-flash-live-preview",
+        model: "gemini-2.5-flash-native-audio-latest",
         config: {
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},

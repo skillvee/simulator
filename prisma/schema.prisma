@@ -121,7 +121,7 @@ model Assessment {
   prSnapshot             Json?
   codeReview             Json?
   supersededBy           String?
-  managerMessagesStarted Boolean             @default(false)
+
   reviewedAt             DateTime?
   repoUrl                String?
   repoStatus             String?             @default("pending")

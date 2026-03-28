@@ -161,7 +161,6 @@ const mockAssessment = {
   completedAt: null,
   prUrl: null,
   repoUrl: null,
-  managerMessagesStarted: false,
   scenario: {
     id: SCENARIO_ID,
     companyName: "TestCo",

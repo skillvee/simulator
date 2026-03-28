@@ -1,4 +1,1 @@
-export {
-  generateManagerGreetings,
-  type GreetingContext,
-} from "./greeting-generator";
+// Chat utilities - greeting generation moved to unified prompt builder

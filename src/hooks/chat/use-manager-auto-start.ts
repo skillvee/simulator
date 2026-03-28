@@ -1,22 +1,17 @@
 /**
- * Hook for handling manager auto-start messages
+ * Hook for handling manager auto-start greeting
  *
- * RF-015: When a candidate enters the Slack chat view, the manager should
- * immediately send a welcome message, then deliver the task briefing shortly after.
- *
- * This hook:
- * 1. Checks if manager messages have already been started
- * 2. If not, delivers an instant welcome message using the manager's name
- * 3. Calls the API in the background to generate task briefing via Gemini
- * 4. Delivers the briefing messages with quick staggered timing
+ * RF-015: When a candidate enters the Slack chat view, the manager sends
+ * an LLM-generated welcome message. The task briefing happens naturally
+ * through the regular chat flow when the candidate replies.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api, ApiClientError } from "@/lib/api";
 import type { ChatMessage } from "@/types";
 
 interface ManagerStartStatus {
-  managerMessagesStarted: boolean;
+  hasConversation: boolean;
   managerId: string | null;
   managerName: string | null;
   status: string;
@@ -24,7 +19,7 @@ interface ManagerStartStatus {
 
 interface ManagerStartResponse {
   alreadyStarted: boolean;
-  messages: ChatMessage[];
+  greeting?: string;
   managerId?: string;
   managerName?: string;
 }
@@ -35,7 +30,6 @@ interface UseManagerAutoStartOptions {
   onMessagesReceived: (messages: ChatMessage[]) => void;
   onTypingStart: () => void;
   onTypingEnd: () => void;
-  userHasSentMessage?: boolean;
 }
 
 interface UseManagerAutoStartReturn {
@@ -45,37 +39,12 @@ interface UseManagerAutoStartReturn {
   error: Error | null;
 }
 
-// Brief delay before the instant welcome message (feels natural)
-const INSTANT_MESSAGE_DELAY = 800;
-
-// Delay between follow-up messages (quick but readable)
-const MESSAGE_GAP_MIN = 500;
-const MESSAGE_GAP_MAX = 1000;
-
-// Typing speed for follow-up messages
-const MS_PER_WORD_MIN = 100;
-const MS_PER_WORD_MAX = 200;
-const TYPING_DURATION_FLOOR = 800;
-const TYPING_DURATION_CAP = 3000;
-
-function randomDelay(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function typingDurationForMessage(text: string): number {
-  const wordCount = text.split(/\s+/).filter(Boolean).length;
-  const msPerWord = randomDelay(MS_PER_WORD_MIN, MS_PER_WORD_MAX);
-  const duration = wordCount * msPerWord;
-  return Math.min(TYPING_DURATION_CAP, Math.max(TYPING_DURATION_FLOOR, duration));
-}
-
 export function useManagerAutoStart({
   assessmentId,
   currentCoworkerId,
   onMessagesReceived,
   onTypingStart,
   onTypingEnd,
-  userHasSentMessage = false,
 }: UseManagerAutoStartOptions): UseManagerAutoStartReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
@@ -84,56 +53,6 @@ export function useManagerAutoStart({
 
   const hasTriggeredRef = useRef(false);
   const isMountedRef = useRef(true);
-  const cancelledRef = useRef(false);
-
-  const deliverMessagesWithStagger = useCallback(
-    async (messages: ChatMessage[]) => {
-      for (let i = 0; i < messages.length; i++) {
-        if (!isMountedRef.current || cancelledRef.current) return;
-
-        // Brief pause before starting to "type"
-        if (i > 0) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, randomDelay(MESSAGE_GAP_MIN, MESSAGE_GAP_MAX))
-          );
-          if (!isMountedRef.current || cancelledRef.current) return;
-        }
-
-        // Show typing indicator
-        setIsTyping(true);
-        onTypingStart();
-
-        const typingDuration = typingDurationForMessage(messages[i].text);
-        await new Promise((resolve) =>
-          setTimeout(resolve, typingDuration)
-        );
-
-        if (!isMountedRef.current || cancelledRef.current) {
-          setIsTyping(false);
-          onTypingEnd();
-          return;
-        }
-
-        setIsTyping(false);
-        onTypingEnd();
-
-        const messageWithCurrentTimestamp: ChatMessage = {
-          ...messages[i],
-          timestamp: new Date().toISOString(),
-        };
-
-        onMessagesReceived([messageWithCurrentTimestamp]);
-      }
-    },
-    [onMessagesReceived, onTypingStart, onTypingEnd]
-  );
-
-  // Cancel message delivery when user sends their first message
-  useEffect(() => {
-    if (userHasSentMessage) {
-      cancelledRef.current = true;
-    }
-  }, [userHasSentMessage]);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -143,7 +62,7 @@ export function useManagerAutoStart({
       hasTriggeredRef.current = true;
 
       try {
-        // Step 1: Check if messages have already been started
+        // Step 1: Check if conversation already exists
         const status = await api<ManagerStartStatus>(
           `/api/chat/manager-start?assessmentId=${assessmentId}`
         );
@@ -152,79 +71,49 @@ export function useManagerAutoStart({
 
         setManagerId(status.managerId);
 
-        if (status.managerMessagesStarted) {
+        if (status.hasConversation) {
           setIsLoading(false);
           return;
         }
 
-        // Step 2: Deliver an instant welcome message using the manager's name
-        // This gives the candidate immediate feedback while Gemini generates the rest
+        // Step 2: Show typing while LLM generates the greeting
         if (status.managerId === currentCoworkerId && status.managerName) {
-          const firstName = status.managerName.split(" ")[0];
-
-          await new Promise((resolve) => setTimeout(resolve, INSTANT_MESSAGE_DELAY));
-          if (!isMountedRef.current || cancelledRef.current) return;
-
-          // Show brief typing indicator for the welcome
           setIsTyping(true);
           onTypingStart();
-          await new Promise((resolve) => setTimeout(resolve, 1200));
-          if (!isMountedRef.current || cancelledRef.current) {
+
+          const response = await api<ManagerStartResponse>(
+            "/api/chat/manager-start",
+            {
+              method: "POST",
+              body: { assessmentId },
+            }
+          );
+
+          if (!isMountedRef.current) {
             setIsTyping(false);
             onTypingEnd();
             return;
           }
+
           setIsTyping(false);
           onTypingEnd();
 
-          const welcomeMessage: ChatMessage = {
-            role: "model",
-            text: `Hey! Welcome to the team! I'm ${firstName} — give me one sec, pulling up what I have for you.`,
-            timestamp: new Date().toISOString(),
-          };
+          setManagerId(response.managerId || null);
 
-          onMessagesReceived([welcomeMessage]);
-          setIsLoading(false);
-
-          // Show typing while Gemini generates the rest
-          setIsTyping(true);
-          onTypingStart();
-        }
-
-        // Step 3: Call API to generate the full greeting (Gemini)
-        const response = await api<ManagerStartResponse>(
-          "/api/chat/manager-start",
-          {
-            method: "POST",
-            body: { assessmentId },
+          if (!response.alreadyStarted && response.greeting) {
+            const greetingMessage: ChatMessage = {
+              role: "model",
+              text: response.greeting,
+              timestamp: new Date().toISOString(),
+            };
+            onMessagesReceived([greetingMessage]);
           }
-        );
-
-        if (!isMountedRef.current) {
-          setIsTyping(false);
-          onTypingEnd();
-          return;
         }
 
-        // Hide the "generating" typing indicator
-        setIsTyping(false);
-        onTypingEnd();
-
-        setManagerId(response.managerId || null);
         setIsLoading(false);
-
-        // Step 4: Deliver the Gemini-generated messages (task briefing + guidance)
-        // The greeting prompt already tells Gemini that a welcome was sent, so
-        // Message 1 is the task briefing (not a duplicate welcome) — deliver all.
-        if (!response.alreadyStarted && response.messages.length > 0) {
-          if (response.managerId === currentCoworkerId) {
-            await deliverMessagesWithStagger(response.messages);
-          }
-        }
       } catch (err) {
         if (!isMountedRef.current) return;
 
-        // Hide typing indicator on error
         setIsTyping(false);
         onTypingEnd();
 
@@ -244,7 +133,7 @@ export function useManagerAutoStart({
     return () => {
       isMountedRef.current = false;
     };
-  }, [assessmentId, currentCoworkerId, deliverMessagesWithStagger, onMessagesReceived, onTypingStart, onTypingEnd]);
+  }, [assessmentId, currentCoworkerId, onMessagesReceived, onTypingStart, onTypingEnd]);
 
   return {
     isLoading,

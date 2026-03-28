@@ -199,7 +199,6 @@ export function Chat({
     onMessagesReceived: handleManagerMessagesWithRevealGuard,
     onTypingStart: handleTypingStart,
     onTypingEnd: handleTypingEnd,
-    userHasSentMessage,
   });
 
   // Show typing indicator in empty state ONLY while the hook is actively

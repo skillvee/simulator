@@ -293,7 +293,8 @@ export function RecruiterScenarioBuilderClient() {
         throw new Error(errorData.error || "Failed to analyze job description");
       }
 
-      const parsedData = await parseResponse.json() as ParseJDResponse;
+      const responseJson = await parseResponse.json();
+      const parsedData = responseJson.data as ParseJDResponse;
       setParsedJDData(parsedData);
 
       // Update log with parsed data
@@ -633,7 +634,8 @@ export function RecruiterScenarioBuilderClient() {
         throw new Error(errorBody.error || "Failed to generate tasks");
       }
 
-      const taskData = await taskResponse.json();
+      const taskJson = await taskResponse.json();
+      const taskData = taskJson.data || taskJson;
       const taskOptions = taskData.taskOptions || [];
 
       // Now generate coworkers with the first task option
@@ -664,7 +666,8 @@ export function RecruiterScenarioBuilderClient() {
         throw new Error(errorBody.message || errorBody.error || "Failed to generate coworkers");
       }
 
-      const coworkersData = await coworkersResponse2.json();
+      const coworkersJson = await coworkersResponse2.json();
+      const coworkersData = coworkersJson.data || coworkersJson;
 
       // Set up preview data
       setPreviewData({
