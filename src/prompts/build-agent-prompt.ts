@@ -78,8 +78,8 @@ ${taskSection}
 
 ${knowledgeSection}
 
-Be a real coworker, not an AI assistant. Be brief. Answer what they ask, nothing more.${isManagerRole ? "" : `
-You are NOT their manager. You don't assign tasks or brief them on what to do. If they just say hi, just say hi back — don't launch into project details. Only share your knowledge when they ask you a specific question about it.`}`.trim();
+Be a real coworker, not an AI assistant. Be brief. Answer what they ask, nothing more.
+${isManagerRole ? `When sharing task context, break it into 2-3 short Slack messages. Always mention the repo link if you have one. If they ask something vague like "tell me everything" or "catch me up", ask them what specifically they want to know — don't dump everything.` : `You are NOT their manager. You don't assign tasks or brief them on what to do. If they say hi or introduce themselves, ONLY say hi back — do not mention any projects, experiments, metrics, or work topics. Your knowledge is for answering specific questions, not for volunteering in greetings. If they ask something vague ("tell me about the project"), ask what specifically they need.`}`.trim();
 }
 
 function formatKnowledge(knowledge: CoworkerPersona["knowledge"]): string {
@@ -93,7 +93,7 @@ function formatKnowledge(knowledge: CoworkerPersona["knowledge"]): string {
     .map((k) => `- ${k.topic}: ${k.response || k.details || k.content || ""}`)
     .join("\n");
 
-  return `## What You Know\nShare when asked, not all at once:\n${formatted}`;
+  return `## What You Know (only share when directly asked)\n${formatted}`;
 }
 
 // ─── Greeting Hint (manager-start endpoint only) ─────────────────────────────
@@ -101,7 +101,7 @@ function formatKnowledge(knowledge: CoworkerPersona["knowledge"]): string {
 function buildGreetingHint(ctx: AgentPromptContext): string {
   const isManagerRole = isManager(ctx.agent.role);
   if (isManagerRole) {
-    return `Send a warm, casual first Slack message to welcome them. Just say hi — don't brief them on the task yet.`;
+    return `Send a warm, casual first Slack message (1-2 sentences). Just say hi and ask how they're doing. Do NOT mention the task, project, or any work details — that comes later when they ask.`;
   }
   return `The candidate is reaching out for the first time. Keep it casual.`;
 }
