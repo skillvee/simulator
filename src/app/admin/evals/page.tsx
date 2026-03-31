@@ -11,7 +11,7 @@ function scoreColor(score: number | null): string {
   return "text-red-600";
 }
 
-function scoreBadge(score: number | null) {
+function _scoreBadge(score: number | null) {
   if (!score) return <Badge variant="secondary">—</Badge>;
   if (score >= 4.0) return <Badge className="bg-green-100 text-green-800">{score.toFixed(2)}</Badge>;
   if (score >= 3.0) return <Badge className="bg-yellow-100 text-yellow-800">{score.toFixed(2)}</Badge>;
