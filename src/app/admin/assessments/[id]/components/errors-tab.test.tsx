@@ -120,7 +120,7 @@ describe("ErrorsTab", () => {
       render(
         <ErrorsTab clientErrors={mockClientErrors} apiCalls={mockApiCalls} />
       );
-      expect(screen.getByText("ERRORS (3 total)")).toBeInTheDocument();
+      expect(screen.getByText("ERRORS (3 actionable)")).toBeInTheDocument();
     });
 
     it("shows Client badge for client errors", () => {

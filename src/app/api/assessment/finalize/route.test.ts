@@ -28,11 +28,14 @@ vi.mock("@/lib/external", () => ({
   fetchPrCiStatus: (...args: unknown[]) => mockFetchPrCiStatus(...args),
 }));
 
-// Mock video evaluation module (now in @/lib/analysis)
+// Mock video evaluation and merge modules (now in @/lib/analysis)
 const mockTriggerVideoAssessment = vi.fn();
+const mockMergeRecordingChunks = vi.fn();
 vi.mock("@/lib/analysis", () => ({
   triggerVideoAssessment: (...args: unknown[]) =>
     mockTriggerVideoAssessment(...args),
+  mergeRecordingChunks: (...args: unknown[]) =>
+    mockMergeRecordingChunks(...args),
 }));
 
 // Mock profile photo generation (in @/lib/candidate)
@@ -47,6 +50,14 @@ import { POST } from "./route";
 describe("POST /api/assessment/finalize", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: merge succeeds with a Gemini URI
+    mockMergeRecordingChunks.mockResolvedValue({
+      success: true,
+      geminiFileUri: "files/merged-test-123",
+      totalChunks: 3,
+      totalSegments: 1,
+      totalSizeBytes: 1024,
+    });
   });
 
   it("should return 401 when not authenticated", async () => {
@@ -445,15 +456,22 @@ describe("POST /api/assessment/finalize", () => {
     expect(data.success).toBe(true);
     expect(data.data.videoAssessment).toEqual({
       triggered: true,
-      videoAssessmentId: "video-assessment-123",
+      videoAssessmentId: null, // Resolved async after response (fire-and-forget)
       hasRecording: true,
     });
 
-    // Verify video assessment was triggered with correct parameters
+    // Flush microtasks so the fire-and-forget .then() chain completes
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Verify merge was called first
+    expect(mockMergeRecordingChunks).toHaveBeenCalledWith("test-id");
+
+    // Verify video assessment was triggered with correct parameters including geminiFileUri
     expect(mockTriggerVideoAssessment).toHaveBeenCalledWith({
       assessmentId: "test-id",
       candidateId: "user-123",
       videoUrl: recordingUrl,
+      geminiFileUri: "files/merged-test-123",
       taskDescription: "Complete the todo list feature",
     });
   });
@@ -674,5 +692,124 @@ describe("POST /api/assessment/finalize", () => {
     // Finalization should succeed even if profile photo throws
     expect(data.success).toBe(true);
     expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+  });
+
+  it("should still trigger video assessment when merge fails (fallback to chunk URL)", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+    const recordingUrl = "https://storage.example.com/recording.webm";
+
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123" },
+    });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-123",
+      status: AssessmentStatus.WORKING,
+      startedAt,
+      prUrl: null,
+      scenario: { taskDescription: "Test task" },
+      recordings: [{ storageUrl: recordingUrl }],
+    });
+    mockAssessmentUpdate.mockResolvedValue({
+      id: "test-id",
+      status: AssessmentStatus.COMPLETED,
+      startedAt,
+      completedAt: new Date(),
+      prUrl: null,
+    });
+
+    // Merge fails — no geminiFileUri
+    mockMergeRecordingChunks.mockResolvedValue({
+      success: false,
+      totalChunks: 0,
+      totalSegments: 0,
+      totalSizeBytes: 0,
+      error: "All chunk downloads failed",
+    });
+
+    mockTriggerVideoAssessment.mockResolvedValue({
+      success: true,
+      videoAssessmentId: "video-assessment-456",
+    });
+
+    const request = new Request("http://localhost/api/assessment/finalize", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId: "test-id" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    expect(data.success).toBe(true);
+    expect(data.data.videoAssessment.triggered).toBe(true);
+
+    // Flush microtasks so the fire-and-forget .then() chain completes
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Should still trigger video assessment, but with undefined geminiFileUri
+    expect(mockTriggerVideoAssessment).toHaveBeenCalledWith({
+      assessmentId: "test-id",
+      candidateId: "user-123",
+      videoUrl: recordingUrl,
+      geminiFileUri: undefined,
+      taskDescription: "Test task",
+    });
+  });
+
+  it("should pass geminiFileUri from merge result to video assessment trigger", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+    const recordingUrl = "https://storage.example.com/recording.webm";
+
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123" },
+    });
+    mockAssessmentFindUnique.mockResolvedValue({
+      id: "test-id",
+      userId: "user-123",
+      status: AssessmentStatus.WORKING,
+      startedAt,
+      prUrl: null,
+      scenario: { taskDescription: "Build a dashboard" },
+      recordings: [{ storageUrl: recordingUrl }],
+    });
+    mockAssessmentUpdate.mockResolvedValue({
+      id: "test-id",
+      status: AssessmentStatus.COMPLETED,
+      startedAt,
+      completedAt: new Date(),
+      prUrl: null,
+    });
+
+    mockMergeRecordingChunks.mockResolvedValue({
+      success: true,
+      geminiFileUri: "files/merged-abc-456",
+      totalChunks: 5,
+      totalSegments: 2,
+      totalSizeBytes: 2048,
+    });
+
+    mockTriggerVideoAssessment.mockResolvedValue({
+      success: true,
+      videoAssessmentId: "video-assessment-789",
+    });
+
+    const request = new Request("http://localhost/api/assessment/finalize", {
+      method: "POST",
+      body: JSON.stringify({ assessmentId: "test-id" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    // Flush microtasks so the fire-and-forget .then() chain completes
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Verify geminiFileUri was passed through
+    expect(mockTriggerVideoAssessment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        geminiFileUri: "files/merged-abc-456",
+      })
+    );
   });
 });

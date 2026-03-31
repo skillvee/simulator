@@ -377,7 +377,7 @@ describe("evaluateVideo", () => {
             {
               fileData: {
                 fileUri: "https://storage.example.com/video.mp4",
-                mimeType: "video/mp4",
+                mimeType: "video/webm",
               },
             },
             {

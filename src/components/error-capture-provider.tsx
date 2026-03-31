@@ -4,13 +4,26 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 interface ErrorEntry {
-  errorType: "UNHANDLED_EXCEPTION" | "CONSOLE_ERROR" | "CONSOLE_WARN" | "CONSOLE_LOG";
+  errorType: "UNHANDLED_EXCEPTION" | "CONSOLE_ERROR" | "CONSOLE_WARN";
   message: string;
   stackTrace?: string;
   url: string;
   assessmentId?: string;
   metadata?: Record<string, unknown>;
 }
+
+/** Patterns that are framework/dev noise — not actionable errors */
+const NOISE_PATTERNS = [
+  /^\[Fast Refresh\]/,
+  /^\[HMR\]/,
+  /scroll-behavior: smooth/,
+  /Image with src .* has either width or height modified/,
+  /Ephemeral token support is experimental/,
+  /ReactDOM\.render is no longer supported/,
+  /Warning: ReactDOM/,
+  /Download the React DevTools/,
+  /An empty string .* was passed to the %s attribute/,
+];
 
 function extractAssessmentId(pathname: string): string | undefined {
   const match = pathname.match(/\/assessments\/([^/]+)/);
@@ -76,16 +89,21 @@ export function ErrorCaptureProvider({ children }: { children: React.ReactNode }
       return extractAssessmentId(pathnameRef.current);
     }
 
-    // Monkey-patch console methods
+    function isNoise(message: string): boolean {
+      return NOISE_PATTERNS.some((pattern) => pattern.test(message));
+    }
+
+    // Monkey-patch console methods (skip console.log — never actionable)
     const originalError = console.error;
     const originalWarn = console.warn;
-    const originalLog = console.log;
 
     console.error = (...args: unknown[]) => {
       originalError.apply(console, args);
+      const message = stringifyArgs(args);
+      if (isNoise(message)) return;
       enqueue({
         errorType: "CONSOLE_ERROR",
-        message: stringifyArgs(args),
+        message,
         url: getUrl(),
         assessmentId: getAssessmentId(),
       });
@@ -93,19 +111,11 @@ export function ErrorCaptureProvider({ children }: { children: React.ReactNode }
 
     console.warn = (...args: unknown[]) => {
       originalWarn.apply(console, args);
+      const message = stringifyArgs(args);
+      if (isNoise(message)) return;
       enqueue({
         errorType: "CONSOLE_WARN",
-        message: stringifyArgs(args),
-        url: getUrl(),
-        assessmentId: getAssessmentId(),
-      });
-    };
-
-    console.log = (...args: unknown[]) => {
-      originalLog.apply(console, args);
-      enqueue({
-        errorType: "CONSOLE_LOG",
-        message: stringifyArgs(args),
+        message,
         url: getUrl(),
         assessmentId: getAssessmentId(),
       });
@@ -146,7 +156,6 @@ export function ErrorCaptureProvider({ children }: { children: React.ReactNode }
       // Restore originals
       console.error = originalError;
       console.warn = originalWarn;
-      console.log = originalLog;
       window.removeEventListener("error", handleError);
       window.removeEventListener("unhandledrejection", handleRejection);
 

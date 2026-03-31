@@ -113,7 +113,7 @@ describe("ErrorCaptureProvider", () => {
     unmount();
   });
 
-  it("captures console.log", () => {
+  it("does not capture console.log (noise)", () => {
     const { unmount } = render(
       <ErrorCaptureProvider>
         <div />
@@ -126,9 +126,7 @@ describe("ErrorCaptureProvider", () => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(fetchCalls).toHaveLength(1);
-    expect(fetchCalls[0].body.errorType).toBe("CONSOLE_LOG");
-    expect(fetchCalls[0].body.message).toBe("a log message");
+    expect(fetchCalls).toHaveLength(0);
 
     unmount();
   });
@@ -142,7 +140,6 @@ describe("ErrorCaptureProvider", () => {
 
     console.error("error 1");
     console.warn("warning 1");
-    console.log("log 1");
 
     // Not yet flushed
     expect(fetchCalls).toHaveLength(0);
@@ -151,8 +148,8 @@ describe("ErrorCaptureProvider", () => {
       vi.advanceTimersByTime(1000);
     });
 
-    // All three sent in one batch
-    expect(fetchCalls).toHaveLength(3);
+    // Both sent in one batch (console.log is no longer captured)
+    expect(fetchCalls).toHaveLength(2);
 
     unmount();
   });
@@ -276,7 +273,6 @@ describe("ErrorCaptureProvider", () => {
   it("restores console methods on unmount", () => {
     const origError = console.error;
     const origWarn = console.warn;
-    const origLog = console.log;
 
     const { unmount } = render(
       <ErrorCaptureProvider>
@@ -289,10 +285,9 @@ describe("ErrorCaptureProvider", () => {
 
     unmount();
 
-    // Console methods are restored
+    // Console methods are restored (console.log is not patched)
     expect(console.error).toBe(origError);
     expect(console.warn).toBe(origWarn);
-    expect(console.log).toBe(origLog);
   });
 
   it("flushes remaining buffer on unmount", () => {
@@ -309,6 +304,32 @@ describe("ErrorCaptureProvider", () => {
 
     expect(fetchCalls).toHaveLength(1);
     expect(fetchCalls[0].body.message).toBe("buffered error");
+  });
+
+  it("filters out noise patterns from console.error and console.warn", () => {
+    const { unmount } = render(
+      <ErrorCaptureProvider>
+        <div />
+      </ErrorCaptureProvider>
+    );
+
+    // These should all be filtered out
+    console.error("[Fast Refresh] rebuilding");
+    console.warn("Detected `scroll-behavior: smooth` on the `<html>` element.");
+    console.warn("Image with src \"/logo.png\" has either width or height modified");
+    console.warn("Ephemeral token support is experimental");
+
+    // This should NOT be filtered
+    console.error("Real application error");
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(fetchCalls).toHaveLength(1);
+    expect(fetchCalls[0].body.message).toBe("Real application error");
+
+    unmount();
   });
 
   it("silently drops fetch errors to avoid infinite loops", () => {

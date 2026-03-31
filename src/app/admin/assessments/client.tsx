@@ -14,6 +14,8 @@ import {
   ChevronRight,
   Clock,
   ExternalLink,
+  MessageSquare,
+  Mic,
   Search,
   X,
 } from "lucide-react";
@@ -54,6 +56,8 @@ interface SerializedAssessment {
   createdAt: string;
   updatedAt: string;
   errorCount: number;
+  textConversationCount: number;
+  voiceSessionCount: number;
   user: {
     id: string;
     name: string | null;
@@ -486,6 +490,9 @@ export function AssessmentsClient({
                     direction={sortDirection}
                     onSort={handleSort}
                   />
+                  <th className="p-4 text-left text-xs font-medium text-muted-foreground">
+                    INTERACTIONS
+                  </th>
                   <SortableHeader
                     label="ERRORS"
                     column="errors"
@@ -671,6 +678,25 @@ function AssessmentRow({
           {duration ? formatDuration(duration) : "-"}
         </td>
         <td className="p-4">
+          <div className="flex items-center gap-2">
+            {assessment.textConversationCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <MessageSquare className="h-3 w-3" />
+                {assessment.textConversationCount}
+              </span>
+            )}
+            {assessment.voiceSessionCount > 0 && (
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <Mic className="h-3 w-3" />
+                {assessment.voiceSessionCount}
+              </span>
+            )}
+            {assessment.textConversationCount === 0 && assessment.voiceSessionCount === 0 && (
+              <span className="text-xs text-muted-foreground">-</span>
+            )}
+          </div>
+        </td>
+        <td className="p-4">
           {assessment.errorCount > 0 ? (
             <Badge variant="destructive" className="gap-1" data-testid={`error-badge-${assessment.id}`}>
               <AlertCircle className="h-3 w-3" />
@@ -685,7 +711,7 @@ function AssessmentRow({
       </tr>
       {isExpanded && (
         <tr>
-          <td colSpan={6} className="border-b border-border p-0">
+          <td colSpan={7} className="border-b border-border p-0">
             <AssessmentDetails assessment={assessment} />
           </td>
         </tr>

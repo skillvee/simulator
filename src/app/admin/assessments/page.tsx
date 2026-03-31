@@ -34,7 +34,17 @@ export default async function AdminAssessmentsPage() {
           },
         },
         _count: {
-          select: { clientErrors: true },
+          select: {
+            clientErrors: {
+              where: {
+                errorType: { in: ["UNHANDLED_EXCEPTION", "CONSOLE_ERROR", "REACT_BOUNDARY"] },
+              },
+            },
+            conversations: {
+              where: { type: "text" },
+            },
+            voiceSessions: true,
+          },
         },
       },
     }),
@@ -89,6 +99,8 @@ export default async function AdminAssessmentsPage() {
       createdAt: a.createdAt.toISOString(),
       updatedAt: a.updatedAt.toISOString(),
       errorCount: apiErrorCount + clientErrorCount,
+      textConversationCount: a._count.conversations,
+      voiceSessionCount: a._count.voiceSessions,
       logs: a.logs.map((log) => ({
         ...log,
         timestamp: log.timestamp.toISOString(),

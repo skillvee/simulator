@@ -180,16 +180,28 @@ export function useVoiceBase({
     ]
   );
 
-  // Add message to transcript
+  // Add message to transcript, merging consecutive chunks from the same role
   const addToTranscript = useCallback(
     (role: "user" | "model", text: string) => {
-      const message: TranscriptMessage = {
-        role,
-        text,
-        timestamp: new Date().toISOString(),
-      };
-      const newTranscript = [...transcriptRef.current, message];
-      updateTranscript(newTranscript);
+      const current = transcriptRef.current;
+      const lastMessage = current[current.length - 1];
+
+      // If the last message is from the same role, append to it
+      if (lastMessage && lastMessage.role === role) {
+        const merged = [...current];
+        merged[merged.length - 1] = {
+          ...lastMessage,
+          text: lastMessage.text + " " + text,
+        };
+        updateTranscript(merged);
+      } else {
+        const message: TranscriptMessage = {
+          role,
+          text,
+          timestamp: new Date().toISOString(),
+        };
+        updateTranscript([...current, message]);
+      }
     },
     [updateTranscript]
   );
