@@ -34,7 +34,7 @@ import { env } from "@/lib/core";
 - Transcription MUST be enabled server-side in ephemeral token config (see `ai/gemini.ts:45`)
 - Use `Modality.AUDIO` import, not string "AUDIO"
 - For text chat, `systemInstruction` not supported - use first message pair instead
-- Models: `gemini-3-flash-preview` (text), `gemini-2.5-flash-native-audio-latest` (voice)
+- Models: `gemini-3-flash-preview` (text), `gemini-3.1-flash-live-preview` (voice)
 
 ## Prisma JSON
 

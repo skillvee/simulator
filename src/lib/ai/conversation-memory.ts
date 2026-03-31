@@ -22,8 +22,8 @@ export type { ChatMessage, ConversationWithMeta, CoworkerMemory } from "@/types"
 // Summarization model - use Flash for speed
 const SUMMARY_MODEL = "gemini-3-flash-preview";
 
-// Maximum messages to include verbatim (recent context)
-const MAX_RECENT_MESSAGES = 10;
+// Include all messages verbatim — modern models have large context windows
+const MAX_RECENT_MESSAGES = Infinity;
 
 // Minimum messages before triggering summarization
 const MIN_MESSAGES_FOR_SUMMARY = 5;
@@ -187,34 +187,18 @@ export function formatMemoryForPrompt(
     return "";
   }
 
-  const sections: string[] = ["\n## Prior Conversation History"];
-  sections.push(
-    "The messages below are the ONLY interactions you have had with this candidate. Do not reference any other conversations, meetings, or discussions that are not shown here."
-  );
+  const sections: string[] = ["\n## Conversation History"];
 
-  // Add summary if available
   if (memory.summary) {
-    sections.push(`\n### Summary of Earlier Conversations\n${memory.summary}`);
+    sections.push(`Summary: ${memory.summary}`);
   }
 
-  // Add recent messages
   if (memory.recentMessages.length > 0) {
-    sections.push("\n### Recent Messages");
     const formattedMessages = memory.recentMessages
       .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
       .join("\n");
     sections.push(formattedMessages);
   }
-
-  sections.push(
-    "\n**CRITICAL INCREMENTAL SHARING RULES:**",
-    "- If the candidate brings up a topic from a prior conversation, you may BUILD on what you already told them. Do NOT proactively bring up past topics — let the candidate re-engage.",
-    "- Use 'As I mentioned...' or 'Building on what we discussed...' ONLY when the candidate asks about a topic you previously discussed, NOT to proactively reference old topics",
-    "- If they ask about the SAME topic again, share NEW details you didn't mention before",
-    "- NEVER repeat the exact same information - always add something new or go deeper",
-    "- Example: If you previously said 'We use Redis for caching', next time say 'The Redis setup I mentioned also handles our pub/sub for real-time updates'",
-    "\nContinue the conversation naturally. Only reference prior discussions when the candidate brings up a related topic. Don't repeat information unless specifically asked to clarify."
-  );
 
   return sections.join("\n");
 }
@@ -242,34 +226,20 @@ export function buildCrossCoworkerContext(
     return "";
   }
 
-  // Build brief context about other interactions
-  const otherInteractions: string[] = [];
-
+  // Collect names of coworkers the candidate has talked to
+  const names = new Set<string>();
   for (const conv of otherCoworkerConversations) {
-    const coworkerName = coworkerMap.get(conv.coworkerId!) || "a coworker";
-    const messageCount = conv.messages.length;
-
-    if (messageCount > 0) {
-      otherInteractions.push(
-        `- The candidate has chatted with ${coworkerName} (${messageCount} messages).`
-      );
+    if (conv.messages.length > 0) {
+      const name = coworkerMap.get(conv.coworkerId!) || "a coworker";
+      names.add(name);
     }
   }
 
-  if (otherInteractions.length === 0) {
+  if (names.size === 0) {
     return "";
   }
 
-  return `\n## Context About Other Conversations
-The candidate has been reaching out to other team members. This is normal and encouraged.
-${otherInteractions.join("\n")}
-
-**IMPORTANT RULES about cross-coworker awareness:**
-- You can acknowledge that the candidate has been talking to specific coworkers listed above (e.g., "I heard you were talking to Alex")
-- If the candidate ASKS "who have I been chatting with?" — ONLY list the coworkers named above. Do NOT list team members they haven't talked to
-- Do NOT assume you know what the candidate discussed with other team members. If they mention talking to someone, ask what came up rather than guessing.
-- Do NOT independently confirm specific technical details from another person's private conversation. If the candidate says "Alex told me about X", you may acknowledge they talked, but share your OWN perspective on X (not echoing what Alex said)
-- Do NOT pry into their conversations with others`;
+  return `\nThe candidate has also talked to: ${Array.from(names).join(", ")}. Don't assume you know what they discussed.`;
 }
 
 /**

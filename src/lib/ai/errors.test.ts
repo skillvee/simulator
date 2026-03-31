@@ -143,7 +143,7 @@ describe("wrapAICall", () => {
 
   it("preserves all context in the thrown AIError", async () => {
     const customContext = {
-      model: "gemini-2.5-flash-native-audio-latest",
+      model: "gemini-3.1-flash-live-preview",
       promptType: "hr-interview",
       promptVersion: "2024-06-15",
     };
@@ -153,7 +153,7 @@ describe("wrapAICall", () => {
       await wrapAICall(mockFn, customContext);
     } catch (error) {
       const aiError = error as AIError;
-      expect(aiError.model).toBe("gemini-2.5-flash-native-audio-latest");
+      expect(aiError.model).toBe("gemini-3.1-flash-live-preview");
       expect(aiError.promptType).toBe("hr-interview");
       expect(aiError.promptVersion).toBe("2024-06-15");
     }

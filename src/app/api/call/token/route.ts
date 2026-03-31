@@ -11,12 +11,12 @@ import {
 import { parseCoworkerKnowledge } from "@/lib/ai";
 import { inferDemographics } from "@/lib/avatar";
 import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
-import { buildVoicePrompt, buildDefensePrompt, type DefenseContext, buildKickoffVoicePrompt } from "@/prompts";
 import { AssessmentStatus } from "@prisma/client";
 import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
+import { buildAgentPrompt, buildDefensePhaseContext } from "@/prompts/build-agent-prompt";
 
 const logger = createLogger("server:api:call:token");
 
@@ -70,25 +70,18 @@ export async function POST(request: Request) {
       return error("Coworker not found", 404, "NOT_FOUND");
     }
 
-    // Get ALL conversations for this assessment (for cross-coworker context)
+    // Get ALL conversations for this assessment
     const allConversations = await db.conversation.findMany({
-      where: {
-        assessmentId,
-      },
+      where: { assessmentId },
       include: {
         coworker: {
-          select: {
-            id: true,
-            name: true,
-          },
+          select: { id: true, name: true },
         },
       },
-      orderBy: {
-        createdAt: "asc",
-      },
+      orderBy: { createdAt: "asc" },
     });
 
-    // Get all conversations with this coworker (text + voice) for memory
+    // Build memory context (voice gets more recent messages)
     const coworkerConversations: ConversationWithMeta[] = allConversations
       .filter((c) => c.coworkerId === coworkerId)
       .map((c) => ({
@@ -99,17 +92,14 @@ export async function POST(request: Request) {
         updatedAt: c.updatedAt,
       }));
 
-    // Build memory context for this coworker (with summarization)
-    // Voice calls get more recent messages since Gemini Live can only
-    // receive context via systemInstruction (no history param).
     const memory = await buildCoworkerMemory(
       coworkerConversations,
       coworker.name,
-      { maxRecentMessages: 20, assessmentId }
+      {}
     );
     const memoryContext = formatMemoryForPrompt(memory, coworker.name);
 
-    // Build cross-coworker context (awareness of other conversations)
+    // Build cross-coworker context
     const coworkerMap = new Map<string, string>();
     for (const c of allConversations) {
       if (c.coworker) {
@@ -128,7 +118,8 @@ export async function POST(request: Request) {
       coworkerMap
     );
 
-    // Build coworker persona for system prompt
+    // Build persona
+    const isManagerCoworker = isManager(coworker.role);
     const persona: CoworkerPersona = {
       name: coworker.name,
       role: coworker.role,
@@ -138,15 +129,11 @@ export async function POST(request: Request) {
       avatarUrl: coworker.avatarUrl,
     };
 
-    // Determine call type: defense, kickoff, or regular
-    const isManagerCoworker = isManager(coworker.role);
+    // Only defense calls need special phase handling
     const isDefenseCall = Boolean(assessment.prUrl) && isManagerCoworker;
-    const isKickoffCall = !assessment.prUrl && !assessment.managerMessagesStarted && isManagerCoworker;
-
-    let systemInstruction: string;
+    let phaseContext: string | undefined;
 
     if (isDefenseCall) {
-      // Build defense prompt for PR review call
       const allConvsMapped = allConversations.map((c) => ({
         type: c.type as "text" | "voice",
         coworkerId: c.coworkerId,
@@ -154,73 +141,35 @@ export async function POST(request: Request) {
         createdAt: c.createdAt,
         updatedAt: c.updatedAt,
       }));
-      const conversationSummary = formatConversationsForSummary(
-        allConvsMapped,
-        coworkerMap
-      );
-
-      const defenseContext: DefenseContext = {
-        managerName: coworker.name,
-        managerRole: coworker.role,
-        companyName: assessment.scenario.companyName,
-        candidateName: session.user.name || undefined,
-        taskDescription: assessment.scenario.taskDescription,
-        techStack: assessment.scenario.techStack,
-        repoUrl: assessment.repoUrl || "",
+      phaseContext = buildDefensePhaseContext({
         prUrl: assessment.prUrl!,
-        conversationSummary,
-        // Screen analysis and code review may not be available yet
-        screenAnalysisSummary: "",
-        ciStatusSummary: "CI status will be checked after the call.",
-        codeReviewSummary: "",
-      };
-
-      systemInstruction = buildDefensePrompt(defenseContext);
-    } else if (isKickoffCall) {
-      // First call with the manager — explain the task from scratch
-      // Fetch all coworkers to provide teammate context (prevents hallucinated names)
-      const allCoworkers = await db.coworker.findMany({
-        where: { scenarioId: assessment.scenarioId },
-        select: { id: true, name: true, role: true },
-      });
-      const teammates = allCoworkers
-        .filter((c) => c.id !== coworkerId)
-        .map((c) => ({ name: c.name, role: c.role }));
-
-      systemInstruction = buildKickoffVoicePrompt({
-        managerName: coworker.name,
-        managerRole: coworker.role,
-        companyName: assessment.scenario.companyName,
-        candidateName: session.user.name || undefined,
+        repoUrl: assessment.repoUrl || "",
         taskDescription: assessment.scenario.taskDescription,
         techStack: assessment.scenario.techStack,
-        repoUrl: assessment.repoUrl || "",
-        personaStyle: coworker.personaStyle,
-        personality: coworker.personality as import("@/types").CoworkerPersonality | null,
-        teammates,
+        conversationSummary: formatConversationsForSummary(allConvsMapped, coworkerMap),
+        ciStatusSummary: "CI status will be checked after the call.",
       });
-    } else {
-      // Regular coworker voice prompt (mid-work calls, non-manager calls)
-      systemInstruction = buildVoicePrompt(
-        persona,
-        {
-          companyName: assessment.scenario.companyName,
-          candidateName: session.user.name || undefined,
-          taskDescription: undefined,
-          techStack: assessment.scenario.techStack,
-        },
-        memoryContext,
-        crossCoworkerContext
-      );
     }
 
-    // Generate ephemeral token for client-side connection
-    // Use coworker's configured voice, or infer from name gender
+    // Build unified system prompt
+    const systemInstruction = buildAgentPrompt({
+      companyName: assessment.scenario.companyName,
+      techStack: assessment.scenario.techStack,
+      agent: persona,
+      taskDescription: isManagerCoworker ? assessment.scenario.taskDescription : undefined,
+      candidateName: session.user.name || undefined,
+      conversationHistory: memoryContext,
+      crossAgentContext: crossCoworkerContext,
+      phase: isDefenseCall ? "defense" : "ongoing",
+      phaseContext,
+      media: "voice",
+    });
+
+    // Generate ephemeral token
     let voiceName = coworker.voiceName || undefined;
     if (!voiceName) {
       const { gender } = inferDemographics(coworker.name);
       const voices = gender === "male" ? GEMINI_VOICES.male : GEMINI_VOICES.female;
-      // Pick a deterministic voice based on name hash
       const hash = coworker.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
       voiceName = voices[hash % voices.length].name;
     }

@@ -11,12 +11,11 @@ import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types
 import type { Prisma } from "@prisma/client";
 import { AssessmentStatus } from "@prisma/client";
 import {
-  buildChatPrompt,
-  buildCallNudgeInstruction,
   buildPRAcknowledgmentContext,
   INVALID_PR_PROMPT,
   DUPLICATE_PR_PROMPT,
 } from "@/prompts";
+import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
 import { success, error, validateRequest } from "@/lib/api";
 import { ChatRequestSchema } from "@/lib/schemas";
 import { isValidPrUrl } from "@/lib/external";
@@ -170,11 +169,11 @@ export async function POST(request: Request) {
       updatedAt: c.updatedAt,
     }));
 
-  // Build memory context — skipSummary avoids a second Gemini call
+  // Build memory context for this coworker
   const memory = await buildCoworkerMemory(
     coworkerConversations,
     coworker.name,
-    { skipSummary: true }
+    {}
   );
   const memoryContext = formatMemoryForPrompt(memory, coworker.name);
 
@@ -197,7 +196,8 @@ export async function POST(request: Request) {
     coworkerMap
   );
 
-  // Build coworker persona for system prompt
+  // Build coworker persona
+  const isCoworkerManager = isManager(coworker.role);
   const persona: CoworkerPersona = {
     name: coworker.name,
     role: coworker.role,
@@ -207,31 +207,18 @@ export async function POST(request: Request) {
     avatarUrl: coworker.avatarUrl,
   };
 
-  // Gate task description: managers get it as background knowledge, non-managers don't get it
-  const isCoworkerManager = isManager(coworker.role);
-  let gatedTaskDescription: string | undefined;
-  if (isCoworkerManager && assessment.scenario.taskDescription) {
-    gatedTaskDescription = `## Your Background Knowledge (NOT shared with the candidate)\nYou assigned this task to the candidate. You know the following details, but do NOT assume the candidate has read or understood any of it. Reference specific aspects ONLY when the candidate asks or brings them up.\n${assessment.scenario.taskDescription}`;
-  }
-
-  // Use centralized chat prompt with Slack-like conversation guidelines
-  let systemPrompt = buildChatPrompt(
-    persona,
-    {
-      companyName: assessment.scenario.companyName,
-      candidateName: session.user.name || undefined,
-      taskDescription: gatedTaskDescription,
-      techStack: assessment.scenario.techStack,
-    },
-    memoryContext,
-    crossCoworkerContext
-  );
-
-  // Nudge non-manager coworkers to suggest a call after 3 user messages
-  const userMessageCount = existingMessages.filter(m => m.role === "user").length;
-  if (!isManager(coworker.role) && userMessageCount === 2) {
-    systemPrompt += buildCallNudgeInstruction();
-  }
+  // Build unified system prompt — let the LLM decide what to do based on context
+  const systemPrompt = buildAgentPrompt({
+    companyName: assessment.scenario.companyName,
+    techStack: assessment.scenario.techStack,
+    agent: persona,
+    taskDescription: isCoworkerManager ? assessment.scenario.taskDescription : undefined,
+    candidateName: session.user.name || undefined,
+    conversationHistory: memoryContext,
+    crossAgentContext: crossCoworkerContext,
+    phase: "ongoing",
+    media: "chat",
+  });
 
   // Build history for Gemini - include system prompt as first message
   const history = existingMessages.map((msg) => ({
@@ -382,7 +369,7 @@ export async function POST(request: Request) {
         timestamp: modelTimestamp,
       };
 
-      const newTranscript = [...existingMessages, userMessage, modelMessage];
+      const newTranscript: ChatMessage[] = [...existingMessages, userMessage, modelMessage];
 
       // Save to database (don't block the stream on this)
       const savePromise = existingConversation

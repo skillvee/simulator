@@ -171,7 +171,7 @@ export default async function GlobalErrorDashboardPage() {
   // Aggregate Gemini health data per model
   const MODEL_LABELS: Record<string, string> = {
     "gemini-3-flash-preview": "Flash",
-    "gemini-2.5-flash-native-audio-latest": "Live",
+    "gemini-3.1-flash-live-preview": "Live",
     "gemini-3-pro-preview": "Pro",
   };
 

@@ -121,7 +121,7 @@ model Assessment {
   prSnapshot             Json?
   codeReview             Json?
   supersededBy           String?
-  managerMessagesStarted Boolean             @default(false)
+
   reviewedAt             DateTime?
   repoUrl                String?
   repoStatus             String?             @default("pending")
@@ -608,4 +608,59 @@ model ClientError {
 
   @@index([assessmentId, timestamp])
   @@index([errorType, timestamp])
+}
+
+// ─── Prompt Eval System ──────────────────────────────────────────────────────
+
+model EvalRun {
+  id            String       @id @default(cuid())
+  name          String
+  promptVersion String
+  model         String
+  status        String       @default("running")
+  scenarioCount Int
+  overallScore  Float?
+  createdAt     DateTime     @default(now())
+  completedAt   DateTime?
+  results       EvalResult[]
+
+  // Optimization
+  optimizationAnalysis Json?
+  optimizedPrompt      String?
+  optimizedRunId       String?
+
+  @@index([createdAt])
+}
+
+model EvalResult {
+  id             String   @id @default(cuid())
+  evalRunId      String
+  scenarioId     String
+  scenarioName   String
+  category       String
+
+  // Generation
+  prompt         String
+  userMessage    String
+  response       String
+  generationMs   Int?
+
+  // Judgments (3 judges as JSON array)
+  judgments      Json
+
+  // Aggregated scores (median of 3 judges)
+  naturalness    Float?
+  roleAccuracy   Float?
+  brevity        Float?
+  contextAwareness Float?
+  infoDiscipline Float?
+  aiIsms         Float?
+  overallScore   Float?
+  flagged        Boolean  @default(false)
+
+  evalRun        EvalRun  @relation(fields: [evalRunId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@index([evalRunId])
+  @@index([scenarioId])
 }
