@@ -13,7 +13,7 @@ import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
 import { useCandidateEvents } from "@/hooks/use-candidate-events";
 import { playMessageSound } from "@/lib/sounds";
 import { createLogger } from "@/lib/core";
-import type { ChatMessage } from "@/types";
+import type { ChatMessage, ScenarioResource } from "@/types";
 import type { ChannelMessage } from "@/lib/ai/coworker-persona";
 import { isManager } from "@/lib/utils/coworker";
 
@@ -31,6 +31,8 @@ interface WorkPageClientProps {
   coworkers: Coworker[];
   selectedCoworkerId: string | null;
   assessmentStartTime: Date;
+  /** Resources the candidate needs (repos, databases, dashboards, etc.) */
+  resources: ScenarioResource[];
   /** PR URL if already submitted */
   prUrl: string | null;
 }
@@ -40,6 +42,7 @@ export function WorkPageClient({
   coworkers,
   selectedCoworkerId: initialSelectedCoworkerId,
   assessmentStartTime,
+  resources,
   prUrl,
 }: WorkPageClientProps) {
   const router = useRouter();
@@ -54,9 +57,12 @@ export function WorkPageClient({
 
   // Client-side selection state — no server round-trip on coworker switch
   const [selectedCoworkerId, setSelectedCoworkerId] = useState(initialSelectedCoworkerId);
+  // Resource viewer state — index of selected resource, null = show chat
+  const [selectedResourceIndex, setSelectedResourceIndex] = useState<number | null>(null);
 
   const handleSelectCoworker = useCallback((coworkerId: string) => {
     setSelectedCoworkerId(coworkerId);
+    setSelectedResourceIndex(null); // Deselect resource when switching to chat
     // Sync URL without triggering server navigation
     window.history.replaceState(null, "", `/assessments/${assessmentId}/work?coworkerId=${coworkerId}`);
   }, [assessmentId]);
@@ -198,6 +204,7 @@ export function WorkPageClient({
       <SlackLayout
         assessmentId={assessmentId}
         coworkers={coworkers}
+        resources={resources}
         selectedCoworkerId={selectedCoworkerId ?? undefined}
         onSelectCoworker={handleSelectCoworker}
         onDefenseComplete={handleDefenseComplete}
@@ -207,6 +214,8 @@ export function WorkPageClient({
         onIncrementGeneralUnreadRef={(fn) => {
           incrementGeneralUnreadRef.current = fn;
         }}
+        selectedResourceIndex={selectedResourceIndex}
+        onSelectResource={setSelectedResourceIndex}
       >
         {isGeneralChannel ? (
           <GeneralChannel

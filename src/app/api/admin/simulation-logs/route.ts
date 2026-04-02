@@ -20,6 +20,18 @@ export async function GET() {
       include: {
         user: { select: { name: true, email: true } },
         scenario: { select: { id: true, name: true } },
+        generationSteps: {
+          select: {
+            id: true,
+            stepName: true,
+            status: true,
+            durationMs: true,
+            attempts: true,
+            errorMessage: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: 200,

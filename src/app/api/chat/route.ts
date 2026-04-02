@@ -207,6 +207,11 @@ export async function POST(request: Request) {
     avatarUrl: coworker.avatarUrl,
   };
 
+  // Extract resource labels for manager awareness
+  const resourceLabels = Array.isArray(assessment.scenario.resources)
+    ? (assessment.scenario.resources as unknown as Array<{ label: string }>).map((r) => r.label)
+    : undefined;
+
   // Build unified system prompt — let the LLM decide what to do based on context
   const systemPrompt = buildAgentPrompt({
     companyName: assessment.scenario.companyName,
@@ -218,6 +223,7 @@ export async function POST(request: Request) {
     crossAgentContext: crossCoworkerContext,
     phase: "ongoing",
     media: "chat",
+    resourceLabels: isCoworkerManager ? resourceLabels : undefined,
   });
 
   // Build history for Gemini - include system prompt as first message

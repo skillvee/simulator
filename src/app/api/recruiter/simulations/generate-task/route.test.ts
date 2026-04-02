@@ -45,6 +45,11 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
       promptVersion: "1.1",
       generatedAt: "2026-02-06T00:00:00.000Z",
     },
+    _debug: {
+      promptText: "test prompt",
+      responseText: "test response",
+      attempts: 1,
+    },
   };
 
   const validRequestBody = {

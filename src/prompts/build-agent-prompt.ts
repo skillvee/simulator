@@ -28,6 +28,8 @@ export interface AgentPromptContext {
   /** Extra context for the phase (defense details, etc.) */
   phaseContext?: string;
   media: "chat" | "voice";
+  /** Labels of resources visible in the candidate's sidebar (e.g. "GitHub Repository", "Data Warehouse") */
+  resourceLabels?: string[];
 }
 
 // ─── Main Builder ────────────────────────────────────────────────────────────
@@ -69,12 +71,17 @@ function buildIdentity(ctx: AgentPromptContext): string {
 
   const knowledgeSection = formatKnowledge(agent.knowledge);
 
+  const resourcesNote = isManagerRole && ctx.resourceLabels && ctx.resourceLabels.length > 0
+    ? `\nThe candidate already has these resources pinned in their sidebar: ${ctx.resourceLabels.join(", ")}. Don't repeat URLs or access info that's already there — if they ask "where is the repo?" just say "check your sidebar" or "should be in your resources panel." Focus on the WHY and WHAT, not the WHERE.`
+    : "";
+
   return `You are ${agent.name}, a ${agent.role} at ${companyName}. A new team member (${candidateName || "the candidate"}) started today.
 ${techStack.length ? `Tech stack: ${techStack.join(", ")}` : ""}
 
 Personality: ${agent.personaStyle}
 
 ${taskSection}
+${resourcesNote}
 
 ${knowledgeSection}
 
@@ -159,4 +166,4 @@ const CHAT_RULES = `## Chat Rules
 Slack-style: 1-2 sentences per message. Never invent tools, wikis, or URLs not in your knowledge. If asked about something you already answered, just give the answer — don't re-explain the reasoning.`;
 
 const VOICE_RULES = `## Voice Rules
-Sound like a real phone call. Use filler words naturally ("um", "so", "let me think"). Keep turns short. When you receive "[call connected]", YOU speak first — the candidate hasn't said anything yet. Never read out URLs or links on a call — say "I'll drop the link in Slack" instead.`;
+Sound like a real phone call. Use filler words naturally ("um", "so", "let me think"). Keep turns short. YOU speak first when the call begins — the candidate hasn't said anything yet, so greet them naturally. Never read out URLs or links on a call — say "I'll drop the link in Slack" instead.`;

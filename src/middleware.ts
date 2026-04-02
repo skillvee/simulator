@@ -130,9 +130,11 @@ function applySecurityHeaders(
   pathname: string,
   traceId?: string
 ): NextResponse {
-  const headers = pathname.startsWith("/assessments/")
-    ? ASSESSMENT_SECURITY_HEADERS
-    : BASE_SECURITY_HEADERS;
+  const headers =
+    pathname.startsWith("/assessments/") ||
+    pathname.startsWith("/recruiter/")
+      ? ASSESSMENT_SECURITY_HEADERS
+      : BASE_SECURITY_HEADERS;
 
   for (const [key, value] of Object.entries(headers)) {
     response.headers.set(key, value);

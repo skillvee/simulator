@@ -52,6 +52,15 @@ export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
  * POST /api/admin/scenarios - Create a new scenario
  * Note: repoUrl is now optional - it will be provisioned by the system
  */
+const ScenarioResourceSchema = z.object({
+  type: z.enum(["repository", "database", "spreadsheet", "api", "dashboard", "document", "custom"]),
+  label: z.string().min(1),
+  url: z.string().optional(),
+  credentials: z.string().optional(),
+  instructions: z.string().optional(),
+  content: z.string().optional(),
+});
+
 export const ScenarioCreateSchema = z.object({
   name: z.string().min(1, "Name is required"),
   companyName: z.string().min(1, "Company name is required"),
@@ -62,6 +71,7 @@ export const ScenarioCreateSchema = z.object({
   targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional().default("mid"),
   archetypeId: z.string().min(1, "Role archetype is required"),
   isPublished: z.boolean().optional().default(false),
+  resources: z.array(ScenarioResourceSchema).optional(),
 });
 export type ScenarioCreate = z.infer<typeof ScenarioCreateSchema>;
 
@@ -78,6 +88,7 @@ export const ScenarioUpdateSchema = z.object({
   targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional(),
   archetypeId: z.string().nullable().optional(),
   isPublished: z.boolean().optional(),
+  resources: z.array(ScenarioResourceSchema).optional(),
 });
 export type ScenarioUpdate = z.infer<typeof ScenarioUpdateSchema>;
 

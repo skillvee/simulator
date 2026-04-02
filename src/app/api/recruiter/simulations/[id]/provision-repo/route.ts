@@ -15,6 +15,8 @@ import { success, error } from "@/lib/api";
 import { createLogger } from "@/lib/core";
 import { provisionRepo, needsRepo } from "@/lib/scenarios/repo-templates";
 import type { ScenarioMetadata } from "@/lib/scenarios/repo-spec";
+import type { ScenarioResource } from "@/types";
+import type { Prisma } from "@prisma/client";
 
 const logger = createLogger("api:recruiter:provision-repo");
 
@@ -62,6 +64,7 @@ export async function POST(
       techStack: true,
       targetLevel: true,
       repoUrl: true,
+      resources: true,
       createdById: true,
       coworkers: {
         select: {
@@ -124,11 +127,31 @@ export async function POST(
   try {
     const { repoUrl, repoSpec } = await provisionRepo(scenarioId, metadata);
 
-    // Update the scenario with the new repo URL and cached spec
+    // Build updated resources array — add repo as a resource if not already present
+    const existingResources = (Array.isArray(scenario.resources)
+      ? scenario.resources as unknown as ScenarioResource[]
+      : []) ;
+    const hasRepoResource = existingResources.some((r) => r.type === "repository");
+    const updatedResources: ScenarioResource[] = hasRepoResource
+      ? existingResources.map((r) =>
+          r.type === "repository" ? { ...r, url: repoUrl } : r
+        )
+      : [
+          {
+            type: "repository" as const,
+            label: "GitHub Repository",
+            url: repoUrl,
+            instructions: "Clone the repo and create a branch from main. Check the README for setup instructions.",
+          },
+          ...existingResources,
+        ];
+
+    // Update the scenario with the new repo URL, cached spec, and resources
     await db.scenario.update({
       where: { id: scenarioId },
       data: {
         repoUrl,
+        resources: updatedResources as unknown as Prisma.InputJsonValue,
         ...(repoSpec ? { repoSpec: repoSpec as object } : {}),
       },
     });

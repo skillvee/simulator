@@ -65,7 +65,6 @@ export function useCoworkerVoice({
     maxRetries,
     config: {
       tokenEndpoint: "/api/call/token",
-      initialGreeting: "[call connected]",
       progressType: progressKey,
       enableSessionRecovery: true,
     },

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Markdown } from "@/components/shared/markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,16 @@ import {
   CheckCircle2,
   X,
   GraduationCap,
+  Package,
+  Database,
+  FileSpreadsheet,
+  Globe,
+  LayoutDashboard,
+  FileText,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
+import type { ScenarioResource } from "@/types";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
 import { LEVEL_EXPECTATIONS, type TargetLevel } from "@/lib/rubric/level-expectations";
 
@@ -39,6 +49,7 @@ interface ScenarioData {
   companyDescription: string;
   taskDescription: string;
   repoUrl: string | null;
+  resources: ScenarioResource[];
   techStack: string[];
   targetLevel: string;
   archetypeName: string | null;
@@ -52,8 +63,28 @@ interface SimulationSettingsClientProps {
   scenario: ScenarioData;
 }
 
+const RESOURCE_ICONS: Record<ScenarioResource["type"], React.ElementType> = {
+  repository: Code,
+  database: Database,
+  spreadsheet: FileSpreadsheet,
+  api: Globe,
+  dashboard: LayoutDashboard,
+  document: FileText,
+  custom: Package,
+};
+
 export function SimulationSettingsClient({ scenario }: SimulationSettingsClientProps) {
   const [copied, setCopied] = useState(false);
+  const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
+
+  const toggleResource = (index: number) => {
+    setExpandedResources((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const [repoUrl, setRepoUrl] = useState(scenario.repoUrl);
   const [repoStatus, setRepoStatus] = useState<"loading" | "ready" | "failed">(
@@ -330,6 +361,92 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           </div>
         </CardContent>
       </Card>
+
+      {/* Resources Section */}
+      {scenario.resources.length > 0 && (
+        <Card className="mb-6 border-stone-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Package className="h-5 w-5" />
+              Resources ({scenario.resources.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {scenario.resources.map((resource, index) => {
+                const Icon = RESOURCE_ICONS[resource.type] ?? Package;
+                const isExpanded = expandedResources.has(index);
+                return (
+                  <div
+                    key={index}
+                    className="rounded-lg border border-stone-100 bg-stone-50 p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 rounded-md bg-blue-50 p-2">
+                        <Icon className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-stone-900">
+                            {resource.label}
+                          </p>
+                          <Badge
+                            variant="secondary"
+                            className="bg-stone-100 text-stone-500 text-xs"
+                          >
+                            {resource.type}
+                          </Badge>
+                        </div>
+                        {resource.url && (
+                          <a
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors break-all"
+                          >
+                            {resource.url}
+                            <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                          </a>
+                        )}
+                        {resource.credentials && (
+                          <p className="mt-1.5 text-sm text-stone-500">
+                            {resource.credentials}
+                          </p>
+                        )}
+                        {resource.instructions && (
+                          <p className="mt-1 text-sm text-stone-500">
+                            {resource.instructions}
+                          </p>
+                        )}
+                        {resource.content && (
+                          <div className="mt-2">
+                            <button
+                              onClick={() => toggleResource(index)}
+                              className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              ) : (
+                                <ChevronRight className="h-3.5 w-3.5" />
+                              )}
+                              {isExpanded ? "Hide content" : "Show content"}
+                            </button>
+                            {isExpanded && (
+                              <div className="mt-2 rounded-md bg-white border border-stone-200 p-4 text-sm text-stone-700">
+                                <Markdown>{resource.content}</Markdown>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Coworkers Section */}
       <Card className="border-stone-200 shadow-sm">

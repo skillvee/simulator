@@ -6,6 +6,8 @@ import {
   generateCoworkers,
   type GenerateCoworkersInput,
 } from "@/lib/scenarios/coworker-generator";
+import { logGenerationStep } from "@/lib/scenarios/generation-logger";
+import { COWORKER_GENERATOR_PROMPT_VERSION } from "@/prompts/recruiter/coworker-generator";
 
 const logger = createLogger("api:recruiter:generate-coworkers");
 
@@ -27,6 +29,7 @@ const requestSchema = z.object({
   techStack: z.array(z.string()).min(1, "Tech stack must have at least one item"),
   taskDescription: z.string().min(1, "Task description is required"),
   keyResponsibilities: z.array(z.string()).min(1, "Key responsibilities must have at least one item"),
+  creationLogId: z.string().optional(),
 });
 
 /**
@@ -55,12 +58,36 @@ export async function POST(request: Request) {
       return validationError(validation.error);
     }
 
-    const input: GenerateCoworkersInput = validation.data;
+    const { creationLogId, ...coworkerInput } = validation.data;
+    const input: GenerateCoworkersInput = coworkerInput;
 
-    // Generate coworkers
-    const result = await generateCoworkers(input);
+    // Start generation step logging if creationLogId is provided
+    const tracker = creationLogId
+      ? await logGenerationStep({
+          creationLogId,
+          stepName: "generate_coworkers",
+          modelUsed: "gemini-3-flash-preview",
+          promptVersion: COWORKER_GENERATOR_PROMPT_VERSION,
+          inputData: input as unknown as Record<string, unknown>,
+        })
+      : null;
 
-    return success(result);
+    try {
+      // Generate coworkers
+      const result = await generateCoworkers(input);
+
+      await tracker?.complete({
+        promptText: result._debug.promptText,
+        responseText: result._debug.responseText,
+        outputData: result as unknown as Record<string, unknown>,
+        attempts: result._debug.attempts,
+      });
+
+      return success(result);
+    } catch (genErr) {
+      await tracker?.fail(genErr instanceof Error ? genErr : new Error(String(genErr)));
+      throw genErr;
+    }
   } catch (err) {
     logger.error("Coworker generation error", { error: err instanceof Error ? err.message : String(err) });
     return error("Coworker generation failed", 500);

@@ -89,7 +89,8 @@ describe("conversation-memory", () => {
 
       expect(memory.hasPriorConversations).toBe(true);
       expect(memory.totalMessageCount).toBe(30);
-      expect(memory.recentMessages).toHaveLength(10); // MAX_RECENT_MESSAGES
+      expect(memory.recentMessages).toHaveLength(30); // MAX_RECENT_MESSAGES = Infinity
+      // Summary is still generated for >5 messages even with full recent window
       expect(memory.summary).toBeTruthy();
     });
 
@@ -151,10 +152,8 @@ describe("conversation-memory", () => {
 
       const result = formatMemoryForPrompt(memory, "Alex Chen");
 
-      expect(result).toContain("## Prior Conversation History");
-      expect(result).toContain("### Summary of Earlier Conversations");
-      expect(result).toContain("We discussed the authentication system.");
-      expect(result).toContain("### Recent Messages");
+      expect(result).toContain("## Conversation History");
+      expect(result).toContain("Summary: We discussed the authentication system.");
       expect(result).toContain("Candidate: Can you help?");
     });
 
@@ -185,10 +184,8 @@ describe("conversation-memory", () => {
 
       const result = formatMemoryForPrompt(memory, "Alex Chen");
 
-      expect(result).toContain("Continue the conversation naturally");
-      expect(result).toContain(
-        "Don't repeat information unless specifically asked to clarify."
-      );
+      expect(result).toContain("## Conversation History");
+      expect(result).toContain("Candidate: Hi");
     });
   });
 
@@ -233,9 +230,8 @@ describe("conversation-memory", () => {
         coworkerMap
       );
 
-      expect(result).toContain("## Context About Other Conversations");
       expect(result).toContain("Jordan Rivera");
-      expect(result).toContain("2 messages");
+      expect(result).toContain("Don't assume you know what they discussed");
       // Should NOT contain topic hints or message previews
       expect(result).not.toContain("How do I run tests?");
       expect(result).not.toContain("Last topic hint");
@@ -279,7 +275,6 @@ describe("conversation-memory", () => {
       );
 
       expect(result).toContain("Jordan Rivera");
-      expect(result).toContain("1 messages");
       expect(result).not.toContain("Secret implementation details");
       expect(result).not.toContain("Last topic hint");
     });
@@ -313,7 +308,7 @@ describe("conversation-memory", () => {
         coworkerMap
       );
 
-      expect(result).toContain("Do NOT pry into their conversations with others");
+      expect(result).toContain("Don't assume you know what they discussed");
     });
 
     it("should include rule about not assuming conversation topics", () => {
@@ -332,7 +327,7 @@ describe("conversation-memory", () => {
       );
 
       expect(result).toContain(
-        "Do NOT assume you know what the candidate discussed with other team members"
+        "Don't assume you know what they discussed"
       );
     });
   });

@@ -151,6 +151,11 @@ export async function POST(request: Request) {
       });
     }
 
+    // Extract resource labels for manager awareness
+    const resourceLabels = Array.isArray(assessment.scenario.resources)
+      ? (assessment.scenario.resources as unknown as Array<{ label: string }>).map((r) => r.label)
+      : undefined;
+
     // Build unified system prompt
     const systemInstruction = buildAgentPrompt({
       companyName: assessment.scenario.companyName,
@@ -163,6 +168,7 @@ export async function POST(request: Request) {
       phase: isDefenseCall ? "defense" : "ongoing",
       phaseContext,
       media: "voice",
+      resourceLabels: isManagerCoworker ? resourceLabels : undefined,
     });
 
     // Generate ephemeral token

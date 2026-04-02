@@ -59,6 +59,11 @@ export type GenerateCodingTaskResponse = {
     promptVersion: string;
     generatedAt: string;
   };
+  _debug: {
+    promptText: string;
+    responseText: string;
+    attempts: number;
+  };
 };
 
 /**
@@ -84,7 +89,9 @@ export async function generateCodingTask(
 ): Promise<GenerateCodingTaskResponse> {
   // Build the context prompt
   const contextPrompt = buildContextPrompt(input);
+  const fullPrompt = `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
+  let lastResponseText = "";
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
@@ -94,11 +101,7 @@ export async function generateCodingTask(
         contents: [
           {
             role: "user",
-            parts: [
-              {
-                text: `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`,
-              },
-            ],
+            parts: [{ text: fullPrompt }],
           },
         ],
       });
@@ -107,6 +110,7 @@ export async function generateCodingTask(
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }
+      lastResponseText = responseText;
 
       // Clean response (remove markdown fences if present)
       const cleanedText = cleanJsonResponse(responseText);
@@ -144,6 +148,11 @@ export async function generateCodingTask(
         _meta: {
           promptVersion: TASK_GENERATOR_PROMPT_VERSION,
           generatedAt: new Date().toISOString(),
+        },
+        _debug: {
+          promptText: fullPrompt,
+          responseText,
+          attempts: attempt,
         },
       };
     } catch (error) {

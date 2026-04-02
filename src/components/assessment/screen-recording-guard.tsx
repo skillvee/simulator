@@ -106,7 +106,7 @@ function ScreenRecordingGuardInner({
                 Recording Stopped
               </DialogTitle>
               <DialogDescription className="text-center">
-                Your screen or webcam recording has stopped
+                Your screen, webcam, or microphone recording has stopped
               </DialogDescription>
             </DialogHeader>
 
@@ -117,11 +117,11 @@ function ScreenRecordingGuardInner({
               )}
               <p className="mb-4 text-muted-foreground">
                 To continue with the assessment, you need to share your{" "}
-                <strong>entire screen</strong> and enable your webcam.
+                <strong>entire screen</strong>, enable your <strong>webcam</strong>, and allow <strong>microphone</strong> access.
               </p>
               <p className="text-sm text-muted-foreground">
-                Sharing a single tab or window is not allowed. Full screen and
-                webcam recording are required to capture your work process.
+                Sharing a single tab or window is not allowed. Full screen,
+                webcam, and microphone recording are all required to capture your work process.
               </p>
             </div>
 
@@ -147,7 +147,7 @@ function ScreenRecordingGuardInner({
               </Button>
 
               <p className="text-center text-sm text-muted-foreground">
-                You cannot continue without screen and webcam recording enabled
+                You cannot continue without screen, webcam, and microphone recording enabled
               </p>
             </DialogFooter>
           </DialogContent>
