@@ -91,6 +91,97 @@ const TEST_USERS = {
     name: "Pepito Perez",
     role: "USER" as const,
   },
+  // Additional candidates for 20+ candidate simulation
+  candidateEmma: {
+    email: "emma.watson@test.com",
+    password: "testpassword123",
+    name: "Emma Watson",
+    role: "USER" as const,
+  },
+  candidateLiam: {
+    email: "liam.chen@test.com",
+    password: "testpassword123",
+    name: "Liam Chen",
+    role: "USER" as const,
+  },
+  candidateOlivia: {
+    email: "olivia.patel@test.com",
+    password: "testpassword123",
+    name: "Olivia Patel",
+    role: "USER" as const,
+  },
+  candidateNoah: {
+    email: "noah.kim@test.com",
+    password: "testpassword123",
+    name: "Noah Kim",
+    role: "USER" as const,
+  },
+  candidateAva: {
+    email: "ava.garcia@test.com",
+    password: "testpassword123",
+    name: "Ava Garcia",
+    role: "USER" as const,
+  },
+  candidateJames: {
+    email: "james.taylor@test.com",
+    password: "testpassword123",
+    name: "James Taylor",
+    role: "USER" as const,
+  },
+  candidateSophia: {
+    email: "sophia.anderson@test.com",
+    password: "testpassword123",
+    name: "Sophia Anderson",
+    role: "USER" as const,
+  },
+  candidateEthan: {
+    email: "ethan.wright@test.com",
+    password: "testpassword123",
+    name: "Ethan Wright",
+    role: "USER" as const,
+  },
+  candidateIsabella: {
+    email: "isabella.lee@test.com",
+    password: "testpassword123",
+    name: "Isabella Lee",
+    role: "USER" as const,
+  },
+  candidateMason: {
+    email: "mason.brown@test.com",
+    password: "testpassword123",
+    name: "Mason Brown",
+    role: "USER" as const,
+  },
+  candidateMia: {
+    email: "mia.jones@test.com",
+    password: "testpassword123",
+    name: "Mia Jones",
+    role: "USER" as const,
+  },
+  candidateLucas: {
+    email: "lucas.martinez@test.com",
+    password: "testpassword123",
+    name: "Lucas Martinez",
+    role: "USER" as const,
+  },
+  candidateCharlotte: {
+    email: "charlotte.davis@test.com",
+    password: "testpassword123",
+    name: "Charlotte Davis",
+    role: "USER" as const,
+  },
+  candidateHenry: {
+    email: "henry.wilson@test.com",
+    password: "testpassword123",
+    name: "Henry Wilson",
+    role: "USER" as const,
+  },
+  candidateAmelia: {
+    email: "amelia.moore@test.com",
+    password: "testpassword123",
+    name: "Amelia Moore",
+    role: "USER" as const,
+  },
 };
 
 // Fixed test assessment IDs - used by AI agents for visual testing
@@ -112,11 +203,43 @@ const TEST_ASSESSMENT_IDS = {
   alexCompleted: "test-assessment-alex-completed",
   matiasCompleted: "test-assessment-matias-completed",
   pepitoWorking: "test-assessment-pepito-working",
+  // Backend scenario (Stripe) - 20+ candidates
+  sarahBackend: "test-assessment-sarah-backend",
+  aliceBackend: "test-assessment-alice-backend",
+  bobBackend: "test-assessment-bob-backend",
+  marcusBackendWorking: "test-assessment-marcus-backend-working",
+  candidateBackendWelcome: "test-assessment-candidate-backend-welcome",
+  emmaBackend: "test-assessment-emma-backend",
+  liamBackend: "test-assessment-liam-backend",
+  oliviaBackend: "test-assessment-olivia-backend",
+  noahBackend: "test-assessment-noah-backend",
+  avaBackend: "test-assessment-ava-backend",
+  jamesBackend: "test-assessment-james-backend",
+  sophiaBackend: "test-assessment-sophia-backend",
+  ethanBackend: "test-assessment-ethan-backend",
+  isabellaBackend: "test-assessment-isabella-backend",
+  masonBackend: "test-assessment-mason-backend",
+  miaBackend: "test-assessment-mia-backend",
+  lucasBackend: "test-assessment-lucas-backend",
+  charlotteBackend: "test-assessment-charlotte-backend",
+  henryBackendWorking: "test-assessment-henry-backend-working",
+  ameliaBackendWelcome: "test-assessment-amelia-backend-welcome",
+  carlaBackend: "test-assessment-carla-backend",
+  alexBackend: "test-assessment-alex-backend",
+  matiasBackendWelcome: "test-assessment-matias-backend-welcome",
+  pepitoBackendWorking: "test-assessment-pepito-backend-working",
+  // Mobile scenario (Notion)
+  carlaMobile: "test-assessment-carla-mobile",
+  alexMobile: "test-assessment-alex-mobile",
+  pepitoMobileWorking: "test-assessment-pepito-mobile-working",
 };
 
 // Fixed test scenario ID for recruiter-focused flow (RF-001)
 const TEST_SCENARIO_IDS = {
   recruiter: "test-scenario-recruiter",
+  backend: "test-scenario-backend",
+  mobile: "test-scenario-mobile",
+  devops: "test-scenario-devops",
 };
 
 async function main() {
@@ -451,8 +574,8 @@ Acceptance Criteria:
     where: { id: TEST_SCENARIO_IDS.recruiter },
     update: {
       name: "Frontend Developer Assessment",
-      companyName: "Test Recruiter Company",
-      companyDescription: `Test Recruiter Company is a technology company focused on building modern web applications.
+      companyName: "Acme Technologies",
+      companyDescription: `Acme Technologies is a technology company focused on building modern web applications.
 
 We value clean code, collaboration, and continuous improvement. Our engineering team works with the latest frontend technologies.
 
@@ -478,8 +601,8 @@ Acceptance Criteria:
     create: {
       id: TEST_SCENARIO_IDS.recruiter,
       name: "Frontend Developer Assessment",
-      companyName: "Test Recruiter Company",
-      companyDescription: `Test Recruiter Company is a technology company focused on building modern web applications.
+      companyName: "Acme Technologies",
+      companyDescription: `Acme Technologies is a technology company focused on building modern web applications.
 
 We value clean code, collaboration, and continuous improvement. Our engineering team works with the latest frontend technologies.
 
@@ -1523,25 +1646,522 @@ Acceptance Criteria:
     console.log("  ⚠️ Test candidate user not found, skipping recruiter flow assessments");
   }
 
+  // ============================================================================
+  // SIMULATION 2: Backend API Engineer at Stripe (senior, 24 candidates)
+  // ============================================================================
+  console.log("\n🔧 Creating Backend API Engineer simulation (Stripe)...");
+
+  const backendScenario = await prisma.scenario.upsert({
+    where: { id: TEST_SCENARIO_IDS.backend },
+    update: {
+      name: "Backend API Engineer",
+      companyName: "Stripe",
+      companyDescription: "Stripe builds economic infrastructure for the internet. Our team builds high-throughput payment processing APIs serving millions of requests per second.",
+      taskDescription: "Design and implement a rate-limiting middleware for the payments API. Must support per-merchant limits, sliding windows, and graceful degradation under load.",
+      repoUrl: "https://github.com/skillvee/stripe-backend-task",
+      techStack: ["Python", "FastAPI", "PostgreSQL", "Redis", "Docker"],
+      isPublished: true,
+      targetLevel: "senior",
+      createdById: testRecruiter?.id ?? null,
+    },
+    create: {
+      id: TEST_SCENARIO_IDS.backend,
+      name: "Backend API Engineer",
+      companyName: "Stripe",
+      companyDescription: "Stripe builds economic infrastructure for the internet. Our team builds high-throughput payment processing APIs serving millions of requests per second.",
+      taskDescription: "Design and implement a rate-limiting middleware for the payments API. Must support per-merchant limits, sliding windows, and graceful degradation under load.",
+      repoUrl: "https://github.com/skillvee/stripe-backend-task",
+      techStack: ["Python", "FastAPI", "PostgreSQL", "Redis", "Docker"],
+      isPublished: true,
+      targetLevel: "senior",
+      createdById: testRecruiter?.id ?? null,
+    },
+  });
+  console.log(`  ✅ Backend scenario: ${backendScenario.name}`);
+
+  // Clean up stale assessments for backend scenario
+  const knownBackendIds = [
+    TEST_ASSESSMENT_IDS.sarahBackend, TEST_ASSESSMENT_IDS.aliceBackend, TEST_ASSESSMENT_IDS.bobBackend,
+    TEST_ASSESSMENT_IDS.marcusBackendWorking, TEST_ASSESSMENT_IDS.candidateBackendWelcome,
+    TEST_ASSESSMENT_IDS.emmaBackend, TEST_ASSESSMENT_IDS.liamBackend, TEST_ASSESSMENT_IDS.oliviaBackend,
+    TEST_ASSESSMENT_IDS.noahBackend, TEST_ASSESSMENT_IDS.avaBackend, TEST_ASSESSMENT_IDS.jamesBackend,
+    TEST_ASSESSMENT_IDS.sophiaBackend, TEST_ASSESSMENT_IDS.ethanBackend, TEST_ASSESSMENT_IDS.isabellaBackend,
+    TEST_ASSESSMENT_IDS.masonBackend, TEST_ASSESSMENT_IDS.miaBackend, TEST_ASSESSMENT_IDS.lucasBackend,
+    TEST_ASSESSMENT_IDS.charlotteBackend, TEST_ASSESSMENT_IDS.henryBackendWorking, TEST_ASSESSMENT_IDS.ameliaBackendWelcome,
+    TEST_ASSESSMENT_IDS.carlaBackend, TEST_ASSESSMENT_IDS.alexBackend, TEST_ASSESSMENT_IDS.matiasBackendWelcome,
+    TEST_ASSESSMENT_IDS.pepitoBackendWorking,
+  ];
+  const staleBackend = await prisma.assessment.findMany({
+    where: { scenarioId: backendScenario.id, id: { notIn: knownBackendIds } },
+    select: { id: true },
+  });
+  if (staleBackend.length > 0) {
+    for (const stale of staleBackend) {
+      const va = await prisma.videoAssessment.findUnique({ where: { assessmentId: stale.id } });
+      if (va) {
+        await prisma.dimensionScore.deleteMany({ where: { assessmentId: va.id } });
+        await prisma.videoAssessmentSummary.deleteMany({ where: { assessmentId: va.id } });
+        await prisma.videoAssessment.delete({ where: { id: va.id } });
+      }
+    }
+    await prisma.assessment.deleteMany({ where: { scenarioId: backendScenario.id, id: { notIn: knownBackendIds } } });
+    console.log(`  🗑️  Cleaned up ${staleBackend.length} stale backend assessment(s)`);
+  }
+
+  // Create coworker for backend scenario
+  await prisma.coworker.deleteMany({ where: { scenarioId: backendScenario.id } });
+  await prisma.coworker.create({
+    data: {
+      scenarioId: backendScenario.id,
+      name: "David Park",
+      role: "Staff Engineer",
+      personaStyle: "Technically rigorous staff engineer who values system design thinking. Asks pointed questions about scalability and failure modes.",
+      knowledge: { teamSize: 12, projectContext: "Payments API platform", techDecisions: ["Redis for rate limiting", "FastAPI for performance"] } as unknown as Prisma.InputJsonValue,
+      avatarUrl: null,
+      voiceName: "Puck",
+    },
+  });
+  console.log(`  ✅ Coworker: David Park (Staff Engineer)`);
+
+  // Helper to create a completed candidate for a scenario
+  async function createCompletedCandidate(opts: {
+    emailKey: keyof typeof TEST_USERS;
+    assessmentId: string;
+    videoAssessmentId: string;
+    scenarioId: string;
+    overallScore: number;
+    recommendation: string;
+    summary: string;
+    percentile: number;
+    scores: Array<{ dimension: string; score: number; observableBehaviors: string; trainableGap: boolean; timestamps: string[] }>;
+    daysAgo?: number;
+    metrics?: { totalDurationMinutes: number; workingPhaseMinutes: number; coworkersContacted: number; aiToolsUsed: boolean; testsStatus: string; codeReviewScore: number };
+  }) {
+    const user = await prisma.user.findUnique({ where: { email: TEST_USERS[opts.emailKey].email } });
+    if (!user) { console.log(`  ⚠️ ${opts.emailKey} not found, skipping`); return; }
+
+    const completedAt = new Date(Date.now() - (opts.daysAgo ?? Math.random() * 14) * 24 * 60 * 60 * 1000);
+    const metrics = opts.metrics ?? { totalDurationMinutes: 70 + Math.floor(Math.random() * 20), workingPhaseMinutes: 55 + Math.floor(Math.random() * 15), coworkersContacted: Math.floor(Math.random() * 4) + 1, aiToolsUsed: Math.random() > 0.3, testsStatus: opts.overallScore >= 2.5 ? "passing" : "failing", codeReviewScore: Math.round(opts.overallScore) };
+
+    // Build skills array for videoEvaluation from dimension scores
+    const dimMap: Record<string, string> = {
+      communication: "COMMUNICATION", problem_decomposition_design: "PROBLEM_SOLVING",
+      technical_execution: "TECHNICAL_KNOWLEDGE", collaboration_coachability: "COLLABORATION",
+      practical_maturity: "ADAPTABILITY", learning_velocity: "LEADERSHIP",
+      work_process: "CREATIVITY",
+    };
+    const skills = opts.scores.map(s => ({
+      dimension: dimMap[s.dimension] || s.dimension.toUpperCase(),
+      score: s.score,
+      rationale: s.observableBehaviors,
+      greenFlags: s.score >= 3 ? [s.observableBehaviors.split(".")[0]] : [],
+      redFlags: s.score <= 2 ? [s.observableBehaviors.split(".")[0]] : [],
+      timestamps: s.timestamps,
+    }));
+
+    const report = {
+      generatedAt: completedAt.toISOString(),
+      assessmentId: opts.assessmentId,
+      candidateName: TEST_USERS[opts.emailKey].name,
+      overallScore: opts.overallScore,
+      overallLevel: opts.overallScore >= 3.5 ? "expert" : opts.overallScore >= 2.5 ? "strong" : "developing",
+      skillScores: opts.scores.map(s => ({ category: s.dimension, score: s.score, level: s.score >= 3 ? "advanced" : "developing", evidence: [s.observableBehaviors], notes: "" })),
+      narrative: { overallSummary: opts.summary, strengths: skills.filter(s => s.score >= 3).map(s => s.rationale.split(".")[0]), areasForImprovement: skills.filter(s => s.score <= 2).map(s => s.rationale.split(".")[0]), notableObservations: [] },
+      recommendations: [],
+      metrics,
+      version: "1.1.0",
+      percentiles: { overall: opts.percentile, calculatedAt: completedAt.toISOString(), totalCandidates: 24 },
+      videoEvaluation: {
+        evaluationVersion: "1.1.0",
+        overallScore: opts.overallScore,
+        skills,
+        hiringSignals: {
+          overallGreenFlags: skills.filter(s => s.score >= 3).map(s => s.greenFlags[0]).filter(Boolean),
+          overallRedFlags: skills.filter(s => s.score <= 2).map(s => s.redFlags[0]).filter(Boolean),
+          recommendation: opts.recommendation,
+          recommendationRationale: opts.summary,
+        },
+        overallSummary: opts.summary,
+        evaluationConfidence: "high" as const,
+      },
+    };
+
+    await prisma.assessment.upsert({
+      where: { id: opts.assessmentId },
+      update: { status: "COMPLETED", scenarioId: opts.scenarioId, report: report as unknown as Prisma.InputJsonValue, completedAt },
+      create: { id: opts.assessmentId, userId: user.id, scenarioId: opts.scenarioId, status: "COMPLETED", report: report as unknown as Prisma.InputJsonValue, completedAt },
+    });
+
+    // Delete existing video assessment if any
+    const existingVA = await prisma.videoAssessment.findUnique({ where: { assessmentId: opts.assessmentId } });
+    if (existingVA) {
+      await prisma.dimensionScore.deleteMany({ where: { assessmentId: existingVA.id } });
+      await prisma.videoAssessmentSummary.deleteMany({ where: { assessmentId: existingVA.id } });
+      await prisma.videoAssessment.delete({ where: { id: existingVA.id } });
+    }
+
+    const va = await prisma.videoAssessment.create({
+      data: { id: opts.videoAssessmentId, candidateId: user.id, assessmentId: opts.assessmentId, videoUrl: `https://example.com/${opts.videoAssessmentId}.mp4`, status: VideoAssessmentStatus.COMPLETED, completedAt, isSearchable: true },
+    });
+
+    for (const score of opts.scores) {
+      await prisma.dimensionScore.create({
+        data: { assessmentId: va.id, dimension: score.dimension, score: score.score, observableBehaviors: score.observableBehaviors, timestamps: score.timestamps, trainableGap: score.trainableGap },
+      });
+    }
+
+    await prisma.videoAssessmentSummary.create({
+      data: {
+        assessmentId: va.id,
+        overallSummary: opts.summary,
+        rawAiResponse: buildRawAiResponse({ scores: opts.scores, report: report as SeedCandidate["report"], summary: opts.summary }) as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    console.log(`  ✅ ${TEST_USERS[opts.emailKey].name}: score ${opts.overallScore} (${opts.recommendation})`);
+  }
+
+  // Helper to create a non-completed (WORKING/WELCOME) candidate
+  async function createPendingCandidate(opts: { emailKey: keyof typeof TEST_USERS; assessmentId: string; scenarioId: string; status: "WORKING" | "WELCOME" }) {
+    const user = await prisma.user.findUnique({ where: { email: TEST_USERS[opts.emailKey].email } });
+    if (!user) return;
+    await prisma.assessment.upsert({
+      where: { id: opts.assessmentId },
+      update: { status: opts.status, scenarioId: opts.scenarioId },
+      create: { id: opts.assessmentId, userId: user.id, scenarioId: opts.scenarioId, status: opts.status },
+    });
+    console.log(`  ✅ ${TEST_USERS[opts.emailKey].name}: ${opts.status}`);
+  }
+
+  // === Backend scenario candidates (24 total: 18 completed, 3 working, 3 welcome) ===
+  const backendCandidates: Parameters<typeof createCompletedCandidate>[0][] = [
+    { emailKey: "candidateSarah", assessmentId: TEST_ASSESSMENT_IDS.sarahBackend, videoAssessmentId: "va-sarah-backend", scenarioId: backendScenario.id, overallScore: 3.75, recommendation: "strong_hire", percentile: 96, daysAgo: 2, summary: "Exceptional systems thinker who designed an elegant rate-limiting solution with sliding windows. Deep Python and Redis expertise, outstanding architectural decisions.", scores: [
+      { dimension: "communication", score: 4, observableBehaviors: "Proactively documented design decisions and trade-offs.", trainableGap: false, timestamps: ["02:00", "15:00", "35:00"] },
+      { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Expert decomposition of rate-limiting into composable middleware layers.", trainableGap: false, timestamps: ["05:00", "20:00"] },
+      { dimension: "technical_execution", score: 4, observableBehaviors: "Deep Redis and Python expertise. Implemented sliding window with atomic operations.", trainableGap: false, timestamps: ["08:00", "22:00", "40:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Engaged well with the team, shared progress updates regularly.", trainableGap: false, timestamps: ["12:00", "30:00"] },
+      { dimension: "practical_maturity", score: 4, observableBehaviors: "Handled edge cases proactively, designed for failure modes.", trainableGap: false, timestamps: ["25:00"] },
+      { dimension: "learning_velocity", score: 4, observableBehaviors: "Owned the design end-to-end, drove decisions confidently.", trainableGap: false, timestamps: ["18:00", "42:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Solid engineering process. Tests first, then implementation.", trainableGap: false, timestamps: ["10:00", "35:00"] },
+    ]},
+    { emailKey: "candidateAlice", assessmentId: TEST_ASSESSMENT_IDS.aliceBackend, videoAssessmentId: "va-alice-backend", scenarioId: backendScenario.id, overallScore: 3.25, recommendation: "hire", percentile: 78, daysAgo: 3, summary: "Strong communicator with solid backend fundamentals. Good API design instincts but needs more experience with distributed systems at scale.", scores: [
+      { dimension: "communication", score: 4, observableBehaviors: "Clear, structured communication. Excellent PR descriptions.", trainableGap: false, timestamps: ["03:00", "20:00"] },
+      { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Good decomposition but missed some edge cases in distributed scenarios.", trainableGap: false, timestamps: ["08:00", "25:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Solid Python skills. Some gaps in Redis optimization patterns.", trainableGap: true, timestamps: ["10:00", "30:00", "45:00"] },
+      { dimension: "collaboration_coachability", score: 4, observableBehaviors: "Outstanding team engagement. Built on feedback effectively.", trainableGap: false, timestamps: ["15:00", "35:00"] },
+      { dimension: "practical_maturity", score: 3, observableBehaviors: "Adapted to feedback well but initially missed failure scenarios.", trainableGap: false, timestamps: ["28:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Showed initiative and took ownership of her component.", trainableGap: false, timestamps: ["22:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Clean code organization. Good test coverage.", trainableGap: false, timestamps: ["12:00", "38:00"] },
+    ]},
+    { emailKey: "candidateBob", assessmentId: TEST_ASSESSMENT_IDS.bobBackend, videoAssessmentId: "va-bob-backend", scenarioId: backendScenario.id, overallScore: 2.0, recommendation: "no_hire", percentile: 15, daysAgo: 5, summary: "Struggled with system design complexity. Basic Python knowledge but lacks distributed systems experience needed for senior role.", scores: [
+      { dimension: "communication", score: 2, observableBehaviors: "Minimal updates. Did not explain design decisions.", trainableGap: true, timestamps: ["10:00"] },
+      { dimension: "problem_decomposition_design", score: 2, observableBehaviors: "Monolithic approach. Did not decompose the rate limiter into components.", trainableGap: true, timestamps: ["15:00", "35:00"] },
+      { dimension: "technical_execution", score: 2, observableBehaviors: "Basic Python but struggled with async patterns and Redis.", trainableGap: true, timestamps: ["08:00", "25:00"] },
+      { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Did not seek help when stuck on Redis integration.", trainableGap: true, timestamps: ["30:00"] },
+      { dimension: "practical_maturity", score: 2, observableBehaviors: "Did not consider failure modes or graceful degradation.", trainableGap: true, timestamps: ["40:00"] },
+      { dimension: "learning_velocity", score: 1, observableBehaviors: "Waited for direction on every design decision.", trainableGap: true, timestamps: [] },
+      { dimension: "work_process", score: 2, observableBehaviors: "No tests written. Ad-hoc development approach.", trainableGap: true, timestamps: ["20:00"] },
+    ]},
+    { emailKey: "candidateEmma", assessmentId: TEST_ASSESSMENT_IDS.emmaBackend, videoAssessmentId: "va-emma-backend", scenarioId: backendScenario.id, overallScore: 3.5, recommendation: "strong_hire", percentile: 88, daysAgo: 1, summary: "Impressive senior-level candidate. Designed a highly scalable token-bucket algorithm with Redis Lua scripts. Strong systems thinking and clean code.", scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Clear technical communication. Good at explaining complex trade-offs.", trainableGap: false, timestamps: ["05:00", "25:00"] },
+      { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Broke rate-limiting into token bucket, sliding window, and fixed window strategies.", trainableGap: false, timestamps: ["08:00", "18:00"] },
+      { dimension: "technical_execution", score: 4, observableBehaviors: "Expert Redis usage with Lua scripts for atomic rate limiting.", trainableGap: false, timestamps: ["12:00", "30:00", "45:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Collaborated when needed but preferred deep focus time.", trainableGap: false, timestamps: ["20:00"] },
+      { dimension: "practical_maturity", score: 4, observableBehaviors: "Considered failure modes, added circuit breakers and fallback strategies.", trainableGap: false, timestamps: ["28:00", "42:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Made confident decisions with clear rationale.", trainableGap: false, timestamps: ["15:00", "35:00"] },
+      { dimension: "work_process", score: 4, observableBehaviors: "TDD approach with comprehensive integration tests.", trainableGap: false, timestamps: ["10:00", "32:00"] },
+    ]},
+    { emailKey: "candidateLiam", assessmentId: TEST_ASSESSMENT_IDS.liamBackend, videoAssessmentId: "va-liam-backend", scenarioId: backendScenario.id, overallScore: 3.0, recommendation: "hire", percentile: 62, daysAgo: 4, summary: "Solid mid-to-senior engineer. Good fundamentals and clean implementation. Needs growth in system design thinking for true senior level.", scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Regular updates and clear explanations.", trainableGap: false, timestamps: ["04:00", "22:00"] },
+      { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Reasonable decomposition. Followed standard patterns.", trainableGap: false, timestamps: ["10:00", "28:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Good Python and FastAPI knowledge. Standard Redis usage.", trainableGap: false, timestamps: ["08:00", "20:00", "38:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Engaged with the team appropriately.", trainableGap: false, timestamps: ["15:00", "30:00"] },
+      { dimension: "practical_maturity", score: 3, observableBehaviors: "Handled basic edge cases but missed some distributed failure scenarios.", trainableGap: true, timestamps: ["25:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Took initiative within scope but didn't push boundaries.", trainableGap: false, timestamps: ["18:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Clean code with adequate test coverage.", trainableGap: false, timestamps: ["12:00", "35:00"] },
+    ]},
+    { emailKey: "candidateOlivia", assessmentId: TEST_ASSESSMENT_IDS.oliviaBackend, videoAssessmentId: "va-olivia-backend", scenarioId: backendScenario.id, overallScore: 3.4, recommendation: "hire", percentile: 82, daysAgo: 2, summary: "Strong problem solver with excellent adaptability. Proposed an innovative approach to distributed rate limiting using consistent hashing.", scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Good written communication. Documented approach thoroughly.", trainableGap: false, timestamps: ["06:00", "28:00"] },
+      { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Innovative decomposition using consistent hashing for distributed rate limiting.", trainableGap: false, timestamps: ["10:00", "22:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Strong Python skills. Good understanding of distributed systems.", trainableGap: false, timestamps: ["08:00", "25:00", "40:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Shared ideas and incorporated suggestions from team.", trainableGap: false, timestamps: ["15:00", "32:00"] },
+      { dimension: "practical_maturity", score: 4, observableBehaviors: "Excellent at handling ambiguity. Proposed graceful degradation strategies.", trainableGap: false, timestamps: ["20:00", "38:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Drove key decisions with clear reasoning.", trainableGap: false, timestamps: ["18:00"] },
+      { dimension: "work_process", score: 4, observableBehaviors: "Creative approach to testing distributed behavior.", trainableGap: false, timestamps: ["14:00", "35:00"] },
+    ]},
+    { emailKey: "candidateNoah", assessmentId: TEST_ASSESSMENT_IDS.noahBackend, videoAssessmentId: "va-noah-backend", scenarioId: backendScenario.id, overallScore: 2.7, recommendation: "no_hire", percentile: 38, daysAgo: 6, summary: "Decent fundamentals but lacks the depth needed for senior. Implementation was functional but not production-ready.", scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Adequate communication. Shared some updates.", trainableGap: false, timestamps: ["05:00", "25:00"] },
+      { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Basic decomposition. Followed tutorial-like approach.", trainableGap: true, timestamps: ["12:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Working knowledge of Python and Redis but no advanced patterns.", trainableGap: true, timestamps: ["10:00", "30:00"] },
+      { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Limited outreach. Mostly worked alone.", trainableGap: true, timestamps: ["20:00"] },
+      { dimension: "practical_maturity", score: 2, observableBehaviors: "Did not consider edge cases or failure modes.", trainableGap: true, timestamps: ["35:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Followed instructions well but didn't go beyond.", trainableGap: false, timestamps: ["15:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Clean code but minimal testing.", trainableGap: true, timestamps: ["22:00"] },
+    ]},
+    { emailKey: "candidateAva", assessmentId: TEST_ASSESSMENT_IDS.avaBackend, videoAssessmentId: "va-ava-backend", scenarioId: backendScenario.id, overallScore: 3.6, recommendation: "strong_hire", percentile: 92, daysAgo: 1, summary: "Outstanding candidate with deep backend expertise. Implemented a sophisticated multi-tier rate limiting system with excellent observability.", scores: [
+      { dimension: "communication", score: 4, observableBehaviors: "Exceptional documentation and communication throughout.", trainableGap: false, timestamps: ["03:00", "18:00", "40:00"] },
+      { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Multi-tier rate limiting with per-endpoint, per-user, and global limits.", trainableGap: false, timestamps: ["07:00", "20:00"] },
+      { dimension: "technical_execution", score: 4, observableBehaviors: "Expert Python async patterns. Built custom Redis pipeline for performance.", trainableGap: false, timestamps: ["10:00", "28:00", "45:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Good team engagement. Shared learnings proactively.", trainableGap: false, timestamps: ["14:00", "32:00"] },
+      { dimension: "practical_maturity", score: 4, observableBehaviors: "Added Prometheus metrics and structured logging for observability.", trainableGap: false, timestamps: ["22:00", "38:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Confident decision-making with clear justifications.", trainableGap: false, timestamps: ["16:00", "35:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Good engineering process with iterative development.", trainableGap: false, timestamps: ["12:00", "30:00"] },
+    ]},
+    { emailKey: "candidateJames", assessmentId: TEST_ASSESSMENT_IDS.jamesBackend, videoAssessmentId: "va-james-backend", scenarioId: backendScenario.id, overallScore: 2.4, recommendation: "no_hire", percentile: 22, daysAgo: 7, summary: "Struggled with the complexity of distributed rate limiting. Basic Python knowledge but significant gaps in system design and Redis.", scores: [
+      { dimension: "communication", score: 2, observableBehaviors: "Sparse communication. Did not share design thinking.", trainableGap: true, timestamps: ["12:00"] },
+      { dimension: "problem_decomposition_design", score: 2, observableBehaviors: "Monolithic implementation without clear separation of concerns.", trainableGap: true, timestamps: ["15:00", "30:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Decent Python basics but struggled with async and Redis.", trainableGap: true, timestamps: ["08:00", "25:00"] },
+      { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Worked in isolation. Asked for help only when completely blocked.", trainableGap: true, timestamps: ["28:00"] },
+      { dimension: "practical_maturity", score: 3, observableBehaviors: "Accepted feedback gracefully when given.", trainableGap: false, timestamps: ["32:00"] },
+      { dimension: "learning_velocity", score: 2, observableBehaviors: "Followed step-by-step but no independent thinking.", trainableGap: true, timestamps: [] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Some testing but incomplete coverage.", trainableGap: true, timestamps: ["20:00"] },
+    ]},
+    { emailKey: "candidateSophia", assessmentId: TEST_ASSESSMENT_IDS.sophiaBackend, videoAssessmentId: "va-sophia-backend", scenarioId: backendScenario.id, overallScore: 3.3, recommendation: "hire", percentile: 75, daysAgo: 3, summary: "Strong collaborator with good backend skills. Excellent at synthesizing feedback and improving her solution iteratively.", scores: [
+      { dimension: "communication", score: 4, observableBehaviors: "Outstanding communicator. Shared progress and blockers proactively.", trainableGap: false, timestamps: ["04:00", "18:00", "35:00"] },
+      { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Good decomposition with iterative refinement.", trainableGap: false, timestamps: ["09:00", "24:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Solid Python and FastAPI skills. Some Redis learning curve.", trainableGap: false, timestamps: ["07:00", "22:00", "38:00"] },
+      { dimension: "collaboration_coachability", score: 4, observableBehaviors: "Best collaborator in the cohort. Synthesized feedback brilliantly.", trainableGap: false, timestamps: ["12:00", "28:00", "42:00"] },
+      { dimension: "practical_maturity", score: 3, observableBehaviors: "Adapted well to requirement changes.", trainableGap: false, timestamps: ["20:00", "36:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Took ownership and drove improvements.", trainableGap: false, timestamps: ["15:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Good testing habits and clean code.", trainableGap: false, timestamps: ["10:00", "32:00"] },
+    ]},
+    { emailKey: "candidateEthan", assessmentId: TEST_ASSESSMENT_IDS.ethanBackend, videoAssessmentId: "va-ethan-backend", scenarioId: backendScenario.id, overallScore: 2.85, recommendation: "no_hire", percentile: 45, daysAgo: 5, summary: "Mid-level engineer attempting senior role. Functional implementation but lacks the depth and ownership expected at senior level.", scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Clear when asked but not proactive.", trainableGap: false, timestamps: ["08:00", "28:00"] },
+      { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Standard approach to rate limiting. No innovation.", trainableGap: false, timestamps: ["12:00", "25:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Solid implementation but nothing senior-level.", trainableGap: false, timestamps: ["10:00", "30:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Engaged appropriately with the team.", trainableGap: false, timestamps: ["15:00", "32:00"] },
+      { dimension: "practical_maturity", score: 3, observableBehaviors: "Handled requirements adequately.", trainableGap: false, timestamps: ["22:00"] },
+      { dimension: "learning_velocity", score: 2, observableBehaviors: "Followed the spec but didn't propose improvements.", trainableGap: true, timestamps: ["18:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Reasonable process with some tests.", trainableGap: false, timestamps: ["14:00", "35:00"] },
+    ]},
+    { emailKey: "candidateIsabella", assessmentId: TEST_ASSESSMENT_IDS.isabellaBackend, videoAssessmentId: "va-isabella-backend", scenarioId: backendScenario.id, overallScore: 3.15, recommendation: "hire", percentile: 68, daysAgo: 4, summary: "Well-rounded candidate with strong adaptability. Pivoted her approach effectively when initial design hit scaling issues.", scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Good communication skills. Shared updates regularly.", trainableGap: false, timestamps: ["05:00", "22:00"] },
+      { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Good decomposition. Pivoted effectively when initial approach didn't scale.", trainableGap: false, timestamps: ["10:00", "28:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Strong Python fundamentals. Growing Redis expertise.", trainableGap: false, timestamps: ["08:00", "25:00", "40:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Collaborative and receptive to feedback.", trainableGap: false, timestamps: ["14:00", "30:00"] },
+      { dimension: "practical_maturity", score: 4, observableBehaviors: "Excellent adaptability. Recognized scaling issues early and pivoted.", trainableGap: false, timestamps: ["18:00", "35:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Showed initiative in redesigning her approach.", trainableGap: false, timestamps: ["20:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Solid process with good test coverage.", trainableGap: false, timestamps: ["12:00", "32:00"] },
+    ]},
+    { emailKey: "candidateMason", assessmentId: TEST_ASSESSMENT_IDS.masonBackend, videoAssessmentId: "va-mason-backend", scenarioId: backendScenario.id, overallScore: 1.7, recommendation: "no_hire", percentile: 8, daysAgo: 8, summary: "Not ready for senior backend role. Fundamental gaps in distributed systems, API design, and Python async patterns.", scores: [
+      { dimension: "communication", score: 2, observableBehaviors: "Minimal communication. Did not share progress.", trainableGap: true, timestamps: ["15:00"] },
+      { dimension: "problem_decomposition_design", score: 1, observableBehaviors: "Could not decompose the rate-limiting problem effectively.", trainableGap: true, timestamps: ["10:00"] },
+      { dimension: "technical_execution", score: 2, observableBehaviors: "Basic Python but no async or Redis experience.", trainableGap: true, timestamps: ["08:00", "30:00"] },
+      { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Did not seek help despite being stuck.", trainableGap: true, timestamps: [] },
+      { dimension: "practical_maturity", score: 2, observableBehaviors: "Did not handle requirement changes.", trainableGap: true, timestamps: ["25:00"] },
+      { dimension: "learning_velocity", score: 1, observableBehaviors: "No ownership. Waited for direction throughout.", trainableGap: true, timestamps: [] },
+      { dimension: "work_process", score: 2, observableBehaviors: "No tests. Incomplete implementation.", trainableGap: true, timestamps: ["20:00"] },
+    ]},
+    { emailKey: "candidateMia", assessmentId: TEST_ASSESSMENT_IDS.miaBackend, videoAssessmentId: "va-mia-backend", scenarioId: backendScenario.id, overallScore: 3.1, recommendation: "hire", percentile: 65, daysAgo: 3, summary: "Good all-around candidate with strong collaboration skills. Solid implementation with room to grow in system design depth.", scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Clear and professional communication.", trainableGap: false, timestamps: ["04:00", "20:00", "38:00"] },
+      { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Good decomposition following established patterns.", trainableGap: false, timestamps: ["09:00", "24:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Solid Python and Redis basics.", trainableGap: false, timestamps: ["07:00", "22:00"] },
+      { dimension: "collaboration_coachability", score: 4, observableBehaviors: "Excellent team player. Helped others while making progress.", trainableGap: false, timestamps: ["12:00", "28:00", "42:00"] },
+      { dimension: "practical_maturity", score: 3, observableBehaviors: "Adapted to changes smoothly.", trainableGap: false, timestamps: ["18:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Took initiative in her area of focus.", trainableGap: false, timestamps: ["15:00", "35:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Clean code with good test coverage.", trainableGap: false, timestamps: ["10:00", "30:00"] },
+    ]},
+    { emailKey: "candidateLucas", assessmentId: TEST_ASSESSMENT_IDS.lucasBackend, videoAssessmentId: "va-lucas-backend", scenarioId: backendScenario.id, overallScore: 2.3, recommendation: "no_hire", percentile: 18, daysAgo: 6, summary: "Below senior expectations. Functional but shallow implementation. Struggled with system design thinking and distributed concepts.", scores: [
+      { dimension: "communication", score: 2, observableBehaviors: "Brief answers. No proactive updates.", trainableGap: true, timestamps: ["10:00"] },
+      { dimension: "problem_decomposition_design", score: 2, observableBehaviors: "Flat architecture without clear separation.", trainableGap: true, timestamps: ["14:00", "30:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Decent Python but lacked Redis depth.", trainableGap: true, timestamps: ["08:00", "25:00"] },
+      { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Minimal engagement with team.", trainableGap: true, timestamps: ["22:00"] },
+      { dimension: "practical_maturity", score: 2, observableBehaviors: "Did not consider production concerns.", trainableGap: true, timestamps: ["28:00"] },
+      { dimension: "learning_velocity", score: 2, observableBehaviors: "Followed a tutorial approach without adaptation.", trainableGap: true, timestamps: [] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Some tests but gaps in edge cases.", trainableGap: true, timestamps: ["18:00"] },
+    ]},
+    { emailKey: "candidateCharlotte", assessmentId: TEST_ASSESSMENT_IDS.charlotteBackend, videoAssessmentId: "va-charlotte-backend", scenarioId: backendScenario.id, overallScore: 3.45, recommendation: "hire", percentile: 85, daysAgo: 2, summary: "Strong senior candidate. Excellent error handling and observability patterns. Clear architectural thinking with production-ready implementation.", scores: [
+      { dimension: "communication", score: 4, observableBehaviors: "Excellent written communication. Clear architectural diagrams.", trainableGap: false, timestamps: ["03:00", "18:00", "40:00"] },
+      { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Clean architecture with clear module boundaries.", trainableGap: false, timestamps: ["08:00", "22:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Strong Python and good Redis patterns. Some optimization opportunities missed.", trainableGap: false, timestamps: ["10:00", "28:00", "42:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Good collaboration with thoughtful code reviews.", trainableGap: false, timestamps: ["14:00", "32:00"] },
+      { dimension: "practical_maturity", score: 4, observableBehaviors: "Production-ready thinking. Excellent error handling.", trainableGap: false, timestamps: ["20:00", "38:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Confident decision-making with good reasoning.", trainableGap: false, timestamps: ["16:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Structured development with comprehensive testing.", trainableGap: false, timestamps: ["12:00", "35:00"] },
+    ]},
+    { emailKey: "candidateCarla", assessmentId: TEST_ASSESSMENT_IDS.carlaBackend, videoAssessmentId: "va-carla-backend", scenarioId: backendScenario.id, overallScore: 3.0, recommendation: "hire", percentile: 58, daysAgo: 4, summary: "Creative problem solver with strong collaboration. Good fundamentals but needs more backend systems experience for senior level.", scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Good communication. Regular progress updates.", trainableGap: false, timestamps: ["05:00", "22:00"] },
+      { dimension: "problem_decomposition_design", score: 3, observableBehaviors: "Creative approach to the problem. Good decomposition.", trainableGap: false, timestamps: ["10:00", "25:00"] },
+      { dimension: "technical_execution", score: 3, observableBehaviors: "Growing backend skills. Solid Python basics.", trainableGap: true, timestamps: ["08:00", "28:00"] },
+      { dimension: "collaboration_coachability", score: 4, observableBehaviors: "Outstanding collaboration. Elevated team discussions.", trainableGap: false, timestamps: ["14:00", "30:00", "42:00"] },
+      { dimension: "practical_maturity", score: 3, observableBehaviors: "Adapted well to changes in requirements.", trainableGap: false, timestamps: ["18:00"] },
+      { dimension: "learning_velocity", score: 2, observableBehaviors: "Could take more ownership of design decisions.", trainableGap: true, timestamps: ["20:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Innovative testing approach.", trainableGap: false, timestamps: ["12:00", "35:00"] },
+    ]},
+    { emailKey: "candidateAlex", assessmentId: TEST_ASSESSMENT_IDS.alexBackend, videoAssessmentId: "va-alex-backend", scenarioId: backendScenario.id, overallScore: 1.85, recommendation: "no_hire", percentile: 10, daysAgo: 9, summary: "Significant gaps in backend engineering. Struggled with the fundamental concepts needed for this role.", scores: [
+      { dimension: "communication", score: 2, observableBehaviors: "Minimal communication. Unclear explanations.", trainableGap: true, timestamps: ["12:00"] },
+      { dimension: "problem_decomposition_design", score: 2, observableBehaviors: "Could not decompose the problem effectively.", trainableGap: true, timestamps: ["15:00"] },
+      { dimension: "technical_execution", score: 2, observableBehaviors: "Limited Python async understanding. No Redis experience.", trainableGap: true, timestamps: ["10:00", "30:00"] },
+      { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Asked for help once but didn't apply feedback.", trainableGap: true, timestamps: ["25:00"] },
+      { dimension: "practical_maturity", score: 2, observableBehaviors: "Frustrated by complexity of requirements.", trainableGap: true, timestamps: ["28:00"] },
+      { dimension: "learning_velocity", score: 1, observableBehaviors: "No initiative. Waited for all direction.", trainableGap: true, timestamps: [] },
+      { dimension: "work_process", score: 2, observableBehaviors: "No tests. Incomplete implementation.", trainableGap: true, timestamps: ["20:00"] },
+    ]},
+  ];
+
+  for (const c of backendCandidates) {
+    await createCompletedCandidate(c);
+  }
+
+  // Working/Welcome candidates for backend scenario
+  await createPendingCandidate({ emailKey: "candidateMarcus", assessmentId: TEST_ASSESSMENT_IDS.marcusBackendWorking, scenarioId: backendScenario.id, status: "WORKING" });
+  await createPendingCandidate({ emailKey: "candidate", assessmentId: TEST_ASSESSMENT_IDS.candidateBackendWelcome, scenarioId: backendScenario.id, status: "WELCOME" });
+  await createPendingCandidate({ emailKey: "candidateHenry", assessmentId: TEST_ASSESSMENT_IDS.henryBackendWorking, scenarioId: backendScenario.id, status: "WORKING" });
+  await createPendingCandidate({ emailKey: "candidateAmelia", assessmentId: TEST_ASSESSMENT_IDS.ameliaBackendWelcome, scenarioId: backendScenario.id, status: "WELCOME" });
+  await createPendingCandidate({ emailKey: "candidateMatias", assessmentId: TEST_ASSESSMENT_IDS.matiasBackendWelcome, scenarioId: backendScenario.id, status: "WELCOME" });
+  await createPendingCandidate({ emailKey: "candidatePepito", assessmentId: TEST_ASSESSMENT_IDS.pepitoBackendWorking, scenarioId: backendScenario.id, status: "WORKING" });
+
+  console.log(`  📊 Backend scenario: 18 completed + 3 working + 3 welcome = 24 candidates`);
+
+  // ============================================================================
+  // SIMULATION 3: React Native Developer at Notion (mid, 3 candidates)
+  // ============================================================================
+  console.log("\n📱 Creating React Native Developer simulation (Notion)...");
+
+  const mobileScenario = await prisma.scenario.upsert({
+    where: { id: TEST_SCENARIO_IDS.mobile },
+    update: {
+      name: "React Native Developer",
+      companyName: "Notion",
+      companyDescription: "Notion is the all-in-one workspace for notes, docs, and project management. Our mobile team builds the cross-platform experience used by millions.",
+      taskDescription: "Build a drag-and-drop block editor component for the mobile app. Must support text, image, and checklist blocks with smooth animations.",
+      repoUrl: "https://github.com/skillvee/notion-mobile-task",
+      techStack: ["React Native", "TypeScript", "GraphQL", "Expo"],
+      isPublished: true,
+      targetLevel: "mid",
+      createdById: testRecruiter?.id ?? null,
+    },
+    create: {
+      id: TEST_SCENARIO_IDS.mobile,
+      name: "React Native Developer",
+      companyName: "Notion",
+      companyDescription: "Notion is the all-in-one workspace for notes, docs, and project management. Our mobile team builds the cross-platform experience used by millions.",
+      taskDescription: "Build a drag-and-drop block editor component for the mobile app. Must support text, image, and checklist blocks with smooth animations.",
+      repoUrl: "https://github.com/skillvee/notion-mobile-task",
+      techStack: ["React Native", "TypeScript", "GraphQL", "Expo"],
+      isPublished: true,
+      targetLevel: "mid",
+      createdById: testRecruiter?.id ?? null,
+    },
+  });
+  console.log(`  ✅ Mobile scenario: ${mobileScenario.name}`);
+
+  // Clean up stale assessments for mobile scenario
+  const knownMobileIds = [TEST_ASSESSMENT_IDS.carlaMobile, TEST_ASSESSMENT_IDS.alexMobile, TEST_ASSESSMENT_IDS.pepitoMobileWorking];
+  const staleMobile = await prisma.assessment.findMany({ where: { scenarioId: mobileScenario.id, id: { notIn: knownMobileIds } }, select: { id: true } });
+  if (staleMobile.length > 0) {
+    for (const stale of staleMobile) {
+      const va = await prisma.videoAssessment.findUnique({ where: { assessmentId: stale.id } });
+      if (va) {
+        await prisma.dimensionScore.deleteMany({ where: { assessmentId: va.id } });
+        await prisma.videoAssessmentSummary.deleteMany({ where: { assessmentId: va.id } });
+        await prisma.videoAssessment.delete({ where: { id: va.id } });
+      }
+    }
+    await prisma.assessment.deleteMany({ where: { scenarioId: mobileScenario.id, id: { notIn: knownMobileIds } } });
+  }
+
+  await prisma.coworker.deleteMany({ where: { scenarioId: mobileScenario.id } });
+  await prisma.coworker.create({
+    data: {
+      scenarioId: mobileScenario.id,
+      name: "Lisa Wong",
+      role: "Mobile Lead",
+      personaStyle: "Pragmatic mobile lead who cares deeply about UX polish and performance. Gives actionable feedback on animation smoothness and gesture handling.",
+      knowledge: { teamSize: 6, projectContext: "Block editor mobile port", techDecisions: ["React Native for cross-platform", "Reanimated for gestures"] } as unknown as Prisma.InputJsonValue,
+      avatarUrl: null,
+      voiceName: "Kore",
+    },
+  });
+  console.log(`  ✅ Coworker: Lisa Wong (Mobile Lead)`);
+
+  await createCompletedCandidate({
+    emailKey: "candidateCarla", assessmentId: TEST_ASSESSMENT_IDS.carlaMobile, videoAssessmentId: "va-carla-mobile", scenarioId: mobileScenario.id,
+    overallScore: 3.5, recommendation: "hire", percentile: 90, daysAgo: 2,
+    summary: "Excellent mobile developer with strong UX instincts. Built smooth drag-and-drop interactions with polished animations. Great collaborator who elevated the design through proactive feedback.",
+    scores: [
+      { dimension: "communication", score: 3, observableBehaviors: "Clear updates and good questions about UX requirements.", trainableGap: false, timestamps: ["03:00", "18:00"] },
+      { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Broke the block editor into reusable, composable components.", trainableGap: false, timestamps: ["08:00", "22:00"] },
+      { dimension: "technical_execution", score: 4, observableBehaviors: "Expert React Native and Reanimated usage. Smooth 60fps animations.", trainableGap: false, timestamps: ["10:00", "28:00", "42:00"] },
+      { dimension: "collaboration_coachability", score: 4, observableBehaviors: "Proactively improved the design based on UX feedback.", trainableGap: false, timestamps: ["14:00", "32:00"] },
+      { dimension: "practical_maturity", score: 3, observableBehaviors: "Handled gesture conflicts well when requirements expanded.", trainableGap: false, timestamps: ["20:00"] },
+      { dimension: "learning_velocity", score: 3, observableBehaviors: "Took ownership of the animation system.", trainableGap: false, timestamps: ["16:00", "35:00"] },
+      { dimension: "work_process", score: 4, observableBehaviors: "Creative approach to block rendering with excellent visual results.", trainableGap: false, timestamps: ["12:00", "30:00"] },
+    ],
+  });
+
+  await createCompletedCandidate({
+    emailKey: "candidateAlex", assessmentId: TEST_ASSESSMENT_IDS.alexMobile, videoAssessmentId: "va-alex-mobile", scenarioId: mobileScenario.id,
+    overallScore: 1.75, recommendation: "no_hire", percentile: 10, daysAgo: 5,
+    summary: "Struggled with React Native fundamentals. Could not implement gesture handling or animations. Limited mobile development experience.",
+    scores: [
+      { dimension: "communication", score: 2, observableBehaviors: "Minimal communication about blockers.", trainableGap: true, timestamps: ["10:00"] },
+      { dimension: "problem_decomposition_design", score: 2, observableBehaviors: "Could not break down the block editor architecture.", trainableGap: true, timestamps: ["15:00"] },
+      { dimension: "technical_execution", score: 1, observableBehaviors: "No React Native experience. Could not set up Reanimated.", trainableGap: true, timestamps: ["08:00", "25:00"] },
+      { dimension: "collaboration_coachability", score: 2, observableBehaviors: "Did not seek help despite being completely blocked.", trainableGap: true, timestamps: ["30:00"] },
+      { dimension: "practical_maturity", score: 2, observableBehaviors: "Frustrated by mobile-specific challenges.", trainableGap: true, timestamps: ["20:00"] },
+      { dimension: "learning_velocity", score: 1, observableBehaviors: "No ownership. Appeared overwhelmed.", trainableGap: true, timestamps: [] },
+      { dimension: "work_process", score: 2, observableBehaviors: "No meaningful output produced.", trainableGap: true, timestamps: ["18:00"] },
+    ],
+  });
+
+  await createPendingCandidate({ emailKey: "candidatePepito", assessmentId: TEST_ASSESSMENT_IDS.pepitoMobileWorking, scenarioId: mobileScenario.id, status: "WORKING" });
+  console.log(`  📊 Mobile scenario: 2 completed + 1 working = 3 candidates`);
+
+  // ============================================================================
+  // SIMULATION 4: DevOps Engineer at Datadog (draft, no candidates)
+  // ============================================================================
+  console.log("\n☁️ Creating DevOps Engineer simulation (Datadog, draft)...");
+
+  const devopsScenario = await prisma.scenario.upsert({
+    where: { id: TEST_SCENARIO_IDS.devops },
+    update: {
+      name: "DevOps Engineer",
+      companyName: "Datadog",
+      companyDescription: "Datadog is the monitoring and analytics platform for cloud-scale infrastructure. Our DevOps team builds the deployment and orchestration systems.",
+      taskDescription: "Design a zero-downtime deployment pipeline for a microservices architecture. Implement blue-green deployments with automated canary analysis.",
+      repoUrl: null,
+      techStack: ["Kubernetes", "Terraform", "AWS", "Go"],
+      isPublished: false,
+      targetLevel: "senior",
+      createdById: testRecruiter?.id ?? null,
+    },
+    create: {
+      id: TEST_SCENARIO_IDS.devops,
+      name: "DevOps Engineer",
+      companyName: "Datadog",
+      companyDescription: "Datadog is the monitoring and analytics platform for cloud-scale infrastructure. Our DevOps team builds the deployment and orchestration systems.",
+      taskDescription: "Design a zero-downtime deployment pipeline for a microservices architecture. Implement blue-green deployments with automated canary analysis.",
+      repoUrl: null,
+      techStack: ["Kubernetes", "Terraform", "AWS", "Go"],
+      isPublished: false,
+      targetLevel: "senior",
+      createdById: testRecruiter?.id ?? null,
+    },
+  });
+  console.log(`  ✅ DevOps scenario (draft): ${devopsScenario.name}`);
+
+  await prisma.coworker.deleteMany({ where: { scenarioId: devopsScenario.id } });
+  await prisma.coworker.create({
+    data: {
+      scenarioId: devopsScenario.id,
+      name: "Ryan O'Brien",
+      role: "Platform Lead",
+      personaStyle: "Experienced platform engineer who values reliability and automation. Expects candidates to think about failure modes and monitoring.",
+      knowledge: { teamSize: 8, projectContext: "Platform reliability initiative", techDecisions: ["Kubernetes for orchestration", "Terraform for IaC"] } as unknown as Prisma.InputJsonValue,
+      avatarUrl: null,
+      voiceName: "Charon",
+    },
+  });
+  console.log(`  ✅ Coworker: Ryan O'Brien (Platform Lead)`);
+
   // Print summary
-  const coworkerCount = await prisma.coworker.count({
-    where: { scenarioId: defaultScenario.id },
-  });
-
-  const recruiterCoworkerCount = await prisma.coworker.count({
-    where: { scenarioId: recruiterScenario.id },
-  });
-
   console.log("\n📊 Summary:");
-  console.log(`   Default Scenario: ${defaultScenario.name}`);
-  console.log(`   Company: ${defaultScenario.companyName}`);
-  console.log(`   Coworkers: ${coworkerCount}`);
-  console.log(`   Tech Stack: ${defaultScenario.techStack.join(", ")}`);
-  console.log("");
-  console.log(`   Recruiter Scenario: ${recruiterScenario.name}`);
-  console.log(`   Company: ${recruiterScenario.companyName}`);
-  console.log(`   Coworkers: ${recruiterCoworkerCount}`);
-  console.log(`   Tech Stack: ${recruiterScenario.techStack.join(", ")}`);
+  for (const scenario of [defaultScenario, recruiterScenario, backendScenario, mobileScenario, devopsScenario]) {
+    const assessmentCount = await prisma.assessment.count({ where: { scenarioId: scenario.id } });
+    const coworkers = await prisma.coworker.count({ where: { scenarioId: scenario.id } });
+    console.log(`   ${scenario.name} (${scenario.companyName}): ${assessmentCount} candidates, ${coworkers} coworkers`);
+  }
 
   console.log("\n🎉 Seed completed successfully!");
 }

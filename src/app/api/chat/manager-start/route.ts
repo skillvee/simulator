@@ -148,6 +148,11 @@ export async function POST(request: Request) {
   // Use initial_greeting phase — this is the only place it's needed
   const phase = "initial_greeting" as const;
 
+  // Extract resource labels for manager awareness
+  const resourceLabels = Array.isArray(assessment.scenario.resources)
+    ? (assessment.scenario.resources as unknown as Array<{ label: string }>).map((r) => r.label)
+    : undefined;
+
   const systemPrompt = buildAgentPrompt({
     companyName: assessment.scenario.companyName,
     techStack: assessment.scenario.techStack,
@@ -158,6 +163,7 @@ export async function POST(request: Request) {
     crossAgentContext,
     phase,
     media: "chat",
+    resourceLabels,
   });
 
   // Generate greeting via LLM

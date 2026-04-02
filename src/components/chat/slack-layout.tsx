@@ -3,12 +3,13 @@
 import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Menu, X, Headphones, Hash } from "lucide-react";
+import { Menu, X, Headphones, Hash, GitBranch, Database, FileSpreadsheet, Globe, LayoutDashboard, FileText, Box, ExternalLink, ArrowLeft } from "lucide-react";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
 import { CoworkerAvatar } from "./coworker-avatar";
-import type { DecorativeTeamMember } from "@/types";
+import { Markdown } from "@/components/shared/markdown";
+import type { DecorativeTeamMember, ScenarioResource } from "@/types";
 
 /**
  * Get the current status for a decorative member based on elapsed time
@@ -79,6 +80,8 @@ export function useCallContext() {
 interface SlackLayoutProps {
   assessmentId: string;
   coworkers: Coworker[];
+  /** Resources the candidate needs (repos, databases, dashboards, etc.) */
+  resources?: ScenarioResource[];
   children: React.ReactNode;
   /** Override the selected coworker (instead of getting from URL) */
   selectedCoworkerId?: string;
@@ -94,6 +97,10 @@ interface SlackLayoutProps {
   onIncrementUnreadRef?: (incrementUnread: (coworkerId: string) => void) => void;
   /** Callback to expose incrementGeneralUnread function to parent */
   onIncrementGeneralUnreadRef?: (incrementGeneralUnread: () => void) => void;
+  /** Index of the currently selected resource (null = show chat) */
+  selectedResourceIndex?: number | null;
+  /** Callback when a resource is selected or deselected */
+  onSelectResource?: (index: number | null) => void;
 }
 
 /**
@@ -157,6 +164,7 @@ function SlackLayoutSkeleton({ children }: { children: React.ReactNode }) {
 function SlackLayoutInner({
   assessmentId,
   coworkers,
+  resources,
   children,
   selectedCoworkerId: overrideSelectedId,
   onSelectCoworker,
@@ -165,6 +173,8 @@ function SlackLayoutInner({
   onStartCallRef,
   onIncrementUnreadRef,
   onIncrementGeneralUnreadRef,
+  selectedResourceIndex,
+  onSelectResource,
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -366,6 +376,15 @@ function SlackLayoutInner({
             />
           </div>
 
+          {/* Resources bookmarks bar */}
+          {resources && resources.length > 0 && (
+            <ResourcesBookmarkBar
+              resources={resources}
+              selectedIndex={selectedResourceIndex ?? null}
+              onSelect={(index) => onSelectResource?.(index)}
+            />
+          )}
+
           {/* Coworker List - scrollable, shrinks when call widget appears */}
           <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
             {/* Channels Section */}
@@ -444,6 +463,7 @@ function SlackLayoutInner({
                 ))}
               </div>
             </div>
+
           </div>
 
           {/* Floating Call Bar - fixed at bottom when call is active */}
@@ -462,15 +482,24 @@ function SlackLayoutInner({
 
         {/* Main content area */}
         <main className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden" style={{background: "hsl(var(--slack-bg-main))"}}>
-          {/* Pass incrementUnread function to children if they're Chat components */}
-          {/* eslint-disable @typescript-eslint/no-explicit-any */}
-          {isValidElement(children) && children.type && (children.type as any).name === 'Chat'
-            ? cloneElement(children as React.ReactElement<any>, {
-                onNewMessage: incrementUnread
-              })
-            : children
-          }
-          {/* eslint-enable @typescript-eslint/no-explicit-any */}
+          {selectedResourceIndex != null && resources?.[selectedResourceIndex] ? (
+            <ResourceViewer
+              resource={resources[selectedResourceIndex]}
+              onBack={() => onSelectResource?.(null)}
+            />
+          ) : (
+            <>
+              {/* Pass incrementUnread function to children if they're Chat components */}
+              {/* eslint-disable @typescript-eslint/no-explicit-any */}
+              {isValidElement(children) && children.type && (children.type as any).name === 'Chat'
+                ? cloneElement(children as React.ReactElement<any>, {
+                    onNewMessage: incrementUnread
+                  })
+                : children
+              }
+              {/* eslint-enable @typescript-eslint/no-explicit-any */}
+            </>
+          )}
         </main>
       </div>
     </CallContext.Provider>
@@ -576,6 +605,217 @@ interface AwayTeamMemberProps {
   isSelected: boolean;
   elapsedMinutes: number;
   onSelect: (decorativeId: string) => void;
+}
+
+// ─── Resources Components ──────────────────────────────────────────────────
+
+const RESOURCE_TYPE_ICONS: Record<ScenarioResource["type"], React.ReactNode> = {
+  repository: <GitBranch size={14} />,
+  database: <Database size={14} />,
+  spreadsheet: <FileSpreadsheet size={14} />,
+  api: <Globe size={14} />,
+  dashboard: <LayoutDashboard size={14} />,
+  document: <FileText size={14} />,
+  custom: <Box size={14} />,
+};
+
+/**
+ * Compact bookmarks bar in the sidebar — shows resource icons/labels.
+ * Clicking a resource switches the main content to the document viewer.
+ */
+function ResourcesBookmarkBar({
+  resources,
+  selectedIndex,
+  onSelect,
+}: {
+  resources: ScenarioResource[];
+  selectedIndex: number | null;
+  onSelect: (index: number | null) => void;
+}) {
+  return (
+    <div
+      className="px-3 py-2 space-y-0.5"
+      style={{ borderBottom: "1px solid hsl(var(--slack-border))" }}
+    >
+      <h3
+        className="px-3 text-xs font-semibold uppercase tracking-wider mb-1.5"
+        style={{ color: "hsl(var(--slack-text-muted))" }}
+      >
+        Resources
+      </h3>
+      {resources.map((resource, index) => (
+        <button
+          key={index}
+          onClick={() => onSelect(selectedIndex === index ? null : index)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md w-full text-left transition-all border-l-2 ${
+            selectedIndex === index
+              ? "border-primary"
+              : "border-transparent"
+          }`}
+          style={{
+            background: selectedIndex === index ? "hsl(var(--slack-bg-hover))" : "transparent",
+            color: "hsl(var(--slack-text))",
+          }}
+          onMouseEnter={(e) => {
+            if (selectedIndex !== index) {
+              e.currentTarget.style.background = "hsl(var(--slack-bg-hover))";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (selectedIndex !== index) {
+              e.currentTarget.style.background = "transparent";
+            }
+          }}
+        >
+          <span style={{ color: "hsl(var(--slack-text-muted))" }}>
+            {RESOURCE_TYPE_ICONS[resource.type]}
+          </span>
+          <span className="text-sm font-medium truncate">{resource.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Inline document viewer — replaces the chat area when a resource is selected.
+ * Renders the resource's markdown content, or falls back to metadata display.
+ */
+function ResourceViewer({
+  resource,
+  onBack,
+}: {
+  resource: ScenarioResource;
+  onBack: () => void;
+}) {
+  const icon = RESOURCE_TYPE_ICONS[resource.type];
+
+  return (
+    <div className="flex flex-col min-h-0 h-full">
+      <div
+        className="flex-1 min-h-0 shadow-sm flex flex-col"
+        style={{
+          background: "hsl(var(--slack-bg-main))",
+          border: "1px solid hsl(var(--slack-border))",
+        }}
+      >
+        {/* Header */}
+        <header
+          className="shrink-0 h-16 flex items-center gap-4 px-6"
+          style={{ borderBottom: "1px solid hsl(var(--slack-border))" }}
+        >
+          <button
+            onClick={onBack}
+            className="rounded-lg p-1.5 transition-colors"
+            style={{ color: "hsl(var(--slack-text-muted))" }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "hsl(var(--slack-bg-hover))";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+            aria-label="Back to chat"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div
+            className="rounded-md p-1.5"
+            style={{
+              background: "hsl(var(--slack-bg-surface))",
+              color: "hsl(var(--slack-text-muted))",
+            }}
+          >
+            {icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2
+              className="text-lg font-bold truncate"
+              style={{ color: "hsl(var(--slack-text))" }}
+            >
+              {resource.label}
+            </h2>
+            {resource.url && (
+              <a
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs hover:underline"
+                style={{ color: "hsl(var(--slack-text-muted))" }}
+              >
+                {resource.url}
+                <ExternalLink size={10} />
+              </a>
+            )}
+          </div>
+        </header>
+
+        {/* Document content */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-8 py-6">
+            {resource.content ? (
+              <Markdown>{resource.content}</Markdown>
+            ) : (
+              /* Fallback for resources without content (legacy data) */
+              <div className="space-y-4">
+                {resource.instructions && (
+                  <div
+                    className="rounded-lg p-4"
+                    style={{
+                      background: "hsl(var(--slack-bg-surface))",
+                      border: "1px solid hsl(var(--slack-border))",
+                    }}
+                  >
+                    <h3
+                      className="text-sm font-semibold mb-2"
+                      style={{ color: "hsl(var(--slack-text))" }}
+                    >
+                      Instructions
+                    </h3>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: "hsl(var(--slack-text-muted))" }}
+                    >
+                      {resource.instructions}
+                    </p>
+                  </div>
+                )}
+                {resource.credentials && (
+                  <div
+                    className="rounded-lg p-4"
+                    style={{
+                      background: "hsl(var(--slack-bg-surface))",
+                      border: "1px solid hsl(var(--slack-border))",
+                    }}
+                  >
+                    <h3
+                      className="text-sm font-semibold mb-2"
+                      style={{ color: "hsl(var(--slack-text))" }}
+                    >
+                      Access
+                    </h3>
+                    <p
+                      className="text-sm leading-relaxed italic"
+                      style={{ color: "hsl(var(--slack-text-muted))" }}
+                    >
+                      {resource.credentials}
+                    </p>
+                  </div>
+                )}
+                {!resource.instructions && !resource.credentials && (
+                  <p
+                    className="text-sm text-center py-8"
+                    style={{ color: "hsl(var(--slack-text-muted))" }}
+                  >
+                    No document content available for this resource.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTeamMemberProps) {

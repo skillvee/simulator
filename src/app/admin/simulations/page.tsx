@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileQuestion } from "lucide-react";
+import { FileQuestion, Plus, Sparkles } from "lucide-react";
 import { CopyLinkButton } from "./copy-link-button";
 
 export default async function ScenariosPage() {
@@ -30,9 +30,20 @@ export default async function ScenariosPage() {
             Manage assessment simulations for candidates
           </p>
         </div>
-        <Button asChild>
-          <Link href="/admin/simulations/builder">Create with AI</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild>
+            <Link href="/recruiter/simulations/new">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Create Simulation
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/admin/simulations/builder">
+              <Sparkles className="mr-1.5 h-4 w-4" />
+              Create with AI
+            </Link>
+          </Button>
+        </div>
       </header>
 
       {scenarios.length === 0 ? (
@@ -43,11 +54,22 @@ export default async function ScenariosPage() {
             </div>
             <h2 className="mb-2 text-xl font-semibold">No simulations yet</h2>
             <p className="mb-6 text-muted-foreground">
-              Create your first simulation using the AI-powered builder
+              Create your first simulation
             </p>
-            <Button asChild>
-              <Link href="/admin/simulations/builder">Create Simulation</Link>
-            </Button>
+            <div className="flex items-center justify-center gap-2">
+              <Button asChild>
+                <Link href="/recruiter/simulations/new">
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Create Simulation
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/admin/simulations/builder">
+                  <Sparkles className="mr-1.5 h-4 w-4" />
+                  Create with AI
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (

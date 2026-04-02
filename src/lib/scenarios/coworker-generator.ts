@@ -38,6 +38,11 @@ export type GenerateCoworkersResponse = {
     promptVersion: string;
     generatedAt: string;
   };
+  _debug: {
+    promptText: string;
+    responseText: string;
+    attempts: number;
+  };
 };
 
 const MAX_GENERATION_ATTEMPTS = 3; // Increased for better resilience against transient failures
@@ -144,7 +149,9 @@ export async function generateCoworkers(
   input: GenerateCoworkersInput
 ): Promise<GenerateCoworkersResponse> {
   const contextPrompt = buildContextPrompt(input);
+  const fullPrompt = `${COWORKER_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
+  let lastResponseText = "";
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
@@ -153,11 +160,7 @@ export async function generateCoworkers(
         contents: [
           {
             role: "user",
-            parts: [
-              {
-                text: `${COWORKER_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`,
-              },
-            ],
+            parts: [{ text: fullPrompt }],
           },
         ],
       });
@@ -166,6 +169,7 @@ export async function generateCoworkers(
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }
+      lastResponseText = responseText;
 
       const coworkers = parseAndValidateCoworkers(responseText);
 
@@ -190,6 +194,11 @@ export async function generateCoworkers(
         _meta: {
           promptVersion: COWORKER_GENERATOR_PROMPT_VERSION,
           generatedAt: new Date().toISOString(),
+        },
+        _debug: {
+          promptText: fullPrompt,
+          responseText,
+          attempts: attempt,
         },
       };
     } catch (error) {

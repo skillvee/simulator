@@ -8,6 +8,7 @@ import {
   type Session,
   type LiveServerMessage,
 } from "@google/genai";
+import { LIVE_MODEL } from "@/lib/ai";
 import {
   checkAudioSupport,
   checkMicrophonePermission,
@@ -288,7 +289,7 @@ export function FloatingCallBar({
 
       let sessionConnected = false;
       const session = await ai.live.connect({
-        model: "gemini-2.5-flash-native-audio-latest",
+        model: LIVE_MODEL,
         config: {
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
@@ -328,14 +329,6 @@ export function FloatingCallBar({
       // Initialize audio capture
       await initializeAudioCapture(stream, session);
       isConnectingRef.current = false;
-
-      // Start the conversation
-      session.sendClientContent({
-        turns: [
-          { role: "user", parts: [{ text: "Hi, thanks for taking my call." }] },
-        ],
-        turnComplete: true,
-      });
     } catch (err) {
       isConnectingRef.current = false;
       logger.error("Connection error", { err });

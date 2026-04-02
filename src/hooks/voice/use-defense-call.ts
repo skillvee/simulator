@@ -77,7 +77,6 @@ export function useDefenseCall({
     onError,
     config: {
       tokenEndpoint,
-      initialGreeting: "[call connected]",
       enableSessionRecovery: false,
     },
     onTokenResponse: (tokenData) => {

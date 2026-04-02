@@ -96,6 +96,9 @@ export type {
   ParsedProfile,
 } from "./cv";
 
+// Scenario types
+export type { ScenarioResource } from "./scenario";
+
 // API response types
 export type { ApiSuccess, ApiError, ApiResponse } from "./api";
 export {

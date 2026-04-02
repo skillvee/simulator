@@ -16,7 +16,7 @@ import {
   createAudioWorkletBlobUrl,
   type AudioPermissionState,
 } from "@/lib/media";
-import type { TranscriptMessage } from "@/lib/ai";
+import { LIVE_MODEL, type TranscriptMessage } from "@/lib/ai";
 import {
   categorizeError,
   calculateBackoffDelay,
@@ -369,7 +369,7 @@ export function useVoiceBase({
 
       let sessionConnected = false;
       const session = await ai.live.connect({
-        model: "gemini-2.5-flash-native-audio-latest",
+        model: LIVE_MODEL,
         config: {
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},

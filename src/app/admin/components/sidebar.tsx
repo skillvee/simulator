@@ -40,7 +40,7 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
     { href: "/admin/simulations", label: "Simulations", icon: FileText },
-    { href: "/admin/creation-logs", label: "Creation Logs", icon: ActivitySquare },
+    { href: "/admin/simulation-logs", label: "Creation Logs", icon: ActivitySquare },
     { href: "/admin/assessments", label: "Assessments", icon: ClipboardCheck },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/evals", label: "Prompt Evals", icon: FlaskConical },

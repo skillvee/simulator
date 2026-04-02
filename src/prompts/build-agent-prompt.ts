@@ -28,6 +28,8 @@ export interface AgentPromptContext {
   /** Extra context for the phase (defense details, etc.) */
   phaseContext?: string;
   media: "chat" | "voice";
+  /** Labels of resources visible in the candidate's sidebar (e.g. "GitHub Repository", "Data Warehouse") */
+  resourceLabels?: string[];
 }
 
 // ─── Main Builder ────────────────────────────────────────────────────────────
@@ -69,12 +71,17 @@ function buildIdentity(ctx: AgentPromptContext): string {
 
   const knowledgeSection = formatKnowledge(agent.knowledge);
 
+  const resourcesNote = isManagerRole && ctx.resourceLabels && ctx.resourceLabels.length > 0
+    ? `\nThe candidate already has these resources pinned in their sidebar: ${ctx.resourceLabels.join(", ")}. Don't repeat URLs or access info that's already there — if they ask "where is the repo?" just say "check your sidebar" or "should be in your resources panel." Focus on the WHY and WHAT, not the WHERE.`
+    : "";
+
   return `You are ${agent.name}, a ${agent.role} at ${companyName}. A new team member (${candidateName || "the candidate"}) started today.
 ${techStack.length ? `Tech stack: ${techStack.join(", ")}` : ""}
 
 Personality: ${agent.personaStyle}
 
 ${taskSection}
+${resourcesNote}
 
 ${knowledgeSection}
 

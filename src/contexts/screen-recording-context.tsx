@@ -393,7 +393,7 @@ export function ScreenRecordingProvider({
         return false;
       }
 
-      // Step 3: Request microphone for audio recording
+      // Step 3: Request microphone for audio recording (mandatory)
       let mixer: AudioMixer | null = null;
       try {
         const micStream = await requestMicrophoneAccess();
@@ -406,10 +406,25 @@ export function ScreenRecordingProvider({
         );
         logger.info("Audio mixer initialized for recording");
       } catch (micErr) {
-        // Microphone is optional for recording — log and continue without audio
-        logger.warn("Microphone unavailable for recording, continuing without audio", {
-          err: micErr instanceof Error ? micErr.message : String(micErr),
-        });
+        // Microphone is mandatory — clean up screen and webcam streams and fail
+        stopScreenCapture(screenStream);
+        streamRef.current = null;
+        stopWebcamCapture(webcamMediaStream);
+        webcamStreamRef.current = null;
+        setWebcamStream(null);
+        setWebcamState("idle");
+
+        if (
+          micErr instanceof DOMException &&
+          (micErr.name === "NotAllowedError" ||
+            micErr.name === "PermissionDeniedError")
+        ) {
+          setError("Microphone permission was denied. Screen, webcam, and microphone are all required.");
+        } else {
+          setError("Failed to access microphone. Please ensure your microphone is connected and not in use by another application.");
+        }
+        setState("error");
+        return false;
       }
 
       // Step 4: Create composite stream via canvas compositor

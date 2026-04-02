@@ -81,6 +81,7 @@ model Scenario {
   targetLevel            String                  @default("mid")
   archetypeId            String?
   repoSpec               Json?
+  resources              Json?
   assessments            Assessment[]
   coworkers              Coworker[]
   archetype              Archetype?              @relation(fields: [archetypeId], references: [id])
@@ -480,10 +481,34 @@ model SimulationCreationLog {
   completedAt    DateTime?
   scenario       Scenario?                @relation(fields: [scenarioId], references: [id])
   user           User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generationSteps SimulationGenerationStep[]
 
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+model SimulationGenerationStep {
+  id              String                @id @default(cuid())
+  creationLogId   String
+  stepName        String                // e.g. "parse_jd", "generate_tasks", "generate_coworkers", "generate_resources"
+  status          String                @default("started") // started, completed, failed
+  modelUsed       String?               // e.g. "gemini-3-flash-preview"
+  promptVersion   String?               // e.g. "3.0"
+  promptText      String?               // Full prompt sent to AI
+  responseText    String?               // Full AI response
+  inputData       Json?                 // Structured input passed to the step
+  outputData      Json?                 // Parsed/validated output from the step
+  durationMs      Int?                  // How long the step took
+  attempts        Int                   @default(1) // Number of retry attempts
+  errorMessage    String?
+  errorDetails    Json?                 // Stack trace, raw error, etc.
+  createdAt       DateTime              @default(now())
+  completedAt     DateTime?
+  creationLog     SimulationCreationLog @relation(fields: [creationLogId], references: [id], onDelete: Cascade)
+
+  @@index([creationLogId])
+  @@index([stepName])
 }
 
 model ApiRequestLog {

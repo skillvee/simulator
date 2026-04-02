@@ -1,22 +1,15 @@
-/**
- * POST /api/recruiter/simulations/generate-task
- *
- * Auto-generate 2-3 realistic work challenge options based on role and company context.
- * Available to RECRUITER and ADMIN roles only.
- */
-
 import { auth } from "@/auth";
 import { success, error, validationError } from "@/lib/api";
 import { createLogger } from "@/lib/core";
-import {
-  generateCodingTask,
-  type GenerateCodingTaskInput,
-} from "@/lib/scenarios/task-generator";
-import { logGenerationStep } from "@/lib/scenarios/generation-logger";
-import { TASK_GENERATOR_PROMPT_VERSION } from "@/prompts/recruiter/task-generator";
 import { z } from "zod";
+import {
+  generateResources,
+  type GenerateResourcesInput,
+} from "@/lib/scenarios/resource-generator";
+import { logGenerationStep } from "@/lib/scenarios/generation-logger";
+import { RESOURCE_GENERATOR_PROMPT_VERSION } from "@/prompts/recruiter/resource-generator";
 
-const logger = createLogger("api:recruiter:generate-task");
+const logger = createLogger("api:recruiter:generate-resources");
 
 interface SessionUser {
   id: string;
@@ -25,23 +18,23 @@ interface SessionUser {
   role?: string;
 }
 
-/**
- * Request body schema
- */
 const requestSchema = z.object({
-  roleName: z.string().min(1, "Role name is required"),
-  seniorityLevel: z.enum(["junior", "mid", "senior", "staff", "principal"]),
-  techStack: z.array(z.string()).min(1, "Tech stack is required"),
-  keyResponsibilities: z
-    .array(z.string())
-    .min(1, "Key responsibilities are required"),
-  domainContext: z.string().min(1, "Domain context is required"),
   companyName: z.string().min(1, "Company name is required"),
+  taskDescription: z.string().min(1, "Task description is required"),
+  techStack: z
+    .array(z.string())
+    .min(1, "Tech stack must have at least one item"),
+  roleName: z.string().min(1, "Role name is required"),
+  seniorityLevel: z.string().min(1, "Seniority level is required"),
   creationLogId: z.string().optional(),
 });
 
+/**
+ * POST /api/recruiter/simulations/generate-resources
+ * Auto-generate 1-4 resources based on task and company context.
+ * Available to RECRUITER and ADMIN roles.
+ */
 export async function POST(request: Request) {
-  // Check authentication
   const session = await auth();
 
   if (!session?.user) {
@@ -54,31 +47,29 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Parse and validate request body
     const body = await request.json();
-    const validationResult = requestSchema.safeParse(body);
 
-    if (!validationResult.success) {
-      return validationError(validationResult.error);
+    const validation = requestSchema.safeParse(body);
+    if (!validation.success) {
+      return validationError(validation.error);
     }
 
-    const { creationLogId, ...taskInput } = validationResult.data;
-    const input: GenerateCodingTaskInput = taskInput;
+    const { creationLogId, ...resourceInput } = validation.data;
+    const input: GenerateResourcesInput = resourceInput;
 
     // Start generation step logging if creationLogId is provided
     const tracker = creationLogId
       ? await logGenerationStep({
           creationLogId,
-          stepName: "generate_tasks",
+          stepName: "generate_resources",
           modelUsed: "gemini-3-flash-preview",
-          promptVersion: TASK_GENERATOR_PROMPT_VERSION,
+          promptVersion: RESOURCE_GENERATOR_PROMPT_VERSION,
           inputData: input as unknown as Record<string, unknown>,
         })
       : null;
 
     try {
-      // Generate task options
-      const result = await generateCodingTask(input);
+      const result = await generateResources(input);
 
       await tracker?.complete({
         promptText: result._debug.promptText,
@@ -93,7 +84,9 @@ export async function POST(request: Request) {
       throw genErr;
     }
   } catch (err) {
-    logger.error("Task generation error", { error: err instanceof Error ? err.message : String(err) });
-    return error("Task generation failed", 500);
+    logger.error("Resource generation error", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return error("Resource generation failed", 500);
   }
 }

@@ -41,6 +41,7 @@ export function createMockScenario(overrides?: Partial<Scenario>): Scenario {
     archetypeId: null,
     isPublished: false,
     repoSpec: null,
+    resources: null,
     createdById: null,
     createdAt: now,
     updatedAt: now,

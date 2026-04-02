@@ -51,8 +51,6 @@ export interface VoiceBaseReturn {
 export interface VoiceConfig {
   /** API endpoint to get the ephemeral token */
   tokenEndpoint: string;
-  /** Initial greeting message to send */
-  initialGreeting: string;
   /** Progress storage key for session recovery (optional) */
   progressType?: string;
   /** Whether to enable session recovery (save/load progress) */

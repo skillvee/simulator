@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { getAssessmentForChat } from "@/server/queries/assessment";
 import { WorkPageClient } from "./client";
 import { AssessmentScreenWrapper } from "@/components/assessment";
+import type { ScenarioResource } from "@/types";
 
 interface WorkPageProps {
   params: Promise<{ id: string }>;
@@ -40,6 +41,8 @@ export default async function WorkPage({
   );
   const defaultCoworkerId = manager?.id || coworkers[0]?.id || null;
 
+  const resources = (assessment.scenario.resources as unknown as ScenarioResource[]) || [];
+
   return (
     <AssessmentScreenWrapper assessmentId={id}>
       <WorkPageClient
@@ -47,7 +50,7 @@ export default async function WorkPage({
         coworkers={coworkers}
         selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
         assessmentStartTime={assessment.createdAt}
-
+        resources={resources}
         prUrl={assessment.prUrl}
       />
     </AssessmentScreenWrapper>

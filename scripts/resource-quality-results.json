@@ -1,0 +1,999 @@
+[
+  {
+    "roleName": "Senior Data Analyst",
+    "companyName": "RetailPulse",
+    "resourceCount": 4,
+    "generationTimeMs": 26329,
+    "resources": [
+      {
+        "resourceLabel": "RetailPulse Conversion Health Dashboard",
+        "resourceType": "dashboard",
+        "contentLength": 3649,
+        "wordCount": 500,
+        "issues": [],
+        "strengths": [
+          "Has substantial tables: 54 rows across 7 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 4,
+          "specificity": 3.5,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "BigQuery Schema & Data Dictionary",
+        "resourceType": "database",
+        "contentLength": 2986,
+        "wordCount": 415,
+        "issues": [
+          "Below target word count: 415 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Has substantial tables: 38 rows across 4 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 2,
+          "completeness": 4,
+          "specificity": 2.5,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Onboarding V2 Strategy Memo",
+        "resourceType": "document",
+        "contentLength": 2408,
+        "wordCount": 352,
+        "issues": [
+          "Below target word count: 352 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)"
+        ],
+        "scores": {
+          "realism": 2,
+          "completeness": 2,
+          "specificity": 1.5,
+          "actionability": 2,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Marketing Channel Performance Spreadsheet",
+        "resourceType": "spreadsheet",
+        "contentLength": 2414,
+        "wordCount": 396,
+        "issues": [
+          "Below target word count: 396 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 54 rows across 7 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3.35,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "Backend Software Engineer",
+    "companyName": "StreamVault",
+    "resourceCount": 4,
+    "generationTimeMs": 25353,
+    "resources": [
+      {
+        "resourceLabel": "streamvault/transcode-worker — README",
+        "resourceType": "repository",
+        "contentLength": 2960,
+        "wordCount": 418,
+        "issues": [
+          "Below target word count: 418 words",
+          "Lacks specific numbers — feels generic",
+          "Repository missing quick start / setup section"
+        ],
+        "strengths": [
+          "Has substantial tables: 14 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has known issues section (realistic)"
+        ],
+        "scores": {
+          "realism": 1.5,
+          "completeness": 4,
+          "specificity": 2,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Transcoding Error & Performance Dashboard",
+        "resourceType": "dashboard",
+        "contentLength": 2271,
+        "wordCount": 380,
+        "issues": [
+          "Below target word count: 380 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 44 rows across 5 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "streamvault_jobs Database Schema",
+        "resourceType": "database",
+        "contentLength": 2849,
+        "wordCount": 454,
+        "issues": [
+          "Below target word count: 454 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Has substantial tables: 66 rows across 6 table(s)",
+          "Cross-references 3 other resource(s)"
+        ],
+        "scores": {
+          "realism": 1.5,
+          "completeness": 4,
+          "specificity": 2,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Transcoding Pipeline Troubleshooting Runbook",
+        "resourceType": "document",
+        "contentLength": 3009,
+        "wordCount": 454,
+        "issues": [
+          "Below target word count: 454 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 2,
+          "specificity": 2,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3.23,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "Product Manager",
+    "companyName": "HealthBridge",
+    "resourceCount": 4,
+    "generationTimeMs": 27919,
+    "resources": [
+      {
+        "resourceLabel": "Notification Engagement & Deliverability Dashboard",
+        "resourceType": "dashboard",
+        "contentLength": 3019,
+        "wordCount": 496,
+        "issues": [
+          "Below target word count: 496 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 56 rows across 5 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Q3 User Experience Survey - Notification Deep Dive",
+        "resourceType": "document",
+        "contentLength": 3178,
+        "wordCount": 531,
+        "issues": [],
+        "strengths": [
+          "Has substantial tables: 46 rows across 4 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3.5,
+          "completeness": 5,
+          "specificity": 4.5,
+          "actionability": 5,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Internal Wiki: Notification Engine v1.4",
+        "resourceType": "repository",
+        "contentLength": 3284,
+        "wordCount": 487,
+        "issues": [
+          "Below target word count: 487 words",
+          "Repository missing quick start / setup section"
+        ],
+        "strengths": [
+          "Has substantial tables: 28 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)",
+          "Has known issues section (realistic)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Competitive Analysis: Patient Engagement Platforms",
+        "resourceType": "custom",
+        "contentLength": 3238,
+        "wordCount": 528,
+        "issues": [],
+        "strengths": [
+          "Has substantial tables: 32 rows across 3 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 5,
+          "specificity": 4,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 4.18,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "DevOps / Site Reliability Engineer",
+    "companyName": "FinanceGrid",
+    "resourceCount": 4,
+    "generationTimeMs": 27990,
+    "resources": [
+      {
+        "resourceLabel": "Cloud Spend & Resource Efficiency Dashboard",
+        "resourceType": "dashboard",
+        "contentLength": 2871,
+        "wordCount": 465,
+        "issues": [
+          "Below target word count: 465 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 70 rows across 8 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 5,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Infrastructure-as-Code (Terraform) — AWS Core",
+        "resourceType": "repository",
+        "contentLength": 2739,
+        "wordCount": 375,
+        "issues": [
+          "Below target word count: 375 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Has substantial tables: 15 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has TODO items (realistic)",
+          "Has known issues section (realistic)"
+        ],
+        "scores": {
+          "realism": 1.5,
+          "completeness": 4,
+          "specificity": 2,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Q4 Orphaned Assets & EBS Inventory",
+        "resourceType": "spreadsheet",
+        "contentLength": 2826,
+        "wordCount": 467,
+        "issues": [
+          "Below target word count: 467 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 68 rows across 4 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 5,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "FinOps Initiative: Q4 Cloud Cost Analysis",
+        "resourceType": "document",
+        "contentLength": 3400,
+        "wordCount": 523,
+        "issues": [],
+        "strengths": [
+          "Has substantial tables: 15 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 5,
+          "specificity": 4,
+          "actionability": 5,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3.95,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "Frontend Engineer",
+    "companyName": "CollabSpace",
+    "resourceCount": 4,
+    "generationTimeMs": 24320,
+    "resources": [
+      {
+        "resourceLabel": "QA Performance Audit: Document Editor v2.4",
+        "resourceType": "document",
+        "contentLength": 3143,
+        "wordCount": 420,
+        "issues": [
+          "Below target word count: 420 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 36 rows across 3 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 4,
+          "completeness": 4,
+          "specificity": 4.5,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Editor Core Architecture & State Management",
+        "resourceType": "document",
+        "contentLength": 3006,
+        "wordCount": 407,
+        "issues": [
+          "Below target word count: 407 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 16 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 4,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "CollabSpace Repository: /packages/editor",
+        "resourceType": "repository",
+        "contentLength": 2218,
+        "wordCount": 271,
+        "issues": [
+          "Very short content: only 271 words",
+          "Lacks specific numbers — feels generic",
+          "Repository missing quick start / setup section"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has TODO items (realistic)",
+          "Has timestamps/dates",
+          "Has known issues section (realistic)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 1,
+          "specificity": 2,
+          "actionability": 2,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Lighthouse & Profiler Metrics - Enterprise Segment",
+        "resourceType": "dashboard",
+        "contentLength": 1980,
+        "wordCount": 295,
+        "issues": [
+          "Very short content: only 295 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 16 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 2,
+          "completeness": 3,
+          "specificity": 3.5,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3.6,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "Machine Learning Engineer",
+    "companyName": "TrustShield",
+    "resourceCount": 4,
+    "generationTimeMs": 28619,
+    "resources": [
+      {
+        "resourceLabel": "Fraud Performance Dashboard (V2.4) — Q3-Q4 Metrics",
+        "resourceType": "dashboard",
+        "contentLength": 2970,
+        "wordCount": 471,
+        "issues": [
+          "Below target word count: 471 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 45 rows across 6 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Snowflake Schema & Feature Engineering Spec",
+        "resourceType": "database",
+        "contentLength": 3675,
+        "wordCount": 549,
+        "issues": [
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Has substantial tables: 64 rows across 6 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 2,
+          "completeness": 5,
+          "specificity": 3,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "MLflow Experiment Archive: Project 'Shield-X'",
+        "resourceType": "custom",
+        "contentLength": 3145,
+        "wordCount": 450,
+        "issues": [
+          "Below target word count: 450 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 18 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 4,
+          "completeness": 4,
+          "specificity": 4.5,
+          "actionability": 5,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Fraud Detection Service — README",
+        "resourceType": "repository",
+        "contentLength": 3116,
+        "wordCount": 432,
+        "issues": [
+          "Below target word count: 432 words"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has specific numbers (not rounded)",
+          "Has known issues section (realistic)"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 2,
+          "specificity": 2.5,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3.83,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "Data Engineer",
+    "companyName": "LogiTrack",
+    "resourceCount": 4,
+    "generationTimeMs": 29264,
+    "resources": [
+      {
+        "resourceLabel": "logitrack-etl-core — README",
+        "resourceType": "repository",
+        "contentLength": 3333,
+        "wordCount": 481,
+        "issues": [
+          "Below target word count: 481 words",
+          "Lacks specific numbers — feels generic",
+          "Repository missing quick start / setup section"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has known issues section (realistic)"
+        ],
+        "scores": {
+          "realism": 1.5,
+          "completeness": 3,
+          "specificity": 2,
+          "actionability": 2,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Logistics Pipeline Performance Dashboard",
+        "resourceType": "dashboard",
+        "contentLength": 2507,
+        "wordCount": 432,
+        "issues": [
+          "Below target word count: 432 words",
+          "dashboard resource has no markdown tables"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 3,
+          "specificity": 4,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Shipment Data Schema & Query Results",
+        "resourceType": "database",
+        "contentLength": 2937,
+        "wordCount": 453,
+        "issues": [
+          "Below target word count: 453 words",
+          "database resource has no markdown tables",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 2,
+          "completeness": 3,
+          "specificity": 2.5,
+          "actionability": 2,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "ETL Error Logs & Incident Report - March 2024",
+        "resourceType": "document",
+        "contentLength": 3318,
+        "wordCount": 465,
+        "issues": [
+          "Below target word count: 465 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has TODO items (realistic)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 2,
+          "specificity": 1.5,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "Security Engineer",
+    "companyName": "VaultPay",
+    "resourceCount": 4,
+    "generationTimeMs": 23101,
+    "resources": [
+      {
+        "resourceLabel": "Q3 External Penetration Test - Executive Summary",
+        "resourceType": "document",
+        "contentLength": 3233,
+        "wordCount": 454,
+        "issues": [
+          "Below target word count: 454 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Has substantial tables: 30 rows across 3 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 4,
+          "specificity": 3,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Account API - Repository & Source Code",
+        "resourceType": "repository",
+        "contentLength": 2323,
+        "wordCount": 289,
+        "issues": [
+          "Very short content: only 289 words",
+          "Lacks specific numbers — feels generic",
+          "Repository missing quick start / setup section"
+        ],
+        "strengths": [
+          "Has substantial tables: 15 rows across 1 table(s)",
+          "Cross-references 2 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has TODO items (realistic)",
+          "Has known issues section (realistic)"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 3,
+          "specificity": 2.5,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Infrastructure Audit - AWS S3 & IAM Configuration",
+        "resourceType": "document",
+        "contentLength": 2220,
+        "wordCount": 275,
+        "issues": [
+          "Very short content: only 275 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Has substantial tables: 30 rows across 3 table(s)",
+          "Cross-references 2 other resource(s)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 1.5,
+          "completeness": 3,
+          "specificity": 2.5,
+          "actionability": 2,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Security Incident Response & Remediation Runbook",
+        "resourceType": "document",
+        "contentLength": 2401,
+        "wordCount": 357,
+        "issues": [
+          "Below target word count: 357 words",
+          "Lacks specific numbers — feels generic"
+        ],
+        "strengths": [
+          "Has substantial tables: 12 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 4,
+          "specificity": 3,
+          "actionability": 2,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3.23,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "QA / Test Automation Engineer",
+    "companyName": "BookFlow",
+    "resourceCount": 4,
+    "generationTimeMs": 26291,
+    "resources": [
+      {
+        "resourceLabel": "Checkout V2 Redesign Specification",
+        "resourceType": "document",
+        "contentLength": 3665,
+        "wordCount": 545,
+        "issues": [],
+        "strengths": [
+          "Has substantial tables: 20 rows across 2 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 4.5,
+          "completeness": 5,
+          "specificity": 5,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Checkout Test Matrix",
+        "resourceType": "spreadsheet",
+        "contentLength": 2824,
+        "wordCount": 511,
+        "issues": [],
+        "strengths": [
+          "Has substantial tables: 59 rows across 3 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3.5,
+          "completeness": 5,
+          "specificity": 4.5,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "BookFlow Web Frontend - README & Test Suite",
+        "resourceType": "repository",
+        "contentLength": 2376,
+        "wordCount": 344,
+        "issues": [
+          "Below target word count: 344 words",
+          "Lacks specific numbers — feels generic",
+          "Repository missing quick start / setup section"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has TODO items (realistic)",
+          "Has known issues section (realistic)"
+        ],
+        "scores": {
+          "realism": 1.5,
+          "completeness": 2,
+          "specificity": 1,
+          "actionability": 2,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Payment & Shipping API Reference",
+        "resourceType": "api",
+        "contentLength": 2535,
+        "wordCount": 348,
+        "issues": [
+          "Below target word count: 348 words",
+          "API doc missing code examples"
+        ],
+        "strengths": [
+          "Has substantial tables: 28 rows across 4 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3.78,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  },
+  {
+    "roleName": "Technical Program Manager",
+    "companyName": "NexaCloud",
+    "resourceCount": 4,
+    "generationTimeMs": 23659,
+    "resources": [
+      {
+        "resourceLabel": "Project Status Reports — Migration Month 4 (October)",
+        "resourceType": "document",
+        "contentLength": 3366,
+        "wordCount": 527,
+        "issues": [],
+        "strengths": [
+          "Has substantial tables: 30 rows across 3 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 4,
+          "completeness": 5,
+          "specificity": 5,
+          "actionability": 4,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Migration Risk Register & Mitigation Plan",
+        "resourceType": "spreadsheet",
+        "contentLength": 2527,
+        "wordCount": 428,
+        "issues": [
+          "Below target word count: 428 words",
+          "Lacks specific numbers — feels generic",
+          "Spreadsheet lacks numeric data for analysis"
+        ],
+        "strengths": [
+          "Has substantial tables: 54 rows across 4 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has @mentions (realistic)",
+          "Has timestamps/dates"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 4,
+          "specificity": 3,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Architecture Overview: Monolith Decoupling & Auth Service V2",
+        "resourceType": "document",
+        "contentLength": 2280,
+        "wordCount": 320,
+        "issues": [
+          "Below target word count: 320 words"
+        ],
+        "strengths": [
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 3,
+          "completeness": 2,
+          "specificity": 3,
+          "actionability": 2,
+          "crossRef": 5
+        }
+      },
+      {
+        "resourceLabel": "Jira Sprint Metrics & Team Velocity Dashboard",
+        "resourceType": "dashboard",
+        "contentLength": 1981,
+        "wordCount": 344,
+        "issues": [
+          "Below target word count: 344 words"
+        ],
+        "strengths": [
+          "Has substantial tables: 36 rows across 5 table(s)",
+          "Cross-references 3 other resource(s)",
+          "Has timestamps/dates",
+          "Has specific numbers (not rounded)"
+        ],
+        "scores": {
+          "realism": 2.5,
+          "completeness": 4,
+          "specificity": 4,
+          "actionability": 3,
+          "crossRef": 5
+        }
+      }
+    ],
+    "overallIssues": [],
+    "overallScore": 3.72,
+    "hasSufficientMaterials": true,
+    "missingResourceTypes": []
+  }
+]

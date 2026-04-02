@@ -5,7 +5,6 @@ import {
   MessageSquare,
   FileCode,
   Video,
-  ClipboardCheck,
   Zap,
   Shield,
   TrendingUp,
@@ -39,9 +38,9 @@ export default function OnePageInvestorPage() {
             />
             <p
               style={{
-                fontSize: 13,
-                color: "#64748b",
-                fontWeight: 500,
+                fontSize: 16,
+                color: "#475569",
+                fontWeight: 600,
                 margin: 0,
               }}
             >
@@ -134,12 +133,8 @@ export default function OnePageInvestorPage() {
                 borderRadius: "0 8px 8px 0",
               }}
             >
-              You&apos;re evaluating ChatGPT, not the candidate.
-              <br />
-              <span style={{ fontWeight: 400, color: "#64748b" }}>
-                The key question remains:{" "}
-                <em>Can this person actually do the job?</em>
-              </span>
+              The key question remains:{" "}
+              <em>Can this person actually do the job?</em>
             </div>
           </div>
 
@@ -161,22 +156,17 @@ export default function OnePageInvestorPage() {
               <SolutionItem
                 icon={<MessageSquare size={16} color="#237CF1" />}
                 title="Live AI stakeholders"
-                desc="PM, manager, tech lead (voice + memory)"
+                desc="Voice conversations with PM, manager, and tech lead — with memory and context"
               />
               <SolutionItem
                 icon={<FileCode size={16} color="#237CF1" />}
-                title="Real deliverables"
-                desc="No trivia — actual work output"
+                title="Real deliverables, not trivia"
+                desc="Candidates produce actual work output — code, PRs, and decisions"
               />
               <SolutionItem
                 icon={<Video size={16} color="#237CF1" />}
-                title="Full recording"
-                desc="Screen + voice captured end-to-end"
-              />
-              <SolutionItem
-                icon={<ClipboardCheck size={16} color="#237CF1" />}
-                title="Structured evaluation"
-                desc="Scorecards, transcripts, artifacts"
+                title="Full capture & structured evaluation"
+                desc="Screen + voice recorded end-to-end, with scorecards, transcripts, and artifacts"
               />
             </div>
             <p
@@ -305,11 +295,8 @@ export default function OnePageInvestorPage() {
                 pre-hire assessment market
               </span>
             </div>
-            <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 16px" }}>
-              Growing{" "}
-              <span style={{ fontWeight: 700, color: "#334155" }}>
-                16% YoY
-              </span>
+            <p style={{ fontSize: 14, color: "#334155", fontWeight: 700, margin: "0 0 16px" }}>
+              Growing 16% CAGR
             </p>
             <div
               style={{
@@ -395,11 +382,11 @@ export default function OnePageInvestorPage() {
               <Image
                 src="/germanreyes.png"
                 alt="German Reyes"
-                width={80}
-                height={80}
+                width={100}
+                height={100}
                 style={{
-                  width: 80,
-                  height: 80,
+                  width: 100,
+                  height: 100,
                   borderRadius: "50%",
                   objectFit: "cover",
                   border: "2px solid rgba(35, 124, 241, 0.2)",
@@ -425,17 +412,18 @@ export default function OnePageInvestorPage() {
                     fontSize: 13,
                     color: "#475569",
                     margin: "4px 0 0",
-                    paddingLeft: 16,
+                    paddingLeft: 0,
                     lineHeight: 1.7,
+                    listStyle: "none",
                   }}
                 >
-                  <li>2 HR Tech exits (acq. by Buk)</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>2 HR Tech exits (acq. by Buk)</li>
                   <li>
-                    Built to{" "}
+                    <span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Built to{" "}
                     <span style={{ fontWeight: 600 }}>$1.4M ARR</span>
                   </li>
-                  <li>ex-GPM, Walmart eCommerce</li>
-                  <li>Berkeley MBA</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>ex-GPM, Walmart eCommerce</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Berkeley MBA</li>
                 </ul>
               </div>
             </div>
@@ -445,11 +433,11 @@ export default function OnePageInvestorPage() {
               <Image
                 src="/matiashoyl.jpeg"
                 alt="Matias Hoyl"
-                width={80}
-                height={80}
+                width={100}
+                height={100}
                 style={{
-                  width: 80,
-                  height: 80,
+                  width: 100,
+                  height: 100,
                   borderRadius: "50%",
                   objectFit: "cover",
                   border: "2px solid rgba(35, 124, 241, 0.2)",
@@ -475,17 +463,18 @@ export default function OnePageInvestorPage() {
                     fontSize: 13,
                     color: "#475569",
                     margin: "4px 0 0",
-                    paddingLeft: 16,
+                    paddingLeft: 0,
                     lineHeight: 1.7,
+                    listStyle: "none",
                   }}
                 >
-                  <li>Meta GenAI</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Meta GenAI</li>
                   <li>
-                    Built Zapien (
+                    <span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Built Zapien (
                     <span style={{ fontWeight: 600 }}>35K users</span>)
                   </li>
-                  <li>Stanford MS</li>
-                  <li>2x Stanford Learning Design winner</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Stanford MS</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>2x Stanford Learning Design winner</li>
                 </ul>
               </div>
             </div>
@@ -556,11 +545,8 @@ export default function OnePageInvestorPage() {
               Currently raising seed
             </p>
             <p style={{ fontSize: 13, color: "#64748b", margin: "4px 0 0" }}>
-              www.skillvee.com
+              german@skillvee.com
             </p>
-          </div>
-          <div style={{ fontSize: 13, color: "#64748b" }}>
-            german@skillvee.com
           </div>
         </footer>
       </div>
@@ -580,10 +566,10 @@ function SectionLabel({
   return (
     <h2
       style={{
-        fontSize: 11,
+        fontSize: 13,
         fontWeight: 900,
         textTransform: "uppercase",
-        letterSpacing: "0.25em",
+        letterSpacing: "0.2em",
         color: "#237CF1",
         marginBottom: 16,
         marginTop: 0,

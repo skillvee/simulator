@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireRecruiter } from "@/lib/core";
 import { db } from "@/server/db";
 import { SimulationSettingsClient } from "./client";
+import type { ScenarioResource } from "@/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -17,6 +18,7 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
       companyDescription: true,
       taskDescription: true,
       repoUrl: true,
+      resources: true,
       techStack: true,
       targetLevel: true,
       createdById: true,
@@ -56,6 +58,7 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
     companyDescription: scenario.companyDescription,
     taskDescription: scenario.taskDescription,
     repoUrl: scenario.repoUrl,
+    resources: (scenario.resources as unknown as ScenarioResource[]) ?? [],
     techStack: scenario.techStack,
     targetLevel: scenario.targetLevel,
     archetypeName: scenario.archetype?.name ?? null,

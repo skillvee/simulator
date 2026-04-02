@@ -26,7 +26,7 @@ import {
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
-import type { ParseJDResponse, InferredSeniorityLevel } from "@/types";
+import type { ParseJDResponse, InferredSeniorityLevel, ScenarioResource } from "@/types";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
 import type { TaskOption } from "@/lib/scenarios/task-generator";
 import { CandidateExperienceSummary } from "@/components/recruiter/candidate-experience-summary"; // eslint-disable-line no-restricted-imports -- Component import allowed for UI
@@ -74,6 +74,7 @@ type PreviewData = {
   taskOptions: TaskOption[];
   selectedTask: TaskChoice | null;
   coworkers: CoworkerBuilderData[];
+  resources: ScenarioResource[];
 };
 
 // Progress messages shown during simulation generation
@@ -285,7 +286,7 @@ export function RecruiterScenarioBuilderClient() {
       const parseResponse = await fetch("/api/recruiter/simulations/parse-jd", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobDescription: jobDescription.trim() }),
+        body: JSON.stringify({ jobDescription: jobDescription.trim(), creationLogId: creationLogIdRef.current }),
       });
 
       if (!parseResponse.ok) {
@@ -499,6 +500,7 @@ export function RecruiterScenarioBuilderClient() {
           techStack: previewData.techStack,
           targetLevel: parsedJDData?.seniorityLevel.value || "mid",
           archetypeId: selectedArchetypeId,
+          resources: previewData.resources.length > 0 ? previewData.resources : undefined,
           // repoUrl is intentionally omitted - it will be set by repo provisioning
         }),
       });
@@ -620,6 +622,7 @@ export function RecruiterScenarioBuilderClient() {
           keyResponsibilities: responsibilities.length > 0 ? responsibilities : ["Build and maintain features"],
           domainContext: domain || "a technology company",
           companyName: companyNameValue,
+          creationLogId: creationLogIdRef.current,
         }),
       });
 
@@ -652,6 +655,7 @@ export function RecruiterScenarioBuilderClient() {
           techStack,
           taskDescription,
           keyResponsibilities: responsibilities.length > 0 ? responsibilities : ["Build and maintain features"],
+          creationLogId: creationLogIdRef.current,
         }),
       });
 
@@ -668,6 +672,34 @@ export function RecruiterScenarioBuilderClient() {
 
       const coworkersJson = await coworkersResponse2.json();
       const coworkersData = coworkersJson.data || coworkersJson;
+      const coworkers: CoworkerBuilderData[] = coworkersData.coworkers || [];
+
+      // Generate resources based on task + company context
+      let resources: ScenarioResource[] = [];
+      try {
+        const resourcesResponse = await fetch("/api/recruiter/simulations/generate-resources", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companyName: companyNameValue,
+            taskDescription,
+            techStack,
+            roleName,
+            seniorityLevel: seniority,
+            creationLogId: creationLogIdRef.current,
+          }),
+        });
+
+        if (resourcesResponse.ok) {
+          const resourcesJson = await resourcesResponse.json();
+          const resourcesData = resourcesJson.data || resourcesJson;
+          resources = resourcesData.resources || [];
+        } else {
+          logger.warn("Resource generation failed, continuing without resources");
+        }
+      } catch (resourceErr) {
+        logger.warn("Resource generation error, continuing without resources", { err: String(resourceErr) });
+      }
 
       // Set up preview data
       setPreviewData({
@@ -677,7 +709,8 @@ export function RecruiterScenarioBuilderClient() {
         techStack,
         taskOptions,
         selectedTask: null, // User must select
-        coworkers: coworkersData.coworkers || [],
+        coworkers,
+        resources,
       });
 
       // Transition to preview
