@@ -91,7 +91,6 @@ export async function generateCodingTask(
   const contextPrompt = buildContextPrompt(input);
   const fullPrompt = `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
-  let lastResponseText = "";
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
@@ -110,8 +109,6 @@ export async function generateCodingTask(
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }
-      lastResponseText = responseText;
-
       // Clean response (remove markdown fences if present)
       const cleanedText = cleanJsonResponse(responseText);
 

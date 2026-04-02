@@ -8,7 +8,7 @@ import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
 import { CoworkerAvatar } from "./coworker-avatar";
-import { Markdown } from "@/components/shared/markdown";
+import { Markdown } from "@/components/shared";
 import type { DecorativeTeamMember, ScenarioResource } from "@/types";
 
 /**

@@ -1148,82 +1148,6 @@ Acceptance Criteria:
     // ========================================================================
     console.log("\n  📊 Creating additional candidates for recruiter dashboard...");
 
-    // Helper: Build v3 rawAiResponse from seed data
-    type SeedCandidate = {
-      scores: Array<{ dimension: string; score: number; observableBehaviors: string; trainableGap: boolean; timestamps: string[] }>;
-      report: {
-        overallScore: number;
-        videoEvaluation: {
-          evaluationVersion: string;
-          overallScore: number;
-          skills: Array<{ dimension: string; score: number; rationale: string; greenFlags: string[]; redFlags: string[]; timestamps: string[] }>;
-          hiringSignals: { overallGreenFlags: string[]; overallRedFlags: string[]; recommendation: string; recommendationRationale: string };
-          overallSummary: string;
-          evaluationConfidence: string;
-        };
-        percentiles: object;
-        metrics: object;
-      };
-      summary: string;
-    };
-
-    function buildRawAiResponse(candidate: SeedCandidate) {
-      const { videoEvaluation } = candidate.report;
-      // Build per-dimension scores with summary and timestamped behaviors
-      const dimensionScores = candidate.scores.map((score) => {
-        const skill = videoEvaluation.skills.find((s) => s.dimension === score.dimension);
-        return {
-          dimensionSlug: score.dimension,
-          dimensionName: score.dimension,
-          score: score.score,
-          summary: skill?.rationale?.split(".")[0]?.trim() + "." || "",
-          confidence: "high",
-          rationale: skill?.rationale || "",
-          observableBehaviors: score.observableBehaviors
-            .split(/\.\s+/)
-            .filter(Boolean)
-            .map((behavior, i) => ({
-              timestamp: score.timestamps[i] || score.timestamps[0] || "",
-              behavior: behavior.endsWith(".") ? behavior : behavior + ".",
-            })),
-          timestamps: score.timestamps,
-          trainableGap: score.trainableGap,
-          greenFlags: skill?.greenFlags || [],
-          redFlags: skill?.redFlags || [],
-        };
-      });
-
-      // Derive top strengths from highest-scoring dimensions
-      const sortedByScoreDesc = [...dimensionScores].sort((a, b) => b.score - a.score);
-      const topStrengths = sortedByScoreDesc
-        .filter((d) => d.score >= 3)
-        .slice(0, 3)
-        .map((d) => ({
-          dimension: d.dimensionName,
-          score: d.score,
-          description: d.greenFlags[0] || d.summary,
-        }));
-
-      // Derive growth areas from lowest-scoring dimensions
-      const sortedByScoreAsc = [...dimensionScores].sort((a, b) => a.score - b.score);
-      const growthAreas = sortedByScoreAsc
-        .filter((d) => d.score <= 2)
-        .slice(0, 3)
-        .map((d) => ({
-          dimension: d.dimensionName,
-          score: d.score,
-          description: d.redFlags[0] || d.rationale?.split(".")[0] || "Needs improvement.",
-        }));
-
-      return {
-        ...videoEvaluation,
-        evaluationVersion: "3.0.0",
-        dimensionScores,
-        topStrengths,
-        growthAreas,
-      };
-    }
-
     const additionalCandidates = [
       // ── Alice Johnson ── Exceptional candidate: avg 3.5 ──
       {
@@ -1722,6 +1646,79 @@ Acceptance Criteria:
     },
   });
   console.log(`  ✅ Coworker: David Park (Staff Engineer)`);
+
+  // Helper: Build v3 rawAiResponse from seed data
+  type SeedCandidate = {
+    scores: Array<{ dimension: string; score: number; observableBehaviors: string; trainableGap: boolean; timestamps: string[] }>;
+    report: {
+      overallScore: number;
+      videoEvaluation: {
+        evaluationVersion: string;
+        overallScore: number;
+        skills: Array<{ dimension: string; score: number; rationale: string; greenFlags: string[]; redFlags: string[]; timestamps: string[] }>;
+        hiringSignals: { overallGreenFlags: string[]; overallRedFlags: string[]; recommendation: string; recommendationRationale: string };
+        overallSummary: string;
+        evaluationConfidence: string;
+      };
+      percentiles: object;
+      metrics: object;
+    };
+    summary: string;
+  };
+
+  function buildRawAiResponse(candidate: SeedCandidate) {
+    const { videoEvaluation } = candidate.report;
+    const dimensionScores = candidate.scores.map((score) => {
+      const skill = videoEvaluation.skills.find((s) => s.dimension === score.dimension);
+      return {
+        dimensionSlug: score.dimension,
+        dimensionName: score.dimension,
+        score: score.score,
+        summary: skill?.rationale?.split(".")[0]?.trim() + "." || "",
+        confidence: "high",
+        rationale: skill?.rationale || "",
+        observableBehaviors: score.observableBehaviors
+          .split(/\.\s+/)
+          .filter(Boolean)
+          .map((behavior, i) => ({
+            timestamp: score.timestamps[i] || score.timestamps[0] || "",
+            behavior: behavior.endsWith(".") ? behavior : behavior + ".",
+          })),
+        timestamps: score.timestamps,
+        trainableGap: score.trainableGap,
+        greenFlags: skill?.greenFlags || [],
+        redFlags: skill?.redFlags || [],
+      };
+    });
+
+    const sortedByScoreDesc = [...dimensionScores].sort((a, b) => b.score - a.score);
+    const topStrengths = sortedByScoreDesc
+      .filter((d) => d.score >= 3)
+      .slice(0, 3)
+      .map((d) => ({
+        dimension: d.dimensionName,
+        score: d.score,
+        description: d.greenFlags[0] || d.summary,
+      }));
+
+    const sortedByScoreAsc = [...dimensionScores].sort((a, b) => a.score - b.score);
+    const growthAreas = sortedByScoreAsc
+      .filter((d) => d.score <= 2)
+      .slice(0, 3)
+      .map((d) => ({
+        dimension: d.dimensionName,
+        score: d.score,
+        description: d.redFlags[0] || d.rationale?.split(".")[0] || "Needs improvement.",
+      }));
+
+    return {
+      ...videoEvaluation,
+      evaluationVersion: "3.0.0",
+      dimensionScores,
+      topStrengths,
+      growthAreas,
+    };
+  }
 
   // Helper to create a completed candidate for a scenario
   async function createCompletedCandidate(opts: {

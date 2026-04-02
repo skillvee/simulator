@@ -151,7 +151,6 @@ export async function generateCoworkers(
   const contextPrompt = buildContextPrompt(input);
   const fullPrompt = `${COWORKER_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
-  let lastResponseText = "";
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
@@ -169,8 +168,6 @@ export async function generateCoworkers(
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }
-      lastResponseText = responseText;
-
       const coworkers = parseAndValidateCoworkers(responseText);
 
       // Validate we have an Engineering Manager
