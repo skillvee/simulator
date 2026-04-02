@@ -111,6 +111,23 @@ function calculateConversationDuration(messages: { timestamp: string }[]): numbe
   return duration > 0 ? duration : null;
 }
 
+/** Collapse consecutive messages from the same role into a single message */
+function mergeConsecutiveMessages<T extends { role: string; text: string; timestamp: string }>(
+  messages: T[]
+): T[] {
+  if (messages.length === 0) return messages;
+  const merged: T[] = [{ ...messages[0] }];
+  for (let i = 1; i < messages.length; i++) {
+    const last = merged[merged.length - 1];
+    if (messages[i].role === last.role) {
+      last.text += " " + messages[i].text;
+    } else {
+      merged.push({ ...messages[i] });
+    }
+  }
+  return merged;
+}
+
 function ChatBubble({
   message,
 }: {
@@ -167,9 +184,10 @@ function ConversationView({
 }: {
   conversation: SerializedConversation;
 }) {
-  const messages = (conversation.transcript as ChatMessage[]) ?? [];
-  const duration = calculateConversationDuration(messages);
+  const rawMessages = (conversation.transcript as ChatMessage[]) ?? [];
   const isVoice = conversation.type === "voice";
+  const messages = isVoice ? mergeConsecutiveMessages(rawMessages) : rawMessages;
+  const duration = calculateConversationDuration(rawMessages);
   const Icon = isVoice ? Mic : MessageSquare;
   const label = isVoice ? "Voice conversation" : "Text conversation";
 
@@ -206,7 +224,7 @@ function VoiceSessionView({
 }: {
   session: SerializedVoiceSession;
 }) {
-  const transcript = (session.transcript as TranscriptMessage[]) ?? [];
+  const transcript = mergeConsecutiveMessages((session.transcript as TranscriptMessage[]) ?? []);
   const events = (session.connectionEvents as ConnectionEvent[]) ?? [];
 
   return (
