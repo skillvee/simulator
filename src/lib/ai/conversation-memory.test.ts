@@ -6,6 +6,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   buildCoworkerMemory,
   formatMemoryForPrompt,
+  formatConversationTimeline,
   buildCrossCoworkerContext,
   type ChatMessage,
   type ConversationWithMeta,
@@ -141,7 +142,7 @@ describe("conversation-memory", () => {
       expect(result).toBe("");
     });
 
-    it("should include summary section when available", () => {
+    it("should skip summary and only include recent messages", () => {
       const memory: CoworkerMemory = {
         hasPriorConversations: true,
         summary: "We discussed the authentication system.",
@@ -151,10 +152,8 @@ describe("conversation-memory", () => {
 
       const result = formatMemoryForPrompt(memory, "Alex Chen");
 
-      expect(result).toContain("## Prior Conversation History");
-      expect(result).toContain("### Summary of Earlier Conversations");
-      expect(result).toContain("We discussed the authentication system.");
-      expect(result).toContain("### Recent Messages");
+      expect(result).toContain("## Conversation History");
+      expect(result).not.toContain("Summary");
       expect(result).toContain("Candidate: Can you help?");
     });
 
@@ -175,20 +174,90 @@ describe("conversation-memory", () => {
       expect(result).toContain("You: Use /api/v1/tasks");
     });
 
-    it("should include guidance about referencing prior discussions", () => {
+    it("should merge consecutive same-role messages", () => {
       const memory: CoworkerMemory = {
         hasPriorConversations: true,
         summary: null,
-        recentMessages: [createMessage("user", "Hi")],
-        totalMessageCount: 1,
+        recentMessages: [
+          createMessage("model", "Hey, no"),
+          createMessage("model", "problem."),
+          createMessage("model", "What's up?"),
+          createMessage("user", "Not much"),
+        ],
+        totalMessageCount: 4,
       };
 
       const result = formatMemoryForPrompt(memory, "Alex Chen");
 
-      expect(result).toContain("Continue the conversation naturally");
-      expect(result).toContain(
-        "Don't repeat information unless specifically asked to clarify."
-      );
+      expect(result).toContain("You: Hey, no problem. What's up?");
+      expect(result).toContain("Candidate: Not much");
+      // Should not have separate entries for fragments
+      expect(result).not.toContain("You: problem.");
+      expect(result).not.toContain("You: What's up?");
+    });
+  });
+
+  describe("formatConversationTimeline", () => {
+    it("should return empty string for no conversations", () => {
+      expect(formatConversationTimeline([])).toBe("");
+    });
+
+    it("should group messages by conversation with modality headers", () => {
+      const conversations: ConversationWithMeta[] = [
+        createConversation("text", "c1", [
+          createMessage("user", "Hi!"),
+          createMessage("model", "Hey, welcome!"),
+        ]),
+        createConversation("voice", "c1", [
+          createMessage("model", "What's going on?"),
+          createMessage("user", "Quick question about the table"),
+        ]),
+      ];
+      // Set different times
+      conversations[0].createdAt = new Date("2026-04-01T14:15:00Z");
+      conversations[1].createdAt = new Date("2026-04-01T15:03:00Z");
+
+      const result = formatConversationTimeline(conversations);
+
+      expect(result).toContain("## Conversation History");
+      expect(result).toContain("### Slack chat");
+      expect(result).toContain("### Voice call");
+      expect(result).toContain("Candidate: Hi!");
+      expect(result).toContain("You: Hey, welcome!");
+      expect(result).toContain("You: What's going on?");
+      // Chat should come before voice (chronological)
+      const chatIdx = result.indexOf("Slack chat");
+      const voiceIdx = result.indexOf("Voice call");
+      expect(chatIdx).toBeLessThan(voiceIdx);
+    });
+
+    it("should merge voice fragments within conversations", () => {
+      const conversations: ConversationWithMeta[] = [
+        createConversation("voice", "c1", [
+          createMessage("model", "Hey,"),
+          createMessage("model", "what's up?"),
+          createMessage("user", "Not much"),
+        ]),
+      ];
+
+      const result = formatConversationTimeline(conversations);
+
+      expect(result).toContain("You: Hey, what's up?");
+      expect(result).not.toContain("You: what's up?");
+    });
+
+    it("should skip conversations with no messages", () => {
+      const conversations: ConversationWithMeta[] = [
+        createConversation("text", "c1", []),
+        createConversation("voice", "c1", [
+          createMessage("model", "Hey!"),
+        ]),
+      ];
+
+      const result = formatConversationTimeline(conversations);
+
+      expect(result).not.toContain("Slack chat");
+      expect(result).toContain("Voice call");
     });
   });
 

@@ -189,18 +189,79 @@ export function formatMemoryForPrompt(
 
   const sections: string[] = ["\n## Conversation History"];
 
-  if (memory.summary) {
-    sections.push(`Summary: ${memory.summary}`);
-  }
-
   if (memory.recentMessages.length > 0) {
-    const formattedMessages = memory.recentMessages
+    const merged = mergeConsecutiveMessages(memory.recentMessages);
+    const formattedMessages = merged
       .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
       .join("\n");
     sections.push(formattedMessages);
   }
 
   return sections.join("\n");
+}
+
+/**
+ * Format conversation history with modality and time boundaries.
+ * Groups messages by conversation (chat vs call) in chronological order,
+ * so the agent sees a timeline like:
+ *
+ *   ## Conversation History
+ *   ### Slack chat — 2:15 PM
+ *   Candidate: Hi Elena!
+ *   You: Hey, welcome!
+ *   ### Voice call — 3:03 PM
+ *   You: Just circling back on the logging bug...
+ *   ### Slack chat — 3:20 PM
+ *   Candidate: Talked to Chloe, bug is confirmed.
+ */
+export function formatConversationTimeline(
+  conversations: ConversationWithMeta[]
+): string {
+  // Filter to conversations with messages, sort chronologically
+  const withMessages = conversations
+    .filter((c) => c.messages.length > 0)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  if (withMessages.length === 0) {
+    return "";
+  }
+
+  const sections: string[] = ["\n## Conversation History"];
+
+  for (const conv of withMessages) {
+    const label = conv.type === "voice" ? "Voice call" : "Slack chat";
+    const time = formatConversationTime(conv.createdAt);
+    sections.push(`### ${label} — ${time}`);
+
+    const merged = mergeConsecutiveMessages(conv.messages);
+    const formatted = merged
+      .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
+      .join("\n");
+    sections.push(formatted);
+  }
+
+  return sections.join("\n");
+}
+
+/** Merge consecutive messages from the same role (fixes voice word-by-word fragments) */
+function mergeConsecutiveMessages(messages: ChatMessage[]): ChatMessage[] {
+  if (messages.length === 0) return [];
+  const merged: ChatMessage[] = [{ ...messages[0] }];
+  for (let i = 1; i < messages.length; i++) {
+    const last = merged[merged.length - 1];
+    if (messages[i].role === last.role) {
+      last.text += " " + messages[i].text;
+    } else {
+      merged.push({ ...messages[i] });
+    }
+  }
+  return merged;
+}
+
+/** Format a date for the conversation timeline header */
+function formatConversationTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
 /**
