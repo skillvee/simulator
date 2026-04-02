@@ -3,10 +3,9 @@ import { db } from "@/server/db";
 import { generateEphemeralToken } from "@/lib/ai/gemini";
 import { GEMINI_VOICES } from "@/lib/ai/gemini-config";
 import {
-  buildCoworkerMemory,
-  formatMemoryForPrompt,
   buildCrossCoworkerContext,
   formatConversationsForSummary,
+  formatConversationTimeline,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
 import { inferDemographics } from "@/lib/avatar";
@@ -16,6 +15,7 @@ import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
+import { logAICall } from "@/lib/analysis";
 import { buildAgentPrompt, buildDefensePhaseContext } from "@/prompts/build-agent-prompt";
 
 const logger = createLogger("server:api:call:token");
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       orderBy: { createdAt: "asc" },
     });
 
-    // Build memory context (voice gets more recent messages)
+    // Build conversation timeline for this coworker (chat + voice, chronological)
     const coworkerConversations: ConversationWithMeta[] = allConversations
       .filter((c) => c.coworkerId === coworkerId)
       .map((c) => ({
@@ -92,12 +92,7 @@ export async function POST(request: Request) {
         updatedAt: c.updatedAt,
       }));
 
-    const memory = await buildCoworkerMemory(
-      coworkerConversations,
-      coworker.name,
-      {}
-    );
-    const memoryContext = formatMemoryForPrompt(memory, coworker.name);
+    const memoryContext = formatConversationTimeline(coworkerConversations);
 
     // Build cross-coworker context
     const coworkerMap = new Map<string, string>();
@@ -165,6 +160,17 @@ export async function POST(request: Request) {
       media: "voice",
     });
 
+    // Log voice system instruction (same as chat logs prompts)
+    const tracker = await logAICall({
+      assessmentId,
+      endpoint: "/api/call/token",
+      promptText: systemInstruction,
+      modelVersion: "gemini-live",
+      promptType: isDefenseCall ? "VOICE_DEFENSE" : "VOICE_CALL",
+      promptVersion: "1.0",
+      modelUsed: "gemini-live",
+    }).catch(() => null);
+
     // Generate ephemeral token
     let voiceName = coworker.voiceName || undefined;
     if (!voiceName) {
@@ -177,6 +183,8 @@ export async function POST(request: Request) {
       systemInstruction,
       voiceName,
     });
+
+    await tracker?.complete({ responseText: "Token generated", statusCode: 200 }).catch(() => {});
 
     return success({
       token,

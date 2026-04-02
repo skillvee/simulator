@@ -402,12 +402,6 @@ export function useVoiceBase({
 
       // Initialize audio capture
       await initializeAudioCapture(stream, session);
-
-      // Start the conversation by sending a greeting trigger
-      session.sendClientContent({
-        turns: [{ role: "user", parts: [{ text: config.initialGreeting }] }],
-        turnComplete: true,
-      });
     } catch (err) {
       logger.error("Connection error", { err });
       const catError = categorizeError(err);
@@ -427,7 +421,6 @@ export function useVoiceBase({
     connectionState,
     assessmentId,
     config.tokenEndpoint,
-    config.initialGreeting,
     tokenRequestBody,
     updateConnectionState,
     handleServerMessage,
