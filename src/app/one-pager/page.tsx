@@ -9,6 +9,7 @@ import {
   Shield,
   TrendingUp,
   Globe,
+  Lightbulb,
 } from "lucide-react";
 
 export default function OnePageInvestorPage() {
@@ -182,78 +183,130 @@ export default function OnePageInvestorPage() {
           </div>
         </div>
 
-        {/* ── WHY NOW ── */}
+        {/* ── WHY NOW + KEY INSIGHT ── */}
         <div
           style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 24,
             marginBottom: 40,
-            background: "rgba(35, 124, 241, 0.04)",
-            border: "1px solid rgba(35, 124, 241, 0.2)",
-            borderRadius: 12,
-            padding: "24px 32px",
           }}
         >
+          {/* WHY NOW */}
           <div
             style={{
+              background: "rgba(35, 124, 241, 0.04)",
+              border: "1px solid rgba(35, 124, 241, 0.2)",
+              borderRadius: 12,
+              padding: "24px 28px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
+              <Zap size={18} color="#237CF1" />
+              <SectionLabel style={{ marginBottom: 0 }}>Why Now</SectionLabel>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <p
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#0f172a",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  Live AI models
+                </p>
+                <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
+                  Real-time voice + context make realistic stakeholder
+                  conversations possible at scale.
+                </p>
+              </div>
+              <div>
+                <p
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#0f172a",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  Multimodal AI
+                </p>
+                <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
+                  Analyze hour-long work sessions reliably — see how candidates
+                  actually work.
+                </p>
+              </div>
+            </div>
+            <p
+              style={{
+                marginTop: 16,
+                marginBottom: 0,
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#237CF1",
+              }}
+            >
+              This was impossible 6 months ago. Now it works.
+            </p>
+          </div>
+
+          {/* KEY INSIGHT */}
+          <div
+            style={{
+              background: "rgba(35, 124, 241, 0.04)",
+              border: "1px solid rgba(35, 124, 241, 0.2)",
+              borderRadius: 12,
+              padding: "24px 28px",
               display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 12,
+              flexDirection: "column",
             }}
           >
-            <Zap size={18} color="#237CF1" />
-            <SectionLabel style={{ marginBottom: 0 }}>Why Now</SectionLabel>
-          </div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 24,
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#0f172a",
-                  margin: "0 0 4px",
-                }}
-              >
-                Live AI models
-              </p>
-              <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
-                Real-time voice + context make realistic stakeholder
-                conversations possible at scale.
-              </p>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
+              <Lightbulb size={18} color="#237CF1" />
+              <SectionLabel style={{ marginBottom: 0 }}>
+                Key Insight
+              </SectionLabel>
             </div>
-            <div>
-              <p
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#0f172a",
-                  margin: "0 0 4px",
-                }}
-              >
-                Multimodal AI
-              </p>
-              <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
-                Analyze hour-long work sessions reliably — see how candidates
-                actually work.
-              </p>
-            </div>
+            <p
+              style={{
+                fontSize: 18,
+                fontWeight: 700,
+                color: "#0f172a",
+                margin: 0,
+                lineHeight: 1.5,
+              }}
+            >
+              Interviews are going away. The future of hiring is watching people
+              work.
+            </p>
+            <p
+              style={{
+                fontSize: 13,
+                color: "#64748b",
+                margin: "12px 0 0",
+                lineHeight: 1.6,
+              }}
+            >
+              Resumes, take-homes, and interviews are all gameable now. Watching
+              real work isn&apos;t.
+            </p>
           </div>
-          <p
-            style={{
-              marginTop: 16,
-              marginBottom: 0,
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#237CF1",
-            }}
-          >
-            This was impossible 6 months ago. Now it works.
-          </p>
         </div>
 
         {/* ── MARKET + MOAT ── */}
@@ -278,25 +331,15 @@ export default function OnePageInvestorPage() {
               <TrendingUp size={16} color="#237CF1" />
               <SectionLabel style={{ marginBottom: 0 }}>Market</SectionLabel>
             </div>
-            <div
+            <p
               style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 8,
-                marginBottom: 4,
+                fontSize: 14,
+                color: "#334155",
+                margin: "0 0 12px",
+                lineHeight: 1.6,
               }}
             >
-              <span
-                style={{ fontSize: 40, fontWeight: 900, color: "#0f172a" }}
-              >
-                $3B
-              </span>
-              <span style={{ fontSize: 13, color: "#64748b" }}>
-                pre-hire assessment market
-              </span>
-            </div>
-            <p style={{ fontSize: 14, color: "#334155", fontWeight: 700, margin: "0 0 16px" }}>
-              Growing 16% CAGR
+              $3B pre-hire assessment market. Growing 16% CAGR.
             </p>
             <div
               style={{
@@ -305,13 +348,15 @@ export default function OnePageInvestorPage() {
                 background: "#f8fafc",
                 borderRadius: 8,
                 padding: "12px 16px",
+                marginBottom: 12,
               }}
             >
               <span style={{ fontWeight: 600, color: "#1e293b" }}>
-                Beachhead:
+                Comparables:
               </span>{" "}
-              Enterprise teams hiring 5+ engineers/month. Highest pain, existing
-              budget (HackerRank replacements).
+              Mercor ($10B), Juicebox ($850M) — AI solved sourcing.
+              HackerRank ($500M, $221M rev) — the incumbent we replace.
+              Evaluation is the missing layer.
             </div>
           </div>
 
@@ -336,10 +381,10 @@ export default function OnePageInvestorPage() {
                 lineHeight: 1.6,
               }}
             >
-              Every simulation generates behavioral data. As we track which
-              hires succeed, we build a{" "}
-              <span style={{ fontWeight: 700 }}>prediction engine</span> no
-              competitor can replicate.
+              Every simulation teaches us what &quot;good&quot; looks like{" "}
+              <span style={{ fontWeight: 700 }}>for each company</span>. As we
+              track which hires succeed, we can predict who will thrive where —
+              not generically, but for each team specifically.
             </p>
             <div
               style={{
@@ -348,20 +393,84 @@ export default function OnePageInvestorPage() {
                 padding: "12px 16px",
               }}
             >
-              <p
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#1e293b",
-                  margin: "0 0 4px",
-                }}
-              >
-                Compounding data advantage
-              </p>
               <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
-                HackerRank can copy the product. They can&apos;t copy the data.
-                Long-term: industry standard for skills-based hiring.
+                Competitors can copy the product. They can&apos;t copy the data.
+                Starting with engineering, expanding to every white-collar role.
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── BUSINESS MODEL + PROGRESS ── */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 48,
+            marginBottom: 40,
+          }}
+        >
+          {/* BUSINESS MODEL */}
+          <div>
+            <SectionLabel>Business Model</SectionLabel>
+            <p
+              style={{
+                fontSize: 13,
+                color: "#334155",
+                margin: "0 0 12px",
+                lineHeight: 1.6,
+              }}
+            >
+              SaaS with freemium. Paid plans from $79/month to enterprise
+              custom pricing.
+            </p>
+            <div
+              style={{
+                fontSize: 13,
+                color: "#475569",
+                background: "#f8fafc",
+                borderRadius: 8,
+                padding: "12px 16px",
+              }}
+            >
+              <span style={{ fontWeight: 600, color: "#1e293b" }}>
+                Beachhead:
+              </span>{" "}
+              Engineering teams hiring 5+ developers/month — hardest roles to
+              evaluate, highest cost of a bad hire. Expands to design, product,
+              and all white-collar roles.
+            </div>
+          </div>
+
+          {/* PROGRESS */}
+          <div>
+            <SectionLabel>Progress</SectionLabel>
+            <p
+              style={{
+                fontSize: 13,
+                color: "#334155",
+                margin: "0 0 12px",
+                lineHeight: 1.6,
+              }}
+            >
+              Working prototype built. 2 committed pilots. Full simulation flow
+              live — AI voice conversations, real coding environment, screen
+              capture, and automated scorecards.
+            </p>
+            <div
+              style={{
+                fontSize: 13,
+                color: "#475569",
+                background: "#f8fafc",
+                borderRadius: 8,
+                padding: "12px 16px",
+              }}
+            >
+              <span style={{ fontWeight: 600, color: "#1e293b" }}>
+                Stack:
+              </span>{" "}
+              Next.js, Supabase, Gemini Live (voice), Gemini Flash
+              (evaluation). Built and shipping fast.
             </div>
           </div>
         </div>
