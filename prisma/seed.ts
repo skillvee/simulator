@@ -683,6 +683,25 @@ Acceptance Criteria:
   });
   console.log(`  ✅ Manager coworker: ${manager.name} (${manager.role})`);
 
+  // Shared type for seed candidate data (used in both inner and outer scopes)
+  type SeedCandidate = {
+    scores: Array<{ dimension: string; score: number; observableBehaviors: string; trainableGap: boolean; timestamps: string[] }>;
+    report: {
+      overallScore: number;
+      videoEvaluation: {
+        evaluationVersion: string;
+        overallScore: number;
+        skills: Array<{ dimension: string; score: number; rationale: string; greenFlags: string[]; redFlags: string[]; timestamps: string[] }>;
+        hiringSignals: { overallGreenFlags: string[]; overallRedFlags: string[]; recommendation: string; recommendationRationale: string };
+        overallSummary: string;
+        evaluationConfidence: string;
+      };
+      percentiles: object;
+      metrics: object;
+    };
+    summary: string;
+  };
+
   // Get the test candidate user
   const testCandidate = await prisma.user.findUnique({
     where: { email: TEST_USERS.candidate.email },
@@ -727,26 +746,22 @@ Acceptance Criteria:
     console.log(`  ✅ Working assessment: ${TEST_ASSESSMENT_IDS.workingRecruiter}`);
     console.log(`     URL: /assessment/${TEST_ASSESSMENT_IDS.workingRecruiter}/chat`);
 
-    // Create test assessment with prUrl set for defense call testing (RF-017)
+    // Create test assessment for defense call testing (RF-017)
     await prisma.assessment.upsert({
       where: { id: TEST_ASSESSMENT_IDS.defense },
       update: {
         status: "WORKING",
         scenarioId: recruiterScenario.id,
-        prUrl: "https://github.com/skillvee/test-repo/pull/1",
       },
       create: {
         id: TEST_ASSESSMENT_IDS.defense,
         userId: testCandidate.id,
         scenarioId: recruiterScenario.id,
         status: "WORKING",
-        prUrl: "https://github.com/skillvee/test-repo/pull/1",
       },
     });
     console.log(`  ✅ Defense assessment: ${TEST_ASSESSMENT_IDS.defense}`);
     console.log(`     URL: /assessment/${TEST_ASSESSMENT_IDS.defense}/chat`);
-    console.log(`     PR URL: https://github.com/skillvee/test-repo/pull/1`);
-    console.log(`     Note: Calls to manager will use defense prompt`);
 
     // Create test assessment with COMPLETED status and report for results page testing (RF-018, RF-025)
     // Updated with new video evaluation data for RF-025
@@ -1004,7 +1019,6 @@ Acceptance Criteria:
       update: {
         status: "COMPLETED",
         scenarioId: recruiterScenario.id,
-        prUrl: "https://github.com/skillvee/test-repo/pull/2",
         report: sampleReport as unknown as Prisma.InputJsonValue,
         completedAt: new Date(),
       },
@@ -1013,7 +1027,6 @@ Acceptance Criteria:
         userId: testCandidate.id,
         scenarioId: recruiterScenario.id,
         status: "COMPLETED",
-        prUrl: "https://github.com/skillvee/test-repo/pull/2",
         report: sampleReport as unknown as Prisma.InputJsonValue,
         completedAt: new Date(),
       },
@@ -1147,82 +1160,6 @@ Acceptance Criteria:
     // ADDITIONAL CANDIDATES for recruiter dashboard testing
     // ========================================================================
     console.log("\n  📊 Creating additional candidates for recruiter dashboard...");
-
-    // Helper: Build v3 rawAiResponse from seed data
-    type SeedCandidate = {
-      scores: Array<{ dimension: string; score: number; observableBehaviors: string; trainableGap: boolean; timestamps: string[] }>;
-      report: {
-        overallScore: number;
-        videoEvaluation: {
-          evaluationVersion: string;
-          overallScore: number;
-          skills: Array<{ dimension: string; score: number; rationale: string; greenFlags: string[]; redFlags: string[]; timestamps: string[] }>;
-          hiringSignals: { overallGreenFlags: string[]; overallRedFlags: string[]; recommendation: string; recommendationRationale: string };
-          overallSummary: string;
-          evaluationConfidence: string;
-        };
-        percentiles: object;
-        metrics: object;
-      };
-      summary: string;
-    };
-
-    function buildRawAiResponse(candidate: SeedCandidate) {
-      const { videoEvaluation } = candidate.report;
-      // Build per-dimension scores with summary and timestamped behaviors
-      const dimensionScores = candidate.scores.map((score) => {
-        const skill = videoEvaluation.skills.find((s) => s.dimension === score.dimension);
-        return {
-          dimensionSlug: score.dimension,
-          dimensionName: score.dimension,
-          score: score.score,
-          summary: skill?.rationale?.split(".")[0]?.trim() + "." || "",
-          confidence: "high",
-          rationale: skill?.rationale || "",
-          observableBehaviors: score.observableBehaviors
-            .split(/\.\s+/)
-            .filter(Boolean)
-            .map((behavior, i) => ({
-              timestamp: score.timestamps[i] || score.timestamps[0] || "",
-              behavior: behavior.endsWith(".") ? behavior : behavior + ".",
-            })),
-          timestamps: score.timestamps,
-          trainableGap: score.trainableGap,
-          greenFlags: skill?.greenFlags || [],
-          redFlags: skill?.redFlags || [],
-        };
-      });
-
-      // Derive top strengths from highest-scoring dimensions
-      const sortedByScoreDesc = [...dimensionScores].sort((a, b) => b.score - a.score);
-      const topStrengths = sortedByScoreDesc
-        .filter((d) => d.score >= 3)
-        .slice(0, 3)
-        .map((d) => ({
-          dimension: d.dimensionName,
-          score: d.score,
-          description: d.greenFlags[0] || d.summary,
-        }));
-
-      // Derive growth areas from lowest-scoring dimensions
-      const sortedByScoreAsc = [...dimensionScores].sort((a, b) => a.score - b.score);
-      const growthAreas = sortedByScoreAsc
-        .filter((d) => d.score <= 2)
-        .slice(0, 3)
-        .map((d) => ({
-          dimension: d.dimensionName,
-          score: d.score,
-          description: d.redFlags[0] || d.rationale?.split(".")[0] || "Needs improvement.",
-        }));
-
-      return {
-        ...videoEvaluation,
-        evaluationVersion: "3.0.0",
-        dimensionScores,
-        topStrengths,
-        growthAreas,
-      };
-    }
 
     const additionalCandidates = [
       // ── Alice Johnson ── Exceptional candidate: avg 3.5 ──
@@ -1558,7 +1495,6 @@ Acceptance Criteria:
         update: {
           status: "COMPLETED",
           scenarioId: recruiterScenario.id,
-          prUrl: `https://github.com/skillvee/test-repo/pull/${additionalCandidates.indexOf(candidate) + 3}`,
           report: candidate.report as unknown as Prisma.InputJsonValue,
           completedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000), // Random time in last week
         },
@@ -1567,7 +1503,6 @@ Acceptance Criteria:
           userId: candidateUser.id,
           scenarioId: recruiterScenario.id,
           status: "COMPLETED",
-          prUrl: `https://github.com/skillvee/test-repo/pull/${additionalCandidates.indexOf(candidate) + 3}`,
           report: candidate.report as unknown as Prisma.InputJsonValue,
           completedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000),
         },
@@ -1722,6 +1657,61 @@ Acceptance Criteria:
     },
   });
   console.log(`  ✅ Coworker: David Park (Staff Engineer)`);
+
+  // Helper: Build v3 rawAiResponse from seed data
+  function buildRawAiResponse(candidate: SeedCandidate) {
+    const { videoEvaluation } = candidate.report;
+    const dimensionScores = candidate.scores.map((score) => {
+      const skill = videoEvaluation.skills.find((s) => s.dimension === score.dimension);
+      return {
+        dimensionSlug: score.dimension,
+        dimensionName: score.dimension,
+        score: score.score,
+        summary: skill?.rationale?.split(".")[0]?.trim() + "." || "",
+        confidence: "high",
+        rationale: skill?.rationale || "",
+        observableBehaviors: score.observableBehaviors
+          .split(/\.\s+/)
+          .filter(Boolean)
+          .map((behavior, i) => ({
+            timestamp: score.timestamps[i] || score.timestamps[0] || "",
+            behavior: behavior.endsWith(".") ? behavior : behavior + ".",
+          })),
+        timestamps: score.timestamps,
+        trainableGap: score.trainableGap,
+        greenFlags: skill?.greenFlags || [],
+        redFlags: skill?.redFlags || [],
+      };
+    });
+
+    const sortedByScoreDesc = [...dimensionScores].sort((a, b) => b.score - a.score);
+    const topStrengths = sortedByScoreDesc
+      .filter((d) => d.score >= 3)
+      .slice(0, 3)
+      .map((d) => ({
+        dimension: d.dimensionName,
+        score: d.score,
+        description: d.greenFlags[0] || d.summary,
+      }));
+
+    const sortedByScoreAsc = [...dimensionScores].sort((a, b) => a.score - b.score);
+    const growthAreas = sortedByScoreAsc
+      .filter((d) => d.score <= 2)
+      .slice(0, 3)
+      .map((d) => ({
+        dimension: d.dimensionName,
+        score: d.score,
+        description: d.redFlags[0] || d.rationale?.split(".")[0] || "Needs improvement.",
+      }));
+
+    return {
+      ...videoEvaluation,
+      evaluationVersion: "3.0.0",
+      dimensionScores,
+      topStrengths,
+      growthAreas,
+    };
+  }
 
   // Helper to create a completed candidate for a scenario
   async function createCompletedCandidate(opts: {

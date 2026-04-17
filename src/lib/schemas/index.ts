@@ -18,6 +18,8 @@ export {
   type ScenarioUpdate,
   AssessmentCreateSchema,
   type AssessmentCreate,
+  AssessmentStartSchema,
+  type AssessmentStart,
   AssessmentFinalizeSchema,
   type AssessmentFinalize,
   RecordingSessionSchema,

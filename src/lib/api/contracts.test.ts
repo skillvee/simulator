@@ -15,7 +15,6 @@ import {
   ChatStreamChunkSchema,
   ChatStreamDoneSchema,
   ChatGetResponseSchema,
-  AssessmentCompleteResponseSchema,
   AssessmentCreateResponseSchema,
   CallTokenResponseSchema,
   RecordingUploadResponseSchema,
@@ -309,43 +308,6 @@ describe("API Response Contract Tests", () => {
       const result = ChatGetResponseSchema.safeParse(body);
       expect(result.success).toBe(true);
       expect(result.data?.data.messages).toEqual([]);
-    });
-  });
-
-  // ── POST /api/assessment/complete ────────────────────────────────────────
-
-  describe("POST /api/assessment/complete — response contract", () => {
-    it("response matches AssessmentCompleteResponseSchema", async () => {
-      const { POST } = await import("@/app/api/assessment/complete/route");
-
-      mockAssessmentFindUnique.mockResolvedValue({
-        ...mockAssessment,
-        userId: USER_ID,
-      });
-      mockAssessmentUpdate.mockResolvedValue({
-        id: ASSESSMENT_ID,
-        status: AssessmentStatus.WORKING,
-        prUrl: "https://github.com/org/repo/pull/1",
-        startedAt: new Date("2026-01-01T00:00:00Z"),
-      });
-
-      const request = new Request(
-        "http://localhost/api/assessment/complete",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            assessmentId: ASSESSMENT_ID,
-            prUrl: "https://github.com/org/repo/pull/1",
-          }),
-        }
-      );
-
-      const response = await POST(request);
-      expect(response.status).toBe(200);
-
-      const body = await response.json();
-      const result = AssessmentCompleteResponseSchema.safeParse(body);
-      expect(result.success).toBe(true);
     });
   });
 

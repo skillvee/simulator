@@ -164,7 +164,6 @@ describe("POST /api/admin/assessment/retry", () => {
         userId: "user-1",
         scenarioId: "scenario-1",
         status: "WORKING",
-        prUrl: "https://github.com/user/repo/pull/1",
       }),
     });
   });

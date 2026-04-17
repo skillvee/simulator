@@ -101,6 +101,14 @@ export const AssessmentCreateSchema = z.object({
 export type AssessmentCreate = z.infer<typeof AssessmentCreateSchema>;
 
 /**
+ * POST /api/assessment/start - Start an assessment
+ */
+export const AssessmentStartSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+});
+export type AssessmentStart = z.infer<typeof AssessmentStartSchema>;
+
+/**
  * POST /api/assessment/finalize - Finalize an assessment
  */
 export const AssessmentFinalizeSchema = z.object({

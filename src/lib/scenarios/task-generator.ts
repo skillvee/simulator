@@ -43,6 +43,7 @@ export type GenerateCodingTaskInput = {
   keyResponsibilities: string[];
   domainContext: string;
   companyName: string;
+  simulationDepth?: string;
 };
 
 /**

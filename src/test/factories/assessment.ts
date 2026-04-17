@@ -20,12 +20,6 @@ import { AssessmentStatus } from "@prisma/client";
  * // Create with custom status
  * const completed = createMockAssessment({ status: AssessmentStatus.COMPLETED });
  *
- * @example
- * // Create with PR submitted (stays in WORKING until defense call completes)
- * const withPr = createMockAssessment({
- *   prUrl: "https://github.com/test/repo/pull/1",
- *   status: AssessmentStatus.WORKING,
- * });
  */
 export function createMockAssessment(
   overrides?: Partial<Assessment>
@@ -41,10 +35,9 @@ export function createMockAssessment(
     completedAt: null,
     repoUrl: null,
     repoStatus: "pending",
-    prUrl: null,
-    prSnapshot: null,
-    ciStatus: null,
     codeReview: null,
+    workingStartedAt: null,
+    targetLevel: null,
 
     report: null,
     reviewedAt: null,

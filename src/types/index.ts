@@ -97,7 +97,8 @@ export type {
 } from "./cv";
 
 // Scenario types
-export type { ScenarioResource } from "./scenario";
+export type { ScenarioResource, SimulationDepth } from "./scenario";
+export { SIMULATION_DEPTH_CONFIG } from "./scenario";
 
 // API response types
 export type { ApiSuccess, ApiError, ApiResponse } from "./api";

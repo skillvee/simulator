@@ -82,6 +82,9 @@ model Scenario {
   archetypeId            String?
   repoSpec               Json?
   resources              Json?
+  isChallenge            Boolean                 @default(false)
+  challengeTagline       String?
+  simulationDepth        String                  @default("medium")
   assessments            Assessment[]
   coworkers              Coworker[]
   archetype              Archetype?              @relation(fields: [archetypeId], references: [id])
@@ -113,15 +116,14 @@ model Assessment {
   scenarioId             String
   status                 AssessmentStatus    @default(WELCOME)
   startedAt              DateTime            @default(now())
+  workingStartedAt       DateTime?
   completedAt            DateTime?
-  prUrl                  String?
   report                 Json?
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
-  ciStatus               Json?
-  prSnapshot             Json?
   codeReview             Json?
   supersededBy           String?
+  targetLevel            String?
 
   reviewedAt             DateTime?
   repoUrl                String?

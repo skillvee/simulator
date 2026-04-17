@@ -6,7 +6,6 @@ import {
   buildCoworkerMemory,
   formatMemoryForPrompt,
   buildCrossCoworkerContext,
-  formatConversationsForSummary,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
 import { inferDemographics } from "@/lib/avatar";
@@ -16,7 +15,7 @@ import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
-import { buildAgentPrompt, buildDefensePhaseContext } from "@/prompts/build-agent-prompt";
+import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
 
 const logger = createLogger("server:api:call:token");
 
@@ -129,27 +128,7 @@ export async function POST(request: Request) {
       avatarUrl: coworker.avatarUrl,
     };
 
-    // Only defense calls need special phase handling
-    const isDefenseCall = Boolean(assessment.prUrl) && isManagerCoworker;
-    let phaseContext: string | undefined;
-
-    if (isDefenseCall) {
-      const allConvsMapped = allConversations.map((c) => ({
-        type: c.type as "text" | "voice",
-        coworkerId: c.coworkerId,
-        messages: (c.transcript as unknown as ChatMessage[]) || [],
-        createdAt: c.createdAt,
-        updatedAt: c.updatedAt,
-      }));
-      phaseContext = buildDefensePhaseContext({
-        prUrl: assessment.prUrl!,
-        repoUrl: assessment.repoUrl || "",
-        taskDescription: assessment.scenario.taskDescription,
-        techStack: assessment.scenario.techStack,
-        conversationSummary: formatConversationsForSummary(allConvsMapped, coworkerMap),
-        ciStatusSummary: "CI status will be checked after the call.",
-      });
-    }
+    // Defense calls removed — PR submission flow no longer used
 
     // Extract resource labels for manager awareness
     const resourceLabels = Array.isArray(assessment.scenario.resources)
@@ -165,8 +144,7 @@ export async function POST(request: Request) {
       candidateName: session.user.name || undefined,
       conversationHistory: memoryContext,
       crossAgentContext: crossCoworkerContext,
-      phase: isDefenseCall ? "defense" : "ongoing",
-      phaseContext,
+      phase: "ongoing",
       media: "voice",
       resourceLabels: isManagerCoworker ? resourceLabels : undefined,
     });
@@ -190,7 +168,7 @@ export async function POST(request: Request) {
       coworkerId: coworker.id,
       coworkerName: coworker.name,
       coworkerRole: coworker.role,
-      isDefenseCall,
+      isDefenseCall: false,
     });
   } catch (err) {
     logger.error("Error generating call token", { err });

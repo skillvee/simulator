@@ -33,8 +33,6 @@ interface WorkPageClientProps {
   assessmentStartTime: Date;
   /** Resources the candidate needs (repos, databases, dashboards, etc.) */
   resources: ScenarioResource[];
-  /** PR URL if already submitted */
-  prUrl: string | null;
 }
 
 export function WorkPageClient({
@@ -43,7 +41,6 @@ export function WorkPageClient({
   selectedCoworkerId: initialSelectedCoworkerId,
   assessmentStartTime,
   resources,
-  prUrl,
 }: WorkPageClientProps) {
   const router = useRouter();
   const { stopRecording } = useScreenRecordingContext();
@@ -234,7 +231,7 @@ export function WorkPageClient({
             coworker={selectedCoworker}
             cachedMessages={cachedMessagesForSelected}
             onMessagesChange={handleMessagesChange}
-            initialPrUrl={prUrl}
+            initialPrUrl={null}
           />
         ) : (
           <div className="flex flex-col min-h-0 h-full">

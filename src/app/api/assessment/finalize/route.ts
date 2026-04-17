@@ -3,13 +3,7 @@ import { success, error, validateRequest } from "@/lib/api";
 import { AssessmentFinalizeSchema } from "@/lib/schemas";
 import { db } from "@/server/db";
 import { createLogger } from "@/lib/core";
-import { AssessmentStatus, Prisma } from "@prisma/client";
-import {
-  cleanupPrAfterAssessment,
-  fetchPrCiStatus,
-  type PrCleanupResult,
-  type PrCiStatus,
-} from "@/lib/external";
+import { AssessmentStatus } from "@prisma/client";
 import {
   triggerVideoAssessment,
   mergeRecordingChunks,
@@ -48,7 +42,6 @@ export async function POST(request: Request) {
         userId: true,
         status: true,
         startedAt: true,
-        prUrl: true,
         codeReview: true,
         scenario: {
           select: {
@@ -86,56 +79,18 @@ export async function POST(request: Request) {
     const totalDurationMs = now.getTime() - assessment.startedAt.getTime();
     const totalDurationSeconds = Math.floor(totalDurationMs / 1000);
 
-    // Fetch final CI status before cleanup (to capture test pass/fail status)
-    // This is the authoritative CI status used in the final assessment
-    let finalCiStatus: PrCiStatus | null = null;
-    if (assessment.prUrl) {
-      try {
-        finalCiStatus = await fetchPrCiStatus(assessment.prUrl);
-      } catch (err) {
-        logger.warn("CI status fetch failed", { assessmentId, error: String(err) });
-        // Continue without CI status - don't block finalization
-      }
-    }
-
-    // Clean up PR after assessment (close it to prevent scenario leakage)
-    // This is done gracefully - failure doesn't block finalization
-    let prCleanupResult: PrCleanupResult | null = null;
-    if (assessment.prUrl) {
-      try {
-        prCleanupResult = await cleanupPrAfterAssessment(assessment.prUrl);
-        if (!prCleanupResult.success) {
-          logger.warn("PR cleanup warning", { assessmentId, message: prCleanupResult.message });
-        }
-      } catch (err) {
-        logger.error("PR cleanup error", { assessmentId, error: String(err) });
-        // Don't fail the finalization if PR cleanup fails
-      }
-    }
-
-    // Update assessment status to COMPLETED and store PR snapshot + CI status
+    // Update assessment status to COMPLETED
     const updatedAssessment = await db.assessment.update({
       where: { id: assessmentId },
       data: {
         status: AssessmentStatus.COMPLETED,
         completedAt: now,
-        // Store PR snapshot for historical reference
-        ...(prCleanupResult?.prSnapshot && {
-          prSnapshot:
-            prCleanupResult.prSnapshot as unknown as Prisma.InputJsonValue,
-        }),
-        // Store final CI status for assessment
-        ...(finalCiStatus && {
-          ciStatus: finalCiStatus as unknown as Prisma.InputJsonValue,
-        }),
       },
       select: {
         id: true,
         status: true,
         startedAt: true,
         completedAt: true,
-        prUrl: true,
-        ciStatus: true,
         codeReview: true,
       },
     });
@@ -209,22 +164,6 @@ export async function POST(request: Request) {
         completedAt: now.toISOString(),
         totalDurationSeconds,
       },
-      prCleanup: prCleanupResult
-        ? {
-            success: prCleanupResult.success,
-            action: prCleanupResult.action,
-            message: prCleanupResult.message,
-          }
-        : null,
-      ciStatus: finalCiStatus
-        ? {
-            overallStatus: finalCiStatus.overallStatus,
-            checksCount: finalCiStatus.checksCount,
-            checksPassed: finalCiStatus.checksPassed,
-            checksFailed: finalCiStatus.checksFailed,
-            testResults: finalCiStatus.testResults,
-          }
-        : null,
       videoAssessment: {
           triggered: videoAssessmentTriggered,
           videoAssessmentId: null, // Resolved async after response

@@ -6,6 +6,20 @@
  */
 
 /**
+ * Simulation depth controls the duration and complexity of the assessment.
+ */
+export type SimulationDepth = "short" | "medium" | "long";
+
+/**
+ * Configuration for each simulation depth level.
+ */
+export const SIMULATION_DEPTH_CONFIG: Record<SimulationDepth, { maxMinutes: number }> = {
+  short: { maxMinutes: 60 },
+  medium: { maxMinutes: 75 },
+  long: { maxMinutes: 90 },
+};
+
+/**
  * A resource the candidate needs access to during the simulation.
  * Flexible enough to represent repos, databases, spreadsheets, APIs, dashboards, etc.
  */

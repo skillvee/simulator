@@ -10,15 +10,9 @@ import { parseCoworkerKnowledge } from "@/lib/ai";
 import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
 import type { Prisma } from "@prisma/client";
 import { AssessmentStatus } from "@prisma/client";
-import {
-  buildPRAcknowledgmentContext,
-  INVALID_PR_PROMPT,
-  DUPLICATE_PR_PROMPT,
-} from "@/prompts";
 import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
 import { success, error, validateRequest } from "@/lib/api";
 import { ChatRequestSchema } from "@/lib/schemas";
-import { isValidPrUrl } from "@/lib/external";
 import { sanitizeForStorage } from "@/lib/sanitization";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
@@ -30,23 +24,6 @@ const logger = createLogger("server:api:chat");
 const CHAT_MODEL = "gemini-3-flash-preview";
 
 // Extract potential PR URL from a message
-function extractPrUrl(message: string): string | null {
-  // Pattern to match URLs in the message
-  const urlPattern = /https?:\/\/[^\s<>"]+/g;
-  const urls = message.match(urlPattern);
-
-  if (!urls) return null;
-
-  // Check each URL for PR pattern
-  for (const url of urls) {
-    if (isValidPrUrl(url)) {
-      return url;
-    }
-  }
-
-  return null;
-}
-
 /**
  * Build the Gemini contents array for a chat message.
  * Extracts the shared pattern of system instructions + history + user message.
@@ -232,46 +209,7 @@ export async function POST(request: Request) {
     parts: [{ text: msg.text }],
   }));
 
-  // Check if the message contains a PR link
-  const extractedPrUrl = extractPrUrl(message);
-  let prSubmitted = false;
-
-  // Check if a PR URL has already been saved for this assessment
-  const prAlreadySaved = !!assessment.prUrl;
-
-  // Determine extra turns and PR state based on context
-  let extraTurns: Array<{ role: string; parts: Array<{ text: string }> }> | undefined;
-
-  if (isCoworkerManager && extractedPrUrl) {
-    if (assessment.status === AssessmentStatus.WORKING) {
-      if (prAlreadySaved) {
-        extraTurns = [
-          { role: "model", parts: [{ text: "Let me respond to this PR link they shared." }] },
-          { role: "user", parts: [{ text: DUPLICATE_PR_PROMPT }] },
-        ];
-      } else {
-        await db.assessment.update({
-          where: { id: assessmentId },
-          data: { prUrl: extractedPrUrl },
-        });
-        prSubmitted = true;
-
-        const prAckPrompt = buildPRAcknowledgmentContext(extractedPrUrl);
-        extraTurns = [
-          { role: "model", parts: [{ text: "Let me respond appropriately to this PR submission." }] },
-          { role: "user", parts: [{ text: prAckPrompt }] },
-        ];
-      }
-    }
-    // If not WORKING status, no extra turns — just normal response
-  } else if (isCoworkerManager && message.toLowerCase().includes("pr") && message.toLowerCase().includes("http")) {
-    extraTurns = [
-      { role: "model", parts: [{ text: "Let me respond helpfully about the PR link." }] },
-      { role: "user", parts: [{ text: INVALID_PR_PROMPT }] },
-    ];
-  }
-
-  const contents = buildGeminiContents(systemPrompt, history, message, extraTurns);
+  const contents = buildGeminiContents(systemPrompt, history, message);
 
   // Start AI call tracking for observability
   const promptText = contents.map(c => c.parts.map(p => p.text).join("")).join("\n");
@@ -398,8 +336,8 @@ export async function POST(request: Request) {
           `data: ${JSON.stringify({
             type: "done",
             timestamp: modelTimestamp,
-            prSubmitted,
-            defenseCallRequired: isCoworkerManager && (prSubmitted || prAlreadySaved),
+            prSubmitted: false,
+            defenseCallRequired: false,
           })}\n\n`
         )
       );

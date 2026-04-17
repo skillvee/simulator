@@ -45,7 +45,6 @@ interface CandidateDetailResponse {
   videoUrl: string | null;
   overallSummary: string;
   codeReview: CodeReviewData | null;
-  prUrl: string | null;
 }
 
 /**
@@ -165,7 +164,6 @@ export async function GET(
     videoUrl: videoAssessment?.videoUrl ?? null,
     overallSummary,
     codeReview,
-    prUrl: assessment.prUrl,
   };
 
   return success(response);
