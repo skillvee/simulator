@@ -55,6 +55,7 @@ vi.mock("@/lib/ai/conversation-memory", () => ({
     totalMessageCount: 0,
   }),
   formatMemoryForPrompt: vi.fn().mockReturnValue(""),
+  formatConversationTimeline: vi.fn().mockReturnValue(""),
   buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
 }));
 

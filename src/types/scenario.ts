@@ -55,6 +55,8 @@ export interface ScenarioResource {
     | "custom";
   /** Human-readable label, e.g. "GitHub Repository", "Data Warehouse", "Sales Data (Excel)" */
   label: string;
+  /** Clickable URL (GitHub URL, Google Sheets link, Grafana dashboard, etc.) */
+  url?: string;
   /** Access instructions, e.g. "Read-only. User: analyst, Password in 1Password" */
   credentials?: string;
   /** How to get started, e.g. "Clone and create a branch from main" */

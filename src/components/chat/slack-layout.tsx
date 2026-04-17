@@ -3,7 +3,7 @@
 import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Menu, X, Headphones, Hash, GitBranch, Database, FileSpreadsheet, Globe, LayoutDashboard, FileText, Box, ArrowLeft, Send, Clock } from "lucide-react";
+import { Menu, X, Headphones, Hash, GitBranch, Database, FileSpreadsheet, Globe, LayoutDashboard, FileText, Box, ExternalLink, ArrowLeft, Send, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
@@ -814,6 +814,18 @@ function ResourceViewer({
             >
               {resource.label}
             </h2>
+            {resource.url && (
+              <a
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs hover:underline"
+                style={{ color: "hsl(var(--slack-text-muted))" }}
+              >
+                {resource.url}
+                <ExternalLink size={10} />
+              </a>
+            )}
           </div>
         </header>
 

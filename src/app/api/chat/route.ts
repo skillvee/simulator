@@ -2,9 +2,8 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { gemini } from "@/lib/ai/gemini";
 import {
-  buildCoworkerMemory,
-  formatMemoryForPrompt,
   buildCrossCoworkerContext,
+  formatConversationTimeline,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
 import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
@@ -154,9 +153,11 @@ export async function POST(request: Request) {
     ? (existingConversation.transcript as unknown as ChatMessage[])
     : [];
 
-  // Get all conversations with this coworker (text + voice) for memory
-  const coworkerConversations: ConversationWithMeta[] = allConversations
-    .filter((c) => c.coworkerId === coworkerId)
+  // Chat uses Gemini's history array for the current text conversation,
+  // but we include voice-only call history in the system prompt so the
+  // agent knows what was discussed on calls with this coworker.
+  const voiceConversations: ConversationWithMeta[] = allConversations
+    .filter((c) => c.coworkerId === coworkerId && c.type === "voice")
     .map((c) => ({
       type: c.type as "text" | "voice",
       coworkerId: c.coworkerId,
@@ -164,14 +165,7 @@ export async function POST(request: Request) {
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
     }));
-
-  // Build memory context for this coworker
-  const memory = await buildCoworkerMemory(
-    coworkerConversations,
-    coworker.name,
-    {}
-  );
-  const memoryContext = formatMemoryForPrompt(memory, coworker.name);
+  const memoryContext = formatConversationTimeline(voiceConversations);
 
   // Build cross-coworker context (awareness of other conversations)
   const coworkerMap = new Map<string, string>();

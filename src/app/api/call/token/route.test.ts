@@ -33,6 +33,7 @@ vi.mock("@/lib/ai/gemini", () => ({
 
 // Mock @/lib/ai/conversation-memory
 const mockFormatMemoryForPrompt = vi.fn();
+const mockFormatConversationTimeline = vi.fn().mockReturnValue("");
 vi.mock("@/lib/ai/conversation-memory", () => ({
   buildCoworkerMemory: vi.fn().mockResolvedValue({
     hasPriorConversations: false,
@@ -42,7 +43,17 @@ vi.mock("@/lib/ai/conversation-memory", () => ({
   }),
   formatMemoryForPrompt: (...args: unknown[]) =>
     mockFormatMemoryForPrompt(...args),
+  formatConversationTimeline: (...args: unknown[]) =>
+    mockFormatConversationTimeline(...args),
   buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
+}));
+
+// Mock @/lib/analysis
+vi.mock("@/lib/analysis", () => ({
+  logAICall: vi.fn().mockResolvedValue({
+    complete: vi.fn().mockResolvedValue(undefined),
+    fail: vi.fn().mockResolvedValue(undefined),
+  }),
 }));
 
 // Mock @/lib/ai
@@ -266,8 +277,8 @@ describe("POST /api/call/token", () => {
         coworker: { id: "coworker-id", name: "Jordan Rivera" },
       },
     ]);
-    // Mock formatMemoryForPrompt to return prior conversation context
-    mockFormatMemoryForPrompt.mockReturnValue(
+    // Mock formatConversationTimeline to return prior conversation context
+    mockFormatConversationTimeline.mockReturnValue(
       "\n## Prior Conversation History\nWe discussed auth."
     );
     mockGenerateEphemeralToken.mockResolvedValue("ephemeral-token-123");

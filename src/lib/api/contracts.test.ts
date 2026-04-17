@@ -100,12 +100,20 @@ vi.mock("@/lib/ai/conversation-memory", () => ({
     totalMessageCount: 0,
   }),
   formatMemoryForPrompt: vi.fn().mockReturnValue(""),
+  formatConversationTimeline: vi.fn().mockReturnValue(""),
   buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
   formatConversationsForSummary: vi.fn().mockReturnValue(""),
 }));
 
 vi.mock("@/lib/ai", () => ({
   parseCoworkerKnowledge: vi.fn().mockReturnValue([]),
+}));
+
+vi.mock("@/lib/analysis", () => ({
+  logAICall: vi.fn().mockResolvedValue({
+    complete: vi.fn().mockResolvedValue(undefined),
+    fail: vi.fn().mockResolvedValue(undefined),
+  }),
 }));
 
 vi.mock("@/lib/avatar", () => ({

@@ -2,12 +2,11 @@
 
 import { useCallback, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { SlackLayout, Chat } from "@/components/chat";
-import { GeneralChannel } from "@/components/chat/general-channel";
+import { SlackLayout, Chat, GeneralChannel } from "@/components/chat";
 import { GENERAL_CHANNEL_MESSAGES } from "@/lib/ai/coworker-persona";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
-import { DecorativeChat } from "@/components/chat/decorative-chat";
+import { DecorativeChat } from "@/components/chat";
 import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
 import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
 import { useCandidateEvents } from "@/hooks/use-candidate-events";

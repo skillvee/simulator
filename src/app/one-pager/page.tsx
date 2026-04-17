@@ -331,7 +331,7 @@ export default function OnePageInvestorPage() {
               <TrendingUp size={16} color="#237CF1" />
               <SectionLabel style={{ marginBottom: 0 }}>Market</SectionLabel>
             </div>
-            <p
+            <div
               style={{
                 fontSize: 14,
                 color: "#334155",
@@ -339,7 +339,17 @@ export default function OnePageInvestorPage() {
                 lineHeight: 1.6,
               }}
             >
-              $3B pre-hire assessment market. Growing 16% CAGR.
+              <span
+                style={{ fontSize: 40, fontWeight: 900, color: "#0f172a" }}
+              >
+                $3B
+              </span>
+              <span style={{ fontSize: 13, color: "#64748b" }}>
+                pre-hire assessment market
+              </span>
+            </div>
+            <p style={{ fontSize: 14, color: "#334155", fontWeight: 700, margin: "0 0 16px" }}>
+              Growing 16% CAGR
             </p>
             <div
               style={{

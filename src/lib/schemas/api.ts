@@ -56,6 +56,7 @@ export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 const ScenarioResourceSchema = z.object({
   type: z.enum(["repository", "database", "spreadsheet", "api", "dashboard", "document", "custom"]),
   label: z.string().min(1),
+  url: z.string().optional(),
   credentials: z.string().optional(),
   instructions: z.string().optional(),
   content: z.string().optional(),
