@@ -20,13 +20,6 @@ export {
 // Manager - Defense (used by unified builder for phase context)
 export { buildDefensePrompt, type DefenseContext } from "./manager/defense";
 
-// Manager - PR Submission
-export {
-  PR_ACKNOWLEDGMENT_PROMPT,
-  buildPRAcknowledgmentContext,
-  INVALID_PR_PROMPT,
-  DUPLICATE_PR_PROMPT,
-} from "./manager/pr-submission";
 
 // Coworker Personas (base builders still used by unified builder)
 export {

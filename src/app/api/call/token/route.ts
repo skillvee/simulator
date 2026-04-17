@@ -29,24 +29,35 @@ export async function POST(request: Request) {
   try {
     const validated = await validateRequest(request, CallTokenRequestSchema);
     if ("error" in validated) return validated.error;
-    const { assessmentId, coworkerId } = validated.data;
+    const { assessmentId, coworkerId, isPostSubmission } = validated.data;
 
-    // Fetch the assessment and verify ownership
-    const assessment = await db.assessment.findFirst({
-      where: {
-        id: assessmentId,
-        userId: session.user.id,
-      },
-      include: {
-        scenario: true,
-        user: {
-          select: {
-            name: true,
-            email: true,
+    // Fetch assessment, coworker, and conversations in parallel
+    const [assessment, allConversations] = await Promise.all([
+      db.assessment.findFirst({
+        where: {
+          id: assessmentId,
+          userId: session.user.id,
+        },
+        include: {
+          scenario: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      }),
+      db.conversation.findMany({
+        where: { assessmentId },
+        include: {
+          coworker: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      }),
+    ]);
 
     if (!assessment) {
       return error("Assessment not found", 404, "NOT_FOUND");
@@ -57,7 +68,7 @@ export async function POST(request: Request) {
       return error("Assessment is completed", 400);
     }
 
-    // Get coworker persona
+    // Coworker query needs scenarioId from assessment, so it runs after
     const coworker = await db.coworker.findFirst({
       where: {
         id: coworkerId,
@@ -68,17 +79,6 @@ export async function POST(request: Request) {
     if (!coworker) {
       return error("Coworker not found", 404, "NOT_FOUND");
     }
-
-    // Get ALL conversations for this assessment
-    const allConversations = await db.conversation.findMany({
-      where: { assessmentId },
-      include: {
-        coworker: {
-          select: { id: true, name: true },
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    });
 
     // Build memory context (voice gets more recent messages)
     const coworkerConversations: ConversationWithMeta[] = allConversations

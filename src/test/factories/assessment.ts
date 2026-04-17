@@ -20,6 +20,11 @@ import { AssessmentStatus } from "@prisma/client";
  * // Create with custom status
  * const completed = createMockAssessment({ status: AssessmentStatus.COMPLETED });
  *
+ * @example
+ * // Create in WORKING status
+ * const working = createMockAssessment({
+ *   status: AssessmentStatus.WORKING,
+ * });
  */
 export function createMockAssessment(
   overrides?: Partial<Assessment>
@@ -32,13 +37,12 @@ export function createMockAssessment(
     scenarioId: "test-scenario-id",
     status: AssessmentStatus.WELCOME,
     startedAt: now,
+    workingStartedAt: null,
     completedAt: null,
+    targetLevel: null,
     repoUrl: null,
     repoStatus: "pending",
     codeReview: null,
-    workingStartedAt: null,
-    targetLevel: null,
-
     report: null,
     reviewedAt: null,
     supersededBy: null,

@@ -40,7 +40,6 @@ export {
   ChatStreamChunkSchema,
   ChatStreamDoneSchema,
   ChatGetResponseSchema,
-  AssessmentCompleteResponseSchema,
   AssessmentCreateResponseSchema,
   CallTokenResponseSchema,
   RecordingUploadResponseSchema,

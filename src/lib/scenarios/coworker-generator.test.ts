@@ -311,7 +311,7 @@ describe("generateCoworkers", () => {
     expect(result.coworkers[0].name).toBe("Jordan Kim");
   });
 
-  it("throws error if coworker has less than 2 critical knowledge items after retries", async () => {
+  it("auto-promotes non-critical knowledge items when coworker has less than 2 critical items", async () => {
     const insufficientCritical = [
       {
         name: "Jordan Kim",
@@ -357,11 +357,15 @@ describe("generateCoworkers", () => {
       text: JSON.stringify(insufficientCritical),
     });
 
-    await expect(generateCoworkers(mockInput)).rejects.toThrow(
-      'Coworker "Jordan Kim" has only 1 critical knowledge items, need at least 2'
-    );
-    // Should have retried (3 calls = MAX_GENERATION_ATTEMPTS)
-    expect(mockGenerateContent).toHaveBeenCalledTimes(3);
+    const result = await generateCoworkers(mockInput);
+    // Implementation auto-promotes non-critical knowledge items to critical instead of throwing
+    // Jordan Kim should have had a non-critical item promoted to critical
+    const jordan = result.coworkers.find((c) => c.name === "Jordan Kim");
+    expect(jordan).toBeDefined();
+    const jordanCriticalCount = jordan!.knowledge.filter((k) => k.isCritical).length;
+    expect(jordanCriticalCount).toBeGreaterThanOrEqual(2);
+    // Only called once since auto-fix doesn't trigger retry
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
   });
 
   it("accepts exactly 3 coworkers", async () => {

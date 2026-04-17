@@ -15,7 +15,8 @@ import { success, error, validateRequest } from "@/lib/api";
 import { ChatRequestSchema } from "@/lib/schemas";
 import { sanitizeForStorage } from "@/lib/sanitization";
 import { isManager } from "@/lib/utils/coworker";
-import { createLogger } from "@/lib/core";
+import { createLogger, isAssessmentExpired } from "@/lib/core";
+import type { SimulationDepth } from "@/types";
 import { logAICall } from "@/lib/analysis";
 
 const logger = createLogger("server:api:chat");
@@ -23,7 +24,6 @@ const logger = createLogger("server:api:chat");
 // Gemini Flash model for text chat
 const CHAT_MODEL = "gemini-3-flash-preview";
 
-// Extract potential PR URL from a message
 /**
  * Build the Gemini contents array for a chat message.
  * Extracts the shared pattern of system instructions + history + user message.
@@ -114,6 +114,16 @@ export async function POST(request: Request) {
     );
   }
 
+  // Check if the assessment time window has expired
+  const chatDepth = (assessment.scenario.simulationDepth || "medium") as SimulationDepth;
+  if (isAssessmentExpired(assessment.workingStartedAt, chatDepth)) {
+    return error(
+      "Assessment time has expired",
+      400,
+      "ASSESSMENT_EXPIRED"
+    );
+  }
+
   // Coworker query needs scenarioId from assessment — runs after first batch
   const coworker = await db.coworker.findFirst({
     where: {
@@ -126,10 +136,19 @@ export async function POST(request: Request) {
     return error("Coworker not found", 404, "NOT_FOUND");
   }
 
-  // Get existing text conversation with this specific coworker
-  const existingConversation = allConversations.find(
+  // Get existing text conversation(s) with this specific coworker
+  // Use the one with the most messages to guard against duplicate conversations
+  // created by race conditions between manager-start and first user message
+  const textConversations = allConversations.filter(
     (c) => c.coworkerId === coworkerId && c.type === "text"
   );
+  const existingConversation = textConversations.length > 1
+    ? textConversations.reduce((best, c) => {
+        const bestLen = ((best.transcript as unknown as ChatMessage[]) || []).length;
+        const cLen = ((c.transcript as unknown as ChatMessage[]) || []).length;
+        return cLen > bestLen ? c : best;
+      })
+    : textConversations[0] ?? null;
 
   const existingMessages = existingConversation
     ? (existingConversation.transcript as unknown as ChatMessage[])
@@ -336,8 +355,6 @@ export async function POST(request: Request) {
           `data: ${JSON.stringify({
             type: "done",
             timestamp: modelTimestamp,
-            prSubmitted: false,
-            defenseCallRequired: false,
           })}\n\n`
         )
       );
@@ -408,16 +425,24 @@ export async function GET(request: Request) {
     return error("Coworker not found", 404, "NOT_FOUND");
   }
 
-  // Get existing conversation
-  // Note: Manager greeting messages are now handled by POST /api/chat/manager-start (RF-015)
-  // which is triggered after a 5-10 second delay for a more realistic feel
-  const conversation = await db.conversation.findFirst({
+  // Get existing conversation(s) — pick the one with the most messages
+  // to guard against duplicates from manager-start / first-message race conditions
+  const conversations = await db.conversation.findMany({
     where: {
       assessmentId,
       coworkerId,
       type: "text",
     },
+    orderBy: { createdAt: "asc" },
   });
+
+  const conversation = conversations.length > 1
+    ? conversations.reduce((best, c) => {
+        const bestLen = ((best.transcript as unknown as ChatMessage[]) || []).length;
+        const cLen = ((c.transcript as unknown as ChatMessage[]) || []).length;
+        return cLen > bestLen ? c : best;
+      })
+    : conversations[0] ?? null;
 
   const messages = conversation
     ? (conversation.transcript as unknown as ChatMessage[])

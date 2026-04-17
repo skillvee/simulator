@@ -15,6 +15,7 @@ import { withRetry, createLogger } from "@/lib/core";
 import { createVideoAssessmentLogger } from "@/lib/analysis";
 import { generateAndStoreEmbeddings } from "@/lib/candidate";
 import { loadRubricForRoleFamily } from "@/lib/rubric";
+import { generateReportForAssessment } from "@/lib/analysis/auto-report";
 import {
   buildRubricEvaluationPrompt,
   RUBRIC_EVALUATION_PROMPT_VERSION,
@@ -85,16 +86,27 @@ function cleanJsonResponse(response: string): string {
 }
 
 /**
+ * Coerces a value to a finite number, or null if empty/"N/A"/unparseable.
+ * Accepts numbers, numeric strings, and null/undefined.
+ */
+function coerceScore(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed === "" || /^(n\/?a|null|none|undefined)$/i.test(trimmed)) return null;
+    const n = Number(trimmed);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/**
  * Parses and validates the Gemini evaluation response against the rubric output schema
  */
 export function parseEvaluationResponse(responseText: string): RubricAssessmentOutput {
   const cleaned = cleanJsonResponse(responseText);
   const parsed = JSON.parse(cleaned);
-
-  // Validate required fields
-  if (typeof parsed.overall_score !== "number") {
-    throw new Error("Missing or invalid overall_score in response");
-  }
 
   if (!parsed.dimension_scores || typeof parsed.dimension_scores !== "object") {
     throw new Error("Missing or invalid dimension_scores in response");
@@ -104,9 +116,25 @@ export function parseEvaluationResponse(responseText: string): RubricAssessmentO
     throw new Error("Missing or invalid overall_summary in response");
   }
 
+  // Coerce overall_score (accepts number, numeric string, or null). Falls back to
+  // the average of non-null dimension scores when the model omits/mangles it.
+  let overallScore = coerceScore(parsed.overall_score);
+
   // Map the raw response to RubricAssessmentOutput
   const dimensionScores = Object.entries(parsed.dimension_scores as Record<string, Record<string, unknown>>).map(
-    ([slug, data]) => {
+    ([slug, data]): {
+      dimensionSlug: string;
+      dimensionName: string;
+      score: number | null;
+      summary: string;
+      confidence: DimensionConfidence;
+      rationale: string;
+      observableBehaviors: TimestampedBehavior[];
+      timestamps: string[];
+      trainableGap: boolean;
+      greenFlags: string[];
+      redFlags: string[];
+    } => {
       // Handle both v3 (array of {timestamp, behavior}) and v2 (flat string array) formats
       const rawBehaviors = data.observable_behaviors as
         | TimestampedBehavior[]
@@ -138,7 +166,7 @@ export function parseEvaluationResponse(responseText: string): RubricAssessmentO
       return {
         dimensionSlug: slug,
         dimensionName: slug, // Will be enriched from rubric data
-        score: (data.score as number | null) ?? null,
+        score: coerceScore(data.score),
         summary: (data.summary as string) ?? "",
         confidence: ((data.confidence as string) ?? "medium") as DimensionConfidence,
         rationale: (data.rationale as string) ?? "",
@@ -150,6 +178,17 @@ export function parseEvaluationResponse(responseText: string): RubricAssessmentO
       };
     }
   );
+
+  // Fallback: if overall_score is missing/invalid, derive it from dimension scores.
+  if (overallScore === null) {
+    const validScores = dimensionScores
+      .map((d) => d.score)
+      .filter((s): s is number => s !== null);
+    if (validScores.length > 0) {
+      const avg = validScores.reduce((sum, s) => sum + s, 0) / validScores.length;
+      overallScore = Math.round(avg * 10) / 10;
+    }
+  }
 
   const detectedRedFlags = (parsed.detected_red_flags ?? []).map(
     (rf: Record<string, unknown>) => ({
@@ -165,7 +204,7 @@ export function parseEvaluationResponse(responseText: string): RubricAssessmentO
   const topStrengths = (parsed.top_strengths ?? []).map(
     (s: Record<string, unknown>) => ({
       dimension: (s.dimension as string) ?? "",
-      score: (s.score as number) ?? 0,
+      score: coerceScore(s.score) ?? 0,
       description: (s.description as string) ?? "",
     })
   );
@@ -173,7 +212,7 @@ export function parseEvaluationResponse(responseText: string): RubricAssessmentO
   const growthAreas = (parsed.growth_areas ?? []).map(
     (g: Record<string, unknown>) => ({
       dimension: (g.dimension as string) ?? "",
-      score: (g.score as number) ?? 0,
+      score: coerceScore(g.score) ?? 0,
       description: (g.description as string) ?? "",
     })
   );
@@ -181,7 +220,7 @@ export function parseEvaluationResponse(responseText: string): RubricAssessmentO
   return {
     evaluationVersion: parsed.evaluation_version ?? RUBRIC_EVALUATION_PROMPT_VERSION,
     roleFamilySlug: parsed.role_family_slug ?? DEFAULT_ROLE_FAMILY_SLUG,
-    overallScore: parsed.overall_score,
+    overallScore,
     dimensionScores,
     detectedRedFlags,
     topStrengths,
@@ -278,8 +317,9 @@ export async function evaluateVideo(
     const apiCallTracker = assessmentLogger.startApiCall(prompt, VIDEO_EVALUATION_MODEL);
 
     let responseText: string;
+    let evaluation: RubricAssessmentOutput;
     try {
-      responseText = await withRetry(
+      const outcome = await withRetry(
         async () => {
           const result = await gemini.models.generateContent({
             model: VIDEO_EVALUATION_MODEL,
@@ -299,13 +339,19 @@ export async function evaluateVideo(
                 ],
               },
             ],
+            config: {
+              responseMimeType: "application/json",
+            },
           });
 
           const text = result.text;
           if (!text) {
             throw new Error("No response from Gemini");
           }
-          return text;
+          // Parse inside the retry so a malformed response gets another attempt
+          // instead of burning the assessment's retry budget.
+          const parsedEvaluation = parseEvaluationResponse(text);
+          return { text, evaluation: parsedEvaluation };
         },
         {
           maxAttempts: 3,
@@ -320,6 +366,8 @@ export async function evaluateVideo(
           },
         }
       );
+      responseText = outcome.text;
+      evaluation = outcome.evaluation;
 
       await assessmentLogger.logEvent(AssessmentLogEventType.RESPONSE_RECEIVED, {
         response_length: responseText.length,
@@ -339,9 +387,6 @@ export async function evaluateVideo(
 
     await assessmentLogger.logEvent(AssessmentLogEventType.PARSING_STARTED);
 
-    // Parse the response
-    const evaluation = parseEvaluationResponse(responseText);
-
     const dimensionCount = evaluation.dimensionScores.filter(
       (d) => d.score !== null
     ).length;
@@ -350,7 +395,7 @@ export async function evaluateVideo(
       parsed_dimension_count: dimensionCount,
     });
 
-    // Store results — use rubric dimension slugs directly as the dimension key
+    // Store results using rubric dimension slugs directly
     const dimensionScores = new Map<string, number | null>();
     for (const dimScore of evaluation.dimensionScores) {
       dimensionScores.set(dimScore.dimensionSlug, dimScore.score);
@@ -446,6 +491,14 @@ export async function evaluateVideo(
           error: error instanceof Error ? error.message : String(error),
         });
       });
+
+    // Auto-generate report now that video evaluation is complete (async, non-blocking)
+    generateReportForAssessment(assessmentId, evaluation).catch((err) => {
+      logger.warn("Auto-report generation failed (candidate can still generate manually)", {
+        assessmentId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
 
     return {
       success: true,

@@ -17,7 +17,7 @@ import { Type } from "@google/genai";
 
 const logger = createLogger("lib:scenarios:resource-generator");
 
-const GENERATION_MODEL = "gemini-3-flash-preview";
+const GENERATION_MODEL = "gemini-3-pro-preview";
 const MAX_GENERATION_ATTEMPTS = 3;
 
 const VALID_RESOURCE_TYPES = [
@@ -30,24 +30,24 @@ const VALID_RESOURCE_TYPES = [
   "custom",
 ] as const;
 
-/** Minimum content length (characters) by resource type — enforced as validation errors */
+/** Minimum content length (characters) by resource type — enforced as validation errors.
+ *  Rule of thumb: ~5-6 chars per word, so 2500 chars ≈ 450 words. */
 const MIN_CONTENT_LENGTH: Record<string, number> = {
-  document: 1200,
-  repository: 1200,
-  api: 1200,
-  dashboard: 900,
-  spreadsheet: 750,
-  database: 900,
-  custom: 600,
+  document: 2500,
+  repository: 2500,
+  api: 2000,
+  dashboard: 2000,
+  spreadsheet: 1500,
+  database: 2000,
+  custom: 1500,
 };
 
 const resourceSchema = z.object({
   type: z.enum(VALID_RESOURCE_TYPES),
   label: z.string().min(1),
-  url: z.string().optional(),
-  credentials: z.string().optional(),
-  instructions: z.string().optional(),
-  content: z.string().min(600, "Resource content must be at least 600 characters"),
+  credentials: z.string().nullish().transform((v) => v ?? undefined),
+  instructions: z.string().nullish().transform((v) => v ?? undefined),
+  content: z.string().min(1500, "Resource content must be at least 1500 characters"),
 });
 
 export type GenerateResourcesInput = {
@@ -188,12 +188,34 @@ function getRoleCategories(roleName: string) {
       !lower.includes("data") &&
       !lower.includes("security") &&
       !lower.includes("ml") &&
-      !lower.includes("machine learning"),
+      !lower.includes("machine learning") &&
+      !lower.includes("qa") &&
+      !lower.includes("test automation") &&
+      !lower.includes("quality"),
     isSecurityRole:
       lower.includes("security") ||
       lower.includes("pen test") ||
       lower.includes("appsec"),
   };
+}
+
+/**
+ * Detect code-like content in a resource.
+ * Gemini JSON schema mode often avoids triple backticks in JSON strings,
+ * so we also check for inline code (`code`), function signatures, shell commands, etc.
+ */
+function hasCodeLikeContent(content: string): boolean {
+  // Fenced code blocks (ideal case)
+  if (/```/.test(content)) return true;
+  // Inline code with function-like patterns: `functionName()`, `module.method()`
+  if (/`[a-zA-Z_]\w*(\.\w+)*\([^)]*\)`/.test(content)) return true;
+  // Shell commands in inline code: `npm install`, `git clone`, `docker run`, etc.
+  if (/`(npm|yarn|pnpm|pip|go|cargo|docker|kubectl|terraform|git|curl|make)\s/.test(content)) return true;
+  // Function/method definitions (various languages)
+  if (/\b(function|func|def|fn|async|export|class|impl)\s+\w+/.test(content)) return true;
+  // Code-like lines with common patterns: import/require, arrows, variable assignments
+  if (/\b(import|require|from|const|let|var|val)\s+\w+/.test(content)) return true;
+  return false;
 }
 
 /** Count markdown table data rows (exclude header separators) */
@@ -259,10 +281,12 @@ function validateRoleSpecificResources(
         `Engineering role "${roleName}" requires repository with setup/quick-start instructions`
       );
     }
-    const hasCodeBlock = repos.some((r) => /```/.test(r.content ?? ""));
-    if (!hasCodeBlock) {
+    // Check for code content — fenced blocks OR inline code patterns
+    // (Gemini JSON mode often avoids triple backticks in JSON strings)
+    const hasCodeContent = repos.some((r) => hasCodeLikeContent(r.content ?? ""));
+    if (!hasCodeContent) {
       throw new Error(
-        `Engineering role "${roleName}" requires repository with at least one code snippet`
+        `Engineering role "${roleName}" requires repository with code snippets (function definitions, commands, or inline code)`
       );
     }
   }
@@ -274,13 +298,41 @@ function validateRoleSpecificResources(
         `Security role "${roleName}" requires at least one document resource`
       );
     }
-    const hasCodeSnippet = docs.some((r) => /```/.test(r.content ?? ""));
+    const hasCodeSnippet = docs.some((r) => hasCodeLikeContent(r.content ?? ""));
     if (!hasCodeSnippet) {
       throw new Error(
         `Security role "${roleName}" requires document with code snippets showing vulnerabilities`
       );
     }
   }
+}
+
+/**
+ * Strip external URLs from resource content.
+ * Replaces URLs with their descriptive text or removes them entirely.
+ * This is a safety net — the prompt instructs Gemini not to generate URLs,
+ * but LLMs don't always comply.
+ */
+function stripExternalUrls(content: string): string {
+  // Replace markdown links [text](url) with just the text
+  let cleaned = content.replace(
+    /\[([^\]]+)\]\((?:https?:\/\/|git@)[^)]+\)/g,
+    "$1"
+  );
+
+  // Replace `git clone <url>` commands with a comment
+  cleaned = cleaned.replace(
+    /`?git\s+clone\s+\S+`?/g,
+    "`# repo already cloned locally`"
+  );
+
+  // Replace bare URLs (http://, https://, git@) that aren't in code context
+  cleaned = cleaned.replace(
+    /(?:https?:\/\/|git@)[^\s)>\]]+/g,
+    "(see internal documentation)"
+  );
+
+  return cleaned;
 }
 
 function parseAndValidateResources(responseText: string): ScenarioResource[] {
@@ -318,6 +370,9 @@ function parseAndValidateResources(responseText: string): ScenarioResource[] {
       );
     }
 
+    // Strip any external URLs that slipped through despite prompt instructions
+    result.data.content = stripExternalUrls(result.data.content);
+
     return result.data;
   });
 
@@ -350,7 +405,8 @@ Generate ONLY the resources that fill real information gaps. Every resource must
 ## Critical Requirements
 1. **Content must be LONG and DETAILED.** Each resource content field must be 500+ words. Tables must have 8+ data rows with specific numbers. No short stubs.
 2. **Resources must cross-reference each other.** End every resource with a "See Also" section listing the other resources by their exact label. Within the body, reference data and concepts from other resources (e.g., "As shown in the [GPU Fleet Dashboard], current utilization is...").
-3. **Everything must be internally consistent.** If the dashboard shows a metric at 2.14%, the memo discussing that metric must cite 2.14%. Names, dates, and systems must match across all resources.`;
+3. **Everything must be internally consistent.** If the dashboard shows a metric at 2.14%, the memo discussing that metric must cite 2.14%. Names, dates, and systems must match across all resources.
+4. **ZERO external URLs.** The candidate reads these resources inline — they cannot click links or visit websites. Do NOT include git clone URLs, GitHub links, Grafana/Datadog dashboard links, JIRA/Linear links, Confluence/Notion links, or ANY http/https/git@ URL. For repos, start Quick Start with local commands (npm install, mvn install, etc.) — the code is already cloned. Reference other information by naming the resource (e.g., "See the Auction Service Logging resource") not by URL.`;
 }
 
 

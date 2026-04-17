@@ -195,7 +195,7 @@ export async function GET(request: Request) {
       // Parse report JSON for metrics
       const report = assessment.report as { metrics?: AssessmentMetrics } | null;
       const metrics = report?.metrics;
-      const targetLevel = (assessment.scenario.targetLevel || "mid") as TargetLevel;
+      const targetLevel = (assessment.targetLevel || assessment.scenario.targetLevel || "mid") as TargetLevel;
 
       // Parse rawAiResponse for v3 rubric data (top_strengths, growth_areas, dimension summaries)
       const rawAiResponse = videoAssessment?.summary?.rawAiResponse as unknown as RubricAssessmentOutput | null;

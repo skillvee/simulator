@@ -253,7 +253,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Complete the todo list feature" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -262,7 +261,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockTriggerVideoAssessment.mockResolvedValue({
       success: true,
@@ -313,7 +311,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -322,7 +319,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockTriggerVideoAssessment.mockResolvedValue({
       success: false,
@@ -359,7 +355,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -368,7 +363,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockTriggerVideoAssessment.mockRejectedValue(new Error("Network error"));
 
@@ -397,7 +391,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [],
     });
@@ -406,7 +399,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockGenerateProfilePhoto.mockResolvedValue({
       success: true,
@@ -446,7 +438,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [],
     });
@@ -455,7 +446,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockGenerateProfilePhoto.mockResolvedValue({
       success: false,
@@ -492,7 +482,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [],
     });
@@ -501,7 +490,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockGenerateProfilePhoto.mockRejectedValue(new Error("Network error"));
 
@@ -531,7 +519,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -540,7 +527,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
 
     // Merge fails — no geminiFileUri
@@ -594,7 +580,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Build a dashboard" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -603,7 +588,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
 
     mockMergeRecordingChunks.mockResolvedValue({

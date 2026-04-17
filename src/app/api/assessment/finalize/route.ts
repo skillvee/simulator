@@ -20,8 +20,7 @@ const logger = createLogger("api:assessment:finalize");
  * Marks assessment as fully completed after the defense call
  * - Transitions status from WORKING to COMPLETED
  * - Records final completion timestamp
- * - Cleans up (closes) the submitted PR to prevent scenario leakage
- * - Preserves PR content in prSnapshot for historical reference
+ * - Records final completion timestamp
  */
 export async function POST(request: Request) {
   try {
@@ -42,6 +41,7 @@ export async function POST(request: Request) {
         userId: true,
         status: true,
         startedAt: true,
+        workingStartedAt: true,
         codeReview: true,
         scenario: {
           select: {
@@ -74,9 +74,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Calculate total duration
+    // Calculate total duration (use workingStartedAt if available, else fall back to startedAt)
     const now = new Date();
-    const totalDurationMs = now.getTime() - assessment.startedAt.getTime();
+    const timerStart = assessment.workingStartedAt ?? assessment.startedAt;
+    const totalDurationMs = now.getTime() - timerStart.getTime();
     const totalDurationSeconds = Math.floor(totalDurationMs / 1000);
 
     // Update assessment status to COMPLETED

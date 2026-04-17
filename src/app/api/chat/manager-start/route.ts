@@ -192,10 +192,25 @@ export async function POST(request: Request) {
     timestamp: new Date().toISOString(),
   };
 
-  // Persist the greeting
-  if (existingConversation) {
+  // Persist the greeting — re-check for existing conversation to avoid
+  // race conditions where another request created one while we were generating
+  const latestConversation = await db.conversation.findFirst({
+    where: {
+      assessmentId,
+      coworkerId: managerCoworker.id,
+      type: "text",
+    },
+  });
+
+  if (latestConversation) {
+    const existingMessages = (latestConversation.transcript as unknown as ChatMessage[]) || [];
+    if (existingMessages.length > 0) {
+      // Conversation was created by another concurrent request — don't overwrite
+      return success({ alreadyStarted: true, managerId: managerCoworker.id, managerName: managerCoworker.name });
+    }
+    // Empty transcript — safe to update with the greeting
     await db.conversation.update({
-      where: { id: existingConversation.id },
+      where: { id: latestConversation.id },
       data: { transcript: [greetingMessage] as unknown as Prisma.InputJsonValue },
     });
   } else {

@@ -158,7 +158,6 @@ const mockAssessment = {
   status: AssessmentStatus.WORKING,
   startedAt: new Date("2026-01-01T00:00:00Z"),
   completedAt: null,
-  prUrl: null,
   repoUrl: null,
   scenario: {
     id: SCENARIO_ID,
@@ -333,7 +332,6 @@ describe("API Response Contract Tests", () => {
         updatedAt: new Date(),
         startedAt: new Date(),
         completedAt: null,
-        prUrl: null,
         repoUrl: null,
         repoStatus: null,
       });

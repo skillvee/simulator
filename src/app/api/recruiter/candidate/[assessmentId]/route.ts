@@ -158,7 +158,7 @@ export async function GET(
       email: assessment.user.email,
     },
     overallScore,
-    strengthLevel: getRelativeStrength(overallScore, (assessment.scenario.targetLevel || "mid") as TargetLevel),
+    strengthLevel: getRelativeStrength(overallScore, (assessment.targetLevel || assessment.scenario.targetLevel || "mid") as TargetLevel),
     dimensionScores,
     percentiles,
     videoUrl: videoAssessment?.videoUrl ?? null,

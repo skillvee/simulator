@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect } from "react";
+import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Menu, X, Headphones, Hash, GitBranch, Database, FileSpreadsheet, Globe, LayoutDashboard, FileText, Box, ExternalLink, ArrowLeft } from "lucide-react";
+import { Menu, X, Headphones, Hash, GitBranch, Database, FileSpreadsheet, Globe, LayoutDashboard, FileText, Box, ArrowLeft, Send, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
@@ -82,13 +84,19 @@ interface SlackLayoutProps {
   coworkers: Coworker[];
   /** Resources the candidate needs (repos, databases, dashboards, etc.) */
   resources?: ScenarioResource[];
+  /** ISO string deadline — when provided, a subtle time-remaining indicator is shown */
+  deadlineAt?: string;
   children: React.ReactNode;
   /** Override the selected coworker (instead of getting from URL) */
   selectedCoworkerId?: string;
   /** Callback when a coworker or channel is selected — keeps navigation client-side */
   onSelectCoworker?: (coworkerId: string) => void;
-  /** Callback when a defense call is completed (PR was submitted, call with manager ended) */
+  /** Callback when a defense call is completed (work was submitted, call with manager ended) */
   onDefenseComplete?: () => void;
+  /** When true, the next call will be flagged as post-submission (defense call) */
+  isPostSubmission?: boolean;
+  /** Callback when candidate clicks "Submit Work" button */
+  onSubmitWork?: () => void;
   /** Callback when any call ends — receives the coworkerId of the ended call */
   onCallEnd?: (coworkerId: string) => void;
   /** Callback to expose startCall function to parent (for programmatic call initiation) */
@@ -165,10 +173,13 @@ function SlackLayoutInner({
   assessmentId,
   coworkers,
   resources,
+  deadlineAt,
   children,
   selectedCoworkerId: overrideSelectedId,
   onSelectCoworker,
   onDefenseComplete,
+  isPostSubmission,
+  onSubmitWork,
   onCallEnd: onCallEndCallback,
   onStartCallRef,
   onIncrementUnreadRef,
@@ -202,6 +213,42 @@ function SlackLayoutInner({
 
     return () => clearInterval(interval);
   }, []);
+
+  // Time remaining display — updates every minute, subtle and non-pressuring
+  const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
+  const [isLowTime, setIsLowTime] = useState(false);
+
+  const deadlineMs = useMemo(
+    () => (deadlineAt ? new Date(deadlineAt).getTime() : null),
+    [deadlineAt]
+  );
+
+  useEffect(() => {
+    if (!deadlineMs) return;
+
+    function update() {
+      const remaining = deadlineMs! - Date.now();
+      if (remaining <= 0) {
+        setTimeRemaining("0:00");
+        setIsLowTime(true);
+        return;
+      }
+      const totalMinutes = Math.floor(remaining / 60000);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      setTimeRemaining(
+        hours > 0
+          ? `${hours}h ${minutes}m`
+          : `${minutes}m`
+      );
+      // Only flag low time under 10 minutes
+      setIsLowTime(totalMinutes < 10);
+    }
+
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, [deadlineMs]);
 
   // Determine selected view from URL - can be coworkerId or "general" for channel
   const selectedCoworkerId =
@@ -363,8 +410,8 @@ function SlackLayoutInner({
           className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[280px] transform flex-col transition-transform duration-200 ease-in-out md:static shrink-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
           style={{background: "hsl(var(--slack-bg-sidebar))", borderRight: "1px solid hsl(var(--slack-border))"}}
         >
-          {/* Header with Skillvee logo */}
-          <div className="h-16 flex items-center px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
+          {/* Header with Skillvee logo and time remaining */}
+          <div className="h-16 flex items-center justify-between px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
             <Image
               src="/skillvee-logo.png"
               alt="Skillvee"
@@ -374,6 +421,24 @@ function SlackLayoutInner({
               style={{ width: "auto", height: "auto" }}
               priority
             />
+            {timeRemaining !== null && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="flex items-center gap-1.5 text-xs font-medium cursor-default"
+                      style={{ color: isLowTime ? "hsl(var(--destructive, 0 84% 60%))" : "hsl(var(--slack-text-muted))" }}
+                    >
+                      <Clock size={12} />
+                      <span>{timeRemaining}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Remaining time: {timeRemaining}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
 
           {/* Resources bookmarks bar */}
@@ -466,6 +531,20 @@ function SlackLayoutInner({
 
           </div>
 
+          {/* Submit Work button */}
+          {onSubmitWork && !activeCall && (
+            <div className="shrink-0 px-4 py-3" style={{ borderTop: "1px solid hsl(var(--slack-border))" }}>
+              <Button
+                onClick={onSubmitWork}
+                className="w-full rounded-lg shadow-sm"
+                size="sm"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Submit Work
+              </Button>
+            </div>
+          )}
+
           {/* Floating Call Bar - fixed at bottom when call is active */}
           {activeCall && callingCoworker && (
             <div className="p-4 relative animate-in slide-in-from-bottom-5 duration-300 fade-in">
@@ -475,6 +554,7 @@ function SlackLayoutInner({
                 callType={activeCall.callType}
                 onCallEnd={endCall}
                 onDefenseComplete={onDefenseComplete}
+                isPostSubmission={isPostSubmission}
               />
             </div>
           )}
@@ -734,18 +814,6 @@ function ResourceViewer({
             >
               {resource.label}
             </h2>
-            {resource.url && (
-              <a
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs hover:underline"
-                style={{ color: "hsl(var(--slack-text-muted))" }}
-              >
-                {resource.url}
-                <ExternalLink size={10} />
-              </a>
-            )}
           </div>
         </header>
 

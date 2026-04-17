@@ -75,16 +75,16 @@ model Scenario {
   repoUrl                String?
   techStack              String[]
   isPublished            Boolean                 @default(false)
+  isChallenge            Boolean                 @default(false)
+  challengeTagline       String?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   createdById            String?
   targetLevel            String                  @default("mid")
+  simulationDepth        String                  @default("medium") // "short" | "medium" | "long"
   archetypeId            String?
   repoSpec               Json?
   resources              Json?
-  isChallenge            Boolean                 @default(false)
-  challengeTagline       String?
-  simulationDepth        String                  @default("medium")
   assessments            Assessment[]
   coworkers              Coworker[]
   archetype              Archetype?              @relation(fields: [archetypeId], references: [id])

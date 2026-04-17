@@ -959,13 +959,20 @@ describe("GET /api/chat", () => {
       id: "assessment-1",
       userId: "user-1",
     });
-    mockConversationFindFirst.mockResolvedValue({
-      id: "conv-1",
-      transcript: [
-        { role: "user", text: "Hello", timestamp: "2025-01-01T00:00:00Z" },
-        { role: "model", text: "Hi there!", timestamp: "2025-01-01T00:00:01Z" },
-      ],
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Test Coworker",
+      role: "peer",
     });
+    mockConversationFindMany.mockResolvedValue([
+      {
+        id: "conv-1",
+        transcript: [
+          { role: "user", text: "Hello", timestamp: "2025-01-01T00:00:00Z" },
+          { role: "model", text: "Hi there!", timestamp: "2025-01-01T00:00:01Z" },
+        ],
+      },
+    ]);
 
     const request = new Request(
       "http://localhost/api/chat?assessmentId=assessment-1&coworkerId=coworker-1"
@@ -989,7 +996,12 @@ describe("GET /api/chat", () => {
       id: "assessment-1",
       userId: "user-1",
     });
-    mockConversationFindFirst.mockResolvedValue(null);
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Test Coworker",
+      role: "peer",
+    });
+    mockConversationFindMany.mockResolvedValue([]);
 
     const request = new Request(
       "http://localhost/api/chat?assessmentId=assessment-1&coworkerId=coworker-1"

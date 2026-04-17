@@ -95,9 +95,20 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
   for (const coworker of coworkers) {
     const criticalCount = coworker.knowledge.filter((k) => k.isCritical).length;
     if (criticalCount < 2) {
-      throw new Error(
-        `Coworker "${coworker.name}" has only ${criticalCount} critical knowledge items, need at least 2`
-      );
+      // Auto-fix: promote non-critical knowledge items to critical
+      const needed = 2 - criticalCount;
+      let promoted = 0;
+      for (const k of coworker.knowledge) {
+        if (!k.isCritical && promoted < needed) {
+          k.isCritical = true;
+          promoted++;
+        }
+      }
+      logger.warn("Auto-promoted knowledge items to critical", {
+        coworkerName: coworker.name,
+        originalCritical: criticalCount,
+        promoted,
+      });
     }
 
     // Validate that knowledge doesn't contain specific file paths
@@ -151,7 +162,7 @@ export async function generateCoworkers(
   const contextPrompt = buildContextPrompt(input);
   const fullPrompt = `${COWORKER_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
-  let lastResponseText = "";
+  let _lastResponseText = "";
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
@@ -169,7 +180,7 @@ export async function generateCoworkers(
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }
-      lastResponseText = responseText;
+      _lastResponseText = responseText;
 
       const coworkers = parseAndValidateCoworkers(responseText);
 

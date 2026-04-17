@@ -11,11 +11,16 @@ import { DecorativeChat } from "@/components/chat/decorative-chat";
 import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
 import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
 import { useCandidateEvents } from "@/hooks/use-candidate-events";
+import { useAssessmentDeadline } from "@/hooks/use-assessment-deadline";
 import { playMessageSound } from "@/lib/sounds";
 import { createLogger } from "@/lib/core";
+import { ASSESSMENT_DURATION_MS } from "@/lib/core/assessment-timer";
 import type { ChatMessage, ScenarioResource } from "@/types";
 import type { ChannelMessage } from "@/lib/ai/coworker-persona";
 import { isManager } from "@/lib/utils/coworker";
+import { SubmitWorkModal } from "@/components/chat/submit-work-modal";
+import { PostDefenseModal } from "@/components/chat/post-defense-modal";
+import { uploadDeliverable } from "@/lib/external/storage";
 
 const logger = createLogger("client:app:work-page");
 
@@ -30,7 +35,8 @@ interface WorkPageClientProps {
   assessmentId: string;
   coworkers: Coworker[];
   selectedCoworkerId: string | null;
-  assessmentStartTime: Date;
+  /** ISO string deadline for auto-finalize */
+  deadlineAt: string;
   /** Resources the candidate needs (repos, databases, dashboards, etc.) */
   resources: ScenarioResource[];
 }
@@ -39,12 +45,22 @@ export function WorkPageClient({
   assessmentId,
   coworkers,
   selectedCoworkerId: initialSelectedCoworkerId,
-  assessmentStartTime,
+  deadlineAt,
   resources,
 }: WorkPageClientProps) {
   const router = useRouter();
   const { stopRecording } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showTimeUpModal, setShowTimeUpModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showPostDefenseModal, setShowPostDefenseModal] = useState(false);
+  const [isPostSubmission, setIsPostSubmission] = useState(false);
+
+  // Compute assessmentStartTime from deadline for hooks that need it
+  const assessmentStartTime = useMemo(
+    () => new Date(new Date(deadlineAt).getTime() - ASSESSMENT_DURATION_MS),
+    [deadlineAt]
+  );
 
   // Manager reference for name substitution
   const manager = useMemo(
@@ -64,9 +80,10 @@ export function WorkPageClient({
     window.history.replaceState(null, "", `/assessments/${assessmentId}/work?coworkerId=${coworkerId}`);
   }, [assessmentId]);
 
-  // Refs to store the increment functions from SlackLayout
+  // Refs to store functions exposed from SlackLayout
   const incrementUnreadRef = useRef<((coworkerId: string) => void) | null>(null);
   const incrementGeneralUnreadRef = useRef<(() => void) | null>(null);
+  const startCallRef = useRef<((coworkerId: string, callType: "coworker") => void) | null>(null);
 
   // State to store ambient messages that arrive while user is viewing the channel
   const [ambientMessages, setAmbientMessages] = useState<ChannelMessage[]>([]);
@@ -150,17 +167,52 @@ export function WorkPageClient({
   // Get the manager name for canned response substitution
   const managerName = manager?.name || "your manager";
 
-  // Handle defense call completion
-  // This is called when a candidate ends a call with the manager after submitting a PR
-  const handleDefenseComplete = useCallback(async () => {
-    if (isCompleting) return; // Prevent duplicate calls
+  // Handle "Submit Work" button click — opens the confirmation modal
+  const handleSubmitWork = useCallback(() => {
+    setShowSubmitModal(true);
+  }, []);
+
+  // Handle submit modal confirmation — upload deliverable, switch to manager, start defense call
+  const handleSubmitConfirm = useCallback(async (file: File | null) => {
+    setShowSubmitModal(false);
+    setIsPostSubmission(true);
+
+    // Upload deliverable file if provided
+    if (file) {
+      try {
+        await uploadDeliverable(file, assessmentId);
+      } catch (err) {
+        logger.error("Error uploading deliverable", { error: String(err) });
+      }
+    }
+
+    // Switch to manager chat and auto-start a defense call
+    if (manager) {
+      handleSelectCoworker(manager.id);
+      // Small delay so the chat UI mounts before the call starts
+      setTimeout(() => {
+        if (startCallRef.current) {
+          startCallRef.current(manager.id, "coworker");
+        }
+      }, 300);
+    }
+  }, [assessmentId, manager, handleSelectCoworker]);
+
+  // Handle defense call completion — show post-defense confirmation instead of immediate finalize
+  const handleDefenseComplete = useCallback(() => {
+    if (isCompleting) return;
+    setShowPostDefenseModal(true);
+  }, [isCompleting]);
+
+  // Handle post-defense "Finalize" confirmation
+  const handleFinalize = useCallback(async () => {
+    if (isCompleting) return;
     setIsCompleting(true);
+    setShowPostDefenseModal(false);
 
     try {
-      // Stop screen recording
       stopRecording();
 
-      // Finalize the assessment (marks as COMPLETED, cleans up PR, etc.)
       const response = await fetch("/api/assessment/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -171,15 +223,65 @@ export function WorkPageClient({
         logger.error("Failed to finalize assessment", { response: await response.text() });
       }
 
-      // Navigate to results page
       router.push(`/assessments/${assessmentId}/results`);
-    } catch (error) {
-      logger.error("Error completing defense", { error });
-      // Still navigate to results even if finalization fails
-      // The results page will handle generating the report if needed
+    } catch (err) {
+      logger.error("Error completing defense", { error: err });
       router.push(`/assessments/${assessmentId}/results`);
     }
   }, [assessmentId, isCompleting, router, stopRecording]);
+
+  // Handle post-defense "Continue Working" — dismiss modal and go back to work
+  const handleContinueWorking = useCallback(() => {
+    setShowPostDefenseModal(false);
+  }, []);
+
+  // Handle assessment time expiration
+  const handleTimeExpired = useCallback(async () => {
+    if (isCompleting) return;
+    setIsCompleting(true);
+    setShowTimeUpModal(true);
+
+    try {
+      stopRecording();
+
+      await fetch("/api/assessment/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId }),
+      });
+    } catch (err) {
+      logger.error("Error finalizing on timeout", { error: String(err) });
+    }
+
+    // Navigate to results after a brief delay so candidate sees the message
+    setTimeout(() => {
+      router.push(`/assessments/${assessmentId}/results`);
+    }, 4000);
+  }, [assessmentId, isCompleting, router, stopRecording]);
+
+  // Set up the deadline timer
+  useAssessmentDeadline({
+    deadlineAt,
+    onTimeExpired: handleTimeExpired,
+  });
+
+  // Show "time's up" modal
+  if (showTimeUpModal) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center max-w-md px-6">
+          <div className="mx-auto mb-6 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-3 border-primary border-t-transparent" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
+          <p className="text-muted-foreground">
+            Your simulation session has ended. We&apos;re saving your work and
+            preparing your results.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading overlay while completing
   if (isCompleting) {
@@ -202,14 +304,20 @@ export function WorkPageClient({
         assessmentId={assessmentId}
         coworkers={coworkers}
         resources={resources}
+        deadlineAt={deadlineAt}
         selectedCoworkerId={selectedCoworkerId ?? undefined}
         onSelectCoworker={handleSelectCoworker}
         onDefenseComplete={handleDefenseComplete}
+        isPostSubmission={isPostSubmission}
+        onSubmitWork={handleSubmitWork}
         onIncrementUnreadRef={(fn) => {
           incrementUnreadRef.current = fn;
         }}
         onIncrementGeneralUnreadRef={(fn) => {
           incrementGeneralUnreadRef.current = fn;
+        }}
+        onStartCallRef={(fn) => {
+          startCallRef.current = fn;
         }}
         selectedResourceIndex={selectedResourceIndex}
         onSelectResource={setSelectedResourceIndex}
@@ -231,7 +339,6 @@ export function WorkPageClient({
             coworker={selectedCoworker}
             cachedMessages={cachedMessagesForSelected}
             onMessagesChange={handleMessagesChange}
-            initialPrUrl={null}
           />
         ) : (
           <div className="flex flex-col min-h-0 h-full">
@@ -246,6 +353,23 @@ export function WorkPageClient({
           </div>
         )}
       </SlackLayout>
+
+      {/* Submit Work confirmation modal */}
+      {showSubmitModal && (
+        <SubmitWorkModal
+          managerName={managerName}
+          onConfirm={handleSubmitConfirm}
+          onCancel={() => setShowSubmitModal(false)}
+        />
+      )}
+
+      {/* Post-defense confirmation modal */}
+      {showPostDefenseModal && (
+        <PostDefenseModal
+          onFinalize={handleFinalize}
+          onContinueWorking={handleContinueWorking}
+        />
+      )}
     </>
   );
 }

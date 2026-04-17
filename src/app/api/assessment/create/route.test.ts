@@ -124,7 +124,7 @@ describe("POST /api/assessment/create", () => {
       id: "new-assessment",
       userId: "user-1",
       scenarioId: "s1",
-      status: "WORKING",
+      status: "WELCOME",
       repoStatus: null,
     };
     mockAssessmentCreate.mockResolvedValue(newAssessment);
@@ -134,14 +134,15 @@ describe("POST /api/assessment/create", () => {
 
     const json = await response.json();
     expect(json.success).toBe(true);
-    expect(json.data.assessment.status).toBe("WORKING");
+    expect(json.data.assessment.status).toBe("WELCOME");
     expect(json.data.isExisting).toBe(false);
 
     expect(mockAssessmentCreate).toHaveBeenCalledWith({
       data: {
         userId: "user-1",
         scenarioId: "s1",
-        status: "WORKING",
+        status: "WELCOME",
+        targetLevel: null,
         repoStatus: null,
       },
     });

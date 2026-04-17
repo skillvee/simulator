@@ -402,6 +402,17 @@ export function useVoiceBase({
 
       // Initialize audio capture
       await initializeAudioCapture(stream, session);
+
+      // Send trigger message so the AI greets first (prompts expect this)
+      session.sendClientContent({
+        turns: [
+          {
+            role: "user",
+            parts: [{ text: "[call connected]" }],
+          },
+        ],
+        turnComplete: true,
+      });
     } catch (err) {
       logger.error("Connection error", { err });
       const catError = categorizeError(err);

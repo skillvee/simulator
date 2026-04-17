@@ -397,17 +397,6 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                             {resource.type}
                           </Badge>
                         </div>
-                        {resource.url && (
-                          <a
-                            href={resource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-1 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors break-all"
-                          >
-                            {resource.url}
-                            <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
-                          </a>
-                        )}
                         {resource.credentials && (
                           <p className="mt-1.5 text-sm text-stone-500">
                             {resource.credentials}

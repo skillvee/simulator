@@ -64,6 +64,38 @@ export async function deleteResume(path: string): Promise<void> {
  * @param path - The path of the file
  * @param expiresIn - Expiration time in seconds (default: 1 hour)
  */
+/**
+ * Upload a deliverable file to Supabase storage
+ * @param file - The file to upload
+ * @param assessmentId - The assessment's ID (used for organizing files)
+ * @returns The signed URL and path of the uploaded file
+ */
+export async function uploadDeliverable(
+  file: File,
+  assessmentId: string
+): Promise<UploadResult> {
+  const timestamp = Date.now();
+  const extension = file.name.split(".").pop() || "bin";
+  const path = `${assessmentId}/${timestamp}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKETS.DELIVERABLES)
+    .upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(`Failed to upload deliverable: ${error.message}`);
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(STORAGE_BUCKETS.DELIVERABLES).getPublicUrl(path);
+
+  return { url: publicUrl, path };
+}
+
 export async function getSignedResumeUrl(
   path: string,
   expiresIn = 3600

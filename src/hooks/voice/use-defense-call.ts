@@ -34,7 +34,6 @@ export interface UseDefenseCallReturn {
   callEndedAt: Date | null;
   managerName: string | null;
   managerRole: string | null;
-  prUrl: string | null;
   retryCount: number;
   maxRetries: number;
   connect: () => Promise<void>;
@@ -68,7 +67,6 @@ export function useDefenseCall({
   const [managerName, setManagerName] = useState<string | null>(null);
   const [managerRole, setManagerRole] = useState<string | null>(null);
   const [managerId, setManagerId] = useState<string | null>(null);
-  const [prUrl, setPrUrl] = useState<string | null>(null);
 
   const base = useVoiceBase({
     assessmentId,
@@ -83,7 +81,6 @@ export function useDefenseCall({
       setManagerName(tokenData.managerName as string | null);
       setManagerRole(tokenData.managerRole as string | null);
       setManagerId(tokenData.managerId as string | null);
-      setPrUrl(tokenData.prUrl as string | null);
     },
   });
 
@@ -162,7 +159,6 @@ export function useDefenseCall({
     callEndedAt: base.endedAt,
     managerName,
     managerRole,
-    prUrl,
     retryCount: base.retryCount,
     maxRetries: base.maxRetries,
     connect: base.connect,

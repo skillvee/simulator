@@ -15,12 +15,14 @@ import {
   requestMicrophoneAccess,
   playAudioChunk,
   createAudioWorkletBlobUrl,
+  getOutputFrequencyData,
   type AudioPermissionState,
 } from "@/lib/media";
 import { playCallRingSound } from "@/lib/sounds";
 import type { TranscriptMessage } from "@/lib/ai";
 import { createLogger } from "@/lib/core";
 import { CoworkerAvatar } from "./coworker-avatar";
+import { AudioWaveform } from "./audio-waveform";
 import { Button } from "@/components/ui/button";
 
 const logger = createLogger("client:chat:floating-call-bar");
@@ -48,6 +50,8 @@ interface FloatingCallBarProps {
   onCallEnd: () => void;
   onDefenseComplete?: () => void;
   onError?: (error: string) => void;
+  /** When true, signals to the server that this call follows work submission (defense call) */
+  isPostSubmission?: boolean;
 }
 
 // Defense calls are detected automatically when the token endpoint returns
@@ -66,6 +70,7 @@ export function FloatingCallBar({
   onCallEnd,
   onDefenseComplete,
   onError,
+  isPostSubmission,
 }: FloatingCallBarProps) {
   const [callState, setCallState] = useState<CallState>("idle");
   const [_permissionState, setPermissionState] =
@@ -86,6 +91,9 @@ export function FloatingCallBar({
   // Audio playback queue
   const audioQueueRef = useRef<string[]>([]);
   const isPlayingRef = useRef(false);
+
+  // Audio level tracking for waveform visualization
+  const micVolumeRef = useRef(0);
 
   // Prevent concurrent connection attempts
   const isConnectingRef = useRef(false);
@@ -199,9 +207,11 @@ export function FloatingCallBar({
       const workletNode = new AudioWorkletNode(audioContext, "audio-processor");
       workletNodeRef.current = workletNode;
 
-      // Handle audio data from worklet
+      // Handle audio data and volume from worklet
       workletNode.port.onmessage = (event) => {
-        if (event.data.type === "audio" && session) {
+        if (event.data.type === "volume") {
+          micVolumeRef.current = event.data.volume;
+        } else if (event.data.type === "audio" && session) {
           const audioData = new Uint8Array(event.data.data);
           const base64 = btoa(String.fromCharCode(...audioData));
 
@@ -243,6 +253,14 @@ export function FloatingCallBar({
     let ringSound: { stop: () => void } | null = null;
 
     try {
+      // Run mic access and token fetch in parallel — they're independent
+      const tokenEndpoint = getTokenEndpoint();
+      const tokenPromise = fetch(tokenEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId, coworkerId: coworker.id, isPostSubmission }),
+      });
+
       // Check and request microphone permission
       const permState = await checkMicrophonePermission();
       setPermissionState(permState);
@@ -257,13 +275,8 @@ export function FloatingCallBar({
       // Start playing ring sound
       ringSound = playCallRingSound();
 
-      // Get ephemeral token from server
-      const tokenEndpoint = getTokenEndpoint();
-      const tokenResponse = await fetch(tokenEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessmentId, coworkerId: coworker.id }),
-      });
+      // Wait for token (likely already done since mic access takes user interaction)
+      const tokenResponse = await tokenPromise;
 
       if (!tokenResponse.ok) {
         const data = await tokenResponse.json();
@@ -358,6 +371,7 @@ export function FloatingCallBar({
     getTokenEndpoint,
     handleServerMessage,
     initializeAudioCapture,
+    isPostSubmission,
     onError,
   ]);
 
@@ -558,30 +572,13 @@ export function FloatingCallBar({
               </Button>
 
               {/* Waveform Visualization */}
-              <div className="flex-1 flex justify-center items-center h-10 gap-0.5">
-                {isSpeaking ? (
-                  [...Array(12)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-1 bg-primary/40 rounded-full animate-pulse"
-                      style={{
-                        height: Math.random() * 20 + 4 + "px",
-                        animationDelay: i * 0.1 + "s",
-                      }}
-                    />
-                  ))
-                ) : isListening && !isMuted ? (
-                  [...Array(12)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-1 bg-muted-foreground/30 rounded-full"
-                      style={{ height: "4px" }}
-                    />
-                  ))
-                ) : (
-                  <div className="h-1 w-full rounded-full" style={{background: "hsl(var(--slack-bg-hover))"}} />
-                )}
-              </div>
+              <AudioWaveform
+                isSpeaking={isSpeaking}
+                isListening={isListening}
+                isMuted={isMuted}
+                micVolumeRef={micVolumeRef}
+                getOutputFrequencyData={getOutputFrequencyData}
+              />
 
               <Button
                 onClick={endCall}

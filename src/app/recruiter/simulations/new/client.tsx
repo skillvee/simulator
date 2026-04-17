@@ -19,14 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileText, ArrowRight, Loader2, X, Sparkles, Check, Pencil, Users, Eye, AlertTriangle, GraduationCap, ChevronDown } from "lucide-react";
+import { FileText, ArrowRight, Loader2, X, Sparkles, Check, Pencil, Users, Eye, AlertTriangle, GraduationCap, ChevronDown, Clock } from "lucide-react";
 import {
   Collapsible,
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
-import type { ParseJDResponse, InferredSeniorityLevel, ScenarioResource } from "@/types";
+import type { ParseJDResponse, InferredSeniorityLevel, ScenarioResource, SimulationDepth } from "@/types";
+import { SIMULATION_DEPTH_CONFIG } from "@/types";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
 import type { TaskOption } from "@/lib/scenarios/task-generator";
 import { CandidateExperienceSummary } from "@/components/recruiter/candidate-experience-summary"; // eslint-disable-line no-restricted-imports -- Component import allowed for UI
@@ -155,6 +156,7 @@ export function RecruiterScenarioBuilderClient() {
   const [selectedArchetypeId, setSelectedArchetypeId] = useState<string>("");
   const [roleFamilies, setRoleFamilies] = useState<RoleFamilyWithArchetypes[]>([]);
   const [showRoleSuggestions, setShowRoleSuggestions] = useState(false);
+  const [simulationDepth, setSimulationDepth] = useState<SimulationDepth>("medium");
 
   // Generating progress message
   const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
@@ -500,13 +502,14 @@ export function RecruiterScenarioBuilderClient() {
           techStack: previewData.techStack,
           targetLevel: parsedJDData?.seniorityLevel.value || "mid",
           archetypeId: selectedArchetypeId,
+          simulationDepth,
           resources: previewData.resources.length > 0 ? previewData.resources : undefined,
           // repoUrl is intentionally omitted - it will be set by repo provisioning
         }),
       });
 
       if (!scenarioResponse.ok) {
-        const errorData = await scenarioResponse.json();
+        const errorData = await scenarioResponse.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to create simulation");
       }
 
@@ -529,7 +532,7 @@ export function RecruiterScenarioBuilderClient() {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({}));
           throw new Error(`Failed to create coworker ${coworker.name}: ${errorData.error || "Unknown error"}`);
         }
 
@@ -622,6 +625,7 @@ export function RecruiterScenarioBuilderClient() {
           keyResponsibilities: responsibilities.length > 0 ? responsibilities : ["Build and maintain features"],
           domainContext: domain || "a technology company",
           companyName: companyNameValue,
+          simulationDepth,
           creationLogId: creationLogIdRef.current,
         }),
       });
@@ -717,7 +721,7 @@ export function RecruiterScenarioBuilderClient() {
       setStep("preview");
       setIsLoading(false);
     } catch (err) {
-      logger.error("Failed to generate preview content", { err });
+      logger.error("Failed to generate preview content", { err: err instanceof Error ? err.message : String(err) });
       const errorMsg = err instanceof Error ? err.message : "Generation failed";
       // Only update log if it wasn't already updated by the specific failure handler above
       if (creationLogIdRef.current) {
@@ -1523,6 +1527,58 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     </p>
                   </div>
                   <Pencil className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </button>
+              )}
+
+              {/* Simulation Depth */}
+              {editingField === "depth" ? (
+                <div className="rounded-lg border bg-background p-3 space-y-3">
+                  <Label className="text-xs font-medium text-muted-foreground">Simulation Length</Label>
+                  <RadioGroup
+                    value={simulationDepth}
+                    onValueChange={(value: string) => setSimulationDepth(value as SimulationDepth)}
+                    className="space-y-2"
+                  >
+                    {(["short", "medium", "long"] as const).map((depth) => {
+                      const config = SIMULATION_DEPTH_CONFIG[depth];
+                      return (
+                        <label
+                          key={depth}
+                          htmlFor={`depth-${depth}`}
+                          className={`flex cursor-pointer items-start gap-2.5 rounded-md border p-2.5 transition-colors hover:border-primary/40 ${
+                            simulationDepth === depth ? "border-primary bg-primary/5" : ""
+                          }`}
+                        >
+                          <RadioGroupItem value={depth} id={`depth-${depth}`} className="mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium">{config.label}</p>
+                            <p className="text-[11px] text-muted-foreground">{config.description}</p>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </RadioGroup>
+                  <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
+                    Done
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="group flex w-full items-start gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:border-primary/40"
+                  onClick={() => setEditingField("depth")}
+                >
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <Check className="h-3 w-3" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Simulation Length</p>
+                    <p className="text-sm font-semibold">{SIMULATION_DEPTH_CONFIG[simulationDepth].label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {SIMULATION_DEPTH_CONFIG[simulationDepth].description}
+                    </p>
+                  </div>
+                  <Clock className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 </button>
               )}
 

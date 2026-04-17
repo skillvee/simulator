@@ -6,17 +6,37 @@
  */
 
 /**
- * Simulation depth controls the duration and complexity of the assessment.
+ * Simulation depth controls the length/complexity of the assessment.
+ *
+ * - "short":  30-min target, 60-min max — focused task, fewer sub-tasks
+ * - "medium": 45-min target, 75-min max — standard assessment (default)
+ * - "long":   60-min target, 90-min max — deep-dive, more sub-tasks and exploration
  */
 export type SimulationDepth = "short" | "medium" | "long";
 
-/**
- * Configuration for each simulation depth level.
- */
-export const SIMULATION_DEPTH_CONFIG: Record<SimulationDepth, { maxMinutes: number }> = {
-  short: { maxMinutes: 60 },
-  medium: { maxMinutes: 75 },
-  long: { maxMinutes: 90 },
+/** Target and max durations (in minutes) for each depth level */
+export const SIMULATION_DEPTH_CONFIG: Record<
+  SimulationDepth,
+  { targetMinutes: number; maxMinutes: number; label: string; description: string }
+> = {
+  short: {
+    targetMinutes: 30,
+    maxMinutes: 60,
+    label: "Short",
+    description: "~30 min target, up to 60 min",
+  },
+  medium: {
+    targetMinutes: 45,
+    maxMinutes: 75,
+    label: "Standard",
+    description: "~45 min target, up to 75 min",
+  },
+  long: {
+    targetMinutes: 60,
+    maxMinutes: 90,
+    label: "Deep Dive",
+    description: "~60 min target, up to 90 min",
+  },
 };
 
 /**
@@ -35,8 +55,6 @@ export interface ScenarioResource {
     | "custom";
   /** Human-readable label, e.g. "GitHub Repository", "Data Warehouse", "Sales Data (Excel)" */
   label: string;
-  /** Clickable URL (GitHub URL, Google Sheets link, Grafana dashboard, etc.) */
-  url?: string;
   /** Access instructions, e.g. "Read-only. User: analyst, Password in 1Password" */
   credentials?: string;
   /** How to get started, e.g. "Clone and create a branch from main" */
