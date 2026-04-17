@@ -28,6 +28,17 @@ Resources are documents the candidate reads INLINE during the simulation. They d
 
 5. **Task-driven, not role-driven** — Read the task description carefully. Generate resources that fill the specific information gaps the candidate needs to solve THIS task. Don't generate generic "a backend engineer might need these" resources.
 
+6. **ABSOLUTELY NO external URLs or links** — Resources are displayed inline in the simulation interface. The candidate CANNOT navigate to any URL. NEVER include:
+   - GitHub/GitLab clone URLs (e.g., \`git clone git@github.com:...\`)
+   - Links to external dashboards (Grafana, Datadog, Kibana, etc.)
+   - Links to issue trackers (JIRA, Linear, etc.)
+   - Links to documentation sites (Confluence, Notion, Google Docs, etc.)
+   - Links to any \`*.internal\`, \`docs.*\`, or \`wiki.*\` domains
+   - ANY URL starting with http://, https://, git@, or containing .com, .io, .org, .dev, .internal
+   Instead of URLs, describe the content inline. Instead of "see dashboard at grafana.internal/...", include the dashboard data directly. Instead of "git clone repo-url", just describe the repo structure. The candidate has NO browser access — every piece of information must be IN the content field.
+
+   For repository READMEs specifically: Do NOT include \`git clone\` commands with URLs. The candidate already has the code — they're reading the README as a reference. Start the Quick Start section with local setup commands like \`npm install\` or \`mvn clean install\`, not clone commands.
+
 ## Content Requirements
 
 Every resource MUST have a \`content\` field with a full markdown document body. The content must be:
@@ -81,7 +92,7 @@ Apply these rules based on the candidate's role:
     "type": "repository",
     "label": "Payment Service — README",
     "instructions": "Service architecture and known issues — check the webhook flow section.",
-    "content": "# payment-service\\n\\nCore payment processing service for VelocityPay. Handles transaction lifecycle from initiation through settlement.\\n\\n## Quick Start\\n\\n\`\`\`bash\\npnpm install\\ncp .env.example .env.local  # fill in Stripe test keys\\npnpm dev\\n\`\`\`\\n\\n## Architecture\\n\\n| Layer | Directory | Description |\\n|-------|-----------|-------------|\\n| API | \`src/routes/\` | Express routes, request validation |\\n| Service | \`src/services/\` | Business logic, orchestration |\\n| Data | \`src/repositories/\` | Prisma queries, DB access |\\n\\n## Webhook Flow\\n\\n1. Stripe sends POST to \`/webhooks/stripe\`\\n2. \`webhook-handler.ts\` validates signature, routes by event type\\n3. \`transaction-processor.ts\` updates transaction state\\n4. Settlement events trigger \`settlement-service.ts\`\\n\\n### Key Handler (src/routes/webhook-handler.ts)\\n\\n\`\`\`typescript\\nexport async function handleStripeWebhook(req: Request) {\\n  const sig = req.headers['stripe-signature'];\\n  const event = stripe.webhooks.constructEvent(req.body, sig, WEBHOOK_SECRET);\\n  switch (event.type) {\\n    case 'payment_intent.succeeded':\\n      return processTransaction(event.data.object, 'COMPLETED');\\n    case 'charge.refunded':\\n      return processRefund(event.data.object);\\n    default:\\n      logger.warn('Unhandled event type', { type: event.type });\\n  }\\n}\\n\`\`\`\\n\\n## Known Issues\\n\\n- **JIRA-1247**: Fraud check p99 latency at 1.2s (target: 500ms). Marcus investigating caching.\\n- **JIRA-1301**: Duplicate webhook handling — no idempotency keys on settlement events. ~5% duplicate processing rate.\\n- **JIRA-1315**: Webhook retry queue backs up during peak hours (4-6pm UTC). Current DLQ threshold is 3 retries.\\n\\n## On-call\\n\\nPagerDuty rotation: #payments-oncall. Runbook: docs.internal/runbooks/payments\\n\\n---\\n*Last updated by @sarah.chen — 2024-03-15*"
+    "content": "# payment-service\\n\\nCore payment processing service for VelocityPay. Handles transaction lifecycle from initiation through settlement.\\n\\n## Quick Start\\n\\n\`\`\`bash\\n# Already cloned — just install and run\\npnpm install\\ncp .env.example .env.local  # fill in Stripe test keys\\npnpm dev\\n\`\`\`\\n\\n## Architecture\\n\\n| Layer | Directory | Description |\\n|-------|-----------|-------------|\\n| API | \`src/routes/\` | Express routes, request validation |\\n| Service | \`src/services/\` | Business logic, orchestration |\\n| Data | \`src/repositories/\` | Prisma queries, DB access |\\n\\n## Webhook Flow\\n\\n1. Stripe sends POST to \`/webhooks/stripe\`\\n2. \`webhook-handler.ts\` validates signature, routes by event type\\n3. \`transaction-processor.ts\` updates transaction state\\n4. Settlement events trigger \`settlement-service.ts\`\\n\\n### Key Handler (src/routes/webhook-handler.ts)\\n\\n\`\`\`typescript\\nexport async function handleStripeWebhook(req: Request) {\\n  const sig = req.headers['stripe-signature'];\\n  const event = stripe.webhooks.constructEvent(req.body, sig, WEBHOOK_SECRET);\\n  switch (event.type) {\\n    case 'payment_intent.succeeded':\\n      return processTransaction(event.data.object, 'COMPLETED');\\n    case 'charge.refunded':\\n      return processRefund(event.data.object);\\n    default:\\n      logger.warn('Unhandled event type', { type: event.type });\\n  }\\n}\\n\`\`\`\\n\\n## Known Issues\\n\\n- **JIRA-1247**: Fraud check p99 latency at 1.2s (target: 500ms). Marcus investigating caching.\\n- **JIRA-1301**: Duplicate webhook handling — no idempotency keys on settlement events. ~5% duplicate processing rate.\\n- **JIRA-1315**: Webhook retry queue backs up during peak hours (4-6pm UTC). Current DLQ threshold is 3 retries.\\n\\n## On-call\\n\\nPagerDuty rotation: #payments-oncall (Slack channel). See the On-Call Runbook resource for escalation procedures.\\n\\n---\\n*Last updated by @sarah.chen — 2024-03-15*"
   }
 ]
 \`\`\`
@@ -109,5 +120,9 @@ Apply these rules based on the candidate's role:
   }
 ]
 \`\`\`
+
+### Code in Content
+
+When including code snippets in the content field (for repository READMEs, security docs, API docs, etc.), use inline code with backticks for short references (e.g., \`functionName()\`, \`npm install\`) and fenced code blocks with triple backticks for longer snippets. Include function signatures, import statements, shell commands, and actual code samples — not just descriptions of code.
 
 IMPORTANT: Return ONLY the JSON array. No markdown code fences, no explanation, no extra text. The \`content\` field must contain valid markdown with newlines escaped as \\n in the JSON string.`;

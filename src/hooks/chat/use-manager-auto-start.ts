@@ -39,6 +39,11 @@ interface UseManagerAutoStartReturn {
   error: Error | null;
 }
 
+// Module-level tracking: once we've triggered the auto-start check for an
+// assessment we never re-trigger it, even if the Chat component remounts
+// (e.g. when the user switches coworkers and comes back).
+const triggeredAssessments = new Set<string>();
+
 export function useManagerAutoStart({
   assessmentId,
   currentCoworkerId,
@@ -46,7 +51,7 @@ export function useManagerAutoStart({
   onTypingStart,
   onTypingEnd,
 }: UseManagerAutoStartOptions): UseManagerAutoStartReturn {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !triggeredAssessments.has(assessmentId));
   const [isTyping, setIsTyping] = useState(false);
   const [managerId, setManagerId] = useState<string | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -58,8 +63,13 @@ export function useManagerAutoStart({
     isMountedRef.current = true;
 
     const checkAndTriggerMessages = async () => {
-      if (hasTriggeredRef.current) return;
+      // Skip if already triggered for this assessment (module-level) or instance
+      if (hasTriggeredRef.current || triggeredAssessments.has(assessmentId)) {
+        setIsLoading(false);
+        return;
+      }
       hasTriggeredRef.current = true;
+      triggeredAssessments.add(assessmentId);
 
       try {
         // Step 1: Check if conversation already exists

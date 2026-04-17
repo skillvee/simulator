@@ -127,7 +127,6 @@ export interface CodeReviewSummary {
  * Full code review data stored in Prisma JSON field
  */
 export interface CodeReviewData {
-  prUrl: string;
   analyzedAt: string;
 
   // Overall scores (1-5 scale)
@@ -415,7 +414,7 @@ export interface DetectedRedFlag {
 export interface RubricAssessmentOutput {
   evaluationVersion: string;
   roleFamilySlug: string;
-  overallScore: number; // Weighted average on 1-4 scale
+  overallScore: number | null; // Weighted average on 1-4 scale, null if insufficient evidence
   dimensionScores: RubricDimensionScore[];
   detectedRedFlags: DetectedRedFlag[];
   topStrengths: AssessmentStrengthOrGap[];

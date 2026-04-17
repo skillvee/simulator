@@ -24,6 +24,7 @@ export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 export const CallTokenRequestSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
   coworkerId: z.string().min(1, "Coworker ID is required"),
+  isPostSubmission: z.boolean().optional(),
 });
 export type CallTokenRequest = z.infer<typeof CallTokenRequestSchema>;
 
@@ -70,6 +71,7 @@ export const ScenarioCreateSchema = z.object({
   techStack: z.array(z.string()).optional().default([]),
   targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional().default("mid"),
   archetypeId: z.string().min(1, "Role archetype is required"),
+  simulationDepth: z.enum(["short", "medium", "long"]).optional().default("medium"),
   isPublished: z.boolean().optional().default(false),
   resources: z.array(ScenarioResourceSchema).optional(),
 });
@@ -87,6 +89,7 @@ export const ScenarioUpdateSchema = z.object({
   techStack: z.array(z.string()).optional(),
   targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional(),
   archetypeId: z.string().nullable().optional(),
+  simulationDepth: z.enum(["short", "medium", "long"]).optional(),
   isPublished: z.boolean().optional(),
   resources: z.array(ScenarioResourceSchema).optional(),
 });
@@ -97,8 +100,17 @@ export type ScenarioUpdate = z.infer<typeof ScenarioUpdateSchema>;
  */
 export const AssessmentCreateSchema = z.object({
   scenarioId: z.string().min(1, "Scenario ID is required"),
+  targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional(),
 });
 export type AssessmentCreate = z.infer<typeof AssessmentCreateSchema>;
+
+/**
+ * POST /api/assessment/start - Start the assessment timer
+ */
+export const AssessmentStartSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+});
+export type AssessmentStart = z.infer<typeof AssessmentStartSchema>;
 
 /**
  * POST /api/assessment/finalize - Finalize an assessment
@@ -256,8 +268,6 @@ export const ChatStreamChunkSchema = z.object({
 export const ChatStreamDoneSchema = z.object({
   type: z.literal("done"),
   timestamp: z.string(),
-  prSubmitted: z.boolean(),
-  defenseCallRequired: z.boolean(),
 });
 
 /**
@@ -275,24 +285,6 @@ export const ChatGetResponseSchema = apiSuccessSchema(
   })
 );
 
-/**
- * POST /api/assessment/complete — response data shape
- */
-export const AssessmentCompleteResponseSchema = apiSuccessSchema(
-  z.object({
-    assessment: z.object({
-      id: z.string(),
-      status: z.string(),
-      prUrl: z.string().nullable(),
-      startedAt: z.union([z.string(), z.date()]),
-    }),
-    timing: z.object({
-      startedAt: z.string(),
-      completedWorkingAt: z.string(),
-      workingDurationSeconds: z.number(),
-    }),
-  })
-);
 
 /**
  * POST /api/assessment/create — response data shape

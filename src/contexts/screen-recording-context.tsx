@@ -107,8 +107,11 @@ async function uploadRecordingData(
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      logger.error("Upload failed", { error });
+      const body = await response.json().catch(() => null);
+      logger.error("Upload failed", {
+        status: String(response.status),
+        message: body?.error ?? "Unknown error",
+      });
       return false;
     }
 

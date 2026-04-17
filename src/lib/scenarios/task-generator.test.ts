@@ -73,7 +73,7 @@ describe("generateCodingTask", () => {
       "Build a transaction webhook handler with retry logic"
     );
     expect(result.taskOptions[0].description).toContain("webhook");
-    expect(result._meta.promptVersion).toBe("1.1");
+    expect(result._meta.promptVersion).toBe("2.0");
     expect(result._meta.generatedAt).toBeDefined();
   });
 

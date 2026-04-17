@@ -339,8 +339,11 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     expect(data.data._meta.promptVersion).toBe("1.1");
     expect(data.data._meta.generatedAt).toBeDefined();
 
-    // Verify generateCodingTask was called with correct input
-    expect(mockGenerateCodingTask).toHaveBeenCalledWith(validRequestBody);
+    // Verify generateCodingTask was called with correct input (includes simulationDepth default)
+    expect(mockGenerateCodingTask).toHaveBeenCalledWith({
+      ...validRequestBody,
+      simulationDepth: "medium",
+    });
   });
 
   it("returns 500 if generation fails", async () => {

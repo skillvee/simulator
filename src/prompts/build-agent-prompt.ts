@@ -118,25 +118,21 @@ function buildGreetingHint(ctx: AgentPromptContext): string {
 // ─── Defense Phase Context Builder ───────────────────────────────────────────
 
 export interface DefensePhaseContext {
-  prUrl: string;
   repoUrl: string;
   taskDescription: string;
   techStack: string[];
   conversationSummary: string;
   codeReviewSummary?: string;
-  ciStatusSummary?: string;
   screenAnalysisSummary?: string;
 }
 
 export function buildDefensePhaseContext(ctx: DefensePhaseContext): string {
-  return `## PR Defense Review
+  return `## Work Review Call
 
 Task: ${ctx.taskDescription}
 Tech stack: ${ctx.techStack.join(", ")}
-Repo: ${ctx.repoUrl}
-PR: ${ctx.prUrl}
+${ctx.repoUrl ? `Repo: ${ctx.repoUrl}` : ""}
 
-CI/Tests: ${ctx.ciStatusSummary || "Will be checked after the call."}
 Code Review: ${ctx.codeReviewSummary || "Not available."}
 Screen Recording: ${ctx.screenAnalysisSummary || "Not available."}
 Team Conversations: ${ctx.conversationSummary || "None."}
@@ -146,7 +142,7 @@ Team Conversations: ${ctx.conversationSummary || "None."}
 Follow these 5 phases in order:
 
 **Phase 1 — Opening (2 min):**
-"Hey! So I've been looking at your PR. Want to give me the quick walkthrough?"
+"Hey! So I've been looking at your work. Want to give me the quick walkthrough?"
 
 **Phase 2 — High-level (3-4 min):**
 Overall approach, how they broke it down, architecture decisions.

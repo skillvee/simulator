@@ -107,7 +107,7 @@ function buildOutputSchema(
   const dimScores = dimensions
     .map(
       (d) => `    "${d.slug}": {
-      "score": "<integer 1-4 or null if insufficient evidence>",
+      "score": <JSON_NUMBER integer 1-4 OR null — unquoted number literal, never a string>,
       "summary": "<1 sentence summarizing this dimension's performance — e.g. 'Quickly breaks ambiguous problems into structured subcomponents.'>",
       "confidence": "high" | "medium" | "low",
       "rationale": "<why this score was given, with specific evidence>",
@@ -115,7 +115,7 @@ function buildOutputSchema(
         { "timestamp": "MM:SS", "behavior": "<specific observed behavior at this timestamp>" },
         { "timestamp": "MM:SS", "behavior": "<specific observed behavior at this timestamp>" }
       ],
-      "trainable_gap": "<boolean - true if this is a skill that can be improved>",
+      "trainable_gap": <JSON_BOOLEAN true if this skill is improvable, else false — unquoted>,
       "green_flags": ["<positive signal 1>"],
       "red_flags": ["<concern 1>"]
     }`
@@ -136,7 +136,7 @@ function buildOutputSchema(
   return `\`\`\`json
 {
   "evaluation_version": "${RUBRIC_EVALUATION_PROMPT_VERSION}",
-  "overall_score": "<number 1.0-4.0, one decimal place — weighted average of non-null dimension scores>",
+  "overall_score": <JSON_NUMBER 1.0-4.0 with one decimal place — weighted average of non-null dimension scores. Unquoted number literal. Use null ONLY if every dimension is null.>,
   "dimension_scores": {
 ${dimScores}
   },
@@ -144,14 +144,14 @@ ${redFlagSchema}
   "top_strengths": [
     {
       "dimension": "<dimension name>",
-      "score": "<integer 1-4>",
+      "score": <JSON_NUMBER integer 1-4, unquoted>,
       "description": "<1-2 sentence explanation of why this is a strength, referencing specific evidence>"
     }
   ],
   "growth_areas": [
     {
       "dimension": "<dimension name>",
-      "score": "<integer 1-4>",
+      "score": <JSON_NUMBER integer 1-4, unquoted>,
       "description": "<1-2 sentence explanation of the gap and what improvement looks like>"
     }
   ],
@@ -215,6 +215,13 @@ ${videoContext.expectedOutcomes?.length ? `- Expected Outcomes:\n${videoContext.
 - NO seniority assumptions based on appearance, speech patterns, or demographics
 - NO role assumptions about background, experience, or job history
 - NO implicit bias: evaluate only observable behaviors
+
+### JSON Types (strict)
+- Placeholders shown as \`<JSON_NUMBER ...>\` MUST be replaced with an unquoted JSON number literal (e.g. \`3\` or \`3.4\`), NEVER a string like \`"3"\` or \`"N/A"\`
+- Placeholders shown as \`<JSON_BOOLEAN ...>\` MUST be replaced with \`true\` or \`false\`, unquoted
+- \`overall_score\` MUST be a number or \`null\` — never a string, never omitted
+- Any \`score\` field MUST be a number or \`null\` — never a string
+- Do NOT include comments (\`//\` or \`/* */\`) anywhere in the output
 
 ---
 

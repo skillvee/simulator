@@ -50,9 +50,6 @@ const mockOriginalAssessment = {
   status: "COMPLETED",
   cvUrl: "https://storage.example.com/cv.pdf",
   parsedProfile: { name: "John Doe" },
-  prUrl: "https://github.com/user/repo/pull/1",
-  prSnapshot: { title: "Add feature" },
-  ciStatus: { status: "passed" },
   codeReview: { score: 85 },
   logs: [{ eventType: "COMPLETED" }],
   user: { id: "user-1" },
@@ -164,7 +161,6 @@ describe("POST /api/admin/assessment/retry", () => {
         userId: "user-1",
         scenarioId: "scenario-1",
         status: "WORKING",
-        prUrl: "https://github.com/user/repo/pull/1",
       }),
     });
   });

@@ -15,6 +15,10 @@ import {
   ExternalLink,
   MessageSquare,
   Loader2,
+  Clock,
+  Wifi,
+  Coffee,
+  PlayCircle,
 } from "lucide-react";
 
 interface ScenarioData {
@@ -23,7 +27,14 @@ interface ScenarioData {
   companyDescription: string;
   taskDescription: string;
   techStack: string[];
+  simulationDepth: string;
 }
+
+const DEPTH_TIMING: Record<string, { target: number; max: number }> = {
+  short: { target: 30, max: 60 },
+  medium: { target: 45, max: 75 },
+  long: { target: 60, max: 90 },
+};
 
 interface WelcomePageClientProps {
   assessmentId: string;
@@ -32,16 +43,34 @@ interface WelcomePageClientProps {
 
 export function WelcomePageClient({
   assessmentId,
-  scenario: _scenario,
+  scenario,
 }: WelcomePageClientProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLaunching, setIsLaunching] = useState(false);
-  const totalSteps = 3;
+  const [startError, setStartError] = useState<string | null>(null);
+  const totalSteps = 4;
 
-  const handleStart = () => {
+  const handleStart = async () => {
     setIsLaunching(true);
-    router.push(`/assessments/${assessmentId}/work`);
+    setStartError(null);
+    try {
+      const res = await fetch("/api/assessment/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setStartError(data?.error || "Failed to start simulation");
+        setIsLaunching(false);
+        return;
+      }
+      router.push(`/assessments/${assessmentId}/work`);
+    } catch {
+      setStartError("Network error. Please check your connection and try again.");
+      setIsLaunching(false);
+    }
   };
 
   return (
@@ -115,6 +144,28 @@ export function WelcomePageClient({
             {step === 3 && (
               <motion.div
                 key="step3-left"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-8"
+              >
+                <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
+                  TAKE
+                  <br />
+                  YOUR
+                  <br />
+                  TIME.
+                </h2>
+                <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl leading-relaxed">
+                  Work at your natural pace. There&apos;s no bonus for
+                  finishing fast — just do your best work.
+                </p>
+              </motion.div>
+            )}
+
+            {step === 4 && (
+              <motion.div
+                key="step4-left"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -313,11 +364,102 @@ export function WelcomePageClient({
                 key="step3-right"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
                 className="space-y-8"
               >
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
                     Step 03
+                  </h4>
+                  <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
+                    Before You Begin
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Clock className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      {(() => {
+                        const timing = DEPTH_TIMING[scenario.simulationDepth] || DEPTH_TIMING.medium;
+                        return (
+                          <>
+                            This simulation is designed to take about{" "}
+                            <strong>{timing.target} minutes</strong>.
+                            {" "}You&apos;ll have up to{" "}
+                            <strong>{timing.max} minutes</strong> before the session
+                            automatically closes.
+                          </>
+                        );
+                      })()}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Coffee className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      <strong>Find a quiet spot</strong> with no distractions.
+                      Treat this like a focused block of work.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Wifi className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      <strong>Ensure stable internet.</strong> If you lose
+                      connection, you can rejoin and continue where you left off.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <PlayCircle className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      <strong>This is a continuous session.</strong> Once you
+                      start, work through to completion in one sitting.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
+                  <p className="text-sm text-slate-600">
+                    <strong className="text-slate-700">Remember:</strong> Work at
+                    your natural pace. There&apos;s no bonus for rushing — we
+                    want to see how you normally work.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={() => setStep(4)}
+                  className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
+                >
+                  Continue
+                  <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+
+                <button
+                  onClick={() => setStep(2)}
+                  className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </button>
+              </motion.div>
+            )}
+
+            {step === 4 && (
+              <motion.div
+                key="step4-right"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-8"
+              >
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+                    Step 04
                   </h4>
                   <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
                     Launch Simulation
@@ -337,6 +479,12 @@ export function WelcomePageClient({
                   during this assessment.
                 </p>
 
+                {startError && (
+                  <p className="text-sm text-center text-destructive font-medium">
+                    {startError}
+                  </p>
+                )}
+
                 <Button
                   onClick={handleStart}
                   disabled={isLaunching}
@@ -353,7 +501,7 @@ export function WelcomePageClient({
                 </Button>
 
                 <button
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(3)}
                   className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />

@@ -115,7 +115,8 @@ describe("middleware security headers", () => {
     const response = middlewareCallback(req) as NextResponse;
 
     expect(response.status).toBe(307);
-    for (const [key, value] of Object.entries(EXPECTED_BASE_HEADERS)) {
+    // Recruiter routes get assessment headers (camera/microphone enabled)
+    for (const [key, value] of Object.entries(EXPECTED_ASSESSMENT_HEADERS)) {
       expect(response.headers.get(key)).toBe(value);
     }
   });

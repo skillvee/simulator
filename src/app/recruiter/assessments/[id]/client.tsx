@@ -72,21 +72,27 @@ interface SimulationCandidatesClientV3Props {
   dimensionExpectations: Record<string, number> | null;
   archetypeName: string | null;
   roleFamilyName: string | null;
+  dimensionMeta: Array<{ key: string; full: string; desc: string }>;
   candidates: CandidateData[];
 }
 
 type ExpectationStatus = "super_exceeds" | "exceeds" | "meets" | "below";
 
-const ALL_DIMENSIONS = [
-  { key: "COMMUNICATION", abbr: "Comm", full: "Communication", desc: "Clarity, listening, and ability to explain and defend decisions" },
-  { key: "PROBLEM_SOLVING", abbr: "Problem", full: "Problem Solving", desc: "How they structure problems, identify root causes, and design solutions" },
-  { key: "TECHNICAL_KNOWLEDGE", abbr: "Tech", full: "Technical Knowledge", desc: "Quality, correctness, and efficiency of code produced" },
-  { key: "COLLABORATION", abbr: "Collab", full: "Collaboration", desc: "How they respond to feedback, ask for help, and interact with teammates" },
-  { key: "ADAPTABILITY", abbr: "Adapt", full: "Adaptability", desc: "Speed of adapting to new information, tools, or feedback" },
-  { key: "LEADERSHIP", abbr: "Lead", full: "Leadership", desc: "Initiative, ownership, and ability to drive decisions forward" },
-  { key: "CREATIVITY", abbr: "Creative", full: "Creativity", desc: "Use of AI tools, novel approaches, and resourcefulness" },
-  { key: "TIME_MANAGEMENT", abbr: "Time", full: "Time Management", desc: "How they prioritize, sequence work, and manage their time" },
-] as const;
+/**
+ * Derive a short abbreviation from a dimension name.
+ * e.g., "Communication" → "Comm", "Problem Decomposition & Design" → "Problem"
+ */
+function deriveAbbr(name: string): string {
+  const first = name.split(/[\s&]+/)[0];
+  return first.length <= 7 ? first : first.slice(0, 7);
+}
+
+interface DimensionDisplay {
+  key: string;
+  abbr: string;
+  full: string;
+  desc: string;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -268,6 +274,7 @@ export function SimulationCandidatesClientV3({
   dimensionExpectations,
   archetypeName,
   roleFamilyName: _roleFamilyName,
+  dimensionMeta,
   candidates,
 }: SimulationCandidatesClientV3Props) {
   const router = useRouter();
@@ -318,13 +325,33 @@ export function SimulationCandidatesClientV3({
     window.history.replaceState({}, "", newUrl);
   }, [compareMode, selectedIds, searchParams]);
 
-  const activeDimensions = useMemo(() => {
+  const activeDimensions: DimensionDisplay[] = useMemo(() => {
+    // Collect all dimension keys that have scores in the data
     const usedKeys = new Set<string>();
     for (const c of candidates) {
       for (const key of Object.keys(c.dimensionScores)) usedKeys.add(key);
     }
-    return ALL_DIMENSIONS.filter((d) => usedKeys.has(d.key));
-  }, [candidates]);
+
+    // Build display info: prefer metadata from rubric, fall back to formatting the slug
+    const _metaMap = new Map(dimensionMeta.map((m) => [m.key, m]));
+    const dims: DimensionDisplay[] = [];
+
+    // First add dimensions in rubric order (if metadata available)
+    for (const meta of dimensionMeta) {
+      if (usedKeys.has(meta.key)) {
+        dims.push({ key: meta.key, abbr: deriveAbbr(meta.full), full: meta.full, desc: meta.desc });
+        usedKeys.delete(meta.key);
+      }
+    }
+
+    // Then add any remaining dimensions from data (no metadata — format from slug)
+    for (const key of usedKeys) {
+      const formatted = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      dims.push({ key, abbr: deriveAbbr(formatted), full: formatted, desc: "" });
+    }
+
+    return dims;
+  }, [candidates, dimensionMeta]);
 
   const handleRowClick = (assessmentId: string) => {
     if (compareMode) return;

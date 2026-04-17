@@ -75,10 +75,13 @@ model Scenario {
   repoUrl                String?
   techStack              String[]
   isPublished            Boolean                 @default(false)
+  isChallenge            Boolean                 @default(false)
+  challengeTagline       String?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
   createdById            String?
   targetLevel            String                  @default("mid")
+  simulationDepth        String                  @default("medium") // "short" | "medium" | "long"
   archetypeId            String?
   repoSpec               Json?
   resources              Json?
@@ -113,15 +116,14 @@ model Assessment {
   scenarioId             String
   status                 AssessmentStatus    @default(WELCOME)
   startedAt              DateTime            @default(now())
+  workingStartedAt       DateTime?
   completedAt            DateTime?
-  prUrl                  String?
   report                 Json?
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
-  ciStatus               Json?
-  prSnapshot             Json?
   codeReview             Json?
   supersededBy           String?
+  targetLevel            String?
 
   reviewedAt             DateTime?
   repoUrl                String?

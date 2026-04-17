@@ -46,7 +46,6 @@ interface AssessmentRecord {
   status: string;
   startedAt: Date;
   completedAt: Date | null;
-  prUrl: string | null;
   scenario: { taskDescription: string };
   recordings: Array<{ storageUrl: string }>;
 }
@@ -271,7 +270,6 @@ describe("Video Recording Pipeline", () => {
       status: AssessmentStatus.WORKING,
       startedAt: new Date("2026-03-27T10:00:00Z"),
       completedAt: null,
-      prUrl: null,
       scenario: { taskDescription: "Implement a todo list feature" },
       recordings: [],
     };

@@ -32,6 +32,7 @@ export default async function WelcomePage({ params }: PageProps) {
           companyDescription: true,
           taskDescription: true,
           techStack: true,
+          simulationDepth: true,
         },
       },
     },
@@ -44,6 +45,11 @@ export default async function WelcomePage({ params }: PageProps) {
   // If already completed, go to results
   if (assessment.status === "COMPLETED") {
     redirect(`/assessments/${id}/results`);
+  }
+
+  // If already started working, go to work page (handles rejoin)
+  if (assessment.workingStartedAt) {
+    redirect(`/assessments/${id}/work`);
   }
 
   return (

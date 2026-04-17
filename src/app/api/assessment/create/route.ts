@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   // Validate request body
   const validated = await validateRequest(request, AssessmentCreateSchema);
   if ("error" in validated) return validated.error;
-  const { scenarioId } = validated.data;
+  const { scenarioId, targetLevel } = validated.data;
 
   try {
     // Fetch the scenario (include repoUrl for per-assessment repo provisioning)
@@ -71,12 +71,14 @@ export async function POST(request: Request) {
       });
     }
 
-    // Create new assessment with WORKING status (skips welcome page)
+    // Create new assessment in WELCOME status
+    // Candidate transitions to WORKING when they click "Start Simulation"
     const assessment = await db.assessment.create({
       data: {
         userId,
         scenarioId,
-        status: "WORKING",
+        status: "WELCOME",
+        targetLevel: targetLevel ?? null,
         repoStatus: scenario.repoUrl ? "pending" : null,
       },
     });

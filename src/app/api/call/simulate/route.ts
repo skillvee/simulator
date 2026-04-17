@@ -14,15 +14,13 @@ import {
   buildCoworkerMemory,
   formatMemoryForPrompt,
   buildCrossCoworkerContext,
-  formatConversationsForSummary,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
 import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
-import { buildVoicePrompt, buildDefensePrompt, type DefenseContext } from "@/prompts";
+import { buildVoicePrompt } from "@/prompts";
 import { success, error, validateRequest } from "@/lib/api";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
-import { isManager } from "@/lib/utils/coworker";
 import { logAICall } from "@/lib/analysis";
 
 const CHAT_MODEL = "gemini-3-flash-preview";
@@ -122,41 +120,8 @@ export async function POST(request: Request) {
     avatarUrl: coworker.avatarUrl,
   };
 
-  // Build system prompt — defense if PR submitted + manager, otherwise regular voice
-  const isDefenseCall = Boolean(assessment.prUrl) && isManager(coworker.role);
-  let systemPrompt: string;
-
-  if (isDefenseCall) {
-    const allConvsMapped = allConversations.map((c) => ({
-      type: c.type as "text" | "voice",
-      coworkerId: c.coworkerId,
-      messages: (c.transcript as unknown as ChatMessage[]) || [],
-      createdAt: c.createdAt,
-      updatedAt: c.updatedAt,
-    }));
-    const conversationSummary = formatConversationsForSummary(
-      allConvsMapped,
-      coworkerMap
-    );
-
-    const defenseContext: DefenseContext = {
-      managerName: coworker.name,
-      managerRole: coworker.role,
-      companyName: assessment.scenario.companyName,
-      candidateName: session.user.name || undefined,
-      taskDescription: assessment.scenario.taskDescription,
-      techStack: assessment.scenario.techStack,
-      repoUrl: assessment.repoUrl || "",
-      prUrl: assessment.prUrl!,
-      conversationSummary,
-      screenAnalysisSummary: "",
-      ciStatusSummary: "CI status not available in simulation mode.",
-      codeReviewSummary: "",
-    };
-
-    systemPrompt = buildDefensePrompt(defenseContext);
-  } else {
-    systemPrompt = buildVoicePrompt(
+  // Build system prompt for voice conversation
+  const systemPrompt = buildVoicePrompt(
       persona,
       {
         companyName: assessment.scenario.companyName,
@@ -167,7 +132,6 @@ export async function POST(request: Request) {
       memoryContext,
       crossCoworkerContext
     );
-  }
 
   // Get existing voice conversation for history
   const existingVoiceConversation = allConversations.find(
@@ -190,7 +154,7 @@ export async function POST(request: Request) {
     endpoint: "/api/call/simulate",
     promptText,
     modelVersion: CHAT_MODEL,
-    promptType: isDefenseCall ? "DEFENSE_CALL" : "VOICE_CALL",
+    promptType: "VOICE_CALL",
     promptVersion: "1.0",
     modelUsed: CHAT_MODEL,
   });
@@ -262,6 +226,6 @@ export async function POST(request: Request) {
   return success({
     response: responseText,
     timestamp: modelMessage.timestamp,
-    isDefenseCall,
+    isDefenseCall: false,
   });
 }

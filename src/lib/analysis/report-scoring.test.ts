@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreToLevel, convertRubricToReport, reportToPrismaJson, ASSESSMENT_DIM_TO_CATEGORY } from "./report-scoring";
+import { scoreToLevel, convertRubricToReport, reportToPrismaJson, RUBRIC_DIM_TO_CATEGORY } from "./report-scoring";
 import type { RubricAssessmentOutput } from "@/types";
 
 describe("scoreToLevel", () => {
@@ -24,12 +24,12 @@ describe("scoreToLevel", () => {
   });
 });
 
-describe("ASSESSMENT_DIM_TO_CATEGORY", () => {
-  it("should map all 8 assessment dimensions", () => {
-    expect(Object.keys(ASSESSMENT_DIM_TO_CATEGORY)).toHaveLength(8);
-    expect(ASSESSMENT_DIM_TO_CATEGORY.COMMUNICATION).toBe("communication");
-    expect(ASSESSMENT_DIM_TO_CATEGORY.PROBLEM_SOLVING).toBe("problem_decomposition");
-    expect(ASSESSMENT_DIM_TO_CATEGORY.TIME_MANAGEMENT).toBe("time_management");
+describe("RUBRIC_DIM_TO_CATEGORY", () => {
+  it("should map rubric dimension slugs to report categories", () => {
+    expect(RUBRIC_DIM_TO_CATEGORY.communication).toBe("communication");
+    expect(RUBRIC_DIM_TO_CATEGORY.problem_decomposition_design).toBe("problem_decomposition");
+    expect(RUBRIC_DIM_TO_CATEGORY.work_process).toBe("time_management");
+    expect(RUBRIC_DIM_TO_CATEGORY.technical_execution).toBe("code_quality");
   });
 });
 

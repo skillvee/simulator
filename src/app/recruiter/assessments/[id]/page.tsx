@@ -10,7 +10,6 @@ import {
   type TargetLevel,
   type RelativeStrength,
 } from "@/lib/rubric/level-expectations";
-import { computeExpectedScores } from "@/lib/rubric/dimension-mapping";
 
 export interface CandidateData {
   assessmentId: string;
@@ -49,7 +48,7 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
           id: true,
           name: true,
           roleFamily: { select: { name: true } },
-          weights: { select: { dimension: { select: { slug: true } }, weight: true } },
+          weights: { select: { dimension: { select: { slug: true, name: true, description: true } }, weight: true } },
           seniorityGates: { select: { dimension: { select: { slug: true } }, seniorityLevel: true, minScore: true } },
         },
       },
@@ -66,17 +65,27 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
   let archetypeName: string | null = null;
   let roleFamilyName: string | null = null;
 
+  // Build dimension metadata from archetype data (slug → display info)
+  let dimensionMeta: Array<{ key: string; full: string; desc: string }> = [];
+
   if (simulation.archetype) {
     archetypeName = simulation.archetype.name;
     roleFamilyName = simulation.archetype.roleFamily.name;
     const gateLevel = targetLevel === "junior" ? "JUNIOR" : targetLevel === "mid" ? "MID" : "SENIOR";
+    // Use rubric dimension slugs directly as expectation keys
+    // (scores are stored using these same slugs)
     const gates: Record<string, number> = {};
     for (const gate of simulation.archetype.seniorityGates) {
       if (gate.seniorityLevel === gateLevel) gates[gate.dimension.slug] = gate.minScore;
     }
-    const weights: Record<string, number> = {};
-    for (const w of simulation.archetype.weights) weights[w.dimension.slug] = w.weight;
-    dimensionExpectations = computeExpectedScores(gates, weights);
+    dimensionExpectations = gates;
+
+    // Build dimension display info from archetype weights (which include all dimensions)
+    dimensionMeta = simulation.archetype.weights.map((w) => ({
+      key: w.dimension.slug,
+      full: w.dimension.name,
+      desc: w.dimension.description,
+    }));
   }
 
   const assessments = await db.assessment.findMany({
@@ -168,6 +177,7 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
       dimensionExpectations={dimensionExpectations}
       archetypeName={archetypeName}
       roleFamilyName={roleFamilyName}
+      dimensionMeta={dimensionMeta}
       candidates={candidatesData}
     />
   );

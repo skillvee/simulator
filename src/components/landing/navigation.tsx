@@ -72,6 +72,19 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
           </Link>
 
           <Link
+            href="/candidates"
+            className={`text-base font-medium transition-colors ${
+              currentPage === "candidates"
+                ? "text-primary"
+                : isDark
+                  ? "text-slate-400 hover:text-white"
+                  : "text-stone-600 hover:text-stone-900"
+            }`}
+          >
+            Candidates
+          </Link>
+
+          <Link
             href="/pricing"
             className={`text-base font-medium transition-colors ${
               currentPage === "pricing"
@@ -172,6 +185,20 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
               onClick={() => setIsOpen(false)}
             >
               Product
+            </Link>
+
+            <Link
+              href="/candidates"
+              className={`block py-2 px-2 text-lg rounded-lg transition-colors ${
+                currentPage === "candidates"
+                  ? "text-primary font-medium bg-primary/5"
+                  : isDark
+                    ? "text-slate-400 hover:text-white hover:bg-white/5"
+                    : "text-stone-600 hover:text-stone-900 hover:bg-stone-50"
+              }`}
+              onClick={() => setIsOpen(false)}
+            >
+              Candidates
             </Link>
 
             <Link

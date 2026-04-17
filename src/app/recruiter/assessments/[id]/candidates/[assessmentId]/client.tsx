@@ -50,7 +50,6 @@ interface CandidateDetailData {
   videoUrl: string | null;
   overallSummary: string;
   codeReview: CodeReviewData | null;
-  prUrl: string | null;
 }
 
 interface CandidateDetailClientProps {

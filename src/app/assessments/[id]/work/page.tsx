@@ -3,7 +3,10 @@ import { auth } from "@/auth";
 import { getAssessmentForChat } from "@/server/queries/assessment";
 import { WorkPageClient } from "./client";
 import { AssessmentScreenWrapper } from "@/components/assessment";
-import type { ScenarioResource } from "@/types";
+import { isAssessmentExpired, getDeadlineAt } from "@/lib/core/assessment-timer";
+import { db } from "@/server/db";
+import { AssessmentStatus } from "@prisma/client";
+import type { ScenarioResource, SimulationDepth } from "@/types";
 
 interface WorkPageProps {
   params: Promise<{ id: string }>;
@@ -27,6 +30,32 @@ export default async function WorkPage({
     redirect("/candidate/dashboard");
   }
 
+  // If no workingStartedAt, candidate hasn't clicked "Start Simulation" yet
+  if (!assessment.workingStartedAt) {
+    redirect(`/assessments/${id}/welcome`);
+  }
+
+  // If already completed, go to results
+  if (assessment.status === AssessmentStatus.COMPLETED) {
+    redirect(`/assessments/${id}/results`);
+  }
+
+  const simulationDepth = (assessment.scenario.simulationDepth || "medium") as SimulationDepth;
+
+  // If expired and still WORKING, auto-finalize server-side
+  if (isAssessmentExpired(assessment.workingStartedAt, simulationDepth)) {
+    await db.assessment.update({
+      where: { id },
+      data: {
+        status: AssessmentStatus.COMPLETED,
+        completedAt: new Date(),
+      },
+    });
+    redirect(`/assessments/${id}/results`);
+  }
+
+  const deadlineAt = getDeadlineAt(assessment.workingStartedAt, simulationDepth).toISOString();
+
   const coworkers = assessment.scenario.coworkers.map((c) => ({
     id: c.id,
     name: c.name,
@@ -49,9 +78,8 @@ export default async function WorkPage({
         assessmentId={id}
         coworkers={coworkers}
         selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
-        assessmentStartTime={assessment.createdAt}
+        deadlineAt={deadlineAt}
         resources={resources}
-        prUrl={assessment.prUrl}
       />
     </AssessmentScreenWrapper>
   );

@@ -19,15 +19,6 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock github cleanup (now in @/lib/external)
-const mockCleanupPrAfterAssessment = vi.fn();
-const mockFetchPrCiStatus = vi.fn();
-vi.mock("@/lib/external", () => ({
-  cleanupPrAfterAssessment: (...args: unknown[]) =>
-    mockCleanupPrAfterAssessment(...args),
-  fetchPrCiStatus: (...args: unknown[]) => mockFetchPrCiStatus(...args),
-}));
-
 // Mock video evaluation and merge modules (now in @/lib/analysis)
 const mockTriggerVideoAssessment = vi.fn();
 const mockMergeRecordingChunks = vi.fn();
@@ -161,7 +152,7 @@ describe("POST /api/assessment/finalize", () => {
     expect(data.error).toContain("Must be in WORKING status");
   });
 
-  it("should finalize assessment without PR and return timing info", async () => {
+  it("should finalize assessment and return timing info", async () => {
     const startedAt = new Date("2024-01-01T10:00:00Z");
 
     mockAuth.mockResolvedValue({
@@ -172,7 +163,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [],
     });
@@ -181,7 +171,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
 
     const request = new Request("http://localhost/api/assessment/finalize", {
@@ -198,7 +187,6 @@ describe("POST /api/assessment/finalize", () => {
     expect(data.data.timing.startedAt).toBe(startedAt.toISOString());
     expect(data.data.timing.completedAt).toBeDefined();
     expect(data.data.timing.totalDurationSeconds).toBeGreaterThan(0);
-    expect(data.data.prCleanup).toBeNull(); // No PR to clean up
     expect(data.data.videoAssessment).toEqual({
       triggered: false,
       videoAssessmentId: null,
@@ -206,171 +194,8 @@ describe("POST /api/assessment/finalize", () => {
     });
     expect(data.data.profilePhoto).toBeDefined();
 
-    // Should not call cleanup when no PR URL
-    expect(mockCleanupPrAfterAssessment).not.toHaveBeenCalled();
     // Should not call video assessment when no recording
     expect(mockTriggerVideoAssessment).not.toHaveBeenCalled();
-  });
-
-  it("should finalize assessment and cleanup PR", async () => {
-    const startedAt = new Date("2024-01-01T10:00:00Z");
-    const prUrl = "https://github.com/owner/repo/pull/123";
-
-    mockAuth.mockResolvedValue({
-      user: { id: "user-123" },
-    });
-    mockAssessmentFindUnique.mockResolvedValue({
-      id: "test-id",
-      userId: "user-123",
-      status: AssessmentStatus.WORKING,
-      startedAt,
-      prUrl,
-      scenario: { taskDescription: "Test task" },
-      recordings: [],
-    });
-    mockCleanupPrAfterAssessment.mockResolvedValue({
-      success: true,
-      action: "closed",
-      message: "Successfully closed PR #123",
-      prSnapshot: {
-        url: prUrl,
-        provider: "github",
-        fetchedAt: "2024-01-01T12:00:00Z",
-        title: "Test PR",
-        body: "PR body",
-        state: "open",
-      },
-    });
-    mockAssessmentUpdate.mockResolvedValue({
-      id: "test-id",
-      status: AssessmentStatus.COMPLETED,
-      startedAt,
-      completedAt: new Date(),
-      prUrl,
-    });
-
-    const request = new Request("http://localhost/api/assessment/finalize", {
-      method: "POST",
-      body: JSON.stringify({ assessmentId: "test-id" }),
-    });
-
-    const response = await POST(request);
-    expect(response.status).toBe(200);
-
-    const data = await response.json();
-    expect(data.success).toBe(true);
-    expect(data.data.prCleanup).toEqual({
-      success: true,
-      action: "closed",
-      message: "Successfully closed PR #123",
-    });
-
-    // Verify cleanup was called with PR URL
-    expect(mockCleanupPrAfterAssessment).toHaveBeenCalledWith(prUrl);
-
-    // Verify prSnapshot was included in update
-    expect(mockAssessmentUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          prSnapshot: expect.objectContaining({
-            url: prUrl,
-            provider: "github",
-          }),
-        }),
-      })
-    );
-  });
-
-  it("should finalize even if PR cleanup fails", async () => {
-    const startedAt = new Date("2024-01-01T10:00:00Z");
-    const prUrl = "https://github.com/owner/repo/pull/123";
-
-    mockAuth.mockResolvedValue({
-      user: { id: "user-123" },
-    });
-    mockAssessmentFindUnique.mockResolvedValue({
-      id: "test-id",
-      userId: "user-123",
-      status: AssessmentStatus.WORKING,
-      startedAt,
-      prUrl,
-      scenario: { taskDescription: "Test task" },
-      recordings: [],
-    });
-    mockCleanupPrAfterAssessment.mockResolvedValue({
-      success: false,
-      action: "error",
-      message: "GitHub API error: 403 Forbidden",
-      prSnapshot: {
-        url: prUrl,
-        provider: "github",
-        fetchedAt: "2024-01-01T12:00:00Z",
-        fetchError: "Failed to close",
-      },
-    });
-    mockAssessmentUpdate.mockResolvedValue({
-      id: "test-id",
-      status: AssessmentStatus.COMPLETED,
-      startedAt,
-      completedAt: new Date(),
-      prUrl,
-    });
-
-    const request = new Request("http://localhost/api/assessment/finalize", {
-      method: "POST",
-      body: JSON.stringify({ assessmentId: "test-id" }),
-    });
-
-    const response = await POST(request);
-    expect(response.status).toBe(200);
-
-    const data = await response.json();
-    // Finalization should succeed even if cleanup failed
-    expect(data.success).toBe(true);
-    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
-    expect(data.data.prCleanup.success).toBe(false);
-    expect(data.data.prCleanup.action).toBe("error");
-  });
-
-  it("should finalize even if PR cleanup throws", async () => {
-    const startedAt = new Date("2024-01-01T10:00:00Z");
-    const prUrl = "https://github.com/owner/repo/pull/123";
-
-    mockAuth.mockResolvedValue({
-      user: { id: "user-123" },
-    });
-    mockAssessmentFindUnique.mockResolvedValue({
-      id: "test-id",
-      userId: "user-123",
-      status: AssessmentStatus.WORKING,
-      startedAt,
-      prUrl,
-      scenario: { taskDescription: "Test task" },
-      recordings: [],
-    });
-    mockCleanupPrAfterAssessment.mockRejectedValue(new Error("Network error"));
-    mockAssessmentUpdate.mockResolvedValue({
-      id: "test-id",
-      status: AssessmentStatus.COMPLETED,
-      startedAt,
-      completedAt: new Date(),
-      prUrl,
-    });
-
-    const request = new Request("http://localhost/api/assessment/finalize", {
-      method: "POST",
-      body: JSON.stringify({ assessmentId: "test-id" }),
-    });
-
-    const response = await POST(request);
-    expect(response.status).toBe(200);
-
-    const data = await response.json();
-    // Finalization should succeed even if cleanup threw
-    expect(data.success).toBe(true);
-    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
-    // prCleanup will be null since the exception was caught
-    expect(data.data.prCleanup).toBeNull();
   });
 
   it("should return 500 on internal error", async () => {
@@ -428,7 +253,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Complete the todo list feature" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -437,7 +261,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockTriggerVideoAssessment.mockResolvedValue({
       success: true,
@@ -488,7 +311,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -497,7 +319,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockTriggerVideoAssessment.mockResolvedValue({
       success: false,
@@ -534,7 +355,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -543,7 +363,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockTriggerVideoAssessment.mockRejectedValue(new Error("Network error"));
 
@@ -572,7 +391,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [],
     });
@@ -581,7 +399,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockGenerateProfilePhoto.mockResolvedValue({
       success: true,
@@ -621,7 +438,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [],
     });
@@ -630,7 +446,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockGenerateProfilePhoto.mockResolvedValue({
       success: false,
@@ -667,7 +482,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [],
     });
@@ -676,7 +490,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
     mockGenerateProfilePhoto.mockRejectedValue(new Error("Network error"));
 
@@ -706,7 +519,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Test task" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -715,7 +527,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
 
     // Merge fails — no geminiFileUri
@@ -769,7 +580,6 @@ describe("POST /api/assessment/finalize", () => {
       userId: "user-123",
       status: AssessmentStatus.WORKING,
       startedAt,
-      prUrl: null,
       scenario: { taskDescription: "Build a dashboard" },
       recordings: [{ storageUrl: recordingUrl }],
     });
@@ -778,7 +588,6 @@ describe("POST /api/assessment/finalize", () => {
       status: AssessmentStatus.COMPLETED,
       startedAt,
       completedAt: new Date(),
-      prUrl: null,
     });
 
     mockMergeRecordingChunks.mockResolvedValue({

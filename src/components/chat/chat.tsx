@@ -34,13 +34,7 @@ interface ChatProps {
   cachedMessages?: ChatMessage[];
   /** Called whenever messages change so parent can cache them per-coworker */
   onMessagesChange?: (coworkerId: string, messages: ChatMessage[]) => void;
-  /** Initial PR URL — if set and coworker is manager, enables defense mode */
-  initialPrUrl?: string | null;
 }
-
-// Note: PR submission handling and defense call flow will be implemented
-// in RF-012 (Slack modifications). Defense now happens within the Slack
-// interface - the candidate will call the manager after submitting a PR.
 
 /**
  * Detect reactions based on user message content
@@ -75,7 +69,6 @@ export function Chat({
   onNewMessage,
   cachedMessages,
   onMessagesChange,
-  initialPrUrl,
 }: ChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(cachedMessages ?? []);
   const [input, setInput] = useState("");
@@ -90,9 +83,9 @@ export function Chat({
   const historyLoadedRef = useRef<string | null>(null);
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Defense mode: disable text input when PR submitted and coworker is manager
+  // Defense mode: disable text input when defense call is pending
   const isManagerCoworker = isManager(coworker.role);
-  const isDefenseMode = defenseCallRequired || !!(initialPrUrl && isManagerCoworker);
+  const isDefenseMode = defenseCallRequired;
   const isInputDisabled = isDefenseMode;
 
   // Check if currently in a call with this coworker
@@ -271,20 +264,24 @@ export function Chat({
             setMessages(history);
           }
           // Otherwise cache is already up-to-date, no update needed
-        } else {
+        } else if (history.length > 0) {
           // No cache — first load for this coworker
-          // If all messages are from the coworker (no user messages yet)
-          // and we haven't revealed for this coworker before, reveal one-by-one
           const hasUserMessages = history.some((m) => m.role === "user");
-          if (!hasUserMessages && history.length > 0 && !revealedCoworkers.has(coworker.id)) {
+
+          // Only do sequential reveal for brand-new greeting-only conversations
+          // that we haven't revealed before in this session
+          if (!hasUserMessages && !revealedCoworkers.has(coworker.id)) {
             revealedCoworkers.add(coworker.id);
             setIsLoading(false);
             await revealMessagesSequentially(history);
             return;
-          } else {
-            setMessages(history);
           }
+
+          // Full history (has user messages) or already revealed — show instantly
+          revealedCoworkers.add(coworker.id);
+          setMessages(history);
         }
+        // else: no cache and no history — leave messages empty
         setIsLoading(false);
       } catch (err) {
         logger.error("Failed to load chat history", { err });

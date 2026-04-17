@@ -198,13 +198,19 @@ function evaluateResource(
     const hasArchitecture = /architecture|directory|structure/i.test(content);
     const hasKnownIssues = /known issue|bug|JIRA|ticket/i.test(content);
     const hasCodeBlocks = /```/.test(content);
+    // Broader code detection: inline code with function patterns, shell commands, definitions
+    const hasCodeContent = hasCodeBlocks ||
+      /`[a-zA-Z_]\w*(\.\w+)*\([^)]*\)`/.test(content) ||
+      /`(npm|yarn|pnpm|pip|go|cargo|docker|kubectl|terraform|git|curl|make)\s/.test(content) ||
+      /\b(function|func|def|fn|async|export|class|impl)\s+\w+/.test(content) ||
+      /\b(import|require|from|const|let|var|val)\s+\w+/.test(content);
     const hasConfig = /config|environment|\.env/i.test(content);
     if (!hasQuickStart) issues.push("Repository missing quick start / setup section");
     if (!hasArchitecture) issues.push("Repository missing architecture overview");
-    if (!hasCodeBlocks) issues.push("Repository missing code snippets");
+    if (!hasCodeContent) issues.push("Repository missing code snippets");
     if (!hasConfig) issues.push("Repository missing configuration reference");
     if (hasKnownIssues) strengths.push("Has known issues section (realistic)");
-    if (hasCodeBlocks) strengths.push("Has code snippets (realistic)");
+    if (hasCodeContent) strengths.push("Has code content (realistic)");
   }
 
   // ── API checks ──

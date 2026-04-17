@@ -4,7 +4,6 @@ import { generateEphemeralToken } from "@/lib/ai/gemini";
 import { GEMINI_VOICES } from "@/lib/ai/gemini-config";
 import {
   buildCrossCoworkerContext,
-  formatConversationsForSummary,
   formatConversationTimeline,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
@@ -16,7 +15,7 @@ import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
 import { logAICall } from "@/lib/analysis";
-import { buildAgentPrompt, buildDefensePhaseContext } from "@/prompts/build-agent-prompt";
+import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
 
 const logger = createLogger("server:api:call:token");
 
@@ -30,24 +29,35 @@ export async function POST(request: Request) {
   try {
     const validated = await validateRequest(request, CallTokenRequestSchema);
     if ("error" in validated) return validated.error;
-    const { assessmentId, coworkerId } = validated.data;
+    const { assessmentId, coworkerId, isPostSubmission } = validated.data;
 
-    // Fetch the assessment and verify ownership
-    const assessment = await db.assessment.findFirst({
-      where: {
-        id: assessmentId,
-        userId: session.user.id,
-      },
-      include: {
-        scenario: true,
-        user: {
-          select: {
-            name: true,
-            email: true,
+    // Fetch assessment, coworker, and conversations in parallel
+    const [assessment, allConversations] = await Promise.all([
+      db.assessment.findFirst({
+        where: {
+          id: assessmentId,
+          userId: session.user.id,
+        },
+        include: {
+          scenario: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      }),
+      db.conversation.findMany({
+        where: { assessmentId },
+        include: {
+          coworker: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      }),
+    ]);
 
     if (!assessment) {
       return error("Assessment not found", 404, "NOT_FOUND");
@@ -58,7 +68,7 @@ export async function POST(request: Request) {
       return error("Assessment is completed", 400);
     }
 
-    // Get coworker persona
+    // Coworker query needs scenarioId from assessment, so it runs after
     const coworker = await db.coworker.findFirst({
       where: {
         id: coworkerId,
@@ -69,17 +79,6 @@ export async function POST(request: Request) {
     if (!coworker) {
       return error("Coworker not found", 404, "NOT_FOUND");
     }
-
-    // Get ALL conversations for this assessment
-    const allConversations = await db.conversation.findMany({
-      where: { assessmentId },
-      include: {
-        coworker: {
-          select: { id: true, name: true },
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    });
 
     // Build conversation timeline for this coworker (chat + voice, chronological)
     const coworkerConversations: ConversationWithMeta[] = allConversations
@@ -124,27 +123,7 @@ export async function POST(request: Request) {
       avatarUrl: coworker.avatarUrl,
     };
 
-    // Only defense calls need special phase handling
-    const isDefenseCall = Boolean(assessment.prUrl) && isManagerCoworker;
-    let phaseContext: string | undefined;
-
-    if (isDefenseCall) {
-      const allConvsMapped = allConversations.map((c) => ({
-        type: c.type as "text" | "voice",
-        coworkerId: c.coworkerId,
-        messages: (c.transcript as unknown as ChatMessage[]) || [],
-        createdAt: c.createdAt,
-        updatedAt: c.updatedAt,
-      }));
-      phaseContext = buildDefensePhaseContext({
-        prUrl: assessment.prUrl!,
-        repoUrl: assessment.repoUrl || "",
-        taskDescription: assessment.scenario.taskDescription,
-        techStack: assessment.scenario.techStack,
-        conversationSummary: formatConversationsForSummary(allConvsMapped, coworkerMap),
-        ciStatusSummary: "CI status will be checked after the call.",
-      });
-    }
+    // Defense calls removed — PR submission flow no longer used
 
     // Extract resource labels for manager awareness
     const resourceLabels = Array.isArray(assessment.scenario.resources)
@@ -160,8 +139,7 @@ export async function POST(request: Request) {
       candidateName: session.user.name || undefined,
       conversationHistory: memoryContext,
       crossAgentContext: crossCoworkerContext,
-      phase: isDefenseCall ? "defense" : "ongoing",
-      phaseContext,
+      phase: "ongoing",
       media: "voice",
       resourceLabels: isManagerCoworker ? resourceLabels : undefined,
     });
@@ -172,7 +150,7 @@ export async function POST(request: Request) {
       endpoint: "/api/call/token",
       promptText: systemInstruction,
       modelVersion: "gemini-live",
-      promptType: isDefenseCall ? "VOICE_DEFENSE" : "VOICE_CALL",
+      promptType: "VOICE_CALL",
       promptVersion: "1.0",
       modelUsed: "gemini-live",
     }).catch(() => null);
@@ -198,7 +176,7 @@ export async function POST(request: Request) {
       coworkerId: coworker.id,
       coworkerName: coworker.name,
       coworkerRole: coworker.role,
-      isDefenseCall,
+      isDefenseCall: false,
     });
   } catch (err) {
     logger.error("Error generating call token", { err });

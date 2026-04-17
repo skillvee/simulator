@@ -91,8 +91,13 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      logger.error("Supabase upload error", { error: String(uploadError) });
-      return error("Failed to upload file", 500);
+      logger.error("Supabase upload error", {
+        bucket,
+        path,
+        message: uploadError.message,
+        name: uploadError.name,
+      });
+      return error(`Failed to upload file: ${uploadError.message}`, 500);
     }
 
     // Create signed URL for access

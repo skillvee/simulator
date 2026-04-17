@@ -65,8 +65,8 @@ export function playMessageSound() {
 }
 
 /**
- * Play a call ringing sound
- * Returns a stop function to halt the ringing
+ * Play a call ringing sound — two short rings with a pause, like a standard phone.
+ * Returns a stop function to halt the ringing.
  */
 export function playCallRingSound(): { stop: () => void } {
   if (!userHasInteracted || !audioContext) {
@@ -80,47 +80,42 @@ export function playCallRingSound(): { stop: () => void } {
     if (!isPlaying || !audioContext) return;
 
     try {
-      // Create nodes for ring tone
-      const oscillator1 = audioContext.createOscillator();
-      const oscillator2 = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      const ctx = audioContext;
+      const now = ctx.currentTime;
 
-      // Connect nodes
-      oscillator1.connect(gainNode);
-      oscillator2.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      // Two short bursts: ring-ring, then silence
+      const bursts = [0, 0.3]; // start times for each burst
 
-      const currentTime = audioContext.currentTime;
+      for (const burstStart of bursts) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
 
-      // Configure dual-tone ring (like a phone)
-      oscillator1.frequency.setValueAtTime(440, currentTime); // A4
-      oscillator2.frequency.setValueAtTime(480, currentTime); // Slightly detuned for richness
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now + burstStart);
 
-      // Volume envelope for single ring
-      gainNode.gain.setValueAtTime(0, currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.4, currentTime + 0.01); // Quick attack
-      gainNode.gain.linearRampToValueAtTime(0.4, currentTime + 0.4); // Sustain
-      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + 0.5); // Quick release
+        const t = now + burstStart;
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.2, t + 0.02);
+        gain.gain.setValueAtTime(0.2, t + 0.18);
+        gain.gain.linearRampToValueAtTime(0, t + 0.2);
 
-      // Play the ring tone
-      oscillator1.start(currentTime);
-      oscillator2.start(currentTime);
-      oscillator1.stop(currentTime + 0.5);
-      oscillator2.stop(currentTime + 0.5);
+        osc.start(t);
+        osc.stop(t + 0.2);
+      }
 
-      // Schedule next ring (1.5 second intervals)
+      // Repeat after pause (ring-ring ... ring-ring)
       if (isPlaying) {
-        timeoutId = setTimeout(playRingTone, 1500);
+        timeoutId = setTimeout(playRingTone, 2000);
       }
     } catch (error) {
       logger.warn('Failed to play ring sound', { error: error instanceof Error ? error.message : String(error) });
     }
   };
 
-  // Start the first ring immediately
   playRingTone();
 
-  // Return stop function
   return {
     stop: () => {
       isPlaying = false;

@@ -55,7 +55,7 @@ async function getCandidateAssessments(
       scenarioName: a.scenario.name,
       companyName: a.scenario.companyName,
       techStack: a.scenario.techStack ?? [],
-      targetLevel: a.scenario.targetLevel ?? "mid",
+      targetLevel: a.targetLevel ?? a.scenario.targetLevel ?? "mid",
       startedAt: a.startedAt.toISOString(),
       completedAt: a.completedAt?.toISOString() ?? null,
       overallScore: report?.overallScore ?? null,

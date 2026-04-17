@@ -2,7 +2,7 @@
 
 import { Suspense, useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -34,6 +34,8 @@ interface InvitePageClientProps {
 
 function InvitePageContent({ scenario, user }: InvitePageClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const targetLevel = searchParams.get("level");
 
   // Auth form state
   const [mode, setMode] = useState<"signup" | "signin">("signup");
@@ -57,7 +59,10 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
         const response = await fetch("/api/assessment/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scenarioId: scenario.id }),
+          body: JSON.stringify({
+            scenarioId: scenario.id,
+            ...(targetLevel && { targetLevel }),
+          }),
         });
 
         const data = await response.json();
@@ -82,7 +87,10 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
   const handleGoogleAuth = () => {
     setIsLoading(true);
     setError("");
-    void signIn("google", { redirectTo: `/invite/${scenario.id}` });
+    const redirectUrl = targetLevel
+      ? `/invite/${scenario.id}?level=${targetLevel}`
+      : `/invite/${scenario.id}`;
+    void signIn("google", { redirectTo: redirectUrl });
   };
 
   const handleCredentialsAuth = async (e: React.FormEvent) => {
