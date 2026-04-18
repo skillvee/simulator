@@ -63,4 +63,6 @@ export interface ScenarioResource {
   instructions?: string;
   /** Full document content (markdown). Displayed inline in the simulation viewer. */
   content?: string;
+  /** Language the resource was generated in (e.g., "en", "es"). Defaults to scenario language. */
+  language?: string;
 }

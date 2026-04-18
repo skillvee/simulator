@@ -163,14 +163,20 @@ export async function generateResources(
         }
       }
 
+      // Add language field to each resource
+      const resourcesWithLanguage = resources.map(resource => ({
+        ...resource,
+        language: input.language,
+      }));
+
       return {
-        resources,
+        resources: resourcesWithLanguage,
         _meta: {
           promptVersion: RESOURCE_GENERATOR_PROMPT_VERSION,
           generatedAt: new Date().toISOString(),
         },
         _debug: {
-          promptText: `[System Instruction]\n${RESOURCE_GENERATOR_SYSTEM_PROMPT}\n\n[User Message]\n${contextPrompt}`,
+          promptText: `[System Instruction]\n${systemInstruction}\n\n[User Message]\n${contextPrompt}`,
           responseText,
           attempts: attempt,
         },
