@@ -63,3 +63,14 @@ export function getConfidenceBadgeStyles(confidence: string): string {
       return "bg-stone-100 text-stone-600";
   }
 }
+
+/**
+ * Convert score to bucket (0-3) for visualization
+ */
+export function scoreToBucket(score: number, scoreScale: 4 | 5): number {
+  const normalizedScore = scoreScale === 5 ? (score - 1) / 4 : score / 4;
+  if (normalizedScore >= 0.875) return 3; // Exceptional
+  if (normalizedScore >= 0.625) return 2; // Strong
+  if (normalizedScore >= 0.375) return 1; // Meets expectations
+  return 0; // Below expectations
+}

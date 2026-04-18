@@ -1,0 +1,133 @@
+{
+  "evaluationVersion": "3.0.0",
+  "roleFamilySlug": "engineering",
+  "overallScore": 3,
+  "dimensionScores": [
+    {
+      "dimensionSlug": "problem_decomposition_design",
+      "score": null,
+      "summary": "No observable evidence of problem decomposition or design.",
+      "confidence": "low",
+      "rationale": "The video does not show the candidate planning, designing, or breaking down any problems related to the task.",
+      "observableBehaviors": [],
+      "timestamps": [],
+      "trainableGap": false,
+      "greenFlags": [],
+      "redFlags": []
+    },
+    {
+      "dimensionSlug": "technical_execution",
+      "score": null,
+      "summary": "No observable coding or technical execution.",
+      "confidence": "low",
+      "rationale": "The candidate is not shown writing, reviewing, or debugging any code at any point in the video.",
+      "observableBehaviors": [],
+      "timestamps": [],
+      "trainableGap": false,
+      "greenFlags": [],
+      "redFlags": []
+    },
+    {
+      "dimensionSlug": "learning_velocity",
+      "score": null,
+      "summary": "No observable evidence of learning or adapting.",
+      "confidence": "low",
+      "rationale": "There is no context showing the candidate receiving new information, encountering bugs, or receiving feedback to adapt to.",
+      "observableBehaviors": [],
+      "timestamps": [],
+      "trainableGap": false,
+      "greenFlags": [],
+      "redFlags": []
+    },
+    {
+      "dimensionSlug": "work_process",
+      "score": null,
+      "summary": "No observable workflow or process.",
+      "confidence": "low",
+      "rationale": "The video does not capture the candidate's work environment, tool usage, time management, or general workflow.",
+      "observableBehaviors": [],
+      "timestamps": [],
+      "trainableGap": false,
+      "greenFlags": [],
+      "redFlags": []
+    },
+    {
+      "dimensionSlug": "communication",
+      "score": 3,
+      "summary": "Clear, proactive technical communication in the single observed interaction.",
+      "confidence": "low",
+      "rationale": "In the brief chat snippet, the candidate clearly articulates their current status ('set up the WebSocket server') and asks a targeted question about architectural direction. This shows an ability to communicate context and seek necessary guidance effectively.",
+      "observableBehaviors": [
+        {
+          "timestamp": "00:10",
+          "behavior": "Candidate sends a concise chat message explaining what they have built and asking a clear question about whether to scale it using Redis pub/sub."
+        }
+      ],
+      "timestamps": [
+        "00:10"
+      ],
+      "trainableGap": false,
+      "greenFlags": [
+        "Proactive communication",
+        "Clear articulation of technical state"
+      ],
+      "redFlags": []
+    },
+    {
+      "dimensionSlug": "practical_maturity",
+      "score": 3,
+      "summary": "Demonstrates awareness of scaling trade-offs and constraints.",
+      "confidence": "low",
+      "rationale": "By asking whether to implement Redis pub/sub for scaling or if the current setup is sufficient, the candidate shows they are thinking about practical constraints and actively avoiding premature optimization.",
+      "observableBehaviors": [
+        {
+          "timestamp": "00:10",
+          "behavior": "Candidate asks 'Should I use Redis pub/sub for scaling, or is the current setup sufficient?', indicating awareness of evaluating effort vs. necessity."
+        }
+      ],
+      "timestamps": [
+        "00:10"
+      ],
+      "trainableGap": false,
+      "greenFlags": [
+        "Awareness of over-engineering risks",
+        "Checking constraints before proceeding"
+      ],
+      "redFlags": []
+    },
+    {
+      "dimensionSlug": "collaboration_coachability",
+      "score": 3,
+      "summary": "Proactively seeks input from a manager before making an architectural decision.",
+      "confidence": "low",
+      "rationale": "The candidate treats the interaction as collaborative, checking in with the Engineering Manager to align on the technical direction rather than making assumptions in isolation.",
+      "observableBehaviors": [
+        {
+          "timestamp": "00:10",
+          "behavior": "Candidate reaches out to 'Alex Chen (Engineering Manager)' for guidance on architecture."
+        }
+      ],
+      "timestamps": [
+        "00:10"
+      ],
+      "trainableGap": false,
+      "greenFlags": [
+        "Proactively solicits feedback",
+        "Engages with team members appropriately"
+      ],
+      "redFlags": []
+    }
+  ],
+  "detectedRedFlags": [],
+  "topStrengths": [
+    {
+      "dimension": "communication",
+      "score": 3,
+      "description": "Based on the very limited evidence provided, the candidate is able to communicate their technical state and ask precise, targeted questions to team members."
+    }
+  ],
+  "growthAreas": [],
+  "overallSummary": "The provided video is a promotional demonstration of a platform rather than a full candidate assessment recording. The candidate is never shown working on the stated task of building a responsive dashboard component. The only observable candidate behavior is a single simulated chat message sent to an Engineering Manager asking about architecture and scaling (WebSockets vs. Redis pub/sub). While this single interaction demonstrates baseline strong communication, practical maturity, and collaborative instincts, there is absolutely no evidence available to evaluate technical execution, problem decomposition, learning velocity, or work process. All scores are highly provisional due to the extreme lack of observable data.",
+  "evaluationConfidence": "low",
+  "insufficientEvidenceNotes": "The video is a platform demo and does not show the candidate attempting the assigned 'dashboard component' task. No code, design process, or actual work is shown. Evaluation is based entirely on one 5-second simulated chat snippet which appears to be from an entirely different scenario."
+}

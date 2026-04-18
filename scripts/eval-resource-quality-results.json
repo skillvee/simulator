@@ -1,0 +1,2392 @@
+[
+  {
+    "runIndex": 0,
+    "scenarioId": "backend-eng",
+    "roleName": "Backend Software Engineer",
+    "companyName": "AppLovin",
+    "taskSummary": "Optimize campaign metadata lookups for the Real-Time Bidder",
+    "taskDescription": "The bidding engine is currently missing its 20ms response SLA on approximately 8% of requests. Profiling shows that the bottleneck is the synchronous retrieval of campaign metadata from the PostgreSQL database for every incoming auction. This latency prevents the system from bidding on high-value traffic during peak periods.\n\nYou need to implement an efficient caching layer for campaign metadata within the bidding microservice. The solution should minimize database hits while ensuring that critical campaign updates (like budget pauses) are reflected within a reasonable timeframe. You will need to determine the appropriate eviction policy and TTL based on campaign volatility.\n\nConstraint: The bidder runs in memory-constrained Docker containers, so the cache size must be strictly controlled. You'll need to consult with the SRE team regarding the specific container resource limits and the Lead Engineer to understand the frequency of campaign metadata updates from the management API.",
+    "resourceCount": 4,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "bidding-engine-service — README",
+        "contentLength": 6447,
+        "wordCount": 820
+      },
+      {
+        "type": "database",
+        "label": "PostgreSQL — Campaign DB Schema & Stats",
+        "contentLength": 5067,
+        "wordCount": 769
+      },
+      {
+        "type": "dashboard",
+        "label": "SRE Dashboard — Bidding Engine Production Metrics",
+        "contentLength": 4397,
+        "wordCount": 726
+      },
+      {
+        "type": "document",
+        "label": "Architecture Decision Record — Campaign Metadata Caching",
+        "contentLength": 5022,
+        "wordCount": 757
+      }
+    ],
+    "generationTimeMs": 84308,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide everything necessary: the specific Java code to be modified, the database schema, the exact memory constraints (250MB), the data volatility requirements (TTLs), and the performance targets (20ms SLA)."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "JIRA-8922",
+            "resourceLabel": "bidding-engine-service — README",
+            "issue": "Reference to a JIRA ticket that doesn't exist as a separate document."
+          },
+          {
+            "text": "JIRA-8945",
+            "resourceLabel": "bidding-engine-service — README",
+            "issue": "Reference to a JIRA ticket that doesn't exist as a separate document."
+          },
+          {
+            "text": "#adtech-bidding-oncall",
+            "resourceLabel": "bidding-engine-service — README",
+            "issue": "Reference to a Slack channel that is not accessible."
+          }
+        ],
+        "explanation": "While there are references to JIRA tickets and Slack channels, the 'Known Issues' and 'SRE Note' sections provide the full context of those external items, so they do not block the candidate."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "bidding-engine-service — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the actual Java code context and the current repository implementation that needs to be wrapped with a cache."
+          },
+          {
+            "label": "PostgreSQL — Campaign DB Schema & Stats",
+            "type": "database",
+            "useful": true,
+            "reason": "Provides the schema and latency percentiles which justify the need for the cache."
+          },
+          {
+            "label": "SRE Dashboard — Bidding Engine Production Metrics",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Crucial for understanding the strict 2GB Docker memory limit and the 1.5GB JVM heap cap."
+          },
+          {
+            "label": "Architecture Decision Record — Campaign Metadata Caching",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides the business logic for TTLs (10s vs 5m) and the math for cache sizing (15KB per object)."
+          }
+        ],
+        "explanation": "Every resource is tightly coupled to the task. There is no 'fluff' content."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "There are no external URLs provided; all references are internal to the provided resource set."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The data is highly consistent. The 250MB memory limit mentioned in the ADR matches the JVM/Container stats in the SRE Dashboard, and the 20ms SLA is consistent across all documents."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate has a clear path: modify the provided Java code using a library like Caffeine, apply the 10s/5m TTL logic, and bound the cache to ~16,000 entries to stay within the 250MB limit. The task is perfectly scoped."
+      },
+      "topIssues": [
+        "Minor references to JIRA and Slack which are non-functional, though context is provided.",
+        "The task asks the candidate to 'consult' with SRE/Lead Engineer; the candidate must realize that the Dashboard and ADR documents represent the results of that consultation."
+      ]
+    }
+  },
+  {
+    "runIndex": 1,
+    "scenarioId": "backend-eng",
+    "roleName": "Backend Software Engineer",
+    "companyName": "AppLovin",
+    "taskSummary": "Optimize Kafka consumer throughput for the Campaign Analytics service",
+    "taskDescription": "The Campaign Analytics service consumes 'ad_impression' events from a Kafka topic and updates aggregate spend in a PostgreSQL database. Currently, when traffic spikes beyond 300K QPS, the consumer lag increases significantly, causing the advertiser dashboard to show stale data for up to 10 minutes. The system must process events with a maximum delay of 30 seconds to satisfy SLA requirements.\n\nYou need to design an improved consumption strategy that balances write throughput with data consistency. The current implementation processes events one-by-one, which is saturating the DB connection pool. You will need to determine the optimal batching window and how to handle potential duplicate events if a consumer group rebalances mid-batch.\n\nConstraint: The PostgreSQL schema is shared with the Billing service and cannot be refactored during this sprint. You should consult with the SRE team to understand the current Kafka partition count and the Lead Data Engineer to clarify if 'at-least-once' delivery is acceptable for these specific analytics.",
+    "resourceCount": 4,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "Campaign Analytics Service — README",
+        "contentLength": 7011,
+        "wordCount": 743
+      },
+      {
+        "type": "database",
+        "label": "Shared PostgreSQL DB — Schema & Sample Data",
+        "contentLength": 5050,
+        "wordCount": 765
+      },
+      {
+        "type": "dashboard",
+        "label": "Production Metrics — Kafka & DB Health",
+        "contentLength": 3975,
+        "wordCount": 672
+      },
+      {
+        "type": "document",
+        "label": "Campaign Analytics — SLA & Architecture Notes",
+        "contentLength": 4279,
+        "wordCount": 626
+      }
+    ],
+    "generationTimeMs": 76851,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a comprehensive overview of the current system, the performance bottleneck (via metrics), the database schema, and the business/technical constraints. The candidate has everything needed to design the batching strategy and the SQL upsert logic."
+      },
+      "brokenReferences": {
+        "score": 5,
+        "references": [
+          {
+            "text": "JIRA-8892",
+            "resourceLabel": "Campaign Analytics Service — README",
+            "issue": "Reference to an external ticket, but the context of the performance degradation is fully explained in the metrics and README."
+          }
+        ],
+        "explanation": "All internal references between documents (e.g., README pointing to DB Schema or Metrics) are correctly satisfied by the provided resources."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Campaign Analytics Service — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the current Java implementation and Spring configuration, which is the starting point for the refactor."
+          },
+          {
+            "label": "Shared PostgreSQL DB — Schema & Sample Data",
+            "type": "database",
+            "useful": true,
+            "reason": "Crucial for understanding the schema constraints and the DBA's recommendation for using UPSERT syntax."
+          },
+          {
+            "label": "Production Metrics — Kafka & DB Health",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Quantifies the bottleneck, showing exactly when the connection pool saturates and how lag scales with QPS."
+          },
+          {
+            "label": "Campaign Analytics — SLA & Architecture Notes",
+            "type": "document",
+            "useful": true,
+            "reason": "Defines the 30-second SLA and explicitly grants permission for 'at-least-once' delivery, which is a key design decision."
+          }
+        ],
+        "explanation": "Every resource is essential. The README provides the 'before' state, the Metrics prove the problem, the DB doc defines the 'where', and the SLA doc defines the 'how' and 'why'."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs or restricted repositories are linked."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The partition counts (64), pod counts (16), connection pool limits (50), and QPS spikes (300K) are consistent across all documents."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate is well-positioned to succeed. They have the current code to modify, the SQL constraints to respect, and the mathematical data (QPS vs SLA) to calculate an appropriate batch size and window."
+      },
+      "topIssues": [
+        "None. The resources are exceptionally well-prepared for this specific backend engineering task."
+      ]
+    }
+  },
+  {
+    "runIndex": 2,
+    "scenarioId": "backend-eng",
+    "roleName": "Backend Software Engineer",
+    "companyName": "AppLovin",
+    "taskSummary": "Optimize the Budget Capping Service to prevent over-delivery",
+    "taskDescription": "The Real-Time Bidding (RTB) engine is currently over-delivering on certain campaigns, spending significantly more than the advertiser's set daily budget. This happens because the Budget Capping Service, which tracks spend in real-time, is not updating fast enough across our distributed nodes. Currently, spend events are consumed from Kafka and persisted to PostgreSQL, but the bidding nodes are often working with stale budget data.\n\nYou need to design a more responsive budget checking mechanism that can handle 500K QPS without adding more than 2ms of latency to the bid request. You will need to determine the best way to synchronize budget state across the bidding fleet while ensuring we don't overwhelm the PostgreSQL instance. \n\nConstraints: The bidding engine is strictly Java/Spring Boot and must not block on database I/O. You should consult the DevOps lead about current Kafka consumer lag and the Product Manager regarding what percentage of budget 'over-delivery' is contractually acceptable for our top-tier clients.",
+    "resourceCount": 4,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "rtb-bidding-engine — README",
+        "contentLength": 5555,
+        "wordCount": 655
+      },
+      {
+        "type": "dashboard",
+        "label": "RTB Fleet Performance & Kafka Metrics",
+        "contentLength": 3789,
+        "wordCount": 649
+      },
+      {
+        "type": "document",
+        "label": "Campaign Over-Delivery Policy & SLAs",
+        "contentLength": 4065,
+        "wordCount": 634
+      },
+      {
+        "type": "database",
+        "label": "Budget Capping DB — Schema & Queries",
+        "contentLength": 4091,
+        "wordCount": 640
+      }
+    ],
+    "generationTimeMs": 74874,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a comprehensive view of the system. The 'consultation' with the DevOps lead and PM requested in the task is effectively handled by Resource 2 (containing DevOps notes) and Resource 3 (the PM's policy document). The technical constraints, current code bottlenecks, and business SLAs are all clearly defined."
+      },
+      "brokenReferences": {
+        "score": 5,
+        "references": [
+          {
+            "text": "TICKET-8892, TICKET-8901, TICKET-8915",
+            "resourceLabel": "rtb-bidding-engine — README",
+            "issue": "The tickets themselves are not provided, but their content is summarized in the 'Known Issues' section."
+          }
+        ],
+        "explanation": "All major references to other documents (Dashboards, SLAs, DB Schema) are included in the resource set. The JIRA tickets are summarized sufficiently for the candidate to understand the context without needing the full ticket history."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "rtb-bidding-engine — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the current Java implementation and identifies the specific code-level bottlenecks (Caffeine cache TTL and blocking I/O)."
+          },
+          {
+            "label": "RTB Fleet Performance & Kafka Metrics",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Quantifies the scale (500K QPS) and the specific latency/lag metrics that need to be improved."
+          },
+          {
+            "label": "Campaign Over-Delivery Policy & SLAs",
+            "type": "document",
+            "useful": true,
+            "reason": "Defines the success criteria (SLA tiers) and suggests potential architectural patterns like budget reservation."
+          },
+          {
+            "label": "Budget Capping DB — Schema & Queries",
+            "type": "database",
+            "useful": true,
+            "reason": "Explains the underlying database contention issues and provides the schema necessary for designing a new state management system."
+          }
+        ],
+        "explanation": "Every resource is critical to solving the design problem. There is no filler content."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present. Internal hostnames like 'rtb-db-primary.internal.applovin.net' are used for context but do not require external access."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The data is highly consistent. Campaign IDs (e.g., cmp_88291A) and performance metrics (500K QPS, <2ms latency) match across the README, Dashboard, and PM document."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate has everything needed to propose a design (e.g., moving to a distributed cache like Redis, implementing a token-bucket reservation system, or using Kafka Streams for real-time aggregation). The constraints are clear and the current failure points are well-documented."
+      },
+      "topIssues": []
+    }
+  },
+  {
+    "runIndex": 3,
+    "scenarioId": "backend-eng",
+    "roleName": "Backend Software Engineer",
+    "companyName": "AppLovin",
+    "taskSummary": "Optimize real-time campaign spend tracking and pacing",
+    "taskDescription": "The real-time bidding engine is currently overspending on high-volume campaigns because the budget tracking service cannot keep pace with the 500K QPS bid stream. Spend updates processed from Kafka are lagging by several seconds, leading to bids being placed for campaigns that have already reached their daily limits. \n\nA more efficient spend-check mechanism is needed to provide the bidding engine with near-instant budget status. The solution must process win-events from a Kafka topic and update a high-speed data store that the bidding engine can query with sub-millisecond latency. While PostgreSQL remains the system of record for billing, it cannot handle the direct query load from the bidding path.\n\nThe candidate must determine the appropriate caching strategy and state synchronization frequency. The DevOps team can provide information on current Redis cluster capacity, while the Product Manager needs to clarify the acceptable margin of error for budget overages on premium accounts.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "Budget Tracker Service — README",
+        "contentLength": 4994,
+        "wordCount": 625
+      },
+      {
+        "type": "dashboard",
+        "label": "Bidding Infrastructure — Performance Dashboard",
+        "contentLength": 3877,
+        "wordCount": 705
+      },
+      {
+        "type": "document",
+        "label": "Campaign Budgeting V2 — PRD",
+        "contentLength": 4148,
+        "wordCount": 618
+      }
+    ],
+    "generationTimeMs": 65629,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete picture of the technical bottleneck (PostgreSQL write contention), the business requirements (SLA tiers for overspend), and the available infrastructure (Redis cluster specs). The candidate has the specific metrics (25K TPS, 4.6s lag) needed to calculate a synchronization strategy."
+      },
+      "brokenReferences": {
+        "score": 5,
+        "references": [],
+        "explanation": "All internal references to the Dashboard and PRD are satisfied as they are included in the resource list. Mentions of Slack channels and file directories are for context and do not point to missing critical documentation."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Budget Tracker Service — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the current code implementation, the database schema, and the specific environment variables available for the Redis implementation."
+          },
+          {
+            "label": "Bidding Infrastructure — Performance Dashboard",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Provides the hard data (TPS, IOPS, CPU) required to justify a specific caching strategy and calculate the flush frequency to PostgreSQL."
+          },
+          {
+            "label": "Campaign Budgeting V2 — PRD",
+            "type": "document",
+            "useful": true,
+            "reason": "Defines the success criteria (SLA margins) and the specific engineering questions the candidate is expected to answer."
+          }
+        ],
+        "explanation": "Each resource serves a distinct and necessary purpose: technical context, performance data, and business requirements."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present. All references are internal to the provided text."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The win-event rates (25K TPS), the current lag (4.6s), and the Redis cluster configuration are consistent across all three documents."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate has everything needed to perform the task. The 'Open Questions' in the PRD act as a perfect guide for the deliverable, and the Dashboard provides the mathematical constraints needed to answer them."
+      },
+      "topIssues": []
+    }
+  },
+  {
+    "runIndex": 4,
+    "scenarioId": "backend-eng",
+    "roleName": "Backend Software Engineer",
+    "companyName": "AppLovin",
+    "taskSummary": "Implement a high-performance bid request filter",
+    "taskDescription": "The bidding engine is currently processing 500K QPS, but a significant portion of these requests are for publishers that have been blacklisted by our advertisers. This is causing unnecessary CPU load and increasing our infrastructure costs. The system needs a high-performance filtering component within the Java/Spring Boot bidding service to drop these requests before they reach the auction logic.\n\nThe filter must check incoming bid requests against a list of blacklisted publisher IDs and category IDs. Since a direct PostgreSQL lookup for every request is impossible at this scale, the solution should involve a local caching strategy or an optimized in-memory data structure. You will need to determine the refresh rate of the blacklist data by consulting with the DevOps team and understand the priority of different blacklist types from the Product Manager.\n\nConstraint: The filtering logic must add no more than 2ms of latency to the total request processing time. You must account for how the service will behave if the source of the blacklist data (a separate microservice) becomes unavailable or returns a partial list.",
+    "resourceCount": 4,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "Bidding Service — README",
+        "contentLength": 5127,
+        "wordCount": 594
+      },
+      {
+        "type": "api",
+        "label": "Blacklist Service — API Docs",
+        "contentLength": 3685,
+        "wordCount": 506
+      },
+      {
+        "type": "dashboard",
+        "label": "Bidding Engine — Production Metrics",
+        "contentLength": 3475,
+        "wordCount": 573
+      },
+      {
+        "type": "document",
+        "label": "PRD & Arch Notes — Edge Filtering",
+        "contentLength": 4537,
+        "wordCount": 702
+      }
+    ],
+    "generationTimeMs": 67132,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [
+          "Full class definition for BidRequest (specifically the getter for category IDs)"
+        ],
+        "explanation": "The resources provide a complete picture of the technical constraints (latency, memory, thread-safety), the business logic (P0/P1 priorities), and the external API contract. While the exact getter name for categories in the BidRequest model isn't shown, it is easily inferable from the publisher example."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "JIRA-8492, JIRA-8501, JIRA-8515",
+            "resourceLabel": "Bidding Service — README",
+            "issue": "The actual JIRA tickets are not provided."
+          },
+          {
+            "text": "admin panel",
+            "resourceLabel": "Bidding Service — README",
+            "issue": "The admin panel interface is not described or provided."
+          }
+        ],
+        "explanation": "The README references several JIRA tickets and an admin panel. However, the README provides sufficient summaries of the JIRA issues (GC pauses, CPU saturation) so that the candidate does not actually need the tickets to complete the task."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Bidding Service — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the code entry point (AuctionService.java) and the existing architecture context."
+          },
+          {
+            "label": "Blacklist Service — API Docs",
+            "type": "api",
+            "useful": true,
+            "reason": "Essential for understanding how to fetch the data, rate limits, and the 'fail open' requirement."
+          },
+          {
+            "label": "Bidding Engine — Production Metrics",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Quantifies the problem (100k QPS wasted) and defines the latency budget (2ms)."
+          },
+          {
+            "label": "PRD & Arch Notes — Edge Filtering",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides specific implementation guidance on thread-safety, data structures, and refresh intervals."
+          }
+        ],
+        "explanation": "Every resource is tightly coupled to the task. There is no 'fluff' content; each document addresses a specific constraint (code, API, performance, or business logic)."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "There are no external URLs that the candidate is required to visit. API paths and environment variables are provided as text context only."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The data is highly consistent. The QPS (500k), the latency limit (2ms), and the publisher/category counts match across the README, Metrics, and PRD."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate has everything needed. The task asks them to 'consult with DevOps' and 'understand priority from the PM', and both of these perspectives are explicitly provided in the 'PRD & Arch Notes' resource. The code snippet provided is sufficient to write the implementation logic."
+      },
+      "topIssues": [
+        "Minor: The exact field name for categories in the BidRequest model is not shown in the code snippet, though 'publisherId' is."
+      ]
+    }
+  },
+  {
+    "runIndex": 0,
+    "scenarioId": "data-analyst",
+    "roleName": "Senior Data Analyst",
+    "companyName": "RetailPulse",
+    "taskSummary": "FAILED",
+    "taskDescription": "FAILED",
+    "resourceCount": 0,
+    "resources": [],
+    "generationTimeMs": 0,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 0,
+      "selfContained": {
+        "score": 0,
+        "missingInfo": [
+          "Generation failed"
+        ],
+        "explanation": "Failed"
+      },
+      "brokenReferences": {
+        "score": 0,
+        "references": [],
+        "explanation": "Failed"
+      },
+      "usefulness": {
+        "score": 0,
+        "perResource": [],
+        "explanation": "Failed"
+      },
+      "externalUrls": {
+        "score": 0,
+        "urls": [],
+        "explanation": "Failed"
+      },
+      "internalConsistency": {
+        "score": 0,
+        "inconsistencies": [],
+        "explanation": "Failed"
+      },
+      "candidateReadiness": {
+        "score": 0,
+        "blockers": [],
+        "explanation": "Failed"
+      },
+      "topIssues": [
+        "Generation failed"
+      ]
+    }
+  },
+  {
+    "runIndex": 1,
+    "scenarioId": "data-analyst",
+    "roleName": "Senior Data Analyst",
+    "companyName": "RetailPulse",
+    "taskSummary": "Diagnostic analysis of checkout funnel drop-off",
+    "taskDescription": "The weekly business review has highlighted a 12% WoW decline in the 'Shipping to Payment' conversion rate, which is significantly impacting overall GMV. Preliminary data suggests the drop-off is concentrated in the mobile web segment, but the root cause remains unidentified.\n\nYou are required to perform a diagnostic analysis using BigQuery to isolate the segment or technical event causing this friction. The analysis should quantify the lost revenue and provide a clear recommendation for the product team. You will need to consult the Frontend Engineer regarding recent deployments to the shipping module and the Product Manager to understand if there were changes to the shipping cost threshold logic.\n\nConstraint: The existing dbt models for funnel tracking have a 24-hour latency, so you may need to query raw event logs. Your final output should include the SQL logic used for the investigation and a proposal for a Looker alert to catch similar anomalies in real-time.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "Looker Dashboard: WBR Checkout Funnel",
+        "contentLength": 3644,
+        "wordCount": 682
+      },
+      {
+        "type": "document",
+        "label": "Release Notes: Checkout v2.4 & Shipping Threshold Update",
+        "contentLength": 3464,
+        "wordCount": 538
+      },
+      {
+        "type": "database",
+        "label": "BigQuery Schema: raw_events.checkout_tracking",
+        "contentLength": 4567,
+        "wordCount": 603
+      }
+    ],
+    "generationTimeMs": 64837,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete ecosystem for the task. The candidate has the business context (threshold changes), the technical context (new API and UI refactor), the quantitative data (funnel metrics), and the technical schema (BigQuery logs) required to produce the SQL and the recommendation."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "[JIRA-8821]",
+            "resourceLabel": "Resource 2",
+            "issue": "Reference to an external JIRA ticket that is not provided."
+          },
+          {
+            "text": "[JIRA-8825]",
+            "resourceLabel": "Resource 2",
+            "issue": "Reference to an external JIRA ticket that is not provided."
+          },
+          {
+            "text": "Q3 margin analysis",
+            "resourceLabel": "Resource 2",
+            "issue": "Reference to an internal document not provided."
+          }
+        ],
+        "explanation": "While there are references to external JIRA tickets and a margin analysis document, the release notes provide sufficient summaries of these items. The candidate does not need the actual documents to complete the diagnostic analysis."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Looker Dashboard: WBR Checkout Funnel",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Essential for identifying that the drop is concentrated in Mobile Web and the $50-$75 cart value segment."
+          },
+          {
+            "label": "Release Notes: Checkout v2.4 & Shipping Threshold Update",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides the root cause hypotheses: a business logic change (threshold) and a technical change (address validation API)."
+          },
+          {
+            "label": "BigQuery Schema: raw_events.checkout_tracking",
+            "type": "database",
+            "useful": true,
+            "reason": "Provides the exact schema, JSON extraction instructions, and sample data needed to write the SQL deliverable."
+          }
+        ],
+        "explanation": "There is no filler; every resource is high-signal and directly addresses a different requirement of the task (quantification, root cause, and technical implementation)."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The resources are highly consistent. The 12% drop in the dashboard matches the WoW delta table; the cart value drop matches the threshold change description; and the sample data in the database schema confirms the 'api_timeout' issue mentioned in the release notes."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate is well-positioned to succeed. They can identify two distinct issues: a planned business impact (threshold change) and an unplanned technical bug (Mobile Web API timeouts). The path to the deliverable is clear and supported by the data provided."
+      },
+      "topIssues": []
+    }
+  },
+  {
+    "runIndex": 2,
+    "scenarioId": "data-analyst",
+    "roleName": "Senior Data Analyst",
+    "companyName": "RetailPulse",
+    "taskSummary": "Analyze conversion funnel leakage following checkout UI updates",
+    "taskDescription": "Following a recent update to the guest checkout flow, mobile conversion rates have dropped by 12% across the marketplace. While the Product team suspects the new UI, there is conflicting data regarding whether users are failing at the payment step or the shipping information stage. You need to investigate the raw event logs in BigQuery to reconstruct the funnel and identify exactly where the drop-off is occurring.\n\nThe analysis requires creating a SQL-based breakdown of the conversion funnel (Product View -> Add to Cart -> Checkout Start -> Payment -> Success). You will need to consult the Product Manager to understand the specific changes made to the guest checkout logic and the Frontend Engineer to confirm if the 'checkout_complete' event trigger was moved or modified. \n\nConstraints: The BigQuery tables for events are partitioned by day; your analysis must be cost-optimized to avoid hitting the daily query budget. The final findings should include a recommendation for a dbt model that standardizes this funnel for future Looker reporting.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "database",
+        "label": "BigQuery Schema: retailpulse_events",
+        "contentLength": 4822,
+        "wordCount": 678
+      },
+      {
+        "type": "document",
+        "label": "PRD: Guest Checkout Revamp (v2.4)",
+        "contentLength": 3870,
+        "wordCount": 562
+      },
+      {
+        "type": "dashboard",
+        "label": "Looker Dashboard: Core E-Commerce Funnel",
+        "contentLength": 3113,
+        "wordCount": 566
+      }
+    ],
+    "generationTimeMs": 59904,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 4.8,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete schema, sample data, business context (PRD), and existing (though flawed) reporting. The candidate has everything needed to write the SQL, identify the drop-off point, and propose a dbt model."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "retailpulse-dbt repository",
+            "resourceLabel": "BigQuery Schema: retailpulse_events",
+            "issue": "The candidate cannot access external repositories, though they can describe the model logic."
+          },
+          {
+            "text": "dbt_models.dim_users",
+            "resourceLabel": "BigQuery Schema: retailpulse_events",
+            "issue": "The schema for this table is not provided, though the resource correctly notes it is not strictly necessary for the funnel analysis."
+          }
+        ],
+        "explanation": "There are mentions of internal repositories and secondary tables that aren't fully defined, but they are clearly labeled as non-essential or context-only, so they don't hinder the primary task."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "BigQuery Schema: retailpulse_events",
+            "type": "database",
+            "useful": true,
+            "reason": "Essential for writing the SQL query; provides the table structure, partition column, and JSON parsing logic."
+          },
+          {
+            "label": "PRD: Guest Checkout Revamp (v2.4)",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides the business logic for the new SPA flow and explains the changes to event triggers (especially checkout_complete)."
+          },
+          {
+            "label": "Looker Dashboard: Core E-Commerce Funnel",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Gives the candidate a baseline to investigate and highlights the specific dates and stages where the data is suspected to be failing."
+          }
+        ],
+        "explanation": "Every resource is directly tied to the investigation. The schema allows for the technical work, the PRD provides the 'why' and the logic, and the dashboard provides the 'where' for the investigation."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs were found in the resources."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The rollout dates (Oct 28), event names, and the observed drop in the dashboard are perfectly aligned across all three resources."
+      },
+      "candidateReadiness": {
+        "score": 4,
+        "blockers": [
+          {
+            "description": "The task and Resource 1 imply the candidate can 'run queries' in a BigQuery UI or local environment, which is not possible in the platform. They must write 'dry' SQL.",
+            "resourceLabel": "BigQuery Schema: retailpulse_events",
+            "severity": "minor"
+          }
+        ],
+        "explanation": "The candidate is well-equipped to perform the analysis. The only minor friction is the narrative suggestion that they can use a live BigQuery console, whereas they will actually be providing the SQL as a written deliverable."
+      },
+      "topIssues": [
+        "Narrative implies access to a live BigQuery environment which the candidate does not have.",
+        "Minor references to a dbt repository and a user dimension table that are not provided, though not critical for the task."
+      ]
+    }
+  },
+  {
+    "runIndex": 3,
+    "scenarioId": "data-analyst",
+    "roleName": "Senior Data Analyst",
+    "companyName": "RetailPulse",
+    "taskSummary": "Investigate a 15% drop in mobile checkout conversion rates",
+    "taskDescription": "Since the last deployment, the checkout completion rate for mobile app users has dropped by approximately 15%, while desktop conversion remains stable. This trend is threatening the quarterly GMV targets and requires an immediate root-cause analysis. \n\nThe goal is to isolate the specific step in the checkout funnel where users are dropping off using BigQuery event logs. You need to determine if this is a technical failure (e.g., failed event firing), a localized performance issue, or a behavioral shift due to recent UI changes. The Product Manager can provide context on the specific variations in the A/B test launched last week, and the Frontend Lead can clarify if any changes were made to the segment.track calls in the mobile codebase. \n\nYour deliverable should include a summary of the findings, the SQL used to identify the bottleneck, and a recommendation for how to structure a new dbt model to prevent this type of blind spot in the future.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "database",
+        "label": "BigQuery Schema: retailpulse_prod",
+        "contentLength": 4763,
+        "wordCount": 672
+      },
+      {
+        "type": "dashboard",
+        "label": "Looker Dashboard: Checkout Conversion & Funnel Health",
+        "contentLength": 3482,
+        "wordCount": 556
+      },
+      {
+        "type": "document",
+        "label": "Release v4.2.0 & A/B Test 'Mobile Checkout Revamp'",
+        "contentLength": 3394,
+        "wordCount": 495
+      }
+    ],
+    "generationTimeMs": 62377,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete ecosystem for the task: a database schema with sample data for SQL construction, a dashboard showing the exact location of the drop-off, and release notes explaining the technical changes and potential bugs. The candidate has everything needed to identify the root cause (tracking trigger change combined with validation logic) and propose a dbt-based solution."
+      },
+      "brokenReferences": {
+        "score": 5,
+        "references": [],
+        "explanation": "All internal references (e.g., 'See Also' sections) correctly point to the other provided resources. Mentions of team members like @marcus.t are intended for the AI chat feature mentioned in the instructions."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Resource 1: BigQuery Schema",
+            "type": "database",
+            "useful": true,
+            "reason": "Essential for writing the SQL deliverable; provides table structures, join keys, and specific BigQuery syntax for JSON parsing."
+          },
+          {
+            "label": "Resource 2: Looker Dashboard",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Provides the quantitative evidence needed to isolate the bottleneck to the 'Shipping -> Payment' transition specifically within the 'Treatment' group."
+          },
+          {
+            "label": "Resource 3: Release Notes",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides the qualitative 'why' behind the data; explains the tracking trigger change and the zip code validation logic which are the likely root causes."
+          }
+        ],
+        "explanation": "Each resource is critical for a different part of the deliverable (SQL, root-cause analysis, and future-proofing recommendation)."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present."
+      },
+      "internalConsistency": {
+        "score": 4,
+        "inconsistencies": [
+          "The total user counts in the 'Funnel Drop-off Analysis' (169,375 mobile users) do not perfectly align with the sum of users in the 'A/B Test Performance' table (92,478 users), even though the test is 100% of traffic. This is likely due to different time windows (72 hours vs. since launch), but it is not explicitly stated."
+        ],
+        "explanation": "The numerical discrepancy is minor and does not interfere with the logic of the analysis, as the conversion percentages and trends are consistent across all documents."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate is well-equipped to perform at a 'Senior' level. The inclusion of data quality notes (guest checkouts, duplicate events) and specific technical implementation details (onBlur triggers, regex validation) allows the candidate to provide a nuanced and accurate recommendation."
+      },
+      "topIssues": []
+    }
+  },
+  {
+    "runIndex": 4,
+    "scenarioId": "data-analyst",
+    "roleName": "Senior Data Analyst",
+    "companyName": "RetailPulse",
+    "taskSummary": "Investigate conversion rate decline in the checkout funnel",
+    "taskDescription": "RetailPulse has observed a 12% drop in conversion rates for mobile users over the last three weeks. Initial reports suggest the drop-off occurs between the 'Add to Cart' and 'Shipping Info' stages, but the existing Looker dashboards don't provide enough granularity to isolate the cause. \n\nYou need to design an analysis plan to identify if this is a technical latency issue, a UI friction point, or a data tracking error. You will need to propose a new dbt model structure that joins raw event logs with transaction data to provide a clearer funnel view. \n\nConsult with the Product Manager to define the exact session timeout logic and with the Lead Engineer to understand recent changes to the mobile checkout flow. The staging BigQuery environment has limited historical data, so you must decide which dimensions are critical for the initial investigation.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "Looker Dashboard: Mobile Conversion Funnel",
+        "contentLength": 4120,
+        "wordCount": 699
+      },
+      {
+        "type": "database",
+        "label": "Data Dictionary & BigQuery Schemas",
+        "contentLength": 4418,
+        "wordCount": 628
+      },
+      {
+        "type": "document",
+        "label": "PRD & Release Notes: Mobile Checkout v3.2",
+        "contentLength": 3684,
+        "wordCount": 565
+      }
+    ],
+    "generationTimeMs": 60441,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete picture: the business problem (conversion drop), the technical schema (BigQuery tables), the specific code-level changes (nested JSON), and the business logic changes (session timeout). The candidate has everything needed to write the dbt SQL and the analysis plan."
+      },
+      "brokenReferences": {
+        "score": 5,
+        "references": [],
+        "explanation": "All 'See Also' links point to other resources provided in the set. Internal references like 'ENG-882' are explained within the PRD resource."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Looker Dashboard: Mobile Conversion Funnel",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Provides the quantitative evidence of the drop-off and identifies the specific funnel step where the issue occurs."
+          },
+          {
+            "label": "Data Dictionary & BigQuery Schemas",
+            "type": "database",
+            "useful": true,
+            "reason": "Essential for the dbt modeling part of the task; provides table names, column types, and sample JSON payloads."
+          },
+          {
+            "label": "PRD & Release Notes: Mobile Checkout v3.2",
+            "type": "document",
+            "useful": true,
+            "reason": "Contains the 'smoking gun' information regarding the nested JSON change and the session timeout logic change."
+          }
+        ],
+        "explanation": "Each resource serves a distinct purpose: one for the 'what' (dashboard), one for the 'how' (schema), and one for the 'why' (PRD)."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present."
+      },
+      "internalConsistency": {
+        "score": 4,
+        "inconsistencies": [
+          "Resource 3 says v3.2 was released Oct 10, but Resource 1 shows 'Mixed' versions until Oct 22 and v3.2 only becoming the primary version on Oct 23."
+        ],
+        "explanation": "The date discrepancy is minor and actually mirrors real-world scenarios where a rollout takes time to reach the majority of the user base or show up in data."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate has clear instructions and all necessary data points. The sample query results in Resource 2 are particularly helpful for understanding the API timeout issue without needing to run actual queries."
+      },
+      "topIssues": []
+    }
+  },
+  {
+    "runIndex": 0,
+    "scenarioId": "frontend-eng",
+    "roleName": "Frontend Engineer",
+    "companyName": "CollabSpace",
+    "taskSummary": "FAILED",
+    "taskDescription": "FAILED",
+    "resourceCount": 0,
+    "resources": [],
+    "generationTimeMs": 0,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 0,
+      "selfContained": {
+        "score": 0,
+        "missingInfo": [
+          "Generation failed"
+        ],
+        "explanation": "Failed"
+      },
+      "brokenReferences": {
+        "score": 0,
+        "references": [],
+        "explanation": "Failed"
+      },
+      "usefulness": {
+        "score": 0,
+        "perResource": [],
+        "explanation": "Failed"
+      },
+      "externalUrls": {
+        "score": 0,
+        "urls": [],
+        "explanation": "Failed"
+      },
+      "internalConsistency": {
+        "score": 0,
+        "inconsistencies": [],
+        "explanation": "Failed"
+      },
+      "candidateReadiness": {
+        "score": 0,
+        "blockers": [],
+        "explanation": "Failed"
+      },
+      "topIssues": [
+        "Generation failed"
+      ]
+    }
+  },
+  {
+    "runIndex": 1,
+    "scenarioId": "frontend-eng",
+    "roleName": "Frontend Engineer",
+    "companyName": "CollabSpace",
+    "taskSummary": "Build a real-time presence indicator for document headers",
+    "taskDescription": "Enterprise teams are reporting confusion regarding who is actively editing a document because the current header lacks a presence indicator. You need to build a dynamic 'Collaborator Stack' component that displays user avatars, handling the logic for showing the first few active users and grouping the remaining users into an overflow count (e.g., '+3').\n\nThe component must be performant enough to handle rapid updates as users join or leave. You will need to check with the backend engineer regarding the shape of the presence data and how frequently updates are broadcast via the WebSocket. Additionally, the designer has specified that the overflow should trigger a detailed list, but the interaction model (hover vs. click) and the focus management for accessibility haven't been finalized yet.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "api",
+        "label": "Presence Service — WebSocket API",
+        "contentLength": 4765,
+        "wordCount": 689
+      },
+      {
+        "type": "document",
+        "label": "Collaborator Stack — UI/UX Spec",
+        "contentLength": 4885,
+        "wordCount": 789
+      },
+      {
+        "type": "repository",
+        "label": "CollabSpace Web — Frontend Repo",
+        "contentLength": 4680,
+        "wordCount": 673
+      }
+    ],
+    "generationTimeMs": 56283,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 4.5,
+      "selfContained": {
+        "score": 4,
+        "missingInfo": [
+          "The API/Props for the internal 'Avatar' component (src/components/ui/Avatar.tsx).",
+          "The API/Props for the internal 'Popover' component (src/components/ui/Popover.tsx)."
+        ],
+        "explanation": "The resources provide excellent detail on data structures, styling, and business logic. However, the candidate is explicitly instructed to use existing internal components (Avatar and Popover) to avoid known bugs, but the code or prop definitions for these components are not provided."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "src/components/ui/Avatar.tsx",
+            "resourceLabel": "CollabSpace Web — Frontend Repo",
+            "issue": "File mentioned as having a z-index bug the candidate needs to fix/work around, but the code is not provided."
+          },
+          {
+            "text": "src/components/ui/Popover.tsx",
+            "resourceLabel": "CollabSpace Web — Frontend Repo",
+            "issue": "File mentioned as the preferred alternative to Radix UI, but the implementation/API is not provided."
+          }
+        ],
+        "explanation": "The resources reference specific internal files and JIRA tickets (BE-882, UI-1042) for context. While the tickets aren't necessary, the lack of the UI component code makes it harder to follow the specific instructions regarding the Popover and Avatar."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Presence Service — WebSocket API",
+            "type": "api",
+            "useful": true,
+            "reason": "Provides the User object schema and explains the data lifecycle (joins/leaves/idle)."
+          },
+          {
+            "label": "Collaborator Stack — UI/UX Spec",
+            "type": "document",
+            "useful": true,
+            "reason": "Crucial for the overflow logic (+N rules) and specific Tailwind styling requirements."
+          },
+          {
+            "label": "CollabSpace Web — Frontend Repo",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the React hook (useWorkspacePresence) needed to actually consume the data."
+          }
+        ],
+        "explanation": "Every resource is directly relevant to the task. The API doc defines the data, the Spec defines the visuals/logic, and the Repo doc defines the implementation path."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present. The WebSocket connection string is for localhost development."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The resources are highly consistent. The data types in the API match the requirements in the UI spec, and the hook in the repo documentation correctly references the data types."
+      },
+      "candidateReadiness": {
+        "score": 4,
+        "blockers": [
+          {
+            "description": "The candidate is told to use an internal Popover component instead of Radix, but doesn't know what props it accepts (e.g., isOpen, onOpenChange, trigger).",
+            "resourceLabel": "CollabSpace Web — Frontend Repo",
+            "severity": "major"
+          }
+        ],
+        "explanation": "A skilled candidate can likely infer or mock the missing UI component APIs, but providing the interface for the Popover and Avatar components would make the task much smoother and less reliant on guesswork."
+      },
+      "topIssues": [
+        "Missing prop definitions or code for the internal 'Avatar' and 'Popover' components.",
+        "The candidate is given specific instructions to fix a z-index issue in a component they cannot see."
+      ]
+    }
+  },
+  {
+    "runIndex": 2,
+    "scenarioId": "frontend-eng",
+    "roleName": "Frontend Engineer",
+    "companyName": "CollabSpace",
+    "taskSummary": "Optimize document list rendering for large enterprise workspaces",
+    "taskDescription": "Enterprise workspaces in CollabSpace often contain thousands of documents, causing the main dashboard list to experience significant frame drops during scrolling and filtering. The current implementation renders the entire list of document metadata at once, which is causing memory bloat in the browser.\n\nA more performant rendering strategy is required, likely involving virtualization or windowing to ensure only visible items are mounted in the DOM. The solution must maintain full accessibility (WCAG 2.1) so that screen reader users can still navigate the list effectively. You will need to coordinate with the Backend Engineer to understand the current pagination API and the Product Manager to determine if 'infinite scroll' or 'load more' behavior is preferred for this specific view.\n\nConstraint: The list items utilize a complex set of Tailwind classes for hover states and context menus that must remain performant during rapid scrolling. The staging environment currently has a 2-second artificial latency on API calls that cannot be disabled.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "Frontend Repo — collabspace-web",
+        "contentLength": 6178,
+        "wordCount": 677
+      },
+      {
+        "type": "api",
+        "label": "Workspace Documents API",
+        "contentLength": 3710,
+        "wordCount": 440
+      },
+      {
+        "type": "document",
+        "label": "Enterprise Dashboard — Performance Audit & Requirements",
+        "contentLength": 4493,
+        "wordCount": 687
+      }
+    ],
+    "generationTimeMs": 56224,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 4.2,
+      "selfContained": {
+        "score": 4,
+        "missingInfo": [
+          "Implementation details of the `useWorkspaceDocuments` hook.",
+          "Implementation details of the `apiClient` utility mentioned in the API docs.",
+          "The `ContextMenu` component code (though its usage is visible)."
+        ],
+        "explanation": "The candidate has the core components and the API specification. However, since they need to refactor the data fetching to support cursor-based pagination (moving away from the current 'fetch-all' approach), not seeing the existing hook or API client implementation makes writing the actual code refactor difficult without making assumptions."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "#dx-help channel",
+            "resourceLabel": "Frontend Repo — collabspace-web",
+            "issue": "Reference to a Slack channel that doesn't exist in the simulation."
+          },
+          {
+            "text": "backend swagger definitions",
+            "resourceLabel": "Frontend Repo — collabspace-web",
+            "issue": "Reference to external documentation not provided (though the API resource compensates for this)."
+          }
+        ],
+        "explanation": "Most references are flavor text for the simulation environment. The lack of the actual Swagger UI is mitigated by the provided API resource."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Frontend Repo — collabspace-web",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the current buggy implementation and the CSS/Tailwind requirements for the list items."
+          },
+          {
+            "label": "Workspace Documents API",
+            "type": "api",
+            "useful": true,
+            "reason": "Essential for understanding how to implement cursor-based pagination for the virtualized list."
+          },
+          {
+            "label": "Enterprise Dashboard — Performance Audit & Requirements",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides specific accessibility (ARIA) requirements and UX constraints (latency handling) that define the success criteria."
+          }
+        ],
+        "explanation": "Every resource is critical to solving the specific performance, accessibility, and data-fetching aspects of the task."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs were found. Library names like @tanstack/react-virtual are mentioned as suggestions but are not hyperlinked."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The 2-second latency, the cursor-based pagination, and the document counts are consistent across all three resources."
+      },
+      "candidateReadiness": {
+        "score": 4,
+        "blockers": [
+          {
+            "description": "The candidate needs to refactor the data fetching logic but lacks the source code for the existing `useWorkspaceDocuments` hook or the `apiClient` utility.",
+            "resourceLabel": "Frontend Repo — collabspace-web",
+            "severity": "major"
+          }
+        ],
+        "explanation": "While the candidate can describe the solution or write a high-level refactor, they will have to 'hallucinate' the data-fetching layer (e.g., assuming it uses SWR or React Query) because the underlying hook implementation is hidden."
+      },
+      "topIssues": [
+        "Missing source code for the data-fetching hook (`useWorkspaceDocuments`), which is central to implementing the required pagination.",
+        "The task requires 'coordinating with the Backend Engineer', which relies on the AI coworker's ability to provide info not in the docs.",
+        "The candidate must assume the existence of specific virtualization libraries since they cannot install new ones during the simulation."
+      ]
+    }
+  },
+  {
+    "runIndex": 3,
+    "scenarioId": "frontend-eng",
+    "roleName": "Frontend Engineer",
+    "companyName": "CollabSpace",
+    "taskSummary": "Implement an accessible and real-time comment notification system",
+    "taskDescription": "Enterprise users have reported that screen readers do not announce new comments in the collaborative sidebar, and keyboard navigation between threads is inconsistent. Additionally, the 'Resolve Thread' action currently requires a full page refresh to update the UI.\n\nThe task involves updating the CommentThread component to meet WCAG 2.1 accessibility standards and implementing optimistic UI updates for the 'Resolve' state. You will need to determine the correct ARIA roles for the live region and ensure focus management is handled when threads are closed. \n\nConstraints: The existing Tailwind utility classes for the sidebar width are fixed to avoid layout shift. You should consult the Backend Engineer regarding the payload structure of the real-time events and the Product Designer on the expected focus behavior when a user navigates between active comments.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "CollabSpace Web Client — README",
+        "contentLength": 5016,
+        "wordCount": 611
+      },
+      {
+        "type": "api",
+        "label": "Collaboration WebSocket API",
+        "contentLength": 3927,
+        "wordCount": 591
+      },
+      {
+        "type": "document",
+        "label": "A11y Audit & Sidebar UI Spec",
+        "contentLength": 4350,
+        "wordCount": 663
+      }
+    ],
+    "generationTimeMs": 53426,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 4.5,
+      "selfContained": {
+        "score": 4,
+        "missingInfo": [
+          "The implementation details of 'useCollaborationStore' (Zustand store) are missing. While 'setActiveThread' is used in the snippet, the candidate needs to know which action to call to optimistically remove or update a thread's status in the global state.",
+          "The 'resolveThreadApi' utility is referenced but its signature (other than taking a threadId) isn't fully shown, though it can be inferred."
+        ],
+        "explanation": "The resources provide excellent context for the 'why' and 'what', including specific ARIA attributes and focus logic. However, the 'how' for the optimistic update is slightly hindered by not seeing the available actions in the Zustand store."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "@frontend-oncall alias in Slack",
+            "resourceLabel": "Resource 1",
+            "issue": "Reference to an external communication channel not available in the simulation."
+          },
+          {
+            "text": "A11y Audit & Sidebar UI Spec",
+            "resourceLabel": "Resource 1 & 2",
+            "issue": "Referenced as a 'See Also' link, but it is actually Resource 3 in the provided list (minor context gap)."
+          }
+        ],
+        "explanation": "Most references are internal to the provided resources. The Slack and 'See Also' links are standard documentation fluff and don't block the task."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Resource 1: README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the actual code snippet to be refactored and identifies the specific bugs and styling constraints."
+          },
+          {
+            "label": "Resource 2: Collaboration WebSocket API",
+            "type": "api",
+            "useful": true,
+            "reason": "Essential for understanding the data structure of incoming comments to implement the ARIA live region announcements correctly."
+          },
+          {
+            "label": "Resource 3: A11y Audit & Sidebar UI Spec",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides the exact ARIA attributes (polite, atomic, relevant) and the specific logic for focus management (next vs. previous thread)."
+          }
+        ],
+        "explanation": "Every resource is directly tied to a specific requirement of the task (A11y, Optimistic UI, Focus Management)."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs were found; only internal paths and WebSocket endpoints are mentioned."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The resources are highly consistent. The bugs mentioned in the README match the audit failures in Resource 3 and the event types in Resource 2."
+      },
+      "candidateReadiness": {
+        "score": 4,
+        "blockers": [
+          {
+            "description": "The candidate needs to update the global state for the optimistic UI but doesn't have the store definition. They will have to 'hallucinate' or assume a method name like 'resolveThread' or 'removeThread' exists on the store.",
+            "resourceLabel": "Resource 1",
+            "severity": "minor"
+          }
+        ],
+        "explanation": "The candidate has clear instructions on the logic and the accessibility requirements. The only minor hurdle is the lack of the full Zustand store API, but a competent frontend engineer can easily mock or describe the necessary state change."
+      },
+      "topIssues": [
+        "Missing Zustand store actions for state manipulation.",
+        "The 'resolveThreadApi' is a black box, though its usage is straightforward in the snippet."
+      ]
+    }
+  },
+  {
+    "runIndex": 4,
+    "scenarioId": "frontend-eng",
+    "roleName": "Frontend Engineer",
+    "companyName": "CollabSpace",
+    "taskSummary": "Optimize the Comment Sidebar for large document performance",
+    "taskDescription": "Users working on high-volume legal and technical documents report significant UI lag and browser memory issues when the comment sidebar contains more than 100 threads. The current implementation renders the entire list of comments into the DOM at once, which blocks the main thread during document navigation.\n\nImplement a performance-optimized version of the CommentSidebar component using React and TypeScript. The solution should handle variable-height comment cards and maintain smooth scrolling. You will need to consult the Backend Engineer to understand the current pagination or streaming capabilities of the comment API. Additionally, check with the Product Manager regarding how the 'Sync with Document' feature should behave when a user clicks a comment that isn't currently visible in the virtualized list.\n\nConstraints: The component must use the existing TailwindCSS utility classes and be compatible with the current Next.js page structure. High-priority focus should be placed on ensuring that adding a new comment doesn't trigger a full re-render of the entire sidebar list.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "CollabSpace Web Client — README",
+        "contentLength": 4585,
+        "wordCount": 593
+      },
+      {
+        "type": "api",
+        "label": "Comments API v2 — Reference",
+        "contentLength": 3571,
+        "wordCount": 447
+      },
+      {
+        "type": "document",
+        "label": "Issue Spec: Sidebar Performance & Virtualization",
+        "contentLength": 4079,
+        "wordCount": 674
+      }
+    ],
+    "generationTimeMs": 54563,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 4,
+      "selfContained": {
+        "score": 3,
+        "missingInfo": [
+          "Source code for 'src/features/comments/CommentCard.tsx'",
+          "Source code for 'src/lib/api/comments.ts' (the useComments hook)",
+          "Source code for 'src/features/comments/CommentComposer.tsx'",
+          "Source code for 'src/features/comments/SidebarHeader.tsx'"
+        ],
+        "explanation": "The candidate is tasked with refactoring the sidebar and updating the data fetching logic. While the main sidebar code is provided, the 'useComments' hook (which they are told to update) and the 'CommentCard' (which determines the dynamic height for virtualization) are missing. The candidate has to guess the internal structure of these files."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "src/lib/api/comments.ts",
+            "resourceLabel": "RESOURCE 1: [repository] \"CollabSpace Web Client — README\"",
+            "issue": "The candidate is told to update this file's logic to support cursors, but the file content is not provided."
+          },
+          {
+            "text": "CommentCard",
+            "resourceLabel": "RESOURCE 1: [repository] \"CollabSpace Web Client — README\"",
+            "issue": "The component is imported and used, but its implementation is missing, making it hard to plan for dynamic height measurements."
+          }
+        ],
+        "explanation": "The task and resources explicitly point to files that the candidate needs to modify or understand (the API hook and the card component) which are not included in the content."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "CollabSpace Web Client — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the current broken implementation and the project architecture."
+          },
+          {
+            "label": "Comments API v2 — Reference",
+            "type": "api",
+            "useful": true,
+            "reason": "Essential for understanding how to implement the required pagination and WebSocket updates."
+          },
+          {
+            "label": "Issue Spec: Sidebar Performance & Virtualization",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides the business logic, performance targets, and specific edge cases like the 'Sync with Document' feature."
+          }
+        ],
+        "explanation": "Every resource is critical to the task. There is no filler content."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [
+          {
+            "url": "/avatars/sarah.jpg",
+            "resourceLabel": "RESOURCE 2: [api] \"Comments API v2 — Reference\""
+          }
+        ],
+        "explanation": "Only internal-style relative paths are used in examples; no external websites are required for the task."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The technical details (Next.js, Tailwind, Zustand, cursor-based pagination) are consistent across all three resources."
+      },
+      "candidateReadiness": {
+        "score": 4,
+        "blockers": [
+          {
+            "description": "Missing the 'useComments' hook source code makes it difficult to 'update the fetching logic' as requested.",
+            "resourceLabel": "RESOURCE 2: [api] \"Comments API v2 — Reference\"",
+            "severity": "major"
+          },
+          {
+            "description": "Missing 'CommentCard' source code makes it difficult to implement precise dynamic height virtualization or optimize its re-renders.",
+            "resourceLabel": "RESOURCE 1: [repository] \"CollabSpace Web Client — README\"",
+            "severity": "major"
+          }
+        ],
+        "explanation": "The candidate can still produce a high-quality architectural plan and a refactored Sidebar component, but they will have to 'mock' or assume the structure of the sub-components and hooks they are supposed to be integrating with."
+      },
+      "topIssues": [
+        "The source code for the 'useComments' hook is missing, yet the candidate is explicitly instructed to update it.",
+        "The 'CommentCard' component code is missing, which is problematic since the task focuses on its variable height and re-rendering performance.",
+        "The candidate is asked to write unit tests and Storybook stories but lacks the existing configuration/boilerplate for these tools."
+      ]
+    }
+  },
+  {
+    "runIndex": 0,
+    "scenarioId": "devops-sre",
+    "roleName": "DevOps / Site Reliability Engineer",
+    "companyName": "FinanceGrid",
+    "taskSummary": "Optimize EKS infrastructure costs and scaling efficiency",
+    "taskDescription": "FinanceGrid’s monthly AWS bill has increased by 25% over the last quarter, primarily driven by underutilized compute resources in the production EKS cluster. Current node groups are statically provisioned using m5.2xlarge instances across three Availability Zones. This setup is inefficient during off-peak hours but necessary for current peak-load stability.\n\nYou need to design a more dynamic scaling strategy using Terraform that incorporates a mix of On-Demand and Spot instances without compromising the 99.99% uptime SLA for the core ledger services. The DevOps team can provide details on the current cluster-autoscaler configuration and pod disruption budgets. You will need to determine from the Backend Lead which microservices are 'Spot-friendly' and which require guaranteed persistence.\n\nConstraint: Cross-AZ data transfer costs are also rising; any solution must account for pod affinity rules to keep high-traffic internal communication localized where possible. The final proposal should include a monitoring plan to track the 'Cost per Transaction' metric in Grafana.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "EKS FinOps & Utilization Dashboard",
+        "contentLength": 3873,
+        "wordCount": 571
+      },
+      {
+        "type": "repository",
+        "label": "financegrid-infra — README",
+        "contentLength": 3808,
+        "wordCount": 502
+      },
+      {
+        "type": "document",
+        "label": "Microservices Placement & SLA Runbook",
+        "contentLength": 4324,
+        "wordCount": 645
+      }
+    ],
+    "generationTimeMs": 54413,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide the current Terraform code, the specific cost data justifying the change, the business logic for which services can use Spot instances, and the specific Prometheus metrics needed for the monitoring plan. The candidate has everything required to draft the proposal and the HCL refactor."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "(see internal documentation)",
+            "resourceLabel": "financegrid-infra — README",
+            "issue": "The Helm repository URL is omitted."
+          },
+          {
+            "text": "SRE-1042, SRE-1045, SRE-1088",
+            "resourceLabel": "financegrid-infra — README",
+            "issue": "JIRA tickets are referenced without links."
+          }
+        ],
+        "explanation": "While there are references to internal docs and JIRA tickets, the context provided within the 'Known Issues' and 'Architecture Overview' sections is sufficient for the candidate to complete the task without needing the actual external pages."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "EKS FinOps & Utilization Dashboard",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Provides the quantitative data for the cost-benefit analysis and the specific metrics for the Grafana monitoring plan."
+          },
+          {
+            "label": "financegrid-infra — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the baseline Terraform HCL that the candidate needs to refactor."
+          },
+          {
+            "label": "Microservices Placement & SLA Runbook",
+            "type": "document",
+            "useful": true,
+            "reason": "Contains the critical business rules (Spot-friendliness, PDBs, and affinity requirements) needed to design the solution."
+          }
+        ],
+        "explanation": "Every resource is directly tied to a specific requirement in the task (Terraform, Affinity, Spot strategy, and Monitoring)."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs were found in the resources."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The node counts (45), instance types (m5.2xlarge), and service names are consistent across the dashboard, the HCL code, and the runbook."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate is well-positioned. The task asks them to 'determine from the Backend Lead' certain info, and Resource 3 is explicitly authored by the Backend Lead and contains that exact info. The metrics provided in Resource 1 allow for a very concrete monitoring plan."
+      },
+      "topIssues": [
+        "Minor: Helm repository URL is placeholder text, though not critical for a design task.",
+        "Minor: JIRA ticket references are used as headers but lack full ticket history."
+      ]
+    }
+  },
+  {
+    "runIndex": 1,
+    "scenarioId": "devops-sre",
+    "roleName": "DevOps / Site Reliability Engineer",
+    "companyName": "FinanceGrid",
+    "taskSummary": "Optimize EKS cluster costs for the Transaction Processing Layer",
+    "taskDescription": "FinanceGrid's monthly AWS bill has increased by 30% following the migration of the core transaction layer to EKS. While the system meets current throughput needs, the current over-provisioning of m5.xlarge instances is unsustainable for the current budget. The goal is to reduce compute costs by at least 15% while maintaining the 99.99% availability SLA required for our $2B annual transaction volume.\n\nYou need to propose a revised infrastructure strategy using Terraform. This involves evaluating the feasibility of Spot instances for specific workloads and implementing a more granular Horizontal Pod Autoscaler (HPA) configuration. You will need to consult the Lead Backend Engineer to identify which services are stateless enough for Spot instances and check with the Finance department regarding the current reserved instance coverage.\n\nConstraint: The staging environment has limited parity with production, so any scaling changes must include a plan for observability using Prometheus/Grafana to detect potential instability early. Infrastructure changes must comply with existing PCI-DSS tagging requirements for auditability.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "AWS Cost & Usage Dashboard (Production EKS)",
+        "contentLength": 4819,
+        "wordCount": 831
+      },
+      {
+        "type": "repository",
+        "label": "infrastructure-live — README",
+        "contentLength": 4387,
+        "wordCount": 607
+      },
+      {
+        "type": "document",
+        "label": "Core Transaction Services — Architecture & HPA Specs",
+        "contentLength": 4728,
+        "wordCount": 717
+      }
+    ],
+    "generationTimeMs": 65148,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete picture: current costs, current infrastructure code (Terraform snippet), service-level suitability for Spot instances (from the Lead Engineer), financial constraints (from Finance), and specific observability metrics (PromQL queries). The candidate has everything needed to write a comprehensive proposal."
+      },
+      "brokenReferences": {
+        "score": 5,
+        "references": [
+          {
+            "text": "k8s/hpa/emergency-scale-up.yaml",
+            "resourceLabel": "infrastructure-live — README",
+            "issue": "File content not provided."
+          },
+          {
+            "text": "scripts/audit/",
+            "resourceLabel": "infrastructure-live — README",
+            "issue": "Script content not provided."
+          }
+        ],
+        "explanation": "While some internal files like the emergency rollback manifest or audit scripts are mentioned, their specific contents are not required for the candidate to fulfill the task of proposing a strategy. All primary cross-references between the dashboard, README, and specs are fully resolved."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "AWS Cost & Usage Dashboard (Production EKS)",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Provides the baseline costs, the 15% reduction target, and the specific constraints from the Finance department regarding Savings Plans."
+          },
+          {
+            "label": "infrastructure-live — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the current Terraform module implementation, the mandatory PCI-DSS tagging requirements, and the rollback procedures."
+          },
+          {
+            "label": "Core Transaction Services — Architecture & HPA Specs",
+            "type": "document",
+            "useful": true,
+            "reason": "Crucial for identifying which services are Spot-compatible and provides the specific HPA target percentages and PromQL queries for the observability plan."
+          }
+        ],
+        "explanation": "Every resource is essential. The dashboard sets the goal, the README provides the technical starting point, and the Specs provide the logic for the optimization."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present in the resources."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The node counts, instance types (m5.xlarge), and service names are consistent across the dashboard, the Terraform snippet, and the architecture document."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate is well-positioned to succeed. The task asks them to 'consult' stakeholders, and those stakeholders' inputs are clearly provided as notes within the resources. The technical requirements (HPA targets, Spot suitability) are explicit."
+      },
+      "topIssues": []
+    }
+  },
+  {
+    "runIndex": 2,
+    "scenarioId": "devops-sre",
+    "roleName": "DevOps / Site Reliability Engineer",
+    "companyName": "FinanceGrid",
+    "taskSummary": "Investigate and mitigate AWS NAT Gateway cost spikes",
+    "taskDescription": "FinanceGrid’s AWS bill has increased by 35% over the last two billing cycles, with 'Data Transfer' and 'NAT Gateway' usage accounting for the majority of the spike. This is threatening the infrastructure budget for the fiscal year. \n\nThe objective is to identify the specific services causing the traffic increase and propose a Terraform-based infrastructure change to reduce these costs without impacting the high-availability requirements of the payment processing engine. The candidate must determine if the traffic is legitimate growth or architectural inefficiency. \n\nInformation gaps: The candidate needs to consult the Lead Backend Engineer to understand recent service deployments and the Finance team regarding the exact budget thresholds. There is also ambiguity around whether the current VPC endpoint configuration covers all S3 and DynamoDB traffic, which requires investigation of the existing Terraform modules.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "AWS Cost & Network Traffic Dashboard",
+        "contentLength": 4012,
+        "wordCount": 563
+      },
+      {
+        "type": "repository",
+        "label": "financegrid-infra — README",
+        "contentLength": 4350,
+        "wordCount": 590
+      },
+      {
+        "type": "document",
+        "label": "Payment Engine & Fraud Detection — Architecture Spec",
+        "contentLength": 3871,
+        "wordCount": 589
+      }
+    ],
+    "generationTimeMs": 56914,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "explanation": "The resources provide a complete picture: the financial data (Resource 1), the infrastructure code causing the issue (Resource 2), and the architectural context explaining the traffic spike (Resource 3). The candidate has everything needed to identify the two main issues: missing S3 Gateway Endpoint routes for EKS and cross-AZ NAT Gateway charges.",
+        "missingInfo": []
+      },
+      "brokenReferences": {
+        "score": 4,
+        "explanation": "There are several references to external items (PR #842, JIRA tickets like INFRA-892, ArgoCD, Datadog), but these function as narrative flavor. The core information from those references is summarized within the text, so the candidate is not blocked by being unable to click them.",
+        "references": [
+          {
+            "text": "PR #842",
+            "resourceLabel": "financegrid-infra — README",
+            "issue": "Reference to a pull request that cannot be accessed."
+          },
+          {
+            "text": "INFRA-892, INFRA-905, INFRA-941",
+            "resourceLabel": "financegrid-infra — README",
+            "issue": "References to JIRA tickets that cannot be accessed."
+          }
+        ]
+      },
+      "usefulness": {
+        "score": 5,
+        "explanation": "Each resource is critical. Resource 1 identifies the 'what' (S3 traffic via NAT), Resource 2 identifies the 'how' (Terraform code missing the route table association), and Resource 3 identifies the 'why' (new ML model downloads).",
+        "perResource": [
+          {
+            "label": "AWS Cost & Network Traffic Dashboard",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Provides the data points necessary to see that S3 traffic is the primary cost driver and that NAT Gateway is the bottleneck."
+          },
+          {
+            "label": "financegrid-infra — README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Contains the actual HCL code snippets that the candidate needs to modify to fix the routing issues."
+          },
+          {
+            "label": "Payment Engine & Fraud Detection — Architecture Spec",
+            "type": "document",
+            "useful": true,
+            "reason": "Explains the business context and the recent change (Fraud v2.0) that triggered the cost spike."
+          }
+        ]
+      },
+      "externalUrls": {
+        "score": 5,
+        "explanation": "No external URLs are provided that the candidate would need to visit to complete the task.",
+        "urls": []
+      },
+      "internalConsistency": {
+        "score": 5,
+        "explanation": "The dates and data are highly consistent. The rollout date in Resource 3 (March 15) perfectly aligns with the cost spike in Resource 1 (March/April). The technical debt mentioned in Resource 2 aligns with the observations in Resource 1.",
+        "inconsistencies": []
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "explanation": "The candidate is well-positioned to succeed. The 'smoking gun' in the Terraform code (the missing EKS route table in the S3 endpoint resource) is clear but requires a keen eye for detail, making it an excellent assessment tool.",
+        "blockers": []
+      },
+      "topIssues": [
+        "The DynamoDB endpoint configuration in the code appears correct, yet the dashboard suggests traffic is still leaving the VPC. This might be a slight distraction or a secondary puzzle regarding DNS/IAM, but it doesn't block the primary task of fixing the S3/NAT costs."
+      ]
+    }
+  },
+  {
+    "runIndex": 3,
+    "scenarioId": "devops-sre",
+    "roleName": "DevOps / Site Reliability Engineer",
+    "companyName": "FinanceGrid",
+    "taskSummary": "Mitigate a $15k/month cloud cost spike in the production EKS cluster",
+    "taskDescription": "A recent financial audit revealed an unexplained $15,000 monthly increase in NAT Gateway egress costs within the production Kubernetes environment. This spike coincides with the migration of several core transaction services. The infrastructure must be optimized to reduce these costs without impacting the strict uptime SLAs required for processing $2B in annual transactions.\n\nThe engineer needs to identify the source of the egress traffic and propose a solution—such as implementing VPC Endpoints or adjusting the cluster's networking topology—via Terraform. The Finance team can provide the specific cost breakdown by region, and the Core Services team can clarify which external payment APIs or third-party services are currently being reached via the public internet. \n\nConstraint: Changes must be applied to the staging environment first, which has limited parity with production's VPC Peering setup. Any proposed changes to the network path must account for existing security group rules that cannot be broadly scoped.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "AWS Cost & Egress Traffic Dashboard",
+        "contentLength": 4284,
+        "wordCount": 648
+      },
+      {
+        "type": "repository",
+        "label": "FinanceGrid Core Infrastructure — Terraform",
+        "contentLength": 5038,
+        "wordCount": 676
+      },
+      {
+        "type": "document",
+        "label": "Core Transaction Services — K8s Migration Memo",
+        "contentLength": 4698,
+        "wordCount": 689
+      }
+    ],
+    "generationTimeMs": 64557,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 4.5,
+      "selfContained": {
+        "score": 4,
+        "missingInfo": [
+          "AWS Managed Prefix List ID for DynamoDB in us-east-1 (S3 is provided, but DynamoDB is not).",
+          "Specific syntax/documentation for the 'terraform-aws-modules/vpc/aws' endpoints configuration."
+        ],
+        "explanation": "The resources provide excellent context, data, and current code snippets. A candidate can identify the problem (S3/DynamoDB traffic hitting NAT) and the solution (VPC Endpoints). However, they are missing the specific Prefix List ID for DynamoDB required for the security group fix, and they must rely on their own knowledge of Terraform module syntax for endpoints since the module documentation isn't provided."
+      },
+      "brokenReferences": {
+        "score": 5,
+        "references": [
+          {
+            "text": "modules/peering/",
+            "resourceLabel": "Resource 2",
+            "issue": "The directory is mentioned but not provided; however, the task explicitly says not to modify peering in staging, so this is non-blocking context."
+          },
+          {
+            "text": "Incident #8821",
+            "resourceLabel": "Resource 3",
+            "issue": "Reference to an external incident ticket, but the memo summarizes the relevant details of the incident."
+          }
+        ],
+        "explanation": "Most references are internal to the provided resources. Mentions of external systems like Terraform Cloud or ArgoCD are for workflow context and do not block the technical task."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "AWS Cost & Egress Traffic Dashboard",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Quantifies the cost spike and identifies the specific pods and AWS services (S3/DynamoDB) causing the egress."
+          },
+          {
+            "label": "FinanceGrid Core Infrastructure — Terraform",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the current VPC and Security Group code that needs to be modified."
+          },
+          {
+            "label": "Core Transaction Services — K8s Migration Memo",
+            "type": "document",
+            "useful": true,
+            "reason": "Explains the architectural history, the urgency of the fix, and the strict PCI-DSS security constraints."
+          }
+        ],
+        "explanation": "Every resource is critical to understanding the 'what', 'where', and 'how' of the task."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present that the candidate would need to visit to complete the task."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The data across the dashboard, the memo, and the Terraform code is consistent regarding the environment (us-east-1), the services involved, and the cost figures."
+      },
+      "candidateReadiness": {
+        "score": 4,
+        "blockers": [
+          {
+            "description": "Missing DynamoDB Prefix List ID for us-east-1.",
+            "resourceLabel": "Resource 3",
+            "severity": "minor"
+          },
+          {
+            "description": "The candidate must know the specific Terraform syntax for the VPC module's endpoint configuration or use standard 'aws_vpc_endpoint' resources without documentation.",
+            "resourceLabel": "Resource 2",
+            "severity": "minor"
+          }
+        ],
+        "explanation": "The candidate has enough information to form a high-quality proposal and write the majority of the Terraform code. The missing Prefix List ID for DynamoDB is a minor gap that can be noted in a proposal or substituted with a placeholder."
+      },
+      "topIssues": [
+        "The DynamoDB Prefix List ID is missing, which is required for the 'strict' security group mandate.",
+        "The candidate is expected to use a specific Terraform module (v5.1.1) but does not have the documentation for its 'endpoints' variable syntax.",
+        "The task requires balancing cost optimization with strict uptime SLAs, which is well-supported by the provided context but requires careful reasoning from the candidate."
+      ]
+    }
+  },
+  {
+    "runIndex": 4,
+    "scenarioId": "devops-sre",
+    "roleName": "DevOps / Site Reliability Engineer",
+    "companyName": "FinanceGrid",
+    "taskSummary": "Diagnose and mitigate intermittent latency spikes in the core transaction service",
+    "taskDescription": "The core transaction-service is experiencing intermittent p99 latency spikes of up to 5 seconds, triggering PagerDuty alerts and threatening the 99.99% uptime SLA. Initial logs show these spikes correlate with high-volume batch processing windows, but the degradation doesn't affect all pods in the cluster equally. FinanceGrid cannot afford downtime on this service as it handles live payment flows.\n\nThe task requires analyzing existing Prometheus metrics and Grafana dashboards to pinpoint whether the bottleneck is CPU throttling, memory pressure, or downstream network latency. You will need to propose adjustments to the Kubernetes Horizontal Pod Autoscaler (HPA) settings or resource requests/limits. You must also determine if the current alerting thresholds are appropriate or contributing to alert fatigue.\n\nConstraint: All infrastructure changes must be defined in Terraform and deployed via ArgoCD. You will need to consult the Lead Backend Engineer regarding the specific behavior of the batch processing logic and ask the Cloud Architect about the current AWS RDS instance scaling limits that might be impacting the service's database connections.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "Grafana: Transaction Service Production Metrics",
+        "contentLength": 4511,
+        "wordCount": 819
+      },
+      {
+        "type": "repository",
+        "label": "financegrid-infra - Repository",
+        "contentLength": 4836,
+        "wordCount": 552
+      },
+      {
+        "type": "document",
+        "label": "Transaction Service Architecture & Runbook",
+        "contentLength": 4784,
+        "wordCount": 734
+      }
+    ],
+    "generationTimeMs": 62517,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete picture: the metrics (Grafana), the current configuration (Terraform/K8s), and the architectural context (Runbook). The candidate has everything needed to identify the CPU throttling/CFS issue and the database connection bottleneck."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "terraform/modules/",
+            "resourceLabel": "financegrid-infra - Repository",
+            "issue": "The directory is listed in the structure but the module code itself is not provided."
+          },
+          {
+            "text": "k8s/base/",
+            "resourceLabel": "financegrid-infra - Repository",
+            "issue": "The base manifests are not provided, only the overlay patch."
+          }
+        ],
+        "explanation": "While some directories in the repository overview are not fully expanded, the specific files needed for the task (the overlay patch and the environment-specific RDS config) are provided in full. This does not block the task."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Grafana: Transaction Service Production Metrics",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Provides the quantitative evidence of CPU throttling and the divergence between p50 and p99 latency."
+          },
+          {
+            "label": "financegrid-infra - Repository",
+            "type": "repository",
+            "useful": true,
+            "reason": "Contains the actual code (HPA, Resource Limits, Terraform) that the candidate is tasked with modifying."
+          },
+          {
+            "label": "Transaction Service Architecture & Runbook",
+            "type": "document",
+            "useful": true,
+            "reason": "Explains the 'why' behind the metrics, specifically the Kafka partition keying issue and the RDS connection math."
+          }
+        ],
+        "explanation": "Every resource is critical. The dashboard identifies the symptom, the repo provides the current state, and the runbook provides the root cause context."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present. All references are internal to the provided resources."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The numbers are perfectly consistent across resources: the 1000m CPU limit, the 50-pod HPA max, the 15-connection DB pool, and the 1000-connection RDS limit all align to create the specific bottleneck described."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate is well-positioned. The 'Noisy Neighbor' section in Resource 3 acts as a clear guide for the candidate to form a recommendation (e.g., decoupling workers or adjusting CFS quotas/limits)."
+      },
+      "topIssues": [
+        "The task requires 'consulting' specific engineers; the candidate must rely on the AI coworker chat to simulate this, but the resources provide the necessary data for those conversations.",
+        "The candidate cannot run 'terraform plan' or 'kustomize build' as suggested in the repo readme, but they can manually edit the provided code snippets for their deliverable."
+      ]
+    }
+  },
+  {
+    "runIndex": 0,
+    "scenarioId": "ml-engineer",
+    "roleName": "Machine Learning Engineer",
+    "companyName": "TrustShield",
+    "taskSummary": "Optimize real-time feature engineering for micro-transaction fraud",
+    "taskDescription": "TrustShield is seeing a significant increase in 'card-testing' fraud, characterized by rapid-fire, low-value transactions that currently bypass our ensemble model. Initial analysis suggests we need new aggregate features (e.g., transaction frequency in the last 60 seconds) to catch these patterns, but our current real-time pipeline is already nearing its latency ceiling.\n\nYou are tasked with designing and implementing a set of features to detect this behavior. You will need to determine how to calculate these aggregates without breaching the 20ms inference budget. The Data Engineering team can provide details on the current streaming feature store limitations, while the Product Manager can clarify the acceptable false-positive rate for low-value transactions.\n\nConstraint: The inference engine handles 10K TPS, and any change to the feature vector must be compatible with the existing PyTorch model architecture. You should define a monitoring plan to track the feature importance and distribution shift post-deployment to ensure the new features don't introduce instability.",
+    "resourceCount": 3,
+    "resources": [
+      {
+        "type": "repository",
+        "label": "fraud-inference-service — README",
+        "contentLength": 4609,
+        "wordCount": 558
+      },
+      {
+        "type": "spreadsheet",
+        "label": "Card-Testing Incident — Transaction Sample Data",
+        "contentLength": 4045,
+        "wordCount": 775
+      },
+      {
+        "type": "document",
+        "label": "Real-time Feature Store & Monitoring Runbook",
+        "contentLength": 4433,
+        "wordCount": 673
+      }
+    ],
+    "generationTimeMs": 58370,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 4.5,
+      "selfContained": {
+        "score": 4,
+        "missingInfo": [
+          "Source code for 'src/features/hydrator.py' (FeatureHydrator class)",
+          "The 'config.yaml' file content"
+        ],
+        "explanation": "The candidate is asked to 'implement' features, but the source code for the FeatureHydrator (where the logic belongs) is missing. However, the FraudScorer code and the Runbook provide enough architectural context and logic requirements for a candidate to draft the implementation from scratch."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "ask your buddy for the dev Redis password",
+            "resourceLabel": "RESOURCE 1",
+            "issue": "Refers to a person/action outside the simulation."
+          },
+          {
+            "text": "config.yaml",
+            "resourceLabel": "RESOURCE 1",
+            "issue": "The file is mentioned as a configuration reference but the content is not provided."
+          },
+          {
+            "text": "PagerDuty under ML-Eng-Tier1",
+            "resourceLabel": "RESOURCE 1",
+            "issue": "External system reference."
+          }
+        ],
+        "explanation": "There are several references to external people (David Chen, Elena Rostova), Slack channels (#ml-alerts), and systems (PagerDuty, Airflow, Snowflake). While these provide good 'flavor', the candidate cannot actually interact with them. Most critical info from these sources is luckily summarized in the text."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "RESOURCE 1",
+            "type": "repository",
+            "useful": true,
+            "reason": "Provides the core inference code, latency constraints, and the specific tensor indices (124-127) available for new features."
+          },
+          {
+            "label": "RESOURCE 2",
+            "type": "spreadsheet",
+            "useful": true,
+            "reason": "Provides the PM's FPR constraints and the 'velocity_60s_proxy' data which proves the correlation needed for the feature design."
+          },
+          {
+            "label": "RESOURCE 3",
+            "type": "document",
+            "useful": true,
+            "reason": "Crucial for implementation; details Redis ZSET vs Flink trade-offs, normalization requirements ([-3.0, 3.0]), and monitoring metrics (PSI/SHAP)."
+          }
+        ],
+        "explanation": "Every resource is essential. Resource 1 sets the technical bounds, Resource 2 provides the business logic/data evidence, and Resource 3 provides the implementation and monitoring strategy."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs were found in the resources."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The latency numbers (20ms SLA, 18.2ms current p99), tensor dimensions (128), and reserved slots (124-127) are perfectly consistent across all three resources."
+      },
+      "candidateReadiness": {
+        "score": 4,
+        "blockers": [
+          {
+            "description": "The candidate needs to implement logic in FeatureHydrator but the file content is not provided.",
+            "resourceLabel": "RESOURCE 1",
+            "severity": "minor"
+          }
+        ],
+        "explanation": "The candidate has enough information to succeed. While the specific hydrator.py file is missing, the Runbook (Resource 3) gives explicit instructions on how to use Redis ZSETs or INCR and how to map the result to slot 124. A strong candidate can easily write the missing class."
+      },
+      "topIssues": [
+        "Missing source code for the FeatureHydrator class, requiring the candidate to define the class structure themselves.",
+        "Heavy reliance on 'flavor' text referencing external colleagues and systems which might lead a candidate to try to 'reach out' to them.",
+        "The task requires a monitoring plan, which is largely provided in Resource 3, potentially making that part of the task a 'copy-paste' exercise rather than a design exercise."
+      ]
+    }
+  },
+  {
+    "runIndex": 1,
+    "scenarioId": "ml-engineer",
+    "roleName": "Machine Learning Engineer",
+    "companyName": "TrustShield",
+    "taskSummary": "FAILED",
+    "taskDescription": "FAILED",
+    "resourceCount": 0,
+    "resources": [],
+    "generationTimeMs": 0,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 0,
+      "selfContained": {
+        "score": 0,
+        "missingInfo": [
+          "Generation failed"
+        ],
+        "explanation": "Failed"
+      },
+      "brokenReferences": {
+        "score": 0,
+        "references": [],
+        "explanation": "Failed"
+      },
+      "usefulness": {
+        "score": 0,
+        "perResource": [],
+        "explanation": "Failed"
+      },
+      "externalUrls": {
+        "score": 0,
+        "urls": [],
+        "explanation": "Failed"
+      },
+      "internalConsistency": {
+        "score": 0,
+        "inconsistencies": [],
+        "explanation": "Failed"
+      },
+      "candidateReadiness": {
+        "score": 0,
+        "blockers": [],
+        "explanation": "Failed"
+      },
+      "topIssues": [
+        "Generation failed"
+      ]
+    }
+  },
+  {
+    "runIndex": 2,
+    "scenarioId": "ml-engineer",
+    "roleName": "Machine Learning Engineer",
+    "companyName": "TrustShield",
+    "taskSummary": "Investigate and resolve sudden precision drop in the primary transaction fraud model",
+    "taskDescription": "The primary transaction fraud model, a PyTorch-based classifier, has shown a 12% degradation in precision over the last 72 hours, resulting in a spike of false positives for top-tier merchants. Preliminary alerts suggest a shift in transaction patterns, but the root cause—whether feature drift in the Snowflake source, a change in upstream schemas, or a coordinated new fraud vector—remains unidentified.\n\nThe task involves diagnosing the source of the performance drop and proposing a remediation plan. This requires evaluating the current MLflow tracking data and determining if a full retraining via Airflow is necessary or if immediate feature engineering adjustments are required. The candidate must consult the Data Engineering team regarding recent pipeline changes and the Product team on the acceptable risk threshold for false positives versus false negatives during this period.\n\nAny proposed changes must maintain the current 10,000 TPS throughput. Operational concerns include setting up more granular model monitoring in MLflow to catch similar drift patterns earlier and ensuring the retraining pipeline doesn't cause resource contention in the production Snowflake warehouse.",
+    "resourceCount": 4,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "MLflow Production Monitoring — Model fraud-v4.2-pytorch",
+        "contentLength": 3202,
+        "wordCount": 507
+      },
+      {
+        "type": "database",
+        "label": "Snowflake Schema — PROD_DB.FEATURE_STORE.FRAUD_FEATURES",
+        "contentLength": 3558,
+        "wordCount": 546
+      },
+      {
+        "type": "repository",
+        "label": "Repo: trustshield-fraud-classifier",
+        "contentLength": 4254,
+        "wordCount": 519
+      },
+      {
+        "type": "document",
+        "label": "Product Policy: Merchant Tier Risk Thresholds",
+        "contentLength": 3622,
+        "wordCount": 543
+      }
+    ],
+    "generationTimeMs": 59245,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete narrative: the root cause (vendor migration in Resource 2), the technical mechanism of failure (imputer logic in Resource 3), the business impact and policy (Resource 4), and the monitoring data (Resource 1). The candidate has everything needed to diagnose the issue and propose the specific fixes requested."
+      },
+      "brokenReferences": {
+        "score": 4,
+        "references": [
+          {
+            "text": "WH_DS_TRAINING",
+            "resourceLabel": "Resource 3",
+            "issue": "Mentioned as the required alternative warehouse, but its existence/specs aren't in the Snowflake resource."
+          }
+        ],
+        "explanation": "Most references are internal and well-defined. The mention of a training warehouse is a minor 'missing' entity, but it functions as a clear instruction for the candidate's remediation plan."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Resource 1: MLflow Monitoring",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Identifies the specific feature (device_trust_score) that is drifting and the merchant tiers affected."
+          },
+          {
+            "label": "Resource 2: Snowflake Schema",
+            "type": "database",
+            "useful": true,
+            "reason": "Explains the root cause via the changelog (vendor migration) and confirms the data pattern (-1.0 values)."
+          },
+          {
+            "label": "Resource 3: Repo",
+            "type": "repository",
+            "useful": true,
+            "reason": "Contains the buggy imputer logic and the Airflow DAG configuration that needs changing."
+          },
+          {
+            "label": "Resource 4: Product Policy",
+            "type": "document",
+            "useful": true,
+            "reason": "Provides the business justification for prioritizing precision for Tier 1 merchants and the decision matrix for fixing vs. retraining."
+          }
+        ],
+        "explanation": "Every resource is critical to a different part of the task (diagnosis, technical fix, operational safety, and business alignment)."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The dates (Oct 21-24), the specific feature name (device_trust_score), the default value (-1.0), and the merchant tiers are perfectly consistent across all four resources."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate can clearly see the path: 1) Identify vendor change caused -1.0 spike. 2) Update imputer to use mean instead of passing -1.0. 3) Update Airflow DAG to use WH_DS_TRAINING. 4) Implement slice-based monitoring. The resources are explicit enough to allow for a high-quality deliverable."
+      },
+      "topIssues": [
+        "The mention of WH_DS_TRAINING is slightly 'out of thin air', but it serves as a clear hint for the remediation plan."
+      ]
+    }
+  },
+  {
+    "runIndex": 3,
+    "scenarioId": "ml-engineer",
+    "roleName": "Machine Learning Engineer",
+    "companyName": "TrustShield",
+    "taskSummary": "FAILED",
+    "taskDescription": "FAILED",
+    "resourceCount": 0,
+    "resources": [],
+    "generationTimeMs": 0,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 0,
+      "selfContained": {
+        "score": 0,
+        "missingInfo": [
+          "Generation failed"
+        ],
+        "explanation": "Failed"
+      },
+      "brokenReferences": {
+        "score": 0,
+        "references": [],
+        "explanation": "Failed"
+      },
+      "usefulness": {
+        "score": 0,
+        "perResource": [],
+        "explanation": "Failed"
+      },
+      "externalUrls": {
+        "score": 0,
+        "urls": [],
+        "explanation": "Failed"
+      },
+      "internalConsistency": {
+        "score": 0,
+        "inconsistencies": [],
+        "explanation": "Failed"
+      },
+      "candidateReadiness": {
+        "score": 0,
+        "blockers": [],
+        "explanation": "Failed"
+      },
+      "topIssues": [
+        "Generation failed"
+      ]
+    }
+  },
+  {
+    "runIndex": 4,
+    "scenarioId": "ml-engineer",
+    "roleName": "Machine Learning Engineer",
+    "companyName": "TrustShield",
+    "taskSummary": "Remediate performance degradation in cross-border fraud detection",
+    "taskDescription": "The primary fraud detection model has shown a significant performance dip over the last week, specifically targeting high-value cross-border transactions. False negatives have increased by 12%, leading to substantial financial loss. The model currently runs real-time inference at 10K TPS, so any changes to the feature set must not push the 95th percentile latency above the current threshold.\n\nYou need to investigate the drift, identify potential feature gaps, and draft a plan to update the PyTorch model via MLflow. The Data Engineering team can provide details on the availability of real-time merchant metadata in Snowflake, and the DevOps lead can clarify the current latency overhead of the inference service. The product team needs a recommendation on the threshold for the new model version before it can be promoted from a shadow deployment.\n\nConstraint: The inference engine is locked to a specific PyTorch version, and the feature engineering logic must be compatible with the existing streaming pipeline. Monitoring must be established to track both model precision and inference latency in the staging environment.",
+    "resourceCount": 4,
+    "resources": [
+      {
+        "type": "dashboard",
+        "label": "Fraud Detection Model Monitoring - Production",
+        "contentLength": 4035,
+        "wordCount": 711
+      },
+      {
+        "type": "database",
+        "label": "Snowflake Schema - Merchant Intelligence & Streaming",
+        "contentLength": 4787,
+        "wordCount": 714
+      },
+      {
+        "type": "repository",
+        "label": "fraud-inference-service - README",
+        "contentLength": 5346,
+        "wordCount": 640
+      },
+      {
+        "type": "document",
+        "label": "ML Model Promotion & Shadow Deployment Policy",
+        "contentLength": 3890,
+        "wordCount": 599
+      }
+    ],
+    "generationTimeMs": 72125,
+    "heuristicUrlCount": 0,
+    "heuristicUrls": [],
+    "judge": {
+      "overallScore": 5,
+      "selfContained": {
+        "score": 5,
+        "missingInfo": [],
+        "explanation": "The resources provide a complete end-to-end context: the specific cause of the model failure (proxy IPs), the available data to fix it (streaming merchant features), the technical constraints (PyTorch 1.13.1 and 50ms latency), and the business process for deployment (shadow mode and promotion thresholds)."
+      },
+      "brokenReferences": {
+        "score": 5,
+        "references": [
+          {
+            "text": "Snowflake Schema - Merchant Intelligence & Streaming",
+            "resourceLabel": "Resource 1",
+            "issue": "None - this is Resource 2"
+          },
+          {
+            "text": "fraud-inference-service - README",
+            "resourceLabel": "Resource 1",
+            "issue": "None - this is Resource 3"
+          },
+          {
+            "text": "ML Model Promotion & Shadow Deployment Policy",
+            "resourceLabel": "Resource 1",
+            "issue": "None - this is Resource 4"
+          }
+        ],
+        "explanation": "All cross-references between the dashboard, the schema, the README, and the policy document are satisfied within the provided resource set."
+      },
+      "usefulness": {
+        "score": 5,
+        "perResource": [
+          {
+            "label": "Resource 1: Fraud Detection Model Monitoring",
+            "type": "dashboard",
+            "useful": true,
+            "reason": "Provides the quantitative evidence of the drift and the specific latency budget (7.9ms) remaining."
+          },
+          {
+            "label": "Resource 2: Snowflake Schema",
+            "type": "database",
+            "useful": true,
+            "reason": "Identifies the specific features (is_proxy_suspect) needed to solve the identified fraud ring issue."
+          },
+          {
+            "label": "Resource 3: fraud-inference-service README",
+            "type": "repository",
+            "useful": true,
+            "reason": "Contains the critical PyTorch version lock (1.13.1) and the code logic for feature hydration."
+          },
+          {
+            "label": "Resource 4: ML Model Promotion Policy",
+            "type": "document",
+            "useful": true,
+            "reason": "Defines the success criteria (Recall/Precision) and the shadow deployment process required for the final deliverable."
+          }
+        ],
+        "explanation": "Every resource is essential for a different part of the task (investigation, feature engineering, technical implementation, and policy compliance)."
+      },
+      "externalUrls": {
+        "score": 5,
+        "urls": [],
+        "explanation": "No external URLs are present. Internal-style paths and local database URIs (sqlite) are used appropriately."
+      },
+      "internalConsistency": {
+        "score": 5,
+        "inconsistencies": [],
+        "explanation": "The latency numbers (50ms SLA, 42.1ms current p95), the model names, and the specific fraud scenario (proxy-based cross-border) are consistent across all four resources."
+      },
+      "candidateReadiness": {
+        "score": 5,
+        "blockers": [],
+        "explanation": "The candidate has everything needed to draft a highly specific plan. They can identify the features to add, the version of PyTorch to use, the MLflow logging requirements, and the specific metrics needed to move from shadow to production."
+      },
+      "topIssues": []
+    }
+  }
+]

@@ -38,6 +38,7 @@ export function createMockUser(overrides?: Partial<User>): User {
     image: null,
     password: null,
     role: UserRole.USER,
+    preferredLanguage: "en",
     createdAt: now,
     updatedAt: now,
     deletedAt: null,

@@ -1,0 +1,16 @@
+Subject: Better way to assess your Growth Engineer candidates — free for Tavus
+
+Hi Hassaan,
+
+I saw Tavus is hiring a Growth Engineer — congrats on the growth.
+
+I'm building SkillVee, a developer assessment platform that simulates a realistic "day at work." Instead of leetcode or take-home tests, candidates go through an HR interview, manager kickoff, a coding task, and a PR defense — all AI-powered, with screen recording. It measures HOW developers work (communication, problem-solving, AI leverage, collaboration), not just what they produce.
+
+We're offering free access to YC founders who are actively hiring in exchange for honest feedback. No strings, no credit card — just use it for your Growth Engineer search and tell us what works and what doesn't.
+
+Would you be open to a 10-minute call this week, or should I just send you the link to try it?
+
+Best,
+German
+
+P.S. Here's a 2-min demo if you want to see it first: [DEMO_LINK]

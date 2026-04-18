@@ -1,0 +1,187 @@
+[
+  {
+    "company": "Shef",
+    "batch": "W19",
+    "description": "Marketplace for homemade food connecting consumers with home chefs",
+    "job_posted": "Software Engineer (Fullstack)",
+    "founders": [
+      { "name": "Joey Grassia", "title": "Founder/CEO", "linkedin": "https://www.linkedin.com/in/joeygrassia/" }
+    ]
+  },
+  {
+    "company": "LiveFlow",
+    "batch": "W21",
+    "description": "Unified AI-ERP & FP&A platform for accounting and finance teams",
+    "job_posted": "Senior Full Stack Engineer",
+    "founders": [
+      { "name": "Lasse Kalkar", "title": "Founder", "linkedin": "https://www.linkedin.com/in/lassekalkar/" },
+      { "name": "Anita Koimur", "title": "Founder & COO", "linkedin": "https://www.linkedin.com/in/anitakoimur/" }
+    ]
+  },
+  {
+    "company": "Arketa",
+    "batch": "S20",
+    "description": "All-in-one platform for fitness and wellness businesses",
+    "job_posted": "Technical Support Engineer",
+    "founders": [
+      { "name": "Rachel Lea Fishman", "title": "Founder", "linkedin": "https://www.linkedin.com/in/rachelleafishman/" },
+      { "name": "Josh Archer", "title": "Founder", "linkedin": "https://www.linkedin.com/in/joshuarcher/" }
+    ]
+  },
+  {
+    "company": "HiOperator",
+    "batch": "S16",
+    "description": "Customer support as a service for businesses",
+    "job_posted": "Senior Software Engineer",
+    "founders": [
+      { "name": "Liz Tsai", "title": "Founder/CEO", "linkedin": "https://www.linkedin.com/in/elizabeth-tsai-7619412b" }
+    ]
+  },
+  {
+    "company": "Soraban",
+    "batch": "W21",
+    "description": "AI assistant for accounting firms automating client data intake",
+    "job_posted": "Fullstack Software Engineer",
+    "founders": [
+      { "name": "Enoch Ko", "title": "Founder/CEO", "linkedin": "https://www.linkedin.com/in/koenoch/" }
+    ]
+  },
+  {
+    "company": "goodfin",
+    "batch": "W22",
+    "description": "AI-native private wealth management and alternative asset investing",
+    "job_posted": "Staff AI Engineer",
+    "founders": [
+      { "name": "Anna Joo Fee", "title": "Founder", "linkedin": "https://www.linkedin.com/in/annajfee/" }
+    ]
+  },
+  {
+    "company": "Confido",
+    "batch": "S21",
+    "description": "AI-enabled financial automation for fast-growing CPG brands",
+    "job_posted": "Senior Software Engineer",
+    "founders": [
+      { "name": "Kara Holinski", "title": "Founder", "linkedin": "https://www.linkedin.com/in/kara-holinski-77b673b6/" },
+      { "name": "Justin Hunter", "title": "Founder", "linkedin": "https://www.linkedin.com/in/justin-hunter/" }
+    ]
+  },
+  {
+    "company": "SnapMagic",
+    "batch": "S15",
+    "description": "AI-assisted electronics design platform for circuit board engineers",
+    "job_posted": "Director of Software & Product",
+    "founders": [
+      { "name": "Natasha Baker", "title": "Founder/CEO", "linkedin": "https://www.linkedin.com/in/natashaabaker" }
+    ]
+  },
+  {
+    "company": "Nextera Robotics",
+    "batch": "S20",
+    "description": "AI-native robotics and industrial automation from MIT",
+    "job_posted": "Robotics and AI Software Engineer",
+    "founders": [
+      { "name": "Lana Graf", "title": "Founder", "linkedin": "https://www.linkedin.com/in/lanagraf/" },
+      { "name": "Alex Rand", "title": "Founder & CTO", "linkedin": "https://www.linkedin.com/in/alex-s-rand-69292095/" }
+    ]
+  },
+  {
+    "company": "Triomics",
+    "batch": "W21",
+    "description": "AI agents for oncology EHRs automating clinical workflows",
+    "job_posted": "Forward Deployed ML Engineer",
+    "founders": [
+      { "name": "Sarim Khan", "title": "Founder", "linkedin": "https://www.linkedin.com/in/sarim-khan-b54485137/" },
+      { "name": "Hrituraj Singh", "title": "Founder", "linkedin": "https://linkedin.com/in/hrituraj1997" }
+    ]
+  },
+  {
+    "company": "Jiga",
+    "batch": "W21",
+    "description": "Manufacturing sourcing platform connecting with vetted manufacturers",
+    "job_posted": "Full Stack Product Engineer",
+    "founders": [
+      { "name": "Adar Hay", "title": "Co-founder and CEO", "linkedin": "https://www.linkedin.com/in/adarhay/" },
+      { "name": "Assaf Geuz", "title": "Co-Founder", "linkedin": "https://www.linkedin.com/in/assaf-geuz-jiga/" },
+      { "name": "Yonatan Wolowelsky", "title": "Co-Founder and CTO", "linkedin": "https://www.linkedin.com/in/yonatan-wolowelsky-2454553a/" }
+    ]
+  },
+  {
+    "company": "Tavus",
+    "batch": "S21",
+    "description": "Multi-modal AI models for avatar rendering and human conversation",
+    "job_posted": "Growth Engineer",
+    "founders": [
+      { "name": "Hassaan Raza", "title": "Founder", "linkedin": "http://linkedin.com/in/hassaanraza/" },
+      { "name": "Quinn Favret", "title": "Founder", "linkedin": "https://www.linkedin.com/in/quinn-favret/" }
+    ]
+  },
+  {
+    "company": "GrowthBook",
+    "batch": "W22",
+    "description": "Open source feature flagging and A/B testing",
+    "job_posted": "Senior Software Engineer",
+    "founders": [
+      { "name": "Graham McNicoll", "title": "Co-founder & CEO", "linkedin": "https://www.linkedin.com/in/grahammcnicoll/" },
+      { "name": "Jeremy Dorn", "title": "Co-founder & CTO", "linkedin": "https://www.linkedin.com/in/jeremy-dorn-6198a09/" }
+    ]
+  },
+  {
+    "company": "Alinea",
+    "batch": "W21",
+    "description": "Automated investing for the next generation",
+    "job_posted": "Product Engineer (iOS)",
+    "founders": [
+      { "name": "Eve Halimi", "title": "Co-Founder & Co-CEO", "linkedin": "https://www.linkedin.com/in/eve-halimi-95b695b4/" },
+      { "name": "Anam Lakhani", "title": "Co-Founder & Co-CEO", "linkedin": "https://www.linkedin.com/in/anam-lakhani-443032134/" }
+    ]
+  },
+  {
+    "company": "JITX",
+    "batch": "S18",
+    "description": "Automatic circuit board design",
+    "job_posted": "Senior Software Engineer",
+    "founders": [
+      { "name": "Duncan Haldane", "title": "Founder/CEO", "linkedin": "https://www.linkedin.com/in/duncan-haldane" },
+      { "name": "Jonathan Bachrach", "title": "Founder/Creative Director", "linkedin": "https://www.linkedin.com/in/jonathan-bachrach-5344434/" }
+    ]
+  },
+  {
+    "company": "OneSchema",
+    "batch": "S21",
+    "description": "Automate CSV and PDF workflows with AI",
+    "job_posted": "Senior Software Engineer",
+    "founders": [
+      { "name": "Andrew Luo", "title": "Co-founder", "linkedin": "https://www.linkedin.com/in/andrew-luo-6495704a/" },
+      { "name": "Christina Gilbert", "title": "Co-founder", "linkedin": "https://www.linkedin.com/in/christinagilbert/" }
+    ]
+  },
+  {
+    "company": "BlueCargo",
+    "batch": "S18",
+    "description": "Automated solution for complex freight transactions",
+    "job_posted": "Senior/Staff Backend Engineer",
+    "founders": [
+      { "name": "Alexandra Griffon", "title": "Founder", "linkedin": "https://www.linkedin.com/in/alexandra-griffon-a6416b8b/" },
+      { "name": "Laura Theveniau", "title": "Founder", "linkedin": "https://www.linkedin.com/in/laura-theveniau-baa878b5/" }
+    ]
+  },
+  {
+    "company": "Wefunder",
+    "batch": "W13",
+    "description": "Robinhood for pre-IPO startups — everyone can invest $100",
+    "job_posted": "Full Stack Product Engineer",
+    "founders": [
+      { "name": "Nick Tommarello", "title": "Founder/CEO", "linkedin": "https://www.linkedin.com/in/nicktommarello/" },
+      { "name": "Greg Belote", "title": "Founder/CTO", "linkedin": "https://www.linkedin.com/in/gregbelote/" }
+    ]
+  },
+  {
+    "company": "Turing Labs Inc.",
+    "batch": "W20",
+    "description": "AI for R&D of consumer brands to develop better products",
+    "job_posted": "Senior Software Engineer",
+    "founders": [
+      { "name": "Manmit Shrimali", "title": "Founder & CEO", "linkedin": "https://www.linkedin.com/in/manmitshrimali/" }
+    ]
+  }
+]
