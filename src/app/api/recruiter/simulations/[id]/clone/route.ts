@@ -10,7 +10,7 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error, validationError } from "@/lib/api";
 import { createLogger } from "@/lib/core";
-import { DEFAULT_LANGUAGE, type SupportedLanguage, isSupportedLanguage } from "@/lib/core/language";
+import { type SupportedLanguage, isSupportedLanguage } from "@/lib/core/language";
 import { generateCodingTask } from "@/lib/scenarios/task-generator";
 import { generateResources } from "@/lib/scenarios/resource-generator";
 import { generateCoworkers } from "@/lib/scenarios/coworker-generator";
@@ -151,12 +151,12 @@ export async function POST(request: Request, context: RouteContext) {
     // 5. Create coworkers for the new scenario
     if (coworkerResult.coworkers && coworkerResult.coworkers.length > 0) {
       await db.coworker.createMany({
-        data: coworkerResult.coworkers.map((coworker: any) => ({
+        data: coworkerResult.coworkers.map((coworker) => ({
           scenarioId: newScenario.id,
           name: coworker.name,
           role: coworker.role,
           personaStyle: coworker.personaStyle,
-          personality: coworker.personality || null,
+          personality: coworker.personality ? coworker.personality as unknown as import("@prisma/client").Prisma.InputJsonValue : undefined,
           knowledge: coworker.knowledge || [],
           avatarUrl: null, // Avatar will be generated separately if needed
           voiceName: null, // Voice can be configured later
