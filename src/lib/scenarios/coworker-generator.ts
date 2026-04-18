@@ -6,6 +6,7 @@
 
 import { gemini } from "@/lib/ai/gemini";
 import { createLogger } from "@/lib/core";
+import { DEFAULT_LANGUAGE, type SupportedLanguage, buildLanguageInstruction } from "@/lib/core/language";
 import {
   COWORKER_GENERATOR_PROMPT_V1,
   COWORKER_GENERATOR_PROMPT_VERSION,
@@ -27,6 +28,7 @@ export type GenerateCoworkersInput = {
   techStack: string[];
   taskDescription: string;
   keyResponsibilities: string[];
+  language?: SupportedLanguage;
 };
 
 /**
@@ -159,8 +161,10 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
 export async function generateCoworkers(
   input: GenerateCoworkersInput
 ): Promise<GenerateCoworkersResponse> {
+  const lang = input.language || DEFAULT_LANGUAGE;
+  const langInstruction = buildLanguageInstruction(lang);
   const contextPrompt = buildContextPrompt(input);
-  const fullPrompt = `${COWORKER_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
+  const fullPrompt = `${COWORKER_GENERATOR_PROMPT_V1}\n\n${langInstruction ? `## Language Instructions\n\n${langInstruction}\n\n` : ''}## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
   let _lastResponseText = "";
 
@@ -234,6 +238,7 @@ export async function generateCoworkers(
  * Build the context prompt from input parameters
  */
 function buildContextPrompt(input: GenerateCoworkersInput): string {
+  const lang = input.language || DEFAULT_LANGUAGE;
   return `**Role Name:** ${input.roleName}
 **Seniority Level:** ${input.seniorityLevel}
 **Company Name:** ${input.companyName}
@@ -242,6 +247,7 @@ function buildContextPrompt(input: GenerateCoworkersInput): string {
 **Task Description:** ${input.taskDescription}
 **Key Responsibilities:**
 ${input.keyResponsibilities.map((r) => `- ${r}`).join("\n")}
+**Language:** ${lang}
 
 Now generate 2-3 coworkers for this context.`;
 }

@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   Copy,
   Check,
@@ -96,6 +104,9 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
+  const [showCloneModal, setShowCloneModal] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [isCloning, setIsCloning] = useState(false);
 
   const toggleResource = (index: number) => {
     setExpandedResources((prev) => {
@@ -186,6 +197,37 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
       day: "numeric",
       year: "numeric",
     }).format(new Date(dateString));
+  };
+
+  const handleClone = async () => {
+    if (!selectedLanguage || selectedLanguage === scenario.language) return;
+
+    setIsCloning(true);
+    try {
+      const response = await fetch(`/api/recruiter/simulations/${scenario.id}/clone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: selectedLanguage })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to clone scenario");
+      }
+
+      const result = await response.json();
+      const newScenarioId = result.data?.scenarioId;
+
+      if (newScenarioId) {
+        router.push(`/recruiter/simulations/${newScenarioId}/settings?success=true`);
+      }
+    } catch (error) {
+      console.error("Clone failed:", error);
+      alert(error instanceof Error ? error.message : "Failed to clone scenario");
+    } finally {
+      setIsCloning(false);
+      setShowCloneModal(false);
+    }
   };
 
   return (
@@ -347,8 +389,8 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const newLang = scenario.language === "en" ? "es" : "en";
-                  router.push(`/recruiter/simulations/new?clone=${scenario.id}&language=${newLang}`);
+                  setSelectedLanguage(scenario.language === "en" ? "es" : "en");
+                  setShowCloneModal(true);
                 }}
                 className="flex items-center gap-2"
               >
@@ -556,6 +598,55 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           )}
         </CardContent>
       </Card>
+
+      {/* Clone Language Modal */}
+      <Dialog open={showCloneModal} onOpenChange={setShowCloneModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clone Scenario to Another Language</DialogTitle>
+            <DialogDescription>
+              This will create a new scenario with all content (task, resources, and coworkers) regenerated in the selected language.
+              <br />
+              <br />
+              <strong>Note:</strong> Recruiter customizations will NOT be carried over. The new scenario will have freshly generated content.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="block text-sm font-medium text-stone-700 mb-2">
+              Target Language
+            </label>
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a language" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(LANGUAGES)
+                  .filter(([code]) => code !== scenario.language)
+                  .map(([code]) => (
+                    <SelectItem key={code} value={code}>
+                      {code === "en" ? "English" : code === "es" ? "Spanish" : code}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCloneModal(false)} disabled={isCloning}>
+              Cancel
+            </Button>
+            <Button onClick={handleClone} disabled={!selectedLanguage || isCloning}>
+              {isCloning ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Cloning...
+                </>
+              ) : (
+                "Clone Scenario"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
