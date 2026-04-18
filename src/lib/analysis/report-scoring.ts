@@ -65,7 +65,8 @@ export function convertRubricToReport(
   assessmentId: string,
   candidateName?: string,
   timing?: { totalDurationMinutes: number | null; workingPhaseMinutes: number | null },
-  coworkersContacted?: number
+  coworkersContacted?: number,
+  language?: string
 ): AssessmentReport {
   const skillScores: SkillScore[] = [];
 
@@ -122,6 +123,7 @@ export function convertRubricToReport(
     generatedAt: new Date().toISOString(),
     assessmentId,
     candidateName,
+    language,
     overallScore: rubricResult.overallScore ?? 0,
     overallLevel: scoreToLevel(rubricResult.overallScore ?? 0),
     skillScores,

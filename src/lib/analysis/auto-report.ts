@@ -40,6 +40,9 @@ export async function generateReportForAssessment(
         select: { coworkerId: true },
         where: { coworkerId: { not: null } },
       },
+      scenario: {
+        select: { language: true },
+      },
     },
   });
 
@@ -62,7 +65,8 @@ export async function generateReportForAssessment(
     assessmentId,
     assessment.user?.name || undefined,
     timing,
-    coworkersContacted
+    coworkersContacted,
+    assessment.scenario.language
   );
 
   await db.assessment.update({

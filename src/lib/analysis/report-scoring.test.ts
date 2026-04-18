@@ -140,6 +140,18 @@ describe("convertRubricToReport", () => {
     expect(report.metrics!.totalDurationMinutes).toBeNull();
     expect(report.metrics!.coworkersContacted).toBe(0);
   });
+
+  it("should set language field when provided", () => {
+    const report = convertRubricToReport(baseRubric, "assess-1", "John Doe", undefined, undefined, "es");
+
+    expect(report.language).toBe("es");
+  });
+
+  it("should set language field to undefined when not provided", () => {
+    const report = convertRubricToReport(baseRubric, "assess-1");
+
+    expect(report.language).toBeUndefined();
+  });
 });
 
 describe("reportToPrismaJson", () => {

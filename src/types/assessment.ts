@@ -316,6 +316,7 @@ export interface AssessmentReport {
   generatedAt: string;
   assessmentId: string;
   candidateName?: string;
+  language?: string;
 
   // Overall scores
   overallScore: number;

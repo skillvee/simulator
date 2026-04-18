@@ -59,6 +59,8 @@ export interface EvaluateVideoOptions {
   expectedOutcomes?: string[];
   /** Role family slug for rubric selection (defaults to "engineering") */
   roleFamilySlug?: string;
+  /** Language for narrative fields (defaults to "en") */
+  language?: string;
 }
 
 // ============================================================================
@@ -302,6 +304,11 @@ export async function evaluateVideo(
         taskDescription,
         expectedOutcomes,
       };
+    }
+
+    // Add language for narrative generation
+    if (options.language) {
+      rubricInput.language = options.language;
     }
 
     // Build the evaluation prompt dynamically from rubric data

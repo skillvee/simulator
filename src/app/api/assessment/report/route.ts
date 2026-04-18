@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       return error("No video recording found for this assessment. Video evaluation cannot proceed without a recording.", 400);
     }
     const videoResult = await resolveVideoEvaluation(
-      assessmentId, videoUrl, assessment.scenario.taskDescription, session.user.id
+      assessmentId, videoUrl, assessment.scenario.taskDescription, session.user.id, assessment.scenario.language
     );
 
     if (videoResult.status === "processing")
@@ -65,7 +65,8 @@ export async function POST(request: Request) {
       assessmentId,
       assessment.user?.name || undefined,
       timing,
-      coworkersContacted
+      coworkersContacted,
+      assessment.scenario.language
     );
 
     // Store report

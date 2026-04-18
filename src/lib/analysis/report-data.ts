@@ -18,7 +18,7 @@ export interface AssessmentReportData {
   user: { name: string | null; email: string | null };
   conversations: { coworkerId: string | null }[];
   recordings: { storageUrl: string }[];
-  scenario: { taskDescription: string };
+  scenario: { taskDescription: string; language: string };
 }
 
 /**
@@ -47,7 +47,7 @@ export async function fetchAssessmentForReport(assessmentId: string): Promise<As
         take: 1,
       },
       scenario: {
-        select: { taskDescription: true },
+        select: { taskDescription: true, language: true },
       },
     },
   });
@@ -67,7 +67,8 @@ export async function resolveVideoEvaluation(
   assessmentId: string,
   videoUrl: string,
   taskDescription: string,
-  userId: string
+  userId: string,
+  language?: string
 ): Promise<ResolvedVideoEvaluation> {
   const videoAssessment = await db.videoAssessment.findUnique({
     where: { assessmentId },
@@ -123,6 +124,7 @@ export async function resolveVideoEvaluation(
         assessmentId: videoAssessmentId,
         videoUrl,
         taskDescription,
+        language,
       });
 
       if (!evalResult.success) {

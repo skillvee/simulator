@@ -8,6 +8,8 @@
  * @since 2026-02-06
  */
 
+import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
+
 export const RUBRIC_EVALUATION_PROMPT_VERSION = "3.0.0";
 
 // ============================================================================
@@ -45,6 +47,7 @@ export interface RubricPromptInput {
     taskDescription?: string;
     expectedOutcomes?: string[];
   };
+  language?: string;
 }
 
 // ============================================================================
@@ -169,7 +172,7 @@ ${redFlagSchema}
  * @returns Complete evaluation prompt string
  */
 export function buildRubricEvaluationPrompt(input: RubricPromptInput): string {
-  const { roleFamilyName, dimensions, redFlags, videoContext } = input;
+  const { roleFamilyName, dimensions, redFlags, videoContext, language } = input;
 
   const dimensionSections = dimensions
     .map((d, i) => buildDimensionSection(d, i))
@@ -193,7 +196,16 @@ ${videoContext.expectedOutcomes?.length ? `- Expected Outcomes:\n${videoContext.
 `
     : "";
 
-  return `You are an objective, evidence-based evaluator assessing a candidate's recorded work session for a **${roleFamilyName}** role. Your evaluation must be fair, consistent, and grounded exclusively in observable behaviors.
+  // Add language instruction for narrative fields if non-English
+  const langInstruction = language && language !== 'en'
+    ? buildLanguageInstruction(language as SupportedLanguage)
+    : '';
+
+  const languageNote = langInstruction
+    ? `\n\n## LANGUAGE INSTRUCTION FOR NARRATIVE FIELDS\n\n${langInstruction}\n\nIMPORTANT: Apply this language instruction ONLY to the narrative fields: overall_summary, descriptions in top_strengths, and descriptions in growth_areas. Keep all dimension names, slugs, JSON keys, and scoring rubric references in English.`
+    : '';
+
+  return `You are an objective, evidence-based evaluator assessing a candidate's recorded work session for a **${roleFamilyName}** role. Your evaluation must be fair, consistent, and grounded exclusively in observable behaviors.${languageNote}
 
 ## CRITICAL RULES
 
