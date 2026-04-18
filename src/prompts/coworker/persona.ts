@@ -11,6 +11,32 @@ import type {
   CoworkerPersonality,
 } from "@/lib/ai";
 
+/**
+ * Voice rules for English conversations
+ */
+export const VOICE_RULES_EN = [
+  "Speak naturally and conversationally",
+  "Use appropriate pauses and intonation",
+  "Avoid robotic or monotone delivery",
+  "Use natural fillers: um, uh, let me think, so, well, you know",
+  "Keep a casual, friendly tone appropriate for a tech workplace"
+];
+
+/**
+ * Voice rules for Spanish conversations
+ */
+export const VOICE_RULES_ES = [
+  "Habla de manera natural y conversacional",
+  "Usa pausas y entonación apropiadas",
+  "Evita una entrega robótica o monótona",
+  "Usa muletillas naturales del español latinoamericano: eh, bueno, a ver, sabes, claro, este, pues",
+  "Mantén un tono casual y amigable apropiado para un ambiente tech",
+  "Usa 'tú' por defecto, no 'usted'",
+  "Evita modismos específicos de España (vale, tío, ordenador, móvil)",
+  "Usa vocabulario latinoamericano neutral: computadora (no ordenador), celular (no móvil)",
+  "Los identificadores de código, nombres de API y términos técnicos se mantienen en inglés"
+];
+
 export interface CoworkerContext {
   companyName: string;
   candidateName?: string;

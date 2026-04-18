@@ -3,6 +3,8 @@
  * All language-specific parameters are centralized here
  */
 
+import { VOICE_RULES_EN, VOICE_RULES_ES } from "@/prompts/coworker/persona";
+
 // Language configuration type
 interface LanguageConfig {
   code: string;
@@ -19,11 +21,7 @@ export const LANGUAGES = {
     code: "en",
     speechLanguageCode: "en-US",
     instruction: "",
-    voiceRules: [
-      "Speak naturally and conversationally",
-      "Use appropriate pauses and intonation",
-      "Avoid robotic or monotone delivery"
-    ],
+    voiceRules: VOICE_RULES_EN,
     fillers: ["um", "uh", "let me think", "so", "well", "you know"],
     dateLocale: "en-US"
   },
@@ -31,12 +29,7 @@ export const LANGUAGES = {
     code: "es",
     speechLanguageCode: "es-US",
     instruction: `Respond in neutral Latin American Spanish. Keep code identifiers, API names, and JSON keys in English. Use "tú" form (not "usted"). Avoid Spain-specific vocabulary like "vale", "tío", "ordenador", "móvil". Use Latin American equivalents: "computadora" instead of "ordenador", "celular" instead of "móvil", "está bien" instead of "vale".`,
-    voiceRules: [
-      "Habla de manera natural y conversacional",
-      "Usa pausas y entonación apropiadas",
-      "Evita una entrega robótica o monótona",
-      "Usa vocabulario latinoamericano neutral"
-    ],
+    voiceRules: VOICE_RULES_ES,
     fillers: ["eh", "este", "bueno", "pues", "o sea", "déjame pensar"],
     dateLocale: "es-MX"
   }

@@ -7,7 +7,7 @@
 
 import type { CoworkerPersona } from "@/types";
 import { isManager } from "@/lib/utils/coworker";
-import { type SupportedLanguage, buildLanguageInstruction } from "@/lib/core/language";
+import { type SupportedLanguage, buildLanguageInstruction, LANGUAGES } from "@/lib/core/language";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -63,7 +63,7 @@ export function buildAgentPrompt(ctx: AgentPromptContext): string {
     sections.push(buildGreetingHint(ctx));
   }
 
-  sections.push(ctx.media === "chat" ? CHAT_RULES : VOICE_RULES);
+  sections.push(ctx.media === "chat" ? CHAT_RULES : buildVoiceRules(ctx.language));
 
   return sections.filter(Boolean).join("\n\n");
 }
@@ -171,7 +171,19 @@ What was hardest, what they'd do differently, AI tool usage.
 const CHAT_RULES = `## Chat Rules
 Slack-style: 1-2 sentences per message. Never invent tools, wikis, or URLs not in your knowledge. If asked about something you already answered, just give the answer — don't re-explain the reasoning.`;
 
-const VOICE_RULES = `## Voice Rules
-Sound like a real phone call. Use filler words naturally ("um", "so", "let me think"). Keep turns short. Never read out URLs or links on a call — say "I'll drop the link in Slack" instead.
+function buildVoiceRules(language: SupportedLanguage): string {
+  const voiceRules = LANGUAGES[language].voiceRules;
+  const fillers = LANGUAGES[language].fillers;
+
+  const rulesList = voiceRules.map(rule => `- ${rule}`).join("\n");
+  const fillerExamples = language === "en"
+    ? `("${fillers.slice(0, 3).join('", "')}")`
+    : `("${fillers.slice(0, 4).join('", "')}", etc.)`;
+
+  return `## Voice Rules
+Sound like a real phone call. Use filler words naturally ${fillerExamples}. Keep turns short. Never read out URLs or links on a call — say "I'll drop the link in Slack" instead.
+
+${rulesList}
 
 YOU must speak first when the call starts. Greet the candidate naturally like picking up the phone: "Hey!", "Yo, what's going on?", etc. Keep it to 1-2 words. Do NOT wait for the candidate to speak first.`;
+}

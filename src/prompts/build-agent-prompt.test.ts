@@ -203,6 +203,52 @@ describe("buildAgentPrompt with language support", () => {
     });
   });
 
+  describe("voice rules with language support", () => {
+    it("should include Spanish fillers for voice prompt with language 'es'", () => {
+      const context: AgentPromptContext = {
+        ...baseContext,
+        language: "es",
+        media: "voice"
+      };
+
+      const prompt = buildAgentPrompt(context);
+
+      // Should have Spanish voice rules and fillers
+      expect(prompt).toContain("Voice Rules");
+      expect(prompt).toContain("eh");
+      expect(prompt).toContain("bueno");
+      expect(prompt).toContain("a ver");
+      expect(prompt).toContain("sabes");
+      expect(prompt).toContain("claro");
+      expect(prompt).toContain("este");
+
+      // Should include Spanish-specific voice rules
+      expect(prompt).toContain("Habla de manera natural y conversacional");
+      expect(prompt).toContain("Usa muletillas naturales del español latinoamericano");
+      expect(prompt).toContain("Usa 'tú' por defecto");
+    });
+
+    it("should include English fillers for voice prompt with language 'en'", () => {
+      const context: AgentPromptContext = {
+        ...baseContext,
+        language: "en",
+        media: "voice"
+      };
+
+      const prompt = buildAgentPrompt(context);
+
+      // Should have English voice rules and fillers
+      expect(prompt).toContain("Voice Rules");
+      expect(prompt).toContain("um");
+      expect(prompt).toContain("uh");
+      expect(prompt).toContain("let me think");
+
+      // Should include English voice rules
+      expect(prompt).toContain("Speak naturally and conversationally");
+      expect(prompt).toContain("Use natural fillers");
+    });
+  });
+
   describe("no language ternaries", () => {
     it("should use LANGUAGES config instead of hardcoded ternaries", () => {
       // Test that both languages work through the config
