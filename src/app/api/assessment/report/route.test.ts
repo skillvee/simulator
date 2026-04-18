@@ -364,6 +364,62 @@ describe("Assessment Report API", () => {
       expect(mockEvaluateVideo).toHaveBeenCalled();
       expect(data.data.report.overallScore).toBe(4.0);
     });
+
+    it("should use report.language for email when generating Spanish report", async () => {
+      // Import and setup mocks
+      const { sendReportEmail, isEmailServiceConfigured } = await import("@/lib/external");
+      (isEmailServiceConfigured as any).mockReturnValue(true);
+      (sendReportEmail as any).mockClear();
+
+      mockAuthFn.mockResolvedValue({ user: { id: "user-1" } });
+      mockFindUnique.mockResolvedValue({
+        id: "assessment-1",
+        userId: "user-1",
+        status: "COMPLETED",
+        report: null,
+        user: { name: "Test User", email: "test@example.com" },
+        startedAt: new Date(),
+        completedAt: new Date(),
+        conversations: [],
+        recordings: [{ storageUrl: "https://example.com/video.mp4" }],
+        scenario: {
+          taskDescription: "Test task",
+          language: "es" // Spanish scenario
+        },
+      });
+      mockFindUniqueVideoAssessment.mockResolvedValue({
+        id: "video-assessment-1",
+        status: VideoAssessmentStatus.COMPLETED,
+        summary: { rawAiResponse: sampleVideoEvaluationOutput },
+      });
+      mockUpdate.mockResolvedValue({ id: "assessment-1" });
+
+      const request = new Request(
+        "http://localhost:3000/api/assessment/report",
+        {
+          method: "POST",
+          headers: { "host": "localhost:3000" },
+          body: JSON.stringify({ assessmentId: "assessment-1" }),
+        }
+      );
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+
+      // Verify sendReportEmail was called with Spanish language from the report
+      expect(sendReportEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: "test@example.com",
+          language: "es", // Should use the report's language
+          report: expect.objectContaining({
+            language: "es", // Report should have Spanish language
+          }),
+        })
+      );
+    });
   });
 
   describe("GET /api/assessment/report", () => {

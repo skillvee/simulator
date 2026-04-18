@@ -85,7 +85,7 @@ export async function generateReportForAssessment(
       assessmentId,
       report: report as AssessmentReport,
       appBaseUrl,
-      language: assessment.scenario.language || "en",
+      language: report.language || "en",
     })
       .then((r) =>
         r.success
