@@ -8,6 +8,13 @@ import { LANGUAGES, DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/
 // Re-export client-safe config for backwards compatibility in server code
 export * from "./gemini-config";
 
+// Best default voices per language based on benchmarking
+// Spanish voices benchmarked for pronunciation accuracy, naturalness, and casual register fit
+export const VOICE_BY_LANGUAGE: Record<SupportedLanguage, string> = {
+  en: "Aoede",      // Default English voice - Breezy tone
+  es: "Leda",       // Best Spanish voice - Youthful, excellent casual register, natural intonation
+};
+
 // Server-side Gemini client (uses API key with v1alpha for token support)
 export const gemini = new GoogleGenAI({
   apiKey: env.GEMINI_API_KEY,
@@ -20,8 +27,10 @@ export async function generateEphemeralToken(config?: {
   voiceName?: string;
   language?: SupportedLanguage;
 }): Promise<string> {
-  const voiceName = config?.voiceName || DEFAULT_VOICE;
   const language = config?.language || DEFAULT_LANGUAGE;
+  // Use language-specific default voice if no voice specified
+  // Manager and coworker voices can still be overridden per scenario
+  const voiceName = config?.voiceName || VOICE_BY_LANGUAGE[language] || DEFAULT_VOICE;
 
   // Get the speech language code from LANGUAGES config
   // Currently using es-US for Spanish; will try es-419 if Gemini Live supports it
