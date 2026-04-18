@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,17 +80,7 @@ type PreviewData = {
 };
 
 // Progress messages shown during simulation generation
-const GENERATING_STEPS = [
-  "Extracting key job description insights...",
-  "Identifying required technical skills...",
-  "Analyzing seniority expectations...",
-  "Crafting realistic work challenges...",
-  "Designing team dynamics and personalities...",
-  "Calibrating difficulty to match role level...",
-  "Building authentic work scenarios...",
-  "Assembling your simulation team...",
-  "Finalizing simulation details...",
-];
+// Will be loaded from translations inside component
 
 // Common tech stacks for multi-select
 const COMMON_TECH_STACKS = [
@@ -141,6 +132,7 @@ const ROLE_SUGGESTIONS = [
 
 export function RecruiterScenarioBuilderClient() {
   const router = useRouter();
+  const t = useTranslations("recruiter.simulations.new");
   const [step, setStep] = useState<Step>("entry");
   const [jobDescription, setJobDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -160,6 +152,19 @@ export function RecruiterScenarioBuilderClient() {
 
   // Generating progress message
   const [generatingMessageIndex, setGeneratingMessageIndex] = useState(0);
+
+  // Get generating steps from translations
+  const GENERATING_STEPS = [
+    t("generating.steps.0"),
+    t("generating.steps.1"),
+    t("generating.steps.2"),
+    t("generating.steps.3"),
+    t("generating.steps.4"),
+    t("generating.steps.5"),
+    t("generating.steps.6"),
+    t("generating.steps.7"),
+    t("generating.steps.8")
+  ];
 
   const resetGeneratingProgress = useCallback(() => {
     setGeneratingMessageIndex(0);
@@ -314,7 +319,7 @@ export function RecruiterScenarioBuilderClient() {
         // Not enough info — redirect to guided form pre-filled with what we extracted
         prefillGuidedForm(parsedData);
         setIsLoading(false);
-        setError("We couldn\u2019t extract enough details. Please fill in the missing fields below.");
+        setError(t("pasteJD.errors.notEnoughInfo"));
         setStep("guided");
         return;
       }
