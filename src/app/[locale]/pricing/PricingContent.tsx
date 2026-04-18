@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 
@@ -18,6 +19,7 @@ const PRICING = {
 };
 
 export default function PricingContent() {
+  const t = useTranslations("pricing");
   const [isAnnual, setIsAnnual] = useState(true);
 
   const starterPrice = isAnnual ? PRICING.starter.annual : PRICING.starter.monthly;
@@ -25,64 +27,70 @@ export default function PricingContent() {
 
   const tiers = [
     {
-      name: "Free",
-      price: "$0",
-      description: "Try before you commit",
+      name: t("tiers.free.name"),
+      price: t("tiers.free.price"),
+      description: t("tiers.free.description"),
       highlight: false,
       features: [
-        { text: "3 assessments", bold: true, suffix: " per month" },
-        { text: "Role-specific work simulations" },
-        { text: "AI-powered evaluation" },
-        { text: "Shareable assessment links" },
-        { text: "Community support" },
+        { text: t("tiers.free.features.1") },
+        { text: t("tiers.free.features.2") },
+        { text: t("tiers.free.features.3") },
+        { text: t("tiers.free.features.4") },
+        { text: t("tiers.free.features.5") },
       ],
-      cta: "Get Started Free",
+      cta: t("tiers.free.cta"),
       ctaVariant: "outline" as const,
     },
     {
-      name: "Starter",
+      name: t("tiers.starter.name"),
       price: `$${starterPrice}`,
-      description: "For small hiring teams",
+      description: t("tiers.starter.description"),
       highlight: false,
       features: [
-        { text: isAnnual ? "180 assessments" : "15 assessments", bold: true, suffix: ` per ${isAnnual ? "year" : "month"}` },
-        { text: "Everything in Free" },
-        { text: "Candidate comparison dashboard" },
-        { text: "Assessment analytics" },
-        { text: "Email support" },
+        { text: t("tiers.starter.features.1", {
+          count: isAnnual ? "180" : "15",
+          period: isAnnual ? t("perYear").replace("/", "") : t("perMonth").replace("/", "")
+        }) },
+        { text: t("tiers.starter.features.2") },
+        { text: t("tiers.starter.features.3") },
+        { text: t("tiers.starter.features.4") },
+        { text: t("tiers.starter.features.5") },
       ],
-      cta: "Start Trial",
+      cta: t("tiers.starter.cta"),
       ctaVariant: "outline" as const,
     },
     {
-      name: "Pro",
+      name: t("tiers.pro.name"),
       price: `$${proPrice}`,
-      description: "For growing teams",
+      description: t("tiers.pro.description"),
       highlight: true,
-      badge: "Best Value",
+      badge: t("tiers.pro.badge"),
       features: [
-        { text: isAnnual ? "600 assessments" : "50 assessments", bold: true, suffix: ` per ${isAnnual ? "year" : "month"}` },
-        { text: "Everything in Starter" },
-        { text: "Custom simulation scenarios" },
-        { text: "Team collaboration tools" },
-        { text: "Priority support" },
+        { text: t("tiers.pro.features.1", {
+          count: isAnnual ? "600" : "50",
+          period: isAnnual ? t("perYear").replace("/", "") : t("perMonth").replace("/", "")
+        }) },
+        { text: t("tiers.pro.features.2") },
+        { text: t("tiers.pro.features.3") },
+        { text: t("tiers.pro.features.4") },
+        { text: t("tiers.pro.features.5") },
       ],
-      cta: "Start Trial",
+      cta: t("tiers.pro.cta"),
       ctaVariant: "primary" as const,
     },
     {
-      name: "Enterprise",
-      price: "Custom",
-      description: "For teams hiring at scale",
+      name: t("tiers.enterprise.name"),
+      price: t("tiers.enterprise.price"),
+      description: t("tiers.enterprise.description"),
       highlight: false,
       features: [
-        { text: "Unlimited", bold: true, suffix: " assessments" },
-        { text: "Everything in Pro" },
-        { text: "ATS integration" },
-        { text: "Dedicated success manager" },
-        { text: "SSO & advanced security" },
+        { text: t("tiers.enterprise.features.1") },
+        { text: t("tiers.enterprise.features.2") },
+        { text: t("tiers.enterprise.features.3") },
+        { text: t("tiers.enterprise.features.4") },
+        { text: t("tiers.enterprise.features.5") },
       ],
-      cta: "Talk to Sales",
+      cta: t("tiers.enterprise.cta"),
       ctaVariant: "outline" as const,
     },
   ];
@@ -105,7 +113,7 @@ export default function PricingContent() {
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Monthly
+            {t("billing.monthly")}
           </button>
           <button
             onClick={() => setIsAnnual(true)}
@@ -115,9 +123,9 @@ export default function PricingContent() {
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            Annual
+            {t("billing.annual")}
             <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full font-bold">
-              Save 17%
+              {t("billing.save")}
             </span>
           </button>
         </div>
@@ -149,8 +157,8 @@ export default function PricingContent() {
               <h3 className="text-2xl font-black text-slate-900 mb-3">{tier.name}</h3>
               <div className="mb-3">
                 <span className="text-4xl font-black text-slate-900">{tier.price}</span>
-                {tier.price !== "Custom" && (
-                  <span className="text-slate-500 text-sm ml-1">/month</span>
+                {tier.price !== t("tiers.enterprise.price") && (
+                  <span className="text-slate-500 text-sm ml-1">{t("perMonth")}</span>
                 )}
               </div>
               <p className="text-slate-600 text-sm">{tier.description}</p>
@@ -161,8 +169,7 @@ export default function PricingContent() {
                 <div key={i} className="flex items-start space-x-2">
                   <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                   <span className="text-slate-700 text-sm">
-                    {feature.bold ? <strong>{feature.text}</strong> : feature.text}
-                    {feature.suffix}
+                    {feature.text}
                   </span>
                 </div>
               ))}

@@ -2,19 +2,33 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 import { Providers } from "@/components/shared";
 
-export const metadata: Metadata = {
-  title: "Skillvee - Practice Real Developer Scenarios",
-  description:
-    "Assess and improve your developer skills through realistic work simulations",
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
+
+  return {
+    title: t("title"),
+    description: t("description"),
+    icons: {
+      icon: "/favicon.ico",
+    },
+    openGraph: {
+      title: t("title"),
+      description: t("description"),
+      type: "website",
+      locale: locale === "es" ? "es_ES" : "en_US",
+    },
+  };
+}
 
 export default async function LocaleLayout({
   children,

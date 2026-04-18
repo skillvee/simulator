@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Navigation from "@/components/landing/navigation";
@@ -9,6 +10,8 @@ import Footer from "@/components/landing/footer";
 import PricingContent from "./PricingContent";
 
 export default function PricingPage() {
+  const t = useTranslations("pricing");
+
   return (
     <div className="min-h-screen bg-[#020617]">
       <Navigation variant="dark" currentPage="pricing" />
@@ -42,17 +45,17 @@ export default function PricingPage() {
             >
               <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
                 <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-slate-400 text-sm">Simple, transparent pricing</span>
+                <span className="text-slate-400 text-sm">{t("hero.badge")}</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-6">
-                Start free.
+                {t("hero.title")}
                 <br />
-                <span className="text-primary">Scale as you grow.</span>
+                <span className="text-primary">{t("hero.titleHighlight")}</span>
               </h1>
 
               <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-                No per-assessment fees, no surprises. Upgrade when you need more capacity.
+                {t("hero.subtitle")}
               </p>
             </motion.div>
           </div>
@@ -72,9 +75,9 @@ export default function PricingPage() {
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
-                  { stat: "$0", label: "Setup fees" },
-                  { stat: "Cancel", label: "Anytime, no contracts" },
-                  { stat: "14-day", label: "Free trial on paid plans" },
+                  { stat: t("valueProps.setupFee.stat"), label: t("valueProps.setupFee.label") },
+                  { stat: t("valueProps.cancel.stat"), label: t("valueProps.cancel.label") },
+                  { stat: t("valueProps.trial.stat"), label: t("valueProps.trial.label") },
                 ].map((item, i) => (
                   <motion.div
                     key={i}
@@ -103,10 +106,10 @@ export default function PricingPage() {
               className="text-center mb-12"
             >
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-                Common Questions
+                {t("faq.label")}
               </p>
               <h2 className="text-3xl sm:text-4xl font-black text-slate-900">
-                Pricing FAQ
+                {t("faq.title")}
               </h2>
             </motion.div>
 
@@ -180,9 +183,9 @@ export default function PricingPage() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl lg:text-6xl font-black text-white mb-6">
-                NOT SURE WHICH PLAN?
+                {t("cta.title")}
                 <br />
-                <span className="text-primary">LET&apos;S TALK.</span>
+                <span className="text-primary">{t("cta.titleHighlight")}</span>
               </h2>
               <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
                 Start with Free and upgrade when you need more capacity. Or schedule a demo to see how it works.

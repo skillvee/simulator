@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
@@ -100,6 +101,8 @@ function HeroProductDemo() {
 }
 
 export default function HomePage() {
+  const t = useTranslations("landing");
+
   return (
     <div className="min-h-screen bg-[#020617]">
       {/* ============================================
@@ -141,23 +144,23 @@ export default function HomePage() {
             >
               <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
                 <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-slate-400 text-sm">Work simulations that actually work</span>
+                <span className="text-slate-400 text-sm">{t("hero.badge")}</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.05] mb-6">
-                Watch them work.
+                {t("hero.title")}
                 <br />
-                <span className="text-primary">Then hire.</span>
+                <span className="text-primary">{t("hero.titleHighlight")}</span>
               </h1>
 
               <p className="text-lg sm:text-xl text-slate-400 max-w-xl mb-8 lg:pr-8">
-                See exactly how candidates communicate, collaborate, and solve problems—before you make the offer. No more expensive hiring mistakes.
+                {t("hero.subtitle")}
               </p>
 
               <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4">
                 <Link href="/demo">
                   <Button className="h-14 px-8 rounded-full bg-white text-slate-900 font-bold text-lg shadow-xl shadow-white/10 hover:bg-slate-100 group">
-                    Request Demo
+                    {t("hero.requestDemo")}
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -199,7 +202,7 @@ export default function HomePage() {
                 <span className="text-amber-600 text-sm">🏆</span>
               </div>
               <span className="text-slate-600 text-sm font-medium">
-                Hackathon Winner
+                {t("credibility.deepmindWinner")}
               </span>
             </div>
 
@@ -208,7 +211,7 @@ export default function HomePage() {
 
             {/* Backed By */}
             <div className="flex items-center gap-5">
-              <span className="text-slate-500 text-sm">Backed by</span>
+              <span className="text-slate-500 text-sm">{t("credibility.backedBy")}</span>
               <Image
                 src="/startx.png"
                 alt="StartX"
@@ -243,13 +246,13 @@ export default function HomePage() {
             className="text-center"
           >
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-              The Problem
+              {t("problem.label")}
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4">
-              You&apos;ve hired the wrong person before
+              {t("problem.title")}
             </h2>
             <p className="text-xl text-slate-600">
-              So has everyone. 75% of companies admit it. Here&apos;s why it keeps happening.
+              {t("problem.subtitle")}
             </p>
           </motion.div>
 
@@ -319,14 +322,14 @@ export default function HomePage() {
               <ul className="space-y-4">
                 {[
                   {
-                    title: "Role-specific scenarios",
-                    desc: "AI generates tasks that match your JD",
+                    title: t("howItWorks.step1.point1.title"),
+                    desc: t("howItWorks.step1.point1.desc"),
                   },
                   {
-                    title: "Custom stakeholder personas",
-                    desc: "PM, manager, and team members tailored to you",
+                    title: t("howItWorks.step1.point2.title"),
+                    desc: t("howItWorks.step1.point2.desc"),
                   },
-                  { title: "Ready in minutes", desc: "No weeks of test design required" },
+                  { title: t("howItWorks.step1.point3.title"), desc: t("howItWorks.step1.point3.desc") },
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -405,16 +408,16 @@ export default function HomePage() {
               <ul className="space-y-4">
                 {[
                   {
-                    title: "Real-time voice calls they can't fake",
-                    desc: "Unscripted conversations with AI stakeholders—no rehearsing, no cheating",
+                    title: t("howItWorks.step2.point1.title"),
+                    desc: t("howItWorks.step2.point1.desc"),
                   },
                   {
-                    title: "AI tools encouraged",
-                    desc: "See how they actually work in 2025",
+                    title: t("howItWorks.step2.point2.title"),
+                    desc: t("howItWorks.step2.point2.desc"),
                   },
                   {
-                    title: "Full transparency",
-                    desc: "Candidates see exactly what you see—no hidden evaluation",
+                    title: t("howItWorks.step2.point3.title"),
+                    desc: t("howItWorks.step2.point3.desc"),
                   },
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
@@ -441,26 +444,25 @@ export default function HomePage() {
                   3
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-slate-900">
-                  Review Standardized Evidence
+                  {t("howItWorks.step3.title")}
                 </h3>
               </div>
               <p className="text-lg text-slate-600 mb-8">
-                Compare candidates side-by-side with consistent, objective data. No
-                more gut feel—see exactly what you&apos;re getting.
+                {t("howItWorks.step3.description")}
               </p>
               <ul className="space-y-4">
                 {[
                   {
-                    title: "Structured scorecards",
-                    desc: "Communication, problem-solving, execution, AI usage",
+                    title: t("howItWorks.step3.point1.title"),
+                    desc: t("howItWorks.step3.point1.desc"),
                   },
                   {
-                    title: "Conversation transcripts",
-                    desc: "See how they clarified requirements and collaborated",
+                    title: t("howItWorks.step3.point2.title"),
+                    desc: t("howItWorks.step3.point2.desc"),
                   },
                   {
-                    title: "Work artifacts",
-                    desc: "Review their actual output and code",
+                    title: t("howItWorks.step3.point3.title"),
+                    desc: t("howItWorks.step3.point3.desc"),
                   },
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
@@ -509,24 +511,24 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-              Universal Platform
+              {t("roles.label")}
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4">
-              Works for every role
+              {t("roles.title")}
             </h2>
             <p className="text-xl text-slate-600">
-              Custom simulations tailored to your specific needs
+              {t("roles.subtitle")}
             </p>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { role: "Software Engineers", icon: Code, color: "blue", desc: "Build features, review code, collaborate with stakeholders" },
-              { role: "Product Managers", icon: Users, color: "purple", desc: "Prioritize backlogs, run meetings, present roadmaps" },
-              { role: "Data Scientists", icon: BarChart3, color: "emerald", desc: "Analyze data, communicate findings, make recommendations" },
-              { role: "Program Managers", icon: TrendingUp, color: "amber", desc: "Coordinate teams, resolve conflicts, drive alignment" },
-              { role: "Sales", icon: DollarSign, color: "rose", desc: "Run discovery calls, handle objections, close deals" },
-              { role: "Customer Success", icon: Users, color: "cyan", desc: "Onboard clients, handle escalations, drive renewals" },
+              { role: t("roles.softwareEngineers.title"), icon: Code, color: "blue", desc: t("roles.softwareEngineers.desc") },
+              { role: t("roles.productManagers.title"), icon: Users, color: "purple", desc: t("roles.productManagers.desc") },
+              { role: t("roles.dataScientists.title"), icon: BarChart3, color: "emerald", desc: t("roles.dataScientists.desc") },
+              { role: t("roles.programManagers.title"), icon: TrendingUp, color: "amber", desc: t("roles.programManagers.desc") },
+              { role: t("roles.sales.title"), icon: DollarSign, color: "rose", desc: t("roles.sales.desc") },
+              { role: t("roles.customerSuccess.title"), icon: Users, color: "cyan", desc: t("roles.customerSuccess.desc") },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -575,55 +577,43 @@ export default function HomePage() {
             className="text-center mb-12"
           >
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-              Got Questions?
+              {t("faq.label")}
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4">
-              Frequently Asked Questions
+              {t("faq.title")}
             </h2>
           </motion.div>
 
           <div className="space-y-4">
             {[
               {
-                question: "How long does the assessment take candidates?",
-                answer: "30-45 minutes. Candidates complete the simulation in one sitting—no scheduling required. They get a link, complete the work, and you get results."
+                question: t("faq.question1.question"),
+                answer: t("faq.question1.answer")
               },
               {
-                question: "Can candidates cheat with AI?",
+                question: t("faq.question2.question"),
                 answer: (
-                  <>
-                    We encourage AI use—that&apos;s how people actually work in 2025. What matters is <em>how</em> they use it. <strong>Our real-time voice conversations are unfakeable</strong>—candidates can&apos;t rehearse, script, or have someone else take the call. Combined with screen recordings of their entire process, you see the real person, not just polished output.
-                  </>
+                  <span dangerouslySetInnerHTML={{ __html: t("faq.question2.answer") }} />
                 )
               },
               {
-                question: "Can we customize the simulation for our role?",
-                answer: "Yes. Paste your job description and we generate a simulation tailored to your specific role, tech stack, and company context. No generic tests—candidates work on scenarios that match what they'd actually do on day one."
+                question: t("faq.question3.question"),
+                answer: t("faq.question3.answer")
               },
               {
-                question: "What ATS integrations do you support?",
+                question: t("faq.question4.question"),
+                answer: t("faq.question4.answer")
+              },
+              {
+                question: t("faq.question5.question"),
                 answer: (
-                  <>
-                    We integrate with major ATS platforms including Greenhouse, Lever, Ashby, and Workday. Results sync automatically to candidate profiles. Don&apos;t see yours? <Link href="/demo" className="text-primary hover:underline">Contact us</Link>—we&apos;re adding new integrations regularly.
-                  </>
+                  <span dangerouslySetInnerHTML={{ __html: t("faq.question5.answer") }} />
                 )
               },
               {
-                question: "Is this fair for all candidates?",
+                question: t("faq.question6.question"),
                 answer: (
-                  <>
-                    <strong>More fair than traditional interviews.</strong> Think about what candidates face today: being judged on appearance, nervousness, and interviewer mood. Subjective &ldquo;culture fit&rdquo; assessments. Advantages for people who interview well but work poorly.<br /><br />
-                    With SkillVee, every candidate gets the identical scenario. No power dynamics, no surprise questions, no bias. They choose when to complete it, use their preferred tools, and their work speaks for itself. We measure what people actually do—not how they perform under artificial pressure.
-                  </>
-                )
-              },
-              {
-                question: "What about candidate privacy?",
-                answer: (
-                  <>
-                    Candidates know exactly what&apos;s being evaluated—there&apos;s no hidden scoring or secret criteria. They see the same materials reviewers see. Compare this to traditional interviews where candidates have no idea what&apos;s being written about them, or personality tests with opaque algorithms.<br /><br />
-                    Our approach is <strong>transparent by design</strong>: candidates demonstrate real skills, reviewers see real work, and everyone knows the rules upfront.
-                  </>
+                  <span dangerouslySetInnerHTML={{ __html: t("faq.question6.answer") }} />
                 )
               }
             ].map((item, index) => (
@@ -641,7 +631,7 @@ export default function HomePage() {
               href="/faq"
               className="text-primary hover:text-primary/80 font-medium hover:underline transition-colors"
             >
-              View all questions →
+              {t("faq.viewAll")}
             </Link>
           </motion.div>
         </div>
@@ -686,16 +676,16 @@ export default function HomePage() {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl lg:text-6xl font-black text-white mb-6">
-              STOP GUESSING.
+              {t("cta.title")}
               <br />
-              <span className="text-primary">START KNOWING.</span>
+              <span className="text-primary">{t("cta.titleHighlight")}</span>
             </h2>
             <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-              See exactly how candidates perform before you make the offer.
+              {t("cta.subtitle")}
             </p>
             <Link href="/demo">
               <Button className="h-14 px-10 rounded-full bg-white text-slate-900 font-bold text-lg shadow-xl hover:bg-slate-100 group">
-                Request Demo
+                {t("cta.requestDemo")}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>

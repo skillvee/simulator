@@ -1,4 +1,8 @@
 {
+  "metadata": {
+    "title": "Skillvee - Obsérvalos trabajar. Luego contrata.",
+    "description": "Ve exactamente cómo los candidatos se comunican, colaboran y resuelven problemas, antes de hacer la oferta. No más errores costosos de contratación."
+  },
   "auth": {
     "signIn": {
       "title": "Bienvenido de nuevo",
@@ -666,6 +670,404 @@
           "cloning": "Clonando...",
           "clone": "Clonar"
         }
+      }
+    }
+  },
+  "landing": {
+    "hero": {
+      "badge": "Simulaciones de trabajo que realmente funcionan",
+      "title": "Obsérvalos trabajar.",
+      "titleHighlight": "Luego contrata.",
+      "subtitle": "Ve exactamente cómo los candidatos se comunican, colaboran y resuelven problemas, antes de hacer la oferta. No más errores costosos de contratación.",
+      "requestDemo": "Solicitar Demo"
+    },
+    "credibility": {
+      "deepmindWinner": "Ganador del Hackathon",
+      "backedBy": "Respaldado por"
+    },
+    "problem": {
+      "label": "El Problema",
+      "title": "Has contratado a la persona equivocada antes",
+      "subtitle": "Todos lo han hecho. El 75% de las empresas lo admiten. Por eso sigue ocurriendo.",
+      "stat1": {
+        "value": "72%",
+        "text": "de los currículums ahora están escritos por IA y se ven iguales. No puedes saber quién está calificado."
+      },
+      "stat2": {
+        "value": "46%",
+        "text": "de las nuevas contrataciones fracasan en 18 meses. Error costoso."
+      },
+      "stat3": {
+        "value": "<1%",
+        "text": "de los solicitantes están verdaderamente calificados. Aguja en un pajar."
+      }
+    },
+    "howItWorks": {
+      "label": "Cómo Funciona",
+      "title": "De la descripción del puesto a la decisión de contratación",
+      "subtitle": "Tres pasos. Sin dolores de cabeza de programación. Evidencia real.",
+      "step1": {
+        "number": "1",
+        "title": "Crea Tu Simulación",
+        "description": "Pega tu descripción de trabajo y generamos un escenario de trabajo realista. Sin pruebas genéricas: tu simulación coincide con el rol real.",
+        "point1": {
+          "title": "Escenarios específicos del rol",
+          "desc": "IA genera tareas que coinciden con tu descripción"
+        },
+        "point2": {
+          "title": "Personas de partes interesadas personalizadas",
+          "desc": "PM, gerente y miembros del equipo adaptados a ti"
+        },
+        "point3": {
+          "title": "Listo en minutos",
+          "desc": "No se requieren semanas de diseño de pruebas"
+        }
+      },
+      "step2": {
+        "number": "2",
+        "title": "Los Candidatos Hacen Trabajo Real",
+        "description": "Envía un enlace. Los candidatos experimentan un primer día realista: recopilan requisitos, toman decisiones y entregan trabajo. 30-45 minutos, sin programación.",
+        "point1": {
+          "title": "Llamadas de voz en tiempo real que no pueden falsificar",
+          "desc": "Conversaciones sin guión con partes interesadas de IA: sin ensayar, sin hacer trampa"
+        },
+        "point2": {
+          "title": "Herramientas de IA alentadas",
+          "desc": "Ve cómo realmente trabajan en 2025"
+        },
+        "point3": {
+          "title": "Transparencia total",
+          "desc": "Los candidatos ven exactamente lo que tú ves: sin evaluación oculta"
+        }
+      },
+      "step3": {
+        "number": "3",
+        "title": "Revisa Evidencia Estandarizada",
+        "description": "Compara candidatos lado a lado con datos consistentes y objetivos. No más intuición: ve exactamente lo que obtienes.",
+        "point1": {
+          "title": "Tarjetas de puntuación estructuradas",
+          "desc": "Comunicación, resolución de problemas, ejecución, uso de IA"
+        },
+        "point2": {
+          "title": "Transcripciones de conversación",
+          "desc": "Ve cómo aclararon requisitos y colaboraron"
+        },
+        "point3": {
+          "title": "Artefactos de trabajo",
+          "desc": "Revisa su producción y código real"
+        }
+      }
+    },
+    "roles": {
+      "label": "Plataforma Universal",
+      "title": "Funciona para cada rol",
+      "subtitle": "Simulaciones personalizadas adaptadas a tus necesidades específicas",
+      "softwareEngineers": {
+        "title": "Ingenieros de Software",
+        "desc": "Construir características, revisar código, colaborar con partes interesadas"
+      },
+      "productManagers": {
+        "title": "Gerentes de Producto",
+        "desc": "Priorizar backlogs, dirigir reuniones, presentar hojas de ruta"
+      },
+      "dataScientists": {
+        "title": "Científicos de Datos",
+        "desc": "Analizar datos, comunicar hallazgos, hacer recomendaciones"
+      },
+      "programManagers": {
+        "title": "Gerentes de Programa",
+        "desc": "Coordinar equipos, resolver conflictos, impulsar alineación"
+      },
+      "sales": {
+        "title": "Ventas",
+        "desc": "Realizar llamadas de descubrimiento, manejar objeciones, cerrar tratos"
+      },
+      "customerSuccess": {
+        "title": "Éxito del Cliente",
+        "desc": "Incorporar clientes, manejar escaladas, impulsar renovaciones"
+      }
+    },
+    "faq": {
+      "label": "¿Tienes Preguntas?",
+      "title": "Preguntas Frecuentes",
+      "viewAll": "Ver todas las preguntas →",
+      "question1": {
+        "question": "¿Cuánto tiempo toma la evaluación a los candidatos?",
+        "answer": "30-45 minutos. Los candidatos completan la simulación de una sola vez, sin necesidad de programación. Reciben un enlace, completan el trabajo y obtienes resultados."
+      },
+      "question2": {
+        "question": "¿Pueden los candidatos hacer trampa con IA?",
+        "answer": "Alentamos el uso de IA: así es como la gente realmente trabaja en 2025. Lo que importa es <em>cómo</em> la usan. <strong>Nuestras conversaciones de voz en tiempo real son imposibles de falsificar</strong>: los candidatos no pueden ensayar, escribir guiones o hacer que alguien más tome la llamada. Combinado con grabaciones de pantalla de todo su proceso, ves a la persona real, no solo resultados pulidos."
+      },
+      "question3": {
+        "question": "¿Podemos personalizar la simulación para nuestro rol?",
+        "answer": "Sí. Pega tu descripción de trabajo y generamos una simulación adaptada a tu rol específico, stack tecnológico y contexto de empresa. Sin pruebas genéricas: los candidatos trabajan en escenarios que coinciden con lo que realmente harían el primer día."
+      },
+      "question4": {
+        "question": "¿Qué integraciones de ATS soportan?",
+        "answer": "Nos integramos con las principales plataformas ATS incluyendo Greenhouse, Lever, Ashby y Workday. Los resultados se sincronizan automáticamente con los perfiles de candidatos. ¿No ves la tuya? Contáctanos: estamos agregando nuevas integraciones regularmente."
+      },
+      "question5": {
+        "question": "¿Es esto justo para todos los candidatos?",
+        "answer": "<strong>Más justo que las entrevistas tradicionales.</strong> Piensa en lo que enfrentan los candidatos hoy: ser juzgados por apariencia, nerviosismo y humor del entrevistador. Evaluaciones subjetivas de \"ajuste cultural\". Ventajas para personas que entrevistan bien pero trabajan mal.<br /><br />Con SkillVee, cada candidato recibe el escenario idéntico. Sin dinámicas de poder, sin preguntas sorpresa, sin sesgo. Eligen cuándo completarlo, usan sus herramientas preferidas y su trabajo habla por sí mismo. Medimos lo que la gente realmente hace, no cómo se desempeña bajo presión artificial."
+      },
+      "question6": {
+        "question": "¿Qué pasa con la privacidad del candidato?",
+        "answer": "Los candidatos saben exactamente qué se está evaluando: no hay puntuación oculta ni criterios secretos. Ven los mismos materiales que ven los revisores. Compara esto con las entrevistas tradicionales donde los candidatos no tienen idea de lo que se está escribiendo sobre ellos, o pruebas de personalidad con algoritmos opacos.<br /><br />Nuestro enfoque es <strong>transparente por diseño</strong>: los candidatos demuestran habilidades reales, los revisores ven trabajo real y todos conocen las reglas desde el principio."
+      }
+    },
+    "cta": {
+      "title": "DEJA DE ADIVINAR.",
+      "titleHighlight": "EMPIEZA A SABER.",
+      "subtitle": "Ve exactamente cómo se desempeñan los candidatos antes de hacer la oferta.",
+      "requestDemo": "Solicitar Demo"
+    }
+  },
+  "pricing": {
+    "hero": {
+      "badge": "Precios simples y transparentes",
+      "title": "Comienza gratis.",
+      "titleHighlight": "Escala mientras creces.",
+      "subtitle": "Sin tarifas por evaluación, sin sorpresas. Actualiza cuando necesites más capacidad."
+    },
+    "billing": {
+      "monthly": "Mensual",
+      "annual": "Anual",
+      "save": "Ahorra 17%"
+    },
+    "perMonth": "/mes",
+    "perYear": "/año",
+    "tiers": {
+      "free": {
+        "name": "Gratis",
+        "price": "$0",
+        "description": "Prueba antes de comprometerte",
+        "badge": "",
+        "features": {
+          "1": "3 evaluaciones por mes",
+          "2": "Simulaciones de trabajo específicas del rol",
+          "3": "Evaluación potenciada por IA",
+          "4": "Enlaces de evaluación compartibles",
+          "5": "Soporte de la comunidad"
+        },
+        "cta": "Empezar Gratis"
+      },
+      "starter": {
+        "name": "Inicial",
+        "description": "Para equipos de contratación pequeños",
+        "badge": "",
+        "features": {
+          "1": "{count} evaluaciones por {period}",
+          "2": "Todo en Gratis",
+          "3": "Panel de comparación de candidatos",
+          "4": "Análisis de evaluaciones",
+          "5": "Soporte por email"
+        },
+        "cta": "Iniciar Prueba"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Para equipos en crecimiento",
+        "badge": "Mejor Valor",
+        "features": {
+          "1": "{count} evaluaciones por {period}",
+          "2": "Todo en Inicial",
+          "3": "Escenarios de simulación personalizados",
+          "4": "Herramientas de colaboración en equipo",
+          "5": "Soporte prioritario"
+        },
+        "cta": "Iniciar Prueba"
+      },
+      "enterprise": {
+        "name": "Empresa",
+        "price": "Personalizado",
+        "description": "Para equipos contratando a escala",
+        "badge": "",
+        "features": {
+          "1": "Evaluaciones ilimitadas",
+          "2": "Todo en Pro",
+          "3": "Integración ATS",
+          "4": "Gerente de éxito dedicado",
+          "5": "SSO y seguridad avanzada"
+        },
+        "cta": "Hablar con Ventas"
+      }
+    },
+    "valueProps": {
+      "setupFee": {
+        "stat": "$0",
+        "label": "Tarifas de configuración"
+      },
+      "cancel": {
+        "stat": "Cancelar",
+        "label": "En cualquier momento, sin contratos"
+      },
+      "trial": {
+        "stat": "14 días",
+        "label": "Prueba gratuita en planes pagos"
+      }
+    },
+    "faq": {
+      "label": "Preguntas Comunes",
+      "title": "Preguntas Frecuentes sobre Precios",
+      "viewAll": "Ver todas las preguntas →",
+      "question1": {
+        "question": "¿Qué cuenta como una evaluación?",
+        "answer": "Cada candidato único que completa una simulación de trabajo cuenta como una evaluación. Puedes enviar invitaciones ilimitadas."
+      },
+      "question2": {
+        "question": "¿Qué pasa si excedo mi límite mensual?",
+        "answer": "Te notificaremos cuando te acerques a tu límite. Puedes actualizar en cualquier momento o comprar evaluaciones adicionales a $10 cada una."
+      },
+      "question3": {
+        "question": "¿Las evaluaciones no utilizadas se acumulan?",
+        "answer": "Las asignaciones mensuales se reinician cada ciclo de facturación. Los planes anuales obtienen un bono del 20% y más flexibilidad."
+      }
+    },
+    "cta": {
+      "title": "¿NO ESTÁS SEGURO DE QUÉ PLAN?",
+      "titleHighlight": "HABLEMOS.",
+      "subtitle": "Comienza con Gratis y actualiza cuando necesites más capacidad. O agenda una demo para ver cómo funciona.",
+      "scheduleDemo": "Agendar una Demo",
+      "viewFaq": "Ver Preguntas Frecuentes"
+    }
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: {date}",
+    "sections": {
+      "intro": {
+        "title": "Introducción",
+        "content": "En Skillvee, tomamos tu privacidad en serio. Esta Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos tu información cuando usas nuestro servicio."
+      },
+      "informationWeCollect": {
+        "title": "Información que Recopilamos",
+        "content": "Recopilamos información que nos proporcionas directamente, como cuando creas una cuenta, participas en evaluaciones o nos contactas para soporte.",
+        "personalInfo": {
+          "title": "Información Personal",
+          "items": {
+            "1": "Nombre e información de contacto",
+            "2": "Información profesional (currículum, historial laboral)",
+            "3": "Respuestas y grabaciones de evaluación",
+            "4": "Credenciales de cuenta"
+          }
+        },
+        "usageInfo": {
+          "title": "Información de Uso",
+          "items": {
+            "1": "Información del navegador y dispositivo",
+            "2": "Dirección IP y datos de ubicación",
+            "3": "Patrones de uso y preferencias",
+            "4": "Métricas de rendimiento"
+          }
+        }
+      },
+      "howWeUse": {
+        "title": "Cómo Usamos Tu Información",
+        "content": "Usamos la información que recopilamos para:",
+        "items": {
+          "1": "Proporcionar y mejorar nuestros servicios",
+          "2": "Procesar y evaluar evaluaciones",
+          "3": "Comunicarnos contigo sobre nuestros servicios",
+          "4": "Garantizar la seguridad de la plataforma y prevenir fraude",
+          "5": "Cumplir con obligaciones legales"
+        }
+      },
+      "dataSharing": {
+        "title": "Compartir Información",
+        "content": "No vendemos ni alquilamos tu información personal. Podemos compartir tu información en las siguientes circunstancias:",
+        "items": {
+          "1": "Con empleadores cuando solicitas posiciones",
+          "2": "Con proveedores de servicios que asisten nuestras operaciones",
+          "3": "Cuando lo requiere la ley o proceso legal",
+          "4": "Para proteger derechos y seguridad"
+        }
+      },
+      "dataSecurity": {
+        "title": "Seguridad de Datos",
+        "content": "Implementamos medidas técnicas y organizacionales apropiadas para proteger tu información personal contra acceso no autorizado, alteración, divulgación o destrucción."
+      },
+      "yourRights": {
+        "title": "Tus Derechos",
+        "content": "Tienes derecho a:",
+        "items": {
+          "1": "Acceder a tu información personal",
+          "2": "Corregir datos inexactos",
+          "3": "Solicitar eliminación de tus datos",
+          "4": "Oponerte a cierto procesamiento",
+          "5": "Portabilidad de datos"
+        }
+      },
+      "contact": {
+        "title": "Contáctanos",
+        "content": "Si tienes preguntas sobre esta Política de Privacidad, por favor contáctanos en privacy@skillvee.com"
+      }
+    }
+  },
+  "terms": {
+    "title": "Términos de Servicio",
+    "lastUpdated": "Última actualización: {date}",
+    "sections": {
+      "acceptance": {
+        "title": "Aceptación de Términos",
+        "content": "Al acceder o usar Skillvee, aceptas estar sujeto a estos Términos de Servicio y todas las leyes y regulaciones aplicables."
+      },
+      "useOfService": {
+        "title": "Uso del Servicio",
+        "content": "Puedes usar nuestro servicio solo para propósitos legales y de acuerdo con estos Términos. Aceptas no usar nuestro servicio:",
+        "items": {
+          "1": "De cualquier manera que viole leyes aplicables",
+          "2": "Para transmitir código dañino o malicioso",
+          "3": "Para intentar acceso no autorizado",
+          "4": "Para interferir con la operación del servicio",
+          "5": "Para hacerse pasar por otros"
+        }
+      },
+      "accounts": {
+        "title": "Cuentas de Usuario",
+        "content": "Cuando creas una cuenta, debes proporcionar información precisa y completa. Eres responsable de:",
+        "items": {
+          "1": "Mantener la seguridad de la cuenta",
+          "2": "Todas las actividades bajo tu cuenta",
+          "3": "Notificar uso no autorizado",
+          "4": "Mantener la información actualizada"
+        }
+      },
+      "intellectualProperty": {
+        "title": "Propiedad Intelectual",
+        "content": "El servicio y su contenido original, características y funcionalidad son propiedad de Skillvee y están protegidos por leyes internacionales de derechos de autor, marcas registradas y otras leyes de propiedad intelectual."
+      },
+      "userContent": {
+        "title": "Contenido del Usuario",
+        "content": "Al enviar contenido a nuestro servicio, nos otorgas una licencia mundial, no exclusiva y libre de regalías para usar, reproducir y distribuir tu contenido en conexión con el servicio."
+      },
+      "privacy": {
+        "title": "Privacidad",
+        "content": "Tu uso de nuestro servicio también está regido por nuestra Política de Privacidad. Por favor revisa nuestra Política de Privacidad para entender nuestras prácticas."
+      },
+      "termination": {
+        "title": "Terminación",
+        "content": "Podemos terminar o suspender tu cuenta y acceso al servicio inmediatamente, sin previo aviso, por cualquier razón, incluido el incumplimiento de estos Términos."
+      },
+      "disclaimers": {
+        "title": "Descargos de Responsabilidad",
+        "content": "El servicio se proporciona \"tal cual\" sin garantías de ningún tipo. No garantizamos que el servicio será ininterrumpido, seguro o libre de errores."
+      },
+      "limitation": {
+        "title": "Limitación de Responsabilidad",
+        "content": "En la máxima medida permitida por la ley, Skillvee no será responsable por ningún daño indirecto, incidental, especial o consecuente que surja de tu uso del servicio."
+      },
+      "governing": {
+        "title": "Ley Aplicable",
+        "content": "Estos Términos se regirán e interpretarán de acuerdo con las leyes de los Estados Unidos, sin tener en cuenta las disposiciones sobre conflicto de leyes."
+      },
+      "changes": {
+        "title": "Cambios a los Términos",
+        "content": "Nos reservamos el derecho de modificar estos Términos en cualquier momento. Te notificaremos de cualquier cambio publicando los nuevos Términos en esta página."
+      },
+      "contact": {
+        "title": "Información de Contacto",
+        "content": "Si tienes alguna pregunta sobre estos Términos, por favor contáctanos en legal@skillvee.com"
       }
     }
   }

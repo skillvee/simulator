@@ -1,4 +1,8 @@
 {
+  "metadata": {
+    "title": "Skillvee - Watch them work. Then hire.",
+    "description": "See exactly how candidates communicate, collaborate, and solve problems—before you make the offer. No more expensive hiring mistakes."
+  },
   "auth": {
     "signIn": {
       "title": "Welcome back",
@@ -666,6 +670,404 @@
           "cloning": "Cloning...",
           "clone": "Clone"
         }
+      }
+    }
+  },
+  "landing": {
+    "hero": {
+      "badge": "Work simulations that actually work",
+      "title": "Watch them work.",
+      "titleHighlight": "Then hire.",
+      "subtitle": "See exactly how candidates communicate, collaborate, and solve problems—before you make the offer. No more expensive hiring mistakes.",
+      "requestDemo": "Request Demo"
+    },
+    "credibility": {
+      "deepmindWinner": "Hackathon Winner",
+      "backedBy": "Backed by"
+    },
+    "problem": {
+      "label": "The Problem",
+      "title": "You've hired the wrong person before",
+      "subtitle": "So has everyone. 75% of companies admit it. Here's why it keeps happening.",
+      "stat1": {
+        "value": "72%",
+        "text": "of resumes are now AI-written and look alike. You can't tell who's qualified."
+      },
+      "stat2": {
+        "value": "46%",
+        "text": "of new hires fail within 18 months. Expensive mistake."
+      },
+      "stat3": {
+        "value": "<1%",
+        "text": "of applicants are truly qualified. Needle in a haystack."
+      }
+    },
+    "howItWorks": {
+      "label": "How It Works",
+      "title": "From job description to hiring decision",
+      "subtitle": "Three steps. No scheduling headaches. Real evidence.",
+      "step1": {
+        "number": "1",
+        "title": "Create Your Simulation",
+        "description": "Paste your job description and we generate a realistic work scenario. No generic tests—your simulation matches the actual role.",
+        "point1": {
+          "title": "Role-specific scenarios",
+          "desc": "AI generates tasks that match your JD"
+        },
+        "point2": {
+          "title": "Custom stakeholder personas",
+          "desc": "PM, manager, and team members tailored to you"
+        },
+        "point3": {
+          "title": "Ready in minutes",
+          "desc": "No weeks of test design required"
+        }
+      },
+      "step2": {
+        "number": "2",
+        "title": "Candidates Do Real Work",
+        "description": "Send a link. Candidates experience a realistic first day—gathering requirements, making decisions, and delivering work. 30-45 minutes, no scheduling.",
+        "point1": {
+          "title": "Real-time voice calls they can't fake",
+          "desc": "Unscripted conversations with AI stakeholders—no rehearsing, no cheating"
+        },
+        "point2": {
+          "title": "AI tools encouraged",
+          "desc": "See how they actually work in 2025"
+        },
+        "point3": {
+          "title": "Full transparency",
+          "desc": "Candidates see exactly what you see—no hidden evaluation"
+        }
+      },
+      "step3": {
+        "number": "3",
+        "title": "Review Standardized Evidence",
+        "description": "Compare candidates side-by-side with consistent, objective data. No more gut feel—see exactly what you're getting.",
+        "point1": {
+          "title": "Structured scorecards",
+          "desc": "Communication, problem-solving, execution, AI usage"
+        },
+        "point2": {
+          "title": "Conversation transcripts",
+          "desc": "See how they clarified requirements and collaborated"
+        },
+        "point3": {
+          "title": "Work artifacts",
+          "desc": "Review their actual output and code"
+        }
+      }
+    },
+    "roles": {
+      "label": "Universal Platform",
+      "title": "Works for every role",
+      "subtitle": "Custom simulations tailored to your specific needs",
+      "softwareEngineers": {
+        "title": "Software Engineers",
+        "desc": "Build features, review code, collaborate with stakeholders"
+      },
+      "productManagers": {
+        "title": "Product Managers",
+        "desc": "Prioritize backlogs, run meetings, present roadmaps"
+      },
+      "dataScientists": {
+        "title": "Data Scientists",
+        "desc": "Analyze data, communicate findings, make recommendations"
+      },
+      "programManagers": {
+        "title": "Program Managers",
+        "desc": "Coordinate teams, resolve conflicts, drive alignment"
+      },
+      "sales": {
+        "title": "Sales",
+        "desc": "Run discovery calls, handle objections, close deals"
+      },
+      "customerSuccess": {
+        "title": "Customer Success",
+        "desc": "Onboard clients, handle escalations, drive renewals"
+      }
+    },
+    "faq": {
+      "label": "Got Questions?",
+      "title": "Frequently Asked Questions",
+      "viewAll": "View all questions →",
+      "question1": {
+        "question": "How long does the assessment take candidates?",
+        "answer": "30-45 minutes. Candidates complete the simulation in one sitting—no scheduling required. They get a link, complete the work, and you get results."
+      },
+      "question2": {
+        "question": "Can candidates cheat with AI?",
+        "answer": "We encourage AI use—that's how people actually work in 2025. What matters is <em>how</em> they use it. <strong>Our real-time voice conversations are unfakeable</strong>—candidates can't rehearse, script, or have someone else take the call. Combined with screen recordings of their entire process, you see the real person, not just polished output."
+      },
+      "question3": {
+        "question": "Can we customize the simulation for our role?",
+        "answer": "Yes. Paste your job description and we generate a simulation tailored to your specific role, tech stack, and company context. No generic tests—candidates work on scenarios that match what they'd actually do on day one."
+      },
+      "question4": {
+        "question": "What ATS integrations do you support?",
+        "answer": "We integrate with major ATS platforms including Greenhouse, Lever, Ashby, and Workday. Results sync automatically to candidate profiles. Don't see yours? Contact us—we're adding new integrations regularly."
+      },
+      "question5": {
+        "question": "Is this fair for all candidates?",
+        "answer": "<strong>More fair than traditional interviews.</strong> Think about what candidates face today: being judged on appearance, nervousness, and interviewer mood. Subjective \"culture fit\" assessments. Advantages for people who interview well but work poorly.<br /><br />With SkillVee, every candidate gets the identical scenario. No power dynamics, no surprise questions, no bias. They choose when to complete it, use their preferred tools, and their work speaks for itself. We measure what people actually do—not how they perform under artificial pressure."
+      },
+      "question6": {
+        "question": "What about candidate privacy?",
+        "answer": "Candidates know exactly what's being evaluated—there's no hidden scoring or secret criteria. They see the same materials reviewers see. Compare this to traditional interviews where candidates have no idea what's being written about them, or personality tests with opaque algorithms.<br /><br />Our approach is <strong>transparent by design</strong>: candidates demonstrate real skills, reviewers see real work, and everyone knows the rules upfront."
+      }
+    },
+    "cta": {
+      "title": "STOP GUESSING.",
+      "titleHighlight": "START KNOWING.",
+      "subtitle": "See exactly how candidates perform before you make the offer.",
+      "requestDemo": "Request Demo"
+    }
+  },
+  "pricing": {
+    "hero": {
+      "badge": "Simple, transparent pricing",
+      "title": "Start free.",
+      "titleHighlight": "Scale as you grow.",
+      "subtitle": "No per-assessment fees, no surprises. Upgrade when you need more capacity."
+    },
+    "billing": {
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "save": "Save 17%"
+    },
+    "perMonth": "/month",
+    "perYear": "/year",
+    "tiers": {
+      "free": {
+        "name": "Free",
+        "price": "$0",
+        "description": "Try before you commit",
+        "badge": "",
+        "features": {
+          "1": "3 assessments per month",
+          "2": "Role-specific work simulations",
+          "3": "AI-powered evaluation",
+          "4": "Shareable assessment links",
+          "5": "Community support"
+        },
+        "cta": "Get Started Free"
+      },
+      "starter": {
+        "name": "Starter",
+        "description": "For small hiring teams",
+        "badge": "",
+        "features": {
+          "1": "{count} assessments per {period}",
+          "2": "Everything in Free",
+          "3": "Candidate comparison dashboard",
+          "4": "Assessment analytics",
+          "5": "Email support"
+        },
+        "cta": "Start Trial"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For growing teams",
+        "badge": "Best Value",
+        "features": {
+          "1": "{count} assessments per {period}",
+          "2": "Everything in Starter",
+          "3": "Custom simulation scenarios",
+          "4": "Team collaboration tools",
+          "5": "Priority support"
+        },
+        "cta": "Start Trial"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "price": "Custom",
+        "description": "For teams hiring at scale",
+        "badge": "",
+        "features": {
+          "1": "Unlimited assessments",
+          "2": "Everything in Pro",
+          "3": "ATS integration",
+          "4": "Dedicated success manager",
+          "5": "SSO & advanced security"
+        },
+        "cta": "Talk to Sales"
+      }
+    },
+    "valueProps": {
+      "setupFee": {
+        "stat": "$0",
+        "label": "Setup fees"
+      },
+      "cancel": {
+        "stat": "Cancel",
+        "label": "Anytime, no contracts"
+      },
+      "trial": {
+        "stat": "14-day",
+        "label": "Free trial on paid plans"
+      }
+    },
+    "faq": {
+      "label": "Common Questions",
+      "title": "Pricing FAQ",
+      "viewAll": "View all questions →",
+      "question1": {
+        "question": "What counts as an assessment?",
+        "answer": "Each unique candidate who completes a work simulation counts as one assessment. You can send unlimited invitations."
+      },
+      "question2": {
+        "question": "What happens if I exceed my monthly limit?",
+        "answer": "We'll notify you when you're approaching your limit. You can upgrade anytime, or purchase additional assessments at $10 each."
+      },
+      "question3": {
+        "question": "Do unused assessments roll over?",
+        "answer": "Monthly allocations reset each billing cycle. Annual plans get a 20% bonus and more flexibility."
+      }
+    },
+    "cta": {
+      "title": "NOT SURE WHICH PLAN?",
+      "titleHighlight": "LET'S TALK.",
+      "subtitle": "Start with Free and upgrade when you need more capacity. Or schedule a demo to see how it works.",
+      "scheduleDemo": "Schedule a Demo",
+      "viewFaq": "View FAQ"
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: {date}",
+    "sections": {
+      "intro": {
+        "title": "Introduction",
+        "content": "At Skillvee, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service."
+      },
+      "informationWeCollect": {
+        "title": "Information We Collect",
+        "content": "We collect information you provide directly to us, such as when you create an account, participate in assessments, or contact us for support.",
+        "personalInfo": {
+          "title": "Personal Information",
+          "items": {
+            "1": "Name and contact information",
+            "2": "Professional information (resume, work history)",
+            "3": "Assessment responses and recordings",
+            "4": "Account credentials"
+          }
+        },
+        "usageInfo": {
+          "title": "Usage Information",
+          "items": {
+            "1": "Browser and device information",
+            "2": "IP address and location data",
+            "3": "Usage patterns and preferences",
+            "4": "Performance metrics"
+          }
+        }
+      },
+      "howWeUse": {
+        "title": "How We Use Your Information",
+        "content": "We use the information we collect to:",
+        "items": {
+          "1": "Provide and improve our services",
+          "2": "Process and evaluate assessments",
+          "3": "Communicate with you about our services",
+          "4": "Ensure platform security and prevent fraud",
+          "5": "Comply with legal obligations"
+        }
+      },
+      "dataSharing": {
+        "title": "Information Sharing",
+        "content": "We do not sell or rent your personal information. We may share your information in the following circumstances:",
+        "items": {
+          "1": "With employers when you apply for positions",
+          "2": "With service providers who assist our operations",
+          "3": "When required by law or legal process",
+          "4": "To protect rights and safety"
+        }
+      },
+      "dataSecurity": {
+        "title": "Data Security",
+        "content": "We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction."
+      },
+      "yourRights": {
+        "title": "Your Rights",
+        "content": "You have the right to:",
+        "items": {
+          "1": "Access your personal information",
+          "2": "Correct inaccurate data",
+          "3": "Request deletion of your data",
+          "4": "Object to certain processing",
+          "5": "Data portability"
+        }
+      },
+      "contact": {
+        "title": "Contact Us",
+        "content": "If you have questions about this Privacy Policy, please contact us at privacy@skillvee.com"
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: {date}",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "content": "By accessing or using Skillvee, you agree to be bound by these Terms of Service and all applicable laws and regulations."
+      },
+      "useOfService": {
+        "title": "Use of Service",
+        "content": "You may use our service only for lawful purposes and in accordance with these Terms. You agree not to use our service:",
+        "items": {
+          "1": "In any way that violates applicable laws",
+          "2": "To transmit harmful or malicious code",
+          "3": "To attempt unauthorized access",
+          "4": "To interfere with service operation",
+          "5": "To impersonate others"
+        }
+      },
+      "accounts": {
+        "title": "User Accounts",
+        "content": "When you create an account, you must provide accurate and complete information. You are responsible for:",
+        "items": {
+          "1": "Maintaining account security",
+          "2": "All activities under your account",
+          "3": "Notifying us of unauthorized use",
+          "4": "Keeping information updated"
+        }
+      },
+      "intellectualProperty": {
+        "title": "Intellectual Property",
+        "content": "The service and its original content, features, and functionality are owned by Skillvee and are protected by international copyright, trademark, and other intellectual property laws."
+      },
+      "userContent": {
+        "title": "User Content",
+        "content": "By submitting content to our service, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, and distribute your content in connection with the service."
+      },
+      "privacy": {
+        "title": "Privacy",
+        "content": "Your use of our service is also governed by our Privacy Policy. Please review our Privacy Policy to understand our practices."
+      },
+      "termination": {
+        "title": "Termination",
+        "content": "We may terminate or suspend your account and access to the service immediately, without prior notice, for any reason, including breach of these Terms."
+      },
+      "disclaimers": {
+        "title": "Disclaimers",
+        "content": "The service is provided \"as is\" without warranties of any kind. We do not guarantee that the service will be uninterrupted, secure, or error-free."
+      },
+      "limitation": {
+        "title": "Limitation of Liability",
+        "content": "To the maximum extent permitted by law, Skillvee shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the service."
+      },
+      "governing": {
+        "title": "Governing Law",
+        "content": "These Terms shall be governed by and construed in accordance with the laws of the United States, without regard to conflict of law provisions."
+      },
+      "changes": {
+        "title": "Changes to Terms",
+        "content": "We reserve the right to modify these Terms at any time. We will notify you of any changes by posting the new Terms on this page."
+      },
+      "contact": {
+        "title": "Contact Information",
+        "content": "If you have any questions about these Terms, please contact us at legal@skillvee.com"
       }
     }
   }
