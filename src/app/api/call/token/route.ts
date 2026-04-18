@@ -16,6 +16,7 @@ import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
 import { logAICall } from "@/lib/analysis";
 import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
+import { DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/language";
 
 const logger = createLogger("server:api:call:token");
 
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
             select: {
               name: true,
               email: true,
+              preferredLanguage: true,
             },
           },
         },
@@ -131,6 +133,7 @@ export async function POST(request: Request) {
       : undefined;
 
     // Build unified system prompt
+    const language = (assessment.user.preferredLanguage as SupportedLanguage) || DEFAULT_LANGUAGE;
     const systemInstruction = buildAgentPrompt({
       companyName: assessment.scenario.companyName,
       techStack: assessment.scenario.techStack,
@@ -142,6 +145,7 @@ export async function POST(request: Request) {
       phase: "ongoing",
       media: "voice",
       resourceLabels: isManagerCoworker ? resourceLabels : undefined,
+      language,
     });
 
     // Log voice system instruction (same as chat logs prompts)

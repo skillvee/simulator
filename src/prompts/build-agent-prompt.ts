@@ -7,6 +7,7 @@
 
 import type { CoworkerPersona } from "@/types";
 import { isManager } from "@/lib/utils/coworker";
+import { type SupportedLanguage, buildLanguageInstruction } from "@/lib/core/language";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -30,12 +31,20 @@ export interface AgentPromptContext {
   media: "chat" | "voice";
   /** Labels of resources visible in the candidate's sidebar (e.g. "GitHub Repository", "Data Warehouse") */
   resourceLabels?: string[];
+  /** Language for AI responses */
+  language: SupportedLanguage;
 }
 
 // ─── Main Builder ────────────────────────────────────────────────────────────
 
 export function buildAgentPrompt(ctx: AgentPromptContext): string {
   const sections: string[] = [];
+
+  // Add language instruction first if non-English
+  const langInstruction = buildLanguageInstruction(ctx.language);
+  if (langInstruction) {
+    sections.push(langInstruction);
+  }
 
   sections.push(buildIdentity(ctx));
 

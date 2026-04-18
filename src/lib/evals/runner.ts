@@ -8,6 +8,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
+import { DEFAULT_LANGUAGE } from "@/lib/core/language";
 import { EVAL_SCENARIOS } from "./scenarios";
 import { judgeResponse, aggregateJudgments } from "./judge";
 import { runMultiTurnConversation } from "./multi-turn";
@@ -122,6 +123,7 @@ async function runSingleScenario(
         phase: scenario.phase,
         phaseContext: scenario.phaseContext,
         media: scenario.media,
+        language: DEFAULT_LANGUAGE,  // Evals always run in English
       });
 
   // Step 2: Generate response
