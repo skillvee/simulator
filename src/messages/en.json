@@ -423,6 +423,11 @@
       "error": "Error",
       "warning": "Warning",
       "info": "Info"
+    },
+    "notFound": {
+      "title": "404",
+      "description": "Page not found",
+      "goHome": "Go home"
     }
   },
   "invite": {
