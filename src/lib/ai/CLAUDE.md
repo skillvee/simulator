@@ -8,6 +8,7 @@ AI-related utilities for Gemini integration, conversation memory, and coworker p
 src/lib/ai/
 ├── index.ts                 # Barrel exports
 ├── gemini.ts                # Gemini client and token generation
+├── live-session.ts          # Shared client-side Gemini Live transport/bootstrap
 ├── conversation-memory.ts   # Conversation history management
 ├── coworker-persona.ts      # Coworker persona definitions
 ├── errors.ts                # AI error handling utilities
@@ -95,3 +96,9 @@ const token = await generateEphemeralToken({
 ```
 
 Available voices are in `GEMINI_VOICES` object, grouped by gender.
+
+## Live API Client Transport
+
+- `src/lib/ai/live-session.ts` is the shared client-side Gemini Live transport used by both the Slack work-page call UI (`FloatingCallBar`) and hook-based voice flows (`useVoiceBase`).
+- Put protocol details here when they are about Gemini Live itself: token fetch format, `ai.live.connect()` config, waiting for `setupComplete`, first-turn bootstrapping, audio worklet wiring, and teardown.
+- Leave UI state, retry policy, transcript persistence, and assessment-specific behaviors in their callers.
