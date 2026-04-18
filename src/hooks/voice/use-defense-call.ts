@@ -19,6 +19,8 @@ export interface UseDefenseCallOptions extends Omit<VoiceBaseOptions, "maxRetrie
   /** Endpoint to save the transcript. Will be configured when integrated with Slack. */
   transcriptEndpoint?: string;
   onCallEnded?: () => void;
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 export interface UseDefenseCallReturn {
@@ -62,6 +64,7 @@ export function useDefenseCall({
   onConnectionStateChange,
   onError,
   onCallEnded,
+  language,
 }: UseDefenseCallOptions): UseDefenseCallReturn {
   // Defense-specific state from token response
   const [managerName, setManagerName] = useState<string | null>(null);
@@ -82,6 +85,7 @@ export function useDefenseCall({
       setManagerRole(tokenData.managerRole as string | null);
       setManagerId(tokenData.managerId as string | null);
     },
+    language,
   });
 
   // Fire-and-forget session log to /api/call/log

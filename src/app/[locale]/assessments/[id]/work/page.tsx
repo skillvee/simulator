@@ -71,6 +71,7 @@ export default async function WorkPage({
   const defaultCoworkerId = manager?.id || coworkers[0]?.id || null;
 
   const resources = (assessment.scenario.resources as unknown as ScenarioResource[]) || [];
+  const language = assessment.scenario.language || undefined;
 
   return (
     <AssessmentScreenWrapper assessmentId={id}>
@@ -80,6 +81,7 @@ export default async function WorkPage({
         selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
         deadlineAt={deadlineAt}
         resources={resources}
+        language={language}
       />
     </AssessmentScreenWrapper>
   );

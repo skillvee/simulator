@@ -109,6 +109,8 @@ interface SlackLayoutProps {
   selectedResourceIndex?: number | null;
   /** Callback when a resource is selected or deselected */
   onSelectResource?: (index: number | null) => void;
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 /**
@@ -186,6 +188,7 @@ function SlackLayoutInner({
   onIncrementGeneralUnreadRef,
   selectedResourceIndex,
   onSelectResource,
+  language,
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -555,6 +558,7 @@ function SlackLayoutInner({
                 onCallEnd={endCall}
                 onDefenseComplete={onDefenseComplete}
                 isPostSubmission={isPostSubmission}
+                language={language}
               />
             </div>
           )}

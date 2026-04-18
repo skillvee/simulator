@@ -43,6 +43,8 @@ export interface UseVoiceBaseOptions extends VoiceBaseOptions {
   tokenRequestBody?: Record<string, unknown>;
   /** Callback when token response is received (to extract additional data) */
   onTokenResponse?: (data: Record<string, unknown>) => void;
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 export interface ConnectionEvent {
@@ -92,6 +94,7 @@ export function useVoiceBase({
   config,
   tokenRequestBody = {},
   onTokenResponse,
+  language,
 }: UseVoiceBaseOptions): UseVoiceBaseReturn {
   // Connection state
   const [connectionState, setConnectionState] =
@@ -343,7 +346,7 @@ export function useVoiceBase({
       const tokenResponse = await fetch(config.tokenEndpoint, {
         method: "POST",
         headers: buildTracedHeaders(undefined, { "Content-Type": "application/json" }),
-        body: JSON.stringify({ assessmentId, ...tokenRequestBody }),
+        body: JSON.stringify({ assessmentId, ...tokenRequestBody, ...(language && { language }) }),
       });
 
       if (!tokenResponse.ok) {
@@ -433,6 +436,7 @@ export function useVoiceBase({
     assessmentId,
     config.tokenEndpoint,
     tokenRequestBody,
+    language,
     updateConnectionState,
     handleServerMessage,
     initializeAudioCapture,

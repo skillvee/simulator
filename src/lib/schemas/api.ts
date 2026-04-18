@@ -25,6 +25,7 @@ export const CallTokenRequestSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
   coworkerId: z.string().min(1, "Coworker ID is required"),
   isPostSubmission: z.boolean().optional(),
+  language: z.string().optional(),
 });
 export type CallTokenRequest = z.infer<typeof CallTokenRequestSchema>;
 

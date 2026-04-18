@@ -38,6 +38,8 @@ interface WorkPageClientProps {
   deadlineAt: string;
   /** Resources the candidate needs (repos, databases, dashboards, etc.) */
   resources: ScenarioResource[];
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 export function WorkPageClient({
@@ -46,6 +48,7 @@ export function WorkPageClient({
   selectedCoworkerId: initialSelectedCoworkerId,
   deadlineAt,
   resources,
+  language,
 }: WorkPageClientProps) {
   const router = useRouter();
   const { stopRecording } = useScreenRecordingContext();
@@ -320,6 +323,7 @@ export function WorkPageClient({
         }}
         selectedResourceIndex={selectedResourceIndex}
         onSelectResource={setSelectedResourceIndex}
+        language={language}
       >
         {isGeneralChannel ? (
           <GeneralChannel

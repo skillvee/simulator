@@ -52,6 +52,8 @@ interface FloatingCallBarProps {
   onError?: (error: string) => void;
   /** When true, signals to the server that this call follows work submission (defense call) */
   isPostSubmission?: boolean;
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 // Defense calls are detected automatically when the token endpoint returns
@@ -71,6 +73,7 @@ export function FloatingCallBar({
   onDefenseComplete,
   onError,
   isPostSubmission,
+  language,
 }: FloatingCallBarProps) {
   const [callState, setCallState] = useState<CallState>("idle");
   const [_permissionState, setPermissionState] =
@@ -258,7 +261,7 @@ export function FloatingCallBar({
       const tokenPromise = fetch(tokenEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessmentId, coworkerId: coworker.id, isPostSubmission }),
+        body: JSON.stringify({ assessmentId, coworkerId: coworker.id, isPostSubmission, language }),
       });
 
       // Check and request microphone permission
@@ -372,6 +375,7 @@ export function FloatingCallBar({
     handleServerMessage,
     initializeAudioCapture,
     isPostSubmission,
+    language,
     onError,
   ]);
 

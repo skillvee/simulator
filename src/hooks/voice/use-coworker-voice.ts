@@ -15,6 +15,8 @@ export type { VoiceConnectionState as ConnectionState };
 
 export interface UseCoworkerVoiceOptions extends VoiceBaseOptions {
   coworkerId: string;
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 export interface UseCoworkerVoiceReturn {
@@ -47,6 +49,7 @@ export function useCoworkerVoice({
   onConnectionStateChange,
   onError,
   maxRetries,
+  language,
 }: UseCoworkerVoiceOptions): UseCoworkerVoiceReturn {
   // Progress storage key for this specific coworker call
   const progressKey = `coworker-call-${coworkerId}`;
@@ -69,6 +72,7 @@ export function useCoworkerVoice({
       enableSessionRecovery: true,
     },
     tokenRequestBody,
+    language,
   });
 
   // Fire-and-forget session log to /api/call/log
