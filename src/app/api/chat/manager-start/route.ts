@@ -53,24 +53,18 @@ export async function POST(request: Request) {
   if ("error" in validated) return validated.error;
   const { assessmentId } = validated.data;
 
-  // Verify assessment belongs to user and get user preferences
-  const [assessment, user] = await Promise.all([
-    db.assessment.findFirst({
-      where: {
-        id: assessmentId,
-        userId: session.user.id,
+  // Verify assessment belongs to user
+  const assessment = await db.assessment.findFirst({
+    where: {
+      id: assessmentId,
+      userId: session.user.id,
+    },
+    include: {
+      scenario: {
+        include: { coworkers: true },
       },
-      include: {
-        scenario: {
-          include: { coworkers: true },
-        },
-      },
-    }),
-    db.user.findUnique({
-      where: { id: session.user.id },
-      select: { preferredLanguage: true },
-    }),
-  ]);
+    },
+  });
 
   if (!assessment) {
     return error("Assessment not found", 404, "NOT_FOUND");
@@ -160,7 +154,7 @@ export async function POST(request: Request) {
     ? (assessment.scenario.resources as unknown as Array<{ label: string }>).map((r) => r.label)
     : undefined;
 
-  const language = (user?.preferredLanguage as SupportedLanguage) || DEFAULT_LANGUAGE;
+  const language = (assessment.scenario.language as SupportedLanguage) || DEFAULT_LANGUAGE;
   const systemPrompt = buildAgentPrompt({
     companyName: assessment.scenario.companyName,
     techStack: assessment.scenario.techStack,

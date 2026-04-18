@@ -73,8 +73,8 @@ export async function POST(request: Request) {
   // Sanitize message to prevent XSS attacks
   const message = sanitizeForStorage(validated.data.message);
 
-  // --- Parallel DB queries (assessment + conversations + user run concurrently) ---
-  const [assessment, allConversations, user] = await Promise.all([
+  // --- Parallel DB queries (assessment + conversations run concurrently) ---
+  const [assessment, allConversations] = await Promise.all([
     db.assessment.findFirst({
       where: {
         id: assessmentId,
@@ -99,10 +99,6 @@ export async function POST(request: Request) {
       orderBy: {
         createdAt: "asc",
       },
-    }),
-    db.user.findUnique({
-      where: { id: session.user.id },
-      select: { preferredLanguage: true },
     }),
   ]);
 
@@ -208,7 +204,7 @@ export async function POST(request: Request) {
     : undefined;
 
   // Build unified system prompt — let the LLM decide what to do based on context
-  const language = (user?.preferredLanguage as SupportedLanguage) || DEFAULT_LANGUAGE;
+  const language = (assessment.scenario.language as SupportedLanguage) || DEFAULT_LANGUAGE;
   const systemPrompt = buildAgentPrompt({
     companyName: assessment.scenario.companyName,
     techStack: assessment.scenario.techStack,
