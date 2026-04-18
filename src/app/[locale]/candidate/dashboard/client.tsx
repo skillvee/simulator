@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,40 +16,33 @@ import {
 } from "lucide-react";
 import type { CandidateAssessmentData } from "./page";
 
-const LEVEL_LABELS: Record<string, string> = {
-  junior: "Junior",
-  mid: "Mid",
-  senior: "Senior",
-  staff: "Staff",
-};
-
-function formatRelativeTime(dateString: string) {
+function formatRelativeTime(dateString: string, t: any) {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffHours < 1) return "just now";
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return "yesterday";
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  if (diffHours < 1) return t("time.justNow");
+  if (diffHours < 24) return t("time.hoursAgo", { hours: diffHours });
+  if (diffDays === 1) return t("time.yesterday");
+  if (diffDays < 7) return t("time.daysAgo", { days: diffDays });
+  if (diffDays < 30) return t("time.weeksAgo", { weeks: Math.floor(diffDays / 7) });
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
   }).format(date);
 }
 
-function formatDuration(startedAt: string, completedAt: string): string {
+function formatDuration(startedAt: string, completedAt: string, t: any): string {
   const durationMs =
     new Date(completedAt).getTime() - new Date(startedAt).getTime();
   const totalMinutes = Math.round(durationMs / 60000);
 
-  if (totalMinutes < 60) return `${totalMinutes}m`;
+  if (totalMinutes < 60) return t("time.minutes", { minutes: totalMinutes });
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  return minutes > 0 ? t("time.hoursMinutes", { hours, minutes }) : t("time.hours", { hours });
 }
 
 function normalizeTitle(name: string): string {
@@ -78,6 +72,7 @@ export function CandidateDashboardClient({
   assessments,
   userName,
 }: CandidateDashboardClientProps) {
+  const t = useTranslations("dashboard");
   const inProgress = assessments.filter((a) => a.status === "WORKING");
   const pending = assessments.filter((a) => a.status === "WELCOME");
   const completed = assessments.filter((a) => a.status === "COMPLETED");
@@ -87,24 +82,24 @@ export function CandidateDashboardClient({
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-stone-900">
-          {userName ? `Welcome back, ${userName.split(" ")[0]}` : "My Assessments"}
+          {userName ? t("header.welcomeBack", { name: userName.split(" ")[0] }) : t("header.myAssessments")}
         </h1>
         <p className="text-sm text-stone-500 mt-1">
-          Track your simulations and review your results
+          {t("header.subtitle")}
         </p>
       </div>
 
       {/* Stat pills */}
       {assessments.length > 0 && (
         <div className="flex items-center gap-3 mb-6 flex-wrap">
-          <StatPill label="total" value={assessments.length} />
+          <StatPill label={t("stats.total")} value={assessments.length} />
           {inProgress.length > 0 && (
-            <StatPill label="in progress" value={inProgress.length} highlight />
+            <StatPill label={t("stats.inProgress")} value={inProgress.length} highlight />
           )}
           {pending.length > 0 && (
-            <StatPill label="pending" value={pending.length} />
+            <StatPill label={t("stats.pending")} value={pending.length} />
           )}
-          <StatPill label="completed" value={completed.length} />
+          <StatPill label={t("stats.completed")} value={completed.length} />
         </div>
       )}
 
@@ -113,11 +108,10 @@ export function CandidateDashboardClient({
           <CardContent className="p-12 text-center">
             <FileText className="mx-auto h-16 w-16 text-stone-300" />
             <h2 className="mt-6 text-xl font-semibold text-stone-900">
-              No assessments yet
+              {t("emptyState.title")}
             </h2>
             <p className="mt-2 text-stone-500 max-w-md mx-auto">
-              You&apos;ll see your assessments here once a recruiter invites you
-              to a simulation. Check your email for invite links.
+              {t("emptyState.description")}
             </p>
           </CardContent>
         </Card>
@@ -126,27 +120,30 @@ export function CandidateDashboardClient({
           {/* In Progress Section */}
           {inProgress.length > 0 && (
             <AssessmentSection
-              title="In Progress"
+              title={t("sections.inProgress")}
               icon={<Play className="h-4 w-4 text-blue-600" />}
               assessments={inProgress}
+              t={t}
             />
           )}
 
           {/* Pending Section */}
           {pending.length > 0 && (
             <AssessmentSection
-              title="Ready to Start"
+              title={t("sections.readyToStart")}
               icon={<Hourglass className="h-4 w-4 text-amber-600" />}
               assessments={pending}
+              t={t}
             />
           )}
 
           {/* Completed Section */}
           {completed.length > 0 && (
             <AssessmentSection
-              title="Completed"
+              title={t("sections.completed")}
               icon={<CheckCircle2 className="h-4 w-4 text-green-600" />}
               assessments={completed}
+              t={t}
             />
           )}
         </div>
@@ -198,10 +195,12 @@ function AssessmentSection({
   title,
   icon,
   assessments,
+  t,
 }: {
   title: string;
   icon: React.ReactNode;
   assessments: CandidateAssessmentData[];
+  t: any;
 }) {
   return (
     <div>
@@ -214,7 +213,7 @@ function AssessmentSection({
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {assessments.map((assessment) => (
-          <AssessmentCard key={assessment.id} assessment={assessment} />
+          <AssessmentCard key={assessment.id} assessment={assessment} t={t} />
         ))}
       </div>
     </div>
@@ -225,8 +224,10 @@ function AssessmentSection({
 
 function AssessmentCard({
   assessment,
+  t,
 }: {
   assessment: CandidateAssessmentData;
+  t: any;
 }) {
   const isCompleted = assessment.status === "COMPLETED";
   const isPending = assessment.status === "WELCOME";
@@ -256,7 +257,7 @@ function AssessmentCard({
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
               </span>
               <span className="text-xs font-medium text-blue-600">
-                In progress
+                {t("status.inProgress")}
               </span>
             </div>
           )}
@@ -265,7 +266,7 @@ function AssessmentCard({
             <div className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-amber-400" />
               <span className="text-xs font-medium text-amber-600">
-                Ready to start
+                {t("status.readyToStart")}
               </span>
             </div>
           )}
@@ -279,7 +280,7 @@ function AssessmentCard({
               variant="outline"
               className="text-[10px] px-1.5 py-0 text-stone-500 border-stone-200 flex-shrink-0 ml-2"
             >
-              {LEVEL_LABELS[assessment.targetLevel] ?? assessment.targetLevel}
+              {t(`levels.${assessment.targetLevel}`)}
             </Badge>
           </div>
 
@@ -302,7 +303,7 @@ function AssessmentCard({
               ))}
               {assessment.techStack.length > 3 && (
                 <span className="text-[10px] text-stone-400">
-                  +{assessment.techStack.length - 3}
+                  {t("card.more", { count: assessment.techStack.length - 3 })}
                 </span>
               )}
             </div>
@@ -334,14 +335,14 @@ function AssessmentCard({
                   <>
                     <AlertCircle className="h-3.5 w-3.5 text-red-500" />
                     <span className="text-xs text-red-600">
-                      Assessment processing failed
+                      {t("card.processingFailed")}
                     </span>
                   </>
                 ) : (
                   <>
                     <Clock className="h-3.5 w-3.5 text-stone-400 animate-pulse" />
                     <span className="text-xs text-stone-500">
-                      Results being processed...
+                      {t("card.resultsBeingProcessed")}
                     </span>
                   </>
                 )}
@@ -358,10 +359,10 @@ function AssessmentCard({
               <Clock className="h-3 w-3 flex-shrink-0" />
               <span>
                 {isCompleted && assessment.completedAt
-                  ? `Completed ${formatRelativeTime(assessment.completedAt)}`
+                  ? t("card.completedTime", { time: formatRelativeTime(assessment.completedAt, t) })
                   : isWorking
-                    ? `Started ${formatRelativeTime(assessment.startedAt)}`
-                    : `Invited ${formatRelativeTime(assessment.startedAt)}`}
+                    ? t("card.startedTime", { time: formatRelativeTime(assessment.startedAt, t) })
+                    : t("card.invitedTime", { time: formatRelativeTime(assessment.startedAt, t) })}
               </span>
             </div>
 
@@ -370,7 +371,7 @@ function AssessmentCard({
                 variant="outline"
                 className="text-[10px] px-1.5 py-0 text-stone-400 border-stone-200"
               >
-                {formatDuration(assessment.startedAt, assessment.completedAt)}
+                {formatDuration(assessment.startedAt, assessment.completedAt, t)}
               </Badge>
             )}
 
@@ -380,7 +381,7 @@ function AssessmentCard({
                 size="sm"
                 className="h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               >
-                {isPending ? "Start" : "Continue"}
+                {isPending ? t("card.start") : t("card.continue")}
                 <ArrowRight className="h-3 w-3 ml-1" />
               </Button>
             )}

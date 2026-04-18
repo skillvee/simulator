@@ -331,6 +331,66 @@
       "networkError": "Network error. Please check your connection and try again."
     }
   },
+  "dashboard": {
+    "header": {
+      "welcomeBack": "Welcome back, {name}",
+      "myAssessments": "My Assessments",
+      "subtitle": "Track your simulations and review your results"
+    },
+    "stats": {
+      "total": "total",
+      "inProgress": "in progress",
+      "pending": "pending",
+      "completed": "completed"
+    },
+    "sections": {
+      "inProgress": "In Progress",
+      "readyToStart": "Ready to Start",
+      "completed": "Completed"
+    },
+    "status": {
+      "inProgress": "In progress",
+      "readyToStart": "Ready to start",
+      "completed": "Completed",
+      "scheduled": "Scheduled"
+    },
+    "emptyState": {
+      "title": "No assessments yet",
+      "description": "You'll see your assessments here once a recruiter invites you to a simulation. Check your email for invite links."
+    },
+    "card": {
+      "processingFailed": "Assessment processing failed",
+      "resultsBeingProcessed": "Results being processed...",
+      "completedTime": "Completed {time}",
+      "startedTime": "Started {time}",
+      "invitedTime": "Invited {time}",
+      "start": "Start",
+      "continue": "Continue",
+      "more": "+{count}"
+    },
+    "levels": {
+      "junior": "Junior",
+      "mid": "Mid",
+      "senior": "Senior",
+      "staff": "Staff"
+    },
+    "time": {
+      "justNow": "just now",
+      "hoursAgo": "{hours}h ago",
+      "yesterday": "yesterday",
+      "daysAgo": "{days}d ago",
+      "weeksAgo": "{weeks}w ago",
+      "minutes": "{minutes}m",
+      "hours": "{hours}h",
+      "hoursMinutes": "{hours}h {minutes}m"
+    },
+    "sidebar": {
+      "myAssessments": "My Assessments",
+      "profile": "Profile",
+      "candidate": "Candidate",
+      "signOut": "Sign out"
+    }
+  },
   "invite": {
     "hero": {
       "title": {

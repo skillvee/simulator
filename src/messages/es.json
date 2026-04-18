@@ -331,6 +331,66 @@
       "networkError": "Error de red. Por favor verifica tu conexión e inténtalo de nuevo."
     }
   },
+  "dashboard": {
+    "header": {
+      "welcomeBack": "Bienvenido de nuevo, {name}",
+      "myAssessments": "Mis Evaluaciones",
+      "subtitle": "Rastrea tus simulaciones y revisa tus resultados"
+    },
+    "stats": {
+      "total": "total",
+      "inProgress": "en progreso",
+      "pending": "pendiente",
+      "completed": "completado"
+    },
+    "sections": {
+      "inProgress": "En Progreso",
+      "readyToStart": "Listo para Comenzar",
+      "completed": "Completado"
+    },
+    "status": {
+      "inProgress": "En progreso",
+      "readyToStart": "Listo para comenzar",
+      "completed": "Completado",
+      "scheduled": "Programado"
+    },
+    "emptyState": {
+      "title": "Aún no hay evaluaciones",
+      "description": "Verás tus evaluaciones aquí cuando un reclutador te invite a una simulación. Revisa tu correo electrónico para ver los enlaces de invitación."
+    },
+    "card": {
+      "processingFailed": "Error al procesar la evaluación",
+      "resultsBeingProcessed": "Procesando resultados...",
+      "completedTime": "Completado {time}",
+      "startedTime": "Iniciado {time}",
+      "invitedTime": "Invitado {time}",
+      "start": "Comenzar",
+      "continue": "Continuar",
+      "more": "+{count}"
+    },
+    "levels": {
+      "junior": "Junior",
+      "mid": "Intermedio",
+      "senior": "Senior",
+      "staff": "Staff"
+    },
+    "time": {
+      "justNow": "justo ahora",
+      "hoursAgo": "hace {hours}h",
+      "yesterday": "ayer",
+      "daysAgo": "hace {days}d",
+      "weeksAgo": "hace {weeks}s",
+      "minutes": "{minutes}m",
+      "hours": "{hours}h",
+      "hoursMinutes": "{hours}h {minutes}m"
+    },
+    "sidebar": {
+      "myAssessments": "Mis Evaluaciones",
+      "profile": "Perfil",
+      "candidate": "Candidato",
+      "signOut": "Cerrar sesión"
+    }
+  },
   "invite": {
     "hero": {
       "title": {

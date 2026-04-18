@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,10 +32,11 @@ interface CandidateSidebarProps {
 export function CandidateSidebar({ user }: CandidateSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
+  const t = useTranslations("dashboard.sidebar");
 
   const navItems = [
-    { href: "/candidate/dashboard", label: "My Assessments", icon: ClipboardCheck, exact: true },
-    { href: "/candidate/dashboard/profile", label: "Profile", icon: User, exact: false },
+    { href: "/candidate/dashboard", label: t("myAssessments"), icon: ClipboardCheck, exact: true },
+    { href: "/candidate/dashboard/profile", label: t("profile"), icon: User, exact: false },
   ];
 
   const isActive = (href: string, exact?: boolean) => {
@@ -115,7 +117,7 @@ export function CandidateSidebar({ user }: CandidateSidebarProps) {
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-medium text-white truncate">
-                    {user.name || "Candidate"}
+                    {user.name || t("candidate")}
                   </p>
                   <p className="text-xs text-white/50 truncate">{user.email}</p>
                 </div>
@@ -137,7 +139,7 @@ export function CandidateSidebar({ user }: CandidateSidebarProps) {
             className="w-56 bg-slate-900 border-white/10 text-white mb-1"
           >
             <div className="px-3 py-2.5 border-b border-white/10">
-              <p className="font-medium text-sm text-white">{user.name || "Candidate"}</p>
+              <p className="font-medium text-sm text-white">{user.name || t("candidate")}</p>
               <p className="text-xs truncate mt-0.5 text-slate-400">{user.email}</p>
             </div>
             <div className="p-1">
@@ -147,7 +149,7 @@ export function CandidateSidebar({ user }: CandidateSidebarProps) {
                   className="w-full flex items-center gap-2 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
-                  Sign out
+                  {t("signOut")}
                 </button>
               </DropdownMenuItem>
             </div>
