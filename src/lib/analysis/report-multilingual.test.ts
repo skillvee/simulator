@@ -149,7 +149,7 @@ describe("Multilingual Report Generation", () => {
       });
 
       expect(promptWithSpanish).toContain("LANGUAGE INSTRUCTION FOR NARRATIVE FIELDS");
-      expect(promptWithSpanish).toContain("Respond in neutral Latin American Spanish");
+      expect(promptWithSpanish).toContain("Respond in natural Latin American Spanish");
       expect(promptWithSpanish).toContain("overall_summary, descriptions in top_strengths, and descriptions in growth_areas");
     });
 

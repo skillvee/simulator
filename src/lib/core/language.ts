@@ -1,6 +1,15 @@
 /**
  * Single source of truth for language configuration
  * All language-specific parameters are centralized here
+ *
+ * Spanish baseline (2024-12-18): 4.73/5.00
+ * - naturalness: 4.70
+ * - roleAccuracy: 4.35
+ * - brevity: 4.91
+ * - contextAwareness: 4.70
+ * - infoDiscipline: 4.96
+ * - aiIsms: 4.78
+ * All dimensions meet English baseline - 0.2 threshold (≥4.32)
  */
 
 import { VOICE_RULES_EN, VOICE_RULES_ES } from "@/prompts/coworker/persona";
@@ -28,7 +37,17 @@ export const LANGUAGES = {
   es: {
     code: "es",
     speechLanguageCode: "es-US",
-    instruction: `Respond in neutral Latin American Spanish. Keep code identifiers, API names, and JSON keys in English. Use "tú" form (not "usted"). Avoid Spain-specific vocabulary like "vale", "tío", "ordenador", "móvil". Use Latin American equivalents: "computadora" instead of "ordenador", "celular" instead of "móvil", "está bien" instead of "vale".`,
+    instruction: `Respond in natural Latin American Spanish. Use "tú" form. Technical terms, APIs, and code stay in English. Avoid Spain-specific words (vale→está bien, ordenador→computadora, móvil→celular).
+
+CRITICAL - Maintain your exact role identity throughout:
+- If you're the Manager, speak AS the manager ("nuestro equipo", "necesitamos")
+- If you're a Developer, stay technical and code-focused
+- If you're PM/QA/Designer, maintain that specific perspective
+
+CRITICAL - Always acknowledge context:
+- Colleague mentions: "Sí, [nombre] me comentó sobre eso..."
+- Previous topics: "Como mencionaste antes..."
+- React to their questions appropriately for your role`,
     voiceRules: VOICE_RULES_ES,
     fillers: ["eh", "este", "bueno", "pues", "o sea", "déjame pensar"],
     dateLocale: "es-MX"

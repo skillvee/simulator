@@ -106,11 +106,11 @@ describe("buildAgentPrompt with language support", () => {
       const prompt = buildAgentPrompt(context);
 
       // Verify key parts of the Spanish instruction are present
-      expect(prompt).toContain("neutral Latin American Spanish");
-      expect(prompt).toContain("code identifiers");
-      expect(prompt).toContain("API names");
-      expect(prompt).toContain("JSON keys in English");
-      expect(prompt).toContain('Use "tú" form (not "usted")');
+      expect(prompt).toContain("natural Latin American Spanish");
+      expect(prompt).toContain("Technical terms");
+      expect(prompt).toContain("APIs");
+      expect(prompt).toContain("code stay in English");
+      expect(prompt).toContain('"tú" form');
     });
 
     it("should handle initial_greeting phase with language", () => {
@@ -217,15 +217,15 @@ describe("buildAgentPrompt with language support", () => {
       expect(prompt).toContain("Voice Rules");
       expect(prompt).toContain("eh");
       expect(prompt).toContain("bueno");
-      expect(prompt).toContain("a ver");
-      expect(prompt).toContain("sabes");
-      expect(prompt).toContain("claro");
       expect(prompt).toContain("este");
+      expect(prompt).toContain("pues");
+      expect(prompt).toContain("mira");
+      expect(prompt).toContain("o sea");
 
       // Should include Spanish-specific voice rules
-      expect(prompt).toContain("Habla de manera natural y conversacional");
-      expect(prompt).toContain("Usa muletillas naturales del español latinoamericano");
-      expect(prompt).toContain("Usa 'tú' por defecto");
+      expect(prompt).toContain("Habla naturalmente");
+      expect(prompt).toContain("muletillas");
+      expect(prompt).toContain("'tú', nunca 'usted'");
     });
 
     it("should include English fillers for voice prompt with language 'en'", () => {
