@@ -1075,5 +1075,39 @@
         "content": "Si tienes alguna pregunta sobre estos Términos, por favor contáctanos en legal@skillvee.com"
       }
     }
+  },
+  "email": {
+    "report": {
+      "subject": "{candidateName}, ¡tu informe de evaluación de Skillvee está listo!",
+      "subjectNoName": "¡Tu informe de evaluación de Skillvee está listo!",
+      "greeting": "Hola {candidateName},",
+      "greetingNoName": "Hola,",
+      "intro": "¡Tu evaluación de desarrollador está completa! Aquí hay un resumen de tu desempeño.",
+      "overallScoreLabel": "{emoji} Desempeño {levelText}",
+      "topSkillsTitle": "Habilidades Principales",
+      "summaryTitle": "Resumen",
+      "keyStrengthsTitle": "Fortalezas Clave",
+      "recommendationsTitle": "Recomendaciones",
+      "viewFullReportButton": "Ver Informe Completo",
+      "fullReportDescription": "Tu informe completo incluye desgloses detallados de habilidades, puntuaciones basadas en evidencia y pasos accionables para mejorar. Haz clic en el botón de arriba para verlo todo.",
+      "footerText": "Este correo fue enviado por {link}. Lo recibiste porque completaste una evaluación de desarrollador.",
+      "skillCategories": {
+        "communication": "Comunicación",
+        "problem_decomposition": "Descomposición de Problemas",
+        "ai_leverage": "Aprovechamiento de IA",
+        "code_quality": "Calidad del Código",
+        "xfn_collaboration": "Colaboración Multifuncional",
+        "time_management": "Gestión del Tiempo",
+        "technical_decision_making": "Toma de Decisiones Técnicas",
+        "presentation": "Presentación"
+      },
+      "levels": {
+        "exceptional": "Excepcional",
+        "strong": "Fuerte",
+        "adequate": "Adecuado",
+        "developing": "En Desarrollo",
+        "needs_improvement": "Necesita Mejorar"
+      }
+    }
   }
 }

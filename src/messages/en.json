@@ -1075,5 +1075,39 @@
         "content": "If you have any questions about these Terms, please contact us at legal@skillvee.com"
       }
     }
+  },
+  "email": {
+    "report": {
+      "subject": "{candidateName}, your Skillvee assessment report is ready!",
+      "subjectNoName": "Your Skillvee assessment report is ready!",
+      "greeting": "Hi {candidateName},",
+      "greetingNoName": "Hi,",
+      "intro": "Your developer assessment is complete! Here's a summary of your performance.",
+      "overallScoreLabel": "{emoji} {levelText} Performance",
+      "topSkillsTitle": "Top Skills",
+      "summaryTitle": "Summary",
+      "keyStrengthsTitle": "Key Strengths",
+      "recommendationsTitle": "Recommendations",
+      "viewFullReportButton": "View Full Report",
+      "fullReportDescription": "Your full report includes detailed skill breakdowns, evidence-based scores, and actionable steps to improve. Click the button above to view it all.",
+      "footerText": "This email was sent by {link}. You received this because you completed a developer assessment.",
+      "skillCategories": {
+        "communication": "Communication",
+        "problem_decomposition": "Problem Decomposition",
+        "ai_leverage": "AI Leverage",
+        "code_quality": "Code Quality",
+        "xfn_collaboration": "Cross-Functional Collaboration",
+        "time_management": "Time Management",
+        "technical_decision_making": "Technical Decision-Making",
+        "presentation": "Presentation"
+      },
+      "levels": {
+        "exceptional": "Exceptional",
+        "strong": "Strong",
+        "adequate": "Adequate",
+        "developing": "Developing",
+        "needs_improvement": "Needs Improvement"
+      }
+    }
   }
 }

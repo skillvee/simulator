@@ -8,6 +8,7 @@
 import { Resend } from "resend";
 import { env } from "@/lib/core/env";
 import { createLogger } from "@/lib/core";
+import { getTranslations } from "next-intl/server";
 import type {
   AssessmentReport,
   ReportSkillCategory as SkillCategory,
@@ -60,6 +61,7 @@ export interface SendReportEmailParams {
   assessmentId: string;
   report: AssessmentReport;
   appBaseUrl: string;
+  language?: string;
 }
 
 export interface EmailResult {
@@ -73,34 +75,25 @@ export interface EmailResult {
 // ============================================================================
 
 /**
- * Maps skill category enum to display name
+ * Maps skill category enum to display name using translations
  */
-function formatSkillCategory(category: SkillCategory): string {
-  const categoryNames: Record<SkillCategory, string> = {
-    communication: "Communication",
-    problem_decomposition: "Problem Decomposition",
-    ai_leverage: "AI Leverage",
-    code_quality: "Code Quality",
-    xfn_collaboration: "Cross-Functional Collaboration",
-    time_management: "Time Management",
-    technical_decision_making: "Technical Decision-Making",
-    presentation: "Presentation",
-  };
-  return categoryNames[category];
+async function formatSkillCategory(category: SkillCategory, t: any): Promise<string> {
+  return t(`skillCategories.${category}`);
 }
 
 /**
- * Maps performance level to display text and emoji
+ * Maps performance level to display text and emoji using translations
  */
-function formatLevel(level: string): { text: string; emoji: string } {
-  const levelInfo: Record<string, { text: string; emoji: string }> = {
-    exceptional: { text: "Exceptional", emoji: "🌟" },
-    strong: { text: "Strong", emoji: "✓" },
-    adequate: { text: "Adequate", emoji: "○" },
-    developing: { text: "Developing", emoji: "→" },
-    needs_improvement: { text: "Needs Improvement", emoji: "!" },
+async function formatLevel(level: string, t: any): Promise<{ text: string; emoji: string }> {
+  const levelEmojis: Record<string, string> = {
+    exceptional: "🌟",
+    strong: "✓",
+    adequate: "○",
+    developing: "→",
+    needs_improvement: "!",
   };
-  return levelInfo[level] || { text: level, emoji: "○" };
+  const text = await t(`levels.${level}`);
+  return { text, emoji: levelEmojis[level] || "○" };
 }
 
 /**
@@ -119,10 +112,13 @@ function generateScoreBar(score: number): string {
 /**
  * Generates HTML email content for assessment report
  */
-export function generateReportEmailHtml(params: SendReportEmailParams): string {
-  const { candidateName, report, assessmentId, appBaseUrl } = params;
+export async function generateReportEmailHtml(params: SendReportEmailParams): Promise<string> {
+  const { candidateName, report, assessmentId, appBaseUrl, language = "en" } = params;
   const reportUrl = `${appBaseUrl}/assessments/${assessmentId}/results`;
-  const levelInfo = formatLevel(report.overallLevel);
+
+  // Get translations
+  const t = await getTranslations({ locale: language, namespace: "email.report" });
+  const levelInfo = await formatLevel(report.overallLevel, t);
 
   // Get top 3 skill scores sorted by score descending
   const topSkills = [...report.skillScores]
@@ -268,34 +264,36 @@ export function generateReportEmailHtml(params: SendReportEmailParams): string {
 
     <div class="content">
       <p class="greeting">
-        ${candidateName ? `Hi ${candidateName},` : "Hi,"}
+        ${candidateName ? t("greeting", { candidateName }) : t("greetingNoName")}
       </p>
 
       <p>
-        Your developer assessment is complete! Here's a summary of your performance.
+        ${t("intro")}
       </p>
 
       <div class="score-box">
         <p class="score-value">${report.overallScore.toFixed(1)}/5</p>
-        <p class="score-label">${levelInfo.emoji} ${levelInfo.text} Performance</p>
+        <p class="score-label">${t("overallScoreLabel", { emoji: levelInfo.emoji, levelText: levelInfo.text })}</p>
       </div>
 
       <div class="section">
-        <h2 class="section-title">Top Skills</h2>
-        ${topSkills
-          .map(
-            (skill) => `
+        <h2 class="section-title">${t("topSkillsTitle")}</h2>
+        ${(
+          await Promise.all(
+            topSkills.map(
+              async (skill) => `
           <div class="skill-row">
-            <span class="skill-name">${formatSkillCategory(skill.category)}</span>
+            <span class="skill-name">${await formatSkillCategory(skill.category, t)}</span>
             <span class="skill-score">${generateScoreBar(skill.score)} ${skill.score.toFixed(1)}</span>
           </div>
         `
+            )
           )
-          .join("")}
+        ).join("")}
       </div>
 
       <div class="section">
-        <h2 class="section-title">Summary</h2>
+        <h2 class="section-title">${t("summaryTitle")}</h2>
         <p class="summary-text">${report.narrative.overallSummary.slice(0, 500)}${report.narrative.overallSummary.length > 500 ? "..." : ""}</p>
       </div>
 
@@ -303,7 +301,7 @@ export function generateReportEmailHtml(params: SendReportEmailParams): string {
         report.narrative.strengths.length > 0
           ? `
       <div class="section">
-        <h2 class="section-title">Key Strengths</h2>
+        <h2 class="section-title">${t("keyStrengthsTitle")}</h2>
         ${report.narrative.strengths
           .slice(0, 3)
           .map((s) => `<div class="strength-item">${s}</div>`)
@@ -317,7 +315,7 @@ export function generateReportEmailHtml(params: SendReportEmailParams): string {
         topRecommendations.length > 0
           ? `
       <div class="section">
-        <h2 class="section-title">Recommendations</h2>
+        <h2 class="section-title">${t("recommendationsTitle")}</h2>
         ${topRecommendations
           .map(
             (r) => `
@@ -334,19 +332,19 @@ export function generateReportEmailHtml(params: SendReportEmailParams): string {
       }
 
       <div class="cta-container">
-        <a href="${reportUrl}" class="cta-button">View Full Report</a>
+        <a href="${reportUrl}" class="cta-button">${t("viewFullReportButton")}</a>
       </div>
 
       <p style="font-size: 13px; color: #666666; margin-top: 32px;">
-        Your full report includes detailed skill breakdowns, evidence-based scores,
-        and actionable steps to improve. Click the button above to view it all.
+        ${t("fullReportDescription")}
       </p>
     </div>
 
     <div class="footer">
       <p>
-        This email was sent by <a href="${appBaseUrl}">Skillvee</a>.<br>
-        You received this because you completed a developer assessment.
+        ${t.rich("footerText", {
+          link: () => `<a href="${appBaseUrl}">Skillvee</a>`
+        })}
       </p>
     </div>
   </div>
@@ -358,10 +356,13 @@ export function generateReportEmailHtml(params: SendReportEmailParams): string {
 /**
  * Generates plain text version of assessment report email
  */
-export function generateReportEmailText(params: SendReportEmailParams): string {
-  const { candidateName, report, assessmentId, appBaseUrl } = params;
+export async function generateReportEmailText(params: SendReportEmailParams): Promise<string> {
+  const { candidateName, report, assessmentId, appBaseUrl, language = "en" } = params;
   const reportUrl = `${appBaseUrl}/assessments/${assessmentId}/results`;
-  const levelInfo = formatLevel(report.overallLevel);
+
+  // Get translations
+  const t = await getTranslations({ locale: language, namespace: "email.report" });
+  const levelInfo = await formatLevel(report.overallLevel, t);
 
   // Get top 3 skill scores
   const topSkills = [...report.skillScores]
@@ -372,34 +373,34 @@ export function generateReportEmailText(params: SendReportEmailParams): string {
     "SKILLVEE - Assessment Report",
     "=".repeat(40),
     "",
-    candidateName ? `Hi ${candidateName},` : "Hi,",
+    candidateName ? t("greeting", { candidateName }) : t("greetingNoName"),
     "",
-    "Your developer assessment is complete!",
+    t("intro"),
     "",
     "OVERALL SCORE",
     "-".repeat(20),
-    `${report.overallScore.toFixed(1)}/5 - ${levelInfo.text} Performance`,
+    `${report.overallScore.toFixed(1)}/5 - ${t("overallScoreLabel", { emoji: levelInfo.emoji, levelText: levelInfo.text })}`,
     "",
-    "TOP SKILLS",
+    t("topSkillsTitle"),
     "-".repeat(20),
   ];
 
-  topSkills.forEach((skill) => {
-    lines.push(
-      `• ${formatSkillCategory(skill.category)}: ${skill.score.toFixed(1)}/5`
-    );
-  });
+  // Add top skills with translations
+  for (const skill of topSkills) {
+    const categoryName = await formatSkillCategory(skill.category, t);
+    lines.push(`• ${categoryName}: ${skill.score.toFixed(1)}/5`);
+  }
 
   lines.push(
     "",
-    "SUMMARY",
+    t("summaryTitle"),
     "-".repeat(20),
     report.narrative.overallSummary,
     ""
   );
 
   if (report.narrative.strengths.length > 0) {
-    lines.push("KEY STRENGTHS", "-".repeat(20));
+    lines.push(t("keyStrengthsTitle"), "-".repeat(20));
     report.narrative.strengths.slice(0, 3).forEach((s) => {
       lines.push(`✓ ${s}`);
     });
@@ -407,15 +408,14 @@ export function generateReportEmailText(params: SendReportEmailParams): string {
   }
 
   lines.push(
-    "VIEW FULL REPORT",
+    t("viewFullReportButton"),
     "-".repeat(20),
     `Visit: ${reportUrl}`,
     "",
-    "Your full report includes detailed skill breakdowns, evidence-based scores,",
-    "and actionable steps to improve.",
+    t("fullReportDescription"),
     "",
     "-".repeat(40),
-    "Skillvee - Developer Assessment Platform",
+    `Skillvee - Developer Assessment Platform`,
     appBaseUrl
   );
 
@@ -481,7 +481,7 @@ export async function sendEmail(params: SendEmailParams): Promise<EmailResult> {
 export async function sendReportEmail(
   params: SendReportEmailParams
 ): Promise<EmailResult> {
-  const { candidateName, to } = params;
+  const { candidateName, to, language = "en" } = params;
 
   // Validate email
   if (!to || !to.includes("@")) {
@@ -491,12 +491,15 @@ export async function sendReportEmail(
     };
   }
 
-  const html = generateReportEmailHtml(params);
-  const text = generateReportEmailText(params);
+  // Get translations for subject
+  const t = await getTranslations({ locale: language, namespace: "email.report" });
+
+  const html = await generateReportEmailHtml(params);
+  const text = await generateReportEmailText(params);
 
   const subject = candidateName
-    ? `${candidateName}, your Skillvee assessment report is ready!`
-    : "Your Skillvee assessment report is ready!";
+    ? t("subject", { candidateName })
+    : t("subjectNoName");
 
   return sendEmail({
     to,

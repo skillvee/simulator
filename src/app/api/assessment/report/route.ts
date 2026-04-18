@@ -86,6 +86,7 @@ export async function POST(request: Request) {
         assessmentId,
         report: report as AssessmentReport,
         appBaseUrl: `${protocol}://${host}`,
+        language: assessment.scenario.language || "en",
       })
         .then((r) => r.success
           ? logger.info("Report email sent", { email: assessment.user?.email })
