@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ export function WelcomePageClient({
   scenario,
 }: WelcomePageClientProps) {
   const router = useRouter();
+  const t = useTranslations("welcome");
   const [step, setStep] = useState(1);
   const [isLaunching, setIsLaunching] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -62,13 +64,13 @@ export function WelcomePageClient({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        setStartError(data?.error || "Failed to start simulation");
+        setStartError(data?.error || t("errors.startFailed"));
         setIsLaunching(false);
         return;
       }
       router.push(`/assessments/${assessmentId}/work`);
     } catch {
-      setStartError("Network error. Please check your connection and try again.");
+      setStartError(t("errors.networkError"));
       setIsLaunching(false);
     }
   };
@@ -109,13 +111,11 @@ export function WelcomePageClient({
                 className="space-y-8"
               >
                 <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
-                  NOT A<br />
-                  TEST.
+                  {t("step1.leftPanel.title")}<br />
+                  {t("step1.leftPanel.titleLine2")}
                 </h2>
                 <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl leading-relaxed">
-                  This is a simulation of real work. You&apos;ll collaborate
-                  with AI teammates, use your favorite tools, and solve actual
-                  problems.
+                  {t("step1.leftPanel.description")}
                 </p>
               </motion.div>
             )}
@@ -129,14 +129,12 @@ export function WelcomePageClient({
                 className="space-y-8"
               >
                 <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
-                  YOUR
+                  {t("step2.leftPanel.title")}
                   <br />
-                  SETUP.
+                  {t("step2.leftPanel.titleLine2")}
                 </h2>
                 <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl leading-relaxed">
-                  Use your own IDE, browser, terminal — everything on your
-                  computer. We record your screen and assess how you actually
-                  work.
+                  {t("step2.leftPanel.description")}
                 </p>
               </motion.div>
             )}
@@ -150,15 +148,14 @@ export function WelcomePageClient({
                 className="space-y-8"
               >
                 <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
-                  TAKE
+                  {t("step3.leftPanel.title")}
                   <br />
-                  YOUR
+                  {t("step3.leftPanel.titleLine2")}
                   <br />
-                  TIME.
+                  {t("step3.leftPanel.titleLine3")}
                 </h2>
                 <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl leading-relaxed">
-                  Work at your natural pace. There&apos;s no bonus for
-                  finishing fast — just do your best work.
+                  {t("step3.leftPanel.description")}
                 </p>
               </motion.div>
             )}
@@ -172,12 +169,12 @@ export function WelcomePageClient({
                 className="space-y-8"
               >
                 <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
-                  READY.
+                  {t("step4.leftPanel.title")}
                   <br />
-                  GO.
+                  {t("step4.leftPanel.titleLine2")}
                 </h2>
                 <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl">
-                  Your environment is ready. Let&apos;s begin.
+                  {t("step4.leftPanel.description")}
                 </p>
               </motion.div>
             )}
@@ -187,15 +184,15 @@ export function WelcomePageClient({
         <footer className="relative z-10 flex items-center gap-8">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <Bot className="w-4 h-4 text-primary" />
-            AI Teammates
+            {t("footer.aiTeammates")}
           </div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <AppWindow className="w-4 h-4 text-primary" />
-            Your Own Tools
+            {t("footer.yourOwnTools")}
           </div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <Monitor className="w-4 h-4 text-primary" />
-            Screen Recorded
+            {t("footer.screenRecorded")}
           </div>
         </footer>
       </div>
@@ -227,10 +224,10 @@ export function WelcomePageClient({
               >
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-                    Step 01
+                    {t("step1.rightPanel.stepLabel")}
                   </h4>
                   <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                    The Experience
+                    {t("step1.rightPanel.title")}
                   </h3>
                 </div>
                 <div className="space-y-4">
@@ -239,9 +236,9 @@ export function WelcomePageClient({
                       <Bot className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      Work with{" "}
-                      <strong>AI-powered teammates</strong> via chat.
-                      They&apos;ll respond just like real colleagues.
+                      {t("step1.rightPanel.points.teammates.description")}
+                      <strong>{t("step1.rightPanel.points.teammates.strong")}</strong>
+                      {t("step1.rightPanel.points.teammates.descriptionEnd")}
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -249,11 +246,9 @@ export function WelcomePageClient({
                       <Monitor className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      Your{" "}
-                      <strong>
-                        entire screen will be recorded
-                      </strong>
-                      . We assess how you work, not just the end result.
+                      {t("step1.rightPanel.points.recording.description")}
+                      <strong>{t("step1.rightPanel.points.recording.strong")}</strong>
+                      {t("step1.rightPanel.points.recording.descriptionEnd")}
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -261,23 +256,23 @@ export function WelcomePageClient({
                       <Sparkles className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>Use any AI tools</strong> you want. Copilot,
-                      ChatGPT, Claude — whatever helps you work best.
+                      {t("step1.rightPanel.points.aiTools.description")}
+                      <strong>{t("step1.rightPanel.points.aiTools.strong")}</strong>
+                      {t("step1.rightPanel.points.aiTools.descriptionEnd")}
                     </p>
                   </div>
                 </div>
                 <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
                   <p className="text-sm text-slate-600">
-                    <strong className="text-slate-700">Tip:</strong> Don&apos;t
-                    hesitate to reach out to your teammates for clarification.
-                    That&apos;s exactly what we want to see!
+                    <strong className="text-slate-700">{t("step1.rightPanel.tip.label")}</strong>
+                    {t("step1.rightPanel.tip.text")}
                   </p>
                 </div>
                 <Button
                   onClick={() => setStep(2)}
                   className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
                 >
-                  Continue
+                  {t("step1.rightPanel.continueButton")}
                   <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </motion.div>
@@ -293,10 +288,10 @@ export function WelcomePageClient({
               >
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-                    Step 02
+                    {t("step2.rightPanel.stepLabel")}
                   </h4>
                   <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                    Your Workspace, Your Rules
+                    {t("step2.rightPanel.title")}
                   </h3>
                 </div>
                 <div className="space-y-4">
@@ -305,8 +300,9 @@ export function WelcomePageClient({
                       <AppWindow className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>Work on your own computer.</strong> Use your IDE,
-                      terminal, browser, repos — any tool you normally use.
+                      {t("step2.rightPanel.points.ownComputer.description")}
+                      <strong>{t("step2.rightPanel.points.ownComputer.strong")}</strong>
+                      {t("step2.rightPanel.points.ownComputer.descriptionEnd")}
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -314,11 +310,9 @@ export function WelcomePageClient({
                       <ExternalLink className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>
-                        You&apos;re expected to work outside SkillVee.
-                      </strong>{" "}
-                      Write code in VS Code, look things up, use whatever
-                      workflow you prefer.
+                      {t("step2.rightPanel.points.workOutside.description")}
+                      <strong>{t("step2.rightPanel.points.workOutside.strong")}</strong>
+                      {t("step2.rightPanel.points.workOutside.descriptionEnd")}
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -326,8 +320,9 @@ export function WelcomePageClient({
                       <Monitor className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>We record your screen the whole time</strong> —
-                      everything you do is part of your assessment.
+                      {t("step2.rightPanel.points.screenRecord.description")}
+                      <strong>{t("step2.rightPanel.points.screenRecord.strong")}</strong>
+                      {t("step2.rightPanel.points.screenRecord.descriptionEnd")}
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -335,8 +330,9 @@ export function WelcomePageClient({
                       <MessageSquare className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>Come back to SkillVee to chat</strong> with your
-                      manager and teammates whenever you need to.
+                      {t("step2.rightPanel.points.comeBack.description")}
+                      <strong>{t("step2.rightPanel.points.comeBack.strong")}</strong>
+                      {t("step2.rightPanel.points.comeBack.descriptionEnd")}
                     </p>
                   </div>
                 </div>
@@ -345,7 +341,7 @@ export function WelcomePageClient({
                   onClick={() => setStep(3)}
                   className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
                 >
-                  Continue
+                  {t("step2.rightPanel.continueButton")}
                   <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
 
@@ -354,7 +350,7 @@ export function WelcomePageClient({
                   className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Back
+                  {t("step2.rightPanel.backButton")}
                 </button>
               </motion.div>
             )}
@@ -369,10 +365,10 @@ export function WelcomePageClient({
               >
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-                    Step 03
+                    {t("step3.rightPanel.stepLabel")}
                   </h4>
                   <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                    Before You Begin
+                    {t("step3.rightPanel.title")}
                   </h3>
                 </div>
                 <div className="space-y-4">
@@ -385,11 +381,11 @@ export function WelcomePageClient({
                         const timing = DEPTH_TIMING[scenario.simulationDepth] || DEPTH_TIMING.medium;
                         return (
                           <>
-                            This simulation is designed to take about{" "}
-                            <strong>{timing.target} minutes</strong>.
-                            {" "}You&apos;ll have up to{" "}
-                            <strong>{timing.max} minutes</strong> before the session
-                            automatically closes.
+                            {t("step3.rightPanel.points.timing.descriptionStart")}
+                            <strong>{t("step3.rightPanel.points.timing.targetTime", { target: timing.target })}</strong>
+                            {t("step3.rightPanel.points.timing.descriptionMid")}
+                            <strong>{t("step3.rightPanel.points.timing.maxTime", { max: timing.max })}</strong>
+                            {t("step3.rightPanel.points.timing.descriptionEnd")}
                           </>
                         );
                       })()}
@@ -400,8 +396,9 @@ export function WelcomePageClient({
                       <Coffee className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>Find a quiet spot</strong> with no distractions.
-                      Treat this like a focused block of work.
+                      {t("step3.rightPanel.points.quietSpot.description")}
+                      <strong>{t("step3.rightPanel.points.quietSpot.strong")}</strong>
+                      {t("step3.rightPanel.points.quietSpot.descriptionEnd")}
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -409,8 +406,9 @@ export function WelcomePageClient({
                       <Wifi className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>Ensure stable internet.</strong> If you lose
-                      connection, you can rejoin and continue where you left off.
+                      {t("step3.rightPanel.points.internet.description")}
+                      <strong>{t("step3.rightPanel.points.internet.strong")}</strong>
+                      {t("step3.rightPanel.points.internet.descriptionEnd")}
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
@@ -418,17 +416,17 @@ export function WelcomePageClient({
                       <PlayCircle className="w-4 h-4 text-slate-500" />
                     </div>
                     <p className="text-slate-600 text-sm leading-relaxed">
-                      <strong>This is a continuous session.</strong> Once you
-                      start, work through to completion in one sitting.
+                      {t("step3.rightPanel.points.continuous.description")}
+                      <strong>{t("step3.rightPanel.points.continuous.strong")}</strong>
+                      {t("step3.rightPanel.points.continuous.descriptionEnd")}
                     </p>
                   </div>
                 </div>
 
                 <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
                   <p className="text-sm text-slate-600">
-                    <strong className="text-slate-700">Remember:</strong> Work at
-                    your natural pace. There&apos;s no bonus for rushing — we
-                    want to see how you normally work.
+                    <strong className="text-slate-700">{t("step3.rightPanel.reminder.label")}</strong>
+                    {t("step3.rightPanel.reminder.text")}
                   </p>
                 </div>
 
@@ -436,7 +434,7 @@ export function WelcomePageClient({
                   onClick={() => setStep(4)}
                   className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
                 >
-                  Continue
+                  {t("step3.rightPanel.continueButton")}
                   <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
 
@@ -445,7 +443,7 @@ export function WelcomePageClient({
                   className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Back
+                  {t("step3.rightPanel.backButton")}
                 </button>
               </motion.div>
             )}
@@ -459,24 +457,22 @@ export function WelcomePageClient({
               >
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-                    Step 04
+                    {t("step4.rightPanel.stepLabel")}
                   </h4>
                   <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                    Launch Simulation
+                    {t("step4.rightPanel.title")}
                   </h3>
                 </div>
                 <p className="text-slate-500 leading-relaxed font-medium">
-                  You&apos;ll receive a task from your manager. The context is{" "}
+                  {t("step4.rightPanel.description.start")}
                   <strong className="text-slate-900">
-                    intentionally incomplete
-                  </strong>{" "}
-                  — part of the assessment is seeing how you ask questions and
-                  gather requirements.
+                    {t("step4.rightPanel.description.strong")}
+                  </strong>
+                  {t("step4.rightPanel.description.end")}
                 </p>
 
                 <p className="text-xs text-center text-slate-500">
-                  By continuing, you agree to screen and webcam recording
-                  during this assessment.
+                  {t("step4.rightPanel.consent")}
                 </p>
 
                 {startError && (
@@ -493,10 +489,10 @@ export function WelcomePageClient({
                   {isLaunching ? (
                     <>
                       <Loader2 className="mr-2 w-5 h-5 animate-spin" />
-                      Launching...
+                      {t("step4.rightPanel.launchingButton")}
                     </>
                   ) : (
-                    "Start Simulation"
+                    t("step4.rightPanel.startButton")
                   )}
                 </Button>
 
@@ -505,7 +501,7 @@ export function WelcomePageClient({
                   className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Back
+                  {t("step4.rightPanel.backButton")}
                 </button>
               </motion.div>
             )}

@@ -1,1 +1,143 @@
-{}
+{
+  "welcome": {
+    "footer": {
+      "aiTeammates": "AI Teammates",
+      "yourOwnTools": "Your Own Tools",
+      "screenRecorded": "Screen Recorded"
+    },
+    "step1": {
+      "leftPanel": {
+        "title": "NOT A",
+        "titleLine2": "TEST.",
+        "description": "This is a simulation of real work. You'll collaborate with AI teammates, use your favorite tools, and solve actual problems."
+      },
+      "rightPanel": {
+        "stepLabel": "Step 01",
+        "title": "The Experience",
+        "points": {
+          "teammates": {
+            "description": "Work with ",
+            "strong": "AI-powered teammates",
+            "descriptionEnd": " via chat. They'll respond just like real colleagues."
+          },
+          "recording": {
+            "description": "Your ",
+            "strong": "entire screen will be recorded",
+            "descriptionEnd": ". We assess how you work, not just the end result."
+          },
+          "aiTools": {
+            "description": "",
+            "strong": "Use any AI tools",
+            "descriptionEnd": " you want. Copilot, ChatGPT, Claude — whatever helps you work best."
+          }
+        },
+        "tip": {
+          "label": "Tip:",
+          "text": " Don't hesitate to reach out to your teammates for clarification. That's exactly what we want to see!"
+        },
+        "continueButton": "Continue"
+      }
+    },
+    "step2": {
+      "leftPanel": {
+        "title": "YOUR",
+        "titleLine2": "SETUP.",
+        "description": "Use your own IDE, browser, terminal — everything on your computer. We record your screen and assess how you actually work."
+      },
+      "rightPanel": {
+        "stepLabel": "Step 02",
+        "title": "Your Workspace, Your Rules",
+        "points": {
+          "ownComputer": {
+            "description": "",
+            "strong": "Work on your own computer.",
+            "descriptionEnd": " Use your IDE, terminal, browser, repos — any tool you normally use."
+          },
+          "workOutside": {
+            "description": "",
+            "strong": "You're expected to work outside SkillVee.",
+            "descriptionEnd": " Write code in VS Code, look things up, use whatever workflow you prefer."
+          },
+          "screenRecord": {
+            "description": "",
+            "strong": "We record your screen the whole time",
+            "descriptionEnd": " — everything you do is part of your assessment."
+          },
+          "comeBack": {
+            "description": "",
+            "strong": "Come back to SkillVee to chat",
+            "descriptionEnd": " with your manager and teammates whenever you need to."
+          }
+        },
+        "continueButton": "Continue",
+        "backButton": "Back"
+      }
+    },
+    "step3": {
+      "leftPanel": {
+        "title": "TAKE",
+        "titleLine2": "YOUR",
+        "titleLine3": "TIME.",
+        "description": "Work at your natural pace. There's no bonus for finishing fast — just do your best work."
+      },
+      "rightPanel": {
+        "stepLabel": "Step 03",
+        "title": "Before You Begin",
+        "points": {
+          "timing": {
+            "descriptionStart": "This simulation is designed to take about ",
+            "targetTime": "{target} minutes",
+            "descriptionMid": ". You'll have up to ",
+            "maxTime": "{max} minutes",
+            "descriptionEnd": " before the session automatically closes."
+          },
+          "quietSpot": {
+            "description": "",
+            "strong": "Find a quiet spot",
+            "descriptionEnd": " with no distractions. Treat this like a focused block of work."
+          },
+          "internet": {
+            "description": "",
+            "strong": "Ensure stable internet.",
+            "descriptionEnd": " If you lose connection, you can rejoin and continue where you left off."
+          },
+          "continuous": {
+            "description": "",
+            "strong": "This is a continuous session.",
+            "descriptionEnd": " Once you start, work through to completion in one sitting."
+          }
+        },
+        "reminder": {
+          "label": "Remember:",
+          "text": " Work at your natural pace. There's no bonus for rushing — we want to see how you normally work."
+        },
+        "continueButton": "Continue",
+        "backButton": "Back"
+      }
+    },
+    "step4": {
+      "leftPanel": {
+        "title": "READY.",
+        "titleLine2": "GO.",
+        "description": "Your environment is ready. Let's begin."
+      },
+      "rightPanel": {
+        "stepLabel": "Step 04",
+        "title": "Launch Simulation",
+        "description": {
+          "start": "You'll receive a task from your manager. The context is ",
+          "strong": "intentionally incomplete",
+          "end": " — part of the assessment is seeing how you ask questions and gather requirements."
+        },
+        "consent": "By continuing, you agree to screen and webcam recording during this assessment.",
+        "startButton": "Start Simulation",
+        "launchingButton": "Launching...",
+        "backButton": "Back"
+      }
+    },
+    "errors": {
+      "startFailed": "Failed to start simulation",
+      "networkError": "Network error. Please check your connection and try again."
+    }
+  }
+}

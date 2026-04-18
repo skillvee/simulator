@@ -1,1 +1,143 @@
-{}
+{
+  "welcome": {
+    "footer": {
+      "aiTeammates": "Compañeros IA",
+      "yourOwnTools": "Tus Herramientas",
+      "screenRecorded": "Pantalla Grabada"
+    },
+    "step1": {
+      "leftPanel": {
+        "title": "NO ES",
+        "titleLine2": "UN TEST.",
+        "description": "Esto es una simulación de trabajo real. Colaborarás con compañeros IA, usarás tus herramientas favoritas y resolverás problemas reales."
+      },
+      "rightPanel": {
+        "stepLabel": "Paso 01",
+        "title": "La Experiencia",
+        "points": {
+          "teammates": {
+            "description": "Trabaja con ",
+            "strong": "compañeros impulsados por IA",
+            "descriptionEnd": " mediante chat. Responderán como colegas reales."
+          },
+          "recording": {
+            "description": "Tu ",
+            "strong": "pantalla completa será grabada",
+            "descriptionEnd": ". Evaluamos cómo trabajas, no solo el resultado final."
+          },
+          "aiTools": {
+            "description": "",
+            "strong": "Usa cualquier herramienta IA",
+            "descriptionEnd": " que quieras. Copilot, ChatGPT, Claude — lo que te ayude a trabajar mejor."
+          }
+        },
+        "tip": {
+          "label": "Consejo:",
+          "text": " No dudes en contactar a tus compañeros para aclaraciones. ¡Eso es exactamente lo que queremos ver!"
+        },
+        "continueButton": "Continuar"
+      }
+    },
+    "step2": {
+      "leftPanel": {
+        "title": "TU",
+        "titleLine2": "ENTORNO.",
+        "description": "Usa tu propio IDE, navegador, terminal — todo en tu computadora. Grabamos tu pantalla y evaluamos cómo trabajas realmente."
+      },
+      "rightPanel": {
+        "stepLabel": "Paso 02",
+        "title": "Tu Espacio, Tus Reglas",
+        "points": {
+          "ownComputer": {
+            "description": "",
+            "strong": "Trabaja en tu propia computadora.",
+            "descriptionEnd": " Usa tu IDE, terminal, navegador, repositorios — cualquier herramienta que uses normalmente."
+          },
+          "workOutside": {
+            "description": "",
+            "strong": "Se espera que trabajes fuera de SkillVee.",
+            "descriptionEnd": " Escribe código en VS Code, busca información, usa el flujo de trabajo que prefieras."
+          },
+          "screenRecord": {
+            "description": "",
+            "strong": "Grabamos tu pantalla todo el tiempo",
+            "descriptionEnd": " — todo lo que hagas es parte de tu evaluación."
+          },
+          "comeBack": {
+            "description": "",
+            "strong": "Regresa a SkillVee para chatear",
+            "descriptionEnd": " con tu gerente y compañeros cuando lo necesites."
+          }
+        },
+        "continueButton": "Continuar",
+        "backButton": "Atrás"
+      }
+    },
+    "step3": {
+      "leftPanel": {
+        "title": "TÓMATE",
+        "titleLine2": "TU",
+        "titleLine3": "TIEMPO.",
+        "description": "Trabaja a tu ritmo natural. No hay bonificación por terminar rápido — solo haz tu mejor trabajo."
+      },
+      "rightPanel": {
+        "stepLabel": "Paso 03",
+        "title": "Antes de Comenzar",
+        "points": {
+          "timing": {
+            "descriptionStart": "Esta simulación está diseñada para tomar unos ",
+            "targetTime": "{target} minutos",
+            "descriptionMid": ". Tendrás hasta ",
+            "maxTime": "{max} minutos",
+            "descriptionEnd": " antes de que la sesión se cierre automáticamente."
+          },
+          "quietSpot": {
+            "description": "",
+            "strong": "Encuentra un lugar tranquilo",
+            "descriptionEnd": " sin distracciones. Trátalo como un bloque de trabajo concentrado."
+          },
+          "internet": {
+            "description": "",
+            "strong": "Asegúrate de tener internet estable.",
+            "descriptionEnd": " Si pierdes conexión, puedes volver a unirte y continuar donde lo dejaste."
+          },
+          "continuous": {
+            "description": "",
+            "strong": "Esta es una sesión continua.",
+            "descriptionEnd": " Una vez que comiences, trabaja hasta completarlo de una sola vez."
+          }
+        },
+        "reminder": {
+          "label": "Recuerda:",
+          "text": " Trabaja a tu ritmo natural. No hay bonificación por apurarse — queremos ver cómo trabajas normalmente."
+        },
+        "continueButton": "Continuar",
+        "backButton": "Atrás"
+      }
+    },
+    "step4": {
+      "leftPanel": {
+        "title": "LISTO.",
+        "titleLine2": "VAMOS.",
+        "description": "Tu entorno está listo. Comencemos."
+      },
+      "rightPanel": {
+        "stepLabel": "Paso 04",
+        "title": "Lanzar Simulación",
+        "description": {
+          "start": "Recibirás una tarea de tu gerente. El contexto es ",
+          "strong": "intencionalmente incompleto",
+          "end": " — parte de la evaluación es ver cómo haces preguntas y recopilas requisitos."
+        },
+        "consent": "Al continuar, aceptas la grabación de pantalla y cámara web durante esta evaluación.",
+        "startButton": "Iniciar Simulación",
+        "launchingButton": "Lanzando...",
+        "backButton": "Atrás"
+      }
+    },
+    "errors": {
+      "startFailed": "Error al iniciar la simulación",
+      "networkError": "Error de red. Por favor verifica tu conexión e inténtalo de nuevo."
+    }
+  }
+}
