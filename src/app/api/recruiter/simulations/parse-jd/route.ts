@@ -8,6 +8,7 @@ import {
   JD_PARSER_PROMPT_VERSION,
 } from "@/prompts/recruiter/jd-parser";
 import { logGenerationStep } from "@/lib/scenarios/generation-logger";
+import { isSupportedLanguage } from "@/lib/core/language";
 import type { ParseJDResponse } from "@/types";
 
 const logger = createLogger("api:recruiter:parse-jd");
@@ -115,6 +116,7 @@ export async function POST(request: Request) {
       "keyResponsibilities",
       "domainContext",
       "roleArchetype",
+      "language",
     ];
 
     const missingFields = expectedFields.filter(
@@ -142,6 +144,24 @@ export async function POST(request: Request) {
         "Could not extract job details from this text. Make sure to paste the full job description including the title and responsibilities.",
         422
       );
+    }
+
+    // Validate and handle language detection
+    if (parsedData.language?.value) {
+      const detectedLanguage = parsedData.language.value;
+      if (!isSupportedLanguage(detectedLanguage)) {
+        // Log the raw detector output for observability
+        logger.warn("Unsupported language detected, falling back to English", {
+          detectedLanguage,
+          jobDescriptionPreview: jobDescription.slice(0, 200)
+        });
+        // Fall back to English
+        parsedData.language = { value: "en", confidence: "low" };
+      }
+    } else {
+      // If language detection failed entirely, default to English
+      logger.warn("Language detection returned null, defaulting to English");
+      parsedData.language = { value: "en", confidence: "low" };
     }
 
     // Log successful completion

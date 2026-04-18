@@ -77,6 +77,7 @@ type PreviewData = {
   selectedTask: TaskChoice | null;
   coworkers: CoworkerBuilderData[];
   resources: ScenarioResource[];
+  language: "en" | "es";
 };
 
 // Progress messages shown during simulation generation
@@ -130,7 +131,11 @@ const ROLE_SUGGESTIONS = [
   "Data Engineer",
 ];
 
-export function RecruiterScenarioBuilderClient() {
+interface RecruiterScenarioBuilderClientProps {
+  uiLocale: "en" | "es";
+}
+
+export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBuilderClientProps) {
   const router = useRouter();
   const t = useTranslations("recruiter.simulations.new");
   const [step, setStep] = useState<Step>("entry");
@@ -445,6 +450,11 @@ export function RecruiterScenarioBuilderClient() {
           value: null,
           confidence: "low",
         },
+        language: {
+          // Default to recruiter's current uiLocale when not parsing JD
+          value: uiLocale,
+          confidence: "high",
+        },
       };
 
       setParsedJDData(guidedData);
@@ -509,6 +519,7 @@ export function RecruiterScenarioBuilderClient() {
           archetypeId: selectedArchetypeId,
           simulationDepth,
           resources: previewData.resources.length > 0 ? previewData.resources : undefined,
+          language: previewData.language,
           // repoUrl is intentionally omitted - it will be set by repo provisioning
         }),
       });
@@ -618,6 +629,7 @@ export function RecruiterScenarioBuilderClient() {
       const seniority = parsedData.seniorityLevel.value || "mid";
       const responsibilities = parsedData.keyResponsibilities.value || [];
       const domain = parsedData.domainContext.value || companyDesc;
+      const language = parsedData.language?.value || "en";
 
       // Generate tasks
       const taskResponse = await fetch("/api/recruiter/simulations/generate-task", {
@@ -720,6 +732,7 @@ export function RecruiterScenarioBuilderClient() {
         selectedTask: null, // User must select
         coworkers,
         resources,
+        language,
       });
 
       // Transition to preview
@@ -1315,6 +1328,51 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     <p className="truncate text-xs text-muted-foreground">{previewData.companyDescription}</p>
                   </div>
                   <Pencil className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </button>
+              )}
+
+              {/* Language */}
+              {editingField === "language" ? (
+                <div className="rounded-lg border bg-background p-3 space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    {t("language")}
+                  </Label>
+                  <Select
+                    value={previewData.language}
+                    onValueChange={(value: "en" | "es") =>
+                      setPreviewData({ ...previewData, language: value })
+                    }
+                  >
+                    <SelectTrigger className="w-full text-sm h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Español</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
+                    Done
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="group flex w-full items-start gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:border-primary/40"
+                  onClick={() => setEditingField("language")}
+                >
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <Check className="h-3 w-3" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">
+                      {t("language")}
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {previewData.language === "es" ? t("spanish") : t("english")}
+                    </p>
+                  </div>
+                  <ChevronDown className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                 </button>
               )}
 
