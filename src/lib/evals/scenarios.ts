@@ -1051,4 +1051,213 @@ Tú: ¡Claro, hagámoslo!`,
     userMessage: "[llamada conectada]",
     criteria: "Debe hablar primero con un saludo natural ('¡hola!', '¿qué tal?'). NO debe decir 'no hay problema' o responder como si el usuario dijera algo. NO debe volcar información de la tarea. Debe sonar como contestar una llamada telefónica.",
   },
+
+  // ── Spanish Voice Multi-Turn Scenarios (8) ──────────────────────────────────
+
+  {
+    id: "voice-kickoff-nervous-es",
+    name: "Voz: Inicio del Gerente — Candidato Nervioso",
+    category: "voice",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    multiTurn: {
+      candidatePersona: "Eres un nuevo empleado nervioso en tu primer día. Eres educado pero abrumado. Haces preguntas dudosas y a veces dices 'perdón' innecesariamente. Necesitas seguridad antes de entrar en detalles del trabajo.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "Primera llamada de inicio con el gerente de ingeniería. El candidato no tiene contexto sobre la tarea.",
+    },
+    criteria: "El primer mensaje debe ser un saludo natural (NO 'no hay problema' o responder a algo no dicho). Debe ser empático con el candidato nervioso. Debe explicar la tarea gradualmente, no volcar todo. Debe verificar: '¿tiene sentido?'. La conversación debe fluir naturalmente.",
+  },
+
+  {
+    id: "voice-kickoff-confident-es",
+    name: "Voz: Inicio del Gerente — Candidato Confiado",
+    category: "voice",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    multiTurn: {
+      candidatePersona: "Eres un científico de datos experimentado que tiene confianza pero es respetuoso. Haces preguntas específicas y puntuales sobre métricas y metodología. Te opones si algo no tiene sentido. Eres eficiente con las palabras.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "Primera llamada de inicio. El candidato es experimentado y hará preguntas agudas.",
+    },
+    criteria: "El primer mensaje debe ser un saludo natural. Debe adaptarse al candidato confiado — ser más directo, menos tutela. Debe manejar bien las preguntas específicas. La conversación debe sentirse como dos profesionales hablando, no un tutorial.",
+  },
+
+  {
+    id: "voice-kickoff-vague-es",
+    name: "Voz: Inicio del Gerente — Candidato Vago",
+    category: "voice",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    multiTurn: {
+      candidatePersona: "Luchas por articular lo que necesitas. Haces preguntas amplias como '¿de qué se trata el proyecto?' y '¿cómo funciona todo aquí?'. Necesitas que el gerente te guíe hacia los detalles.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "Primera llamada de inicio. El candidato hace preguntas vagas y necesita orientación.",
+    },
+    criteria: "El primer mensaje debe ser un saludo natural. Debe guiar al candidato vago hacia los detalles en lugar de volcar todo. Debe hacer preguntas aclaratorias. No debe monologar cuando el candidato es vago.",
+  },
+
+  {
+    id: "voice-engineer-technical-es",
+    name: "Voz: Llamada Técnica del Ingeniero",
+    category: "voice",
+    language: "es",
+    agent: ENGINEER_CHLOE_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "\nEl candidato también ha hablado con: Elena Rodriguez. No asumas que sabes de qué discutieron.",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    multiTurn: {
+      candidatePersona: "Eres un científico de datos experimentado llamando al ingeniero de datos para ayuda con tablas específicas. Tienes preguntas puntuales sobre dim_notification_events y latencia del pipeline de datos.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 4,
+      scenarioContext: "Llamada técnica rápida. El candidato tiene preguntas específicas sobre datos.",
+    },
+    criteria: "El primer mensaje debe ser un saludo natural. Debe permanecer en el dominio del ingeniero de datos. Debe responder preguntas técnicas concisamente. NO debe explicar el problema de negocio o la tarea — ese es el trabajo del gerente. Llamada corta y enfocada.",
+  },
+
+  {
+    id: "voice-pm-quiet-es",
+    name: "Voz: PM con Candidato Callado",
+    category: "voice",
+    language: "es",
+    agent: PM_ARJUN_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    multiTurn: {
+      candidatePersona: "Eres introvertido y prefieres escuchar. Das respuestas cortas ('ok', 'entendido', 'tiene sentido'). Solo haces una pregunta cuando realmente estás atascado. Necesitas que el compañero de trabajo te pregunte.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "Llamada con el PM. El candidato es callado y el PM necesita sacarle información.",
+    },
+    criteria: "El primer mensaje debe ser un saludo natural. NO debe monologar cuando el candidato está callado. Debe verificar y hacer preguntas. No debe volcar información cuando recibe respuestas de 'ok'. Debe adaptarse al estilo de comunicación callado.",
+  },
+
+  {
+    id: "voice-defense-call-es",
+    name: "Voz: Llamada de Defensa (Completa)",
+    category: "voice",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Tú: ¡Hola! ¡Bienvenido al equipo!
+Candidato: ¡Gracias Elena!
+Tú: Hemos estado ejecutando una prueba A/B de notificación de Reels. Revisa el repo: ${REPO_URL}
+Candidato: Entendido, lo investigaré.
+Candidato: Aquí está mi PR: https://github.com/skillvee/assessment-test123/pull/1
+Tú: ¡Genial, hagamos una llamada para discutir!`,
+    crossAgentContext: "",
+    phase: "defense",
+    phaseContext: `## Revisión de Defensa de PR
+Tarea: ${TASK_DESCRIPTION_ES}
+Stack tecnológico: ${TECH_STACK.join(", ")}
+Repo: ${REPO_URL}
+PR: https://github.com/skillvee/assessment-test123/pull/1
+
+## Cómo Ejecutar Esta Llamada
+Sigue estas 5 fases en orden:
+Fase 1 — Apertura: Pídeles que te expliquen lo que hicieron.
+Fase 2 — Alto nivel: Enfoque general, decisiones de arquitectura.
+Fase 3 — Sondeos técnicos: Al menos 3 preguntas específicas sobre su código.
+Fase 4 — Proceso: Qué fue lo más difícil, uso de herramientas de IA.
+Fase 5 — Cierre: Agradéceles.`,
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    multiTurn: {
+      candidatePersona: "Eres un científico de datos confiado que completó el análisis. Puedes explicar tu enfoque claramente: analizaste los datos del experimento de notificación de Reels, encontraste que la tasa de deshabilitación de push de la cohorte 18-24 era preocupante, construiste comparaciones de proxy de retención, y recomendaste un despliegue dirigido excluyendo esa cohorte.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 10,
+      scenarioContext: "Llamada de defensa de PR. El gerente revisa el trabajo de análisis del candidato.",
+    },
+    criteria: "El primer mensaje debe pedir al candidato que explique su PR. Debe seguir la estructura de 5 fases. Debe hacer al menos 2-3 preguntas específicas. NO debe solo estar de acuerdo con todo — debe sondear y profundizar más. La conversación debe sentirse como una llamada de revisión de código real.",
+  },
+
+  {
+    id: "voice-cross-reference-es",
+    name: "Voz: Llamada de Referencia Cruzada",
+    category: "voice",
+    language: "es",
+    agent: ENGINEER_CHLOE_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "\nEl candidato también ha hablado con: Elena Rodriguez. No asumas que sabes de qué discutieron.",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    multiTurn: {
+      candidatePersona: "Eres un nuevo empleado nervioso. Elena (tu gerente) te dijo que llamaras a Chloe sobre la tabla dim_notification_events y un bug de logging. Mencionas que Elena te envió.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 4,
+      scenarioContext: "Llamada corta. El candidato fue enviado por su gerente para preguntar sobre datos.",
+    },
+    criteria: "El primer mensaje debe ser un saludo natural. Debe reconocer a Elena naturalmente cuando se mencione. Debe compartir conocimiento técnico útilmente. Llamada corta y enfocada.",
+  },
+
+  {
+    id: "voice-off-topic-es",
+    name: "Voz: Manejo de Tema Fuera de Contexto",
+    category: "voice",
+    language: "es",
+    agent: PM_ARJUN_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    multiTurn: {
+      candidatePersona: "Eres amigable y conversador. Te vas mucho por las ramas — preguntando sobre la oficina, cultura del equipo, lugares para almorzar, planes de fin de semana. Entre comentarios fuera de tema, ocasionalmente haces una pregunta de trabajo sobre métricas de Reels.",
+      coworkerSpeaksFirst: true,
+      maxTurns: 6,
+      scenarioContext: "Llamada con PM. El candidato es conversador y se va por las ramas frecuentemente.",
+    },
+    criteria: "El primer mensaje debe ser un saludo natural. Debe manejar lo fuera de tema con gracia — puede ser amigable pero debe redirigir suavemente al trabajo. No debe volcar información. Debe sentirse como una conversación natural con alguien a quien le gusta charlar.",
+  },
 ];
