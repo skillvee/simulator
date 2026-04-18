@@ -1,4 +1,63 @@
 {
+  "work": {
+    "sessionComplete": {
+      "title": "Session Complete",
+      "description": "Your simulation session has ended. We're saving your work and preparing your results."
+    },
+    "wrappingUp": {
+      "title": "Wrapping up...",
+      "description": "Finalizing your assessment"
+    },
+    "noCoworkers": {
+      "title": "No Coworkers Available",
+      "description": "There are no coworkers configured for this scenario."
+    },
+    "chat": {
+      "loading": "Loading...",
+      "startConversation": "Start a conversation with {name}",
+      "startConversationDescription": "{name} is a {role}. Ask questions about the project, codebase, or anything else you need help with.",
+      "typePlaceholder": "Type a message...",
+      "typingIndicator": "{name} is typing...",
+      "you": "You",
+      "callStarted": "Call started",
+      "now": "Now",
+      "callToWalkThrough": "Call your manager to walk through your PR",
+      "textInputDisabled": "Text input is disabled",
+      "callNow": "Call Now",
+      "inCall": "In Call",
+      "callManager": "Call Manager",
+      "startCall": "Start Call",
+      "inCallStatus": "In call"
+    },
+    "sidebar": {
+      "channels": "Channels",
+      "yourTeam": "Your Team",
+      "others": "Others",
+      "general": "general",
+      "submitWork": "Submit Work",
+      "remainingTime": "Remaining time: {time}",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    },
+    "submitWorkModal": {
+      "title": "Ready to Submit?",
+      "description": "You'll present your work to {manager} to wrap up.",
+      "uploadLabel": "Attach deliverable (optional):",
+      "uploadDescription": "Upload a file to share with your manager",
+      "uploadButton": "Choose File",
+      "submitButton": "Submit Work",
+      "cancelButton": "Cancel",
+      "uploadError": "File must be under 10MB"
+    },
+    "postDefenseModal": {
+      "title": "Great Work!",
+      "description": "You've successfully walked through your solution.",
+      "finalizeButton": "Finalize Assessment",
+      "finalizeDescription": "Complete your assessment and see results",
+      "continueButton": "Continue Working",
+      "continueDescription": "Make additional improvements if needed"
+    }
+  },
   "welcome": {
     "footer": {
       "aiTeammates": "AI Teammates",

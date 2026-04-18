@@ -1,4 +1,63 @@
 {
+  "work": {
+    "sessionComplete": {
+      "title": "Sesión Completa",
+      "description": "Tu sesión de simulación ha terminado. Estamos guardando tu trabajo y preparando tus resultados."
+    },
+    "wrappingUp": {
+      "title": "Terminando...",
+      "description": "Finalizando tu evaluación"
+    },
+    "noCoworkers": {
+      "title": "No Hay Compañeros Disponibles",
+      "description": "No hay compañeros configurados para este escenario."
+    },
+    "chat": {
+      "loading": "Cargando...",
+      "startConversation": "Inicia una conversación con {name}",
+      "startConversationDescription": "{name} es {role}. Haz preguntas sobre el proyecto, la base de código o cualquier cosa en la que necesites ayuda.",
+      "typePlaceholder": "Escribe un mensaje...",
+      "typingIndicator": "{name} está escribiendo...",
+      "you": "Tú",
+      "callStarted": "Llamada iniciada",
+      "now": "Ahora",
+      "callToWalkThrough": "Llama a tu gerente para revisar tu PR",
+      "textInputDisabled": "La entrada de texto está deshabilitada",
+      "callNow": "Llamar Ahora",
+      "inCall": "En Llamada",
+      "callManager": "Llamar al Gerente",
+      "startCall": "Iniciar Llamada",
+      "inCallStatus": "En llamada"
+    },
+    "sidebar": {
+      "channels": "Canales",
+      "yourTeam": "Tu Equipo",
+      "others": "Otros",
+      "general": "general",
+      "submitWork": "Entregar Trabajo",
+      "remainingTime": "Tiempo restante: {time}",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú"
+    },
+    "submitWorkModal": {
+      "title": "¿Listo para Entregar?",
+      "description": "Presentarás tu trabajo a {manager} para finalizar.",
+      "uploadLabel": "Adjuntar entregable (opcional):",
+      "uploadDescription": "Sube un archivo para compartir con tu gerente",
+      "uploadButton": "Elegir Archivo",
+      "submitButton": "Entregar Trabajo",
+      "cancelButton": "Cancelar",
+      "uploadError": "El archivo debe ser menor a 10MB"
+    },
+    "postDefenseModal": {
+      "title": "¡Excelente Trabajo!",
+      "description": "Has presentado exitosamente tu solución.",
+      "finalizeButton": "Finalizar Evaluación",
+      "finalizeDescription": "Completa tu evaluación y ver resultados",
+      "continueButton": "Continuar Trabajando",
+      "continueDescription": "Hacer mejoras adicionales si es necesario"
+    }
+  },
   "welcome": {
     "footer": {
       "aiTeammates": "Compañeros IA",

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Headphones } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { api, ApiClientError, buildTracedHeaders } from "@/lib/api";
 import { createLogger } from "@/lib/core";
 import { useCallContext } from "./slack-layout";
@@ -70,6 +71,7 @@ export function Chat({
   cachedMessages,
   onMessagesChange,
 }: ChatProps) {
+  const t = useTranslations("work.chat");
   const [messages, setMessages] = useState<ChatMessage[]>(cachedMessages ?? []);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -528,7 +530,7 @@ export function Chat({
             {isInCall ? (
               <div className="flex items-center gap-2 rounded-full bg-green-500 px-3 py-1.5 shadow-sm">
                 <Headphones size={14} className="text-white" />
-                <span className="text-sm font-medium text-white">In Call</span>
+                <span className="text-sm font-medium text-white">{t("inCall")}</span>
               </div>
             ) : isDefenseMode ? (
               <Button
@@ -536,7 +538,7 @@ export function Chat({
                 className="shadow-sm rounded-full animate-pulse bg-primary text-primary-foreground"
                 onClick={() => startCall(coworker.id, "coworker")}
               >
-                <Headphones className="h-4 w-4 mr-2" /> Call Manager
+                <Headphones className="h-4 w-4 mr-2" /> {t("callManager")}
               </Button>
             ) : (
               <Button
@@ -545,7 +547,7 @@ export function Chat({
                 className="shadow-sm rounded-full"
                 onClick={() => startCall(coworker.id, "coworker")}
               >
-                <Headphones className="h-4 w-4 mr-2" /> Start Call
+                <Headphones className="h-4 w-4 mr-2" /> {t("startCall")}
               </Button>
             )}
           </div>
@@ -556,7 +558,7 @@ export function Chat({
           <div className="py-6 space-y-6">
             {isLoading ? (
               <div className="flex h-full items-center justify-center py-20">
-                <div style={{color: "hsl(var(--slack-text-muted))"}}>Loading...</div>
+                <div style={{color: "hsl(var(--slack-text-muted))"}}>{t("loading")}</div>
               </div>
             ) : messages.length === 0 ? (
               showManagerTypingInEmptyState ? (
@@ -585,11 +587,10 @@ export function Chat({
                     />
                   </div>
                   <h2 className="mb-2 text-lg font-semibold" style={{color: "hsl(var(--slack-text))"}}>
-                    Start a conversation with {coworker.name}
+                    {t("startConversation", { name: coworker.name })}
                   </h2>
                   <p className="max-w-md text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
-                    {coworker.name} is a {coworker.role}. Ask questions about the
-                    project, codebase, or anything else you need help with.
+                    {t("startConversationDescription", { name: coworker.name, role: coworker.role })}
                   </p>
                 </div>
               )
@@ -603,7 +604,7 @@ export function Chat({
                       {isMe ? (
                         <Avatar className="h-10 w-10 mt-1 shadow-sm border border-border">
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                            You
+                            {t("you")}
                           </AvatarFallback>
                         </Avatar>
                       ) : (
@@ -663,8 +664,8 @@ export function Chat({
                       <div className="bg-green-900 p-1 rounded-full">
                         <Headphones className="h-3 w-3 text-green-400" />
                       </div>
-                      <span className="text-xs font-medium" style={{color: "hsl(var(--slack-text))"}}>Call started</span>
-                      <span className="text-[10px]" style={{color: "hsl(var(--slack-text-muted))"}}>• Now</span>
+                      <span className="text-xs font-medium" style={{color: "hsl(var(--slack-text))"}}>{t("callStarted")}</span>
+                      <span className="text-[10px]" style={{color: "hsl(var(--slack-text-muted))"}}>• {t("now")}</span>
                     </div>
                   </div>
                 )}
@@ -697,8 +698,8 @@ export function Chat({
               <Headphones className="h-4 w-4 shrink-0" style={{color: "hsl(var(--slack-text-muted))"}} />
               <span className="text-sm" style={{color: "hsl(var(--slack-text-muted))"}}>
                 {isDefenseMode
-                  ? "Call your manager to walk through your PR"
-                  : "Text input is disabled"}
+                  ? t("callToWalkThrough")
+                  : t("textInputDisabled")}
               </span>
               {isDefenseMode && !isInCall && (
                 <Button
@@ -706,7 +707,7 @@ export function Chat({
                   className="rounded-full ml-2 shrink-0"
                   onClick={() => startCall(coworker.id, "coworker")}
                 >
-                  <Headphones className="h-3 w-3 mr-1" /> Call Now
+                  <Headphones className="h-3 w-3 mr-1" /> {t("callNow")}
                 </Button>
               )}
             </div>
@@ -719,7 +720,7 @@ export function Chat({
                 onChange={(e) => setInput(e.target.value)}
                 onClick={() => markUserInteraction()}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a message..."
+                placeholder={t("typePlaceholder")}
                 disabled={isSending}
                 className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-slate-500"
                 style={{color: "hsl(var(--slack-text))"}}
@@ -742,6 +743,7 @@ export function Chat({
 
 // Typing indicator component - matches bubble style
 function TypingIndicator({ coworkerName }: { coworkerName: string }) {
+  const t = useTranslations("work.chat");
   return (
     <div className="flex flex-col items-start gap-1">
       <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl rounded-bl-sm shadow-sm" style={{background: "hsl(var(--slack-bg-surface))"}}>
@@ -761,7 +763,7 @@ function TypingIndicator({ coworkerName }: { coworkerName: string }) {
         </div>
       </div>
       <span className="text-xs px-2" style={{color: "hsl(var(--slack-text-muted))"}}>
-        {coworkerName} is typing...
+        {t("typingIndicator", { name: coworkerName })}
       </span>
     </div>
   );

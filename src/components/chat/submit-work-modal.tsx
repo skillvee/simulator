@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Send, X, Upload, FileCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 const MAX_FILE_SIZE_MB = 50;
@@ -18,6 +19,7 @@ export function SubmitWorkModal({
   onConfirm,
   onCancel,
 }: SubmitWorkModalProps) {
+  const t = useTranslations("work.submitWorkModal");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,7 +29,7 @@ export function SubmitWorkModal({
     setError(null);
 
     if (selected && selected.size > MAX_FILE_SIZE_BYTES) {
-      setError(`File must be under ${MAX_FILE_SIZE_MB}MB`);
+      setError(t("uploadError"));
       setFile(null);
       return;
     }
@@ -50,7 +52,7 @@ export function SubmitWorkModal({
           onClick={onCancel}
           className="absolute top-4 right-4 rounded-lg p-1 transition-colors"
           style={{ color: "hsl(var(--slack-text-muted))" }}
-          aria-label="Close"
+          aria-label={t("cancelButton")}
         >
           <X size={18} />
         </button>
@@ -61,13 +63,13 @@ export function SubmitWorkModal({
             className="text-xl font-bold"
             style={{ color: "hsl(var(--slack-text))" }}
           >
-            Ready to submit?
+            {t("title")}
           </h2>
           <p
             className="text-sm mt-1.5"
             style={{ color: "hsl(var(--slack-text-muted))" }}
           >
-            {managerName} will hop on a call with you to discuss your work.
+            {t("description", { manager: managerName })}
           </p>
         </div>
 
@@ -77,10 +79,7 @@ export function SubmitWorkModal({
             className="block text-sm font-medium mb-1.5"
             style={{ color: "hsl(var(--slack-text))" }}
           >
-            Upload deliverable{" "}
-            <span style={{ color: "hsl(var(--slack-text-muted))" }}>
-              (optional)
-            </span>
+            {t("uploadLabel")}
           </label>
 
           <input
@@ -122,7 +121,7 @@ export function SubmitWorkModal({
               }}
             >
               <Upload size={16} />
-              Choose file
+              {t("uploadButton")}
             </button>
           )}
 
@@ -133,21 +132,21 @@ export function SubmitWorkModal({
             className="text-xs mt-1"
             style={{ color: "hsl(var(--slack-text-muted))" }}
           >
-            Upload your work (model, database, image, etc.) — max {MAX_FILE_SIZE_MB}MB.
+            {t("uploadDescription")}
           </p>
         </div>
 
         {/* Actions */}
         <div className="flex gap-3 justify-end">
           <Button variant="outline" size="sm" onClick={onCancel}>
-            Cancel
+            {t("cancelButton")}
           </Button>
           <Button
             size="sm"
             onClick={() => onConfirm(file)}
           >
             <Send className="h-4 w-4 mr-2" />
-            Submit & Start Review
+            {t("submitButton")}
           </Button>
         </div>
       </div>

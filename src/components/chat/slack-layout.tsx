@@ -2,6 +2,7 @@
 
 import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Menu, X, Headphones, Hash, GitBranch, Database, FileSpreadsheet, Globe, LayoutDashboard, FileText, Box, ExternalLink, ArrowLeft, Send, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -192,6 +193,7 @@ function SlackLayoutInner({
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("work.sidebar");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeCall, setActiveCall] = useState<{
     coworkerId: string;
@@ -395,7 +397,7 @@ function SlackLayoutInner({
           onMouseLeave={(e) => {
             e.currentTarget.style.background = "hsl(var(--slack-bg-surface))";
           }}
-          aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+          aria-label={isSidebarOpen ? t("closeMenu") : t("openMenu")}
         >
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -437,7 +439,7 @@ function SlackLayoutInner({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
-                    <p>Remaining time: {timeRemaining}</p>
+                    <p>{t("remainingTime", { time: timeRemaining })}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -458,7 +460,7 @@ function SlackLayoutInner({
             {/* Channels Section */}
             <div>
               <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
-                Channels
+                {t("channels")}
               </h3>
               <div className="space-y-0.5">
                 <button
@@ -484,7 +486,7 @@ function SlackLayoutInner({
                   }}
                 >
                   <Hash size={14} style={{color: "hsl(var(--slack-text-muted))"}} />
-                  <span className={`text-sm flex-1 ${generalUnread > 0 ? "font-bold" : "font-medium"}`}>general</span>
+                  <span className={`text-sm flex-1 ${generalUnread > 0 ? "font-bold" : "font-medium"}`}>{t("general")}</span>
                   {generalUnread > 0 && (
                     <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                       {generalUnread > 9 ? "9+" : generalUnread}
@@ -497,7 +499,7 @@ function SlackLayoutInner({
             {/* Your Team Section - interactive coworkers */}
             <div>
               <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
-                Your Team
+                {t("yourTeam")}
               </h3>
               <div className="space-y-1">
                 {coworkers.map((coworker) => (
@@ -517,7 +519,7 @@ function SlackLayoutInner({
             {/* Others Section - decorative team members */}
             <div>
               <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
-                Others
+                {t("others")}
               </h3>
               <div className="space-y-1">
                 {DECORATIVE_TEAM_MEMBERS.map((member) => (
@@ -543,7 +545,7 @@ function SlackLayoutInner({
                 size="sm"
               >
                 <Send className="h-4 w-4 mr-2" />
-                Submit Work
+                {t("submitWork")}
               </Button>
             </div>
           )}
@@ -607,6 +609,7 @@ function CoworkerItem({
   onChat,
   onCall,
 }: CoworkerItemProps) {
+  const t = useTranslations("work.chat");
   return (
     <div
       onClick={onChat}
@@ -651,7 +654,7 @@ function CoworkerItem({
         <div className={`text-sm truncate ${unreadCount > 0 ? "font-bold" : "font-semibold"}`} style={{color: "hsl(var(--slack-text))"}}>{coworker.name}</div>
         <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>
           {isInCall ? (
-            <span className="text-green-600 dark:text-green-400 font-medium">In call</span>
+            <span className="text-green-600 dark:text-green-400 font-medium">{t("inCallStatus")}</span>
           ) : (
             coworker.role
           )}
@@ -676,7 +679,7 @@ function CoworkerItem({
             : "hover:bg-primary hover:text-primary-foreground"
         }`}
         style={{color: "hsl(var(--slack-text-muted))"}}
-        aria-label={isInCall ? "In call" : `Call ${coworker.name}`}
+        aria-label={isInCall ? t("inCallStatus") : `Call ${coworker.name}`}
       >
         <Headphones size={14} />
       </button>

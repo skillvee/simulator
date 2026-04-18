@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { SlackLayout, Chat, GeneralChannel } from "@/components/chat";
 import { GENERAL_CHANNEL_MESSAGES } from "@/lib/ai/coworker-persona";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
@@ -51,6 +52,7 @@ export function WorkPageClient({
   language,
 }: WorkPageClientProps) {
   const router = useRouter();
+  const t = useTranslations("work");
   const { stopRecording } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
   const [showTimeUpModal, setShowTimeUpModal] = useState(false);
@@ -275,10 +277,9 @@ export function WorkPageClient({
           <div className="mx-auto mb-6 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
             <div className="h-6 w-6 animate-spin rounded-full border-3 border-primary border-t-transparent" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
+          <h2 className="text-2xl font-bold mb-2">{t("sessionComplete.title")}</h2>
           <p className="text-muted-foreground">
-            Your simulation session has ended. We&apos;re saving your work and
-            preparing your results.
+            {t("sessionComplete.description")}
           </p>
         </div>
       </div>
@@ -291,9 +292,9 @@ export function WorkPageClient({
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <h2 className="text-lg font-semibold">Wrapping up...</h2>
+          <h2 className="text-lg font-semibold">{t("wrappingUp.title")}</h2>
           <p className="text-sm text-muted-foreground">
-            Finalizing your assessment
+            {t("wrappingUp.description")}
           </p>
         </div>
       </div>
@@ -347,9 +348,9 @@ export function WorkPageClient({
           <div className="flex flex-col min-h-0 h-full">
             <div className="flex-1 min-h-0 bg-background rounded-2xl shadow-sm border border-border flex items-center justify-center">
               <div className="text-center">
-                <h2 className="mb-2 text-xl font-semibold">No Coworkers Available</h2>
+                <h2 className="mb-2 text-xl font-semibold">{t("noCoworkers.title")}</h2>
                 <p className="text-muted-foreground">
-                  There are no coworkers configured for this scenario.
+                  {t("noCoworkers.description")}
                 </p>
               </div>
             </div>
