@@ -4,7 +4,7 @@ import { requireCandidate, createLogger } from "@/lib/core";
 const logger = createLogger("server:app:results-page");
 import { db } from "@/server/db";
 import { transformToCandidateResults } from "@/lib/candidate/results-transformer";
-import { CandidateSidebar } from "@/app/candidate/dashboard/components/sidebar";
+import { CandidateSidebar } from "@/app/[locale]/candidate/dashboard/components/sidebar";
 import { CandidateResultsClient } from "./client";
 import type { AssessmentReport } from "@/types";
 

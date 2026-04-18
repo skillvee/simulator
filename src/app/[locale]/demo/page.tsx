@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { InlineWidget, useCalendlyEventListener } from "react-calendly";
+import { Link } from "@/i18n/routing";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -199,9 +200,9 @@ export default function DemoPage() {
 
                       <p className="text-xs text-slate-500 text-center">
                         We&apos;ll never share your info. See our{" "}
-                        <a href="/privacy" className="text-primary hover:underline">
+                        <Link href="/privacy" className="text-primary hover:underline">
                           privacy policy
-                        </a>
+                        </Link>
                         .
                       </p>
                     </form>

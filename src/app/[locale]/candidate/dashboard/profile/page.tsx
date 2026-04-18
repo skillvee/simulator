@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { AccountDeletionSection } from "@/app/settings/account-deletion-section";
+import { AccountDeletionSection } from "@/app/[locale]/settings/account-deletion-section";
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("en-US", {
