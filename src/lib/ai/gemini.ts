@@ -3,6 +3,7 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { env } from "@/lib/core/env";
 import { LIVE_MODEL, DEFAULT_VOICE } from "./gemini-config";
+import { LANGUAGES, DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/language";
 
 // Re-export client-safe config for backwards compatibility in server code
 export * from "./gemini-config";
@@ -17,8 +18,14 @@ export const gemini = new GoogleGenAI({
 export async function generateEphemeralToken(config?: {
   systemInstruction?: string;
   voiceName?: string;
+  language?: SupportedLanguage;
 }): Promise<string> {
   const voiceName = config?.voiceName || DEFAULT_VOICE;
+  const language = config?.language || DEFAULT_LANGUAGE;
+
+  // Get the speech language code from LANGUAGES config
+  // Currently using es-US for Spanish; will try es-419 if Gemini Live supports it
+  const languageCode = LANGUAGES[language].speechLanguageCode;
 
   const response = await gemini.authTokens.create({
     config: {
@@ -33,6 +40,10 @@ export async function generateEphemeralToken(config?: {
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           speechConfig: {
+            // Language code for speech recognition and synthesis
+            // Verified: Gemini Live accepts es-US for Latin American Spanish
+            // TODO: Try es-419 when available, fallback to es-US if rejected
+            languageCode,
             voiceConfig: {
               prebuiltVoiceConfig: {
                 voiceName,

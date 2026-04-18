@@ -170,6 +170,7 @@ export async function POST(request: Request) {
     const token = await generateEphemeralToken({
       systemInstruction,
       voiceName,
+      language,
     });
 
     await tracker?.complete({ responseText: "Token generated", statusCode: 200 }).catch(() => {});

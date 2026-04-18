@@ -368,11 +368,13 @@ describe("POST /api/call/token", () => {
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
         systemInstruction: expect.stringContaining("Respond in neutral Latin American Spanish"),
+        language: "es", // Verify language parameter is passed
       })
     );
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
         systemInstruction: expect.stringContaining("Use \"tú\" form"),
+        language: "es",
       })
     );
   });
@@ -420,6 +422,101 @@ describe("POST /api/call/token", () => {
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
         systemInstruction: expect.not.stringContaining("Respond in neutral Latin American Spanish"),
+        language: "en", // Verify English language is passed
+      })
+    );
+  });
+
+  it("should pass language code 'es' for Spanish voice sessions", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "test-id",
+      scenarioId: "scenario-id",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["TypeScript", "React"],
+        language: "es", // Spanish scenario
+      },
+      user: {
+        name: "Test User",
+        email: "test@example.com",
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-id",
+      name: "María García",
+      role: "Senior Engineer",
+      personaStyle: "Technical",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockGenerateEphemeralToken.mockResolvedValue("ephemeral-token-123");
+
+    const request = new Request("http://localhost/api/call/token", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "test-id",
+        coworkerId: "coworker-id",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    // Verify language code "es" is passed for Spanish scenario
+    expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: "es",
+      })
+    );
+  });
+
+  it("should pass language code 'en' for English voice sessions", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "test-id",
+      scenarioId: "scenario-id",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["TypeScript", "React"],
+        language: "en", // English scenario
+      },
+      user: {
+        name: "Test User",
+        email: "test@example.com",
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-id",
+      name: "John Smith",
+      role: "Senior Engineer",
+      personaStyle: "Technical",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockGenerateEphemeralToken.mockResolvedValue("ephemeral-token-123");
+
+    const request = new Request("http://localhost/api/call/token", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "test-id",
+        coworkerId: "coworker-id",
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    // Verify language code "en" is passed for English scenario
+    expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: "en",
       })
     );
   });
