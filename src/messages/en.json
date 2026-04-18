@@ -268,5 +268,51 @@
       "startFailed": "Failed to start simulation",
       "networkError": "Network error. Please check your connection and try again."
     }
+  },
+  "invite": {
+    "hero": {
+      "title": {
+        "line1": "YOUR",
+        "line2": "NEXT ROLE."
+      },
+      "subtitle": "{companyName} is looking for someone to join their team. Experience a day in the role before you commit."
+    },
+    "features": {
+      "aiTeammates": "AI Teammates",
+      "useAnyAiTools": "Use Any AI Tools"
+    },
+    "auth": {
+      "notYou": "Not you?",
+      "signOut": "Sign out",
+      "settingUpSimulation": "Setting up your simulation...",
+      "getStarted": "Get Started",
+      "continueWithGoogle": "Continue with Google",
+      "orSignUpWithEmail": "or sign up with email",
+      "orSignInWithEmail": "or sign in with email",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "emailAddress": "Email address",
+      "password": "Password",
+      "passwordWithRequirement": "Password (8+ characters)",
+      "confirmPassword": "Confirm password",
+      "creatingAccount": "Creating account...",
+      "signingIn": "Signing in...",
+      "createAccount": "Create account",
+      "signIn": "Sign in",
+      "signUp": "Sign up",
+      "consent": "By signing up, you agree to screen and webcam recording and our <terms>Terms</terms> & <privacy>Privacy Policy</privacy>",
+      "alreadyHaveAccount": "Already have an account?",
+      "dontHaveAccount": "Don't have an account?"
+    },
+    "errors": {
+      "failedToCreateAssessment": "Failed to create assessment",
+      "genericError": "An error occurred. Please try again.",
+      "passwordsDontMatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "registrationFailed": "Registration failed",
+      "accountCreatedButSignInFailed": "Account created but sign-in failed. Please sign in manually.",
+      "invalidCredentials": "Invalid email or password"
+    },
+    "loading": "Loading..."
   }
 }

@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -36,6 +37,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const targetLevel = searchParams.get("level");
+  const t = useTranslations("invite");
 
   // Auth form state
   const [mode, setMode] = useState<"signup" | "signin">("signup");
@@ -68,7 +70,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
         const data = await response.json();
 
         if (!response.ok) {
-          setError(data.error || "Failed to create assessment");
+          setError(data.error || t("errors.failedToCreateAssessment"));
           setIsLoading(false);
           hasStartedRedirect.current = false;
           return;
@@ -77,7 +79,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
         router.push(`/assessments/${data.data.assessment.id}/welcome`);
       } catch (err) {
         logger.error("Assessment create failed", { err });
-        setError("An error occurred. Please try again.");
+        setError(t("errors.genericError"));
         setIsLoading(false);
         hasStartedRedirect.current = false;
       }
@@ -100,13 +102,13 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
 
     if (mode === "signup") {
       if (password !== confirmPassword) {
-        setError("Passwords do not match");
+        setError(t("errors.passwordsDontMatch"));
         setIsLoading(false);
         return;
       }
 
       if (password.length < 8) {
-        setError("Password must be at least 8 characters");
+        setError(t("errors.passwordTooShort"));
         setIsLoading(false);
         return;
       }
@@ -125,7 +127,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
         const data = await response.json();
 
         if (!response.ok) {
-          setError(data.error || "Registration failed");
+          setError(data.error || t("errors.registrationFailed"));
           setIsLoading(false);
           return;
         }
@@ -137,9 +139,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
         });
 
         if (signInResult?.error) {
-          setError(
-            "Account created but sign-in failed. Please sign in manually."
-          );
+          setError(t("errors.accountCreatedButSignInFailed"));
           setIsLoading(false);
           return;
         }
@@ -147,7 +147,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
         setIsLoading(false);
         router.refresh();
       } catch {
-        setError("An error occurred. Please try again.");
+        setError(t("errors.genericError"));
         setIsLoading(false);
       }
     } else {
@@ -158,7 +158,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setError(t("errors.invalidCredentials"));
         setIsLoading(false);
       } else {
         setIsLoading(false);
@@ -199,13 +199,12 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
             className="space-y-8"
           >
             <h1 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-white">
-              YOUR
+              {t("hero.title.line1")}
               <br />
-              NEXT ROLE.
+              {t("hero.title.line2")}
             </h1>
             <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl">
-              {scenario.companyName} is looking for someone to join their team.
-              Experience a day in the role before you commit.
+              {t("hero.subtitle", { companyName: scenario.companyName })}
             </p>
           </motion.div>
         </main>
@@ -213,11 +212,11 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
         <footer className="relative z-10 flex items-center gap-8">
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <Bot className="w-4 h-4 text-primary" />
-            AI Teammates
+            {t("features.aiTeammates")}
           </div>
           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
             <Sparkles className="w-4 h-4 text-primary" />
-            Use Any AI Tools
+            {t("features.useAnyAiTools")}
           </div>
         </footer>
       </div>
@@ -239,12 +238,12 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                       {error}
                     </div>
                     <p className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
-                      Not you?{" "}
+                      {t("auth.notYou")}{" "}
                       <Link
                         href="/api/auth/signout"
                         className="text-primary hover:underline"
                       >
-                        Sign out
+                        {t("auth.signOut")}
                       </Link>
                     </p>
                   </>
@@ -252,7 +251,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                   <>
                     <Loader2 className="w-8 h-8 text-primary animate-spin" />
                     <p className="text-slate-500 text-sm font-medium">
-                      Setting up your simulation...
+                      {t("auth.settingUpSimulation")}
                     </p>
                   </>
                 )}
@@ -267,7 +266,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
             >
               <div className="space-y-2">
                 <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                  Get Started
+                  {t("auth.getStarted")}
                 </h3>
               </div>
 
@@ -304,7 +303,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                       d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                     />
                   </svg>
-                  Continue with Google
+                  {t("auth.continueWithGoogle")}
                 </Button>
 
                 {/* Divider */}
@@ -314,7 +313,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                   </div>
                   <div className="relative flex justify-center text-xs">
                     <span className="bg-white px-4 text-slate-400 font-medium">
-                      or {mode === "signup" ? "sign up" : "sign in"} with email
+                      {mode === "signup" ? t("auth.orSignUpWithEmail") : t("auth.orSignInWithEmail")}
                     </span>
                   </div>
                 </div>
@@ -327,7 +326,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                         type="text"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="First name"
+                        placeholder={t("auth.firstName")}
                         disabled={isLoading}
                         className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
                       />
@@ -335,7 +334,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                         type="text"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        placeholder="Last name"
+                        placeholder={t("auth.lastName")}
                         disabled={isLoading}
                         className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
                       />
@@ -346,7 +345,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address"
+                    placeholder={t("auth.emailAddress")}
                     required
                     disabled={isLoading}
                     className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
@@ -358,8 +357,8 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={
                       mode === "signup"
-                        ? "Password (8+ characters)"
-                        : "Password"
+                        ? t("auth.passwordWithRequirement")
+                        : t("auth.password")
                     }
                     required
                     disabled={isLoading}
@@ -371,7 +370,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm password"
+                      placeholder={t("auth.confirmPassword")}
                       required
                       disabled={isLoading}
                       className="h-12 rounded-full bg-slate-50 border-transparent px-5 focus:bg-white focus:border-primary"
@@ -385,40 +384,37 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                   >
                     {isLoading
                       ? mode === "signup"
-                        ? "Creating account..."
-                        : "Signing in..."
+                        ? t("auth.creatingAccount")
+                        : t("auth.signingIn")
                       : mode === "signup"
-                        ? "Create account"
-                        : "Sign in"}
+                        ? t("auth.createAccount")
+                        : t("auth.signIn")}
                   </Button>
                 </form>
 
                 {/* Consent text (signup only) */}
                 {mode === "signup" && (
                   <p className="text-xs text-center text-slate-400">
-                    By signing up, you agree to screen and webcam recording
-                    and our{" "}
-                    <Link
-                      href="/terms"
-                      className="text-primary hover:underline"
-                    >
-                      Terms
-                    </Link>{" "}
-                    &{" "}
-                    <Link
-                      href="/privacy"
-                      className="text-primary hover:underline"
-                    >
-                      Privacy Policy
-                    </Link>
+                    {t.rich("auth.consent", {
+                      terms: (chunks) => (
+                        <Link href="/terms" className="text-primary hover:underline">
+                          {chunks}
+                        </Link>
+                      ),
+                      privacy: (chunks) => (
+                        <Link href="/privacy" className="text-primary hover:underline">
+                          {chunks}
+                        </Link>
+                      ),
+                    })}
                   </p>
                 )}
 
                 {/* Toggle mode */}
                 <p className="text-center text-sm text-slate-500">
                   {mode === "signup"
-                    ? "Already have an account? "
-                    : "Don't have an account? "}
+                    ? t("auth.alreadyHaveAccount")
+                    : t("auth.dontHaveAccount")}{" "}
                   <button
                     onClick={() => {
                       setMode(mode === "signup" ? "signin" : "signup");
@@ -426,7 +422,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
                     }}
                     className="font-semibold text-primary hover:underline"
                   >
-                    {mode === "signup" ? "Sign in" : "Sign up"}
+                    {mode === "signup" ? t("auth.signIn") : t("auth.signUp")}
                   </button>
                 </p>
               </div>
@@ -439,11 +435,12 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
 }
 
 function InvitePageLoading() {
+  const t = useTranslations("invite");
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617]">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-        <p className="mt-4 text-slate-400">Loading...</p>
+        <p className="mt-4 text-slate-400">{t("loading")}</p>
       </div>
     </div>
   );

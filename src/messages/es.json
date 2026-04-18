@@ -268,5 +268,51 @@
       "startFailed": "Error al iniciar la simulación",
       "networkError": "Error de red. Por favor verifica tu conexión e inténtalo de nuevo."
     }
+  },
+  "invite": {
+    "hero": {
+      "title": {
+        "line1": "TU",
+        "line2": "PRÓXIMO ROL."
+      },
+      "subtitle": "{companyName} está buscando a alguien para unirse a su equipo. Experimenta un día en el rol antes de comprometerte."
+    },
+    "features": {
+      "aiTeammates": "Compañeros IA",
+      "useAnyAiTools": "Usa Cualquier Herramienta IA"
+    },
+    "auth": {
+      "notYou": "¿No eres tú?",
+      "signOut": "Cerrar sesión",
+      "settingUpSimulation": "Configurando tu simulación...",
+      "getStarted": "Comenzar",
+      "continueWithGoogle": "Continuar con Google",
+      "orSignUpWithEmail": "o regístrate con email",
+      "orSignInWithEmail": "o inicia sesión con email",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "emailAddress": "Correo electrónico",
+      "password": "Contraseña",
+      "passwordWithRequirement": "Contraseña (8+ caracteres)",
+      "confirmPassword": "Confirmar contraseña",
+      "creatingAccount": "Creando cuenta...",
+      "signingIn": "Iniciando sesión...",
+      "createAccount": "Crear cuenta",
+      "signIn": "Iniciar sesión",
+      "signUp": "Registrarse",
+      "consent": "Al registrarte, aceptas la grabación de pantalla y cámara web y nuestros <terms>Términos</terms> y <privacy>Política de Privacidad</privacy>",
+      "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+      "dontHaveAccount": "¿No tienes una cuenta?"
+    },
+    "errors": {
+      "failedToCreateAssessment": "Error al crear la evaluación",
+      "genericError": "Ocurrió un error. Por favor, inténtalo de nuevo.",
+      "passwordsDontMatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+      "registrationFailed": "Error en el registro",
+      "accountCreatedButSignInFailed": "Cuenta creada pero falló el inicio de sesión. Por favor, inicia sesión manualmente.",
+      "invalidCredentials": "Correo electrónico o contraseña inválidos"
+    },
+    "loading": "Cargando..."
   }
 }
