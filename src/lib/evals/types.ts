@@ -13,6 +13,7 @@ export interface EvalScenario {
   id: string;
   name: string;
   category: "manager" | "non-manager" | "edge-case" | "voice";
+  language?: "en" | "es"; // Language for scenario, defaults to "en"
 
   // Inputs for buildAgentPrompt
   agent: CoworkerPersona;
@@ -110,6 +111,7 @@ export interface EvalRunResult {
 export interface RunEvalOptions {
   name?: string;
   category?: "manager" | "non-manager" | "edge-case" | "voice";
+  language?: "en" | "es";
   scenarioIds?: string[];
   verbose?: boolean;
 }

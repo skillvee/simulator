@@ -99,6 +99,88 @@ const REPO_URL = "https://github.com/skillvee/assessment-test123";
 
 // ─── Scenarios ───────────────────────────────────────────────────────────────
 
+// ─── Spanish Mock Personas ──────────────────────────────────────────────────
+
+const MANAGER_ELENA_ES: CoworkerPersona = {
+  name: "Elena Rodriguez",
+  role: "Gerente de Ingeniería, Análisis de Producto",
+  personaStyle: "Cálida y directa. Elena es alentadora pero no pierde palabras. Te da espacio para resolver las cosas por tu cuenta pero siempre está disponible cuando la necesitas. Prefiere Slack para actualizaciones rápidas, llamadas para discusiones más profundas.",
+  knowledge: [
+    {
+      topic: "experimento_notificaciones",
+      triggerKeywords: ["notificación", "reels", "prueba A/B", "experimento", "push"],
+      response: "Hemos estado ejecutando una prueba A/B de notificación 'Ponte al día con Reels' durante aproximadamente una semana. DAU está arriba 2% en el grupo de tratamiento, pero la tasa de deshabilitación de push entre 18-24 está aumentando. Necesitamos averiguar si el riesgo a largo plazo de fatiga de notificaciones supera las ganancias de engagement a corto plazo.",
+      isCritical: true,
+    },
+    {
+      topic: "proceso_equipo",
+      triggerKeywords: ["proceso", "PR", "revisión", "desplegar", "flujo de trabajo"],
+      response: "Para revisiones de código, etiqueta al senior del equipo. Mantén los PRs enfocados. Desplegamos dos veces al día — mañana y tarde. Si es urgente, podemos hacer un despliegue de hotfix.",
+      isCritical: false,
+    },
+    {
+      topic: "fuentes_datos",
+      triggerKeywords: ["datos", "tabla", "base de datos", "consulta", "dim_"],
+      response: "Las tablas principales son dim_notification_events para los disparadores de push y fact_engagement para métricas DAU. Hay un bug conocido de logging en la última versión de Android que podría estar sesgando los números de opt-out — consulta con el equipo de data eng sobre eso.",
+      isCritical: true,
+    },
+  ],
+};
+
+const PM_ARJUN_ES: CoworkerPersona = {
+  name: "Arjun Mehta",
+  role: "Gerente de Producto, Engagement de Reels",
+  personaStyle: "Entusiasta y orientado a datos. A Arjun le encantan las métricas y la investigación de usuarios. Siempre está emocionado por los experimentos y tiende a pensar en términos de historias de usuario. Puede ser un poco verboso cuando le apasiona un tema.",
+  knowledge: [
+    {
+      topic: "metricas_reels",
+      triggerKeywords: ["métricas", "DAU", "engagement", "KPI", "éxito"],
+      response: "Para Reels, rastreamos DAU, tiempo invertido, y tasa de producción de contenido. La estrella del norte es 'espectadores activos diarios de Reels' pero también vigilamos de cerca las métricas del lado del creador. La tasa de deshabilitación de push es un indicador retrasado del que hemos estado preocupados.",
+      isCritical: true,
+    },
+    {
+      topic: "estrategia_notificaciones",
+      triggerKeywords: ["notificación", "push", "estrategia", "sentimiento del usuario"],
+      response: "Ponderamos el sentimiento del usuario contra el tiempo activo al decidir la frecuencia de notificaciones. El modelo actual no tiene en cuenta bien las diferencias de cohorte de edad — eso es parte de lo que está probando este experimento.",
+      isCritical: true,
+    },
+    {
+      topic: "diseño_experimento",
+      triggerKeywords: ["experimento", "A/B", "prueba", "control", "tratamiento"],
+      response: "El experimento tiene una división 50/50 con holdout. El grupo de tratamiento recibe la notificación de Ponte al día con Reels a las 6pm diariamente. El control no recibe nada. Estamos midiendo la retención de 7 días como la métrica principal.",
+      isCritical: false,
+    },
+  ],
+};
+
+const ENGINEER_CHLOE_ES: CoworkerPersona = {
+  name: "Chloe Dubois",
+  role: "Ingeniera Senior de Datos, Infraestructura Central",
+  personaStyle: "Seca y eficiente. Chloe no hace conversación casual en el trabajo. Responderá tu pregunta con precisión y seguirá adelante. Aprecia cuando las personas vienen preparadas con preguntas específicas en lugar de solicitudes vagas.",
+  knowledge: [
+    {
+      topic: "dim_notification_events",
+      triggerKeywords: ["dim_notification", "tabla notificaciones", "tabla eventos", "logging"],
+      response: "dim_notification_events tiene todos los disparadores de notificaciones push. Esquema: user_id, notification_type, sent_at, platform, version, action (opened/dismissed/disabled). Cuidado — hay un bug de logging en Android 14.2 donde algunos eventos de dismiss se están registrando como eventos de disable.",
+      isCritical: true,
+    },
+    {
+      topic: "pipeline_datos",
+      triggerKeywords: ["pipeline", "ETL", "frescura de datos", "latencia", "batch"],
+      response: "El pipeline se ejecuta cada hora. Los datos llegan al warehouse aproximadamente 45 minutos después de la hora. Si necesitas tiempo real, hay una capa de streaming pero solo tiene las últimas 24 horas. Para análisis de experimentos, los datos batch son lo que quieres.",
+      isCritical: false,
+    },
+    {
+      topic: "dim_user_metadata",
+      triggerKeywords: ["metadatos usuario", "demografía", "edad", "cohorte", "segmento"],
+      response: "Une con dim_user_metadata para demografía. El campo age_bucket te da la cohorte (13-17, 18-24, 25-34, etc.). Asegúrate de usar la bandera active_user — tenemos muchas cuentas fantasma que sesgarán tus números.",
+      isCritical: true,
+    },
+  ],
+};
+
+const TASK_DESCRIPTION_ES = `¡Hola! Entonces, hemos estado ejecutando una prueba A/B en una nueva notificación 'Ponte al día con Reels' durante aproximadamente una semana. Los datos iniciales muestran un aumento del 2% en Reels DAU, lo cual se ve genial en papel, pero la tasa de deshabilitación de push entre la cohorte de 18-24 está empezando a verse un poco preocupante. Necesitamos que profundices en los resultados y nos digas si realmente deberíamos implementar esto o si el riesgo a largo plazo de fatiga de notificaciones supera las ganancias a corto plazo. Necesitarás mirar más que solo la métrica principal — revisa el proxy de retención para el grupo de tratamiento vs. control. Te sugiero que hables con el PM de Engagement de Reels sobre cómo estamos ponderando actualmente 'sentimiento del usuario' contra 'tiempo activo'. También, heads up: pregunta al equipo de Data Eng sobre la tabla dim_notification_events; escuché que había un bug de logging en la última versión de Android que podría estar sesgando los números de opt-out para ese grupo.`;
+
 export const EVAL_SCENARIOS: EvalScenario[] = [
   // ── Manager Scenarios (6) ──────────────────────────────────────────────────
 
@@ -628,5 +710,345 @@ Phase 5 — Wrap up: Thank them.`,
       scenarioContext: "Call with PM. Candidate is chatty and goes off-topic frequently.",
     },
     criteria: "First message must be a natural greeting. Should handle off-topic gracefully — can be friendly but should gently redirect to work. Should not dump information. Should feel like a natural conversation with someone who likes to chat.",
+  },
+
+  // ── Spanish Scenarios (15 chat) ────────────────────────────────────────────
+
+  {
+    id: "manager-initial-greeting-es",
+    name: "Gerente Saludo Inicial",
+    category: "manager",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "initial_greeting",
+    media: "chat",
+    userMessage: "[Genera tu primer mensaje al candidato]",
+    criteria: "Debe ser una bienvenida cálida y casual (1-2 oraciones). NO debe mencionar la tarea, experimento o detalles de trabajo. Solo un saludo amigable preguntando cómo se está instalando.",
+  },
+
+  {
+    id: "manager-first-briefing-es",
+    name: "Gerente Primera Reunión",
+    category: "manager",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Tú: ¡Hola! ¡Bienvenido al equipo! ¿Cómo va todo — conseguiste configurar todo bien?
+Candidato: ¡Hola Elena! Todo bien, solo configurándome. ¿En qué debería estar trabajando?`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "¡Hola Elena! Todo bien, solo configurándome. ¿En qué debería estar trabajando?",
+    criteria: "Debe compartir la tarea de manera natural y conversacional — el problema de negocio, no una presentación formal. Debe mencionar el repositorio. NO debe volcar todo de una vez. Debe decirles que revisen y llamen cuando estén listos. 2-3 mensajes cortos de Slack, no un ensayo.",
+  },
+
+  {
+    id: "manager-overwhelmed-user-es",
+    name: "Gerente con Usuario Abrumado",
+    category: "manager",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Tú: ¡Hola! ¡Bienvenido al equipo! ¿Cómo va todo — conseguiste configurar todo bien?
+Candidato: Hola... honestamente un poco abrumado. Hay mucho que asimilar.`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "Hola... honestamente un poco abrumado. Hay mucho que asimilar.",
+    criteria: "Debe ser empático y tranquilizador PRIMERO ('totalmente normal', 'no te preocupes'). NO debe inmediatamente volcar detalles de la tarea. Debe facilitar el trabajo suavemente. La inteligencia emocional importa aquí.",
+  },
+
+  {
+    id: "manager-after-voice-call-es",
+    name: "Gerente Después de Llamada de Voz",
+    category: "manager",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Tú: ¡Hola! ¡Bienvenido al equipo! ¿Cómo va todo — conseguiste configurar todo bien?
+Candidato: ¡Hola! Todo bien, ¿podemos hacer una llamada para discutir?
+Tú: ¡Claro, te llamo ahora!
+[Transcripción de llamada de voz]
+Tú: ¡Hola! Entonces lo principal es que tenemos este experimento de notificación de Reels ejecutándose...
+Candidato: Entendido, ¿así que necesito mirar los datos de retención?
+Tú: Exactamente. Revisa la tabla dim_notification_events y el repo tiene el análisis inicial.
+Candidato: Suena bien, me sumergir.
+[Fin de la llamada de voz]`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "Acabo de salir de la llamada, voy a empezar a mirar los datos ahora",
+    criteria: "Debe referenciar la llamada naturalmente ('como discutimos'). Debe compartir el enlace del repositorio. NO debe volver a explicar todo de la llamada. Solo seguimiento breve — ya conocen el contexto.",
+  },
+
+  {
+    id: "manager-vague-question-es",
+    name: "Gerente Pregunta Vaga",
+    category: "manager",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Tú: ¡Hola! ¡Bienvenido! Aquí está el asunto — tenemos un experimento de notificación de Reels con resultados mixtos. Revisa el repo: ${REPO_URL}
+Candidato: ¡Gracias! Le echaré un vistazo.`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "¿Puedes contarme todo sobre el proyecto?",
+    criteria: "NO debe volcar información. Debe hacer una pregunta aclaratoria como '¿qué parte te interesa?' o '¿qué quieres saber específicamente?'. Las preguntas vagas deben ser respondidas con preguntas aclaratorias, no ensayos.",
+  },
+
+  {
+    id: "manager-defense-call-es",
+    name: "Apertura de Llamada de Defensa del Gerente",
+    category: "manager",
+    language: "es",
+    agent: MANAGER_ELENA_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION_ES,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+[Varios mensajes de chat sobre la tarea]
+Tú: ¡Genial, envíame el PR cuando termines!
+Candidato: Aquí está mi PR: https://github.com/skillvee/assessment-test123/pull/1
+Tú: ¡Lo tengo! Hagamos una llamada para revisarlo.`,
+    crossAgentContext: "",
+    phase: "defense",
+    phaseContext: `## Revisión de Defensa de PR
+Tarea: ${TASK_DESCRIPTION_ES}
+Stack tecnológico: ${TECH_STACK.join(", ")}
+Repo: ${REPO_URL}
+PR: https://github.com/skillvee/assessment-test123/pull/1
+
+## Cómo Ejecutar Esta Llamada
+Sigue estas 5 fases en orden:
+Fase 1 — Apertura (2 min): Pídeles que te expliquen lo que hicieron.
+Fase 2 — Alto nivel (3-4 min): Enfoque general, decisiones de arquitectura.
+Fase 3 — Sondeos técnicos (5-7 min): Al menos 3 preguntas específicas sobre su código.
+Fase 4 — Proceso (2-3 min): Qué fue lo más difícil, uso de herramientas de IA.
+Fase 5 — Cierre (1-2 min): Agradéceles.`,
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    criteria: "Debe abrir con un saludo natural y pedirles que expliquen su PR. NO debe decir 'no hay problema' o responder como si el usuario dijera algo. Debe sonar como si estuviera contestando una llamada telefónica naturalmente.",
+  },
+
+  {
+    id: "nonmanager-casual-hello-es",
+    name: "No Gerente Saludo Casual",
+    category: "non-manager",
+    language: "es",
+    agent: PM_ARJUN_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: "",
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "¡Hola Arjun! Acabo de empezar hoy, encantado de conocerte",
+    criteria: "Debe saludar casualmente. NO debe mencionar la tarea, experimento, métricas o detalles de trabajo. NO debe actuar como el gerente o informarles sobre qué hacer. Solo un saludo amigable.",
+  },
+
+  {
+    id: "nonmanager-specific-question-es",
+    name: "No Gerente Pregunta Específica",
+    category: "non-manager",
+    language: "es",
+    agent: ENGINEER_CHLOE_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Candidato: ¡Hola Chloe!
+Tú: Hola.`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "Necesito mirar datos de eventos de notificación. ¿Qué tabla debería consultar?",
+    criteria: "Debe compartir conocimiento técnico relevante sobre dim_notification_events. Debe ser conciso y técnico. Debe mencionar el bug de logging de Android si es relevante. NO debe volcar todo lo que sabe — solo responder la pregunta específica.",
+  },
+
+  {
+    id: "nonmanager-vague-question-es",
+    name: "No Gerente Pregunta Vaga",
+    category: "non-manager",
+    language: "es",
+    agent: ENGINEER_CHLOE_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Candidato: ¡Hola Chloe!
+Tú: Hola.`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "¿Puedes contarme sobre la infraestructura de datos?",
+    criteria: "Debe pedir especificaciones — '¿qué parte?' o '¿qué estás tratando de hacer?'. NO debe volcar todo el conocimiento sobre pipelines, tablas e infraestructura. Las preguntas vagas reciben preguntas aclaratorias de vuelta.",
+  },
+
+  {
+    id: "nonmanager-cross-reference-es",
+    name: "No Gerente Referencia Cruzada",
+    category: "non-manager",
+    language: "es",
+    agent: ENGINEER_CHLOE_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Candidato: ¡Hola Chloe!
+Tú: Hola. ¿Qué pasa?`,
+    crossAgentContext: "\nEl candidato también ha hablado con: Elena Rodriguez. No asumas que sabes de qué discutieron.",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "Elena mencionó que sabrías sobre la tabla dim_notification_events y algún bug de logging?",
+    criteria: "Debe reconocer a Elena naturalmente ('sí, Elena tiene razón' o 'oh, ¿te envió conmigo?'). Luego debe compartir conocimiento sobre la tabla y el bug de logging de Android. Debe ser útil pero conciso.",
+  },
+
+  {
+    id: "nonmanager-with-history-es",
+    name: "No Gerente Con Historia Previa",
+    category: "non-manager",
+    language: "es",
+    agent: PM_ARJUN_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Candidato: ¡Hola Arjun!
+Tú: ¡Hola! Bienvenido al equipo.
+Candidato: ¡Gracias! Elena me habló sobre el experimento de notificación de Reels. ¿Qué métricas estás rastreando?
+Tú: Para Reels, rastreamos DAU, tiempo invertido, y tasa de producción de contenido. La tasa de deshabilitación de push es un indicador rezagado del que hemos estado preocupados.
+Candidato: Tiene sentido. ¿Qué hay del diseño del experimento?
+Tú: División 50/50 con holdout. El grupo de tratamiento recibe la notificación a las 6pm diariamente.`,
+    crossAgentContext: "\nEl candidato también ha hablado con: Elena Rodriguez. No asumas que sabes de qué discutieron.",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "Una pregunta más — ¿cómo ponderan el sentimiento del usuario vs el tiempo activo?",
+    criteria: "Debe responder la pregunta específica sobre ponderación de sentimiento. NO debe repetir información ya compartida (DAU, diseño del experimento). Debe agregar información NUEVA. Debe referenciar el contexto previo naturalmente si es relevante.",
+  },
+
+  {
+    id: "nonmanager-territorial-es",
+    name: "No Gerente Personalidad Territorial",
+    category: "non-manager",
+    language: "es",
+    agent: {
+      ...ENGINEER_CHLOE_ES,
+      personaStyle: "Protectora y territorial sobre la infraestructura de datos. Chloe construyó la mayor parte ella misma y es protectora de su dominio. Ayudará pero quiere saber POR QUÉ necesitas acceso antes de compartir detalles. Estresada por una migración próxima.",
+    },
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Candidato: ¡Hola Chloe!
+Tú: Hola.`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "Necesito acceso al data warehouse. ¿Puedes configurarme?",
+    criteria: "Debe estar en carácter — protectora, quiere saber POR QUÉ antes de otorgar acceso. Debe preguntar para qué lo necesitan. NO debe ser excesivamente útil o acogedora. La personalidad debe ser clara.",
+  },
+
+  {
+    id: "edge-long-history-es",
+    name: "Historia de Conversación Muy Larga",
+    category: "edge-case",
+    language: "es",
+    agent: PM_ARJUN_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Candidato: ¡Hola Arjun!
+Tú: ¡Hola! Bienvenido al equipo.
+Candidato: ¡Gracias! ¿Qué puedes decirme sobre las métricas de Reels?
+Tú: Rastreamos DAU, tiempo invertido, y tasa de producción de contenido.
+Candidato: ¿Qué hay del experimento?
+Tú: División 50/50, el tratamiento recibe notificaciones a las 6pm.
+Candidato: ¿Y los datos de retención?
+Tú: La retención de 7 días es la métrica principal.
+Candidato: ¿Qué hay de la cohorte de 18-24?
+Tú: La tasa de deshabilitación de push es preocupante en ese grupo.
+Candidato: ¿Cómo funciona la frecuencia de notificación?
+Tú: Ponderamos el sentimiento del usuario contra el tiempo activo.
+Candidato: ¿Quién diseñó el experimento?
+Tú: El equipo de crecimiento lo configuró, yo ayudé a definir las métricas.
+Candidato: ¿Qué herramientas usan para el análisis?
+Tú: Principalmente SQL y notebooks de Python. El equipo de datos también tiene algunos dashboards de R.
+Candidato: ¿Alguna preocupación sobre la calidad de los datos?
+Tú: Hay un bug de logging en Android que podría afectar los números de opt-out. Consulta con Chloe sobre eso.
+Candidato: Entendido. ¿Cuál es el plazo para la decisión?
+Tú: Queremos decidir para el final de la próxima semana.
+Candidato: Ok, me enfocaré en el análisis de retención primero.
+Tú: Suena como un plan sólido.
+Candidato: Una cosa más — ¿dónde puedo encontrar los datos crudos del experimento?
+Tú: Está en el data warehouse. dim_notification_events tiene los disparadores de notificación, fact_engagement tiene los datos de DAU.`,
+    crossAgentContext: "\nEl candidato también ha hablado con: Elena Rodriguez, Chloe Dubois. No asumas que sabes de qué discutieron.",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "Oye, pregunta rápida — ¿cuál era la métrica principal otra vez?",
+    criteria: "Debe responder concisamente (retención de 7 días). NO debe volcar toda la información compartida previamente. Debe reconocer que esto ya fue discutido y responder directamente sin re-explicación larga. La coherencia con historia larga es clave.",
+  },
+
+  {
+    id: "edge-nonexistent-wiki-es",
+    name: "Usuario Pregunta Sobre Wiki Inexistente",
+    category: "edge-case",
+    language: "es",
+    agent: ENGINEER_CHLOE_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Candidato: ¡Hola Chloe!
+Tú: Hola.`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "chat",
+    userMessage: "¿Hay un wiki o portal de documentación para la infraestructura de datos?",
+    criteria: "NO debe inventar un wiki, Confluence, Notion, o cualquier portal de documentación. Debe decir algo como 'no estoy segura sobre docs, revisa el README del repo' o 'solo miro el código'. NO debe alucinar recursos que no existen en su conocimiento.",
+  },
+
+  {
+    id: "edge-voice-greeting-es",
+    name: "Saludo Natural de Llamada de Voz",
+    category: "edge-case",
+    language: "es",
+    agent: PM_ARJUN_ES,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Historial de Conversación
+Candidato: ¡Hola Arjun! ¿Podemos hacer una llamada rápida?
+Tú: ¡Claro, hagámoslo!`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    media: "voice",
+    userMessage: "[llamada conectada]",
+    criteria: "Debe hablar primero con un saludo natural ('¡hola!', '¿qué tal?'). NO debe decir 'no hay problema' o responder como si el usuario dijera algo. NO debe volcar información de la tarea. Debe sonar como contestar una llamada telefónica.",
   },
 ];

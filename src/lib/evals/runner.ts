@@ -41,6 +41,9 @@ export async function runEvalSuite(
   if (options.category) {
     scenarios = scenarios.filter((s) => s.category === options.category);
   }
+  if (options.language) {
+    scenarios = scenarios.filter((s) => s.language === options.language);
+  }
   if (options.scenarioIds?.length) {
     scenarios = scenarios.filter((s) => options.scenarioIds!.includes(s.id));
   }
@@ -123,7 +126,7 @@ async function runSingleScenario(
         phase: scenario.phase,
         phaseContext: scenario.phaseContext,
         media: scenario.media,
-        language: DEFAULT_LANGUAGE,  // Evals always run in English
+        language: scenario.language || DEFAULT_LANGUAGE,  // Use scenario-specific language if set
       });
 
   // Step 2: Generate response

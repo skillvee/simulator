@@ -56,6 +56,7 @@ Usage: npx tsx scripts/run-evals.ts [options]
 Options:
   --name <label>           Label for this eval run (default: timestamp)
   --category <cat>         Filter: manager | non-manager | edge-case
+  --language <lang>        Filter by language: en | es (default: both)
   --scenarios <ids>        Comma-separated scenario IDs
   --prompt-file <path>     Custom prompt template file (for A/B testing)
   --verbose                Show per-scenario scores as they complete
@@ -73,6 +74,7 @@ Options:
 
   const name = getFlag("name") || `eval-${new Date().toISOString().slice(0, 16).replace("T", "-")}`;
   const category = getFlag("category") as "manager" | "non-manager" | "edge-case" | undefined;
+  const language = getFlag("language") as "en" | "es" | undefined;
   const scenarioIds = getFlag("scenarios")?.split(",");
   const promptFile = getFlag("prompt-file");
   const verbose = hasFlag("verbose") || true; // Default verbose
@@ -111,7 +113,7 @@ Options:
 
   try {
     const { results, overallScore, promptVersion } = await runEvalSuite(
-      { name, category, scenarioIds, verbose },
+      { name, category, language, scenarioIds, verbose },
       {
         apiKey,
         promptOverride,
