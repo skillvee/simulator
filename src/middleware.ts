@@ -130,11 +130,15 @@ const ASSESSMENT_SECURITY_HEADERS: Record<string, string> = {
 function applySecurityHeaders(
   response: NextResponse,
   pathname: string,
-  traceId?: string
+  traceId?: string,
+  pathWithoutLocale?: string
 ): NextResponse {
+  // For page routes, check the pathWithoutLocale; for API routes, check pathname
+  const pathToCheck = pathWithoutLocale || pathname;
+
   const headers =
-    pathname.startsWith("/assessments/") ||
-    pathname.startsWith("/recruiter/")
+    pathToCheck.startsWith("/assessments/") ||
+    pathToCheck.startsWith("/recruiter/")
       ? ASSESSMENT_SECURITY_HEADERS
       : BASE_SECURITY_HEADERS;
 
@@ -330,12 +334,12 @@ export default auth((req) => {
 
   // Skip auth routes (handled by NextAuth)
   if (isAuthRoute(pathname)) {
-    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Allow public page routes without authentication
   if (isPublicPageRoute(pathWithoutLocale)) {
-    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Handle candidate dashboard routes (any authenticated user)
@@ -343,9 +347,9 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL(`/${currentLocale}/sign-in`, req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId, pathWithoutLocale);
     }
-    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Handle recruiter page routes
@@ -354,17 +358,17 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL(`/${currentLocale}/sign-in`, req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId, pathWithoutLocale);
     }
 
     // Check recruiter role (RECRUITER or ADMIN allowed)
     if (user?.role !== "RECRUITER" && user?.role !== "ADMIN") {
       // Redirect candidates to their own dashboard instead of showing an error
       const redirectUrl = new URL(`/${currentLocale}/candidate/dashboard`, req.url);
-      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
     }
 
-    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Handle assessment page routes
@@ -373,12 +377,12 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL(`/${currentLocale}/sign-in`, req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId, pathWithoutLocale);
     }
 
     // Note: Assessment ownership is verified at the page level, not middleware
     // This is because middleware doesn't have access to database queries
-    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Handle admin page routes
@@ -387,7 +391,7 @@ export default auth((req) => {
     if (!session?.user) {
       const signInUrl = new URL(`/${currentLocale}/sign-in`, req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId, pathWithoutLocale);
     }
 
     // Check admin role (only ADMIN allowed)
@@ -395,13 +399,13 @@ export default auth((req) => {
       // Redirect to the user's appropriate dashboard
       if (user?.role === "RECRUITER") {
         const redirectUrl = new URL(`/${currentLocale}/recruiter/dashboard`, req.url);
-        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId);
+        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
       }
       const redirectUrl = new URL(`/${currentLocale}/candidate/dashboard`, req.url);
-      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
     }
 
-    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Redirect authenticated users from home page to their dashboard
@@ -409,20 +413,20 @@ export default auth((req) => {
     if (session?.user) {
       if (user?.role === "ADMIN") {
         const redirectUrl = new URL(`/${currentLocale}/admin`, req.url);
-        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId);
+        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
       }
       if (user?.role === "RECRUITER") {
         const redirectUrl = new URL(`/${currentLocale}/recruiter/dashboard`, req.url);
-        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId);
+        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
       }
       // Candidates (USER role) go to candidate dashboard
       const redirectUrl = new URL(`/${currentLocale}/candidate/dashboard`, req.url);
-      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
     }
   }
 
   // For all other routes, apply i18n middleware
-  return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId);
+  return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
 });
 
 /**
