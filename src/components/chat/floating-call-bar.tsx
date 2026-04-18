@@ -2,22 +2,24 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Mic, MicOff, PhoneOff } from "lucide-react";
-import {
-  GoogleGenAI,
-  Modality,
-  type Session,
-  type LiveServerMessage,
-} from "@google/genai";
-import { LIVE_MODEL } from "@/lib/ai";
+import { type Session, type LiveServerMessage } from "@google/genai";
 import {
   checkAudioSupport,
   checkMicrophonePermission,
   requestMicrophoneAccess,
   playAudioChunk,
-  createAudioWorkletBlobUrl,
   getOutputFrequencyData,
+  stopAudioPlayback,
   type AudioPermissionState,
 } from "@/lib/media";
+import {
+  connectLiveAudioSession,
+  createOpeningTurnController,
+  disconnectLiveAudioResources,
+  fetchLiveToken,
+  handleLiveServerMessage,
+  initializeLiveAudioCapture,
+} from "@/lib/ai/live-session";
 import { playCallRingSound } from "@/lib/sounds";
 import type { TranscriptMessage } from "@/lib/ai";
 import { createLogger } from "@/lib/core";
@@ -62,6 +64,9 @@ interface FloatingCallBarProps {
 
 /**
  * Slack huddles-style floating call bar that appears at the bottom of the sidebar.
+ * This is the real Gemini Live call path for the assessment work page.
+ * Shared Live protocol/bootstrap details live in `@/lib/ai/live-session`.
+ *
  * Shows: coworker avatar, name, mute button, end call button.
  * No transcript - audio-only experience for realistic simulation.
  */
@@ -103,6 +108,19 @@ export function FloatingCallBar({
 
   // Track defense call state for callback closure
   const isDefenseCallRef = useRef(false);
+
+  const openingTurnControllerRef = useRef<ReturnType<
+    typeof createOpeningTurnController
+  > | null>(null);
+
+  if (!openingTurnControllerRef.current) {
+    openingTurnControllerRef.current = createOpeningTurnController({
+      getSession: () => sessionRef.current,
+      onError: (context, err) => {
+        logger.error(context, { err });
+      },
+    });
+  }
 
   // API endpoints for coworker calls
   // Note: Defense call endpoints were removed in RF-006. Defense calls
@@ -155,42 +173,29 @@ export function FloatingCallBar({
   // Handle incoming messages from Gemini
   const handleServerMessage = useCallback(
     (message: LiveServerMessage) => {
-      // Handle audio data
-      if (message.serverContent?.modelTurn?.parts) {
-        for (const part of message.serverContent.modelTurn.parts) {
-          if (part.inlineData?.data) {
-            audioQueueRef.current.push(part.inlineData.data);
-            playNextAudio();
-          }
-        }
-      }
-
-      // Handle input transcription (user speech) - save but don't display
-      if (message.serverContent?.inputTranscription?.text) {
-        const text = message.serverContent.inputTranscription.text;
-        if (text.trim()) {
+      handleLiveServerMessage(message, {
+        onSetupComplete: () => {
+          openingTurnControllerRef.current?.markSetupComplete();
+        },
+        onAudioChunk: (audioData) => {
+          audioQueueRef.current.push(audioData);
+          playNextAudio();
+        },
+        onInputTranscription: (text) => {
           addToTranscript("user", text);
-        }
-      }
-
-      // Handle output transcription (model speech) - save but don't display
-      if (message.serverContent?.outputTranscription?.text) {
-        const text = message.serverContent.outputTranscription.text;
-        if (text.trim()) {
+        },
+        onOutputTranscription: (text) => {
           addToTranscript("model", text);
-        }
-      }
-
-      // Handle turn complete
-      if (message.serverContent?.turnComplete) {
-        setIsSpeaking(false);
-      }
-
-      // Handle interruption
-      if (message.serverContent?.interrupted) {
-        audioQueueRef.current = [];
-        setIsSpeaking(false);
-      }
+        },
+        onTurnComplete: () => {
+          setIsSpeaking(false);
+        },
+        onInterrupted: () => {
+          audioQueueRef.current = [];
+          stopAudioPlayback();
+          setIsSpeaking(false);
+        },
+      });
     },
     [addToTranscript, playNextAudio]
   );
@@ -198,42 +203,22 @@ export function FloatingCallBar({
   // Initialize audio capture
   const initializeAudioCapture = useCallback(
     async (stream: MediaStream, session: Session) => {
-      const audioContext = new AudioContext({ sampleRate: 16000 });
+      const { audioContext, workletNode } = await initializeLiveAudioCapture({
+        stream,
+        session,
+        onVolume: (volume) => {
+          micVolumeRef.current = volume;
+        },
+        onReady: () => {
+          openingTurnControllerRef.current?.markAudioCaptureReady();
+        },
+        onError: (context, err) => {
+          logger.error(context, { err });
+        },
+      });
+
       audioContextRef.current = audioContext;
-
-      // Create audio worklet
-      const workletUrl = createAudioWorkletBlobUrl();
-      await audioContext.audioWorklet.addModule(workletUrl);
-      URL.revokeObjectURL(workletUrl);
-
-      const source = audioContext.createMediaStreamSource(stream);
-      const workletNode = new AudioWorkletNode(audioContext, "audio-processor");
       workletNodeRef.current = workletNode;
-
-      // Handle audio data and volume from worklet
-      workletNode.port.onmessage = (event) => {
-        if (event.data.type === "volume") {
-          micVolumeRef.current = event.data.volume;
-        } else if (event.data.type === "audio" && session) {
-          const audioData = new Uint8Array(event.data.data);
-          const base64 = btoa(String.fromCharCode(...audioData));
-
-          try {
-            session.sendRealtimeInput({
-              audio: {
-                data: base64,
-                mimeType: "audio/pcm;rate=16000",
-              },
-            });
-          } catch (err) {
-            logger.error("Error sending audio", { err });
-          }
-        }
-      };
-
-      source.connect(workletNode);
-      workletNode.connect(audioContext.destination);
-
       setIsListening(true);
     },
     []
@@ -258,11 +243,19 @@ export function FloatingCallBar({
     try {
       // Run mic access and token fetch in parallel — they're independent
       const tokenEndpoint = getTokenEndpoint();
-      const tokenPromise = fetch(tokenEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessmentId, coworkerId: coworker.id, isPostSubmission, language }),
+      const tokenPromise = fetchLiveToken<{
+        token: string;
+        isDefenseCall?: boolean;
+      }>({
+        endpoint: tokenEndpoint,
+        body: {
+          assessmentId,
+          coworkerId: coworker.id,
+          isPostSubmission,
+          ...(language ? { language } : {}),
+        },
       });
+      void tokenPromise.catch(() => {});
 
       // Check and request microphone permission
       const permState = await checkMicrophonePermission();
@@ -279,38 +272,18 @@ export function FloatingCallBar({
       ringSound = playCallRingSound();
 
       // Wait for token (likely already done since mic access takes user interaction)
-      const tokenResponse = await tokenPromise;
-
-      if (!tokenResponse.ok) {
-        const data = await tokenResponse.json();
-        throw new Error(data.error || "Failed to get call token");
-      }
-
-      const response = await tokenResponse.json();
-      const { token, isDefenseCall: defenseMode } = response.data;
+      const { token, isDefenseCall: defenseMode } = await tokenPromise;
 
       // Track if this is a defense call for completion handling
       const isDefense = defenseMode === true;
       setIsDefenseCall(isDefense);
       isDefenseCallRef.current = isDefense;
 
-      // Connect to Gemini Live
-      const ai = new GoogleGenAI({
-        apiKey: token,
-        httpOptions: {
-          apiVersion: "v1alpha",
-          baseUrl: "https://generativelanguage.googleapis.com",
-        },
-      });
+      openingTurnControllerRef.current?.markOpeningTurnPending();
 
       let sessionConnected = false;
-      const session = await ai.live.connect({
-        model: LIVE_MODEL,
-        config: {
-          responseModalities: [Modality.AUDIO],
-          inputAudioTranscription: {},
-          outputAudioTranscription: {},
-        },
+      const session = await connectLiveAudioSession({
+        token,
         callbacks: {
           onopen: () => {
             sessionConnected = true;
@@ -348,6 +321,7 @@ export function FloatingCallBar({
     } catch (err) {
       isConnectingRef.current = false;
       logger.error("Connection error", { err });
+      openingTurnControllerRef.current?.reset();
       const errorMessage =
         err instanceof Error ? err.message : "Connection failed";
       setError(errorMessage);
@@ -381,26 +355,19 @@ export function FloatingCallBar({
 
   // Disconnect from Gemini Live
   const disconnect = useCallback(() => {
-    if (workletNodeRef.current) {
-      workletNodeRef.current.disconnect();
-      workletNodeRef.current = null;
-    }
+    disconnectLiveAudioResources({
+      workletNode: workletNodeRef.current,
+      audioContext: audioContextRef.current,
+      mediaStream: mediaStreamRef.current,
+      session: sessionRef.current,
+      onPlaybackStopped: stopAudioPlayback,
+    });
 
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
-
-    if (sessionRef.current) {
-      sessionRef.current.close();
-      sessionRef.current = null;
-    }
-
+    workletNodeRef.current = null;
+    audioContextRef.current = null;
+    mediaStreamRef.current = null;
+    sessionRef.current = null;
+    openingTurnControllerRef.current?.reset();
     setIsListening(false);
     setIsSpeaking(false);
     audioQueueRef.current = [];
