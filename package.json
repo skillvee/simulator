@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "./tests/e2e/run-all.sh",
+    "test:i18n": "npx tsx scripts/run-i18n-coverage.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
