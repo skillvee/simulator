@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { AssessmentDimension } from "@prisma/client";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import {
   ArrowLeft,
   Eye,
@@ -33,17 +34,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-// Map dimension enums to human-readable labels
-const dimensionLabels: Record<AssessmentDimension, string> = {
-  COMMUNICATION: "Communication",
-  PROBLEM_SOLVING: "Problem Solving",
-  TECHNICAL_KNOWLEDGE: "Technical Knowledge",
-  COLLABORATION: "Collaboration",
-  ADAPTABILITY: "Adaptability",
-  LEADERSHIP: "Leadership",
-  CREATIVITY: "Creativity",
-  TIME_MANAGEMENT: "Time Management",
-};
 
 // All dimensions in display order
 const dimensionOrder: AssessmentDimension[] = [
@@ -199,6 +189,7 @@ function DimensionScoreCard({
   showWeightLevel?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { translateDimension } = useAssessmentTranslations();
 
   // Parse and normalize timestamps from JSON
   const validTimestamps = timestamps
@@ -241,7 +232,7 @@ function DimensionScoreCard({
               <span
                 className={`font-semibold ${isDeemphasized ? "text-muted-foreground" : ""}`}
               >
-                {dimensionLabels[dimension]}
+                {translateDimension(dimension)}
               </span>
               {showWeightLevel && weightLevel && (
                 <WeightLevelBadge level={weightLevel} />
@@ -480,6 +471,8 @@ function FitScoreBreakdown({
   scores: Array<{ dimension: AssessmentDimension; score: number }>;
   archetype: RoleArchetype;
 }) {
+  const { translateDimension } = useAssessmentTranslations();
+
   // Calculate fit score using the archetype weights
   const dimensionScoreInputs = scores.map((s) => ({
     dimension: s.dimension,
@@ -533,7 +526,7 @@ function FitScoreBreakdown({
                 <div className="flex-1">
                   <div className="mb-1 flex items-center gap-2">
                     <span className="font-medium">
-                      {dimensionLabels[item.dimension]}
+                      {translateDimension(item.dimension)}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       ({WEIGHT_MULTIPLIERS[item.weightLevel]}x weight)
@@ -641,6 +634,7 @@ function CandidateProfileInner({ data }: { data: CandidateProfileData }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const { translateDimension } = useAssessmentTranslations();
 
   const [videoModal, setVideoModal] = useState<{
     isOpen: boolean;

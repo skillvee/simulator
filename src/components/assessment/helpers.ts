@@ -6,17 +6,6 @@
 export type StrengthLevel = "Exceptional" | "Strong" | "Meets expectations" | "Below expectations";
 
 /**
- * Convert SCREAMING_SNAKE_CASE to Title Case
- * PROBLEM_SOLVING -> Problem Solving
- */
-export function formatDimensionName(dimension: string): string {
-  return dimension
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-/**
  * Get strength level badge styling
  */
 export function getStrengthBadgeStyles(level: StrengthLevel | string): string {

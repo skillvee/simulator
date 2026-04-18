@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 
 /**
  * Props for DimensionScoreCard component
@@ -25,17 +26,6 @@ export interface DimensionScoreCardProps {
   onTimestampClick: (seconds: number) => void;
 }
 
-/**
- * Format dimension name for display
- * PROBLEM_SOLVING -> Problem Solving
- * COMMUNICATION -> Communication
- */
-function formatDimensionName(dimension: string): string {
-  return dimension
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
 
 /**
  * Convert timestamp string to seconds
@@ -116,6 +106,7 @@ export function DimensionScoreCard({
   trainableGap,
   onTimestampClick,
 }: DimensionScoreCardProps) {
+  const { translateDimension } = useAssessmentTranslations();
   const handleTimestampClick = (timestamp: string) => {
     const seconds = timestampToSeconds(timestamp);
     onTimestampClick(seconds);
@@ -131,7 +122,7 @@ export function DimensionScoreCard({
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-base font-medium text-stone-900">
-            {formatDimensionName(dimension)}
+            {translateDimension(dimension)}
           </CardTitle>
           <div className="flex items-center gap-2 shrink-0">
             <ScoreCircles score={score} />

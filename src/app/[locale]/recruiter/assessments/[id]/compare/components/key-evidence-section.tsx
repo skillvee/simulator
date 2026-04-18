@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { formatDimensionName } from "./helpers";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import type { CandidateComparison } from "./types";
 
 interface EvidenceMoment {
@@ -76,6 +76,7 @@ function deriveKeyEvidence(candidate: CandidateComparison): EvidenceMoment[] {
 }
 
 export function KeyEvidenceSection({ candidates, defaultExpanded = false, onTimestampClick }: KeyEvidenceSectionProps) {
+  const { translateDimension } = useAssessmentTranslations();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
@@ -129,7 +130,7 @@ export function KeyEvidenceSection({ candidates, defaultExpanded = false, onTime
                           </Badge>
                           <div className="text-xs">
                             <span className="font-semibold text-stone-900">
-                              {formatDimensionName(moment.dimension)}:
+                              {translateDimension(moment.dimension)}:
                             </span>{" "}
                             <span>{moment.description}</span>
                           </div>

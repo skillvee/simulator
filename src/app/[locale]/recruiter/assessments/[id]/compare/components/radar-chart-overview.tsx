@@ -21,8 +21,8 @@ import { cn } from "@/lib/utils";
 import {
   getInitials,
   getStrengthBadgeStyles,
-  formatDimensionName,
 } from "./helpers";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import type { CandidateComparison } from "./types";
 
 // Custom tick renderer that wraps long labels onto multiple lines
@@ -124,6 +124,7 @@ export function RadarChartOverview({
   showPercentiles,
   totalCandidatesInSimulation,
 }: RadarChartOverviewProps) {
+  const { translateDimension } = useAssessmentTranslations();
   const isSingle = candidates.length === 1;
 
   // Transform data for radar chart
@@ -137,7 +138,7 @@ export function RadarChartOverview({
       .sort()
       .map((dim) => {
         const point: Record<string, string | number> = {
-          dimension: formatDimensionName(dim),
+          dimension: translateDimension(dim),
           fullMark: 4,
         };
         candidates.forEach((c, idx) => {

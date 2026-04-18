@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -93,16 +94,6 @@ function getPercentileBadgeColor(percentile: number): string {
   return "bg-red-100 text-red-700";
 }
 
-/**
- * Format dimension name for display
- */
-function formatDimensionName(dimension: string): string {
-  // Convert camelCase or snake_case to Title Case with spaces
-  return dimension
-    .replace(/_/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
 
 /**
  * Loading skeleton component
@@ -162,6 +153,7 @@ function ForbiddenError() {
  */
 export function CandidateDetailClient({ assessmentId, simulationId }: CandidateDetailClientProps) {
   const [data, setData] = useState<CandidateDetailData | null>(null);
+  const { translateDimension } = useAssessmentTranslations();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<number | null>(null);
 
@@ -314,7 +306,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base font-medium text-stone-900">
-                      {formatDimensionName(dim.dimension)}
+                      {translateDimension(dim.dimension)}
                     </CardTitle>
                     <div className="flex items-center gap-2">
                       <span className={`text-xl font-bold ${getDimensionScoreColor(dim.score)}`}>

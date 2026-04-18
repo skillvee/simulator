@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, CheckCircle2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDimensionName } from "./helpers";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import { ScoreDots } from "./score-dots";
 import type { CandidateComparison } from "./types";
 
@@ -165,6 +165,7 @@ export function CoreDimensionsSection({
 }: CoreDimensionsSectionProps) {
   const isSingle = candidates.length === 1;
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const { translateDimension } = useAssessmentTranslations();
 
   const allDimensions = useMemo(() => {
     const dimensionSet = new Set<string>();
@@ -265,7 +266,7 @@ export function CoreDimensionsSection({
                       <ChevronRight className="h-4 w-4 text-stone-400 flex-shrink-0" />
                     )}
                     <span className="font-medium text-stone-900">
-                      {formatDimensionName(dimension)}
+                      {translateDimension(dimension)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -348,7 +349,7 @@ export function CoreDimensionsSection({
                     <ChevronRight className="h-4 w-4 text-stone-400 flex-shrink-0" />
                   )}
                   <span className="font-medium text-stone-900">
-                    {formatDimensionName(dimension)}
+                    {translateDimension(dimension)}
                   </span>
                 </div>
 

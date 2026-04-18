@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { formatTime, formatDimensionName } from "./helpers";
+import { formatTime } from "./helpers";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 
 const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -24,6 +25,7 @@ export function VideoModal({
   candidateName,
   dimensionName,
 }: VideoModalProps) {
+  const { translateDimension } = useAssessmentTranslations();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = useState(initialTime);
   const [duration, setDuration] = useState(0);
@@ -68,7 +70,7 @@ export function VideoModal({
               <>
                 <span className="text-stone-400">&middot;</span>
                 <span className="text-stone-600 font-normal">
-                  {formatDimensionName(dimensionName)}
+                  {translateDimension(dimensionName)}
                 </span>
               </>
             )}

@@ -1,6 +1,5 @@
 // Re-export shared helpers
 export {
-  formatDimensionName,
   getStrengthBadgeStyles,
   getScoreColor,
   getConfidenceBadgeStyles,

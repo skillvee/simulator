@@ -1,5 +1,7 @@
+"use client";
+
 import { CheckCircle2, AlertTriangle } from "lucide-react";
-import { formatDimensionName } from "./helpers";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import type { CandidateComparison } from "./types";
 
 interface StrengthsGrowthSectionProps {
@@ -8,6 +10,7 @@ interface StrengthsGrowthSectionProps {
 
 export function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionProps) {
   const isSingle = candidates.length === 1;
+  const { translateDimension } = useAssessmentTranslations();
 
   if (isSingle) {
     const candidate = candidates[0];
@@ -31,7 +34,7 @@ export function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionPro
                       <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                       <div>
                         <span className="font-medium text-stone-900">
-                          {formatDimensionName(strength.dimension)}
+                          {translateDimension(strength.dimension)}
                         </span>
                         <span className="text-stone-400 ml-1">({strength.score}/4)</span>
                         <p className="text-xs text-stone-500 mt-0.5">{strength.description}</p>
@@ -56,7 +59,7 @@ export function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionPro
                       <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
                       <div>
                         <span className="font-medium text-stone-900">
-                          {formatDimensionName(area.dimension)}
+                          {translateDimension(area.dimension)}
                         </span>
                         <span className="text-stone-400 ml-1">({area.score}/4)</span>
                         <p className="text-xs text-stone-500 mt-0.5">{area.description}</p>
@@ -106,7 +109,7 @@ export function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionPro
                           <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <span className="font-medium text-stone-900">
-                              {formatDimensionName(strength.dimension)}
+                              {translateDimension(strength.dimension)}
                             </span>
                             <span className="text-stone-400 ml-1">({strength.score}/4)</span>
                             <p className="text-xs text-stone-500 mt-0.5">{strength.description}</p>
@@ -144,7 +147,7 @@ export function StrengthsGrowthSection({ candidates }: StrengthsGrowthSectionPro
                           <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
                           <div>
                             <span className="font-medium text-stone-900">
-                              {formatDimensionName(area.dimension)}
+                              {translateDimension(area.dimension)}
                             </span>
                             <span className="text-stone-400 ml-1">({area.score}/4)</span>
                             <p className="text-xs text-stone-500 mt-0.5">{area.description}</p>

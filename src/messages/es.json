@@ -189,9 +189,9 @@
     "levels": {
       "exceptional": "Excepcional",
       "strong": "Fuerte",
-      "meetsExpectations": "Cumple las expectativas",
-      "belowExpectations": "Por debajo de las expectativas",
-      "developing": "En desarrollo"
+      "adequate": "Adecuado",
+      "developing": "En Desarrollo",
+      "needs_improvement": "Necesita Mejorar"
     }
   },
   "welcome": {
