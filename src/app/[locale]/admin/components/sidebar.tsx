@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   FlaskConical,
 } from "lucide-react";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 
 interface AdminSidebarProps {
   user: {
@@ -111,6 +112,13 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
           })}
         </div>
       </nav>
+
+      {/* Language Switcher */}
+      {sidebarOpen && (
+        <div className="px-3 pb-3">
+          <LanguageSwitcher variant="dark" />
+        </div>
+      )}
 
       {/* Footer */}
       <div className="flex h-[72px] items-center border-t border-white/10 px-3">

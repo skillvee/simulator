@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { AuthButton, useAuth } from "@/components/auth";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 
 interface NavigationProps {
   currentPage?: string;
@@ -111,6 +112,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
           </Link>
 
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             {isSignedIn ? (
               <>
                 <Link href={dashboardHref}>
@@ -230,6 +232,9 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
             </Link>
 
             <div className={`pt-4 space-y-4 ${isDark ? "border-t border-white/10" : "border-t border-stone-200"}`}>
+              <div className="mb-4">
+                <LanguageSwitcher />
+              </div>
               {isSignedIn ? (
                 <div className="space-y-4">
                   <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
