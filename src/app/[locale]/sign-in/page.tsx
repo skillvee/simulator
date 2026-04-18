@@ -5,6 +5,7 @@ import { signIn, getSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
@@ -27,6 +28,7 @@ function SignInForm() {
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations("auth.signIn");
 
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const authError = searchParams.get("error");
@@ -49,7 +51,7 @@ function SignInForm() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError(t("errors.invalid"));
       setIsLoading(false);
     } else {
       // If no explicit callbackUrl was provided, check user role to redirect to appropriate dashboard
@@ -87,9 +89,9 @@ function SignInForm() {
               priority
             />
           </Link>
-          <h2 className="text-3xl font-bold text-slate-900">Welcome back</h2>
+          <h2 className="text-3xl font-bold text-slate-900">{t("title")}</h2>
           <p className="mt-2 text-slate-500">
-            Sign in to your account to continue
+            {t("subtitle")}
           </p>
         </div>
 
@@ -97,8 +99,8 @@ function SignInForm() {
         {(error || authError) && (
           <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
             {error || (authError === "OAuthAccountNotLinked"
-              ? "This email is already associated with another sign-in method."
-              : "An error occurred during sign in. Please try again.")}
+              ? t("errors.oauthNotLinked")
+              : t("errors.general"))}
           </div>
         )}
 
@@ -111,7 +113,7 @@ function SignInForm() {
           disabled={isLoading}
         >
           <GoogleIcon />
-          Continue with Google
+          {t("continueWithGoogle")}
         </Button>
 
         {/* Divider */}
@@ -120,7 +122,7 @@ function SignInForm() {
             <div className="w-full border-t border-slate-200" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-4 text-slate-400">or</span>
+            <span className="bg-white px-4 text-slate-400">{t("or")}</span>
           </div>
         </div>
 
@@ -128,14 +130,14 @@ function SignInForm() {
         <form onSubmit={handleCredentialsSignIn} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Email
+              {t("email")}
             </label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               required
               disabled={isLoading}
               className="h-12 rounded-xl border-slate-200 focus:border-primary"
@@ -145,10 +147,10 @@ function SignInForm() {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                Password
+                {t("password")}
               </label>
               <Link href="/forgot-password" className="text-xs text-primary hover:text-primary/80 transition-colors">
-                Forgot password?
+                {t("forgotPassword")}
               </Link>
             </div>
             <Input
@@ -156,7 +158,7 @@ function SignInForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder={t("passwordPlaceholder")}
               required
               disabled={isLoading}
               className="h-12 rounded-xl border-slate-200 focus:border-primary"
@@ -168,9 +170,9 @@ function SignInForm() {
             className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/25 transition-all group"
             disabled={isLoading}
           >
-            {isLoading ? "Signing in..." : (
+            {isLoading ? t("signingIn") : (
               <>
-                Sign in
+                {t("signInButton")}
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </>
             )}
@@ -178,12 +180,12 @@ function SignInForm() {
         </form>
 
         <p className="mt-8 text-center text-sm text-slate-500">
-          Don&apos;t have an account?{" "}
+          {t("dontHaveAccount")}{" "}
           <Link
             href={`/sign-up${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
             className="font-semibold text-primary hover:text-primary/80 transition-colors"
           >
-            Sign up
+            {t("signUp")}
           </Link>
         </p>
       </div>
@@ -192,11 +194,12 @@ function SignInForm() {
 }
 
 function SignInLoading() {
+  const t = useTranslations("auth.signIn");
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-        <p className="mt-4 text-slate-500">Loading...</p>
+        <p className="mt-4 text-slate-500">{t("loading")}</p>
       </div>
     </div>
   );

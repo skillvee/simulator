@@ -1,4 +1,66 @@
 {
+  "auth": {
+    "signIn": {
+      "title": "Bienvenido de nuevo",
+      "subtitle": "Inicia sesión en tu cuenta para continuar",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Ingresa tu contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "continueWithGoogle": "Continuar con Google",
+      "or": "o",
+      "signInButton": "Iniciar sesión",
+      "signingIn": "Iniciando sesión...",
+      "dontHaveAccount": "¿No tienes una cuenta?",
+      "signUp": "Regístrate",
+      "loading": "Cargando...",
+      "errors": {
+        "invalid": "Correo electrónico o contraseña inválidos",
+        "oauthNotLinked": "Este correo ya está asociado con otro método de inicio de sesión.",
+        "general": "Ocurrió un error durante el inicio de sesión. Por favor intenta de nuevo."
+      }
+    },
+    "signUp": {
+      "title": "Crea tu cuenta",
+      "subtitle": "Comienza a practicar entrevistas con IA",
+      "recruiterTitle": "Crea tu cuenta de reclutador",
+      "recruiterSubtitle": "Comienza a evaluar candidatos con simulaciones impulsadas por IA",
+      "firstName": "Nombre",
+      "firstNamePlaceholder": "Juan",
+      "lastName": "Apellido",
+      "lastNamePlaceholder": "Pérez",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "workEmail": "Correo de trabajo",
+      "workEmailPlaceholder": "tu@empresa.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Al menos 8 caracteres",
+      "confirmPassword": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "Confirma tu contraseña",
+      "continueWithGoogle": "Continuar con Google",
+      "or": "o",
+      "createAccountButton": "Crear cuenta",
+      "createRecruiterAccountButton": "Crear cuenta de reclutador",
+      "creatingAccount": "Creando cuenta...",
+      "termsPrefix": "Al registrarte, aceptas nuestros",
+      "termsOfService": "Términos de Servicio",
+      "and": "y",
+      "privacyPolicy": "Política de Privacidad",
+      "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Iniciar sesión",
+      "lookingForAssessment": "¿Buscas tomar una evaluación?",
+      "signUpAsCandidate": "Regístrate como candidato",
+      "loading": "Cargando...",
+      "errors": {
+        "passwordsDontMatch": "Las contraseñas no coinciden",
+        "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+        "registrationFailed": "El registro falló",
+        "accountCreatedButSignInFailed": "Cuenta creada pero el inicio de sesión falló. Por favor inicia sesión manualmente.",
+        "general": "Ocurrió un error. Por favor intenta de nuevo."
+      }
+    }
+  },
   "work": {
     "sessionComplete": {
       "title": "Sesión Completa",

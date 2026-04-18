@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight } from "lucide-react";
@@ -30,6 +31,7 @@ function SignUpForm() {
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations("auth.signUp");
 
   // Get role from URL params (candidate or employer)
   const role = searchParams.get("role") as "candidate" | "employer" | null;
@@ -65,14 +67,14 @@ function SignUpForm() {
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("errors.passwordsDontMatch"));
       setIsLoading(false);
       return;
     }
 
     // Validate password strength
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError(t("errors.passwordTooShort"));
       setIsLoading(false);
       return;
     }
@@ -93,7 +95,7 @@ function SignUpForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Registration failed");
+        setError(data.error || t("errors.registrationFailed"));
         setIsLoading(false);
         return;
       }
@@ -106,14 +108,14 @@ function SignUpForm() {
       });
 
       if (signInResult?.error) {
-        setError("Account created but sign-in failed. Please sign in manually.");
+        setError(t("errors.accountCreatedButSignInFailed"));
         setIsLoading(false);
         return;
       }
 
       router.push(callbackUrl);
     } catch {
-      setError("An error occurred. Please try again.");
+      setError(t("errors.general"));
       setIsLoading(false);
     }
   };
@@ -133,9 +135,9 @@ function SignUpForm() {
               priority
             />
           </Link>
-          <h2 className="text-3xl font-bold text-slate-900">Create your account</h2>
+          <h2 className="text-3xl font-bold text-slate-900">{t("title")}</h2>
           <p className="mt-2 text-slate-500">
-            Start practicing interviews with AI
+            {t("subtitle")}
           </p>
         </div>
 
@@ -155,7 +157,7 @@ function SignUpForm() {
           disabled={isLoading}
         >
           <GoogleIcon />
-          Continue with Google
+          {t("continueWithGoogle")}
         </Button>
 
         {/* Divider */}
@@ -164,7 +166,7 @@ function SignUpForm() {
             <div className="w-full border-t border-slate-200" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-4 text-slate-400">or</span>
+            <span className="bg-white px-4 text-slate-400">{t("or")}</span>
           </div>
         </div>
 
@@ -173,28 +175,28 @@ function SignUpForm() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-1.5">
-                First name
+                {t("firstName")}
               </label>
               <Input
                 id="firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="John"
+                placeholder={t("firstNamePlaceholder")}
                 disabled={isLoading}
                 className="h-12 rounded-xl border-slate-200 focus:border-primary"
               />
             </div>
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-1.5">
-                Last name
+                {t("lastName")}
               </label>
               <Input
                 id="lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="Doe"
+                placeholder={t("lastNamePlaceholder")}
                 disabled={isLoading}
                 className="h-12 rounded-xl border-slate-200 focus:border-primary"
               />
@@ -203,14 +205,14 @@ function SignUpForm() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Email address
+              {t("email")}
             </label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               required
               disabled={isLoading}
               className="h-12 rounded-xl border-slate-200 focus:border-primary"
@@ -219,14 +221,14 @@ function SignUpForm() {
 
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Password
+              {t("password")}
             </label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder={t("passwordPlaceholder")}
               required
               disabled={isLoading}
               className="h-12 rounded-xl border-slate-200 focus:border-primary"
@@ -235,14 +237,14 @@ function SignUpForm() {
 
           <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1.5">
-              Confirm password
+              {t("confirmPassword")}
             </label>
             <Input
               id="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm your password"
+              placeholder={t("confirmPasswordPlaceholder")}
               required
               disabled={isLoading}
               className="h-12 rounded-xl border-slate-200 focus:border-primary"
@@ -254,9 +256,9 @@ function SignUpForm() {
             className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/25 transition-all group"
             disabled={isLoading}
           >
-            {isLoading ? "Creating account..." : (
+            {isLoading ? t("creatingAccount") : (
               <>
-                Create account
+                {t("createAccountButton")}
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </>
             )}
@@ -265,23 +267,23 @@ function SignUpForm() {
 
         {/* Terms */}
         <p className="mt-4 text-xs text-center text-slate-400">
-          By signing up, you agree to our{" "}
+          {t("termsPrefix")}{" "}
           <Link href="/terms" className="text-primary hover:underline">
-            Terms of Service
+            {t("termsOfService")}
           </Link>{" "}
-          and{" "}
+          {t("and")}{" "}
           <Link href="/privacy" className="text-primary hover:underline">
-            Privacy Policy
+            {t("privacyPolicy")}
           </Link>
         </p>
 
         <p className="mt-8 text-center text-sm text-slate-500">
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <Link
             href={`/sign-in${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
             className="font-semibold text-primary hover:text-primary/80 transition-colors"
           >
-            Sign in
+            {t("signIn")}
           </Link>
         </p>
       </div>
@@ -290,11 +292,12 @@ function SignUpForm() {
 }
 
 function SignUpLoading() {
+  const t = useTranslations("auth.signUp");
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-        <p className="mt-4 text-slate-500">Loading...</p>
+        <p className="mt-4 text-slate-500">{t("loading")}</p>
       </div>
     </div>
   );

@@ -1,4 +1,66 @@
 {
+  "auth": {
+    "signIn": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account to continue",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "forgotPassword": "Forgot password?",
+      "continueWithGoogle": "Continue with Google",
+      "or": "or",
+      "signInButton": "Sign in",
+      "signingIn": "Signing in...",
+      "dontHaveAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "loading": "Loading...",
+      "errors": {
+        "invalid": "Invalid email or password",
+        "oauthNotLinked": "This email is already associated with another sign-in method.",
+        "general": "An error occurred during sign in. Please try again."
+      }
+    },
+    "signUp": {
+      "title": "Create your account",
+      "subtitle": "Start practicing interviews with AI",
+      "recruiterTitle": "Create your recruiter account",
+      "recruiterSubtitle": "Start assessing candidates with AI-powered simulations",
+      "firstName": "First name",
+      "firstNamePlaceholder": "John",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Doe",
+      "email": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "workEmail": "Work email",
+      "workEmailPlaceholder": "you@company.com",
+      "password": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "continueWithGoogle": "Continue with Google",
+      "or": "or",
+      "createAccountButton": "Create account",
+      "createRecruiterAccountButton": "Create recruiter account",
+      "creatingAccount": "Creating account...",
+      "termsPrefix": "By signing up, you agree to our",
+      "termsOfService": "Terms of Service",
+      "and": "and",
+      "privacyPolicy": "Privacy Policy",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "lookingForAssessment": "Looking to take an assessment?",
+      "signUpAsCandidate": "Sign up as a candidate",
+      "loading": "Loading...",
+      "errors": {
+        "passwordsDontMatch": "Passwords do not match",
+        "passwordTooShort": "Password must be at least 8 characters",
+        "registrationFailed": "Registration failed",
+        "accountCreatedButSignInFailed": "Account created but sign-in failed. Please sign in manually.",
+        "general": "An error occurred. Please try again."
+      }
+    }
+  },
   "work": {
     "sessionComplete": {
       "title": "Session Complete",
