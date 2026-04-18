@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { success, error, validationError } from "@/lib/api";
 import { createLogger } from "@/lib/core";
+import { DEFAULT_LANGUAGE, type SupportedLanguage, isSupportedLanguage } from "@/lib/core/language";
 import { z } from "zod";
 import {
   generateResources,
@@ -26,6 +27,10 @@ const requestSchema = z.object({
     .min(1, "Tech stack must have at least one item"),
   roleName: z.string().min(1, "Role name is required"),
   seniorityLevel: z.string().min(1, "Seniority level is required"),
+  language: z.string().optional().refine(
+    (val) => !val || isSupportedLanguage(val),
+    { message: "Invalid language code" }
+  ),
   creationLogId: z.string().optional(),
 });
 
@@ -54,8 +59,11 @@ export async function POST(request: Request) {
       return validationError(validation.error);
     }
 
-    const { creationLogId, ...resourceInput } = validation.data;
-    const input: GenerateResourcesInput = resourceInput;
+    const { creationLogId, language, ...resourceInput } = validation.data;
+    const input: GenerateResourcesInput = {
+      ...resourceInput,
+      language: (language as SupportedLanguage) || DEFAULT_LANGUAGE,
+    };
 
     // Start generation step logging if creationLogId is provided
     const tracker = creationLogId

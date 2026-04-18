@@ -414,6 +414,7 @@ async function main() {
         keyResponsibilities: config.keyResponsibilities,
         domainContext: config.domainContext,
         companyName: config.companyName,
+        language: "en",
       });
       const task = taskResult.taskOptions[0];
       console.log(`   ✅ Task: ${task.summary}`);
@@ -441,6 +442,7 @@ async function main() {
         techStack: config.techStack,
         roleName: config.roleName,
         seniorityLevel: config.seniorityLevel,
+        language: "en",
       });
       console.log(
         `   ✅ Resources: ${resourceResult.resources.map((r) => r.label).join(", ")}`

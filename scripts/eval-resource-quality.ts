@@ -63,6 +63,7 @@ const SCENARIOS: (GenerateCodingTaskInput & { id: string })[] = [
       "AdTech company running a real-time bidding platform processing 500K QPS",
     companyName: "AppLovin",
     simulationDepth: "medium",
+    language: "en",
   },
   {
     id: "data-analyst",
@@ -78,6 +79,7 @@ const SCENARIOS: (GenerateCodingTaskInput & { id: string })[] = [
       "E-commerce marketplace with 2M monthly active users, focus on conversion optimization",
     companyName: "RetailPulse",
     simulationDepth: "medium",
+    language: "en",
   },
   {
     id: "frontend-eng",
@@ -93,6 +95,7 @@ const SCENARIOS: (GenerateCodingTaskInput & { id: string })[] = [
       "Collaborative document editing platform for enterprise teams",
     companyName: "CollabSpace",
     simulationDepth: "medium",
+    language: "en",
   },
   {
     id: "devops-sre",
@@ -115,6 +118,7 @@ const SCENARIOS: (GenerateCodingTaskInput & { id: string })[] = [
       "FinTech company processing $2B in annual transactions with strict uptime SLAs",
     companyName: "FinanceGrid",
     simulationDepth: "medium",
+    language: "en",
   },
   {
     id: "ml-engineer",
@@ -130,6 +134,7 @@ const SCENARIOS: (GenerateCodingTaskInput & { id: string })[] = [
       "Fraud detection platform for a payments company, real-time inference at 10K TPS",
     companyName: "TrustShield",
     simulationDepth: "medium",
+    language: "en",
   },
 ];
 
@@ -331,6 +336,7 @@ async function main() {
           techStack: scenario.techStack,
           roleName: scenario.roleName,
           seniorityLevel: scenario.seniorityLevel,
+          language: "en",
         });
         const elapsed = Date.now() - startTime;
 

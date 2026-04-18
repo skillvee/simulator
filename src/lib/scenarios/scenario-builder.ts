@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod";
+import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
 
 /**
  * Schema for structured personality dimensions
@@ -372,11 +373,15 @@ export function applyExtraction(
  * Build the complete system prompt including current state
  */
 export function buildCompleteSystemPrompt(
-  currentData: ScenarioBuilderData
+  currentData: ScenarioBuilderData,
+  language: SupportedLanguage
 ): string {
-  return (
-    SCENARIO_BUILDER_SYSTEM_PROMPT +
+  const languageInstruction = buildLanguageInstruction(language);
+  const basePrompt = SCENARIO_BUILDER_SYSTEM_PROMPT +
     formatCurrentStateForPrompt(currentData) +
-    extractionInstructionsPrompt
-  );
+    extractionInstructionsPrompt;
+
+  return languageInstruction
+    ? `${languageInstruction}\n\n${basePrompt}`
+    : basePrompt;
 }

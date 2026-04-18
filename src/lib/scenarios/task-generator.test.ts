@@ -31,6 +31,7 @@ describe("generateCodingTask", () => {
     ],
     domainContext: "fintech startup",
     companyName: "PayFlow Inc.",
+    language: "en",
   };
 
   const mockTaskOptions: TaskOption[] = [

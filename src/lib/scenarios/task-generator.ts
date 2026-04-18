@@ -11,6 +11,7 @@ import {
 } from "@/prompts/recruiter/task-generator";
 import { z } from "zod";
 import { createLogger } from "@/lib/core";
+import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
 
 const logger = createLogger("lib:scenarios:task-generator");
 
@@ -44,6 +45,7 @@ export type GenerateCodingTaskInput = {
   domainContext: string;
   companyName: string;
   simulationDepth?: "short" | "medium" | "long";
+  language: SupportedLanguage;
 };
 
 /**
@@ -91,7 +93,10 @@ export async function generateCodingTask(
 ): Promise<GenerateCodingTaskResponse> {
   // Build the context prompt
   const contextPrompt = buildContextPrompt(input);
-  const fullPrompt = `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
+  const languageInstruction = buildLanguageInstruction(input.language);
+  const fullPrompt = languageInstruction
+    ? `${languageInstruction}\n\n${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`
+    : `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
   let _lastResponseText = "";
 

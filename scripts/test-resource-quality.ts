@@ -388,7 +388,7 @@ async function main() {
 
     const startTime = Date.now();
     try {
-      const response = await generateResources(scenario);
+      const response = await generateResources({ ...scenario, language: "en" });
       const elapsed = Date.now() - startTime;
 
       console.log(`  -> Generated ${response.resources.length} resource(s) in ${(elapsed / 1000).toFixed(1)}s`);

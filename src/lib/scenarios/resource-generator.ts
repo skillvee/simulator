@@ -7,6 +7,7 @@
 
 import { gemini } from "@/lib/ai/gemini";
 import { createLogger } from "@/lib/core";
+import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
 import {
   RESOURCE_GENERATOR_SYSTEM_PROMPT,
   RESOURCE_GENERATOR_PROMPT_VERSION,
@@ -58,6 +59,7 @@ export type GenerateResourcesInput = {
   roleName: string;
   /** The candidate's seniority level */
   seniorityLevel: string;
+  language: SupportedLanguage;
 };
 
 export type GenerateResourcesResponse = {
@@ -84,10 +86,15 @@ export async function generateResources(
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
+      const languageInstruction = buildLanguageInstruction(input.language);
+      const systemInstruction = languageInstruction
+        ? `${languageInstruction}\n\n${RESOURCE_GENERATOR_SYSTEM_PROMPT}`
+        : RESOURCE_GENERATOR_SYSTEM_PROMPT;
+
       const response = await gemini.models.generateContent({
         model: GENERATION_MODEL,
         config: {
-          systemInstruction: RESOURCE_GENERATOR_SYSTEM_PROMPT,
+          systemInstruction,
           temperature: 0.7,
           responseMimeType: "application/json",
           responseSchema: {
@@ -138,8 +145,23 @@ export async function generateResources(
         throw new Error("Empty response from Gemini");
       }
 
-      const resources = parseAndValidateResources(responseText);
+      let resources = parseAndValidateResources(responseText);
       validateRoleSpecificResources(resources, input.roleName);
+
+      // Post-processing: deterministic cleanup
+      resources = postProcessResources(resources);
+
+      // Targeted code patch for engineering roles with missing references
+      const { isEngineeringRole } = getRoleCategories(input.roleName);
+      if (isEngineeringRole) {
+        const missingRefs = findMissingCodeReferences(resources, input.taskDescription);
+        if (missingRefs.length > 0) {
+          logger.info("Detected missing code references, patching", {
+            missing: missingRefs,
+          });
+          resources = await patchMissingCode(resources, missingRefs, input);
+        }
+      }
 
       return {
         resources,
@@ -307,32 +329,241 @@ function validateRoleSpecificResources(
   }
 }
 
+// ─── Post-Processing Pipeline ───────────────────────────────────────
+// Deterministic cleanup that runs on every generated resource set.
+// Catches issues the prompt can't reliably prevent.
+
 /**
  * Strip external URLs from resource content.
- * Replaces URLs with their descriptive text or removes them entirely.
- * This is a safety net — the prompt instructs Gemini not to generate URLs,
- * but LLMs don't always comply.
  */
 function stripExternalUrls(content: string): string {
-  // Replace markdown links [text](url) with just the text
   let cleaned = content.replace(
     /\[([^\]]+)\]\((?:https?:\/\/|git@)[^)]+\)/g,
     "$1"
   );
-
-  // Replace `git clone <url>` commands with a comment
   cleaned = cleaned.replace(
     /`?git\s+clone\s+\S+`?/g,
     "`# repo already cloned locally`"
   );
-
-  // Replace bare URLs (http://, https://, git@) that aren't in code context
   cleaned = cleaned.replace(
     /(?:https?:\/\/|git@)[^\s)>\]]+/g,
     "(see internal documentation)"
   );
+  return cleaned;
+}
+
+/**
+ * Clean dangling references to external tools the candidate can't access.
+ */
+function cleanDanglingReferences(content: string): string {
+  let cleaned = content;
+
+  // Slack channel action references: "reach out on #channel" → "reach out to your coworkers"
+  cleaned = cleaned.replace(
+    /(?:reach out (?:to|on|in|via)|contact|ping|ask in|post (?:to|in)|check)\s+#[\w-]+/gi,
+    (match) => match.replace(/#[\w-]+/, "your coworkers")
+  );
+
+  // Standalone Slack channel in contact/on-call sections
+  cleaned = cleaned.replace(
+    /(?:Slack(?:\s+channel)?:\s*)#[\w-]+/gi,
+    "Slack channel (ask your coworkers)"
+  );
+
+  // PagerDuty/OpsGenie references
+  cleaned = cleaned.replace(
+    /(?:PagerDuty|OpsGenie|incident\.io)\s+(?:rotation|schedule|escalation|under)[^.\n]*/gi,
+    "on-call rotation (ask your manager)"
+  );
+
+  // "Check the [monitoring tool] dashboard" → point to provided resources
+  cleaned = cleaned.replace(
+    /(?:check|see|view|open|visit|go to|navigate to)\s+(?:the\s+)?(?:Grafana|Datadog|Kibana|Splunk|New Relic|CloudWatch|Prometheus)\s+(?:dashboard|board|console|UI)[^.\n]*/gi,
+    "see the metrics in the dashboard resource"
+  );
+
+  // "Open the JIRA/Linear board" → point to known issues
+  cleaned = cleaned.replace(
+    /(?:check|see|view|open|visit)\s+(?:the\s+)?(?:JIRA|Linear|Asana|Trello|Shortcut)\s+(?:board|project|sprint|backlog)[^.\n]*/gi,
+    "see the known issues listed above"
+  );
+
+  // Bare ticket references without inline context: "JIRA-1234" not followed by ": description"
+  cleaned = cleaned.replace(
+    /\b((?:JIRA|TICKET|LINEAR|ISSUE|BUG|TASK|SRE|INFRA|ENG)-\d+)\b(?!\s*[:—–-]\s*\S)/g,
+    "$1 (see context above)"
+  );
 
   return cleaned;
+}
+
+/**
+ * Fix "See Also" sections to only reference resources that actually exist in the set.
+ */
+function fixSeeAlsoReferences(
+  content: string,
+  otherLabels: string[]
+): string {
+  const seeAlsoPattern = /(\*\*See Also:\*\*|\*\*Related:\*\*|## See Also|## Related)/i;
+  const seeAlsoMatch = content.match(seeAlsoPattern);
+  if (!seeAlsoMatch) return content;
+
+  const seeAlsoIdx = content.lastIndexOf(seeAlsoMatch[0]);
+  const beforeSeeAlso = content.slice(0, seeAlsoIdx);
+  const seeAlsoSection = content.slice(seeAlsoIdx);
+
+  // Check if any existing labels are referenced
+  const hasValidRef = otherLabels.some((label) => {
+    const shortLabel = label.slice(0, Math.min(20, label.length)).toLowerCase();
+    return seeAlsoSection.toLowerCase().includes(shortLabel);
+  });
+
+  if (!hasValidRef && otherLabels.length > 0) {
+    // Rewrite See Also with actual labels
+    const refList = otherLabels.map((l) => `- ${l}`).join("\n");
+    return `${beforeSeeAlso}---\n\n**See Also:**\n${refList}`;
+  }
+
+  return content;
+}
+
+/**
+ * Extract file/function/hook names from a task description.
+ * Only meaningful for engineering roles.
+ */
+function extractCodeReferences(taskDescription: string): string[] {
+  const refs: string[] = [];
+
+  // File paths: src/something/file.ts
+  const filePaths = taskDescription.match(
+    /(?:src|lib|app|components|hooks|features|modules|utils|services|handlers)\/[\w/./-]+\.\w+/g
+  );
+  if (filePaths) refs.push(...filePaths);
+
+  // React hooks: useXxx
+  const hooks = taskDescription.match(/\buse[A-Z]\w+/g);
+  if (hooks) refs.push(...hooks);
+
+  // Component/class names in backticks: `CommentCard`, `BidHandler`
+  const backticked = taskDescription.match(/`([A-Z]\w+)`/g);
+  if (backticked) refs.push(...backticked.map((q) => q.replace(/`/g, "")));
+
+  // Named patterns: "the XyzHandler", "the processPayment function"
+  const namedCode = taskDescription.match(
+    /(?:the\s+)`?(\w+(?:Handler|Service|Controller|Processor|Manager|Factory|Provider|Client|Worker|Queue|Pipeline|Resolver|Middleware))`?/gi
+  );
+  if (namedCode) {
+    refs.push(
+      ...namedCode.map((m) =>
+        m.replace(/^the\s+/i, "").replace(/`/g, "")
+      )
+    );
+  }
+
+  return [...new Set(refs)];
+}
+
+/**
+ * Check if repository resources contain code for files/functions
+ * mentioned in the task. Returns names that are missing.
+ */
+function findMissingCodeReferences(
+  resources: ScenarioResource[],
+  taskDescription: string
+): string[] {
+  const codeRefs = extractCodeReferences(taskDescription);
+  if (codeRefs.length === 0) return [];
+
+  const allContent = resources.map((r) => r.content ?? "").join("\n");
+
+  return codeRefs.filter((ref) => {
+    // Get the base name (e.g., "useComments" from "src/hooks/useComments.ts")
+    const baseName = ref.split("/").pop()?.replace(/\.\w+$/, "") ?? ref;
+    return !allContent.toLowerCase().includes(baseName.toLowerCase());
+  });
+}
+
+/**
+ * Full post-processing pipeline for a resource set.
+ */
+function postProcessResources(
+  resources: ScenarioResource[]
+): ScenarioResource[] {
+  const allLabels = resources.map((r) => r.label);
+
+  return resources.map((r) => {
+    let content = r.content ?? "";
+    content = stripExternalUrls(content);
+    content = cleanDanglingReferences(content);
+    content = fixSeeAlsoReferences(content, allLabels.filter((l) => l !== r.label));
+    return { ...r, content };
+  });
+}
+
+/**
+ * Targeted regeneration: if the task mentions specific code that's missing
+ * from the resources, ask the LLM to add it to the repository resource.
+ * Only runs for engineering roles when post-processing detects gaps.
+ */
+async function patchMissingCode(
+  resources: ScenarioResource[],
+  missingRefs: string[],
+  input: GenerateResourcesInput
+): Promise<ScenarioResource[]> {
+  const repoIdx = resources.findIndex((r) => r.type === "repository");
+  if (repoIdx === -1) return resources;
+
+  const repo = resources[repoIdx];
+  const missingList = missingRefs.slice(0, 5).join(", "); // Cap at 5 to keep prompt short
+
+  logger.info("Patching missing code references into repository resource", {
+    missing: missingList,
+    repoLabel: repo.label,
+  });
+
+  try {
+    const response = await gemini.models.generateContent({
+      model: GENERATION_MODEL,
+      config: {
+        temperature: 0.3,
+        responseMimeType: "text/plain",
+      },
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: `You are updating a repository README for a ${input.roleName} simulation.
+
+The task asks the candidate to work on: ${missingList}
+
+But the current README doesn't include the implementation code for these. The candidate can ONLY see what's in this document — they cannot browse the codebase.
+
+Here is the current README content:
+${repo.content}
+
+Add a new section called "## Key Source Files" BEFORE the "Known Issues" or "See Also" section. Include realistic implementation code snippets (20-40 lines each) for: ${missingList}
+
+Return the COMPLETE updated README content. Do not remove any existing content. Do not add any URLs.`,
+            },
+          ],
+        },
+      ],
+    });
+
+    const patchedContent = response.text;
+    if (patchedContent && patchedContent.length > (repo.content ?? "").length) {
+      const updated = [...resources];
+      updated[repoIdx] = { ...repo, content: stripExternalUrls(patchedContent) };
+      return updated;
+    }
+  } catch (error) {
+    logger.warn("Failed to patch missing code, using original resources", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return resources;
 }
 
 function parseAndValidateResources(responseText: string): ScenarioResource[] {

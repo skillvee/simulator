@@ -153,6 +153,7 @@ export const ScenarioBuilderRequestSchema = z.object({
     .optional()
     .default([]),
   scenarioData: z.record(z.unknown()).optional().default({}),
+  language: z.string().optional(),
 });
 export type ScenarioBuilderRequest = z.infer<
   typeof ScenarioBuilderRequestSchema

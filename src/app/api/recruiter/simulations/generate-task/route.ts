@@ -8,6 +8,7 @@
 import { auth } from "@/auth";
 import { success, error, validationError } from "@/lib/api";
 import { createLogger } from "@/lib/core";
+import { DEFAULT_LANGUAGE, type SupportedLanguage, isSupportedLanguage } from "@/lib/core/language";
 import {
   generateCodingTask,
   type GenerateCodingTaskInput,
@@ -38,6 +39,10 @@ const requestSchema = z.object({
   domainContext: z.string().min(1, "Domain context is required"),
   companyName: z.string().min(1, "Company name is required"),
   simulationDepth: z.enum(["short", "medium", "long"]).optional().default("medium"),
+  language: z.string().optional().refine(
+    (val) => !val || isSupportedLanguage(val),
+    { message: "Invalid language code" }
+  ),
   creationLogId: z.string().optional(),
 });
 
@@ -63,10 +68,11 @@ export async function POST(request: Request) {
       return validationError(validationResult.error);
     }
 
-    const { creationLogId, ...taskInput } = validationResult.data;
+    const { creationLogId, language, ...taskInput } = validationResult.data;
     const input: GenerateCodingTaskInput = {
       ...taskInput,
       simulationDepth: taskInput.simulationDepth,
+      language: (language as SupportedLanguage) || DEFAULT_LANGUAGE,
     };
 
     // Start generation step logging if creationLogId is provided
