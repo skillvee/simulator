@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { convertRubricToReport } from "./report-scoring";
 import { buildRubricEvaluationPrompt, type RubricPromptInput } from "@/prompts/analysis/rubric-evaluation";
 import type { RubricAssessmentOutput } from "@/types";

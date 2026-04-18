@@ -8,11 +8,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { POST as clonePOST } from "./[id]/clone/route";
 import { PATCH as updatePATCH } from "./[id]/route";
-import { DEFAULT_LANGUAGE } from "@/lib/core/language";
 
 // Mock auth
 const mockAuth = vi.fn();

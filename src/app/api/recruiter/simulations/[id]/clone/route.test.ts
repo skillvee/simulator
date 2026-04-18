@@ -118,7 +118,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
     challengeTagline: null,
     repoSpec: null,
     coworkers: [],
-  } as any;
+  } as never;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -126,7 +126,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
 
   it("should successfully clone a scenario to Spanish", async () => {
     // Setup mocks
-    vi.mocked(auth).mockResolvedValue({ user: mockUser } as any);
+    vi.mocked(auth).mockResolvedValue({ user: mockUser } as never);
     vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario);
     vi.mocked(db.scenario.create).mockResolvedValue({
       ...mockScenario,
@@ -185,7 +185,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
   });
 
   it("should reject cloning to the same language", async () => {
-    vi.mocked(auth).mockResolvedValue({ user: mockUser } as any);
+    vi.mocked(auth).mockResolvedValue({ user: mockUser } as never);
     vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario);
 
     const request = new Request("http://localhost:3000/api/recruiter/simulations/scenario123/clone", {
@@ -206,7 +206,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
   });
 
   it("should reject unauthorized users", async () => {
-    vi.mocked(auth).mockResolvedValue({ user: null } as any);
+    vi.mocked(auth).mockResolvedValue({ user: null } as never);
 
     const request = new Request("http://localhost:3000/api/recruiter/simulations/scenario123/clone", {
       method: "POST",
@@ -228,7 +228,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
   it("should reject non-recruiter users", async () => {
     vi.mocked(auth).mockResolvedValue({
       user: { ...mockUser, role: "USER" },
-    } as any);
+    } as never);
 
     const request = new Request("http://localhost:3000/api/recruiter/simulations/scenario123/clone", {
       method: "POST",
@@ -248,7 +248,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
   });
 
   it("should reject cloning scenarios not owned by the user", async () => {
-    vi.mocked(auth).mockResolvedValue({ user: mockUser } as any);
+    vi.mocked(auth).mockResolvedValue({ user: mockUser } as never);
     vi.mocked(db.scenario.findUnique).mockResolvedValue({
       ...mockScenario,
       createdById: "other-user-id", // Different owner
@@ -274,7 +274,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
   it("should allow admin to clone any scenario", async () => {
     vi.mocked(auth).mockResolvedValue({
       user: { ...mockUser, role: "ADMIN" },
-    } as any);
+    } as never);
     vi.mocked(db.scenario.findUnique).mockResolvedValue({
       ...mockScenario,
       createdById: "other-user-id", // Different owner
@@ -302,7 +302,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
   });
 
   it("should reject invalid language codes", async () => {
-    vi.mocked(auth).mockResolvedValue({ user: mockUser } as any);
+    vi.mocked(auth).mockResolvedValue({ user: mockUser } as never);
 
     const request = new Request("http://localhost:3000/api/recruiter/simulations/scenario123/clone", {
       method: "POST",

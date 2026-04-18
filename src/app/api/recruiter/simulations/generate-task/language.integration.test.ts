@@ -172,7 +172,7 @@ describe("POST /api/recruiter/simulations/generate-task - Language Support", () 
       });
 
       const response = await POST(request);
-      const data = await response.json();
+      await response.json();
 
       expect(response.status).toBe(200);
 

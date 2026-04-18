@@ -31,7 +31,7 @@ describe("AssessmentLayout - scenario language redirect", () => {
         language: "es",
       },
     };
-    vi.mocked(db.assessment.findUnique).mockResolvedValue(mockAssessment as any);
+    vi.mocked(db.assessment.findUnique).mockResolvedValue(mockAssessment as never);
 
     const params = Promise.resolve({
       locale: "en",
@@ -56,7 +56,7 @@ describe("AssessmentLayout - scenario language redirect", () => {
         language: "en",
       },
     };
-    vi.mocked(db.assessment.findUnique).mockResolvedValue(mockAssessment as any);
+    vi.mocked(db.assessment.findUnique).mockResolvedValue(mockAssessment as never);
 
     const params = Promise.resolve({
       locale: "es",
@@ -81,7 +81,7 @@ describe("AssessmentLayout - scenario language redirect", () => {
         language: "es",
       },
     };
-    vi.mocked(db.assessment.findUnique).mockResolvedValue(mockAssessment as any);
+    vi.mocked(db.assessment.findUnique).mockResolvedValue(mockAssessment as never);
 
     const params = Promise.resolve({
       locale: "es",
@@ -129,7 +129,7 @@ describe("AssessmentLayout - scenario language redirect", () => {
         language: "en",
       },
     };
-    vi.mocked(db.assessment.findUnique).mockResolvedValue(mockAssessment as any);
+    vi.mocked(db.assessment.findUnique).mockResolvedValue(mockAssessment as never);
 
     const params = Promise.resolve({
       locale: "en",

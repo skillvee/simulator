@@ -29,7 +29,7 @@ describe("InviteLayout - scenario language redirect", () => {
     const mockScenario = {
       language: "es",
     };
-    vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario as any);
+    vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario as never);
 
     const params = Promise.resolve({
       locale: "en",
@@ -52,7 +52,7 @@ describe("InviteLayout - scenario language redirect", () => {
     const mockScenario = {
       language: "en",
     };
-    vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario as any);
+    vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario as never);
 
     const params = Promise.resolve({
       locale: "es",
@@ -75,7 +75,7 @@ describe("InviteLayout - scenario language redirect", () => {
     const mockScenario = {
       language: "es",
     };
-    vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario as any);
+    vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario as never);
 
     const params = Promise.resolve({
       locale: "es",
@@ -121,7 +121,7 @@ describe("InviteLayout - scenario language redirect", () => {
     const mockScenario = {
       language: "en",
     };
-    vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario as any);
+    vi.mocked(db.scenario.findUnique).mockResolvedValue(mockScenario as never);
 
     const params = Promise.resolve({
       locale: "en",

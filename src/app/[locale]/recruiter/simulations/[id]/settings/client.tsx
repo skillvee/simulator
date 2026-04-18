@@ -44,7 +44,7 @@ import {
 import type { ScenarioResource } from "@/types";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
 import { LEVEL_EXPECTATIONS, type TargetLevel } from "@/lib/rubric/level-expectations";
-import { LANGUAGES, type SupportedLanguage } from "@/lib/core/language";
+import { LANGUAGES } from "@/lib/core/language";
 import {
   Tooltip,
   TooltipContent,
@@ -367,7 +367,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {Object.entries(LANGUAGES).map(([code, config]) => (
+                          {Object.entries(LANGUAGES).map(([code]) => (
                             <SelectItem key={code} value={code}>
                               {code === "en" ? "English" : code === "es" ? "Spanish" : code}
                             </SelectItem>

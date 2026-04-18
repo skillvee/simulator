@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import type { CandidateAssessmentData } from "./page";
 
-function formatRelativeTime(dateString: string, t: any) {
+type TranslationFn = ReturnType<typeof useTranslations>;
+
+function formatRelativeTime(dateString: string, t: TranslationFn) {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -34,7 +36,7 @@ function formatRelativeTime(dateString: string, t: any) {
   }).format(date);
 }
 
-function formatDuration(startedAt: string, completedAt: string, t: any): string {
+function formatDuration(startedAt: string, completedAt: string, t: TranslationFn): string {
   const durationMs =
     new Date(completedAt).getTime() - new Date(startedAt).getTime();
   const totalMinutes = Math.round(durationMs / 60000);
@@ -200,7 +202,7 @@ function AssessmentSection({
   title: string;
   icon: React.ReactNode;
   assessments: CandidateAssessmentData[];
-  t: any;
+  t: TranslationFn;
 }) {
   return (
     <div>
@@ -227,7 +229,7 @@ function AssessmentCard({
   t,
 }: {
   assessment: CandidateAssessmentData;
-  t: any;
+  t: TranslationFn;
 }) {
   const isCompleted = assessment.status === "COMPLETED";
   const isPending = assessment.status === "WELCOME";

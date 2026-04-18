@@ -20,8 +20,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { AssessmentCardData } from "./page";
 
+type TranslationFn = ReturnType<typeof useTranslations>;
 
-function formatRelativeTime(dateString: string, t: any) {
+function formatRelativeTime(dateString: string, t: TranslationFn) {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -64,7 +65,7 @@ function getScoreColor(strengthLabel: string | null) {
 function getStrengthShortLabel(
   strengthLabel: string | null,
   targetLevel: string,
-  t: any
+  t: TranslationFn
 ): string {
   const level = t(`levels.${targetLevel}`);
   switch (strengthLabel) {
@@ -228,7 +229,7 @@ function StatPill({
   value,
   highlight,
 }: {
-  t: any;
+  t: TranslationFn;
   label: string;
   value: number;
   highlight?: boolean;
@@ -270,7 +271,7 @@ function ScoreCircle({
   score: number;
   strengthLabel: string | null;
   targetLevel: string;
-  t: any;
+  t: TranslationFn;
 }) {
   const colorClass = getScoreColor(strengthLabel);
   const shortLabel = getStrengthShortLabel(strengthLabel, targetLevel, t);
@@ -291,7 +292,7 @@ function ScoreCircle({
 
 // --- Progress Bar ---
 
-function PipelineBar({ sim, t }: { sim: AssessmentCardData; t: any }) {
+function PipelineBar({ sim, t }: { sim: AssessmentCardData; t: TranslationFn }) {
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-1.5">
@@ -382,17 +383,15 @@ function TechStackTags({ techStack }: { techStack: string[] }) {
 
 // --- Last Activity Footer ---
 
-function LastActivity({ sim, t }: { sim: AssessmentCardData; t: any }) {
+function LastActivity({ sim, t }: { sim: AssessmentCardData; t: TranslationFn }) {
   if (!sim.lastActivityDate) return null;
 
   const getActivityText = () => {
-    if ((sim as any).lastActivityType && (sim as any).lastActivityUserName) {
-      const userName = (sim as any).lastActivityUserName;
-      return t(`activity.${(sim as any).lastActivityType}`, { name: userName });
-    } else if ((sim as any).lastActivityType) {
-      return t(`activity.${(sim as any).lastActivityType}`, { name: t('activity.someone') });
+    if (sim.lastActivityType && sim.lastActivityUserName) {
+      return t(`activity.${sim.lastActivityType}`, { name: sim.lastActivityUserName });
+    } else if (sim.lastActivityType) {
+      return t(`activity.${sim.lastActivityType}`, { name: t('activity.someone') });
     }
-    // Fallback to old description format
     return sim.lastActivityDescription;
   };
 
@@ -418,7 +417,7 @@ function CompanyStatus({
 }: {
   sim: AssessmentCardData;
   dimmed?: boolean;
-  t: any;
+  t: TranslationFn;
 }) {
   // Hide company if title already contains it
   const showCompany = !sim.name
@@ -462,7 +461,7 @@ function AssessmentCard({
   sim: AssessmentCardData;
   copiedId: string | null;
   onCopyLink: (e: React.MouseEvent, id: string) => void;
-  t: any;
+  t: TranslationFn;
 }) {
   const hasUnreviewed = sim.needsReviewCount > 0;
   const hasCandidates = sim.totalCandidates > 0;

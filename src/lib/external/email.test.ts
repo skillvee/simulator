@@ -41,7 +41,7 @@ vi.mock("@/lib/core", () => ({
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn(({ locale, namespace }) => {
     // Return a mock translation function that handles both simple keys and rich text
-    const translations: Record<string, Record<string, any>> = {
+    const translations: Record<string, Record<string, Record<string, string>>> = {
       "email.report": {
         en: {
           subject: "{candidateName}, your Skillvee assessment report is ready!",
@@ -104,7 +104,7 @@ vi.mock("next-intl/server", () => ({
 
     const langTranslations = translations[namespace]?.[locale] || translations[namespace]?.en || {};
 
-    const t = (key: string, values?: Record<string, any>) => {
+    const t = (key: string, values?: Record<string, unknown>) => {
       // Handle both simple keys and dotted keys (e.g., "skillCategories.communication")
       let template = langTranslations[key] || key;
 
@@ -119,7 +119,7 @@ vi.mock("next-intl/server", () => ({
     };
 
     // Add the rich method to the translation function
-    (t as any).rich = (key: string, values: Record<string, any>) => {
+    (t as unknown as { rich: (key: string, values: Record<string, unknown>) => string }).rich = (key: string, values: Record<string, unknown>) => {
       let template = langTranslations[key] || key;
       Object.entries(values).forEach(([k, v]) => {
         if (typeof v === "function") {

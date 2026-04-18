@@ -634,7 +634,6 @@ function CandidateProfileInner({ data }: { data: CandidateProfileData }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const { translateDimension } = useAssessmentTranslations();
 
   const [videoModal, setVideoModal] = useState<{
     isOpen: boolean;

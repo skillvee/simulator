@@ -30,7 +30,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       }
     },
     // Fallback to English when Spanish key is missing
-    getMessageFallback: ({ namespace, key, error }) => {
+    getMessageFallback: ({ namespace, key }) => {
       const isProduction = process.env.NODE_ENV === 'production';
 
       if (isProduction) {
@@ -38,10 +38,10 @@ export default getRequestConfig(async ({ requestLocale }) => {
         if (defaultMessages) {
           const fallbackKey = namespace ? `${namespace}.${key}` : key;
           const keys = fallbackKey.split('.');
-          let fallbackMessage: any = defaultMessages;
+          let fallbackMessage: unknown = defaultMessages;
 
           for (const k of keys) {
-            fallbackMessage = fallbackMessage?.[k];
+            fallbackMessage = (fallbackMessage as Record<string, unknown>)?.[k];
             if (!fallbackMessage) break;
           }
 

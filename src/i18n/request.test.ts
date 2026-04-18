@@ -3,7 +3,7 @@ import { IntlError, IntlErrorCode } from 'next-intl';
 
 // Mock next-intl/server before importing the module
 vi.mock('next-intl/server', () => ({
-  getRequestConfig: (fn: Function) => fn
+  getRequestConfig: (fn: (...args: unknown[]) => unknown) => fn
 }));
 
 // Mock the routing module

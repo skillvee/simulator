@@ -19,7 +19,7 @@ vi.mock("@/auth", () => ({
 
 // Mock next-intl/middleware to pass through requests
 vi.mock("next-intl/middleware", () => ({
-  default: () => (req: any) => NextResponse.next(),
+  default: () => () => NextResponse.next(),
 }));
 
 // Mock i18n routing

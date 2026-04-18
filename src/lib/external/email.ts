@@ -74,17 +74,19 @@ export interface EmailResult {
 // Helper Functions
 // ============================================================================
 
+type EmailTranslationFn = Awaited<ReturnType<typeof getTranslations>>;
+
 /**
  * Maps skill category enum to display name using translations
  */
-async function formatSkillCategory(category: SkillCategory, t: any): Promise<string> {
+async function formatSkillCategory(category: SkillCategory, t: EmailTranslationFn): Promise<string> {
   return t(`skillCategories.${category}`);
 }
 
 /**
  * Maps performance level to display text and emoji using translations
  */
-async function formatLevel(level: string, t: any): Promise<{ text: string; emoji: string }> {
+async function formatLevel(level: string, t: EmailTranslationFn): Promise<{ text: string; emoji: string }> {
   const levelEmojis: Record<string, string> = {
     exceptional: "🌟",
     strong: "✓",

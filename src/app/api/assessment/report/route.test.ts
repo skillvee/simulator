@@ -368,8 +368,8 @@ describe("Assessment Report API", () => {
     it("should use report.language for email when generating Spanish report", async () => {
       // Import and setup mocks
       const { sendReportEmail, isEmailServiceConfigured } = await import("@/lib/external");
-      (isEmailServiceConfigured as any).mockReturnValue(true);
-      (sendReportEmail as any).mockClear();
+      vi.mocked(isEmailServiceConfigured).mockReturnValue(true);
+      vi.mocked(sendReportEmail).mockClear();
 
       mockAuthFn.mockResolvedValue({ user: { id: "user-1" } });
       mockFindUnique.mockResolvedValue({

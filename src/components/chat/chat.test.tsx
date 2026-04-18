@@ -60,7 +60,7 @@ vi.mock("next-intl", () => ({
     };
     if (key.includes("{")) {
       // Handle interpolations
-      return (values: any) => key.replace(/{(\w+)}/g, (_, k) => values[k] || k);
+      return (values: Record<string, string>) => key.replace(/{(\w+)}/g, (_, k) => values[k] || k);
     }
     return translations[key] || key;
   },

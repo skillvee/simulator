@@ -120,7 +120,7 @@ describe("/api/recruiter/simulations/builder - Language Support", () => {
       });
 
       const response = await POST(request);
-      const data = await response.json();
+      await response.json();
 
       expect(response.status).toBe(200);
 
@@ -184,7 +184,7 @@ describe("/api/recruiter/simulations/builder - Language Support", () => {
       });
 
       const response = await POST(request);
-      const data = await response.json();
+      await response.json();
 
       expect(response.status).toBe(200);
 

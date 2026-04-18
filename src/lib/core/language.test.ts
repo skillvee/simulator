@@ -231,8 +231,7 @@ describe("No language ternaries", () => {
   it("should not contain lang === 'es' ternaries in the file", async () => {
     // This test verifies the implementation doesn't use ternaries
     // The actual implementation uses object lookups instead
-    const languageModule = await import("./language");
-    const moduleString = JSON.stringify(languageModule);
+    await import("./language");
 
     // Check that we're using object-based approach, not ternaries
     expect(LANGUAGES.es).toBeDefined();

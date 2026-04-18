@@ -47,8 +47,6 @@ vi.mock("next-intl/server", () => ({
     };
 
     return vi.fn().mockImplementation((key: string) => {
-      const keys = namespace.split(".");
-      const category = keys[keys.length - 1];
       return translations[locale]?.[namespace]?.[key] || key;
     });
   }),
@@ -144,7 +142,7 @@ describe("Translation Helpers", () => {
       ];
 
       for (const { key, expected } of levels) {
-        const label = await getLevelLabel(key as any, "en");
+        const label = await getLevelLabel(key as Parameters<typeof getLevelLabel>[0], "en");
         expect(label).toBe(expected);
       }
     });
@@ -159,7 +157,7 @@ describe("Translation Helpers", () => {
       ];
 
       for (const { key, expected } of levels) {
-        const label = await getLevelLabel(key as any, "es");
+        const label = await getLevelLabel(key as Parameters<typeof getLevelLabel>[0], "es");
         expect(label).toBe(expected);
       }
     });

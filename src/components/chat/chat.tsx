@@ -12,7 +12,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useManagerAutoStart } from "@/hooks";
 import { playMessageSound, markUserInteraction } from "@/lib/sounds";
 import type { ChatMessage, MessageReaction } from "@/types";
-import { isManager } from "@/lib/utils/coworker";
 
 const logger = createLogger("client:chat:chat");
 
@@ -86,7 +85,6 @@ export function Chat({
   const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Defense mode: disable text input when defense call is pending
-  const isManagerCoworker = isManager(coworker.role);
   const isDefenseMode = defenseCallRequired;
   const isInputDisabled = isDefenseMode;
 

@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
 import Navigation from "@/components/landing/navigation";
 import Footer from "@/components/landing/footer";
 
