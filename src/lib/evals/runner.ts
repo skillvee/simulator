@@ -181,6 +181,7 @@ async function runSingleScenario(
     criteria: scenario.criteria,
     apiKey: config.apiKey,
     isMultiTurn: !!scenario.multiTurn,
+    language: scenario.language,
   });
 
   // Step 4: Aggregate scores

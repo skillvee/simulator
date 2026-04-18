@@ -26,9 +26,13 @@ function buildJudgePrompt(context: {
   response: string;
   criteria: string;
   isMultiTurn?: boolean;
+  language?: "en" | "es";
 }): string {
   const mediaLabel = context.media === "chat" ? "Slack" : "phone call";
   const isVoiceMultiTurn = context.isMultiTurn && context.media === "voice";
+
+  // Spanish calibration note
+  const spanishCalibration = context.language === "es" ? `\n\n## Spanish Language Calibration\n\nWhen evaluating Spanish responses:\n- Don't penalize Spanish conversational fillers (eh, bueno, a ver, pues, vale, vaya)\n- Don't flag English technical terms as code-switching errors (it's common and acceptable in Spanish tech conversations)\n- Judge naturalness against Spanish native speaker register, not English patterns\n- Consider cultural communication differences (may be more formal/indirect than English equivalents)` : "";
 
   return `You are a strict evaluator of simulated workplace conversations. Your job is to find problems.
 
@@ -123,7 +127,7 @@ ${context.response}`}
 
 ## Your Evaluation
 
-First, list 1-3 specific flaws${isVoiceMultiTurn ? " in the COWORKER's behavior" : ""}. Quote any AI-isms you find verbatim. Then score.
+First, list 1-3 specific flaws${isVoiceMultiTurn ? " in the COWORKER's behavior" : ""}. Quote any AI-isms you find verbatim. Then score.${spanishCalibration}
 
 Respond as JSON only (no markdown fences):
 {"flaws": "...", "naturalness": N, "personaConsistency": N, "brevity": N, "conversationalFlow": N, "infoDiscipline": N, "aiIsms": N, "reasoning": "1-2 sentences"}`;
@@ -144,6 +148,7 @@ export async function judgeResponse(context: {
   criteria: string;
   apiKey: string;
   isMultiTurn?: boolean;
+  language?: "en" | "es";
 }): Promise<Judgment[]> {
   const gemini = new GoogleGenAI({ apiKey: context.apiKey });
   const prompt = buildJudgePrompt(context);
@@ -250,3 +255,6 @@ export function aggregateJudgments(judgments: Judgment[]): {
     flagged,
   };
 }
+
+// Export for testing
+export { buildJudgePrompt };
