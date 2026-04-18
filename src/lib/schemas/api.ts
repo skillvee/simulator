@@ -74,6 +74,7 @@ export const ScenarioCreateSchema = z.object({
   simulationDepth: z.enum(["short", "medium", "long"]).optional().default("medium"),
   isPublished: z.boolean().optional().default(false),
   resources: z.array(ScenarioResourceSchema).optional(),
+  language: z.string().optional().default("en"),
 });
 export type ScenarioCreate = z.infer<typeof ScenarioCreateSchema>;
 
@@ -92,6 +93,7 @@ export const ScenarioUpdateSchema = z.object({
   simulationDepth: z.enum(["short", "medium", "long"]).optional(),
   isPublished: z.boolean().optional(),
   resources: z.array(ScenarioResourceSchema).optional(),
+  language: z.string().optional(),
 });
 export type ScenarioUpdate = z.infer<typeof ScenarioUpdateSchema>;
 

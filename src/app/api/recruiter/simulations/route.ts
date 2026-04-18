@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   // Validate request body using Zod schema
   const validated = await validateRequest(request, ScenarioCreateSchema);
   if ("error" in validated) return validated.error;
-  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, targetLevel, archetypeId, simulationDepth, resources } = validated.data;
+  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, targetLevel, archetypeId, simulationDepth, resources, language } = validated.data;
 
   // Create scenario with createdById set to current user and isPublished true
   try {
@@ -105,6 +105,7 @@ export async function POST(request: Request) {
         simulationDepth,
         archetypeId,
         resources: resources as unknown as import("@prisma/client").Prisma.InputJsonValue,
+        language, // Persist the language field
         isPublished: true, // Recruiter scenarios are always active
         createdById: user.id, // Set ownership to current user
       },

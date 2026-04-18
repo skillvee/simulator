@@ -102,6 +102,7 @@ Return ONLY a JSON object matching this exact schema:
 - Use present tense to describe the current state of the system
 - Be specific about tools/services when realistic (Stripe, Postgres, SendGrid)
 - For senior+ roles, always include at least one operational concern (monitoring, security, performance, scalability, observability)
+- **Language Note**: When generating descriptions in non-English languages, keep ALL code identifiers, API names, function names, database fields, and JSON keys in English. Only translate the descriptive text and explanations.
 
 ## Example Output
 

@@ -339,10 +339,11 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     expect(data.data._meta.promptVersion).toBe("1.1");
     expect(data.data._meta.generatedAt).toBeDefined();
 
-    // Verify generateCodingTask was called with correct input (includes simulationDepth default)
+    // Verify generateCodingTask was called with correct input (includes simulationDepth and language defaults)
     expect(mockGenerateCodingTask).toHaveBeenCalledWith({
       ...validRequestBody,
       simulationDepth: "medium",
+      language: "en",
     });
   });
 
