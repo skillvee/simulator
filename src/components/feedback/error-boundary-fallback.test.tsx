@@ -3,6 +3,21 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundaryFallback } from "./error-boundary-fallback";
 
+// Mock next-intl
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => {
+    const translations: Record<string, string> = {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred. Please try again, and if the problem persists, contact support.",
+      "tryAgain": "Try again",
+      "errorDetails": "Error details"
+    };
+    const parts = key.split(".");
+    const finalKey = parts[parts.length - 1];
+    return translations[finalKey] || key;
+  },
+}));
+
 describe("ErrorBoundaryFallback", () => {
   const mockFetch = vi.fn().mockResolvedValue({ ok: true });
   const originalFetch = global.fetch;
@@ -27,7 +42,7 @@ describe("ErrorBoundaryFallback", () => {
     );
 
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
   });
 
   it("calls reset when try again is clicked", async () => {
@@ -36,7 +51,7 @@ describe("ErrorBoundaryFallback", () => {
 
     render(<ErrorBoundaryFallback error={defaultError} reset={reset} />);
 
-    await user.click(screen.getByRole("button", { name: /try again/i }));
+    await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(reset).toHaveBeenCalledOnce();
   });
 

@@ -391,6 +391,36 @@
       "signOut": "Cerrar sesión"
     }
   },
+  "common": {
+    "error": {
+      "title": "Algo salió mal",
+      "description": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo, y si el problema persiste, contacta a soporte.",
+      "tryAgain": "Intentar de nuevo",
+      "errorDetails": "Detalles del error"
+    },
+    "loading": {
+      "default": "Cargando...",
+      "pleaseWait": "Por favor espera..."
+    },
+    "actions": {
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "confirm": "Confirmar",
+      "close": "Cerrar",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "submit": "Enviar",
+      "continue": "Continuar",
+      "dismiss": "Descartar"
+    },
+    "status": {
+      "success": "Éxito",
+      "error": "Error",
+      "warning": "Advertencia",
+      "info": "Información"
+    }
+  },
   "invite": {
     "hero": {
       "title": {

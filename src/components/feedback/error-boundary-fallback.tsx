@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Card, CardContent, Button } from "@/components/ui";
+import { useTranslations } from "next-intl";
 
 interface ErrorBoundaryFallbackProps {
   error: Error & { digest?: string };
@@ -46,6 +47,8 @@ export function ErrorBoundaryFallback({
   context,
   assessmentId,
 }: ErrorBoundaryFallbackProps) {
+  const t = useTranslations("common.error");
+
   useEffect(() => {
     reportError(error, context, assessmentId);
   }, [error, context, assessmentId]);
@@ -60,23 +63,22 @@ export function ErrorBoundaryFallback({
             </div>
 
             <h2 className="mb-2 text-xl font-semibold">
-              Something went wrong
+              {t("title")}
             </h2>
 
             <p className="mb-6 text-sm text-muted-foreground">
-              An unexpected error occurred. Please try again, and if the problem
-              persists, contact support.
+              {t("description")}
             </p>
 
             <Button onClick={reset}>
               <RefreshCw className="h-4 w-4" />
-              Try again
+              {t("tryAgain")}
             </Button>
 
             {process.env.NODE_ENV === "development" && (
               <details className="mt-6 w-full text-left">
                 <summary className="cursor-pointer text-xs text-muted-foreground">
-                  Error details
+                  {t("errorDetails")}
                 </summary>
                 <pre className="mt-2 max-h-40 overflow-auto rounded-lg bg-muted p-3 text-xs">
                   {error.message}

@@ -3,6 +3,7 @@
 import { CheckCircle2, AlertCircle, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import type { Toast } from "./types";
 
 interface ToastNotificationProps {
@@ -11,6 +12,8 @@ interface ToastNotificationProps {
 }
 
 export function ToastNotification({ toast, onDismiss }: ToastNotificationProps) {
+  const t = useTranslations("common.actions");
+
   const bgClass =
     toast.type === "success"
       ? "border-green-500 bg-green-50 dark:bg-green-950"
@@ -43,7 +46,7 @@ export function ToastNotification({ toast, onDismiss }: ToastNotificationProps) 
           size="sm"
           onClick={() => onDismiss(toast.id)}
           className={textClass}
-          aria-label="Dismiss"
+          aria-label={t("dismiss")}
         >
           <X className="h-4 w-4" />
         </Button>

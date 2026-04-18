@@ -391,6 +391,36 @@
       "signOut": "Sign out"
     }
   },
+  "common": {
+    "error": {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred. Please try again, and if the problem persists, contact support.",
+      "tryAgain": "Try again",
+      "errorDetails": "Error details"
+    },
+    "loading": {
+      "default": "Loading...",
+      "pleaseWait": "Please wait..."
+    },
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "confirm": "Confirm",
+      "close": "Close",
+      "back": "Back",
+      "next": "Next",
+      "submit": "Submit",
+      "continue": "Continue",
+      "dismiss": "Dismiss"
+    },
+    "status": {
+      "success": "Success",
+      "error": "Error",
+      "warning": "Warning",
+      "info": "Info"
+    }
+  },
   "invite": {
     "hero": {
       "title": {
