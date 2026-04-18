@@ -93,7 +93,16 @@ export async function POST(request: Request) {
         updatedAt: c.updatedAt,
       }));
 
-    const memoryContext = formatConversationTimeline(coworkerConversations);
+    // Past conversations (all ended). The active new call gets its own
+    // marker appended below so the model doesn't confuse history with now.
+    const pastHistory = formatConversationTimeline(coworkerConversations);
+
+    const activeCallMarker = `\n\n## 📞 Active Call — Happening NOW
+The candidate's phone just rang and they picked up. They are silent on the line, waiting for YOU to speak. Everything in "Past Conversations" above is memory of earlier events — those calls have ALREADY ENDED. Do NOT continue any prior thread, do NOT resume a mid-sentence question, do NOT respond as if they just said something.
+
+Open THIS brand-new call right now with your persona's natural greeting (the "YOU must speak first" rule below applies to this moment).`;
+
+    const memoryContext = pastHistory + activeCallMarker;
 
     // Build cross-coworker context
     const coworkerMap = new Map<string, string>();

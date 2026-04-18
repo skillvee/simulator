@@ -226,21 +226,70 @@ export function formatConversationTimeline(
     return "";
   }
 
-  const sections: string[] = ["\n## Conversation History"];
+  const sections: string[] = ["\n## Past Conversations (memory — NOT ongoing)"];
 
   for (const conv of withMessages) {
-    const label = conv.type === "voice" ? "Voice call" : "Slack chat";
-    const time = formatConversationTime(conv.createdAt);
-    sections.push(`### ${label} — ${time}`);
+    if (conv.type === "voice") {
+      // Split a voice conversation into discrete call sessions using
+      // timestamp gaps — consecutive voice calls persist into the same
+      // DB row, so we segment on idle gaps > 60s.
+      const callSessions = splitVoiceCallSessions(conv.messages);
+      for (const session of callSessions) {
+        const firstTs = session[0]?.timestamp ?? conv.createdAt;
+        const header = `### Voice call — ${formatConversationTime(firstTs)} (${formatRelativeTime(firstTs)}, ended)`;
+        sections.push(header);
 
-    const merged = mergeConsecutiveMessages(conv.messages);
-    const formatted = merged
-      .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
-      .join("\n");
-    sections.push(formatted);
+        const merged = mergeConsecutiveMessages(session);
+        const formatted = merged
+          .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
+          .join("\n");
+        sections.push(formatted);
+      }
+    } else {
+      const time = formatConversationTime(conv.createdAt);
+      sections.push(`### Slack chat — ${time}`);
+
+      const merged = mergeConsecutiveMessages(conv.messages);
+      const formatted = merged
+        .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
+        .join("\n");
+      sections.push(formatted);
+    }
   }
 
   return sections.join("\n");
+}
+
+/** Split voice messages into discrete call sessions by timestamp gap */
+function splitVoiceCallSessions(
+  messages: ChatMessage[],
+  gapSeconds = 60
+): ChatMessage[][] {
+  if (messages.length === 0) return [];
+  const sessions: ChatMessage[][] = [[messages[0]]];
+  for (let i = 1; i < messages.length; i++) {
+    const prev = new Date(messages[i - 1].timestamp).getTime();
+    const curr = new Date(messages[i].timestamp).getTime();
+    if (!isNaN(prev) && !isNaN(curr) && (curr - prev) / 1000 > gapSeconds) {
+      sessions.push([messages[i]]);
+    } else {
+      sessions[sessions.length - 1].push(messages[i]);
+    }
+  }
+  return sessions;
+}
+
+/** Format a timestamp as relative time (e.g., "2 min ago", "about 1 hour ago") */
+function formatRelativeTime(timestamp: Date | string): string {
+  const d = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+  const diffMs = Date.now() - d.getTime();
+  if (isNaN(diffMs) || diffMs < 0) return "just now";
+  const minutes = Math.round(diffMs / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes === 1) return "1 min ago";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  return hours === 1 ? "about 1 hour ago" : `about ${hours} hours ago`;
 }
 
 /** Merge consecutive messages from the same role (fixes voice word-by-word fragments) */
