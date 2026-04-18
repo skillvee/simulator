@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { CoworkerBuilderData } from "./scenario-builder";
+import type { SupportedLanguage } from "@/lib/core/language";
 
 // Mock Gemini before importing the module
 const mockGenerateContent = vi.fn();
@@ -99,7 +100,7 @@ describe("generateCoworkers", () => {
     expect(result.coworkers[0].name).toBe("Jordan Kim");
     expect(result.coworkers[0].role).toBe("Engineering Manager");
     expect(result.coworkers[1].name).toBe("Aisha Patel");
-    expect(result._meta.promptVersion).toBe("2.0");
+    expect(result._meta.promptVersion).toBe("2.1");
     expect(result._meta.generatedAt).toBeDefined();
   });
 
@@ -400,5 +401,86 @@ describe("generateCoworkers", () => {
 
     expect(result.coworkers).toHaveLength(3);
     expect(result.coworkers[2].name).toBe("Carlos Martinez");
+  });
+
+  it("should include language in prompt when provided", async () => {
+    const spanishCoworkers: CoworkerBuilderData[] = [
+      {
+        name: "María García",
+        role: "Engineering Manager",  // Keep role in English to pass validation
+        personaStyle: "Cálida y solidaria pero ocupada. Da orientación de alto nivel.",
+        knowledge: [
+          {
+            topic: "expectativas_revision_codigo",
+            triggerKeywords: ["revisión de código", "pr", "pull request"],
+            response: "Hacemos revisiones de código asíncronas. Etiquétame cuando esté listo.",
+            isCritical: true,
+          },
+          {
+            topic: "contexto_proyecto",
+            triggerKeywords: ["contexto", "prioridad", "importante"],
+            response: "Esta función es para nuestros clientes empresariales. Es prioritaria.",
+            isCritical: true,
+          },
+        ],
+      },
+      {
+        name: "Carlos Rodríguez",
+        role: "Ingeniero Senior",
+        personaStyle: "Directo y técnico. Prefiere puntos concretos.",
+        knowledge: [
+          {
+            topic: "configuracion_local",
+            triggerKeywords: ["configuración", "local", "desarrollo"],
+            response: "Usa Docker para el entorno local. El README tiene todos los detalles.",
+            isCritical: true,
+          },
+          {
+            topic: "arquitectura_api",
+            triggerKeywords: ["api", "endpoint", "backend"],
+            response: "Estamos migrando a GraphQL pero pagos todavía usa REST por PCI.",
+            isCritical: true,
+          },
+        ],
+      },
+    ];
+
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify(spanishCoworkers),
+    });
+
+    const spanishInput: GenerateCoworkersInput = {
+      ...mockInput,
+      language: "es" as SupportedLanguage,
+    };
+
+    const result = await generateCoworkers(spanishInput);
+
+    // Verify the prompt contains Spanish language instruction
+    expect(mockGenerateContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contents: expect.arrayContaining([
+          expect.objectContaining({
+            parts: expect.arrayContaining([
+              expect.objectContaining({
+                text: expect.stringContaining("Language:** es"),
+              }),
+            ]),
+          }),
+        ]),
+      })
+    );
+
+    // Verify the prompt includes language instructions section
+    const callArgs = mockGenerateContent.mock.calls[0][0];
+    const promptText = callArgs.contents[0].parts[0].text;
+    expect(promptText).toContain("## Language Instructions");
+    expect(promptText).toContain("Generate ALL persona bios (personaStyle) in the target language");
+    expect(promptText).toContain("Generate ALL knowledge responses in the target language");
+
+    // Verify the result contains Spanish content
+    expect(result.coworkers).toHaveLength(2);
+    expect(result.coworkers[0].personaStyle).toContain("orientación");
+    expect(result.coworkers[0].knowledge[0].response).toContain("revisiones de código asíncronas");
   });
 });

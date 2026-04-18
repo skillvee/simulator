@@ -160,6 +160,7 @@ export async function POST(request: Request, context: RouteContext) {
           knowledge: coworker.knowledge || [],
           avatarUrl: null, // Avatar will be generated separately if needed
           voiceName: null, // Voice can be configured later
+          language: targetLanguage,
         })),
       });
     }

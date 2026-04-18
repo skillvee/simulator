@@ -106,6 +106,7 @@ model Coworker {
   updatedAt     DateTime       @updatedAt
   voiceName     String?
   personality   Json?
+  language      String         @default("en")
   conversations Conversation[]
   scenario      Scenario       @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 

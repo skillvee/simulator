@@ -6,6 +6,7 @@ import {
   generateCoworkers,
   type GenerateCoworkersInput,
 } from "@/lib/scenarios/coworker-generator";
+import { type SupportedLanguage } from "@/lib/core/language";
 import { logGenerationStep } from "@/lib/scenarios/generation-logger";
 import { COWORKER_GENERATOR_PROMPT_VERSION } from "@/prompts/recruiter/coworker-generator";
 
@@ -29,6 +30,7 @@ const requestSchema = z.object({
   techStack: z.array(z.string()).min(1, "Tech stack must have at least one item"),
   taskDescription: z.string().min(1, "Task description is required"),
   keyResponsibilities: z.array(z.string()).min(1, "Key responsibilities must have at least one item"),
+  language: z.enum(["en", "es", "fr", "de", "it", "pt", "ja", "ko", "zh"]).optional(),
   creationLogId: z.string().optional(),
 });
 
@@ -59,7 +61,10 @@ export async function POST(request: Request) {
     }
 
     const { creationLogId, ...coworkerInput } = validation.data;
-    const input: GenerateCoworkersInput = coworkerInput;
+    const input: GenerateCoworkersInput = {
+      ...coworkerInput,
+      language: coworkerInput.language as SupportedLanguage | undefined,
+    };
 
     // Start generation step logging if creationLogId is provided
     const tracker = creationLogId
