@@ -26,6 +26,8 @@ export interface AssessmentCardData {
   topCandidates: TopCandidate[];
   lastActivityDate: string | null;
   lastActivityDescription: string | null;
+  lastActivityType: string | null;
+  lastActivityUserName: string | null;
   targetLevel: string;
   techStack: string[];
   avgScore: number | null;
@@ -102,11 +104,15 @@ async function getSimulationsWithStats(
     // Find last activity with description
     let lastActivityDate: Date | null = null;
     let lastActivityDescription: string | null = null;
+    let lastActivityType: string | null = null;
+    let lastActivityUserName: string | null = null;
 
     for (const a of assessments) {
       if (a.completedAt && (!lastActivityDate || a.completedAt > lastActivityDate)) {
         lastActivityDate = a.completedAt;
         lastActivityDescription = `${a.user.name ?? "Someone"} completed`;
+        lastActivityType = "completed";
+        lastActivityUserName = a.user.name;
       }
     }
     for (const a of assessments) {
@@ -115,6 +121,8 @@ async function getSimulationsWithStats(
         if (!lastActivityDate || startDate > lastActivityDate) {
           lastActivityDate = startDate;
           lastActivityDescription = `${a.user.name ?? "Someone"} started`;
+          lastActivityType = "started";
+          lastActivityUserName = a.user.name;
         }
       }
     }
@@ -124,6 +132,8 @@ async function getSimulationsWithStats(
         if (!lastActivityDate || createdDate > lastActivityDate) {
           lastActivityDate = createdDate;
           lastActivityDescription = `${a.user.name ?? "Someone"} signed up`;
+          lastActivityType = "signedUp";
+          lastActivityUserName = a.user.name;
         }
       }
     }
@@ -157,6 +167,8 @@ async function getSimulationsWithStats(
       topCandidates,
       lastActivityDate: lastActivityDate?.toISOString() ?? null,
       lastActivityDescription,
+      lastActivityType,
+      lastActivityUserName,
       targetLevel: level,
       techStack: scenario.techStack ?? [],
       avgScore,

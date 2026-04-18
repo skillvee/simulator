@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,25 +20,19 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { AssessmentCardData } from "./page";
 
-const LEVEL_LABELS: Record<string, string> = {
-  junior: "Junior",
-  mid: "Mid",
-  senior: "Senior",
-  staff: "Staff",
-};
 
-function formatRelativeTime(dateString: string) {
+function formatRelativeTime(dateString: string, t: any) {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffHours < 1) return "just now";
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays === 1) return "yesterday";
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  if (diffHours < 1) return t('time.justNow');
+  if (diffHours < 24) return t('time.hoursAgo', { hours: diffHours });
+  if (diffDays === 1) return t('time.yesterday');
+  if (diffDays < 7) return t('time.daysAgo', { days: diffDays });
+  if (diffDays < 30) return t('time.weeksAgo', { weeks: Math.floor(diffDays / 7) });
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
@@ -68,18 +63,19 @@ function getScoreColor(strengthLabel: string | null) {
 
 function getStrengthShortLabel(
   strengthLabel: string | null,
-  targetLevel: string
+  targetLevel: string,
+  t: any
 ): string {
-  const level = LEVEL_LABELS[targetLevel] ?? targetLevel;
+  const level = t(`levels.${targetLevel}`);
   switch (strengthLabel) {
     case "Exceptional":
-      return `Exceptional for ${level}`;
+      return t('strengthLabels.exceptional', { level });
     case "Strong":
-      return `Strong for ${level}`;
+      return t('strengthLabels.strong', { level });
     case "Meets expectations":
-      return `Meets ${level} bar`;
+      return t('strengthLabels.meets', { level });
     case "Below expectations":
-      return `Below ${level} bar`;
+      return t('strengthLabels.below', { level });
     default:
       return "";
   }
@@ -93,6 +89,7 @@ export function AssessmentsListClient({
   simulations,
 }: AssessmentsListClientProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const t = useTranslations('recruiter.assessments');
 
   const handleCopyLink = async (
     e: React.MouseEvent,
@@ -114,7 +111,7 @@ export function AssessmentsListClient({
       document.body.removeChild(textArea);
     }
     setCopiedId(simulationId);
-    toast.success("Shareable simulation link copied");
+    toast.success(t('card.linkCopied'));
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -155,11 +152,11 @@ export function AssessmentsListClient({
     <div className="p-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-stone-900">Assessments</h1>
+        <h1 className="text-2xl font-semibold text-stone-900">{t('title')}</h1>
         <Button asChild className="bg-blue-600 hover:bg-blue-700">
           <Link href="/recruiter/simulations/new">
             <Plus className="mr-2 h-4 w-4" />
-            Create Simulation
+            {t('createSimulation')}
           </Link>
         </Button>
       </div>
@@ -167,15 +164,16 @@ export function AssessmentsListClient({
       {/* Stat pills */}
       {simulations.length > 0 && (
         <div className="flex items-center gap-3 mb-6 flex-wrap">
-          <StatPill label="simulations" value={simulations.length} />
-          <StatPill label="candidates" value={totalCandidates} />
-          <StatPill label="completed" value={totalCompleted} />
+          <StatPill t={t} label="simulations" value={simulations.length} />
+          <StatPill t={t} label="candidates" value={totalCandidates} />
+          <StatPill t={t} label="completed" value={totalCompleted} />
           {totalInProgress > 0 && (
-            <StatPill label="in progress" value={totalInProgress} />
+            <StatPill t={t} label="inProgress" value={totalInProgress} />
           )}
           {totalNeedsReview > 0 && (
             <StatPill
-              label="to review"
+              t={t}
+              label="toReview"
               value={totalNeedsReview}
               highlight
             />
@@ -189,11 +187,10 @@ export function AssessmentsListClient({
           <CardContent className="p-12 text-center">
             <ClipboardCheck className="mx-auto h-16 w-16 text-stone-300" />
             <h2 className="mt-6 text-xl font-semibold text-stone-900">
-              No assessments yet
+              {t('empty.title')}
             </h2>
             <p className="mt-2 text-stone-500">
-              Create a simulation and invite candidates to see their assessment
-              results here.
+              {t('empty.description')}
             </p>
             <Button
               asChild
@@ -201,7 +198,7 @@ export function AssessmentsListClient({
             >
               <Link href="/recruiter/simulations/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Your First Simulation
+                {t('empty.createButton')}
               </Link>
             </Button>
           </CardContent>
@@ -214,6 +211,7 @@ export function AssessmentsListClient({
               sim={sim}
               copiedId={copiedId}
               onCopyLink={handleCopyLink}
+              t={t}
             />
           ))}
         </div>
@@ -225,10 +223,12 @@ export function AssessmentsListClient({
 // --- Stat Pill ---
 
 function StatPill({
+  t,
   label,
   value,
   highlight,
 }: {
+  t: any;
   label: string;
   value: number;
   highlight?: boolean;
@@ -253,7 +253,7 @@ function StatPill({
           highlight ? "text-blue-600" : "text-stone-500"
         }`}
       >
-        {label}
+        {t(`stats.${label}`)}
       </div>
     </div>
   );
@@ -265,13 +265,15 @@ function ScoreCircle({
   score,
   strengthLabel,
   targetLevel,
+  t,
 }: {
   score: number;
   strengthLabel: string | null;
   targetLevel: string;
+  t: any;
 }) {
   const colorClass = getScoreColor(strengthLabel);
-  const shortLabel = getStrengthShortLabel(strengthLabel, targetLevel);
+  const shortLabel = getStrengthShortLabel(strengthLabel, targetLevel, t);
 
   return (
     <div className="flex items-center gap-2">
@@ -289,7 +291,7 @@ function ScoreCircle({
 
 // --- Progress Bar ---
 
-function PipelineBar({ sim }: { sim: AssessmentCardData }) {
+function PipelineBar({ sim, t }: { sim: AssessmentCardData; t: any }) {
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-1.5">
@@ -298,7 +300,7 @@ function PipelineBar({ sim }: { sim: AssessmentCardData }) {
           <span className="font-medium text-stone-900">
             {sim.totalCandidates}
           </span>{" "}
-          candidate{sim.totalCandidates !== 1 ? "s" : ""}
+          {sim.totalCandidates !== 1 ? t('card.candidates') : t('card.candidate')}
         </span>
       </div>
 
@@ -333,19 +335,19 @@ function PipelineBar({ sim }: { sim: AssessmentCardData }) {
         {sim.completedCount > 0 && (
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-green-500" />
-            {sim.completedCount} completed
+            {sim.completedCount} {t('card.completed')}
           </span>
         )}
         {sim.inProgressCount > 0 && (
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-blue-500" />
-            {sim.inProgressCount} active
+            {sim.inProgressCount} {t('card.active')}
           </span>
         )}
         {sim.pendingCount > 0 && (
           <span className="flex items-center gap-1">
             <span className="h-2 w-2 rounded-full bg-stone-300" />
-            {sim.pendingCount} pending
+            {sim.pendingCount} {t('card.pending')}
           </span>
         )}
       </div>
@@ -380,17 +382,27 @@ function TechStackTags({ techStack }: { techStack: string[] }) {
 
 // --- Last Activity Footer ---
 
-function LastActivity({ sim }: { sim: AssessmentCardData }) {
+function LastActivity({ sim, t }: { sim: AssessmentCardData; t: any }) {
   if (!sim.lastActivityDate) return null;
+
+  const getActivityText = () => {
+    if ((sim as any).lastActivityType && (sim as any).lastActivityUserName) {
+      const userName = (sim as any).lastActivityUserName;
+      return t(`activity.${(sim as any).lastActivityType}`, { name: userName });
+    } else if ((sim as any).lastActivityType) {
+      return t(`activity.${(sim as any).lastActivityType}`, { name: t('activity.someone') });
+    }
+    // Fallback to old description format
+    return sim.lastActivityDescription;
+  };
 
   return (
     <div className="pt-2 border-t border-stone-100">
       <div className="flex items-center gap-1 text-xs text-stone-400">
         <Clock className="h-3 w-3 flex-shrink-0" />
         <span className="truncate">
-          {sim.lastActivityDescription
-            ? `${sim.lastActivityDescription} ${formatRelativeTime(sim.lastActivityDate)}`
-            : formatRelativeTime(sim.lastActivityDate)}
+          {getActivityText()}
+          {sim.lastActivityDate && ` ${formatRelativeTime(sim.lastActivityDate, t)}`}
         </span>
       </div>
     </div>
@@ -402,9 +414,11 @@ function LastActivity({ sim }: { sim: AssessmentCardData }) {
 function CompanyStatus({
   sim,
   dimmed,
+  t,
 }: {
   sim: AssessmentCardData;
   dimmed?: boolean;
+  t: any;
 }) {
   // Hide company if title already contains it
   const showCompany = !sim.name
@@ -426,11 +440,11 @@ function CompanyStatus({
       {sim.isPublished ? (
         <span className="flex items-center gap-1 text-[11px] text-green-600 flex-shrink-0">
           <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-          Open
+          {t('card.open')}
         </span>
       ) : (
         <span className="text-[11px] text-stone-400 flex-shrink-0">
-          Draft
+          {t('card.draft')}
         </span>
       )}
     </div>
@@ -443,10 +457,12 @@ function AssessmentCard({
   sim,
   copiedId,
   onCopyLink,
+  t,
 }: {
   sim: AssessmentCardData;
   copiedId: string | null;
   onCopyLink: (e: React.MouseEvent, id: string) => void;
+  t: any;
 }) {
   const hasUnreviewed = sim.needsReviewCount > 0;
   const hasCandidates = sim.totalCandidates > 0;
@@ -479,7 +495,7 @@ function AssessmentCard({
                   variant="outline"
                   className="text-[10px] px-1.5 py-0 text-stone-500 border-stone-200"
                 >
-                  {LEVEL_LABELS[sim.targetLevel] ?? sim.targetLevel}
+                  {t(`levels.${sim.targetLevel}`)}
                 </Badge>
                 <Button
                   variant="ghost"
@@ -501,13 +517,13 @@ function AssessmentCard({
             </div>
 
             {/* Company + status */}
-            <CompanyStatus sim={sim} />
+            <CompanyStatus sim={sim} t={t} />
 
             {/* Tech stack */}
             <TechStackTags techStack={sim.techStack} />
 
             {/* Pipeline */}
-            <PipelineBar sim={sim} />
+            <PipelineBar sim={sim} t={t} />
 
             {/* Score with context */}
             {sim.avgScore !== null && (
@@ -516,6 +532,7 @@ function AssessmentCard({
                   score={sim.avgScore}
                   strengthLabel={sim.strengthLabel}
                   targetLevel={sim.targetLevel}
+                  t={t}
                 />
               </div>
             )}
@@ -524,7 +541,7 @@ function AssessmentCard({
             <div className="flex-1" />
 
             {/* Last activity */}
-            <LastActivity sim={sim} />
+            <LastActivity sim={sim} t={t} />
           </CardContent>
         </Card>
       </Link>
@@ -550,7 +567,7 @@ function AssessmentCard({
                   variant="outline"
                   className="text-[10px] px-1.5 py-0 text-stone-500 border-stone-200"
                 >
-                  {LEVEL_LABELS[sim.targetLevel] ?? sim.targetLevel}
+                  {t(`levels.${sim.targetLevel}`)}
                 </Badge>
                 <Button
                   variant="ghost"
@@ -572,13 +589,13 @@ function AssessmentCard({
             </div>
 
             {/* Company + status */}
-            <CompanyStatus sim={sim} />
+            <CompanyStatus sim={sim} t={t} />
 
             {/* Tech stack */}
             <TechStackTags techStack={sim.techStack} />
 
             {/* Pipeline */}
-            <PipelineBar sim={sim} />
+            <PipelineBar sim={sim} t={t} />
 
             {/* Score with context */}
             {sim.avgScore !== null && (
@@ -587,6 +604,7 @@ function AssessmentCard({
                   score={sim.avgScore}
                   strengthLabel={sim.strengthLabel}
                   targetLevel={sim.targetLevel}
+                  t={t}
                 />
               </div>
             )}
@@ -601,8 +619,8 @@ function AssessmentCard({
                   <Clock className="h-3 w-3 flex-shrink-0" />
                   <span className="truncate">
                     {sim.lastActivityDescription
-                      ? `${sim.lastActivityDescription} ${formatRelativeTime(sim.lastActivityDate)}`
-                      : formatRelativeTime(sim.lastActivityDate)}
+                      ? `${sim.lastActivityDescription} ${formatRelativeTime(sim.lastActivityDate, t)}`
+                      : formatRelativeTime(sim.lastActivityDate, t)}
                   </span>
                 </div>
               </div>
@@ -645,7 +663,7 @@ function AssessmentCard({
           </div>
 
           {/* Company + status */}
-          <CompanyStatus sim={sim} dimmed />
+          <CompanyStatus sim={sim} dimmed t={t} />
 
           {/* Empty state */}
           <div className="py-2">

@@ -468,6 +468,72 @@
     "loading": "Cargando..."
   },
   "recruiter": {
+    "assessments": {
+      "title": "Evaluaciones",
+      "createSimulation": "Crear Simulación",
+      "stats": {
+        "simulations": "simulaciones",
+        "candidates": "candidatos",
+        "completed": "completadas",
+        "inProgress": "en progreso",
+        "toReview": "por revisar"
+      },
+      "empty": {
+        "title": "No hay evaluaciones aún",
+        "description": "Crea una simulación e invita candidatos para ver sus resultados de evaluación aquí.",
+        "createButton": "Crea Tu Primera Simulación"
+      },
+      "card": {
+        "needsReview": "{count} por revisar",
+        "candidate": "candidato",
+        "candidates": "candidatos",
+        "completed": "completadas",
+        "active": "activas",
+        "pending": "pendientes",
+        "open": "Abierta",
+        "draft": "Borrador",
+        "noCandidatesYet": "No hay candidatos aún",
+        "copyInviteLink": "Copiar enlace de invitación",
+        "linkCopied": "Enlace de simulación copiado"
+      },
+      "activity": {
+        "completed": "{name} completó",
+        "started": "{name} comenzó",
+        "signedUp": "{name} se registró",
+        "someone": "Alguien"
+      },
+      "levels": {
+        "junior": "Junior",
+        "mid": "Medio",
+        "senior": "Senior",
+        "staff": "Staff"
+      },
+      "strengthLabels": {
+        "exceptional": "Excepcional para {level}",
+        "strong": "Fuerte para {level}",
+        "meets": "Cumple el estándar {level}",
+        "below": "Por debajo del estándar {level}"
+      },
+      "time": {
+        "justNow": "justo ahora",
+        "hoursAgo": "hace {hours}h",
+        "yesterday": "ayer",
+        "daysAgo": "hace {days}d",
+        "weeksAgo": "hace {weeks}s"
+      },
+      "compare": {
+        "backTo": "Volver a {name}",
+        "compareWithOthers": "Comparar con otros",
+        "top": "Top {percent}%",
+        "of": "de {total}",
+        "noSummary": "Sin resumen disponible",
+        "errors": {
+          "accessDenied": "Acceso denegado",
+          "failedToLoad": "Error al cargar datos de comparación",
+          "genericError": "Ocurrió un error al obtener los datos"
+        }
+      }
+    },
     "simulations": {
       "new": {
         "title": "Crear una Nueva Simulación",

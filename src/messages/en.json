@@ -468,6 +468,72 @@
     "loading": "Loading..."
   },
   "recruiter": {
+    "assessments": {
+      "title": "Assessments",
+      "createSimulation": "Create Simulation",
+      "stats": {
+        "simulations": "simulations",
+        "candidates": "candidates",
+        "completed": "completed",
+        "inProgress": "in progress",
+        "toReview": "to review"
+      },
+      "empty": {
+        "title": "No assessments yet",
+        "description": "Create a simulation and invite candidates to see their assessment results here.",
+        "createButton": "Create Your First Simulation"
+      },
+      "card": {
+        "needsReview": "{count} to review",
+        "candidate": "candidate",
+        "candidates": "candidates",
+        "completed": "completed",
+        "active": "active",
+        "pending": "pending",
+        "open": "Open",
+        "draft": "Draft",
+        "noCandidatesYet": "No candidates yet",
+        "copyInviteLink": "Copy invite link",
+        "linkCopied": "Shareable simulation link copied"
+      },
+      "activity": {
+        "completed": "{name} completed",
+        "started": "{name} started",
+        "signedUp": "{name} signed up",
+        "someone": "Someone"
+      },
+      "levels": {
+        "junior": "Junior",
+        "mid": "Mid",
+        "senior": "Senior",
+        "staff": "Staff"
+      },
+      "strengthLabels": {
+        "exceptional": "Exceptional for {level}",
+        "strong": "Strong for {level}",
+        "meets": "Meets {level} bar",
+        "below": "Below {level} bar"
+      },
+      "time": {
+        "justNow": "just now",
+        "hoursAgo": "{hours}h ago",
+        "yesterday": "yesterday",
+        "daysAgo": "{days}d ago",
+        "weeksAgo": "{weeks}w ago"
+      },
+      "compare": {
+        "backTo": "Back to {name}",
+        "compareWithOthers": "Compare with others",
+        "top": "Top {percent}%",
+        "of": "of {total}",
+        "noSummary": "No summary available",
+        "errors": {
+          "accessDenied": "Access denied",
+          "failedToLoad": "Failed to load comparison data",
+          "genericError": "An error occurred while fetching data"
+        }
+      }
+    },
     "simulations": {
       "new": {
         "title": "Create a New Simulation",

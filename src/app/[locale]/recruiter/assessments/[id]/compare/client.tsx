@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ export function CandidateCompareClient({
     message: string;
   } | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>("0");
+  const t = useTranslations('recruiter.assessments.compare');
 
   // Video modal state
   const [videoModal, setVideoModal] = useState<{
@@ -68,8 +70,8 @@ export function CandidateCompareClient({
             code: response.status,
             message:
               response.status === 403
-                ? "Access denied"
-                : "Failed to load comparison data",
+                ? t('errors.accessDenied')
+                : t('errors.failedToLoad'),
           });
           return;
         }
@@ -87,7 +89,7 @@ export function CandidateCompareClient({
       } catch {
         setError({
           code: 500,
-          message: "An error occurred while fetching data",
+          message: t('errors.genericError'),
         });
       } finally {
         setLoading(false);
@@ -209,17 +211,16 @@ export function CandidateCompareClient({
                       </Badge>
                       {showPercentiles && (
                         <Badge variant="outline" className="text-xs">
-                          Top{" "}
-                          {Math.round(100 - candidate.overallPercentile)}%
+                          {t('top', { percent: Math.round(100 - candidate.overallPercentile) })}
                           <span className="text-stone-400 ml-1">
-                            of {totalCandidatesInSimulation}
+                            {t('of', { total: totalCandidatesInSimulation })}
                           </span>
                         </Badge>
                       )}
                     </div>
 
                     <p className="text-sm text-stone-600 text-center">
-                      {candidate.summary || "No summary available"}
+                      {candidate.summary || t('noSummary')}
                     </p>
                   </div>
                 </div>
@@ -243,7 +244,7 @@ export function CandidateCompareClient({
         >
           <Link href={`/recruiter/assessments/${simulationId}`}>
             <ChevronLeft className="mr-1.5 h-4 w-4" />
-            Back to {simulationName}
+            {t('backTo', { name: simulationName })}
           </Link>
         </Button>
 
@@ -251,7 +252,7 @@ export function CandidateCompareClient({
           <Button asChild variant="outline" size="sm" className="border-stone-200">
             <Link href={`/recruiter/assessments/${simulationId}`}>
               <Users className="mr-1.5 h-4 w-4" />
-              Compare with others
+              {t('compareWithOthers')}
             </Link>
           </Button>
         )}
