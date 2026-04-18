@@ -29,10 +29,28 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  Languages,
+  Info,
+  FolderOpen,
 } from "lucide-react";
 import type { ScenarioResource } from "@/types";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
 import { LEVEL_EXPECTATIONS, type TargetLevel } from "@/lib/rubric/level-expectations";
+import { LANGUAGES, type SupportedLanguage } from "@/lib/core/language";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useRouter } from "next/navigation";
 
 interface Coworker {
   id: string;
@@ -52,6 +70,7 @@ interface ScenarioData {
   resources: ScenarioResource[];
   techStack: string[];
   targetLevel: string;
+  language: string;
   archetypeName: string | null;
   roleFamilyName: string | null;
   createdAt: string;
@@ -74,6 +93,7 @@ const RESOURCE_ICONS: Record<ScenarioResource["type"], React.ElementType> = {
 };
 
 export function SimulationSettingsClient({ scenario }: SimulationSettingsClientProps) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
 
@@ -289,6 +309,54 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
               </div>
             </div>
           )}
+
+          <div>
+            <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
+              <Languages className="h-4 w-4" />
+              Language
+            </h3>
+            <div className="flex items-center gap-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative">
+                      <Select value={scenario.language} disabled>
+                        <SelectTrigger className="w-48 cursor-not-allowed opacity-75">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(LANGUAGES).map(([code, config]) => (
+                            <SelectItem key={code} value={code}>
+                              {code === "en" ? "English" : code === "es" ? "Spanish" : code}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Info className="h-3.5 w-3.5 text-stone-400 ml-32" />
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Scenario language is immutable once created.</p>
+                    <p className="text-xs mt-1 text-stone-400">Clone the scenario to create a version in another language.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const newLang = scenario.language === "en" ? "es" : "en";
+                  router.push(`/recruiter/simulations/new?clone=${scenario.id}&language=${newLang}`);
+                }}
+                className="flex items-center gap-2"
+              >
+                <FolderOpen className="h-4 w-4" />
+                Clone to another language
+              </Button>
+            </div>
+          </div>
 
           <div>
             <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">

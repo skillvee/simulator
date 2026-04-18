@@ -21,6 +21,7 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
       resources: true,
       techStack: true,
       targetLevel: true,
+      language: true,
       createdById: true,
       createdAt: true,
       archetype: {
@@ -61,6 +62,7 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
     resources: (scenario.resources as unknown as ScenarioResource[]) ?? [],
     techStack: scenario.techStack,
     targetLevel: scenario.targetLevel,
+    language: scenario.language,
     archetypeName: scenario.archetype?.name ?? null,
     roleFamilyName: scenario.archetype?.roleFamily.name ?? null,
     createdAt: scenario.createdAt.toISOString(),
