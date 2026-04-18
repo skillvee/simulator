@@ -58,6 +58,76 @@
       "continueDescription": "Make additional improvements if needed"
     }
   },
+  "results": {
+    "backToAssessments": "Back to My Assessments",
+    "assessmentResults": "Assessment Results",
+    "noReport": {
+      "generating": {
+        "title": "Generating Report",
+        "description": "We're analyzing your performance and generating your personalized report. This may take a moment."
+      },
+      "notReady": {
+        "title": "Report Not Ready",
+        "description": "Your assessment report hasn't been generated yet. Click below to generate it now.",
+        "generateButton": "Generate Report"
+      }
+    },
+    "overview": {
+      "evaluationConfidence": "Evaluation confidence:"
+    },
+    "strengthsGrowth": {
+      "title": "Strengths & Areas to Develop",
+      "strengths": {
+        "title": "Your Strengths",
+        "empty": "No strengths identified yet"
+      },
+      "areasToImprove": {
+        "title": "Areas to Develop",
+        "empty": "No specific areas identified"
+      }
+    },
+    "skillBreakdown": {
+      "title": "Skill Breakdown",
+      "expandAll": "Expand All",
+      "collapseAll": "Collapse All",
+      "demonstratedWell": "What You Demonstrated Well",
+      "score": "Score:"
+    },
+    "workStyle": {
+      "title": "Work Style",
+      "totalDuration": "Total Duration",
+      "activeWorkingTime": "Active Working Time",
+      "coworkersContacted": "Coworkers Contacted",
+      "aiToolsUsed": "AI Tools Used",
+      "ciTests": "CI Tests",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "insufficientEvidence": {
+      "title": "Not enough to give you a full evaluation",
+      "description": "This assessment session was too short or didn't capture enough of your work for us to evaluate you on all dimensions. Below is a summary of what was observed.",
+      "observedTitle": "What we observed"
+    }
+  },
+  "assessment": {
+    "dimensions": {
+      "COMMUNICATION": "Communication",
+      "PROBLEM_SOLVING": "Problem Solving",
+      "TECHNICAL_KNOWLEDGE": "Technical Knowledge",
+      "COLLABORATION": "Collaboration",
+      "ADAPTABILITY": "Adaptability",
+      "LEADERSHIP": "Leadership",
+      "CREATIVITY": "Creativity",
+      "TIME_MANAGEMENT": "Time Management"
+    },
+    "levels": {
+      "exceptional": "Exceptional",
+      "strong": "Strong",
+      "meetsExpectations": "Meets expectations",
+      "belowExpectations": "Below expectations",
+      "developing": "Developing"
+    }
+  },
   "welcome": {
     "footer": {
       "aiTeammates": "AI Teammates",

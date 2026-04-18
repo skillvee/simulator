@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   RadarChart,
   PolarGrid,
@@ -15,10 +16,8 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import {
-  formatDimensionName,
-  getStrengthBadgeStyles,
-} from "@/components/assessment/helpers";
+import { getStrengthBadgeStyles } from "@/components/assessment/helpers";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import type { CandidateResultsData } from "@/types";
 
 function CustomAngleTick({
@@ -60,13 +59,15 @@ interface CandidateRadarChartOverviewProps {
 export function CandidateRadarChartOverview({
   results,
 }: CandidateRadarChartOverviewProps) {
+  const t = useTranslations("results.overview");
+  const { translateDimension, translateStrengthLevel } = useAssessmentTranslations();
   const radarData = useMemo(() => {
     return results.dimensionScores.map((d) => ({
-      dimension: formatDimensionName(d.dimension),
+      dimension: translateDimension(d.dimension),
       score: d.score,
       fullMark: results.scoreScale,
     }));
-  }, [results.dimensionScores, results.scoreScale]);
+  }, [results.dimensionScores, results.scoreScale, translateDimension]);
 
   const chartConfig: ChartConfig = useMemo(
     () => ({
@@ -145,12 +146,12 @@ export function CandidateRadarChartOverview({
 
           {/* Strength Badge */}
           <Badge className={getStrengthBadgeStyles(results.strengthLevel)}>
-            {results.strengthLevel}
+            {translateStrengthLevel(results.strengthLevel)}
           </Badge>
 
           {/* Confidence */}
           <p className="text-xs text-stone-400">
-            Evaluation confidence:{" "}
+            {t("evaluationConfidence")}{" "}
             <span className="font-medium capitalize text-stone-500">
               {results.evaluationConfidence}
             </span>

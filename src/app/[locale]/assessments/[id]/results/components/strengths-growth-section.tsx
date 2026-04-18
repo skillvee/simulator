@@ -1,7 +1,8 @@
 "use client";
 
 import { CheckCircle2, TrendingUp } from "lucide-react";
-import { formatDimensionName } from "@/components/assessment/helpers";
+import { useTranslations } from "next-intl";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import type { CandidateResultsData } from "@/types";
 
 interface StrengthsGrowthSectionProps {
@@ -11,11 +12,13 @@ interface StrengthsGrowthSectionProps {
 export function CandidateStrengthsGrowthSection({
   results,
 }: StrengthsGrowthSectionProps) {
+  const t = useTranslations("results.strengthsGrowth");
+  const { translateDimension } = useAssessmentTranslations();
   return (
     <div className="border-b border-stone-200 bg-white">
       <div className="px-6 py-4 border-b border-stone-200">
         <h2 className="text-lg font-semibold text-stone-900">
-          Strengths & Areas to Develop
+          {t("title")}
         </h2>
       </div>
 
@@ -23,7 +26,7 @@ export function CandidateStrengthsGrowthSection({
         {/* Your Strengths */}
         <div className="p-6">
           <h3 className="text-sm font-semibold text-stone-700 mb-3">
-            Your Strengths
+            {t("strengths.title")}
           </h3>
           {results.topStrengths.length > 0 ? (
             <ul className="space-y-3">
@@ -33,7 +36,7 @@ export function CandidateStrengthsGrowthSection({
                     <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <span className="font-medium text-stone-900">
-                        {formatDimensionName(strength.dimension)}
+                        {translateDimension(strength.dimension)}
                       </span>
                       <span className="text-stone-400 ml-1">
                         ({strength.score}/{results.scoreScale})
@@ -48,7 +51,7 @@ export function CandidateStrengthsGrowthSection({
             </ul>
           ) : (
             <span className="text-sm text-stone-400 italic">
-              No strengths identified yet
+              {t("strengths.empty")}
             </span>
           )}
         </div>
@@ -56,7 +59,7 @@ export function CandidateStrengthsGrowthSection({
         {/* Areas to Develop */}
         <div className="p-6">
           <h3 className="text-sm font-semibold text-stone-700 mb-3">
-            Areas to Develop
+            {t("areasToImprove.title")}
           </h3>
           {results.growthAreas.length > 0 ? (
             <ul className="space-y-3">
@@ -66,7 +69,7 @@ export function CandidateStrengthsGrowthSection({
                     <TrendingUp className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <span className="font-medium text-stone-900">
-                        {formatDimensionName(area.dimension)}
+                        {translateDimension(area.dimension)}
                       </span>
                       <span className="text-stone-400 ml-1">
                         ({area.score}/{results.scoreScale})
@@ -81,7 +84,7 @@ export function CandidateStrengthsGrowthSection({
             </ul>
           ) : (
             <span className="text-sm text-stone-400 italic">
-              No specific areas identified
+              {t("areasToImprove.empty")}
             </span>
           )}
         </div>

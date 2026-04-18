@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { CandidateResultsData } from "@/types";
 
 interface WorkStyleSectionProps {
@@ -7,6 +8,7 @@ interface WorkStyleSectionProps {
 }
 
 export function CandidateWorkStyleSection({ results }: WorkStyleSectionProps) {
+  const t = useTranslations("results.workStyle");
   const { metrics } = results;
 
   if (!metrics) return null;
@@ -21,23 +23,23 @@ export function CandidateWorkStyleSection({ results }: WorkStyleSectionProps) {
 
   const metricItems = [
     {
-      label: "Total Duration",
+      label: t("totalDuration"),
       value: formatDuration(metrics.totalDurationMinutes),
     },
     {
-      label: "Active Working Time",
+      label: t("activeWorkingTime"),
       value: formatDuration(metrics.workingPhaseMinutes),
     },
     {
-      label: "Coworkers Contacted",
+      label: t("coworkersContacted"),
       value: metrics.coworkersContacted.toString(),
     },
     {
-      label: "AI Tools Used",
-      value: metrics.aiToolsUsed ? "Yes" : "No",
+      label: t("aiToolsUsed"),
+      value: metrics.aiToolsUsed ? t("yes") : t("no"),
     },
     {
-      label: "CI Tests",
+      label: t("ciTests"),
       value:
         metrics.testsStatus === "unknown"
           ? "\u2014"
@@ -49,7 +51,7 @@ export function CandidateWorkStyleSection({ results }: WorkStyleSectionProps) {
   return (
     <div className="border-b border-stone-200 bg-white">
       <div className="px-6 py-4 border-b border-stone-200">
-        <h2 className="text-lg font-semibold text-stone-900">Work Style</h2>
+        <h2 className="text-lg font-semibold text-stone-900">{t("title")}</h2>
       </div>
 
       <div className="px-6 py-4">

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
 import { ScoreDots } from "@/components/assessment/score-dots";
-import { formatDimensionName } from "@/components/assessment/helpers";
+import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import type { CandidateResultsData, CandidateDimensionScore } from "@/types";
 
 interface CoreDimensionsSectionProps {
@@ -18,6 +19,7 @@ function DimensionDetailContent({
   dimension: CandidateDimensionScore;
   scoreScale: number;
 }) {
+  const t = useTranslations("results.skillBreakdown");
   return (
     <div className="space-y-3">
       {/* Rationale */}
@@ -31,7 +33,7 @@ function DimensionDetailContent({
       {dimension.strengths.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-stone-700 mb-1.5">
-            What You Demonstrated Well
+            {t("demonstratedWell")}
           </h4>
           <ul className="space-y-1">
             {dimension.strengths.map((strength, idx) => (
@@ -50,7 +52,7 @@ function DimensionDetailContent({
       {/* Score context */}
       <div className="pt-2 border-t border-stone-100">
         <p className="text-[11px] text-stone-400">
-          Score: {dimension.score}/{scoreScale}
+          {t("score")} {dimension.score}/{scoreScale}
         </p>
       </div>
     </div>
@@ -60,6 +62,8 @@ function DimensionDetailContent({
 export function CandidateCoreDimensionsSection({
   results,
 }: CoreDimensionsSectionProps) {
+  const t = useTranslations("results.skillBreakdown");
+  const { translateDimension } = useAssessmentTranslations();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const allDimensions = useMemo(
@@ -92,7 +96,7 @@ export function CandidateCoreDimensionsSection({
       {/* Section Header */}
       <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-stone-900">
-          Skill Breakdown
+          {t("title")}
         </h2>
         <div className="flex gap-2">
           <Button
@@ -102,7 +106,7 @@ export function CandidateCoreDimensionsSection({
             className="text-sm text-stone-600 hover:text-stone-900"
           >
             <ChevronDown className="mr-1.5 h-4 w-4" />
-            Expand All
+            {t("expandAll")}
           </Button>
           <Button
             variant="ghost"
@@ -111,7 +115,7 @@ export function CandidateCoreDimensionsSection({
             className="text-sm text-stone-600 hover:text-stone-900"
           >
             <ChevronRight className="mr-1.5 h-4 w-4" />
-            Collapse All
+            {t("collapseAll")}
           </Button>
         </div>
       </div>
@@ -138,7 +142,7 @@ export function CandidateCoreDimensionsSection({
                     <ChevronRight className="h-4 w-4 text-stone-400 flex-shrink-0" />
                   )}
                   <span className="font-medium text-stone-900">
-                    {formatDimensionName(dimScore.dimension)}
+                    {translateDimension(dimScore.dimension)}
                   </span>
                 </div>
                 <div className="flex items-center gap-3">

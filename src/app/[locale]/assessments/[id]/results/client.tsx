@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { createLogger } from "@/lib/core";
@@ -26,6 +27,7 @@ function NoReportState({
   onGenerate: () => void;
   isGenerating: boolean;
 }) {
+  const t = useTranslations("results.noReport");
   return (
     <div className="flex min-h-full items-center justify-center p-8">
       <Card className="max-w-md p-12 text-center shadow-lg">
@@ -33,11 +35,10 @@ function NoReportState({
           <>
             <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
             <h2 className="mb-4 text-2xl font-semibold text-stone-900">
-              Generating Report
+              {t("generating.title")}
             </h2>
             <p className="mb-6 text-stone-500">
-              We&apos;re analyzing your performance and generating your
-              personalized report. This may take a moment.
+              {t("generating.description")}
             </p>
           </>
         ) : (
@@ -46,13 +47,12 @@ function NoReportState({
               <AlertCircle className="h-8 w-8 text-blue-600" />
             </div>
             <h2 className="mb-4 text-2xl font-semibold text-stone-900">
-              Report Not Ready
+              {t("notReady.title")}
             </h2>
             <p className="mb-6 text-stone-500">
-              Your assessment report hasn&apos;t been generated yet. Click below
-              to generate it now.
+              {t("notReady.description")}
             </p>
-            <Button onClick={onGenerate}>Generate Report</Button>
+            <Button onClick={onGenerate}>{t("notReady.generateButton")}</Button>
           </>
         )}
       </Card>
@@ -64,6 +64,7 @@ export function CandidateResultsClient({
   assessmentId,
   results: initialResults,
 }: CandidateResultsClientProps) {
+  const t = useTranslations("results");
   const [results] = useState<CandidateResultsData | null>(initialResults);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -119,12 +120,12 @@ export function CandidateResultsClient({
         >
           <Link href="/candidate/dashboard">
             <ChevronLeft className="mr-1.5 h-4 w-4" />
-            Back to My Assessments
+            {t("backToAssessments")}
           </Link>
         </Button>
         <div className="text-right">
           <h1 className="text-sm font-semibold text-stone-900">
-            Assessment Results
+            {t("assessmentResults")}
           </h1>
           <p className="text-xs text-stone-400">{formattedDate}</p>
         </div>

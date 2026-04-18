@@ -58,6 +58,76 @@
       "continueDescription": "Hacer mejoras adicionales si es necesario"
     }
   },
+  "results": {
+    "backToAssessments": "Volver a Mis Evaluaciones",
+    "assessmentResults": "Resultados de la Evaluación",
+    "noReport": {
+      "generating": {
+        "title": "Generando Reporte",
+        "description": "Estamos analizando tu desempeño y generando tu reporte personalizado. Esto puede tomar un momento."
+      },
+      "notReady": {
+        "title": "Reporte No Listo",
+        "description": "Tu reporte de evaluación aún no ha sido generado. Haz clic abajo para generarlo ahora.",
+        "generateButton": "Generar Reporte"
+      }
+    },
+    "overview": {
+      "evaluationConfidence": "Confianza de evaluación:"
+    },
+    "strengthsGrowth": {
+      "title": "Fortalezas y Áreas de Desarrollo",
+      "strengths": {
+        "title": "Tus Fortalezas",
+        "empty": "No se han identificado fortalezas aún"
+      },
+      "areasToImprove": {
+        "title": "Áreas para Desarrollar",
+        "empty": "No se han identificado áreas específicas"
+      }
+    },
+    "skillBreakdown": {
+      "title": "Desglose de Habilidades",
+      "expandAll": "Expandir Todo",
+      "collapseAll": "Colapsar Todo",
+      "demonstratedWell": "Lo Que Demostraste Bien",
+      "score": "Puntuación:"
+    },
+    "workStyle": {
+      "title": "Estilo de Trabajo",
+      "totalDuration": "Duración Total",
+      "activeWorkingTime": "Tiempo de Trabajo Activo",
+      "coworkersContacted": "Compañeros Contactados",
+      "aiToolsUsed": "Herramientas IA Usadas",
+      "ciTests": "Pruebas CI",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "insufficientEvidence": {
+      "title": "No hay suficiente información para una evaluación completa",
+      "description": "Esta sesión de evaluación fue muy corta o no capturó suficiente de tu trabajo para evaluarte en todas las dimensiones. A continuación, un resumen de lo observado.",
+      "observedTitle": "Lo que observamos"
+    }
+  },
+  "assessment": {
+    "dimensions": {
+      "COMMUNICATION": "Comunicación",
+      "PROBLEM_SOLVING": "Resolución de Problemas",
+      "TECHNICAL_KNOWLEDGE": "Conocimiento Técnico",
+      "COLLABORATION": "Colaboración",
+      "ADAPTABILITY": "Adaptabilidad",
+      "LEADERSHIP": "Liderazgo",
+      "CREATIVITY": "Creatividad",
+      "TIME_MANAGEMENT": "Gestión del Tiempo"
+    },
+    "levels": {
+      "exceptional": "Excepcional",
+      "strong": "Fuerte",
+      "meetsExpectations": "Cumple las expectativas",
+      "belowExpectations": "Por debajo de las expectativas",
+      "developing": "En desarrollo"
+    }
+  },
   "welcome": {
     "footer": {
       "aiTeammates": "Compañeros IA",
