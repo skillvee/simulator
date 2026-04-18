@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   try {
     const validated = await validateRequest(request, CallTokenRequestSchema);
     if ("error" in validated) return validated.error;
-    const { assessmentId, coworkerId, isPostSubmission } = validated.data;
+    const { assessmentId, coworkerId, isPostSubmission: _isPostSubmission } = validated.data;
 
     // Fetch assessment, coworker, and conversations in parallel
     const [assessment, allConversations] = await Promise.all([
@@ -133,7 +133,7 @@ export async function POST(request: Request) {
       : undefined;
 
     // Build unified system prompt
-    const language = (assessment.user.preferredLanguage as SupportedLanguage) || DEFAULT_LANGUAGE;
+    const language = (assessment.scenario.language as SupportedLanguage) || DEFAULT_LANGUAGE;
     const systemInstruction = buildAgentPrompt({
       companyName: assessment.scenario.companyName,
       techStack: assessment.scenario.techStack,
