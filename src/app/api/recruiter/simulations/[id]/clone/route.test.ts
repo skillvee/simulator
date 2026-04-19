@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import type { Scenario } from "@prisma/client";
 import { POST } from "./route";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
@@ -118,7 +119,7 @@ describe("POST /api/recruiter/simulations/[id]/clone", () => {
     challengeTagline: null,
     repoSpec: null,
     coworkers: [],
-  } as never;
+  } as unknown as Scenario;
 
   beforeEach(() => {
     vi.clearAllMocks();

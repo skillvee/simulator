@@ -56,8 +56,6 @@ export type {
   HiringManagerOutput,
   // Candidate results types (candidate-facing view)
   CandidateResultsData,
-  CandidateDimensionScore,
-  CandidateStrengthOrGrowth,
   CandidateWorkStyleMetrics,
 } from "./assessment";
 

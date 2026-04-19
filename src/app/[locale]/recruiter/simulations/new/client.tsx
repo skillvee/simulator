@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -487,7 +487,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
 
     setIsLoading(true);
     setSaveError(null);
-    setSaveProgress("Creating simulation...");
+    setSaveProgress(t("preview.saveProgress.creating"));
 
     // Update log to saving state
     await updateLog({
@@ -531,7 +531,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
 
       const { data: { scenario } } = await scenarioResponse.json();
 
-      setSaveProgress("Setting up team members...");
+      setSaveProgress(t("preview.saveProgress.teamMembers"));
 
       // Step 3: Create coworkers
       const coworkerPromises = previewData.coworkers.map(async (coworker) => {
@@ -568,7 +568,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
         logger.warn("Some coworkers failed to create", { count: failedCoworkers.length, failedCoworkers });
       }
 
-      setSaveProgress("Almost done...");
+      setSaveProgress(t("preview.saveProgress.almostDone"));
 
       // Step 4: Trigger avatar generation (fire-and-forget)
       fetch("/api/avatar/generate", {
@@ -643,6 +643,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
           domainContext: domain || "a technology company",
           companyName: companyNameValue,
           simulationDepth,
+          language,
           creationLogId: creationLogIdRef.current,
         }),
       });
@@ -676,6 +677,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
           techStack,
           taskDescription,
           keyResponsibilities: responsibilities.length > 0 ? responsibilities : ["Build and maintain features"],
+          language,
           creationLogId: creationLogIdRef.current,
         }),
       });
@@ -707,6 +709,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
             techStack,
             roleName,
             seniorityLevel: seniority,
+            language,
             creationLogId: creationLogIdRef.current,
           }),
         });
@@ -758,7 +761,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
       if (parsedJDData) {
         prefillGuidedForm(parsedJDData);
       }
-      setError("Generation failed \u2014 please review the details below and try again.");
+      setError(t("errors.generationFailed"));
       setStep("guided");
       setIsLoading(false);
     }
@@ -770,9 +773,9 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
         <div className="w-full max-w-3xl space-y-8">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold">Create a New Simulation</h1>
+            <h1 className="text-3xl font-bold">{t("title")}</h1>
             <p className="mt-2 text-lg text-muted-foreground">
-              Start with a job description or answer a few questions
+              {t("subtitle")}
             </p>
           </div>
 
@@ -783,9 +786,9 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
                 <FileText className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold">Paste a Job Description</h2>
+                <h2 className="text-xl font-semibold">{t("pasteJD.title")}</h2>
                 <p className="text-sm text-muted-foreground">
-                  Recommended — we&apos;ll extract everything automatically
+                  {t("pasteJD.subtitle")}
                 </p>
               </div>
             </div>
@@ -795,12 +798,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Paste your job description here...
-
-Example:
-Senior Frontend Engineer at Acme Corp
-
-We're looking for an experienced frontend developer to join our team. You'll be working on our React-based dashboard, building new features for our analytics platform..."
+                placeholder={t("pasteJD.placeholder")}
                 className="min-h-[300px] resize-y"
                 disabled={isLoading}
               />
@@ -818,14 +816,14 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     onClick={handleTryAgain}
                     className="text-destructive hover:text-destructive"
                   >
-                    Try again
+                    {t("pasteJD.tryAgain")}
                   </Button>
                 </div>
               )}
 
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Tip: Press{" "}
+                  {t("pasteJD.keyboardTip")}{" "}
                   <kbd className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
                     {typeof navigator !== "undefined" &&
                     navigator.platform.toLowerCase().includes("mac")
@@ -833,7 +831,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                       : "Ctrl"}
                     +Enter
                   </kbd>{" "}
-                  to continue
+                  {t("pasteJD.toContine")}
                 </p>
                 <Button
                   onClick={handleContinue}
@@ -844,11 +842,11 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Analyzing your job description...
+                      {t("pasteJD.analyzing")}
                     </>
                   ) : (
                     <>
-                      Continue
+                      {t("pasteJD.continueButton")}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
@@ -860,14 +858,14 @@ We're looking for an experienced frontend developer to join our team. You'll be 
           {/* Secondary Path: Guided */}
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Don&apos;t have a job description?{" "}
+              {t("guidedPath.dontHaveJD")}{" "}
               <Button
                 variant="link"
                 className="h-auto p-0 text-sm"
                 onClick={handleGuidedPath}
                 disabled={isLoading}
               >
-                Answer a few questions instead
+                {t("guidedPath.link")}
               </Button>
             </p>
           </div>
@@ -875,7 +873,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
           {/* Cancel Link */}
           <div className="text-center">
             <Button variant="ghost" asChild className="text-muted-foreground">
-              <Link href="/recruiter/simulations">Cancel</Link>
+              <Link href="/recruiter/simulations">{t("cancel")}</Link>
             </Button>
           </div>
         </div>
@@ -893,9 +891,9 @@ We're looking for an experienced frontend developer to join our team. You'll be 
         <div className="w-full max-w-2xl space-y-6">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold">Tell Us About Your Role</h1>
+            <h1 className="text-3xl font-bold">{t("guided.title")}</h1>
             <p className="mt-2 text-lg text-muted-foreground">
-              Answer a few questions to create your simulation
+              {t("guided.subtitle")}
             </p>
           </div>
 
@@ -910,7 +908,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Question 1: Role Title */}
               <div className="space-y-2">
                 <Label htmlFor="roleTitle" className="text-base font-semibold">
-                  What&apos;s the role title? <span className="text-destructive">*</span>
+                  {t("guided.roleTitle")} <span className="text-destructive">*</span>
                 </Label>
                 <div className="relative">
                   <Input
@@ -922,7 +920,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     }}
                     onFocus={() => setShowRoleSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowRoleSuggestions(false), 200)}
-                    placeholder="e.g., Senior Backend Engineer"
+                    placeholder={t("guided.roleTitlePlaceholder")}
                     disabled={isLoading}
                     className="text-base"
                     required
@@ -950,13 +948,13 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Question 2: Company Name */}
               <div className="space-y-2">
                 <Label htmlFor="companyName" className="text-base font-semibold">
-                  What&apos;s the company name? <span className="text-destructive">*</span>
+                  {t("guided.companyName")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="companyName"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="e.g., Acme Corp"
+                  placeholder={t("guided.companyNamePlaceholder")}
                   disabled={isLoading}
                   className="text-base"
                   required
@@ -966,14 +964,14 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Question 3: Company Description */}
               <div className="space-y-2">
                 <Label htmlFor="companyDescription" className="text-base font-semibold">
-                  What does your company do?{" "}
-                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                  {t("guided.companyDescription")}{" "}
+                  <span className="text-sm font-normal text-muted-foreground">{t("guided.optional")}</span>
                 </Label>
                 <Textarea
                   id="companyDescription"
                   value={companyDescription}
                   onChange={(e) => setCompanyDescription(e.target.value)}
-                  placeholder="e.g., We&apos;re a fintech startup building payment infrastructure for small businesses"
+                  placeholder={t("guided.companyDescriptionPlaceholder")}
                   disabled={isLoading}
                   className="min-h-[80px] text-base"
                   rows={3}
@@ -983,8 +981,8 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Question 4: Tech Stack */}
               <div className="space-y-3">
                 <Label className="text-base font-semibold">
-                  What technologies does this role use?{" "}
-                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                  {t("guided.techStack")}{" "}
+                  <span className="text-sm font-normal text-muted-foreground">{t("guided.optional")}</span>
                 </Label>
                 <div className="flex flex-wrap gap-2">
                   {COMMON_TECH_STACKS.map((tech) => (
@@ -1027,7 +1025,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                         addCustomTech();
                       }
                     }}
-                    placeholder="Add other technology..."
+                    placeholder={t("guided.addCustomTech")}
                     disabled={isLoading}
                     className="text-sm"
                   />
@@ -1038,7 +1036,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     disabled={!customTech.trim() || isLoading}
                     className="shrink-0"
                   >
-                    Add
+                    {t("guided.addButton")}
                   </Button>
                 </div>
               </div>
@@ -1046,8 +1044,8 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Question 5: Seniority Level */}
               <div className="space-y-3">
                 <Label className="text-base font-semibold">
-                  What seniority level?{" "}
-                  <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                  {t("guided.seniorityLevel")}{" "}
+                  <span className="text-sm font-normal text-muted-foreground">{t("guided.optional")}</span>
                 </Label>
                 <RadioGroup
                   value={seniorityLevel}
@@ -1058,25 +1056,25 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="junior" id="junior" />
                     <Label htmlFor="junior" className="cursor-pointer font-normal">
-                      Junior
+                      {t("guided.junior")}
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="mid" id="mid" />
                     <Label htmlFor="mid" className="cursor-pointer font-normal">
-                      Mid-level
+                      {t("guided.midLevel")}
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="senior" id="senior" />
                     <Label htmlFor="senior" className="cursor-pointer font-normal">
-                      Senior
+                      {t("guided.senior")}
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="staff" id="staff" />
                     <Label htmlFor="staff" className="cursor-pointer font-normal">
-                      Staff+
+                      {t("guided.staffPlus")}
                     </Label>
                   </div>
                 </RadioGroup>
@@ -1086,8 +1084,8 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {roleFamilies.length > 0 && (
                 <div className="space-y-3">
                   <Label className="text-base font-semibold">
-                    Role archetype{" "}
-                    <span className="text-sm font-normal text-muted-foreground">(adjusts scoring expectations per dimension)</span>
+                    {t("guided.roleArchetype")}{" "}
+                    <span className="text-sm font-normal text-muted-foreground">{t("guided.roleArchetypeDescription")}</span>
                   </Label>
                   <Select
                     value={selectedArchetypeId}
@@ -1095,7 +1093,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     disabled={isLoading}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a role archetype..." />
+                      <SelectValue placeholder={t("guided.selectArchetype")} />
                     </SelectTrigger>
                     <SelectContent>
                       {roleFamilies.map((family) => (
@@ -1112,7 +1110,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   </Select>
                   {selectedArchetypeId && selectedArchetypeId !== "none" && (
                     <p className="text-xs text-muted-foreground">
-                      Scoring expectations will be adjusted for this role — different dimensions will have different expected scores based on seniority.
+                      {t("guided.archetypeNote")}
                     </p>
                   )}
                 </div>
@@ -1130,7 +1128,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     onClick={handleTryAgain}
                     className="text-destructive hover:text-destructive"
                   >
-                    Try again
+                    {t("pasteJD.tryAgain")}
                   </Button>
                 </div>
               )}
@@ -1144,7 +1142,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   disabled={isLoading}
                   className="gap-2"
                 >
-                  Back
+                  {t("guided.back")}
                 </Button>
                 <Button
                   type="submit"
@@ -1155,11 +1153,11 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating your simulation...
+                      {t("guided.generating")}
                     </>
                   ) : (
                     <>
-                      Continue
+                      {t("guided.continue")}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
@@ -1171,7 +1169,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
           {/* Cancel Link */}
           <div className="text-center">
             <Button variant="ghost" asChild className="text-muted-foreground">
-              <Link href="/recruiter/simulations">Cancel</Link>
+              <Link href="/recruiter/simulations">{t("cancel")}</Link>
             </Button>
           </div>
         </div>
@@ -1188,7 +1186,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
         <div className="w-full max-w-md space-y-8 text-center">
           <Sparkles className="mx-auto h-12 w-12 animate-pulse text-primary" />
           <div className="space-y-3">
-            <h2 className="text-2xl font-bold">Building your simulation</h2>
+            <h2 className="text-2xl font-bold">{t("generating.title")}</h2>
             <p
               key={generatingMessageIndex}
               className="text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-500"
@@ -1236,9 +1234,9 @@ We're looking for an experienced frontend developer to join our team. You'll be 
         {/* Header */}
         <div className="border-b px-6 py-4">
           <div className="mx-auto max-w-6xl">
-            <h1 className="text-2xl font-bold">Confirm Your Simulation</h1>
+            <h1 className="text-2xl font-bold">{t("preview.title")}</h1>
             <p className="text-sm text-muted-foreground">
-              Pick a challenge, then review the auto-generated details
+              {t("preview.subtitle")}
             </p>
           </div>
         </div>
@@ -1250,13 +1248,13 @@ We're looking for an experienced frontend developer to join our team. You'll be 
             {/* ===== LEFT COLUMN: Confirmed details ===== */}
             <div className="space-y-3">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Auto-generated details
+                {t("preview.autoGeneratedDetails")}
               </p>
 
               {/* Simulation Name */}
               {editingField === "name" ? (
                 <div className="rounded-lg border bg-background p-3 space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Simulation Name</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">{t("preview.simulationName")}</Label>
                   <Input
                     value={previewData.simulationName}
                     onChange={(e) =>
@@ -1280,7 +1278,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     <Check className="h-3 w-3" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Simulation Name</p>
+                    <p className="text-xs text-muted-foreground">{t("preview.simulationName")}</p>
                     <p className="truncate text-sm font-semibold">{previewData.simulationName}</p>
                   </div>
                   <Pencil className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
@@ -1290,13 +1288,13 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Company */}
               {editingField === "company" ? (
                 <div className="rounded-lg border bg-background p-3 space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Company</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">{t("preview.company")}</Label>
                   <Input
                     value={previewData.companyName}
                     onChange={(e) =>
                       setPreviewData({ ...previewData, companyName: e.target.value })
                     }
-                    placeholder="Company name"
+                    placeholder={t("preview.companyNamePlaceholder")}
                     className="text-sm font-semibold"
                     autoFocus
                   />
@@ -1305,12 +1303,12 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     onChange={(e) =>
                       setPreviewData({ ...previewData, companyDescription: e.target.value })
                     }
-                    placeholder="Company description"
+                    placeholder={t("preview.companyDescriptionPlaceholder")}
                     rows={2}
                     className="text-sm"
                   />
                   <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
-                    Done
+                    {t("preview.done")}
                   </Button>
                 </div>
               ) : (
@@ -1323,7 +1321,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     <Check className="h-3 w-3" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Company</p>
+                    <p className="text-xs text-muted-foreground">{t("preview.company")}</p>
                     <p className="truncate text-sm font-semibold">{previewData.companyName}</p>
                     <p className="truncate text-xs text-muted-foreground">{previewData.companyDescription}</p>
                   </div>
@@ -1347,12 +1345,12 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="en">{t("english")}</SelectItem>
+                      <SelectItem value="es">{t("spanish")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
-                    Done
+                    {t("preview.done")}
                   </Button>
                 </div>
               ) : (
@@ -1379,7 +1377,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Tech Stack */}
               {editingField === "techStack" ? (
                 <div className="rounded-lg border bg-background p-3 space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Tech Stack</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">{t("preview.techStack")}</Label>
                   <div className="flex flex-wrap gap-1.5">
                     {previewData.techStack.map((tech) => (
                       <Badge key={tech} variant="outline" className="gap-1 px-2 py-0.5 text-xs">
@@ -1397,7 +1395,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     ))}
                   </div>
                   <Input
-                    placeholder="Add technology + Enter"
+                    placeholder={t("preview.addTechnology")}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         const value = e.currentTarget.value.trim();
@@ -1413,7 +1411,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     className="text-sm"
                   />
                   <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
-                    Done
+                    {t("preview.done")}
                   </Button>
                 </div>
               ) : (
@@ -1426,7 +1424,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     <Check className="h-3 w-3" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Tech Stack</p>
+                    <p className="text-xs text-muted-foreground">{t("preview.techStack")}</p>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {previewData.techStack.slice(0, 6).map((tech) => (
                         <Badge key={tech} variant="secondary" className="px-1.5 py-0 text-[10px]">
@@ -1435,7 +1433,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                       ))}
                       {previewData.techStack.length > 6 && (
                         <span className="text-xs text-muted-foreground">
-                          +{previewData.techStack.length - 6} more
+                          {t("preview.more", { count: previewData.techStack.length - 6 })}
                         </span>
                       )}
                     </div>
@@ -1455,8 +1453,8 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                       <Check className="h-3 w-3" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-muted-foreground">Team Members</p>
-                      <p className="text-sm font-semibold">{previewData.coworkers.length} members</p>
+                      <p className="text-xs text-muted-foreground">{t("preview.teamMembers")}</p>
+                      <p className="text-sm font-semibold">{t("preview.members", { count: previewData.coworkers.length })}</p>
                       <div className="mt-1 flex items-center gap-1.5">
                         <div className="flex -space-x-1.5">
                           {previewData.coworkers.map((c, i) => (
@@ -1473,9 +1471,9 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
                   <SheetHeader>
-                    <SheetTitle>Team Members</SheetTitle>
+                    <SheetTitle>{t("teamSheet.title")}</SheetTitle>
                     <SheetDescription>
-                      AI-generated team that will interact with the candidate
+                      {t("teamSheet.description")}
                     </SheetDescription>
                   </SheetHeader>
                   <div className="space-y-4 p-4">
@@ -1489,7 +1487,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                           </div>
                         </div>
                         <div>
-                          <p className="text-xs font-semibold text-muted-foreground">Persona Style</p>
+                          <p className="text-xs font-semibold text-muted-foreground">{t("teamSheet.personaStyle")}</p>
                           <p className="mt-0.5 text-sm">{coworker.personaStyle}</p>
                         </div>
                         {coworker.personality && (
@@ -1503,7 +1501,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                           </div>
                         )}
                         <div>
-                          <p className="text-xs font-semibold text-muted-foreground">Knowledge Items</p>
+                          <p className="text-xs font-semibold text-muted-foreground">{t("teamSheet.knowledgeItems")}</p>
                           <ul className="mt-1 space-y-1">
                             {coworker.knowledge.map((k, kIndex) => (
                               <li key={kIndex} className="flex items-center text-sm">
@@ -1511,7 +1509,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                                 {k.isCritical && (
                                   <Badge className="ml-2 text-[10px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50">
                                     <AlertTriangle className="mr-0.5 h-2.5 w-2.5" />
-                                    Critical
+                                    {t("teamSheet.critical")}
                                   </Badge>
                                 )}
                               </li>
@@ -1527,7 +1525,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Seniority Level */}
               {editingField === "seniority" ? (
                 <div className="rounded-lg border bg-background p-3 space-y-3">
-                  <Label className="text-xs font-medium text-muted-foreground">Seniority Level</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">{t("preview.seniorityLevel")}</Label>
                   <RadioGroup
                     value={parsedJDData?.seniorityLevel.value || "mid"}
                     onValueChange={(value: string) => {
@@ -1541,10 +1539,10 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     className="space-y-2"
                   >
                     {([
-                      { value: "junior", label: "Junior", desc: "0-2 years — can do the work with guidance, learning-focused" },
-                      { value: "mid", label: "Mid-Level", desc: "2-5 years — independent contributor, solid fundamentals" },
-                      { value: "senior", label: "Senior", desc: "5-8 years — works independently, mentors others, owns systems" },
-                      { value: "staff", label: "Staff+", desc: "8+ years — sets technical direction, cross-team impact" },
+                      { value: "junior", label: t("guided.junior"), desc: t("preview.juniorDesc") },
+                      { value: "mid", label: t("guided.midLevel"), desc: t("preview.midDesc") },
+                      { value: "senior", label: t("guided.senior"), desc: t("preview.seniorDesc") },
+                      { value: "staff", label: t("guided.staffPlus"), desc: t("preview.staffDesc") },
                     ] as const).map((level) => (
                       <label
                         key={level.value}
@@ -1564,7 +1562,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     ))}
                   </RadioGroup>
                   <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
-                    Done
+                    {t("preview.done")}
                   </Button>
                 </div>
               ) : (
@@ -1577,14 +1575,14 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     <Check className="h-3 w-3" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Seniority Level</p>
+                    <p className="text-xs text-muted-foreground">{t("preview.seniorityLevel")}</p>
                     <p className="text-sm font-semibold">
-                      {({ junior: "Junior", mid: "Mid-Level", senior: "Senior", staff: "Staff+" } as const)[
+                      {({ junior: t("guided.junior"), mid: t("guided.midLevel"), senior: t("guided.senior"), staff: t("guided.staffPlus") } as const)[
                         (parsedJDData?.seniorityLevel.value || "mid") as InferredSeniorityLevel
                       ]}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {({ junior: "0-2 years experience", mid: "2-5 years experience", senior: "5-8 years experience", staff: "8+ years experience" } as const)[
+                      {({ junior: t("preview.juniorExp"), mid: t("preview.midExp"), senior: t("preview.seniorExp"), staff: t("preview.staffExp") } as const)[
                         (parsedJDData?.seniorityLevel.value || "mid") as InferredSeniorityLevel
                       ]}
                     </p>
@@ -1596,7 +1594,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               {/* Simulation Depth */}
               {editingField === "depth" ? (
                 <div className="rounded-lg border bg-background p-3 space-y-3">
-                  <Label className="text-xs font-medium text-muted-foreground">Simulation Length</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">{t("preview.simulationDepth")}</Label>
                   <RadioGroup
                     value={simulationDepth}
                     onValueChange={(value: string) => setSimulationDepth(value as SimulationDepth)}
@@ -1622,7 +1620,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     })}
                   </RadioGroup>
                   <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>
-                    Done
+                    {t("preview.done")}
                   </Button>
                 </div>
               ) : (
@@ -1635,7 +1633,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     <Check className="h-3 w-3" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Simulation Length</p>
+                    <p className="text-xs text-muted-foreground">{t("preview.simulationDepth")}</p>
                     <p className="text-sm font-semibold">{SIMULATION_DEPTH_CONFIG[simulationDepth].label}</p>
                     <p className="text-xs text-muted-foreground">
                       {SIMULATION_DEPTH_CONFIG[simulationDepth].description}
@@ -1652,10 +1650,10 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${hasArchetype ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"}`}>
                       {hasArchetype ? <Check className="h-3 w-3" /> : <GraduationCap className="h-3 w-3" />}
                     </div>
-                    <p className="text-xs text-muted-foreground">Role Archetype</p>
+                    <p className="text-xs text-muted-foreground">{t("preview.roleArchetype")}</p>
                     {!hasArchetype && (
                       <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 text-[10px]">
-                        Required
+                        {t("preview.required")}
                       </Badge>
                     )}
                   </div>
@@ -1664,7 +1662,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     onValueChange={setSelectedArchetypeId}
                   >
                     <SelectTrigger className={`w-full text-sm h-9 ${!hasArchetype ? "border-amber-300" : ""}`}>
-                      <SelectValue placeholder="Select a role archetype..." />
+                      <SelectValue placeholder={t("guided.selectArchetype")} />
                     </SelectTrigger>
                     <SelectContent>
                       {roleFamilies.map((family) => (
@@ -1681,7 +1679,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                   </Select>
                   {hasArchetype && (
                     <p className="text-[10px] text-muted-foreground">
-                      Scoring expectations will vary by dimension for this role
+                      {t("preview.scoringNote")}
                     </p>
                   )}
                 </div>
@@ -1695,14 +1693,14 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     className="group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     <Eye className="h-3.5 w-3.5" />
-                    Preview candidate experience
+                    {t("preview.previewCandidateExperience")}
                   </button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
                   <SheetHeader>
-                    <SheetTitle>Candidate Experience</SheetTitle>
+                    <SheetTitle>{t("candidateExperienceSheet.title")}</SheetTitle>
                     <SheetDescription>
-                      This is what candidates will see when they start the simulation
+                      {t("candidateExperienceSheet.description")}
                     </SheetDescription>
                   </SheetHeader>
                   <div className="p-4">
@@ -1722,10 +1720,10 @@ We're looking for an experienced frontend developer to join our team. You'll be 
               <Card className="flex flex-1 flex-col border-primary/30 p-6">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-semibold">Choose a Challenge</h2>
+                    <h2 className="text-lg font-semibold">{t("preview.chooseChallenge")}</h2>
                     {!previewData.selectedTask && (
                       <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 text-[10px]">
-                        Required
+                        {t("preview.required")}
                       </Badge>
                     )}
                     {previewData.selectedTask && (
@@ -1735,7 +1733,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Select the challenge candidates will work on during the assessment
+                    {t("preview.selectChallenge")}
                   </p>
                 </div>
 
@@ -1791,7 +1789,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                                   onClick={(e) => e.stopPropagation()}
                                   className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
                                 >
-                                  {isExpanded ? "Hide candidate brief" : "Show candidate brief"}
+                                  {isExpanded ? t("preview.hideCandidateBrief") : t("preview.showCandidateBrief")}
                                   <ChevronDown
                                     className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                                   />
@@ -1821,7 +1819,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     >
                       <RadioGroupItem value="custom" id="custom" className="mt-0.5" />
                       <div className="flex-1 space-y-2">
-                        <p className="text-sm font-medium">Write my own</p>
+                        <p className="text-sm font-medium">{t("preview.writeMyOwn")}</p>
                         {previewData.selectedTask?.type === "custom" && (
                           <Textarea
                             value={customTaskInput}
@@ -1833,7 +1831,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                               });
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            placeholder="Describe the challenge..."
+                            placeholder={t("preview.describechallenge")}
                             rows={4}
                             className="text-sm"
                           />
@@ -1851,7 +1849,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
         <div className="border-t bg-background px-6 py-4">
           <div className="mx-auto flex max-w-6xl items-center justify-between">
             <Button variant="ghost" onClick={() => setStep("entry")} disabled={isLoading}>
-              Back
+              {t("guided.back")}
             </Button>
             <div className="flex items-center gap-4">
               {saveError && (
@@ -1866,17 +1864,17 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     }}
                     className="text-destructive hover:text-destructive"
                   >
-                    Try again
+                    {t("pasteJD.tryAgain")}
                   </Button>
                 </div>
               )}
               {!isReadyToCreate && !saveError && (
                 <p className="text-sm text-muted-foreground">
                   {!previewData.selectedTask && !hasArchetype
-                    ? "Select a challenge and role archetype to continue"
+                    ? t("preview.selectChallengeAndArchetype")
                     : !previewData.selectedTask
-                      ? "Select a challenge to continue"
-                      : "Select a role archetype to continue"}
+                      ? t("preview.selectChallengeOnly")
+                      : t("preview.selectArchetypeOnly")}
                 </p>
               )}
               <Button
@@ -1887,10 +1885,10 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {saveProgress || "Creating..."}
+                    {saveProgress || t("preview.creating")}
                   </>
                 ) : (
-                  "Create Simulation"
+                  t("preview.createSimulation")
                 )}
               </Button>
             </div>

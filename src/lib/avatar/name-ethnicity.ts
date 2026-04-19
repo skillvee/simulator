@@ -84,6 +84,26 @@ const ETHNICITY_MAP: Record<string, EthnicGroup> = {
   gutierrez: "hispanic", alejandro: "hispanic", ricardo: "hispanic",
   gabriela: "hispanic", mariana: "hispanic", elena: "hispanic", javier: "hispanic",
   fernando: "hispanic", raul: "hispanic", carmen: "hispanic",
+  matias: "hispanic", "matías": "hispanic", mateo: "hispanic", "matéo": "hispanic",
+  sebastian: "hispanic", "sebastián": "hispanic", tomas: "hispanic", "tomás": "hispanic",
+  nicolas: "hispanic", "nicolás": "hispanic", santiago: "hispanic", lucas: "hispanic",
+  joaquin: "hispanic", "joaquín": "hispanic", benjamin: "hispanic", "benjamín": "hispanic",
+  agustin: "hispanic", "agustín": "hispanic", martin: "hispanic", "martín": "hispanic",
+  julian: "hispanic", "julián": "hispanic", facundo: "hispanic", ignacio: "hispanic",
+  gonzalo: "hispanic", federico: "hispanic", emiliano: "hispanic", leonardo: "hispanic",
+  cristian: "hispanic", "cristián": "hispanic", esteban: "hispanic", juan: "hispanic",
+  luis: "hispanic", jose: "hispanic", "josé": "hispanic", pedro: "hispanic",
+  antonio: "hispanic", manuel: "hispanic", francisco: "hispanic", sergio: "hispanic",
+  jorge: "hispanic", hector: "hispanic", "héctor": "hispanic", oscar: "hispanic",
+  "óscar": "hispanic", rafael: "hispanic", victor: "hispanic", "víctor": "hispanic",
+  alberto: "hispanic", mauricio: "hispanic", felipe: "hispanic", guillermo: "hispanic",
+  renata: "hispanic", daniela: "hispanic", paula: "hispanic", ana: "hispanic",
+  maria: "hispanic", "maría": "hispanic", laura_h: "hispanic", patricia: "hispanic",
+  natalia: "hispanic", andrea: "hispanic", florencia: "hispanic", martina: "hispanic",
+  antonella: "hispanic", agustina: "hispanic", catalina: "hispanic", emilia: "hispanic",
+  alba: "hispanic", rocio: "hispanic", "rocío": "hispanic", pilar: "hispanic",
+  beatriz: "hispanic", ines: "hispanic", "inés": "hispanic", silvia: "hispanic",
+  mercedes: "hispanic", guadalupe: "hispanic", ximena: "hispanic", regina: "hispanic",
 
   // Middle Eastern
   fatima: "middle-eastern", leila: "middle-eastern", noor: "middle-eastern",
@@ -105,6 +125,10 @@ const FEMALE_NAMES = new Set([
   "emma", "claire", "hannah", "rachel", "sofia", "emily", "sarah", "jennifer", "laura", "jessica",
   "aisha", "zara", "imani", "thandiwe", "ebony", "keisha",
   "camila", "valentina", "lucia", "isabella", "gabriela", "mariana", "elena", "carmen",
+  "renata", "daniela", "paula", "ana", "maria", "maría", "patricia", "natalia",
+  "andrea", "florencia", "martina", "antonella", "agustina", "catalina", "emilia",
+  "alba", "rocio", "rocío", "pilar", "beatriz", "ines", "inés", "silvia",
+  "mercedes", "guadalupe", "ximena", "regina",
   "fatima", "leila", "noor", "yasmin", "layla", "maryam", "amira", "sara",
   "alex", "taylor", "sam", "riley", "jordan",
 ]);
@@ -119,6 +143,13 @@ const MALE_NAMES = new Set([
   "marcus", "derek", "kwame", "emeka", "jamal", "malik", "tyrone", "lamar", "darnell",
   "carlos", "diego", "miguel", "andres", "pablo", "alejandro", "ricardo",
   "javier", "fernando", "raul",
+  "matias", "matías", "mateo", "matéo", "sebastian", "sebastián",
+  "tomas", "tomás", "nicolas", "nicolás", "santiago", "lucas", "joaquin", "joaquín",
+  "benjamin", "benjamín", "agustin", "agustín", "martin", "martín",
+  "julian", "julián", "facundo", "ignacio", "gonzalo", "federico", "emiliano",
+  "leonardo", "cristian", "cristián", "esteban", "juan", "luis", "jose", "josé",
+  "pedro", "antonio", "manuel", "francisco", "sergio", "jorge", "hector", "héctor",
+  "oscar", "óscar", "victor", "víctor", "alberto", "mauricio", "felipe", "guillermo",
   "omar", "ali", "karim", "tariq", "rami", "ahmed", "mohammed", "youssef",
   "kai", "eden", "marco", "jayden", "nico",
 ]);
@@ -188,9 +219,18 @@ const AVATAR_POOL: Record<string, string[]> = {
  * Get the avatar file path from the pool for a given name.
  * Returns a path like "/avatars/pool/mei-lin.jpg".
  * Deterministic: same name always returns the same avatar.
+ *
+ * If `overrides.gender` or `overrides.ethnicity` is provided, they bypass
+ * name-based inference — use these when the LLM or admin explicitly set them,
+ * so a name like "Matias" never picks a female pool due to an incomplete dictionary.
  */
-export function getPoolAvatarPath(fullName: string): string {
-  const { group, gender } = inferDemographics(fullName);
+export function getPoolAvatarPath(
+  fullName: string,
+  overrides?: { gender?: Gender | null; ethnicity?: EthnicGroup | null }
+): string {
+  const inferred = inferDemographics(fullName);
+  const group: EthnicGroup = overrides?.ethnicity ?? inferred.group;
+  const gender: Gender = overrides?.gender ?? inferred.gender;
   const key = `${group}-${gender}`;
   const pool = AVATAR_POOL[key];
 
@@ -203,3 +243,16 @@ export function getPoolAvatarPath(fullName: string): string {
   const index = hashName(fullName) % pool.length;
   return `/avatars/pool/${pool[index]}.jpg`;
 }
+
+export const ETHNIC_GROUPS: readonly EthnicGroup[] = [
+  "east-asian",
+  "south-asian",
+  "southeast-asian",
+  "white",
+  "black",
+  "hispanic",
+  "middle-eastern",
+  "mixed",
+] as const;
+
+export const GENDERS: readonly Gender[] = ["male", "female"] as const;

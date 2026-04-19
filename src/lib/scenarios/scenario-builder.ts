@@ -40,6 +40,22 @@ export const coworkerBuilderSchema = z.object({
   role: z.string().min(1),
   personaStyle: z.string().min(1),
   personality: coworkerPersonalitySchema.optional(),
+  // Optional at schema level for backward compat with legacy fixtures.
+  // The coworker generator post-fills these via name-based inference when the LLM omits them,
+  // and call sites fall back to inference if still missing.
+  gender: z.enum(["male", "female"]).optional(),
+  ethnicity: z
+    .enum([
+      "east-asian",
+      "south-asian",
+      "southeast-asian",
+      "white",
+      "black",
+      "hispanic",
+      "middle-eastern",
+      "mixed",
+    ])
+    .optional(),
   knowledge: z.array(
     z.object({
       topic: z.string(),

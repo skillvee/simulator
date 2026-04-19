@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { Markdown } from "@/components/shared/markdown";
 import { Button } from "@/components/ui/button";
@@ -102,6 +103,8 @@ const RESOURCE_ICONS: Record<ScenarioResource["type"], React.ElementType> = {
 
 export function SimulationSettingsClient({ scenario }: SimulationSettingsClientProps) {
   const router = useRouter();
+  const t = useTranslations("recruiter.simulations.settings");
+  const tRubricLevels = useTranslations("rubric.levels");
   const [copied, setCopied] = useState(false);
   const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
   const [showCloneModal, setShowCloneModal] = useState(false);
@@ -212,7 +215,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to clone scenario");
+        throw new Error(error.message || t("cloneModal.cloneFailed"));
       }
 
       const result = await response.json();
@@ -223,7 +226,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
       }
     } catch (error) {
       console.error("Clone failed:", error);
-      alert(error instanceof Error ? error.message : "Failed to clone scenario");
+      alert(error instanceof Error ? error.message : t("cloneModal.cloneFailed"));
     } finally {
       setIsCloning(false);
       setShowCloneModal(false);
@@ -238,9 +241,9 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           <div className="flex items-center gap-3">
             <CheckCircle2 className="h-5 w-5 text-green-600" />
             <div>
-              <p className="font-medium text-green-900">Simulation created!</p>
+              <p className="font-medium text-green-900">{t("successBanner.title")}</p>
               <p className="text-sm text-green-700">
-                Share the link below with candidates to get started
+                {t("successBanner.description")}
               </p>
             </div>
           </div>
@@ -262,7 +265,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Simulations
+          {t("backToSimulations")}
         </Link>
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -279,10 +282,10 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg text-blue-900">
             <LinkIcon className="h-5 w-5" />
-            Shareable Link
+            {t("shareableLink.title")}
           </CardTitle>
           <p className="text-sm text-blue-700">
-            Share this link with candidates to start their assessment
+            {t("shareableLink.description")}
           </p>
         </CardHeader>
         <CardContent>
@@ -304,12 +307,12 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
               {copied ? (
                 <>
                   <Check className="mr-2 h-5 w-5" />
-                  Copied!
+                  {t("shareableLink.copied")}
                 </>
               ) : (
                 <>
                   <Copy className="mr-2 h-5 w-5" />
-                  Copy Link
+                  {t("shareableLink.copy")}
                 </>
               )}
             </Button>
@@ -320,12 +323,12 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
       {/* Simulation Details */}
       <Card className="mb-6 border-stone-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Simulation Details</CardTitle>
+          <CardTitle className="text-lg">{t("details.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
             <h3 className="text-sm font-medium text-stone-500 mb-2">
-              Task Description
+              {t("details.taskDescription")}
             </h3>
             <p className="text-stone-900 whitespace-pre-wrap">
               {scenario.taskDescription}
@@ -336,7 +339,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
             <div>
               <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
                 <Code className="h-4 w-4" />
-                Tech Stack
+                {t("details.techStack")}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {scenario.techStack.map((tech) => (
@@ -355,7 +358,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           <div>
             <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
               <Languages className="h-4 w-4" />
-              Language
+              {t("details.languageHeading")}
             </h3>
             <div className="flex items-center gap-3">
               <TooltipProvider>
@@ -369,7 +372,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                         <SelectContent>
                           {Object.entries(LANGUAGES).map(([code]) => (
                             <SelectItem key={code} value={code}>
-                              {code === "en" ? "English" : code === "es" ? "Spanish" : code}
+                              {code === "en" ? t("details.english") : code === "es" ? t("details.spanish") : code}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -380,8 +383,8 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Scenario language is immutable once created.</p>
-                    <p className="text-xs mt-1 text-stone-400">Clone the scenario to create a version in another language.</p>
+                    <p>{t("details.languageImmutable")}</p>
+                    <p className="text-xs mt-1 text-stone-400">{t("details.cloneToCreateInOther")}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -395,7 +398,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                 className="flex items-center gap-2"
               >
                 <FolderOpen className="h-4 w-4" />
-                Clone to another language
+                {t("cloneToLanguage")}
               </Button>
             </div>
           </div>
@@ -403,16 +406,17 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           <div>
             <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
               <GraduationCap className="h-4 w-4" />
-              Target Level
+              {t("details.targetLevel")}
             </h3>
             {(() => {
-              const level = LEVEL_EXPECTATIONS[(scenario.targetLevel || "mid") as TargetLevel];
+              const levelKey = (scenario.targetLevel || "mid") as TargetLevel;
+              const level = LEVEL_EXPECTATIONS[levelKey];
               return (
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
-                    {level.label}
+                    {tRubricLevels(`${levelKey}.label`)}
                   </Badge>
-                  <span className="text-sm text-stone-500">{level.yearsRange} experience</span>
+                  <span className="text-sm text-stone-500">{t("details.yearsExperience", { years: tRubricLevels(`${levelKey}.yearsRange`) })}</span>
                   {scenario.archetypeName ? (
                     <>
                       <span className="text-sm text-stone-400">·</span>
@@ -424,21 +428,21 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                       )}
                     </>
                   ) : (
-                    <span className="text-sm text-stone-400">· Expected score: {level.expectedScore}/4</span>
+                    <span className="text-sm text-stone-400">{t("details.expectedScore", { score: level.expectedScore })}</span>
                   )}
                 </div>
               );
             })()}
             {scenario.archetypeName && (
               <p className="text-xs text-stone-400 mt-1">
-                Per-dimension scoring expectations are adjusted for this role archetype and seniority level
+                {t("details.archetypeNote")}
               </p>
             )}
           </div>
 
           <div>
             <h3 className="text-sm font-medium text-stone-500 mb-2">
-              Repository
+              {t("details.repository")}
             </h3>
             {repoStatus === "ready" && repoUrl ? (
               <a
@@ -452,12 +456,12 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
               </a>
             ) : repoStatus === "failed" ? (
               <span className="text-sm text-stone-400">
-                Not available — check GITHUB_ORG_TOKEN configuration
+                {t("details.repoUnavailable")}
               </span>
             ) : (
               <div className="flex items-center gap-2 text-stone-500">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-blue-600" />
-                <span className="text-sm">Setting up...</span>
+                <span className="text-sm">{t("details.settingUp")}</span>
               </div>
             )}
           </div>
@@ -465,7 +469,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           <div>
             <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
               <Calendar className="h-4 w-4" />
-              Created
+              {t("details.created")}
             </h3>
             <p className="text-stone-900">{formatDate(scenario.createdAt)}</p>
           </div>
@@ -478,7 +482,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Package className="h-5 w-5" />
-              Resources ({scenario.resources.length})
+              {t("resources.title", { count: scenario.resources.length })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -539,7 +543,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                               ) : (
                                 <ChevronRight className="h-3.5 w-3.5" />
                               )}
-                              {isExpanded ? "Hide content" : "Show content"}
+                              {isExpanded ? t("resources.hideContent") : t("resources.showContent")}
                             </button>
                             {isExpanded && (
                               <div className="mt-2 rounded-md bg-white border border-stone-200 p-4 text-sm text-stone-700">
@@ -563,12 +567,12 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Users className="h-5 w-5" />
-            Coworkers ({scenario.coworkers.length})
+            {t("coworkers.title", { count: scenario.coworkers.length })}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {scenario.coworkers.length === 0 ? (
-            <p className="text-stone-500 text-sm">No coworkers configured.</p>
+            <p className="text-stone-500 text-sm">{t("coworkers.none")}</p>
           ) : (
             <div className="space-y-4">
               {scenario.coworkers.map((coworker) => (
@@ -603,28 +607,28 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
       <Dialog open={showCloneModal} onOpenChange={setShowCloneModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Clone Scenario to Another Language</DialogTitle>
+            <DialogTitle>{t("cloneModal.dialogTitle")}</DialogTitle>
             <DialogDescription>
-              This will create a new scenario with all content (task, resources, and coworkers) regenerated in the selected language.
+              {t("cloneModal.dialogDescription")}
               <br />
               <br />
-              <strong>Note:</strong> Recruiter customizations will NOT be carried over. The new scenario will have freshly generated content.
+              <strong>{t("cloneModal.noteLabel")}</strong> {t("cloneModal.noteText")}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <label className="block text-sm font-medium text-stone-700 mb-2">
-              Target Language
+              {t("cloneModal.targetLanguage")}
             </label>
             <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a language" />
+                <SelectValue placeholder={t("cloneModal.selectLanguage")} />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(LANGUAGES)
                   .filter(([code]) => code !== scenario.language)
                   .map(([code]) => (
                     <SelectItem key={code} value={code}>
-                      {code === "en" ? "English" : code === "es" ? "Spanish" : code}
+                      {code === "en" ? t("details.english") : code === "es" ? t("details.spanish") : code}
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -632,16 +636,16 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCloneModal(false)} disabled={isCloning}>
-              Cancel
+              {t("cloneModal.cancel")}
             </Button>
             <Button onClick={handleClone} disabled={!selectedLanguage || isCloning}>
               {isCloning ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Cloning...
+                  {t("cloneModal.cloning")}
                 </>
               ) : (
-                "Clone Scenario"
+                t("cloneModal.cloneScenario")
               )}
             </Button>
           </DialogFooter>

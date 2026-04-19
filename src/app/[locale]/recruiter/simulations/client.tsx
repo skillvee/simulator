@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,6 +55,7 @@ interface Props {
 
 export function SimulationsTableClient({ simulations }: Props) {
   const router = useRouter();
+  const t = useTranslations("recruiter.simulations.list");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] =
     useState<SimulationManageData | null>(null);
@@ -78,7 +80,7 @@ export function SimulationsTableClient({ simulations }: Props) {
       document.body.removeChild(t);
     }
     setCopiedId(simulationId);
-    toast.success("Invite link copied");
+    toast.success(t("toast.linkCopied"));
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -92,13 +94,13 @@ export function SimulationsTableClient({ simulations }: Props) {
       );
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error || "Failed to delete");
+        toast.error(data.error || t("toast.deleteFailed"));
         return;
       }
-      toast.success("Simulation deleted");
+      toast.success(t("toast.deleted"));
       router.refresh();
     } catch {
-      toast.error("Failed to delete");
+      toast.error(t("toast.deleteFailed"));
     } finally {
       setIsDeleting(false);
       setDeleteTarget(null);
@@ -152,10 +154,10 @@ export function SimulationsTableClient({ simulations }: Props) {
 
   const levelLabel = (level: string) => {
     const map: Record<string, string> = {
-      junior: "Junior",
-      mid: "Mid",
-      senior: "Senior",
-      lead: "Lead",
+      junior: t("levels.junior"),
+      mid: t("levels.mid"),
+      senior: t("levels.senior"),
+      lead: t("levels.lead"),
     };
     return map[level] ?? level;
   };
@@ -166,18 +168,20 @@ export function SimulationsTableClient({ simulations }: Props) {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900">
-            Simulations
+            {t("title")}
           </h1>
           <p className="mt-1 text-sm text-stone-500">
             {simulations.length > 0
-              ? `${simulations.length} simulation${simulations.length !== 1 ? "s" : ""}`
-              : "Create your first simulation to start assessing candidates"}
+              ? simulations.length === 1
+                ? t("countSingular", { count: simulations.length })
+                : t("countPlural", { count: simulations.length })
+              : t("emptyHelper")}
           </p>
         </div>
         <Button asChild className="bg-blue-600 hover:bg-blue-700">
           <Link href="/recruiter/simulations/new">
             <Plus className="mr-2 h-4 w-4" />
-            Create Simulation
+            {t("createSimulation")}
           </Link>
         </Button>
       </div>
@@ -187,10 +191,10 @@ export function SimulationsTableClient({ simulations }: Props) {
           <CardContent className="p-12 text-center">
             <FolderOpen className="mx-auto h-16 w-16 text-stone-300" />
             <h2 className="mt-6 text-xl font-semibold text-stone-900">
-              No simulations yet
+              {t("empty.title")}
             </h2>
             <p className="mt-2 text-stone-500">
-              Create your first work simulation to start assessing candidates.
+              {t("empty.description")}
             </p>
             <Button
               asChild
@@ -198,7 +202,7 @@ export function SimulationsTableClient({ simulations }: Props) {
             >
               <Link href="/recruiter/simulations/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Your First Simulation
+                {t("empty.createButton")}
               </Link>
             </Button>
           </CardContent>
@@ -213,7 +217,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                     onClick={() => toggleSort("name")}
                     className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
                   >
-                    Simulation
+                    {t("table.simulation")}
                     <SortIcon col="name" />
                   </button>
                 </TableHead>
@@ -222,13 +226,13 @@ export function SimulationsTableClient({ simulations }: Props) {
                     onClick={() => toggleSort("company")}
                     className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
                   >
-                    Company
+                    {t("table.company")}
                     <SortIcon col="company" />
                   </button>
                 </TableHead>
                 <TableHead className="w-[80px]">
                   <span className="text-xs font-medium text-stone-500">
-                    Status
+                    {t("table.status")}
                   </span>
                 </TableHead>
                 <TableHead className="w-[80px]">
@@ -236,7 +240,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                     onClick={() => toggleSort("level")}
                     className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
                   >
-                    Level
+                    {t("table.level")}
                     <SortIcon col="level" />
                   </button>
                 </TableHead>
@@ -245,7 +249,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                     onClick={() => toggleSort("candidates")}
                     className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
                   >
-                    Candidates
+                    {t("table.candidates")}
                     <SortIcon col="candidates" />
                   </button>
                 </TableHead>
@@ -254,7 +258,7 @@ export function SimulationsTableClient({ simulations }: Props) {
                     onClick={() => toggleSort("created")}
                     className="flex items-center text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors"
                   >
-                    Created
+                    {t("table.created")}
                     <SortIcon col="created" />
                   </button>
                 </TableHead>
@@ -293,14 +297,14 @@ export function SimulationsTableClient({ simulations }: Props) {
                         variant="secondary"
                         className="bg-blue-50 text-blue-700 border-0 text-[11px] font-medium"
                       >
-                        Open
+                        {t("status.open")}
                       </Badge>
                     ) : (
                       <Badge
                         variant="secondary"
                         className="bg-stone-100 text-stone-500 border-0 text-[11px]"
                       >
-                        Draft
+                        {t("status.draft")}
                       </Badge>
                     )}
                   </TableCell>
@@ -371,26 +375,25 @@ export function SimulationsTableClient({ simulations }: Props) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete simulation?</AlertDialogTitle>
+            <AlertDialogTitle>{t("delete.confirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete{" "}
+              {t("delete.confirmDescriptionBefore")}
               <span className="font-medium text-stone-700">
                 {deleteTarget?.name}
-              </span>{" "}
-              and all associated candidate results, recordings, and scores.
-              This action cannot be undone.
+              </span>
+              {t("delete.confirmDescriptionAfter")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>
-              Cancel
+              {t("delete.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? t("delete.deleting") : t("delete.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

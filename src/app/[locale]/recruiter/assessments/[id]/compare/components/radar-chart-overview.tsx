@@ -23,6 +23,7 @@ import {
   getStrengthBadgeStyles,
 } from "./helpers";
 import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
+import { useTranslations } from "next-intl";
 import type { CandidateComparison } from "./types";
 
 // Custom tick renderer that wraps long labels onto multiple lines
@@ -125,6 +126,7 @@ export function RadarChartOverview({
   totalCandidatesInSimulation,
 }: RadarChartOverviewProps) {
   const { translateDimension } = useAssessmentTranslations();
+  const tRelativeStrength = useTranslations("rubric.relativeStrength");
   const isSingle = candidates.length === 1;
 
   // Transform data for radar chart
@@ -225,7 +227,7 @@ export function RadarChartOverview({
             {/* Badges */}
             <div className="flex flex-col items-center gap-2">
               <Badge className={getStrengthBadgeStyles(candidate.strengthLevel)}>
-                {candidate.strengthLevel}
+                {tRelativeStrength(candidate.strengthLevel)}
               </Badge>
               {showPercentiles && (
                 <Badge variant="outline" className="text-xs">
@@ -348,7 +350,7 @@ export function RadarChartOverview({
                     candidate.strengthLevel
                   )}
                 >
-                  {candidate.strengthLevel}
+                  {tRelativeStrength(candidate.strengthLevel)}
                 </Badge>
 
                 {showPercentiles && (

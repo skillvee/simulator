@@ -1,7 +1,11 @@
-import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 
 export default function Footer() {
+  const t = useTranslations("landing.footer");
+  const year = new Date().getFullYear();
+
   return (
     <footer className="relative bg-slate-900 text-slate-300 py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
@@ -18,7 +22,7 @@ export default function Footer() {
               />
             </div>
             <p className="text-blue-200/80 mb-4">
-              See how candidates actually work before you hire them.
+              {t("tagline")}
             </p>
             <p className="text-blue-200/80">
               <a href="mailto:hi@skillvee.com" className="hover:text-white transition-colors">
@@ -28,58 +32,58 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4 text-white">Product</h3>
+            <h3 className="font-semibold mb-4 text-white">{t("productHeading")}</h3>
             <ul className="space-y-2 text-blue-200/70">
               <li>
                 <Link href="/product" className="hover:text-white transition-colors">
-                  How It Works
+                  {t("howItWorks")}
                 </Link>
               </li>
               <li>
                 <Link href="/demo" className="hover:text-white transition-colors">
-                  Request Demo
+                  {t("requestDemo")}
                 </Link>
               </li>
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  Pricing
+                  {t("pricing")}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4 text-white">Resources</h3>
+            <h3 className="font-semibold mb-4 text-white">{t("resourcesHeading")}</h3>
             <ul className="space-y-2 text-blue-200/70">
               <li>
                 <Link href="/interview-questions" className="hover:text-white transition-colors">
-                  Question Bank
+                  {t("questionBank")}
                 </Link>
               </li>
               <li>
                 <Link href="/interview-guides" className="hover:text-white transition-colors">
-                  Interview Guides
+                  {t("interviewGuides")}
                 </Link>
               </li>
               <li>
                 <Link href="/faq" className="hover:text-white transition-colors">
-                  FAQ
+                  {t("faq")}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-semibold mb-4 text-white">Legal</h3>
+            <h3 className="font-semibold mb-4 text-white">{t("legalHeading")}</h3>
             <ul className="space-y-2 text-blue-200/70">
               <li>
                 <Link href="/privacy" className="hover:text-white transition-colors">
-                  Privacy Policy
+                  {t("privacyPolicy")}
                 </Link>
               </li>
               <li>
                 <Link href="/terms" className="hover:text-white transition-colors">
-                  Terms of Service
+                  {t("termsOfService")}
                 </Link>
               </li>
             </ul>
@@ -88,7 +92,7 @@ export default function Footer() {
 
         <div className="border-t border-slate-800/50 pt-8 text-center">
           <p className="text-slate-400/60">
-            © {new Date().getFullYear()} Skillvee. All rights reserved.
+            {t("copyright", { year })}
           </p>
         </div>
       </div>

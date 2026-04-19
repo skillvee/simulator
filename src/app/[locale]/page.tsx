@@ -258,9 +258,9 @@ export default function HomePage() {
 
           <div className="grid lg:grid-cols-3 gap-12 mt-20">
             {[
-              { stat: "72%", text: "of resumes are now AI-written and look alike. You can't tell who's qualified." },
-              { stat: "46%", text: "of new hires fail within 18 months. Expensive mistake." },
-              { stat: "<1%", text: "of applicants are truly qualified. Needle in a haystack." },
+              { stat: t("problem.stat1.value"), text: t("problem.stat1.text") },
+              { stat: t("problem.stat2.value"), text: t("problem.stat2.text") },
+              { stat: t("problem.stat3.value"), text: t("problem.stat3.text") },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -290,13 +290,13 @@ export default function HomePage() {
             className="text-center mb-16 sm:mb-20"
           >
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-              How It Works
+              {t("howItWorks.label")}
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4">
-              From job description to hiring decision
+              {t("howItWorks.title")}
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Three steps. No scheduling headaches. Real evidence.
+              {t("howItWorks.subtitle")}
             </p>
           </motion.div>
 
@@ -312,12 +312,11 @@ export default function HomePage() {
                   1
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-slate-900">
-                  Create Your Simulation
+                  {t("howItWorks.step1.title")}
                 </h3>
               </div>
               <p className="text-lg text-slate-600 mb-8">
-                Paste your job description and we generate a realistic work scenario.
-                No generic tests—your simulation matches the actual role.
+                {t("howItWorks.step1.description")}
               </p>
               <ul className="space-y-4">
                 {[
@@ -397,13 +396,11 @@ export default function HomePage() {
                   2
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-slate-900">
-                  Candidates Do Real Work
+                  {t("howItWorks.step2.title")}
                 </h3>
               </div>
               <p className="text-lg text-slate-600 mb-8">
-                Send a link. Candidates experience a realistic first day—gathering
-                requirements, making decisions, and delivering work. 30-45 minutes, no
-                scheduling.
+                {t("howItWorks.step2.description")}
               </p>
               <ul className="space-y-4">
                 {[

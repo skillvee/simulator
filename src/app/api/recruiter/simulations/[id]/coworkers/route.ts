@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 import { createLogger } from "@/lib/core";
+import { getPoolAvatarPath, inferDemographics, type EthnicGroup, type Gender } from "@/lib/avatar/name-ethnicity";
+import { pickVoiceForCoworker } from "@/lib/ai/gemini-config";
 
 const logger = createLogger("api:recruiter:coworkers");
 
@@ -50,7 +52,7 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName, language } = body;
+  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName, language, gender, ethnicity } = body;
 
   // Validate required fields
   if (!name || !role || !personaStyle) {
@@ -67,6 +69,11 @@ export async function POST(request: Request, context: RouteContext) {
     }
   }
 
+  // Resolve gender/ethnicity — prefer caller-provided, fall back to name-based inference.
+  const inferred = inferDemographics(name);
+  const resolvedGender: Gender = gender === "male" || gender === "female" ? gender : inferred.gender;
+  const resolvedEthnicity: EthnicGroup = isEthnicGroup(ethnicity) ? ethnicity : inferred.group;
+
   const coworker = await db.coworker.create({
     data: {
       scenarioId,
@@ -74,12 +81,27 @@ export async function POST(request: Request, context: RouteContext) {
       role,
       personaStyle,
       personality: personality || null,
-      knowledge: validatedKnowledge,  // Use validated array
-      avatarUrl,
-      voiceName: voiceName || null,
+      knowledge: validatedKnowledge,
+      gender: resolvedGender,
+      ethnicity: resolvedEthnicity,
+      avatarUrl: avatarUrl || getPoolAvatarPath(name, { gender: resolvedGender, ethnicity: resolvedEthnicity }),
+      voiceName: voiceName || pickVoiceForCoworker(resolvedGender, name),
       language: language || scenario.language || 'en',
     },
   });
 
   return success({ coworker }, 201);
+}
+
+function isEthnicGroup(value: unknown): value is EthnicGroup {
+  return (
+    value === "east-asian" ||
+    value === "south-asian" ||
+    value === "southeast-asian" ||
+    value === "white" ||
+    value === "black" ||
+    value === "hispanic" ||
+    value === "middle-eastern" ||
+    value === "mixed"
+  );
 }

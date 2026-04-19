@@ -63,6 +63,87 @@
         "accountCreatedButSignInFailed": "Account created but sign-in failed. Please sign in manually.",
         "general": "An error occurred. Please try again."
       }
+    },
+    "error": {
+      "title": "Authentication Error",
+      "description": "Something went wrong during authentication. Please try again.",
+      "tryAgain": "Try Again",
+      "backToHome": "Back to Home"
+    }
+  },
+  "demo": {
+    "hero": {
+      "eyebrow": "Book a Demo",
+      "titleLine1": "See the platform.",
+      "titleLine2": "Ask the hard questions.",
+      "subtitle": "20 minutes. No slides. We'll show you exactly how Skillvee works with your roles—and you'll see why algorithm tests are dead."
+    },
+    "benefits": {
+      "heading": "In your demo:",
+      "item1": "Live walkthrough with your actual job description",
+      "item2": "See how candidates experience the simulation",
+      "item3": "Review sample candidate results and scorecards",
+      "item4": "Get honest answers about fit for your team"
+    },
+    "trust": {
+      "duration": "20 minutes",
+      "founder": "Talk to a founder",
+      "pickTime": "Pick your time"
+    },
+    "form": {
+      "title": "Request your demo",
+      "nameLabel": "Name",
+      "namePlaceholder": "Jane Smith",
+      "emailLabel": "Work email",
+      "emailPlaceholder": "jane@company.com",
+      "companyLabel": "Company",
+      "companyPlaceholder": "Acme Corp",
+      "roleLabel": "Your role",
+      "rolePlaceholder": "Head of Engineering",
+      "loading": "Loading...",
+      "submit": "Continue to scheduling",
+      "privacyPrefix": "We'll never share your info. See our",
+      "privacyLink": "privacy policy"
+    },
+    "scheduling": {
+      "title": "Thanks, {name}!",
+      "subtitle": "Pick a time that works for you."
+    },
+    "success": {
+      "title": "You're all set!",
+      "description": "Check your email for the calendar invite. We'll send a quick prep guide before your demo.",
+      "proTipLabel": "Pro tip:",
+      "proTipBody": "Have a job description ready. We'll show you exactly how Skillvee would assess that role."
+    },
+    "whyTeamsSwitch": {
+      "eyebrow": "Why Switch",
+      "title": "Why teams switch to Skillvee",
+      "card1": {
+        "stat": "46%",
+        "label": "of new hires fail",
+        "description": "Within 18 months. Traditional interviews miss what matters.",
+        "source": "Leadership IQ"
+      },
+      "card2": {
+        "stat": "89%",
+        "label": "fail due to attitude, not skills",
+        "description": "Resumes can't show how someone actually works.",
+        "source": "Leadership IQ"
+      },
+      "card3": {
+        "stat": "$14.9k",
+        "label": "wasted per bad hire",
+        "description": "On average. One simulation costs less than one mistake.",
+        "source": "CareerBuilder"
+      },
+      "sourceLabel": "Source: {source}"
+    },
+    "cta": {
+      "eyebrow": "Ready to Start?",
+      "titleLine1": "STOP GUESSING.",
+      "titleLine2": "START KNOWING.",
+      "subtitle": "See exactly how candidates perform before you make the offer.",
+      "button": "Book Your Demo"
     }
   },
   "work": {
@@ -73,6 +154,10 @@
     "wrappingUp": {
       "title": "Wrapping up...",
       "description": "Finalizing your assessment"
+    },
+    "submittingWork": {
+      "title": "Sharing your work...",
+      "description": "Giving {manager} a moment to look things over before your call."
     },
     "noCoworkers": {
       "title": "No Coworkers Available",
@@ -139,25 +224,22 @@
       }
     },
     "overview": {
-      "evaluationConfidence": "Evaluation confidence:"
+      "thanks": "Thanks for working through this with us, {name}.",
+      "whatWeSawTitle": "What we saw",
+      "momentsTitle": "Things you did"
     },
-    "strengthsGrowth": {
-      "title": "Strengths & Areas to Develop",
-      "strengths": {
-        "title": "Your Strengths",
-        "empty": "No strengths identified yet"
-      },
-      "areasToImprove": {
-        "title": "Areas to Develop",
-        "empty": "No specific areas identified"
-      }
+    "howToThink": {
+      "title": "How to think about this",
+      "body": "This is a snapshot of one session, not a verdict on you as an engineer. Companies use it alongside your resume and interviews — it's one input, not the decision."
     },
-    "skillBreakdown": {
-      "title": "Skill Breakdown",
-      "expandAll": "Expand All",
-      "collapseAll": "Collapse All",
-      "demonstratedWell": "What You Demonstrated Well",
-      "score": "Score:"
+    "nextSteps": {
+      "title": "What happens next",
+      "companyNotified": "Your results have been shared with {company}. They'll reach out with next steps.",
+      "marketplaceTitle": "Stay on our radar for future opportunities",
+      "marketplaceBody": "Skillvee is small but growing a network of companies that hire based on how people actually work. If you opt in, we'll surface your profile to other companies that match this kind of work style. No guarantees on timing — we'll only reach out when it's a real fit.",
+      "marketplaceDisclosure": "We'd share this summary and your work style — never the full recording.",
+      "marketplaceToggleLabel": "Let Skillvee surface my profile to other companies",
+      "saved": "Saved"
     },
     "workStyle": {
       "title": "Work Style",
@@ -169,22 +251,46 @@
       "yes": "Yes",
       "no": "No"
     },
-    "insufficientEvidence": {
-      "title": "Not enough to give you a full evaluation",
-      "description": "This assessment session was too short or didn't capture enough of your work for us to evaluate you on all dimensions. Below is a summary of what was observed.",
-      "observedTitle": "What we observed"
+    "experienceFeedback": {
+      "title": "How was this for you?",
+      "subtitle": "Your feedback helps us make the assessment fairer for everyone.",
+      "like": "I liked it",
+      "dislike": "Didn't love it",
+      "commentPlaceholder": "Anything you'd like us to know? (optional)",
+      "commentHelp": "Saved when you click outside the box.",
+      "saved": "Saved",
+      "saveError": "Couldn't save — try again"
     }
   },
   "assessment": {
     "dimensions": {
       "COMMUNICATION": "Communication",
-      "PROBLEM_SOLVING": "Problem Solving",
-      "TECHNICAL_KNOWLEDGE": "Technical Knowledge",
-      "COLLABORATION": "Collaboration",
-      "ADAPTABILITY": "Adaptability",
-      "LEADERSHIP": "Leadership",
-      "CREATIVITY": "Creativity",
-      "TIME_MANAGEMENT": "Time Management"
+      "PRACTICAL_MATURITY": "Practical Maturity",
+      "COLLABORATION_COACHABILITY": "Collaboration & Coachability",
+      "PROBLEM_DECOMPOSITION_DESIGN": "Problem Decomposition & Design",
+      "TECHNICAL_EXECUTION": "Technical Execution",
+      "LEARNING_VELOCITY": "Learning Velocity",
+      "WORK_PROCESS": "Work Process",
+      "PROBLEM_STRUCTURING": "Problem Structuring",
+      "PRIORITIZATION_TRADEOFFS": "Prioritization & Trade-offs",
+      "DATA_REASONING": "Data Reasoning",
+      "STAKEHOLDER_INFLUENCE": "Stakeholder Influence",
+      "ANALYTICAL_REASONING": "Analytical Reasoning",
+      "TECHNICAL_PROFICIENCY_DS": "Technical Proficiency",
+      "INSIGHT_COMMUNICATION": "Insight Communication",
+      "METHODOLOGY_RIGOR": "Methodology & Rigor",
+      "PROGRAM_STRUCTURING": "Program Structuring",
+      "RISK_IDENTIFICATION": "Risk Identification & Mitigation",
+      "CROSS_TEAM_COORDINATION": "Cross-Team Coordination",
+      "EXECUTION_TRACKING": "Execution Tracking & Accountability",
+      "DISCOVERY_QUALIFICATION": "Discovery & Qualification",
+      "VALUE_ARTICULATION": "Value Articulation",
+      "OBJECTION_HANDLING": "Objection Handling",
+      "CLOSING_NEXT_STEPS": "Closing & Next Steps",
+      "ONBOARDING_ENABLEMENT": "Onboarding & Enablement",
+      "ESCALATION_HANDLING": "Escalation Handling",
+      "VALUE_REALIZATION": "Value Realization & Retention",
+      "RELATIONSHIP_MANAGEMENT": "Relationship Management"
     },
     "levels": {
       "exceptional": "Exceptional",
@@ -537,10 +643,26 @@
         "of": "of {total}",
         "noSummary": "No summary available",
         "errors": {
-          "accessDenied": "Access denied",
+          "accessDenied": "Access Denied",
+          "accessDeniedDescription": "You don't have permission to view one or more of these candidates.",
+          "backToCandidates": "Back to Candidates",
+          "unableToLoad": "Unable to load comparison",
           "failedToLoad": "Failed to load comparison data",
           "genericError": "An error occurred while fetching data"
         }
+      },
+      "candidateDetail": {
+        "backToCandidates": "Back to Candidates",
+        "accessDenied": "Access Denied",
+        "accessDeniedDescription": "You don't have permission to view this candidate's assessment. This may be because the assessment belongs to a different recruiter.",
+        "unableToLoad": "Unable to load candidate data",
+        "fetchError": "An error occurred while fetching the assessment details.",
+        "anonymousCandidate": "Anonymous Candidate",
+        "completed": "Completed {date}",
+        "compareWithOthers": "Compare with others",
+        "overallScore": "Overall Score",
+        "topPercent": "Top {percent}%",
+        "dimensionScores": "Dimension Scores"
       }
     },
     "simulations": {
@@ -611,6 +733,8 @@
           "autoGeneratedDetails": "Auto-generated details",
           "simulationName": "Simulation Name",
           "company": "Company",
+          "companyNamePlaceholder": "Company name",
+          "companyDescriptionPlaceholder": "Company description",
           "techStack": "Tech Stack",
           "addTechnology": "Add technology + Enter",
           "teamMembers": "Team Members",
@@ -662,23 +786,266 @@
         "cancel": "Cancel",
         "language": "Language",
         "english": "English",
-        "spanish": "Español"
+        "spanish": "Español",
+        "errors": {
+          "generationFailed": "Generation failed — please review the details below and try again."
+        }
       },
       "settings": {
         "cloneToLanguage": "Clone to another language",
         "language": "Language",
         "readOnly": "(read-only)",
+        "backToSimulations": "Back to Simulations",
+        "successBanner": {
+          "title": "Simulation created!",
+          "description": "Share the link below with candidates to get started"
+        },
+        "shareableLink": {
+          "title": "Shareable Link",
+          "description": "Share this link with candidates to start their assessment",
+          "copied": "Copied!",
+          "copy": "Copy Link"
+        },
+        "details": {
+          "title": "Simulation Details",
+          "taskDescription": "Task Description",
+          "techStack": "Tech Stack",
+          "languageHeading": "Language",
+          "english": "English",
+          "spanish": "Spanish",
+          "languageImmutable": "Scenario language is immutable once created.",
+          "cloneToCreateInOther": "Clone the scenario to create a version in another language.",
+          "targetLevel": "Target Level",
+          "yearsExperience": "{years} experience",
+          "expectedScore": "· Expected score: {score}/4",
+          "archetypeNote": "Per-dimension scoring expectations are adjusted for this role archetype and seniority level",
+          "repository": "Repository",
+          "repoUnavailable": "Not available — check GITHUB_ORG_TOKEN configuration",
+          "settingUp": "Setting up...",
+          "created": "Created"
+        },
+        "resources": {
+          "title": "Resources ({count})",
+          "showContent": "Show content",
+          "hideContent": "Hide content"
+        },
+        "coworkers": {
+          "title": "Coworkers ({count})",
+          "none": "No coworkers configured."
+        },
         "cloneModal": {
           "title": "Clone to Another Language",
           "description": "Create a copy of this simulation in another language. The scenario content (task, team, resources) will be regenerated in the selected language.",
+          "dialogTitle": "Clone Scenario to Another Language",
+          "dialogDescription": "This will create a new scenario with all content (task, resources, and coworkers) regenerated in the selected language.",
+          "noteLabel": "Note:",
+          "noteText": "Recruiter customizations will NOT be carried over. The new scenario will have freshly generated content.",
+          "targetLanguage": "Target Language",
           "selectLanguage": "Select a language",
+          "cancel": "Cancel",
           "cloning": "Cloning...",
-          "clone": "Clone"
+          "clone": "Clone",
+          "cloneScenario": "Clone Scenario",
+          "cloneFailed": "Failed to clone scenario"
+        }
+      },
+      "list": {
+        "title": "Simulations",
+        "countSingular": "{count} simulation",
+        "countPlural": "{count} simulations",
+        "emptyHelper": "Create your first simulation to start assessing candidates",
+        "createSimulation": "Create Simulation",
+        "empty": {
+          "title": "No simulations yet",
+          "description": "Create your first work simulation to start assessing candidates.",
+          "createButton": "Create Your First Simulation"
+        },
+        "table": {
+          "simulation": "Simulation",
+          "company": "Company",
+          "status": "Status",
+          "level": "Level",
+          "candidates": "Candidates",
+          "created": "Created"
+        },
+        "status": {
+          "open": "Open",
+          "draft": "Draft"
+        },
+        "levels": {
+          "junior": "Junior",
+          "mid": "Mid",
+          "senior": "Senior",
+          "lead": "Lead"
+        },
+        "toast": {
+          "linkCopied": "Invite link copied",
+          "deleted": "Simulation deleted",
+          "deleteFailed": "Failed to delete"
+        },
+        "delete": {
+          "confirmTitle": "Delete simulation?",
+          "confirmDescriptionBefore": "This will permanently delete ",
+          "confirmDescriptionAfter": " and all associated candidate results, recordings, and scores. This action cannot be undone.",
+          "cancel": "Cancel",
+          "delete": "Delete",
+          "deleting": "Deleting..."
         }
       }
     }
   },
+  "product": {
+    "hero": {
+      "badge": "See it in action",
+      "title": "Watch a candidate complete",
+      "titleHighlight": "a real simulation.",
+      "subtitle": "This is what your hiring team sees after a candidate finishes. Real conversations. Real work. Real signal."
+    },
+    "timeline": {
+      "title": "A realistic day at work—not algorithm puzzles",
+      "subtitle": "Candidates experience what the job actually feels like. You see how they actually work.",
+      "step1": {
+        "title": "Gather Requirements",
+        "description": "Candidate joins a kickoff call with their AI manager, then chats with stakeholders to clarify the task. Great candidates ask smart questions. Others dive in blind. You'll see the difference.",
+        "tag1": "Manager kickoff",
+        "tag2": "Stakeholder chat"
+      },
+      "step2": {
+        "title": "Do the Actual Work",
+        "description": "Build the feature, analyze the data, create the roadmap—whatever the role requires. Screen is recorded. AI tools are encouraged. We want to see how they really work.",
+        "tag1": "Screen recorded",
+        "tag2": "AI tools allowed",
+        "tag3": "~20-30 minutes"
+      },
+      "step3": {
+        "title": "Present and Defend",
+        "description": "Submit the work and face questions. The AI pushes back on decisions. Do they defend good ideas? Accept valid criticism? Fold at the first sign of disagreement?",
+        "tag1": "Voice call",
+        "tag2": "Challenging questions"
+      }
+    },
+    "features": {
+      "title": "Everything you need to make the decision",
+      "subtitle": "Not just a score. Actual evidence of how they work.",
+      "scorecard": {
+        "title": "Structured Scorecard",
+        "text": "AI-generated ratings across key dimensions."
+      },
+      "transcripts": {
+        "title": "Full Transcripts",
+        "text": "Every conversation with stakeholders."
+      },
+      "recording": {
+        "title": "Screen Recording",
+        "text": "Watch their entire process if you want."
+      },
+      "aiUsage": {
+        "title": "AI Tool Usage",
+        "text": "Do they use AI thoughtfully or blindly copy-paste?"
+      },
+      "feedback": {
+        "title": "Handling Feedback",
+        "text": "How do they respond to pushback? Defend ideas when right?"
+      },
+      "communication": {
+        "title": "Communication",
+        "text": "Can they explain their work clearly and professionally?"
+      }
+    },
+    "comparison": {
+      "title": "There's a better way to hire",
+      "oldWayLabel": "The Old Way",
+      "skillveeWayLabel": "The Skillvee Way",
+      "signalQuality": {
+        "title": "Signal Quality",
+        "oldWay": "Low-fidelity signals from resumes and interviews.",
+        "skillveeWay": "High-fidelity signals from real work simulations."
+      },
+      "candidateExperience": {
+        "title": "Candidate Experience",
+        "oldWay": "Stressful, irrelevant algorithm tests and trivia questions.",
+        "skillveeWay": "Engaging, relevant tasks that showcase their skills."
+      },
+      "timeToHire": {
+        "title": "Time to Hire",
+        "oldWay": "Weeks of scheduling and multiple interview rounds.",
+        "skillveeWay": "Asynchronous assessments completed in hours."
+      },
+      "bias": {
+        "title": "Bias",
+        "oldWay": "Prone to unconscious bias and 'culture fit' assessment.",
+        "skillveeWay": "Standardized, objective evidence for every candidate."
+      }
+    },
+    "security": {
+      "title": "Enterprise-ready from day one",
+      "subtitle": "Your candidate data is secure. Your compliance needs are met.",
+      "soc2": {
+        "title": "SOC 2 Type II",
+        "description": "Audited security controls. Your data is protected by industry-standard practices."
+      },
+      "gdpr": {
+        "title": "GDPR Compliant",
+        "description": "Full data privacy compliance for EU candidates. Automatic data retention policies."
+      },
+      "sso": {
+        "title": "SSO & Integrations",
+        "description": "SAML SSO, Greenhouse, Lever, and Workday integrations available for Enterprise."
+      },
+      "contactCta": "Contact us for Enterprise"
+    },
+    "faq": {
+      "title": "Common questions",
+      "q1": {
+        "question": "How long does it take to set up a simulation?",
+        "answer": "Most simulations are ready in under 5 minutes. Paste your job description, review the generated scenario, customize if needed, and you're ready to send to candidates. No weeks of test design required."
+      },
+      "q2": {
+        "question": "Can I customize the simulation for my specific role?",
+        "answer": "Yes. The AI generates a baseline from your JD, but you can customize the scenario, stakeholder personas, specific tasks, and evaluation criteria. Enterprise plans include white-glove simulation design support."
+      },
+      "q3": {
+        "question": "How do candidates feel about this vs. traditional interviews?",
+        "answer": "Candidates consistently rate Skillvee higher than algorithm tests. They appreciate that it's relevant to the actual job, respects their time (30-45 min vs. multi-hour interviews), and lets them show their real skills—not trivia recall."
+      },
+      "q4": {
+        "question": "What if a candidate has technical issues?",
+        "answer": "Candidates can pause and resume. If issues persist, they can contact support. All sessions are saved automatically, so no work is lost. We also provide a pre-flight check before they start."
+      }
+    },
+    "cta": {
+      "title": "READY TO UPGRADE",
+      "titleHighlight": "YOUR HIRING?",
+      "subtitle": "Get a personalized demo or try a sample assessment as a candidate.",
+      "requestDemo": "Request Demo",
+      "trySample": "Try Sample Assessment"
+    }
+  },
   "landing": {
+    "nav": {
+      "product": "Product",
+      "candidates": "Candidates",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "dashboard": "Dashboard",
+      "signIn": "Sign in",
+      "requestDemo": "Request Demo"
+    },
+    "footer": {
+      "tagline": "See how candidates actually work before you hire them.",
+      "productHeading": "Product",
+      "howItWorks": "How It Works",
+      "requestDemo": "Request Demo",
+      "pricing": "Pricing",
+      "resourcesHeading": "Resources",
+      "questionBank": "Question Bank",
+      "interviewGuides": "Interview Guides",
+      "faq": "FAQ",
+      "legalHeading": "Legal",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "copyright": "© {year} Skillvee. All rights reserved."
+    },
     "hero": {
       "badge": "Work simulations that actually work",
       "title": "Watch them work.",
@@ -1076,6 +1443,125 @@
       }
     }
   },
+  "candidateTerms": {
+    "nav": {
+      "backToTerms": "← Back to Terms",
+      "home": "Home"
+    },
+    "title": "SkillVee Candidate Terms of Service",
+    "intro": "This Agreement is made between the individual using our platform ('Candidate') and SkillVee Corporation ('SkillVee'). Candidates may access interview practice, skill validation, and job placement services through our AI-powered platform.",
+    "sections": {
+      "platformUsage": {
+        "title": "1. Platform Usage and Account",
+        "intro": "Candidates agree to use the SkillVee platform for legitimate career development and job-seeking purposes. By creating an account, you warrant that:",
+        "bullets": {
+          "0": "All information provided is accurate and truthful",
+          "1": "You are the authorized owner of your credentials and work samples",
+          "2": "You will maintain the security of your account credentials",
+          "3": "You will not share your account with others or create multiple accounts"
+        }
+      },
+      "assessmentConduct": {
+        "title": "2. Assessment and Interview Conduct",
+        "intro": "When participating in assessments, practice interviews, or company evaluations, Candidates agree to:",
+        "bullets": {
+          "0": "Complete assessments independently without unauthorized assistance",
+          "1": "Consent to screen and audio/video recording during evaluation sessions",
+          "2": "Represent their own skills and experience authentically",
+          "3": "Not attempt to manipulate, cheat, or circumvent the AI evaluation systems",
+          "4": "Maintain professional conduct during all platform interactions"
+        }
+      },
+      "platformExclusive": {
+        "title": "3. Platform-Exclusive Communications",
+        "body1": "When introduced to a Company through SkillVee, Candidates agree to conduct all initial communications, interview scheduling, and hiring discussions exclusively through the SkillVee platform.",
+        "body2": "This includes refraining from directly contacting Companies outside the platform until a formal offer has been extended and the placement has been properly recorded through SkillVee."
+      },
+      "nonCircumvention": {
+        "title": "4. Non-Circumvention Agreement",
+        "body1": "SkillVee invests significant resources in connecting Candidates with employment opportunities. Candidates acknowledge this investment and agree not to circumvent the platform when engaging with Companies introduced through SkillVee.",
+        "body2": "For a period of <strong>12 months</strong> following an introduction to a Company through SkillVee, Candidates agree not to:",
+        "bullets": {
+          "0": "Directly apply to or contact the Company outside the platform to circumvent placement fees",
+          "1": "Accept employment with the Company without completing the SkillVee placement process",
+          "2": "Refer other candidates to the Company as a means of circumvention"
+        },
+        "body3": "Violations may result in account termination and legal action to recover applicable placement fees."
+      },
+      "dataPrivacy": {
+        "title": "5. Data Usage and Privacy",
+        "intro": "By using SkillVee, Candidates consent to the collection and use of their data as follows:",
+        "bullets": {
+          "0": "Profile information, resume, and portfolio materials may be shared with Companies for evaluation purposes",
+          "1": "Assessment recordings, screen captures, and AI-generated insights become part of your SkillVee profile",
+          "2": "Anonymized performance data may be used to improve our AI systems and platform",
+          "3": "Communication logs within the platform may be reviewed for quality assurance and dispute resolution"
+        }
+      },
+      "dataRights": {
+        "title": "6. Your Rights to Your Data",
+        "intro": "Candidates retain the following rights regarding their personal data:",
+        "bullets": {
+          "0": "Request access to all data SkillVee holds about you",
+          "1": "Request correction of inaccurate information",
+          "2": "Request deletion of your account and associated data (subject to legal retention requirements)",
+          "3": "Withdraw consent for future data processing (may limit platform functionality)",
+          "4": "Export your profile data in a portable format"
+        },
+        "note": "Data deletion requests will be processed within 30 days. Note that some data may be retained for legal compliance or ongoing business obligations with Companies."
+      },
+      "intellectualProperty": {
+        "title": "7. Intellectual Property",
+        "intro": "Candidates retain ownership of their original work, including code samples, portfolio pieces, and other materials submitted to the platform. However, by submitting materials, Candidates grant SkillVee a license to:",
+        "bullets": {
+          "0": "Display materials to Companies for evaluation purposes",
+          "1": "Use anonymized code samples to improve AI assessment systems",
+          "2": "Store and process materials as necessary for platform operation"
+        }
+      },
+      "freeServices": {
+        "title": "8. Free Services and Paid Features",
+        "body": "SkillVee provides core interview practice and job placement services at no cost to Candidates. Premium features, enhanced visibility, or additional services may be offered for a fee and will be clearly disclosed before purchase."
+      },
+      "prohibitedConduct": {
+        "title": "9. Prohibited Conduct",
+        "intro": "Candidates agree not to:",
+        "bullets": {
+          "0": "Provide false or misleading information about their qualifications",
+          "1": "Use automated tools to interact with the platform without authorization",
+          "2": "Attempt to access other users' accounts or data",
+          "3": "Share confidential assessment content or Company information with third parties",
+          "4": "Use the platform for any unlawful purpose"
+        }
+      },
+      "termination": {
+        "title": "10. Account Termination",
+        "intro": "Either party may terminate this agreement at any time. Candidates may delete their account through account settings. SkillVee may terminate accounts for violations of these terms. Upon termination:",
+        "bullets": {
+          "0": "Non-circumvention obligations remain in effect for the specified period",
+          "1": "Data will be deleted per our retention policy unless legally required otherwise",
+          "2": "Access to the platform and all services will be revoked"
+        }
+      },
+      "liability": {
+        "title": "11. Limitation of Liability",
+        "body": "SkillVee provides the platform \"as is\" and does not guarantee employment outcomes. We are not responsible for hiring decisions made by Companies, interview outcomes, or career impacts resulting from platform use. Our liability is limited to the fees paid by the Candidate, if any, in the 12 months preceding any claim."
+      },
+      "modification": {
+        "title": "12. Modification of Terms",
+        "body": "SkillVee reserves the right to modify these Terms of Service with 30 days notice to Candidates via email or platform notification. Continued use of the platform after the notice period constitutes acceptance of revised terms."
+      },
+      "governingLaw": {
+        "title": "13. Governing Law and Disputes",
+        "body": "This agreement shall be governed by the laws of the State of California, USA. Any disputes will be resolved through binding arbitration, with the prevailing party entitled to reasonable attorneys' fees."
+      }
+    },
+    "footer": {
+      "lastUpdatedLabel": "Last Updated:",
+      "lastUpdatedDate": "November 26, 2025",
+      "acknowledgement": "By using SkillVee's platform, you acknowledge acceptance of these Terms of Service and agree to be legally bound by their provisions."
+    }
+  },
   "email": {
     "report": {
       "subject": "{candidateName}, your Skillvee assessment report is ready!",
@@ -1108,6 +1594,648 @@
         "developing": "Developing",
         "needs_improvement": "Needs Improvement"
       }
+    }
+  },
+  "faqPage": {
+    "metadata": {
+      "title": "FAQ - Work Simulation Assessments for Technical Hiring",
+      "description": "Get answers about Skillvee's work simulation platform. Learn how to assess candidates with realistic job tasks, pricing, integration, and more."
+    },
+    "hero": {
+      "label": "Got Questions?",
+      "title": "Frequently Asked Questions",
+      "subtitle": "Everything you need to know about using Skillvee to hire better"
+    },
+    "categories": {
+      "gettingStarted": {
+        "title": "Getting Started",
+        "questions": {
+          "q1": {
+            "question": "How does Skillvee work?",
+            "answer": "Paste your job description. We generate a realistic work simulation. Send the link to candidates. They complete a 30-45 minute simulation on their own time. You review how they actually performed—their communication, execution, and problem-solving approach."
+          },
+          "q2": {
+            "question": "How long does it take to get started?",
+            "answer": "About 5 minutes. Paste your JD, review the generated simulation, and you're ready to send links to candidates. No lengthy onboarding or training required."
+          },
+          "q3": {
+            "question": "What roles does Skillvee support?",
+            "answer": "Any role where you want to see how candidates actually work. We support technical roles (Software Engineers, Data Scientists), business roles (Product Managers, Program Managers), and customer-facing roles (Sales, Contact Center, Customer Success). Each simulation is tailored to your specific job description—not pulled from a generic test library."
+          },
+          "q4": {
+            "question": "Can I customize the simulation scenarios?",
+            "answer": "Yes. We generate simulations based on your job description. Enterprise customers can work with us to create fully custom scenarios that match your team's specific challenges and tech stack."
+          }
+        }
+      },
+      "howAssessmentsWork": {
+        "title": "How Assessments Work",
+        "questions": {
+          "q1": {
+            "question": "What do candidates actually do in a simulation?",
+            "answer": "They experience a realistic first day: meet their \"manager,\" gather requirements from AI-powered stakeholders, complete a work task, and defend their approach. It's 30-45 minutes of real work—not algorithm puzzles that nobody uses after the interview."
+          },
+          "q2": {
+            "question": "Can candidates use AI tools like ChatGPT?",
+            "answer": "Yes—we encourage it. In real work, people use AI tools. We want to see how candidates use them: thoughtfully or blindly? Do they verify the output? Can they explain what the AI generated? This is the skill that actually matters now."
+          },
+          "q3": {
+            "question": "How do you prevent cheating?",
+            "answer": "We flip the model. Traditional tests try to ban AI and hope no one cheats. With live stakeholder conversations and 30-45 minutes of continuous work, there's nothing to cheat on. You can't fake real work with real-time interactions."
+          },
+          "q4": {
+            "question": "What's the candidate experience like?",
+            "answer": "Candidates consistently prefer work simulations to algorithm tests. They get to show actual skills instead of memorized trivia. And they walk away understanding what the job would actually be like—a better experience for everyone."
+          },
+          "q5": {
+            "question": "How long do assessments take?",
+            "answer": "30-45 minutes. Long enough to see real work, short enough to respect everyone's time. Candidates complete it asynchronously—no scheduling coordination needed."
+          }
+        }
+      },
+      "resultsEvaluation": {
+        "title": "Results & Evaluation",
+        "questions": {
+          "q1": {
+            "question": "What do I see in the results?",
+            "answer": "You see how candidates actually worked: how they gathered requirements, used AI tools, executed the task, communicated their approach, and handled pushback. Not just a score—actual evidence of how they'll perform on day one."
+          },
+          "q2": {
+            "question": "How does AI-powered evaluation work?",
+            "answer": "Our AI analyzes the full simulation—conversations, work output, and decision defense. It scores on communication, technical execution, problem-solving approach, and fit. Every candidate gets the same criteria, removing human reviewer inconsistency."
+          },
+          "q3": {
+            "question": "Can I compare candidates easily?",
+            "answer": "Yes. Same scenario for every candidate means you can directly compare how different people approached the same problem. Apples to apples—not apples to algorithm test scores."
+          },
+          "q4": {
+            "question": "How do you reduce bias in hiring?",
+            "answer": "Same scenario for every candidate. AI-powered scoring removes human reviewer inconsistency. We measure what people actually do, not what their resume says or where they went to school. Work speaks for itself."
+          }
+        }
+      },
+      "integrationTechnical": {
+        "title": "Integration & Technical",
+        "questions": {
+          "q1": {
+            "question": "Does Skillvee integrate with our ATS?",
+            "answer": "Enterprise customers get ATS integration with major platforms including Greenhouse, Lever, and Ashby. Contact us for specific integration requirements."
+          },
+          "q2": {
+            "question": "Is candidate data secure?",
+            "answer": "Yes. We're SOC 2 compliant. Assessment data is encrypted at rest and in transit. We don't sell candidate data to third parties. You control who sees results."
+          },
+          "q3": {
+            "question": "Can we use our own branding?",
+            "answer": "Enterprise customers can white-label the candidate experience with their company logo and branding."
+          },
+          "q4": {
+            "question": "What browsers and devices work?",
+            "answer": "Skillvee works on all modern browsers (Chrome, Safari, Firefox, Edge) on desktop. We recommend desktop for the best candidate experience during simulations."
+          }
+        }
+      }
+    },
+    "cta": {
+      "label": "Still Have Questions?",
+      "title": "LET'S TALK.",
+      "subtitle": "Can't find what you're looking for? We'll answer your questions and show you how it works.",
+      "requestDemo": "Request Demo",
+      "emailUs": "Email Us"
+    }
+  },
+  "candidatesPage": {
+    "metadata": {
+      "title": "Validate Your Skills | Skillvee",
+      "description": "Take a free AI-powered assessment that simulates a real workday. No leetcode. No whiteboard. Show how you actually work."
+    },
+    "roleFamilies": {
+      "engineering": "Software Engineering",
+      "product_management": "Product Management",
+      "data_science": "Data Science",
+      "program_management": "Program Management",
+      "sales": "Sales",
+      "customer_success": "Customer Success"
+    },
+    "archetypes": {
+      "frontend_engineer": {
+        "name": "Frontend Engineer",
+        "description": "Build and maintain web/mobile UI; optimize performance; ensure accessibility."
+      },
+      "backend_engineer": {
+        "name": "Backend Engineer",
+        "description": "Build scalable services; design APIs; manage data pipelines."
+      },
+      "fullstack_engineer": {
+        "name": "Full Stack Engineer",
+        "description": "Combine frontend and backend skills; integrate systems; deliver features end-to-end."
+      },
+      "tech_lead": {
+        "name": "Tech Lead / Architect",
+        "description": "Define architecture; guide engineering teams; ensure maintainability and technical strategy."
+      },
+      "devops_sre": {
+        "name": "DevOps / SRE Engineer",
+        "description": "Build CI/CD pipelines; monitor systems; optimize infrastructure and reliability."
+      },
+      "growth_pm": {
+        "name": "Growth Product Manager",
+        "description": "Optimize acquisition, activation, and retention through experimentation and data-driven decisions."
+      },
+      "platform_pm": {
+        "name": "Platform Product Manager",
+        "description": "Build internal platforms, developer tools, and infrastructure products that serve other teams."
+      },
+      "core_pm": {
+        "name": "Core Product Manager",
+        "description": "Own a product area end-to-end — define strategy, manage roadmap, ship features, measure outcomes."
+      },
+      "analytics_engineer": {
+        "name": "Analytics Engineer",
+        "description": "Build data pipelines, maintain data models, and create reliable datasets for analysis."
+      },
+      "data_analyst": {
+        "name": "Data Analyst",
+        "description": "Analyze business data, create dashboards, and provide insights to drive decisions."
+      },
+      "ml_engineer": {
+        "name": "ML Engineer",
+        "description": "Build and deploy machine learning models; feature engineering; optimization and research implementation."
+      },
+      "technical_program_manager": {
+        "name": "Technical Program Manager",
+        "description": "Coordinate complex technical programs across engineering, infrastructure, and platform teams."
+      },
+      "business_program_manager": {
+        "name": "Business Program Manager",
+        "description": "Drive cross-functional business initiatives spanning product, marketing, operations, and go-to-market."
+      },
+      "account_executive": {
+        "name": "Account Executive",
+        "description": "Full-cycle sales — prospect, qualify, present, negotiate, and close new business."
+      },
+      "sales_development_rep": {
+        "name": "Sales Development Representative",
+        "description": "Prospect and qualify leads; book meetings; build pipeline for account executives."
+      },
+      "solutions_engineer": {
+        "name": "Solutions Engineer",
+        "description": "Technical sales support — product demos, proof of concepts, and technical validation with prospects."
+      },
+      "onboarding_specialist": {
+        "name": "Onboarding Specialist",
+        "description": "Guide new customers from purchase to productive use; ensure successful initial adoption."
+      },
+      "customer_success_manager": {
+        "name": "Customer Success Manager",
+        "description": "Own the ongoing customer relationship post-onboarding; drive retention, expansion, and advocacy."
+      },
+      "renewals_manager": {
+        "name": "Renewals Manager",
+        "description": "Drive contract renewals; negotiate terms; identify and mitigate churn risks."
+      }
+    },
+    "hero": {
+      "badge": "Free forever for candidates",
+      "titleLine1": "Show how you",
+      "titleLine2": "actually work.",
+      "subtitle": "No leetcode. No whiteboard. Take a free AI-powered simulation that mirrors a real workday — talk to your manager, tackle a real task, and get a detailed skills report.",
+      "stats": {
+        "duration": "30-45 minutes",
+        "teammates": "AI teammates",
+        "report": "Detailed report"
+      }
+    },
+    "levels": {
+      "junior": {
+        "label": "Junior",
+        "years": "0-2 years",
+        "description": "You're early in your career. The simulation focuses on executing well-defined tasks with some guidance available.",
+        "expectations": [
+          "Follow clear instructions",
+          "Ask good questions",
+          "Deliver working code"
+        ]
+      },
+      "mid": {
+        "label": "Mid-Level",
+        "years": "2-5 years",
+        "description": "You work independently on features. The simulation tests your ability to gather requirements and deliver end-to-end.",
+        "expectations": [
+          "Clarify ambiguous requirements",
+          "Make reasonable trade-offs",
+          "Communicate progress proactively"
+        ]
+      },
+      "senior": {
+        "label": "Senior",
+        "years": "5-8 years",
+        "description": "You own large areas and mentor others. Expect ambiguous requirements and cross-team coordination challenges.",
+        "expectations": [
+          "Navigate ambiguity confidently",
+          "Push back on scope when needed",
+          "Consider broader system impact"
+        ]
+      },
+      "staff": {
+        "label": "Staff+",
+        "years": "8+ years",
+        "description": "You drive technical strategy across teams. The simulation involves system design decisions and organizational influence.",
+        "expectations": [
+          "Shape the problem, not just solve it",
+          "Align stakeholders with competing priorities",
+          "Make architecture-level trade-offs"
+        ]
+      }
+    },
+    "dialog": {
+      "title": "Choose your experience level",
+      "subtitle": "for {name}. This calibrates the simulation difficulty and how your results are evaluated.",
+      "startChallenge": "Start Challenge"
+    },
+    "card": {
+      "duration": "~30-45 min",
+      "takeChallenge": "Take Challenge"
+    },
+    "section": {
+      "challengesAvailable": "{count} challenge{plural} available"
+    },
+    "empty": {
+      "title": "Coming Soon",
+      "description": "We're preparing challenges across multiple roles. Check back soon to validate your skills."
+    }
+  },
+  "onePager": {
+    "tagline": "Work simulations that show who can actually do the job",
+    "problem": {
+      "label": "The Problem",
+      "title": "Hiring is broken in the AI era",
+      "stat1": "of resumes are now AI-written and look alike",
+      "stat2": "of candidates use AI during interviews",
+      "stat3": "of applicants are truly qualified",
+      "callout": "The key question remains:",
+      "calloutEmphasis": "Can this person actually do the job?"
+    },
+    "solution": {
+      "label": "The Solution",
+      "title": "A 45-min simulation of the real job",
+      "item1Title": "Live AI stakeholders",
+      "item1Desc": "Voice conversations with PM, manager, and tech lead — with memory and context",
+      "item2Title": "Real deliverables, not trivia",
+      "item2Desc": "Candidates produce actual work output — code, PRs, and decisions",
+      "item3Title": "Full capture & structured evaluation",
+      "item3Desc": "Screen + voice recorded end-to-end, with scorecards, transcripts, and artifacts",
+      "footer": "Compare candidates side-by-side on real work."
+    },
+    "whyNow": {
+      "label": "Why Now",
+      "item1Title": "Live AI models",
+      "item1Desc": "Real-time voice + context make realistic stakeholder conversations possible at scale.",
+      "item2Title": "Multimodal AI",
+      "item2Desc": "Analyze hour-long work sessions reliably — see how candidates actually work.",
+      "footer": "This was impossible 6 months ago. Now it works."
+    },
+    "keyInsight": {
+      "label": "Key Insight",
+      "headline": "Interviews are going away. The future of hiring is watching people work.",
+      "detail": "Resumes, take-homes, and interviews are all gameable now. Watching real work isn't."
+    },
+    "market": {
+      "label": "Market",
+      "tamLabel": "pre-hire assessment market",
+      "growth": "Growing 16% CAGR",
+      "comparablesLabel": "Comparables:",
+      "comparablesText": "Mercor ($10B), Juicebox ($850M) — AI solved sourcing. HackerRank ($500M, $221M rev) — the incumbent we replace. Evaluation is the missing layer."
+    },
+    "moat": {
+      "label": "Moat",
+      "introPre": "Every simulation teaches us what \"good\" looks like ",
+      "introHighlight": "for each company",
+      "introPost": ". As we track which hires succeed, we can predict who will thrive where — not generically, but for each team specifically.",
+      "footer": "Competitors can copy the product. They can't copy the data. Starting with engineering, expanding to every white-collar role."
+    },
+    "businessModel": {
+      "label": "Business Model",
+      "intro": "SaaS with freemium. Paid plans from $79/month to enterprise custom pricing.",
+      "beachheadLabel": "Beachhead:",
+      "beachheadText": "Engineering teams hiring 5+ developers/month — hardest roles to evaluate, highest cost of a bad hire. Expands to design, product, and all white-collar roles."
+    },
+    "progress": {
+      "label": "Progress",
+      "intro": "Working prototype built. 2 committed pilots. Full simulation flow live — AI voice conversations, real coding environment, screen capture, and automated scorecards.",
+      "stackLabel": "Stack:",
+      "stackText": "Next.js, Supabase, Gemini Live (voice), Gemini Flash (evaluation). Built and shipping fast."
+    },
+    "team": {
+      "label": "Team",
+      "germanRole": "CEO",
+      "germanItem1": "2 HR Tech exits (acq. by Buk)",
+      "germanItem2Pre": "Built to ",
+      "germanItem2Highlight": "$1.4M ARR",
+      "germanItem3": "ex-GPM, Walmart eCommerce",
+      "germanItem4": "Berkeley MBA",
+      "matiasRole": "CTO",
+      "matiasItem1": "Meta GenAI",
+      "matiasItem2Pre": "Built Zapien (",
+      "matiasItem2Highlight": "35K users",
+      "matiasItem2Post": ")",
+      "matiasItem3": "Stanford MS",
+      "matiasItem4": "2x Stanford Learning Design winner",
+      "pill1Label": "We know the buyer",
+      "pill1Detail": "HR Tech exits",
+      "pill2Label": "We can build this",
+      "pill2Detail": "Meta GenAI",
+      "pill3Label": "We move fast",
+      "pill3Detail": "Working prototype"
+    },
+    "footer": {
+      "title": "Currently raising seed"
+    }
+  },
+  "presentation": {
+    "title": {
+      "title": "Watch them work.\nThen hire.",
+      "subtitle": "See exactly how candidates communicate, collaborate, and solve problems—before you make the offer. No more expensive hiring mistakes."
+    },
+    "problem": {
+      "title": "The Problem",
+      "subtitle": "Enterprise engineering teams are drowning in AI-enhanced candidates.",
+      "stat1Label": "Applications per role",
+      "stat2Label": "AI-generated resumes",
+      "stat3Label": "Interview rounds since 2021",
+      "stat4Label": "Use AI in interviews",
+      "footnote": "HackerRank bans AI and tests trivia. Take-homes get AI submissions. None of it works anymore."
+    },
+    "solution": {
+      "title": "Our Solution",
+      "subtitle": "45-minute work simulation with AI coworkers",
+      "feature1Title": "Voice Calls",
+      "feature1Desc": "Real-time conversations with AI stakeholders",
+      "feature2Title": "Real Deliverables",
+      "feature2Desc": "Candidates produce actual work artifacts",
+      "feature3Title": "Screen Recorded",
+      "feature3Desc": "See exactly how they work and problem-solve",
+      "feature4Title": "Side-by-Side",
+      "feature4Desc": "Compare candidates on actual work output"
+    },
+    "demoBuilder": {
+      "title": "Create Simulation",
+      "subtitle": "Recruiters build scenarios through natural conversation with AI. No forms - just describe what you want."
+    },
+    "demoJoin": {
+      "title": "Candidate Joins",
+      "subtitle": "Recruiter shares a unique link. Candidate sees the role and signs up."
+    },
+    "demoChat": {
+      "title": "Slack-like Workspace",
+      "subtitle": "Candidates collaborate with AI coworkers via chat and voice calls"
+    },
+    "demoCall": {
+      "title": "Voice Calls",
+      "subtitle": "Real-time conversations with AI stakeholders powered by Gemini Live"
+    },
+    "demoAnalysis": {
+      "title": "AI Analysis",
+      "subtitle": "Screen recording is sent to Gemini multimodal to evaluate how candidates actually work",
+      "dimension1": "Problem Solving",
+      "dimension2": "Communication",
+      "dimension3": "AI Tool Usage",
+      "dimension4": "Code Quality",
+      "dimension5": "Time Management",
+      "dimension6": "Collaboration",
+      "dimension7": "Technical Skills",
+      "dimension8": "Autonomy"
+    },
+    "demoDashboard": {
+      "title": "Recruiter Dashboard",
+      "subtitle": "Track all simulations and candidates in one place"
+    },
+    "demoScorecard": {
+      "title": "AI Scorecard",
+      "subtitle": "Detailed analysis across 8 dimensions with observable behaviors"
+    },
+    "demoCompare": {
+      "title": "Compare Candidates",
+      "subtitle": "Side-by-side comparison on actual work output"
+    },
+    "whyNow": {
+      "title": "Why Now?",
+      "subtitle": "The 10X unlock powered by Gemini",
+      "unlock1Title": "Gemini Live",
+      "unlock1Desc": "Real-time voice conversations with AI stakeholders (PM, manager, tech lead) that remember context across the session",
+      "unlock2Title": "Gemini Multimodal",
+      "unlock2Desc": "Accurately analyzes hour-long screen recordings to evaluate how candidates work, use AI, and problem-solve"
+    },
+    "market": {
+      "title": "Market",
+      "subtitle": "$3B pre-hire assessment market growing 16%/yr",
+      "tam": "$3B",
+      "growth": "16%/yr",
+      "beachhead": "Enterprise teams hiring 5+ engineers/month",
+      "moat": "Every simulation generates behavioral data → prediction engine competitors can't replicate"
+    },
+    "team": {
+      "title": "Team",
+      "subtitle": "HR Tech exits + Meta GenAI + we ship fast",
+      "germanRole": "CEO",
+      "germanHighlight1": "2 HR Tech exits (acquired by Buk)",
+      "germanHighlight2": "Grew startup $0→$1.4M ARR",
+      "germanHighlight3": "GPM at Walmart eCommerce",
+      "germanHighlight4": "Berkeley MBA",
+      "matiasRole": "CTO",
+      "matiasHighlight1": "Meta GenAI",
+      "matiasHighlight2": "Stanford MS",
+      "matiasHighlight3": "Built Zapien (35K users)",
+      "matiasHighlight4": "2x Stanford Learning Design winner",
+      "whyUs": "HR Tech exits (we know the buyer) + Meta GenAI (we can build this) + this prototype (we ship fast)"
+    },
+    "visuals": {
+      "totalAddressableMarket": "Total Addressable Market",
+      "growthRate": "Growth Rate",
+      "competitorsLabel": "Competitors:",
+      "beachheadLabel": "Beachhead",
+      "moatLabel": "Moat",
+      "simulationBuilder": "Simulation Builder",
+      "describeSimulation": "Describe your simulation...",
+      "preview": "Preview",
+      "name": "Name",
+      "company": "Company",
+      "techStack": "Tech Stack",
+      "coworkers": "Coworkers",
+      "saveSimulation": "Save Simulation",
+      "team": "Team",
+      "startCall": "Start Call",
+      "typeMessage": "Type a message...",
+      "callInProgress": "Call in progress • 2:34",
+      "poweredByGeminiLive": "Powered by Gemini Live",
+      "screenRecording45": "45 min screen recording",
+      "geminiMultimodalAnalysis": "Gemini Multimodal Analysis",
+      "dimensionsAssessed": "8 Dimensions Assessed",
+      "aiOutput": "AI Output",
+      "observableBehaviors": "Observable behaviors",
+      "behaviorsCount": "24 found",
+      "timestampsLinked": "Timestamps linked",
+      "timestampsCount": "12 moments",
+      "hiringSignals": "Hiring signals",
+      "signalsCount": "3 green, 1 red",
+      "dashboard": "Dashboard",
+      "welcomeBack": "Welcome back, Recruiter",
+      "newSimulation": "+ New Simulation",
+      "statsSimulations": "Simulations",
+      "statsCandidates": "Candidates",
+      "statsCompleted": "Completed",
+      "statsCompletionRate": "Completion Rate",
+      "recentActivity": "Recent Activity",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "hoursAgo": "2h ago",
+      "inProgress": "In Progress",
+      "candidateRoleLabel": "Senior Engineer • Completed Jan 15",
+      "overallScore": "Overall Score",
+      "skillDimensions": "Skill Dimensions",
+      "scoreProblemSolving": "Problem Solving",
+      "scoreCommunication": "Communication",
+      "scoreTechnicalSkills": "Technical Skills",
+      "scoreAiLeverage": "AI Leverage",
+      "levelExceptional": "Exceptional",
+      "levelStrong": "Strong",
+      "levelProficient": "Proficient",
+      "strengths": "Strengths",
+      "areasToProbe": "Areas to Probe",
+      "strength1": "Asked clarifying questions",
+      "strength2": "Used AI tools effectively",
+      "strength3": "Clear code structure",
+      "areaToProbe1": "Took long on edge cases",
+      "screenRecording": "Screen Recording",
+      "watchSession": "45 min • Watch full session",
+      "compareCandidates": "Compare Candidates",
+      "topPercent": "Top {percent}%",
+      "compareDim1": "Problem Solving",
+      "compareDim2": "Communication",
+      "compareDim3": "Technical",
+      "compareDim4": "AI Leverage",
+      "recommendedPrefix": "Recommended: Alex Johnson",
+      "recommendedDesc": "Top 2% overall, exceptional problem solving skills",
+      "yourNextRole": "YOUR\nNEXT ROLE.",
+      "joinSubtitle": "Acme Corp is looking for a Senior Engineer",
+      "aiTeammates": "AI Teammates",
+      "useAnyAi": "Use Any AI",
+      "step01": "Step 01",
+      "welcome": "Welcome",
+      "welcomeDesc": "Experience a day at Acme Corp. This simulation assesses how you work.",
+      "continue": "Continue →",
+      "msgAi1": "Hi! I'll help you create a simulation. What role are you hiring for?",
+      "msgUser1": "Senior backend engineer at Acme Corp. They'll build a REST API.",
+      "msgAi2": "Got it! What tech stack should they use?",
+      "msgUser2": "Node.js, TypeScript, PostgreSQL",
+      "previewName": "Backend API Challenge",
+      "previewCompany": "Acme Corp",
+      "previewTask": "Build a REST API...",
+      "coworkerSarahName": "Sarah Chen",
+      "coworkerSarahRole": "Engineering Manager",
+      "coworkerAlexName": "Alex Kim",
+      "coworkerAlexRole": "Product Manager",
+      "coworkerJordanName": "Jordan Lee",
+      "coworkerJordanRole": "Senior Engineer",
+      "chatMsg1": "Hey! Welcome to the team. I have a task for you today.",
+      "chatYou": "You",
+      "chatMsg2": "Thanks! Excited to get started. What's the project?",
+      "chatMsg3": "We need to add a new feature to the checkout flow. I'll send over the requirements.",
+      "candidateJohn": "John Smith",
+      "candidateEmma": "Emma Wilson",
+      "candidateMike": "Mike Chen",
+      "candidateAlex": "Alex Johnson"
+    },
+    "controls": {
+      "exitFullscreen": "Exit fullscreen (F)",
+      "enterFullscreen": "Enter fullscreen (F)"
+    }
+  },
+  "settings": {
+    "accountDeletion": {
+      "dangerZone": "Danger Zone",
+      "deleteAccount": {
+        "title": "Delete Account",
+        "description": "Permanently delete your account and all associated data. This includes your profile, all assessments, recordings, uploaded CVs, and reports."
+      },
+      "privacyPolicyLink": "Read our Privacy Policy",
+      "pending": {
+        "title": "Deletion Scheduled",
+        "description": "Requested on {date}. Your account and all data will be permanently deleted within 30 days.",
+        "cancel": "Cancel Deletion",
+        "cancelling": "Cancelling..."
+      },
+      "actions": {
+        "delete": "Delete Account",
+        "cancel": "Cancel"
+      },
+      "modal": {
+        "title": "Choose Deletion Method",
+        "method": {
+          "schedule": {
+            "title": "Schedule Deletion (30 days)",
+            "description": "Your account will be marked for deletion. You have 30 days to change your mind before data is permanently removed."
+          },
+          "immediate": {
+            "title": "Delete Immediately",
+            "description": "Permanently delete your account and all data right now. This action cannot be undone."
+          }
+        },
+        "confirm": {
+          "labelPrefix": "Type",
+          "labelSuffix": "to confirm:",
+          "errorMustType": "Please type \"DELETE MY ACCOUNT\" to confirm"
+        },
+        "buttons": {
+          "schedule": "Schedule Deletion",
+          "scheduling": "Scheduling...",
+          "deleteNow": "Delete Now",
+          "deleting": "Deleting..."
+        }
+      },
+      "whatWillBeDeleted": {
+        "title": "What will be deleted:",
+        "items": {
+          "profile": "Your profile information",
+          "assessments": "All assessments and reports",
+          "recordings": "Screen recordings and screenshots",
+          "cvs": "Uploaded CVs and resumes",
+          "transcripts": "Conversation transcripts"
+        }
+      },
+      "errors": {
+        "generic": "An error occurred",
+        "requestFailed": "Failed to request deletion",
+        "deleteFailed": "Failed to delete account",
+        "cancelFailed": "Failed to cancel request"
+      },
+      "successDeleted": "Account deleted successfully. Redirecting to homepage..."
+    }
+  },
+  "rubric": {
+    "levels": {
+      "junior": {
+        "label": "Junior",
+        "yearsRange": "0-2 years"
+      },
+      "mid": {
+        "label": "Mid-Level",
+        "yearsRange": "2-5 years"
+      },
+      "senior": {
+        "label": "Senior",
+        "yearsRange": "5-8 years"
+      },
+      "staff": {
+        "label": "Staff",
+        "yearsRange": "8+ years"
+      }
+    },
+    "relativeStrength": {
+      "exceptional": "Exceptional",
+      "strong": "Strong",
+      "meets": "Meets expectations",
+      "below": "Below expectations"
     }
   }
 }

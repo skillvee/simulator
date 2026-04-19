@@ -1,12 +1,20 @@
 import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/server/db";
 import { CandidatesPageClient } from "./client";
 
-export const metadata: Metadata = {
-  title: "Validate Your Skills | Skillvee",
-  description:
-    "Take a free AI-powered assessment that simulates a real workday. No leetcode. No whiteboard. Show how you actually work.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "candidatesPage.metadata" });
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 interface ChallengeArchetype {
   slug: string;

@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/external";
 import { STORAGE_BUCKETS } from "@/lib/external/storage";
 import { success, error } from "@/lib/api";
 import { createLogger } from "@/lib/core";
+import { summarizeDeliverable } from "@/lib/analysis/deliverable-parser";
 
 const logger = createLogger("api:assessment:deliverable");
 
@@ -93,6 +94,20 @@ export async function POST(request: Request) {
       logger.error("Failed to generate signed URL", { assessmentId, error: signError?.message });
       return error("Failed to generate download URL", 500);
     }
+
+    // Parse the submission so the defense call can probe specifics.
+    // Awaited so the follow-up call has context on start; a parse failure
+    // must not fail the upload — summary is nullable and the prompt handles it.
+    const deliverableSummary = await summarizeDeliverable(storagePath, file.name);
+
+    await db.assessment.update({
+      where: { id: assessmentId },
+      data: {
+        deliverablePath: storagePath,
+        deliverableFilename: file.name,
+        deliverableSummary,
+      },
+    });
 
     return success({
       path: storagePath,

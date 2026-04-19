@@ -91,6 +91,19 @@ export interface CoworkerPersona {
   avatarUrl?: string | null;
   /** Gemini Live voice name for calls (e.g., "Orus", "Aoede") */
   voiceName?: string | null;
+  /** Coworker gender — used to keep avatar + voice aligned with the character */
+  gender?: "male" | "female" | null;
+  /** Ethnic group — used to pick a matching avatar pool */
+  ethnicity?:
+    | "east-asian"
+    | "south-asian"
+    | "southeast-asian"
+    | "white"
+    | "black"
+    | "hispanic"
+    | "middle-eastern"
+    | "mixed"
+    | null;
 }
 
 /**

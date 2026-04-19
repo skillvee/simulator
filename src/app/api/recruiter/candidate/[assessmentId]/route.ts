@@ -4,9 +4,9 @@ import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import type { CodeReviewData } from "@/types";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
-import { getRelativeStrength, type TargetLevel, type RelativeStrength } from "@/lib/rubric/level-expectations";
+import { getRelativeStrength, type TargetLevel, type RelativeStrengthKey } from "@/lib/rubric/level-expectations";
 
-type CandidateStrengthLevel = RelativeStrength;
+type CandidateStrengthLevel = RelativeStrengthKey;
 
 /**
  * Session user interface for type safety

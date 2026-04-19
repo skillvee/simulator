@@ -131,16 +131,27 @@ export interface DefensePhaseContext {
   taskDescription: string;
   techStack: string[];
   conversationSummary: string;
+  /** AI-generated brief of what the candidate submitted — files, approach, decisions, probe areas. */
+  submissionSummary?: string;
+  submissionFilename?: string;
   codeReviewSummary?: string;
   screenAnalysisSummary?: string;
 }
 
 export function buildDefensePhaseContext(ctx: DefensePhaseContext): string {
+  const submissionSection = ctx.submissionSummary
+    ? `## What They Submitted\n${ctx.submissionFilename ? `File: ${ctx.submissionFilename}\n\n` : ""}${ctx.submissionSummary}`
+    : ctx.submissionFilename
+      ? `## What They Submitted\nFile: ${ctx.submissionFilename} (contents could not be inspected — ask them to walk you through it)`
+      : "## What They Submitted\nNo file was uploaded — ask them to describe what they built from scratch.";
+
   return `## Work Review Call
 
 Task: ${ctx.taskDescription}
 Tech stack: ${ctx.techStack.join(", ")}
 ${ctx.repoUrl ? `Repo: ${ctx.repoUrl}` : ""}
+
+${submissionSection}
 
 Code Review: ${ctx.codeReviewSummary || "Not available."}
 Screen Recording: ${ctx.screenAnalysisSummary || "Not available."}
@@ -148,22 +159,25 @@ Team Conversations: ${ctx.conversationSummary || "None."}
 
 ## How to Run This Call
 
+The goal is to verify the candidate actually understood their own work — that they considered trade-offs, made intentional decisions, and can defend their approach. You have NOT said "how's your day going" — you're reviewing their finished work. Do NOT open with small talk about their day.
+
 Follow these 5 phases in order:
 
-**Phase 1 — Opening (2 min):**
-"Hey! So I've been looking at your work. Want to give me the quick walkthrough?"
+**Phase 1 — Opening (1-2 min):**
+Open with something like: "Hey! So I had a look at what you submitted. Walk me through it — what did you build and how does it work?"
+Do NOT ask about their day, how they're feeling, or how it went. Go straight to the work.
 
 **Phase 2 — High-level (3-4 min):**
-Overall approach, how they broke it down, architecture decisions.
+Their overall approach, how they broke the problem down, the architecture decisions they made. Let them talk. Then probe.
 
 **Phase 3 — Technical probes (5-7 min) — MOST CRITICAL:**
-At least 3 specific questions about their actual code. Reference real files from the PR. Never ask generic questions.
+Reference the "Probe Areas" and "Key Decisions" from the submission summary above. Ask at least 3 SPECIFIC questions about their actual code — name files, functions, or decisions. Push on trade-offs: "why that approach over X?", "what does this do if Y happens?", "did you consider Z?". Never ask generic questions. If they can't explain their own code, dig deeper gently.
 
 **Phase 4 — Process (2-3 min):**
-What was hardest, what they'd do differently, AI tool usage.
+What was hardest. What they'd do differently with more time. How they used AI tools. What they're least confident about in what they shipped.
 
-**Phase 5 — Wrap up (1-2 min):**
-"Cool, I've got a good picture. Thanks for walking me through it."`;
+**Phase 5 — Wrap up (1 min):**
+"Cool, I've got a good picture. Thanks for walking me through it." End the call.`;
 }
 
 // ─── Media Rules ─────────────────────────────────────────────────────────────

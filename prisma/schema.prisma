@@ -107,6 +107,8 @@ model Coworker {
   voiceName     String?
   personality   Json?
   language      String         @default("en")
+  gender        String?
+  ethnicity     String?
   conversations Conversation[]
   scenario      Scenario       @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
@@ -131,6 +133,9 @@ model Assessment {
   reviewedAt             DateTime?
   repoUrl                String?
   repoStatus             String?             @default("pending")
+  deliverablePath        String?
+  deliverableFilename    String?
+  deliverableSummary     String?
   scenario               Scenario            @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
   user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   apiCalls               AssessmentApiCall[]
@@ -142,9 +147,20 @@ model Assessment {
   videoAssessment        VideoAssessment?
   apiRequestLogs         ApiRequestLog[]
   candidateEvents        CandidateEvent[]
+  candidateFeedback      AssessmentFeedback?
 
   @@index([userId])
   @@index([scenarioId, userId])
+}
+
+model AssessmentFeedback {
+  id           String                   @id @default(cuid())
+  assessmentId String                   @unique
+  rating       AssessmentFeedbackRating
+  comment      String?
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  assessment   Assessment               @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
 }
 
 model Conversation {
@@ -582,6 +598,11 @@ enum SimulationCreationStatus {
   SAVING
   COMPLETED
   FAILED
+}
+
+enum AssessmentFeedbackRating {
+  LIKE
+  DISLIKE
 }
 
 enum ClientErrorType {

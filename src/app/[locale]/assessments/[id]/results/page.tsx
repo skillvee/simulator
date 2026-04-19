@@ -29,6 +29,12 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           companyName: true,
         },
       },
+      videoAssessment: {
+        select: { isSearchable: true },
+      },
+      candidateFeedback: {
+        select: { rating: true, comment: true },
+      },
     },
   });
 
@@ -73,7 +79,16 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         candidateName: user.name || "there",
         scenarioName: assessment.scenario.name,
         companyName: assessment.scenario.companyName,
+        isSearchable: assessment.videoAssessment?.isSearchable ?? false,
+        hasVideoAssessment: assessment.videoAssessment != null,
       })
+    : null;
+
+  const initialFeedback = assessment.candidateFeedback
+    ? {
+        rating: assessment.candidateFeedback.rating as "LIKE" | "DISLIKE",
+        comment: assessment.candidateFeedback.comment ?? "",
+      }
     : null;
 
   return (
@@ -85,6 +100,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         <CandidateResultsClient
           assessmentId={id}
           results={candidateResults}
+          initialFeedback={initialFeedback}
         />
       </main>
     </div>

@@ -248,7 +248,7 @@ These IDs are created by the seed script and can be used for predictable E2E tes
 | ID                                 | Status     | Owner              | URL                                                 |
 | ---------------------------------- | ---------- | ------------------ | --------------------------------------------------- |
 | `test-assessment-chat`             | WORKING    | user@test.com      | `/assessments/test-assessment-chat/work`             |
-| `test-assessment-welcome`          | ONBOARDING | candidate@test.com | `/assessments/test-assessment-welcome/welcome`       |
+| `test-assessment-welcome`          | WELCOME    | candidate@test.com | `/assessments/test-assessment-welcome/welcome`       |
 | `test-assessment-working-recruiter`| WORKING    | candidate@test.com | `/assessments/test-assessment-working-recruiter/work`|
 
 ### Test Scenarios
@@ -286,9 +286,6 @@ const TEST_ASSESSMENT_IDS = {
 ```
 
 Then create the assessment with `prisma.assessment.upsert()` using the fixed ID.
-
-Note: The defense page was removed in RF-006. Defense calls now happen within
-the Slack interface (to be implemented in RF-012).
 
 ## Gotchas
 

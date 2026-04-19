@@ -37,5 +37,16 @@ export const ALL_VOICE_NAMES = [
 
 export type VoiceName = (typeof ALL_VOICE_NAMES)[number];
 
+/**
+ * Deterministically pick a voice for a coworker given their gender + name.
+ * Same (gender, name) pair always returns the same voice.
+ * Use this to assign voices at coworker creation so they never drift from the character.
+ */
+export function pickVoiceForCoworker(gender: "male" | "female", name: string): string {
+  const voices = gender === "male" ? GEMINI_VOICES.male : GEMINI_VOICES.female;
+  const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return voices[hash % voices.length].name;
+}
+
 // Re-export TranscriptMessage from centralized types for backwards compatibility
 export type { TranscriptMessage } from "@/types";

@@ -3,20 +3,22 @@
  * Used by both recruiter comparison and candidate results views.
  */
 
-export type StrengthLevel = "Exceptional" | "Strong" | "Meets expectations" | "Below expectations";
+export type StrengthLevel = "exceptional" | "strong" | "meets" | "below";
 
 /**
- * Get strength level badge styling
+ * Get strength level badge styling. Accepts the slug keys from
+ * `RelativeStrengthKey` (in `@/lib/rubric/level-expectations`); display
+ * text should be resolved separately via `useTranslations("rubric.relativeStrength")`.
  */
 export function getStrengthBadgeStyles(level: StrengthLevel | string): string {
   switch (level) {
-    case "Exceptional":
+    case "exceptional":
       return "bg-green-100 text-green-800 hover:bg-green-100";
-    case "Strong":
+    case "strong":
       return "bg-blue-100 text-blue-800 hover:bg-blue-100";
-    case "Meets expectations":
+    case "meets":
       return "bg-stone-100 text-stone-700 hover:bg-stone-100";
-    case "Below expectations":
+    case "below":
       return "bg-red-100 text-red-800 hover:bg-red-100";
     default:
       return "bg-stone-100 text-stone-700 hover:bg-stone-100";

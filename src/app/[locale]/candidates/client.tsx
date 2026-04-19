@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -48,58 +49,13 @@ interface CandidatesPageClientProps {
   groups: RoleFamilyGroup[];
 }
 
-// --- Level definitions ---
-
-const LEVELS = [
-  {
-    value: "junior" as const,
-    label: "Junior",
-    years: "0-2 years",
-    description:
-      "You're early in your career. The simulation focuses on executing well-defined tasks with some guidance available.",
-    expectations: [
-      "Follow clear instructions",
-      "Ask good questions",
-      "Deliver working code",
-    ],
-  },
-  {
-    value: "mid" as const,
-    label: "Mid-Level",
-    years: "2-5 years",
-    description:
-      "You work independently on features. The simulation tests your ability to gather requirements and deliver end-to-end.",
-    expectations: [
-      "Clarify ambiguous requirements",
-      "Make reasonable trade-offs",
-      "Communicate progress proactively",
-    ],
-  },
-  {
-    value: "senior" as const,
-    label: "Senior",
-    years: "5-8 years",
-    description:
-      "You own large areas and mentor others. Expect ambiguous requirements and cross-team coordination challenges.",
-    expectations: [
-      "Navigate ambiguity confidently",
-      "Push back on scope when needed",
-      "Consider broader system impact",
-    ],
-  },
-  {
-    value: "staff" as const,
-    label: "Staff+",
-    years: "8+ years",
-    description:
-      "You drive technical strategy across teams. The simulation involves system design decisions and organizational influence.",
-    expectations: [
-      "Shape the problem, not just solve it",
-      "Align stakeholders with competing priorities",
-      "Make architecture-level trade-offs",
-    ],
-  },
-];
+interface Level {
+  value: "junior" | "mid" | "senior" | "staff";
+  label: string;
+  years: string;
+  description: string;
+  expectations: string[];
+}
 
 // --- Role family styling ---
 
@@ -151,12 +107,15 @@ function LevelPickerDialog({
   open,
   onOpenChange,
   archetype,
+  levels,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   archetype: ChallengeArchetype | null;
+  levels: Level[];
 }) {
   const router = useRouter();
+  const t = useTranslations("candidatesPage");
   const [selected, setSelected] = useState<string | null>(null);
 
   if (!archetype) return null;
@@ -166,16 +125,15 @@ function LevelPickerDialog({
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">
-            Choose your experience level
+            {t("dialog.title")}
           </DialogTitle>
           <p className="text-sm text-slate-500 mt-1">
-            for {archetype.name}. This calibrates the simulation difficulty and
-            how your results are evaluated.
+            {t("dialog.subtitle", { name: archetype.name })}
           </p>
         </DialogHeader>
 
         <div className="space-y-3 mt-4">
-          {LEVELS.map((level) => {
+          {levels.map((level) => {
             const isSelected = selected === level.value;
             return (
               <button
@@ -235,7 +193,7 @@ function LevelPickerDialog({
             }
           }}
         >
-          Start Challenge
+          {t("dialog.startChallenge")}
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </DialogContent>
@@ -250,6 +208,7 @@ function ChallengeCard({
   archetype: ChallengeArchetype;
   onSelect: () => void;
 }) {
+  const t = useTranslations("candidatesPage");
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -261,20 +220,25 @@ function ChallengeCard({
         {/* Header */}
         <div className="mb-3">
           <h3 className="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">
-            {archetype.name}
+            {t.has(`archetypes.${archetype.slug}.name`)
+              ? t(`archetypes.${archetype.slug}.name`)
+              : archetype.name}
           </h3>
         </div>
 
         {/* Task tagline */}
         <p className="text-sm text-slate-500 mb-5">
-          {archetype.challengeTagline ?? archetype.description}
+          {archetype.challengeTagline ??
+            (t.has(`archetypes.${archetype.slug}.description`)
+              ? t(`archetypes.${archetype.slug}.description`)
+              : archetype.description)}
         </p>
 
         {/* Footer */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <Clock className="w-3.5 h-3.5" />
-            <span>~30-45 min</span>
+            <span>{t("card.duration")}</span>
           </div>
 
           <Button
@@ -282,7 +246,7 @@ function ChallengeCard({
             className="rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-5 group-hover:shadow-md group-hover:shadow-primary/20 transition-all"
             onClick={onSelect}
           >
-            Take Challenge
+            {t("card.takeChallenge")}
             <ArrowRight className="w-3.5 h-3.5 ml-1.5 group-hover:translate-x-0.5 transition-transform" />
           </Button>
         </div>
@@ -298,6 +262,7 @@ function RoleFamilySection({
   group: RoleFamilyGroup;
   onSelectArchetype: (archetype: ChallengeArchetype) => void;
 }) {
+  const t = useTranslations("candidatesPage");
   const style = FAMILY_STYLES[group.slug] ?? FAMILY_STYLES.engineering;
   const Icon = style.icon;
 
@@ -316,10 +281,16 @@ function RoleFamilySection({
           <Icon className={`w-5 h-5 ${style.color}`} />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-slate-900">{group.name}</h2>
+          <h2 className="text-xl font-bold text-slate-900">
+            {t.has(`roleFamilies.${group.slug}`)
+              ? t(`roleFamilies.${group.slug}`)
+              : group.name}
+          </h2>
           <p className="text-sm text-slate-500">
-            {group.archetypes.length} challenge
-            {group.archetypes.length !== 1 ? "s" : ""} available
+            {t("section.challengesAvailable", {
+              count: group.archetypes.length,
+              plural: group.archetypes.length !== 1 ? "s" : "",
+            })}
           </p>
         </div>
       </div>
@@ -341,12 +312,44 @@ function RoleFamilySection({
 // --- Page ---
 
 export function CandidatesPageClient({ groups }: CandidatesPageClientProps) {
+  const t = useTranslations("candidatesPage");
   const totalChallenges = groups.reduce(
     (sum, g) => sum + g.archetypes.length,
     0
   );
   const [selectedArchetype, setSelectedArchetype] =
     useState<ChallengeArchetype | null>(null);
+
+  const levels: Level[] = [
+    {
+      value: "junior",
+      label: t("levels.junior.label"),
+      years: t("levels.junior.years"),
+      description: t("levels.junior.description"),
+      expectations: t.raw("levels.junior.expectations") as string[],
+    },
+    {
+      value: "mid",
+      label: t("levels.mid.label"),
+      years: t("levels.mid.years"),
+      description: t("levels.mid.description"),
+      expectations: t.raw("levels.mid.expectations") as string[],
+    },
+    {
+      value: "senior",
+      label: t("levels.senior.label"),
+      years: t("levels.senior.years"),
+      description: t("levels.senior.description"),
+      expectations: t.raw("levels.senior.expectations") as string[],
+    },
+    {
+      value: "staff",
+      label: t("levels.staff.label"),
+      years: t("levels.staff.years"),
+      description: t("levels.staff.description"),
+      expectations: t.raw("levels.staff.expectations") as string[],
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -381,35 +384,33 @@ export function CandidatesPageClient({ groups }: CandidatesPageClientProps) {
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
               <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
               <span className="text-slate-400 text-sm">
-                Free forever for candidates
+                {t("hero.badge")}
               </span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-6">
-              Show how you
+              {t("hero.titleLine1")}
               <br />
-              <span className="text-primary">actually work.</span>
+              <span className="text-primary">{t("hero.titleLine2")}</span>
             </h1>
 
             <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-8">
-              No leetcode. No whiteboard. Take a free AI-powered simulation that
-              mirrors a real workday — talk to your manager, tackle a real task,
-              and get a detailed skills report.
+              {t("hero.subtitle")}
             </p>
 
             {/* Quick stats */}
             <div className="flex items-center justify-center gap-8 text-sm text-slate-500">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                <span>30-45 minutes</span>
+                <span>{t("hero.stats.duration")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                <span>AI teammates</span>
+                <span>{t("hero.stats.teammates")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4" />
-                <span>Detailed report</span>
+                <span>{t("hero.stats.report")}</span>
               </div>
             </div>
           </motion.div>
@@ -436,11 +437,10 @@ export function CandidatesPageClient({ groups }: CandidatesPageClientProps) {
               <Code className="w-8 h-8 text-slate-400" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 mb-2">
-              Coming Soon
+              {t("empty.title")}
             </h2>
             <p className="text-slate-500 max-w-md mx-auto">
-              We&apos;re preparing challenges across multiple roles. Check back
-              soon to validate your skills.
+              {t("empty.description")}
             </p>
           </motion.div>
         )}
@@ -455,6 +455,7 @@ export function CandidatesPageClient({ groups }: CandidatesPageClientProps) {
           if (!open) setSelectedArchetype(null);
         }}
         archetype={selectedArchetype}
+        levels={levels}
       />
     </div>
   );

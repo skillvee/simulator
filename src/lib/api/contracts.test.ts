@@ -125,6 +125,7 @@ vi.mock("@/lib/ai/gemini-config", () => ({
     male: [{ name: "Puck" }],
     female: [{ name: "Kore" }],
   },
+  pickVoiceForCoworker: vi.fn().mockReturnValue("Puck"),
 }));
 
 vi.mock("@/lib/scenarios/repo-templates", () => ({

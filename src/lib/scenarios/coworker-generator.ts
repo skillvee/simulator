@@ -12,6 +12,7 @@ import {
   COWORKER_GENERATOR_PROMPT_VERSION,
 } from "@/prompts/recruiter/coworker-generator";
 import { type CoworkerBuilderData, coworkerBuilderSchema } from "./scenario-builder";
+import { inferDemographics } from "@/lib/avatar/name-ethnicity";
 
 const logger = createLogger("lib:scenarios:coworker-generator");
 
@@ -75,7 +76,25 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
   }
 
   const coworkers = parsed.map((coworker, index) => {
-    const result = coworkerBuilderSchema.safeParse(coworker);
+    // Backfill gender/ethnicity from name if LLM omitted them, so one missing field
+    // doesn't fail the whole generation. The name-based dictionary now covers common
+    // international names; the hash fallback is a last resort.
+    const candidate = coworker && typeof coworker === "object" ? { ...coworker } : coworker;
+    if (candidate && typeof candidate === "object" && typeof candidate.name === "string") {
+      if (!candidate.gender || !candidate.ethnicity) {
+        const inferred = inferDemographics(candidate.name);
+        if (!candidate.gender) {
+          candidate.gender = inferred.gender;
+          logger.warn("LLM omitted gender; inferred from name", { name: candidate.name, inferred: inferred.gender });
+        }
+        if (!candidate.ethnicity) {
+          candidate.ethnicity = inferred.group;
+          logger.warn("LLM omitted ethnicity; inferred from name", { name: candidate.name, inferred: inferred.group });
+        }
+      }
+    }
+
+    const result = coworkerBuilderSchema.safeParse(candidate);
     if (!result.success) {
       throw new Error(
         `Invalid coworker at index ${index}: ${result.error.message}`

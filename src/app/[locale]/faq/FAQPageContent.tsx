@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, MessageSquare, BookOpen, Users, Shield, ArrowRight } from "lucide-react";
 import Navigation from "@/components/landing/navigation";
@@ -48,7 +49,7 @@ function FAQAccordion({ item }: { item: FAQItem; index: number }) {
       </button>
       {isOpen && (
         <div className="px-6 pb-5 animate-in fade-in duration-200">
-          <div className="pl-12 text-slate-600 leading-relaxed">{item.answer}</div>
+          <div className="pl-12 text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: item.answer }} />
         </div>
       )}
     </motion.div>
@@ -56,100 +57,102 @@ function FAQAccordion({ item }: { item: FAQItem; index: number }) {
 }
 
 export default function FAQPageContent() {
+  const t = useTranslations("faqPage");
+
   const faqSections: FAQSection[] = [
     {
-      title: "Getting Started",
+      title: t("categories.gettingStarted.title"),
       icon: <BookOpen className="w-6 h-6 text-primary" />,
       color: "blue",
       items: [
         {
-          question: "How does Skillvee work?",
-          answer: "Paste your job description. We generate a realistic work simulation. Send the link to candidates. They complete a 30-45 minute simulation on their own time. You review how they actually performed—their communication, execution, and problem-solving approach."
+          question: t("categories.gettingStarted.questions.q1.question"),
+          answer: t("categories.gettingStarted.questions.q1.answer")
         },
         {
-          question: "How long does it take to get started?",
-          answer: "About 5 minutes. Paste your JD, review the generated simulation, and you're ready to send links to candidates. No lengthy onboarding or training required."
+          question: t("categories.gettingStarted.questions.q2.question"),
+          answer: t("categories.gettingStarted.questions.q2.answer")
         },
         {
-          question: "What roles does Skillvee support?",
-          answer: "Any role where you want to see how candidates actually work. We support technical roles (Software Engineers, Data Scientists), business roles (Product Managers, Program Managers), and customer-facing roles (Sales, Contact Center, Customer Success). Each simulation is tailored to your specific job description—not pulled from a generic test library."
+          question: t("categories.gettingStarted.questions.q3.question"),
+          answer: t("categories.gettingStarted.questions.q3.answer")
         },
         {
-          question: "Can I customize the simulation scenarios?",
-          answer: "Yes. We generate simulations based on your job description. Enterprise customers can work with us to create fully custom scenarios that match your team's specific challenges and tech stack."
+          question: t("categories.gettingStarted.questions.q4.question"),
+          answer: t("categories.gettingStarted.questions.q4.answer")
         }
       ]
     },
     {
-      title: "How Assessments Work",
+      title: t("categories.howAssessmentsWork.title"),
       icon: <MessageSquare className="w-6 h-6 text-primary" />,
       color: "blue",
       items: [
         {
-          question: "What do candidates actually do in a simulation?",
-          answer: "They experience a realistic first day: meet their \"manager,\" gather requirements from AI-powered stakeholders, complete a work task, and defend their approach. It's 30-45 minutes of real work—not algorithm puzzles that nobody uses after the interview."
+          question: t("categories.howAssessmentsWork.questions.q1.question"),
+          answer: t("categories.howAssessmentsWork.questions.q1.answer")
         },
         {
-          question: "Can candidates use AI tools like ChatGPT?",
-          answer: "Yes—we encourage it. In real work, people use AI tools. We want to see how candidates use them: thoughtfully or blindly? Do they verify the output? Can they explain what the AI generated? This is the skill that actually matters now."
+          question: t("categories.howAssessmentsWork.questions.q2.question"),
+          answer: t("categories.howAssessmentsWork.questions.q2.answer")
         },
         {
-          question: "How do you prevent cheating?",
-          answer: "We flip the model. Traditional tests try to ban AI and hope no one cheats. With live stakeholder conversations and 30-45 minutes of continuous work, there's nothing to cheat on. You can't fake real work with real-time interactions."
+          question: t("categories.howAssessmentsWork.questions.q3.question"),
+          answer: t("categories.howAssessmentsWork.questions.q3.answer")
         },
         {
-          question: "What's the candidate experience like?",
-          answer: "Candidates consistently prefer work simulations to algorithm tests. They get to show actual skills instead of memorized trivia. And they walk away understanding what the job would actually be like—a better experience for everyone."
+          question: t("categories.howAssessmentsWork.questions.q4.question"),
+          answer: t("categories.howAssessmentsWork.questions.q4.answer")
         },
         {
-          question: "How long do assessments take?",
-          answer: "30-45 minutes. Long enough to see real work, short enough to respect everyone's time. Candidates complete it asynchronously—no scheduling coordination needed."
+          question: t("categories.howAssessmentsWork.questions.q5.question"),
+          answer: t("categories.howAssessmentsWork.questions.q5.answer")
         }
       ]
     },
     {
-      title: "Results & Evaluation",
+      title: t("categories.resultsEvaluation.title"),
       icon: <Users className="w-6 h-6 text-primary" />,
       color: "blue",
       items: [
         {
-          question: "What do I see in the results?",
-          answer: "You see how candidates actually worked: how they gathered requirements, used AI tools, executed the task, communicated their approach, and handled pushback. Not just a score—actual evidence of how they'll perform on day one."
+          question: t("categories.resultsEvaluation.questions.q1.question"),
+          answer: t("categories.resultsEvaluation.questions.q1.answer")
         },
         {
-          question: "How does AI-powered evaluation work?",
-          answer: "Our AI analyzes the full simulation—conversations, work output, and decision defense. It scores on communication, technical execution, problem-solving approach, and fit. Every candidate gets the same criteria, removing human reviewer inconsistency."
+          question: t("categories.resultsEvaluation.questions.q2.question"),
+          answer: t("categories.resultsEvaluation.questions.q2.answer")
         },
         {
-          question: "Can I compare candidates easily?",
-          answer: "Yes. Same scenario for every candidate means you can directly compare how different people approached the same problem. Apples to apples—not apples to algorithm test scores."
+          question: t("categories.resultsEvaluation.questions.q3.question"),
+          answer: t("categories.resultsEvaluation.questions.q3.answer")
         },
         {
-          question: "How do you reduce bias in hiring?",
-          answer: "Same scenario for every candidate. AI-powered scoring removes human reviewer inconsistency. We measure what people actually do, not what their resume says or where they went to school. Work speaks for itself."
+          question: t("categories.resultsEvaluation.questions.q4.question"),
+          answer: t("categories.resultsEvaluation.questions.q4.answer")
         }
       ]
     },
     {
-      title: "Integration & Technical",
+      title: t("categories.integrationTechnical.title"),
       icon: <Shield className="w-6 h-6 text-primary" />,
       color: "blue",
       items: [
         {
-          question: "Does Skillvee integrate with our ATS?",
-          answer: "Enterprise customers get ATS integration with major platforms including Greenhouse, Lever, and Ashby. Contact us for specific integration requirements."
+          question: t("categories.integrationTechnical.questions.q1.question"),
+          answer: t("categories.integrationTechnical.questions.q1.answer")
         },
         {
-          question: "Is candidate data secure?",
-          answer: "Yes. We're SOC 2 compliant. Assessment data is encrypted at rest and in transit. We don't sell candidate data to third parties. You control who sees results."
+          question: t("categories.integrationTechnical.questions.q2.question"),
+          answer: t("categories.integrationTechnical.questions.q2.answer")
         },
         {
-          question: "Can we use our own branding?",
-          answer: "Enterprise customers can white-label the candidate experience with their company logo and branding."
+          question: t("categories.integrationTechnical.questions.q3.question"),
+          answer: t("categories.integrationTechnical.questions.q3.answer")
         },
         {
-          question: "What browsers and devices work?",
-          answer: "Skillvee works on all modern browsers (Chrome, Safari, Firefox, Edge) on desktop. We recommend desktop for the best candidate experience during simulations."
+          question: t("categories.integrationTechnical.questions.q4.question"),
+          answer: t("categories.integrationTechnical.questions.q4.answer")
         }
       ]
     }
@@ -181,15 +184,15 @@ export default function FAQPageContent() {
               className="text-center"
             >
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-                Got Questions?
+                {t("hero.label")}
               </p>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
-                Frequently Asked Questions
+                {t("hero.title")}
               </h1>
 
               <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-                Everything you need to know about using Skillvee to hire better
+                {t("hero.subtitle")}
               </p>
             </motion.div>
           </div>
@@ -256,26 +259,26 @@ export default function FAQPageContent() {
             viewport={{ once: true }}
           >
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-              Still Have Questions?
+              {t("cta.label")}
             </p>
             <h2 className="text-4xl lg:text-6xl font-black text-white mb-6">
-              LET&apos;S TALK.
+              {t("cta.title")}
             </h2>
             <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-              Can&apos;t find what you&apos;re looking for? We&apos;ll answer your questions and show you how it works.
+              {t("cta.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/demo">
                 <Button className="h-14 px-10 rounded-full bg-white text-slate-900 font-bold text-lg shadow-xl hover:bg-slate-100 group">
-                  Request Demo
+                  {t("cta.requestDemo")}
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="mailto:hi@skillvee.com">
+              <a href="mailto:hi@skillvee.com">
                 <Button variant="ghost" className="h-14 px-6 rounded-full text-white hover:bg-white/10 font-semibold">
-                  Email Us
+                  {t("cta.emailUs")}
                 </Button>
-              </Link>
+              </a>
             </div>
           </motion.div>
         </div>

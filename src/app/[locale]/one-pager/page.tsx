@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import {
   MessageSquare,
   FileCode,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 
 export default function OnePageInvestorPage() {
+  const t = useTranslations("onePager");
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <div
@@ -45,7 +47,7 @@ export default function OnePageInvestorPage() {
                 margin: 0,
               }}
             >
-              Work simulations that show who can actually do the job
+              {t("tagline")}
             </p>
           </div>
           <div
@@ -73,7 +75,7 @@ export default function OnePageInvestorPage() {
         >
           {/* PROBLEM */}
           <div>
-            <SectionLabel>The Problem</SectionLabel>
+            <SectionLabel>{t("problem.label")}</SectionLabel>
             <h3
               style={{
                 fontSize: 20,
@@ -83,19 +85,13 @@ export default function OnePageInvestorPage() {
                 marginTop: 0,
               }}
             >
-              Hiring is broken in the AI era
+              {t("problem.title")}
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { metric: "72%", text: "of resumes are now AI-written and look alike" },
-                {
-                  metric: "45%",
-                  text: "of candidates use AI during interviews",
-                },
-                {
-                  metric: "<1%",
-                  text: "of applicants are truly qualified",
-                },
+                { metric: "72%", text: t("problem.stat1") },
+                { metric: "45%", text: t("problem.stat2") },
+                { metric: "<1%", text: t("problem.stat3") },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -134,14 +130,14 @@ export default function OnePageInvestorPage() {
                 borderRadius: "0 8px 8px 0",
               }}
             >
-              The key question remains:{" "}
-              <em>Can this person actually do the job?</em>
+              {t("problem.callout")}{" "}
+              <em>{t("problem.calloutEmphasis")}</em>
             </div>
           </div>
 
           {/* SOLUTION */}
           <div>
-            <SectionLabel>The Solution</SectionLabel>
+            <SectionLabel>{t("solution.label")}</SectionLabel>
             <h3
               style={{
                 fontSize: 20,
@@ -151,23 +147,23 @@ export default function OnePageInvestorPage() {
                 marginTop: 0,
               }}
             >
-              A 45-min simulation of the real job
+              {t("solution.title")}
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <SolutionItem
                 icon={<MessageSquare size={16} color="#237CF1" />}
-                title="Live AI stakeholders"
-                desc="Voice conversations with PM, manager, and tech lead — with memory and context"
+                title={t("solution.item1Title")}
+                desc={t("solution.item1Desc")}
               />
               <SolutionItem
                 icon={<FileCode size={16} color="#237CF1" />}
-                title="Real deliverables, not trivia"
-                desc="Candidates produce actual work output — code, PRs, and decisions"
+                title={t("solution.item2Title")}
+                desc={t("solution.item2Desc")}
               />
               <SolutionItem
                 icon={<Video size={16} color="#237CF1" />}
-                title="Full capture & structured evaluation"
-                desc="Screen + voice recorded end-to-end, with scorecards, transcripts, and artifacts"
+                title={t("solution.item3Title")}
+                desc={t("solution.item3Desc")}
               />
             </div>
             <p
@@ -178,7 +174,7 @@ export default function OnePageInvestorPage() {
                 color: "#334155",
               }}
             >
-              Compare candidates side-by-side on real work.
+              {t("solution.footer")}
             </p>
           </div>
         </div>
@@ -210,7 +206,7 @@ export default function OnePageInvestorPage() {
               }}
             >
               <Zap size={18} color="#237CF1" />
-              <SectionLabel style={{ marginBottom: 0 }}>Why Now</SectionLabel>
+              <SectionLabel style={{ marginBottom: 0 }}>{t("whyNow.label")}</SectionLabel>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
@@ -222,11 +218,10 @@ export default function OnePageInvestorPage() {
                     margin: "0 0 4px",
                   }}
                 >
-                  Live AI models
+                  {t("whyNow.item1Title")}
                 </p>
                 <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
-                  Real-time voice + context make realistic stakeholder
-                  conversations possible at scale.
+                  {t("whyNow.item1Desc")}
                 </p>
               </div>
               <div>
@@ -238,11 +233,10 @@ export default function OnePageInvestorPage() {
                     margin: "0 0 4px",
                   }}
                 >
-                  Multimodal AI
+                  {t("whyNow.item2Title")}
                 </p>
                 <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
-                  Analyze hour-long work sessions reliably — see how candidates
-                  actually work.
+                  {t("whyNow.item2Desc")}
                 </p>
               </div>
             </div>
@@ -255,7 +249,7 @@ export default function OnePageInvestorPage() {
                 color: "#237CF1",
               }}
             >
-              This was impossible 6 months ago. Now it works.
+              {t("whyNow.footer")}
             </p>
           </div>
 
@@ -280,7 +274,7 @@ export default function OnePageInvestorPage() {
             >
               <Lightbulb size={18} color="#237CF1" />
               <SectionLabel style={{ marginBottom: 0 }}>
-                Key Insight
+                {t("keyInsight.label")}
               </SectionLabel>
             </div>
             <p
@@ -292,8 +286,7 @@ export default function OnePageInvestorPage() {
                 lineHeight: 1.5,
               }}
             >
-              Interviews are going away. The future of hiring is watching people
-              work.
+              {t("keyInsight.headline")}
             </p>
             <p
               style={{
@@ -303,8 +296,7 @@ export default function OnePageInvestorPage() {
                 lineHeight: 1.6,
               }}
             >
-              Resumes, take-homes, and interviews are all gameable now. Watching
-              real work isn&apos;t.
+              {t("keyInsight.detail")}
             </p>
           </div>
         </div>
@@ -329,7 +321,7 @@ export default function OnePageInvestorPage() {
               }}
             >
               <TrendingUp size={16} color="#237CF1" />
-              <SectionLabel style={{ marginBottom: 0 }}>Market</SectionLabel>
+              <SectionLabel style={{ marginBottom: 0 }}>{t("market.label")}</SectionLabel>
             </div>
             <div
               style={{
@@ -345,11 +337,11 @@ export default function OnePageInvestorPage() {
                 $3B
               </span>
               <span style={{ fontSize: 13, color: "#64748b" }}>
-                pre-hire assessment market
+                {t("market.tamLabel")}
               </span>
             </div>
             <p style={{ fontSize: 14, color: "#334155", fontWeight: 700, margin: "0 0 16px" }}>
-              Growing 16% CAGR
+              {t("market.growth")}
             </p>
             <div
               style={{
@@ -362,11 +354,9 @@ export default function OnePageInvestorPage() {
               }}
             >
               <span style={{ fontWeight: 600, color: "#1e293b" }}>
-                Comparables:
+                {t("market.comparablesLabel")}
               </span>{" "}
-              Mercor ($10B), Juicebox ($850M) — AI solved sourcing.
-              HackerRank ($500M, $221M rev) — the incumbent we replace.
-              Evaluation is the missing layer.
+              {t("market.comparablesText")}
             </div>
           </div>
 
@@ -381,7 +371,7 @@ export default function OnePageInvestorPage() {
               }}
             >
               <Shield size={16} color="#237CF1" />
-              <SectionLabel style={{ marginBottom: 0 }}>Moat</SectionLabel>
+              <SectionLabel style={{ marginBottom: 0 }}>{t("moat.label")}</SectionLabel>
             </div>
             <p
               style={{
@@ -391,10 +381,9 @@ export default function OnePageInvestorPage() {
                 lineHeight: 1.6,
               }}
             >
-              Every simulation teaches us what &quot;good&quot; looks like{" "}
-              <span style={{ fontWeight: 700 }}>for each company</span>. As we
-              track which hires succeed, we can predict who will thrive where —
-              not generically, but for each team specifically.
+              {t("moat.introPre")}
+              <span style={{ fontWeight: 700 }}>{t("moat.introHighlight")}</span>
+              {t("moat.introPost")}
             </p>
             <div
               style={{
@@ -404,8 +393,7 @@ export default function OnePageInvestorPage() {
               }}
             >
               <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
-                Competitors can copy the product. They can&apos;t copy the data.
-                Starting with engineering, expanding to every white-collar role.
+                {t("moat.footer")}
               </p>
             </div>
           </div>
@@ -422,7 +410,7 @@ export default function OnePageInvestorPage() {
         >
           {/* BUSINESS MODEL */}
           <div>
-            <SectionLabel>Business Model</SectionLabel>
+            <SectionLabel>{t("businessModel.label")}</SectionLabel>
             <p
               style={{
                 fontSize: 13,
@@ -431,8 +419,7 @@ export default function OnePageInvestorPage() {
                 lineHeight: 1.6,
               }}
             >
-              SaaS with freemium. Paid plans from $79/month to enterprise
-              custom pricing.
+              {t("businessModel.intro")}
             </p>
             <div
               style={{
@@ -444,17 +431,15 @@ export default function OnePageInvestorPage() {
               }}
             >
               <span style={{ fontWeight: 600, color: "#1e293b" }}>
-                Beachhead:
+                {t("businessModel.beachheadLabel")}
               </span>{" "}
-              Engineering teams hiring 5+ developers/month — hardest roles to
-              evaluate, highest cost of a bad hire. Expands to design, product,
-              and all white-collar roles.
+              {t("businessModel.beachheadText")}
             </div>
           </div>
 
           {/* PROGRESS */}
           <div>
-            <SectionLabel>Progress</SectionLabel>
+            <SectionLabel>{t("progress.label")}</SectionLabel>
             <p
               style={{
                 fontSize: 13,
@@ -463,9 +448,7 @@ export default function OnePageInvestorPage() {
                 lineHeight: 1.6,
               }}
             >
-              Working prototype built. 2 committed pilots. Full simulation flow
-              live — AI voice conversations, real coding environment, screen
-              capture, and automated scorecards.
+              {t("progress.intro")}
             </p>
             <div
               style={{
@@ -477,17 +460,16 @@ export default function OnePageInvestorPage() {
               }}
             >
               <span style={{ fontWeight: 600, color: "#1e293b" }}>
-                Stack:
+                {t("progress.stackLabel")}
               </span>{" "}
-              Next.js, Supabase, Gemini Live (voice), Gemini Flash
-              (evaluation). Built and shipping fast.
+              {t("progress.stackText")}
             </div>
           </div>
         </div>
 
         {/* ── TEAM ── */}
         <div style={{ marginBottom: 40 }}>
-          <SectionLabel>Team</SectionLabel>
+          <SectionLabel>{t("team.label")}</SectionLabel>
           <div
             style={{
               display: "grid",
@@ -523,7 +505,7 @@ export default function OnePageInvestorPage() {
                       marginLeft: 4,
                     }}
                   >
-                    CEO
+                    {t("team.germanRole")}
                   </span>
                 </p>
                 <ul
@@ -536,13 +518,13 @@ export default function OnePageInvestorPage() {
                     listStyle: "none",
                   }}
                 >
-                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>2 HR Tech exits (acq. by Buk)</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>{t("team.germanItem1")}</li>
                   <li>
-                    <span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Built to{" "}
-                    <span style={{ fontWeight: 600 }}>$1.4M ARR</span>
+                    <span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>{t("team.germanItem2Pre")}
+                    <span style={{ fontWeight: 600 }}>{t("team.germanItem2Highlight")}</span>
                   </li>
-                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>ex-GPM, Walmart eCommerce</li>
-                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Berkeley MBA</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>{t("team.germanItem3")}</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>{t("team.germanItem4")}</li>
                 </ul>
               </div>
             </div>
@@ -574,7 +556,7 @@ export default function OnePageInvestorPage() {
                       marginLeft: 4,
                     }}
                   >
-                    CTO
+                    {t("team.matiasRole")}
                   </span>
                 </p>
                 <ul
@@ -587,13 +569,14 @@ export default function OnePageInvestorPage() {
                     listStyle: "none",
                   }}
                 >
-                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Meta GenAI</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>{t("team.matiasItem1")}</li>
                   <li>
-                    <span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Built Zapien (
-                    <span style={{ fontWeight: 600 }}>35K users</span>)
+                    <span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>{t("team.matiasItem2Pre")}
+                    <span style={{ fontWeight: 600 }}>{t("team.matiasItem2Highlight")}</span>
+                    {t("team.matiasItem2Post")}
                   </li>
-                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>Stanford MS</li>
-                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>2x Stanford Learning Design winner</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>{t("team.matiasItem3")}</li>
+                  <li><span style={{ color: "#cbd5e1", marginRight: 8, fontSize: 8 }}>&#9679;</span>{t("team.matiasItem4")}</li>
                 </ul>
               </div>
             </div>
@@ -609,9 +592,9 @@ export default function OnePageInvestorPage() {
             }}
           >
             {[
-              { label: "We know the buyer", detail: "HR Tech exits" },
-              { label: "We can build this", detail: "Meta GenAI" },
-              { label: "We move fast", detail: "Working prototype" },
+              { label: t("team.pill1Label"), detail: t("team.pill1Detail") },
+              { label: t("team.pill2Label"), detail: t("team.pill2Detail") },
+              { label: t("team.pill3Label"), detail: t("team.pill3Detail") },
             ].map((item, i) => (
               <div
                 key={i}
@@ -661,7 +644,7 @@ export default function OnePageInvestorPage() {
                 margin: 0,
               }}
             >
-              Currently raising seed
+              {t("footer.title")}
             </p>
             <p style={{ fontSize: 13, color: "#64748b", margin: "4px 0 0" }}>
               german@skillvee.com

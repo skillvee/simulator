@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { useAssessmentTranslations } from "@/hooks/use-assessment-translations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,9 +19,10 @@ import {
 import type { CodeReviewData } from "@/types";
 
 /**
- * Candidate strength levels
+ * Candidate strength levels (slug keys from RelativeStrengthKey).
+ * Display text resolved via `useTranslations("rubric.relativeStrength")`.
  */
-type CandidateStrengthLevel = "Exceptional" | "Strong" | "Meets expectations" | "Below expectations";
+type CandidateStrengthLevel = "exceptional" | "strong" | "meets" | "below";
 
 /**
  * Dimension score data from API
@@ -63,13 +65,13 @@ interface CandidateDetailClientProps {
  */
 function getStrengthBadgeStyles(level: CandidateStrengthLevel): string {
   switch (level) {
-    case "Exceptional":
+    case "exceptional":
       return "bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 border-0";
-    case "Strong":
+    case "strong":
       return "bg-green-100 text-green-700 border-0";
-    case "Meets expectations":
+    case "meets":
       return "bg-stone-100 text-stone-700 border-0";
-    case "Below expectations":
+    case "below":
       return "bg-red-100 text-red-800 border-0";
   }
 }
@@ -131,18 +133,18 @@ function LoadingSkeleton() {
  * Error state for 403 Forbidden
  */
 function ForbiddenError() {
+  const t = useTranslations("recruiter.assessments.candidateDetail");
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
       <div className="rounded-full bg-red-100 p-4 mb-4">
         <ShieldAlert className="h-12 w-12 text-red-600" />
       </div>
-      <h1 className="text-2xl font-semibold text-stone-900 mb-2">Access Denied</h1>
+      <h1 className="text-2xl font-semibold text-stone-900 mb-2">{t("accessDenied")}</h1>
       <p className="text-stone-500 text-center mb-6 max-w-md">
-        You don&apos;t have permission to view this candidate&apos;s assessment.
-        This may be because the assessment belongs to a different recruiter.
+        {t("accessDeniedDescription")}
       </p>
       <Button asChild className="bg-blue-600 hover:bg-blue-700">
-        <Link href="/recruiter/assessments">Back to Candidates</Link>
+        <Link href="/recruiter/assessments">{t("backToCandidates")}</Link>
       </Button>
     </div>
   );
@@ -152,6 +154,8 @@ function ForbiddenError() {
  * Main candidate detail client component
  */
 export function CandidateDetailClient({ assessmentId, simulationId }: CandidateDetailClientProps) {
+  const t = useTranslations("recruiter.assessments.candidateDetail");
+  const tRelativeStrength = useTranslations("rubric.relativeStrength");
   const [data, setData] = useState<CandidateDetailData | null>(null);
   const { translateDimension } = useAssessmentTranslations();
   const [loading, setLoading] = useState(true);
@@ -192,13 +196,13 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
         <AlertCircle className="h-12 w-12 text-stone-400 mb-4" />
         <h1 className="text-xl font-semibold text-stone-900 mb-2">
-          Unable to load candidate data
+          {t("unableToLoad")}
         </h1>
         <p className="text-stone-500 mb-6">
-          An error occurred while fetching the assessment details.
+          {t("fetchError")}
         </p>
         <Button asChild variant="outline">
-          <Link href="/recruiter/assessments">Back to Candidates</Link>
+          <Link href="/recruiter/assessments">{t("backToCandidates")}</Link>
         </Button>
       </div>
     );
@@ -223,17 +227,17 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Candidates
+          {t("backToCandidates")}
         </Link>
 
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-semibold text-stone-900">
-                {data.candidate.name || "Anonymous Candidate"}
+                {data.candidate.name || t("anonymousCandidate")}
               </h1>
               <Badge className={getStrengthBadgeStyles(data.strengthLevel)}>
-                {data.strengthLevel}
+                {tRelativeStrength(data.strengthLevel)}
               </Badge>
             </div>
             {data.scenarioName && (
@@ -242,7 +246,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
             {data.completedAt && (
               <p className="mt-1 text-sm text-stone-400 flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5" />
-                Completed {formatDate(data.completedAt)}
+                {t("completed", { date: formatDate(data.completedAt) })}
               </p>
             )}
           </div>
@@ -250,7 +254,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           <Button asChild variant="outline" className="border-stone-200">
             <Link href={`/recruiter/assessments/${simulationId}/compare?ids=${assessmentId}`}>
               <Users className="mr-2 h-4 w-4" />
-              Compare with others
+              {t("compareWithOthers")}
             </Link>
           </Button>
         </div>
@@ -262,7 +266,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-stone-500 mb-1">
-                Overall Score
+                {t("overallScore")}
               </p>
               <div className="flex items-baseline gap-2">
                 <span className={`text-4xl font-bold ${getDimensionScoreColor(data.overallScore)}`}>
@@ -277,7 +281,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
                   className={`text-sm px-3 py-1.5 ${getPercentileBadgeColor(overallPercentile)}`}
                 >
                   <TrendingUp className="mr-1.5 h-3.5 w-3.5" />
-                  Top {Math.round(100 - overallPercentile)}%
+                  {t("topPercent", { percent: Math.round(100 - overallPercentile) })}
                 </Badge>
               </div>
             )}
@@ -293,7 +297,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
       {/* Dimension Cards */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-stone-900 mb-4">
-          Dimension Scores
+          {t("dimensionScores")}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {data.dimensionScores.map((dim) => {
@@ -316,7 +320,7 @@ export function CandidateDetailClient({ assessmentId, simulationId }: CandidateD
                         <Badge
                           className={`text-xs ${getPercentileBadgeColor(dimPercentile)}`}
                         >
-                          Top {Math.round(100 - dimPercentile)}%
+                          {t("topPercent", { percent: Math.round(100 - dimPercentile) })}
                         </Badge>
                       )}
                     </div>
