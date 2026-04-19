@@ -592,9 +592,11 @@ export default function HomePage() {
               },
               {
                 question: t("faq.question2.question"),
-                answer: (
-                  <span dangerouslySetInnerHTML={{ __html: t("faq.question2.answer") }} />
-                )
+                answer: t.rich("faq.question2.answer", {
+                  em: (chunks) => <em>{chunks}</em>,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                  br: () => <br />
+                })
               },
               {
                 question: t("faq.question3.question"),
@@ -606,15 +608,19 @@ export default function HomePage() {
               },
               {
                 question: t("faq.question5.question"),
-                answer: (
-                  <span dangerouslySetInnerHTML={{ __html: t("faq.question5.answer") }} />
-                )
+                answer: t.rich("faq.question5.answer", {
+                  em: (chunks) => <em>{chunks}</em>,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                  br: () => <br />
+                })
               },
               {
                 question: t("faq.question6.question"),
-                answer: (
-                  <span dangerouslySetInnerHTML={{ __html: t("faq.question6.answer") }} />
-                )
+                answer: t.rich("faq.question6.answer", {
+                  em: (chunks) => <em>{chunks}</em>,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                  br: () => <br />
+                })
               }
             ].map((item, index) => (
               <FAQAccordion key={index} item={item} />
