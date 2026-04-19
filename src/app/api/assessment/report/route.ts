@@ -1,16 +1,10 @@
 import { auth } from "@/auth";
 import { success, error } from "@/lib/api";
-import { db } from "@/server/db";
 import { createLogger } from "@/lib/core";
 import { sendReportEmail, isEmailServiceConfigured } from "@/lib/external";
-import {
-  fetchAssessmentForReport,
-  resolveVideoEvaluation,
-  calculateTiming,
-  countUniqueCoworkers,
-  convertRubricToReport,
-  reportToPrismaJson,
-} from "@/lib/analysis";
+import { generateOrFetchReport } from "@/lib/analysis";
+import { db } from "@/server/db";
+import { Prisma } from "@prisma/client";
 import type { AssessmentReport } from "@/types";
 
 const logger = createLogger("api:assessment:report");
@@ -24,77 +18,66 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { assessmentId, forceRegenerate = false } = body;
+    const { assessmentId, forceRegenerate = false } = body as {
+      assessmentId?: string;
+      forceRegenerate?: boolean;
+    };
 
     if (!assessmentId) {
       return error("Assessment ID is required", 400);
     }
 
-    const assessment = await fetchAssessmentForReport(assessmentId);
-    if (!assessment) {
-      return error("Assessment not found", 404);
-    }
+    const existing = await db.assessment.findUnique({
+      where: { id: assessmentId },
+      select: { userId: true, report: true, user: { select: { name: true, email: true } } },
+    });
 
-    if (assessment.userId !== session.user.id) {
+    if (!existing) return error("Assessment not found", 404);
+    if (existing.userId !== session.user.id) {
       return error("Unauthorized to access this assessment", 403);
     }
 
-    // Return cached report if available
-    if (assessment.report && !forceRegenerate) {
-      return success({ report: assessment.report, cached: true });
+    const hadCachedReport = !!existing.report;
+
+    if (forceRegenerate && hadCachedReport) {
+      await db.assessment.update({
+        where: { id: assessmentId },
+        data: { report: Prisma.DbNull },
+      });
     }
 
-    const videoUrl = assessment.recordings[0]?.storageUrl;
-    if (!videoUrl) {
-      return error("No video recording found for this assessment. Video evaluation cannot proceed without a recording.", 400);
-    }
-    const videoResult = await resolveVideoEvaluation(
-      assessmentId, videoUrl, assessment.scenario.taskDescription, session.user.id, assessment.scenario.language
-    );
+    const result = await generateOrFetchReport(assessmentId, session.user.id);
 
-    if (videoResult.status === "processing")
-      return error("Video evaluation is still in progress. Please try again later.", 202);
-    if (videoResult.status === "error")
-      return error(videoResult.message, 500);
+    if (result.status === "not_found") return error("Assessment not found", 404);
+    if (result.status === "unauthorized") return error("Unauthorized to access this assessment", 403);
+    if (result.status === "processing") return error("Video evaluation is still in progress. Please try again later.", 202);
+    if (result.status === "error") return error(result.message, 500);
 
-    const timing = calculateTiming(assessment.startedAt, assessment.completedAt);
-    const coworkersContacted = countUniqueCoworkers(assessment.conversations);
+    const cached = hadCachedReport && !forceRegenerate;
 
-    const report = convertRubricToReport(
-      videoResult.data,
-      assessmentId,
-      assessment.user?.name || undefined,
-      timing,
-      coworkersContacted,
-      assessment.scenario.language
-    );
-
-    // Store report
-    await db.assessment.update({
-      where: { id: assessmentId },
-      data: { report: reportToPrismaJson(report) },
-    });
-
-    // Send email notification asynchronously (fire-and-forget)
-    const emailSent = isEmailServiceConfigured() && !!assessment.user?.email;
-    if (emailSent) {
-      const host = request.headers.get("host") || "localhost:3000";
-      const protocol = host.includes("localhost") ? "http" : "https";
-      sendReportEmail({
-        to: assessment.user!.email!,
-        candidateName: assessment.user.name || undefined,
-        assessmentId,
-        report: report as AssessmentReport,
-        appBaseUrl: `${protocol}://${host}`,
-        language: report.language || "en",
-      })
-        .then((r) => r.success
-          ? logger.info("Report email sent", { email: assessment.user?.email })
-          : logger.warn("Failed to send report email", { error: r.error }))
-        .catch((err) => logger.error("Error sending report email", { error: String(err) }));
+    // Fire-and-forget email notification for freshly generated reports
+    let emailSent = false;
+    if (!cached) {
+      emailSent = isEmailServiceConfigured() && !!existing.user?.email;
+      if (emailSent && existing.user?.email) {
+        const host = request.headers.get("host") || "localhost:3000";
+        const protocol = host.includes("localhost") ? "http" : "https";
+        void sendReportEmail({
+          to: existing.user.email,
+          candidateName: existing.user.name || undefined,
+          assessmentId,
+          report: result.report as AssessmentReport,
+          appBaseUrl: `${protocol}://${host}`,
+          language: result.report.language || "en",
+        })
+          .then((r) => r.success
+            ? logger.info("Report email sent", { email: existing.user?.email })
+            : logger.warn("Failed to send report email", { error: r.error }))
+          .catch((err) => logger.error("Error sending report email", { error: String(err) }));
+      }
     }
 
-    return success({ report, cached: false, emailSent });
+    return success({ report: result.report, cached, emailSent });
   } catch (err) {
     logger.error("Error generating assessment report", { error: String(err) });
     return error("Failed to generate assessment report", 500);

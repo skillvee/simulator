@@ -16,24 +16,34 @@ import { ExperienceFeedback } from "./components/experience-feedback";
 
 const logger = createLogger("client:app:results");
 
+export type NoReportReason = "processing" | "error";
+
 interface CandidateResultsClientProps {
   assessmentId: string;
   results: CandidateResultsData | null;
   initialFeedback: { rating: "LIKE" | "DISLIKE"; comment: string } | null;
+  noReportReason?: NoReportReason | null;
 }
 
 function NoReportState({
   onGenerate,
   isGenerating,
+  errorMessage,
+  initialReason,
 }: {
   onGenerate: () => void;
   isGenerating: boolean;
+  errorMessage: string | null;
+  initialReason: NoReportReason | null;
 }) {
   const t = useTranslations("results.noReport");
+  // If the server already knows the report is being processed, show that
+  // state immediately (don't require the user to click "Generate").
+  const showGenerating = isGenerating || initialReason === "processing";
   return (
     <div className="flex min-h-full items-center justify-center p-8">
       <Card className="max-w-md p-12 text-center shadow-lg">
-        {isGenerating ? (
+        {showGenerating ? (
           <>
             <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             <h2 className="mb-4 text-2xl font-semibold">{t("generating.title")}</h2>
@@ -48,6 +58,11 @@ function NoReportState({
             </div>
             <h2 className="mb-4 text-2xl font-semibold">{t("notReady.title")}</h2>
             <p className="mb-6 text-muted-foreground">{t("notReady.description")}</p>
+            {errorMessage && (
+              <p className="mb-6 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                {errorMessage}
+              </p>
+            )}
             <Button onClick={onGenerate}>{t("notReady.generateButton")}</Button>
           </>
         )}
@@ -60,13 +75,17 @@ export function CandidateResultsClient({
   assessmentId,
   results: initialResults,
   initialFeedback,
+  noReportReason = null,
 }: CandidateResultsClientProps) {
   const t = useTranslations("results");
+  const tGen = useTranslations("results.noReport.notReady");
   const [results] = useState<CandidateResultsData | null>(initialResults);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleGenerateReport = async () => {
     setIsGenerating(true);
+    setErrorMessage(null);
     try {
       const response = await fetch("/api/assessment/report", {
         method: "POST",
@@ -76,9 +95,20 @@ export function CandidateResultsClient({
 
       if (response.ok) {
         window.location.reload();
+        return;
       }
+
+      let message = tGen("generateError");
+      try {
+        const body = (await response.json()) as { error?: string };
+        if (body?.error) message = body.error;
+      } catch {
+        // ignore body parse errors — fall back to default message
+      }
+      setErrorMessage(message);
     } catch (error) {
-      logger.error("Error generating report", { error });
+      logger.error("Error generating report", { error: String(error) });
+      setErrorMessage(tGen("generateError"));
     } finally {
       setIsGenerating(false);
     }
@@ -89,6 +119,8 @@ export function CandidateResultsClient({
       <NoReportState
         onGenerate={handleGenerateReport}
         isGenerating={isGenerating}
+        errorMessage={errorMessage}
+        initialReason={noReportReason}
       />
     );
   }

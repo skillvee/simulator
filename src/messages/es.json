@@ -220,7 +220,8 @@
       "notReady": {
         "title": "Reporte No Listo",
         "description": "Tu reporte de evaluación aún no ha sido generado. Haz clic abajo para generarlo ahora.",
-        "generateButton": "Generar Reporte"
+        "generateButton": "Generar Reporte",
+        "generateError": "No pudimos generar tu reporte en este momento. Intenta de nuevo en un minuto."
       }
     },
     "overview": {

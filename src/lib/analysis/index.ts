@@ -8,3 +8,4 @@ export * from "./report-data";
 export * from "./report-migration";
 export * from "./report-scoring";
 export * from "./translation-helpers";
+export * from "./generate-report";

@@ -220,7 +220,8 @@
       "notReady": {
         "title": "Report Not Ready",
         "description": "Your assessment report hasn't been generated yet. Click below to generate it now.",
-        "generateButton": "Generate Report"
+        "generateButton": "Generate Report",
+        "generateError": "We couldn't generate your report right now. Please try again in a minute."
       }
     },
     "overview": {

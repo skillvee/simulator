@@ -4,8 +4,9 @@ import { requireCandidate, createLogger } from "@/lib/core";
 const logger = createLogger("server:app:results-page");
 import { db } from "@/server/db";
 import { transformToCandidateResults } from "@/lib/candidate/results-transformer";
+import { generateOrFetchReport } from "@/lib/analysis/generate-report";
 import { CandidateSidebar } from "@/app/[locale]/candidate/dashboard/components/sidebar";
-import { CandidateResultsClient } from "./client";
+import { CandidateResultsClient, type NoReportReason } from "./client";
 import type { AssessmentReport } from "@/types";
 
 interface ResultsPageProps {
@@ -47,28 +48,24 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     redirect(`/assessments/${id}/work`);
   }
 
-  // If no report exists yet, try to generate one
   let report = assessment.report as AssessmentReport | null;
+  let noReportReason: NoReportReason | null = null;
 
   if (!report) {
-    try {
-      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-      const response = await fetch(`${baseUrl}/api/assessment/report`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: `next-auth.session-token=${user.id}`,
-        },
-        body: JSON.stringify({ assessmentId: id }),
-        cache: "no-store",
+    const result = await generateOrFetchReport(id, user.id);
+    if (result.status === "ready") {
+      report = result.report;
+    } else if (result.status === "processing") {
+      noReportReason = "processing";
+    } else if (result.status === "error") {
+      logger.error("Failed to generate report on results page", {
+        assessmentId: id,
+        message: result.message,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        report = data.data.report;
-      }
-    } catch (error) {
-      logger.error("Error generating report on results page", { error });
+      noReportReason = "error";
+    } else {
+      // not_found / unauthorized — fall through to dashboard redirect safety
+      redirect("/candidate/dashboard");
     }
   }
 
@@ -101,6 +98,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           assessmentId={id}
           results={candidateResults}
           initialFeedback={initialFeedback}
+          noReportReason={noReportReason}
         />
       </main>
     </div>
