@@ -49,4 +49,5 @@ skillvee-investor-list.xlsx
 # Plan artifacts
 .nightshift-plan
 .claude/plans/
+.claude/worktrees/
 docs/plans/
