@@ -88,8 +88,8 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
           logger.warn("LLM omitted gender; inferred from name", { name: candidate.name, inferred: inferred.gender });
         }
         if (!candidate.ethnicity) {
-          candidate.ethnicity = inferred.group;
-          logger.warn("LLM omitted ethnicity; inferred from name", { name: candidate.name, inferred: inferred.group });
+          candidate.ethnicity = inferred.ethnicity;
+          logger.warn("LLM omitted ethnicity; inferred from name", { name: candidate.name, inferred: inferred.ethnicity });
         }
       }
     }

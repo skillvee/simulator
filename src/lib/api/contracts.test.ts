@@ -117,7 +117,7 @@ vi.mock("@/lib/analysis", () => ({
 }));
 
 vi.mock("@/lib/avatar", () => ({
-  inferDemographics: vi.fn().mockReturnValue({ gender: "male" }),
+  inferDemographics: vi.fn().mockReturnValue({ gender: "male", ethnicity: "white" }),
 }));
 
 vi.mock("@/lib/ai/gemini-config", () => ({

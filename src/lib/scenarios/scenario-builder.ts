@@ -46,13 +46,13 @@ export const coworkerBuilderSchema = z.object({
   gender: z.enum(["male", "female"]).optional(),
   ethnicity: z
     .enum([
-      "east-asian",
-      "south-asian",
-      "southeast-asian",
+      "east_asian",
+      "south_asian",
+      "southeast_asian",
       "white",
       "black",
       "hispanic",
-      "middle-eastern",
+      "middle_eastern",
       "mixed",
     ])
     .optional(),

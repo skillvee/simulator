@@ -5,7 +5,7 @@
  * Used by the simulation builder to create 2-3 coworker personas with relevant knowledge.
  */
 
-export const COWORKER_GENERATOR_PROMPT_VERSION = "2.2";
+export const COWORKER_GENERATOR_PROMPT_VERSION = "2.3";
 
 export const COWORKER_GENERATOR_PROMPT_V1 = `You are a coworker persona generator for Skillvee, a developer assessment platform. Your job is to generate EXACTLY 2-3 realistic coworker personas based on a role and company context.
 
@@ -37,7 +37,7 @@ Generate an array of 2-3 coworkers that feel like real team members. **YOU MUST 
 
    **CRITICAL: For every coworker, you MUST also emit explicit \`gender\` and \`ethnicity\` fields that match the name.** These drive avatar + voice selection downstream — do NOT let them drift from the name (e.g., a coworker named "Matias Rodriguez" must have \`gender: "male"\` and \`ethnicity: "hispanic"\`).
    - \`gender\`: one of \`"male"\` | \`"female"\`
-   - \`ethnicity\`: one of \`"east-asian"\` | \`"south-asian"\` | \`"southeast-asian"\` | \`"white"\` | \`"black"\` | \`"hispanic"\` | \`"middle-eastern"\` | \`"mixed"\`
+   - \`ethnicity\`: one of \`"east_asian"\` | \`"south_asian"\` | \`"southeast_asian"\` | \`"white"\` | \`"black"\` | \`"hispanic"\` | \`"middle_eastern"\` | \`"mixed"\`
 
 4. **Detailed personaStyle** - Not just "helpful and friendly". Examples:
    - "Direct and technical. Prefers bullet points. Responds quickly but briefly. Uses Slack emoji reactions. Won't hand-hold — expects you to figure things out."
@@ -139,7 +139,7 @@ Return ONLY a JSON array matching this exact schema:
     "name": "string (realistic full name)",
     "role": "string (specific title, e.g., 'Engineering Manager' not just 'Manager')",
     "gender": "male" | "female",
-    "ethnicity": "east-asian" | "south-asian" | "southeast-asian" | "white" | "black" | "hispanic" | "middle-eastern" | "mixed",
+    "ethnicity": "east_asian" | "south_asian" | "southeast_asian" | "white" | "black" | "hispanic" | "middle_eastern" | "mixed",
     "personaStyle": "string (detailed communication style, 2-3 sentences)",
     "personality": {
       "warmth": "welcoming" | "neutral" | "guarded",
@@ -245,7 +245,7 @@ For example, for Spanish (es):
     "name": "Jordan Kim",
     "role": "Engineering Manager",
     "gender": "female",
-    "ethnicity": "east-asian",
+    "ethnicity": "east_asian",
     "personaStyle": "Warm and supportive but busy. Gives high-level guidance and encourages autonomy. Responds with voice memos on Slack. Trusts the team to figure out details.",
     "personality": {
       "warmth": "welcoming",
@@ -275,7 +275,7 @@ For example, for Spanish (es):
     "name": "Aisha Patel",
     "role": "Senior Full-Stack Engineer",
     "gender": "female",
-    "ethnicity": "south-asian",
+    "ethnicity": "south_asian",
     "personaStyle": "Direct and technical. Prefers bullet points. Responds quickly but briefly. Uses lots of emoji reactions. Won't hand-hold but will unblock you if you're stuck.",
     "personality": {
       "warmth": "guarded",

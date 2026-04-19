@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
-import { getPoolAvatarPath, inferDemographics, type EthnicGroup, type Gender } from "@/lib/avatar/name-ethnicity";
+import { getPoolAvatarPath, inferDemographics, isEthnicity, isGender, type Ethnicity, type Gender } from "@/lib/avatar/name-ethnicity";
 import { pickVoiceForCoworker } from "@/lib/ai/gemini-config";
 
 interface SessionUser {
@@ -86,8 +86,8 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const inferred = inferDemographics(name);
-  const resolvedGender: Gender = gender === "male" || gender === "female" ? gender : inferred.gender;
-  const resolvedEthnicity: EthnicGroup = isEthnicGroup(ethnicity) ? ethnicity : inferred.group;
+  const resolvedGender: Gender = isGender(gender) ? gender : inferred.gender;
+  const resolvedEthnicity: Ethnicity = isEthnicity(ethnicity) ? ethnicity : inferred.ethnicity;
 
   const coworker = await db.coworker.create({
     data: {
@@ -105,17 +105,4 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   return success({ coworker }, 201);
-}
-
-function isEthnicGroup(value: unknown): value is EthnicGroup {
-  return (
-    value === "east-asian" ||
-    value === "south-asian" ||
-    value === "southeast-asian" ||
-    value === "white" ||
-    value === "black" ||
-    value === "hispanic" ||
-    value === "middle-eastern" ||
-    value === "mixed"
-  );
 }

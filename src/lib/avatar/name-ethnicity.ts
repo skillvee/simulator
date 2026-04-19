@@ -6,55 +6,55 @@
  * from the static avatar pool (public/avatars/pool/).
  */
 
-export type EthnicGroup =
-  | "east-asian"
-  | "south-asian"
-  | "southeast-asian"
+export type Ethnicity =
+  | "east_asian"
+  | "south_asian"
+  | "southeast_asian"
   | "white"
   | "black"
   | "hispanic"
-  | "middle-eastern"
+  | "middle_eastern"
   | "mixed";
 
 export type Gender = "male" | "female";
 
 export interface Demographics {
-  group: EthnicGroup;
+  ethnicity: Ethnicity;
   gender: Gender;
 }
 
 // First name → likely ethnicity mapping
 // Lowercase keys for case-insensitive lookup
-const ETHNICITY_MAP: Record<string, EthnicGroup> = {
+const ETHNICITY_MAP: Record<string, Ethnicity> = {
   // East Asian
-  mei: "east-asian", lin: "east-asian", chen: "east-asian", wei: "east-asian",
-  zhang: "east-asian", wang: "east-asian", li: "east-asian", liu: "east-asian",
-  yuki: "east-asian", hiroshi: "east-asian", kenji: "east-asian", akiko: "east-asian",
-  takeshi: "east-asian", haruki: "east-asian", naomi: "east-asian", yumi: "east-asian",
-  jisoo: "east-asian", hyun: "east-asian", soo: "east-asian", minjun: "east-asian",
-  hana: "east-asian", jun: "east-asian", sato: "east-asian", tanaka: "east-asian",
-  park: "east-asian", kim: "east-asian", wong: "east-asian", chang: "east-asian",
-  huang: "east-asian", zhao: "east-asian", yang: "east-asian", wu: "east-asian",
-  xu: "east-asian", sun: "east-asian", guo: "east-asian", he: "east-asian",
-  liang: "east-asian", xiao: "east-asian", cheng: "east-asian", deng: "east-asian",
+  mei: "east_asian", lin: "east_asian", chen: "east_asian", wei: "east_asian",
+  zhang: "east_asian", wang: "east_asian", li: "east_asian", liu: "east_asian",
+  yuki: "east_asian", hiroshi: "east_asian", kenji: "east_asian", akiko: "east_asian",
+  takeshi: "east_asian", haruki: "east_asian", naomi: "east_asian", yumi: "east_asian",
+  jisoo: "east_asian", hyun: "east_asian", soo: "east_asian", minjun: "east_asian",
+  hana: "east_asian", jun: "east_asian", sato: "east_asian", tanaka: "east_asian",
+  park: "east_asian", kim: "east_asian", wong: "east_asian", chang: "east_asian",
+  huang: "east_asian", zhao: "east_asian", yang: "east_asian", wu: "east_asian",
+  xu: "east_asian", sun: "east_asian", guo: "east_asian", he: "east_asian",
+  liang: "east_asian", xiao: "east_asian", cheng: "east_asian", deng: "east_asian",
 
   // South Asian
-  priya: "south-asian", arjun: "south-asian", sharma: "south-asian", patel: "south-asian",
-  kumar: "south-asian", singh: "south-asian", mehta: "south-asian", gupta: "south-asian",
-  ananya: "south-asian", deepika: "south-asian", kavya: "south-asian", nisha: "south-asian",
-  rahul: "south-asian", vikram: "south-asian", sanjay: "south-asian", amit: "south-asian",
-  ravi: "south-asian", suresh: "south-asian", anil: "south-asian", prakash: "south-asian",
-  reddy: "south-asian", verma: "south-asian", krishnan: "south-asian", desai: "south-asian",
-  aditya: "south-asian", varun: "south-asian", rohan: "south-asian", neha: "south-asian",
-  pooja: "south-asian", shreya: "south-asian", divya: "south-asian", anjali: "south-asian",
+  priya: "south_asian", arjun: "south_asian", sharma: "south_asian", patel: "south_asian",
+  kumar: "south_asian", singh: "south_asian", mehta: "south_asian", gupta: "south_asian",
+  ananya: "south_asian", deepika: "south_asian", kavya: "south_asian", nisha: "south_asian",
+  rahul: "south_asian", vikram: "south_asian", sanjay: "south_asian", amit: "south_asian",
+  ravi: "south_asian", suresh: "south_asian", anil: "south_asian", prakash: "south_asian",
+  reddy: "south_asian", verma: "south_asian", krishnan: "south_asian", desai: "south_asian",
+  aditya: "south_asian", varun: "south_asian", rohan: "south_asian", neha: "south_asian",
+  pooja: "south_asian", shreya: "south_asian", divya: "south_asian", anjali: "south_asian",
 
   // Southeast Asian
-  linh: "southeast-asian", nguyen: "southeast-asian", tran: "southeast-asian",
-  pham: "southeast-asian", minh: "southeast-asian", duc: "southeast-asian",
-  santos: "southeast-asian", reyes: "southeast-asian", cruz: "southeast-asian",
-  budi: "southeast-asian", siti: "southeast-asian", hartono: "southeast-asian",
-  putri: "southeast-asian", dewi: "southeast-asian", rizal: "southeast-asian",
-  ramon: "southeast-asian", leilani: "southeast-asian",
+  linh: "southeast_asian", nguyen: "southeast_asian", tran: "southeast_asian",
+  pham: "southeast_asian", minh: "southeast_asian", duc: "southeast_asian",
+  santos: "southeast_asian", reyes: "southeast_asian", cruz: "southeast_asian",
+  budi: "southeast_asian", siti: "southeast_asian", hartono: "southeast_asian",
+  putri: "southeast_asian", dewi: "southeast_asian", rizal: "southeast_asian",
+  ramon: "southeast_asian", leilani: "southeast_asian",
 
   // White/European
   emma: "white", james: "white", claire: "white", hannah: "white", rachel: "white",
@@ -106,14 +106,14 @@ const ETHNICITY_MAP: Record<string, EthnicGroup> = {
   mercedes: "hispanic", guadalupe: "hispanic", ximena: "hispanic", regina: "hispanic",
 
   // Middle Eastern
-  fatima: "middle-eastern", leila: "middle-eastern", noor: "middle-eastern",
-  sara_k: "middle-eastern", yasmin: "middle-eastern", omar: "middle-eastern",
-  ali: "middle-eastern", karim: "middle-eastern", tariq: "middle-eastern",
-  rami: "middle-eastern", hassan: "middle-eastern", rashid: "middle-eastern",
-  abbasi: "middle-eastern", khoury: "middle-eastern", ibrahim: "middle-eastern",
-  mansour: "middle-eastern", tehrani: "middle-eastern", farah: "middle-eastern",
-  ahmed: "middle-eastern", mohammed: "middle-eastern", youssef: "middle-eastern",
-  layla: "middle-eastern", maryam: "middle-eastern", amira: "middle-eastern",
+  fatima: "middle_eastern", leila: "middle_eastern", noor: "middle_eastern",
+  sara_k: "middle_eastern", yasmin: "middle_eastern", omar: "middle_eastern",
+  ali: "middle_eastern", karim: "middle_eastern", tariq: "middle_eastern",
+  rami: "middle_eastern", hassan: "middle_eastern", rashid: "middle_eastern",
+  abbasi: "middle_eastern", khoury: "middle_eastern", ibrahim: "middle_eastern",
+  mansour: "middle_eastern", tehrani: "middle_eastern", farah: "middle_eastern",
+  ahmed: "middle_eastern", mohammed: "middle_eastern", youssef: "middle_eastern",
+  layla: "middle_eastern", maryam: "middle_eastern", amira: "middle_eastern",
 };
 
 // First name → likely gender mapping
@@ -177,7 +177,7 @@ export function inferDemographics(fullName: string): Demographics {
   const lastName = parts[parts.length - 1] || "";
 
   // Try first name, then last name for ethnicity
-  const group: EthnicGroup = ETHNICITY_MAP[firstName] || ETHNICITY_MAP[lastName] || "mixed";
+  const ethnicity: Ethnicity = ETHNICITY_MAP[firstName] || ETHNICITY_MAP[lastName] || "mixed";
 
   // Infer gender from first name
   let gender: Gender;
@@ -190,26 +190,26 @@ export function inferDemographics(fullName: string): Demographics {
     gender = hashName(fullName) % 2 === 0 ? "female" : "male";
   }
 
-  return { group, gender };
+  return { ethnicity, gender };
 }
 
 // All people in the avatar pool, organized by group + gender
 // These must match the filenames generated by scripts/generate-avatar-pool.ts
 const AVATAR_POOL: Record<string, string[]> = {
-  "east-asian-female": ["mei-lin", "yuki-tanaka", "jisoo-park", "sarah-chen", "hana-kim"],
-  "east-asian-male": ["wei-zhang", "kevin-wong", "hiroshi-sato", "david-liu", "jun-park"],
-  "south-asian-female": ["priya-sharma", "ananya-patel", "deepika-gupta", "kavya-reddy", "nisha-kumar"],
-  "south-asian-male": ["arjun-mehta", "rahul-verma", "vikram-singh", "sanjay-krishnan", "amit-desai"],
-  "southeast-asian-female": ["linh-nguyen", "grace-santos", "nina-tran", "maya-reyes", "siti-rahman"],
-  "southeast-asian-male": ["minh-pham", "rafael-cruz", "duc-le", "jay-santos", "budi-hartono"],
+  "east_asian-female": ["mei-lin", "yuki-tanaka", "jisoo-park", "sarah-chen", "hana-kim"],
+  "east_asian-male": ["wei-zhang", "kevin-wong", "hiroshi-sato", "david-liu", "jun-park"],
+  "south_asian-female": ["priya-sharma", "ananya-patel", "deepika-gupta", "kavya-reddy", "nisha-kumar"],
+  "south_asian-male": ["arjun-mehta", "rahul-verma", "vikram-singh", "sanjay-krishnan", "amit-desai"],
+  "southeast_asian-female": ["linh-nguyen", "grace-santos", "nina-tran", "maya-reyes", "siti-rahman"],
+  "southeast_asian-male": ["minh-pham", "rafael-cruz", "duc-le", "jay-santos", "budi-hartono"],
   "white-female": ["emma-johnson", "sofia-andersson", "claire-dubois", "hannah-mueller", "rachel-thompson"],
   "white-male": ["james-obrien", "alex-rivera", "daniel-kowalski", "ryan-campbell", "luca-moretti"],
   "black-female": ["aisha-johnson", "zara-okafor", "maya-williams", "imani-brooks", "thandiwe-nkosi"],
   "black-male": ["marcus-thompson", "derek-washington", "kwame-asante", "jordan-davis", "emeka-obi"],
   "hispanic-female": ["sofia-rodriguez", "camila-morales", "valentina-garcia", "lucia-fernandez", "isabella-torres"],
   "hispanic-male": ["carlos-mendez", "diego-vargas", "miguel-santos", "andres-gutierrez", "pablo-reyes"],
-  "middle-eastern-female": ["fatima-al-rashid", "leila-hassan", "noor-abbasi", "sara-khoury", "yasmin-farah"],
-  "middle-eastern-male": ["omar-hassan", "ali-tehrani", "karim-mansour", "tariq-ibrahim", "rami-khoury"],
+  "middle_eastern-female": ["fatima-al-rashid", "leila-hassan", "noor-abbasi", "sara-khoury", "yasmin-farah"],
+  "middle_eastern-male": ["omar-hassan", "ali-tehrani", "karim-mansour", "tariq-ibrahim", "rami-khoury"],
   // Mixed avatars reuse existing pool files (mixed-specific avatars were never generated)
   "mixed-female": ["emma-johnson", "grace-santos", "maya-williams", "rachel-thompson", "aisha-johnson"],
   "mixed-male": ["alex-rivera", "jordan-davis", "rafael-cruz", "daniel-kowalski", "carlos-mendez"],
@@ -226,12 +226,12 @@ const AVATAR_POOL: Record<string, string[]> = {
  */
 export function getPoolAvatarPath(
   fullName: string,
-  overrides?: { gender?: Gender | null; ethnicity?: EthnicGroup | null }
+  overrides?: { gender?: Gender | null; ethnicity?: Ethnicity | null }
 ): string {
   const inferred = inferDemographics(fullName);
-  const group: EthnicGroup = overrides?.ethnicity ?? inferred.group;
+  const ethnicity: Ethnicity = overrides?.ethnicity ?? inferred.ethnicity;
   const gender: Gender = overrides?.gender ?? inferred.gender;
-  const key = `${group}-${gender}`;
+  const key = `${ethnicity}-${gender}`;
   const pool = AVATAR_POOL[key];
 
   if (!pool || pool.length === 0) {
@@ -244,15 +244,23 @@ export function getPoolAvatarPath(
   return `/avatars/pool/${pool[index]}.jpg`;
 }
 
-export const ETHNIC_GROUPS: readonly EthnicGroup[] = [
-  "east-asian",
-  "south-asian",
-  "southeast-asian",
+export const ETHNICITIES: readonly Ethnicity[] = [
+  "east_asian",
+  "south_asian",
+  "southeast_asian",
   "white",
   "black",
   "hispanic",
-  "middle-eastern",
+  "middle_eastern",
   "mixed",
 ] as const;
 
 export const GENDERS: readonly Gender[] = ["male", "female"] as const;
+
+export function isEthnicity(value: unknown): value is Ethnicity {
+  return typeof value === "string" && (ETHNICITIES as readonly string[]).includes(value);
+}
+
+export function isGender(value: unknown): value is Gender {
+  return value === "male" || value === "female";
+}

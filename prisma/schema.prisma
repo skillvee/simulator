@@ -107,8 +107,8 @@ model Coworker {
   voiceName     String?
   personality   Json?
   language      String         @default("en")
-  gender        String?
-  ethnicity     String?
+  gender        CoworkerGender?
+  ethnicity     CoworkerEthnicity?
   conversations Conversation[]
   scenario      Scenario       @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
@@ -603,6 +603,22 @@ enum SimulationCreationStatus {
 enum AssessmentFeedbackRating {
   LIKE
   DISLIKE
+}
+
+enum CoworkerGender {
+  male
+  female
+}
+
+enum CoworkerEthnicity {
+  east_asian
+  south_asian
+  southeast_asian
+  white
+  black
+  hispanic
+  middle_eastern
+  mixed
 }
 
 enum ClientErrorType {

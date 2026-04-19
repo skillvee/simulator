@@ -95,13 +95,13 @@ export interface CoworkerPersona {
   gender?: "male" | "female" | null;
   /** Ethnic group — used to pick a matching avatar pool */
   ethnicity?:
-    | "east-asian"
-    | "south-asian"
-    | "southeast-asian"
+    | "east_asian"
+    | "south_asian"
+    | "southeast_asian"
     | "white"
     | "black"
     | "hispanic"
-    | "middle-eastern"
+    | "middle_eastern"
     | "mixed"
     | null;
 }

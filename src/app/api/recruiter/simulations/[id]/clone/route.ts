@@ -158,7 +158,7 @@ export async function POST(request: Request, context: RouteContext) {
         data: coworkerResult.coworkers.map((coworker) => {
           const inferred = inferDemographics(coworker.name);
           const gender = coworker.gender ?? inferred.gender;
-          const ethnicity = coworker.ethnicity ?? inferred.group;
+          const ethnicity = coworker.ethnicity ?? inferred.ethnicity;
           return {
             scenarioId: newScenario.id,
             name: coworker.name,
