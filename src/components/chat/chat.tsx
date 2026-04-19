@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useManagerAutoStart } from "@/hooks";
 import { playMessageSound, markUserInteraction } from "@/lib/sounds";
 import type { ChatMessage, MessageReaction } from "@/types";
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
 
 const logger = createLogger("client:chat:chat");
 
@@ -24,6 +25,8 @@ interface Coworker {
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: Gender | null;
+  ethnicity?: Ethnicity | null;
 }
 
 interface ChatProps {
@@ -566,6 +569,8 @@ export function Chat({
                     <CoworkerAvatar
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
+                      gender={coworker.gender}
+                      ethnicity={coworker.ethnicity}
                       size="md"
                       className="mt-1 shadow-sm border border-border"
                     />
@@ -580,6 +585,8 @@ export function Chat({
                     <CoworkerAvatar
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
+                      gender={coworker.gender}
+                      ethnicity={coworker.ethnicity}
                       size="lg"
                       className="shadow-md border border-border"
                     />
@@ -609,6 +616,8 @@ export function Chat({
                         <CoworkerAvatar
                           name={coworker.name}
                           avatarUrl={coworker.avatarUrl}
+                          gender={coworker.gender}
+                          ethnicity={coworker.ethnicity}
                           size="md"
                           className="mt-1 shadow-sm border border-border"
                         />
@@ -674,6 +683,8 @@ export function Chat({
                     <CoworkerAvatar
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
+                      gender={coworker.gender}
+                      ethnicity={coworker.ethnicity}
                       size="md"
                       className="mt-1 shadow-sm border [border-color:hsl(var(--slack-border))]"
                     />

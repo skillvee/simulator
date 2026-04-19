@@ -2,11 +2,15 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { getPoolAvatarPath } from "@/lib/avatar/name-ethnicity";
+import { getPoolAvatarPath, type Gender, type Ethnicity } from "@/lib/avatar/name-ethnicity";
 
 interface CoworkerAvatarProps {
   name: string;
   avatarUrl?: string | null;
+  /** Explicit gender from the coworker record — overrides name-based inference. */
+  gender?: Gender | null;
+  /** Explicit ethnicity from the coworker record — overrides name-based inference. */
+  ethnicity?: Ethnicity | null;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
@@ -16,12 +20,14 @@ interface CoworkerAvatarProps {
  *
  * Priority:
  * 1. Explicit avatarUrl (from DB, e.g. Supabase signed URL)
- * 2. Static pool photo matched by name demographics (public/avatars/pool/)
+ * 2. Static pool photo — uses explicit gender/ethnicity when available, else infers from name
  * 3. Initials fallback
  */
 export function CoworkerAvatar({
   name,
   avatarUrl,
+  gender,
+  ethnicity,
   size = "md",
   className = "",
 }: CoworkerAvatarProps) {
@@ -32,10 +38,8 @@ export function CoworkerAvatar({
     xl: "h-32 w-32",
   };
 
-  // Use explicit avatar URL if set, otherwise pick from the static pool by name
-  const imageUrl = avatarUrl || getPoolAvatarPath(name);
+  const imageUrl = avatarUrl || getPoolAvatarPath(name, { gender, ethnicity });
 
-  // Get initials for fallback
   const initials = name
     .split(" ")
     .map((part) => part[0])

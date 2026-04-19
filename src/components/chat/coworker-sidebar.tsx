@@ -2,6 +2,7 @@
 
 import { Headphones } from "lucide-react";
 import { DECORATIVE_TEAM_MEMBERS, getInitials } from "@/lib/ai";
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
 import { CoworkerAvatar } from "./coworker-avatar";
 
 interface Coworker {
@@ -9,6 +10,8 @@ interface Coworker {
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: Gender | null;
+  ethnicity?: Ethnicity | null;
 }
 
 interface CoworkerSidebarProps {
@@ -91,6 +94,8 @@ function CoworkerItem({
         <CoworkerAvatar
           name={coworker.name}
           avatarUrl={coworker.avatarUrl}
+          gender={coworker.gender}
+          ethnicity={coworker.ethnicity}
           size="sm"
           className="border-2 border-background shadow-sm"
         />

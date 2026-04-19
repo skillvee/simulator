@@ -38,11 +38,15 @@ export type CallState =
   | "error"
   | "ended";
 
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
+
 interface Coworker {
   id: string;
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: Gender | null;
+  ethnicity?: Ethnicity | null;
 }
 
 interface FloatingCallBarProps {
@@ -483,6 +487,8 @@ export function FloatingCallBar({
                 <CoworkerAvatar
                   name={coworker.name}
                   avatarUrl={coworker.avatarUrl}
+                  gender={coworker.gender}
+                  ethnicity={coworker.ethnicity}
                   size="md"
                   className="ring-2 [--tw-ring-color:hsl(var(--slack-bg-sidebar))]"
                 />
@@ -516,6 +522,8 @@ export function FloatingCallBar({
                   <CoworkerAvatar
                     name={coworker.name}
                     avatarUrl={coworker.avatarUrl}
+                    gender={coworker.gender}
+                    ethnicity={coworker.ethnicity}
                     size="md"
                     className={`ring-2 [--tw-ring-color:hsl(var(--slack-bg-sidebar))] [--tw-ring-offset-color:hsl(var(--slack-bg-surface))] ${isSpeaking ? "ring-primary ring-offset-2" : ""}`}
                   />
@@ -574,7 +582,7 @@ export function FloatingCallBar({
         <div className="rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border/50 overflow-hidden" style={{background: "hsl(var(--slack-bg-surface))"}}>
           <div className="p-4">
             <div className="flex items-center gap-3">
-              <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
+              <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} gender={coworker.gender} ethnicity={coworker.ethnicity} size="md" />
               <div>
                 <p className="text-sm font-bold" style={{color: "hsl(var(--slack-text))"}}>Call ended</p>
                 <p className="text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>Saving conversation...</p>

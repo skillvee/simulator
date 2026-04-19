@@ -43,6 +43,7 @@ import {
   FolderOpen,
 } from "lucide-react";
 import type { ScenarioResource } from "@/types";
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
 import { LEVEL_EXPECTATIONS, type TargetLevel } from "@/lib/rubric/level-expectations";
 import { LANGUAGES } from "@/lib/core/language";
@@ -67,6 +68,8 @@ interface Coworker {
   role: string;
   voiceName: string | null;
   avatarUrl: string | null;
+  gender: Gender | null;
+  ethnicity: Ethnicity | null;
 }
 
 interface ScenarioData {
@@ -580,7 +583,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                   key={coworker.id}
                   className="flex items-center gap-4 p-4 rounded-lg bg-stone-50 border border-stone-100"
                 >
-                  <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
+                  <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} gender={coworker.gender} ethnicity={coworker.ethnicity} size="md" />
                   <div className="flex-1">
                     <p className="font-medium text-stone-900">{coworker.name}</p>
                     <div className="flex items-center gap-3 mt-1 text-sm text-stone-500">

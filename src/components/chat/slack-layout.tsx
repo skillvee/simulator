@@ -48,11 +48,15 @@ function getCurrentStatus(
   };
 }
 
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
+
 interface Coworker {
   id: string;
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: Gender | null;
+  ethnicity?: Ethnicity | null;
 }
 
 // Context for managing call state across the layout
@@ -638,6 +642,8 @@ function CoworkerItem({
           <CoworkerAvatar
             name={coworker.name}
             avatarUrl={coworker.avatarUrl}
+            gender={coworker.gender}
+            ethnicity={coworker.ethnicity}
             size="sm"
             className="shadow-sm"
           />

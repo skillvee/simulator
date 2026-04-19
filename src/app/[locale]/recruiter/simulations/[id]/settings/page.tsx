@@ -37,6 +37,8 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
           role: true,
           voiceName: true,
           avatarUrl: true,
+          gender: true,
+          ethnicity: true,
         },
         orderBy: { createdAt: "asc" },
       },

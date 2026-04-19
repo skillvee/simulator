@@ -17,6 +17,7 @@ import { createLogger } from "@/lib/core";
 import { ASSESSMENT_DURATION_MS } from "@/lib/core/assessment-timer";
 import type { ChatMessage, ScenarioResource } from "@/types";
 import type { ChannelMessage } from "@/lib/ai/coworker-persona";
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
 import { isManager } from "@/lib/utils/coworker";
 import { SubmitWorkModal } from "@/components/chat/submit-work-modal";
 import { PostDefenseModal } from "@/components/chat/post-defense-modal";
@@ -29,6 +30,8 @@ interface Coworker {
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: Gender | null;
+  ethnicity?: Ethnicity | null;
 }
 
 interface WorkPageClientProps {
