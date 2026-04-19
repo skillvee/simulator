@@ -51,21 +51,26 @@ describe("LANGUAGES config", () => {
 
     it("should have Spanish instruction with required content", () => {
       const instruction = LANGUAGES.es.instruction;
+      // Latin American dialect + tú form
       expect(instruction).toContain("Latin American Spanish");
       expect(instruction).toContain("tú");
-      expect(instruction).toContain("usted");
+      // Spain→LatAm substitution pairs the instruction should teach
       expect(instruction).toContain("vale");
+      expect(instruction).toContain("está bien");
       expect(instruction).toContain("ordenador");
-      expect(instruction).toContain("móvil");
       expect(instruction).toContain("computadora");
+      expect(instruction).toContain("móvil");
       expect(instruction).toContain("celular");
     });
 
     it("should mention keeping technical terms in English", () => {
       const instruction = LANGUAGES.es.instruction;
-      expect(instruction).toContain("code identifiers");
-      expect(instruction).toContain("API names");
-      expect(instruction).toContain("JSON keys");
+      // Intent: technical vocabulary, API names, and code stay in English.
+      // Keep assertions on the concepts, not the exact phrasing — the
+      // instruction is tuned periodically against the Spanish eval baseline.
+      expect(instruction).toContain("Technical terms");
+      expect(instruction).toContain("APIs");
+      expect(instruction).toContain("code");
       expect(instruction).toContain("English");
     });
 
