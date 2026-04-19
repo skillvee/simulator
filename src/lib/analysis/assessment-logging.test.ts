@@ -202,22 +202,29 @@ describe("logVideoAssessmentApiCall", () => {
   });
 
   it("should calculate durationMs between request and response", async () => {
-    const apiCall = await logVideoAssessmentApiCall({
-      videoAssessmentId: "assessment-1",
-      promptText: "Test prompt",
-      modelVersion: "gemini-3-pro-preview",
-    });
+    const startTime = new Date("2024-01-01T00:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(startTime);
 
-    // Wait a bit before completing
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    try {
+      const apiCall = await logVideoAssessmentApiCall({
+        videoAssessmentId: "assessment-1",
+        promptText: "Test prompt",
+        modelVersion: "gemini-3-pro-preview",
+      });
 
-    await apiCall.updateWithResponse({
-      responseText: "Response",
-      statusCode: 200,
-    });
+      vi.setSystemTime(new Date(startTime.getTime() + 50));
 
-    const updateCall = mockVideoAssessmentApiCallUpdate.mock.calls[0][0];
-    expect(updateCall.data.durationMs).toBeGreaterThanOrEqual(50);
+      await apiCall.updateWithResponse({
+        responseText: "Response",
+        statusCode: 200,
+      });
+
+      const updateCall = mockVideoAssessmentApiCallUpdate.mock.calls[0][0];
+      expect(updateCall.data.durationMs).toBe(50);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -254,26 +261,29 @@ describe("createVideoAssessmentLogger", () => {
   });
 
   it("should automatically calculate duration between events", async () => {
-    const logger = createVideoAssessmentLogger("assessment-1");
+    const startTime = new Date("2024-01-01T00:00:00.000Z");
+    vi.useFakeTimers();
+    vi.setSystemTime(startTime);
 
-    // First event
-    await logger.logEvent(AssessmentLogEventType.STARTED);
+    try {
+      const logger = createVideoAssessmentLogger("assessment-1");
 
-    // Wait a bit
-    await new Promise((resolve) => setTimeout(resolve, 50));
+      await logger.logEvent(AssessmentLogEventType.STARTED);
 
-    // Second event
-    await logger.logEvent(AssessmentLogEventType.PROMPT_SENT);
+      vi.setSystemTime(new Date(startTime.getTime() + 50));
 
-    // First event should have no duration
-    expect(
-      mockVideoAssessmentLogCreate.mock.calls[0][0].data.durationMs
-    ).toBeNull();
+      await logger.logEvent(AssessmentLogEventType.PROMPT_SENT);
 
-    // Second event should have duration >= 50ms
-    expect(
-      mockVideoAssessmentLogCreate.mock.calls[1][0].data.durationMs
-    ).toBeGreaterThanOrEqual(50);
+      expect(
+        mockVideoAssessmentLogCreate.mock.calls[0][0].data.durationMs
+      ).toBeNull();
+
+      expect(
+        mockVideoAssessmentLogCreate.mock.calls[1][0].data.durationMs
+      ).toBe(50);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("should track last event timestamp", async () => {
