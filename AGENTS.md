@@ -64,6 +64,7 @@ These look unusual but are correct by design:
 - Minor naming preferences.
 - Missing JSDoc or docstrings.
 - Suggestions to add comments that restate the code.
+- Micro-optimizations in non-hot paths — don't suggest map-vs-for rewrites, premature memoization, or similar unless there's real user-visible impact.
 
 ## Severity
 
