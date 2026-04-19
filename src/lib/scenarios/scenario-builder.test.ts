@@ -49,6 +49,7 @@ describe("getCompletionStatus", () => {
       coworkers: [
         {
           name: "Alex",
+          gender: "male",
           role: "Manager",
           personaStyle: "Professional",
           knowledge: [
@@ -78,6 +79,7 @@ describe("getCompletionStatus", () => {
       coworkers: [
         {
           name: "Alex",
+          gender: "male",
           role: "Manager",
           personaStyle: "Professional",
           knowledge: [], // Empty knowledge
@@ -120,6 +122,7 @@ describe("formatScenarioForPrompt", () => {
       coworkers: [
         {
           name: "Alex Chen",
+          gender: "male",
           role: "Manager",
           personaStyle: "Professional",
           knowledge: [
@@ -290,6 +293,7 @@ describe("applyExtraction", () => {
       coworkers: [
         {
           name: "Existing",
+          gender: "female",
           role: "Dev",
           personaStyle: "Casual",
           knowledge: [],
@@ -299,6 +303,7 @@ describe("applyExtraction", () => {
     const extraction = {
       newCoworker: {
         name: "New Coworker",
+        gender: "female" as const,
         role: "Manager",
         personaStyle: "Professional",
         knowledge: [],
@@ -316,6 +321,7 @@ describe("applyExtraction", () => {
       coworkers: [
         {
           name: "Jordan",
+          gender: "female",
           role: "Dev",
           personaStyle: "Technical",
           knowledge: [],
@@ -345,6 +351,7 @@ describe("applyExtraction", () => {
       coworkers: [
         {
           name: "Alex",
+          gender: "male",
           role: "Manager",
           personaStyle: "Professional",
           knowledge: [
@@ -358,6 +365,7 @@ describe("applyExtraction", () => {
         },
         {
           name: "Jordan",
+          gender: "female",
           role: "Dev",
           personaStyle: "Technical",
           knowledge: [],
@@ -387,6 +395,7 @@ describe("applyExtraction", () => {
     const extraction = {
       newCoworker: {
         name: "First Coworker",
+        gender: "female" as const,
         role: "Manager",
         personaStyle: "Professional",
         knowledge: [],
@@ -404,12 +413,14 @@ describe("applyExtraction", () => {
       coworkers: [
         {
           name: "Sarah Jenkins",
+          gender: "female",
           role: "Developer",
           personaStyle: "Friendly",
           knowledge: [],
         },
         {
           name: "Marcus Thorne",
+          gender: "female",
           role: "Manager",
           personaStyle: "Professional",
           knowledge: [],
@@ -419,6 +430,7 @@ describe("applyExtraction", () => {
     const extraction = {
       newCoworker: {
         name: "Sarah Jenkins",
+        gender: "female" as const,
         role: "Senior Developer",
         personaStyle: "Technical and detail-oriented",
         knowledge: [
@@ -471,6 +483,7 @@ describe("formatCurrentStateForPrompt", () => {
       coworkers: [
         {
           name: "Alex",
+          gender: "male",
           role: "Manager",
           personaStyle: "Professional",
           knowledge: [

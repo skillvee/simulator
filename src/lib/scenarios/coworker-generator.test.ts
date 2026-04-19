@@ -38,6 +38,7 @@ describe("generateCoworkers", () => {
   const mockCoworkers: CoworkerBuilderData[] = [
     {
       name: "Jordan Kim",
+      gender: "female",
       role: "Engineering Manager",
       personaStyle:
         "Warm and supportive but busy. Gives high-level guidance and encourages autonomy. Responds with voice memos on Slack. Trusts the team to figure out details.",
@@ -60,6 +61,7 @@ describe("generateCoworkers", () => {
     },
     {
       name: "Aisha Patel",
+      gender: "female",
       role: "Senior Full-Stack Engineer",
       personaStyle:
         "Direct and technical. Prefers bullet points. Responds quickly but briefly. Uses emoji reactions. Won't hand-hold but will unblock you if stuck.",
@@ -208,6 +210,7 @@ describe("generateCoworkers", () => {
     const noManager = [
       {
         name: "Alice Johnson",
+        gender: "female",
         role: "Senior Developer",
         personaStyle: "Technical and detailed",
         knowledge: [
@@ -227,6 +230,7 @@ describe("generateCoworkers", () => {
       },
       {
         name: "Bob Smith",
+        gender: "male",
         role: "Product Manager",
         personaStyle: "User-focused",
         knowledge: [
@@ -262,6 +266,7 @@ describe("generateCoworkers", () => {
     const noManager = [
       {
         name: "Alice Johnson",
+        gender: "female",
         role: "Senior Developer",
         personaStyle: "Technical and detailed",
         knowledge: [
@@ -281,6 +286,7 @@ describe("generateCoworkers", () => {
       },
       {
         name: "Bob Smith",
+        gender: "male",
         role: "Product Manager",
         personaStyle: "User-focused",
         knowledge: [
@@ -316,6 +322,7 @@ describe("generateCoworkers", () => {
     const insufficientCritical = [
       {
         name: "Jordan Kim",
+        gender: "female",
         role: "Engineering Manager",
         personaStyle: "Supportive",
         knowledge: [
@@ -335,6 +342,7 @@ describe("generateCoworkers", () => {
       },
       {
         name: "Aisha Patel",
+        gender: "female",
         role: "Senior Engineer",
         personaStyle: "Direct",
         knowledge: [
@@ -374,6 +382,7 @@ describe("generateCoworkers", () => {
       ...mockCoworkers,
       {
         name: "Carlos Martinez",
+        gender: "male",
         role: "DevOps Engineer",
         personaStyle: "Practical and solution-oriented",
         knowledge: [
@@ -407,6 +416,7 @@ describe("generateCoworkers", () => {
     const spanishCoworkers: CoworkerBuilderData[] = [
       {
         name: "María García",
+        gender: "female",
         role: "Engineering Manager",  // Keep role in English to pass validation
         personaStyle: "Cálida y solidaria pero ocupada. Da orientación de alto nivel.",
         knowledge: [
@@ -426,6 +436,7 @@ describe("generateCoworkers", () => {
       },
       {
         name: "Carlos Rodríguez",
+        gender: "male",
         role: "Ingeniero Senior",
         personaStyle: "Directo y técnico. Prefiere puntos concretos.",
         knowledge: [

@@ -1461,7 +1461,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                       <div className="mt-1 flex items-center gap-1.5">
                         <div className="flex -space-x-1.5">
                           {previewData.coworkers.map((c, i) => (
-                            <CoworkerAvatar key={i} name={c.name} size="sm" className="ring-2 ring-background" />
+                            <CoworkerAvatar key={i} name={c.name} gender={c.gender} size="sm" className="ring-2 ring-background" />
                           ))}
                         </div>
                         <p className="truncate text-xs text-muted-foreground">
@@ -1483,7 +1483,7 @@ We're looking for an experienced frontend developer to join our team. You'll be 
                     {previewData.coworkers.map((coworker, index) => (
                       <div key={index} className="space-y-3 rounded-lg border p-4">
                         <div className="flex items-center gap-3">
-                          <CoworkerAvatar name={coworker.name} size="md" />
+                          <CoworkerAvatar name={coworker.name} gender={coworker.gender} size="md" />
                           <div>
                             <p className="font-semibold">{coworker.name}</p>
                             <p className="text-sm text-muted-foreground">{coworker.role}</p>

@@ -55,6 +55,7 @@ export function IncomingCallModal({ coworker, onAccept, onDecline }: IncomingCal
           <CoworkerAvatar
             name={coworker.name}
             avatarUrl={coworker.avatarUrl}
+            gender={coworker.gender}
             size="lg"
             className="relative h-20 w-20 shadow-lg ring-4 ring-primary/30"
           />

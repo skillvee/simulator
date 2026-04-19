@@ -639,6 +639,7 @@ function CoworkerItem({
           <CoworkerAvatar
             name={coworker.name}
             avatarUrl={coworker.avatarUrl}
+            gender={coworker.gender}
             size="sm"
             className="shadow-sm"
           />

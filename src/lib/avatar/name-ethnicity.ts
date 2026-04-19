@@ -158,9 +158,6 @@ export function inferDemographics(
   let gender: Gender;
   if (explicitGender === "male" || explicitGender === "female") {
     gender = explicitGender;
-  } else if (explicitGender === "non-binary") {
-    // Pool only has male/female buckets — deterministically pick one for non-binary.
-    gender = hashName(fullName) % 2 === 0 ? "female" : "male";
   } else if (FEMALE_NAMES.has(firstName)) {
     gender = "female";
   } else if (MALE_NAMES.has(firstName)) {

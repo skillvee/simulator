@@ -63,9 +63,7 @@ function buildAvatarPrompt(coworker: CoworkerData): string {
       ? "a man"
       : coworker.gender === "female"
         ? "a woman"
-        : coworker.gender === "non-binary"
-          ? "a non-binary person"
-          : "a person";
+        : "a person";
 
   // Build the prompt — include gender AND name so Imagen produces a photo that
   // matches both the stated gender and the cultural background of the name.

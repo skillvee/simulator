@@ -7,6 +7,7 @@ describe("CandidateExperienceSummary", () => {
   const mockCoworkers: CoworkerBuilderData[] = [
     {
       name: "Jordan Kim",
+      gender: "female",
       role: "Engineering Manager",
       personaStyle: "Strategic and supportive, delegates details.",
       knowledge: [
@@ -26,6 +27,7 @@ describe("CandidateExperienceSummary", () => {
     },
     {
       name: "Alex Chen",
+      gender: "male",
       role: "Senior Backend Engineer",
       personaStyle: "Helpful and detail-oriented.",
       knowledge: [
@@ -45,6 +47,7 @@ describe("CandidateExperienceSummary", () => {
     },
     {
       name: "Sam Patel",
+      gender: "female",
       role: "Frontend Developer",
       personaStyle: "Energetic and collaborative.",
       knowledge: [
@@ -158,6 +161,7 @@ describe("CandidateExperienceSummary", () => {
     const singleCoworker: CoworkerBuilderData[] = [
       {
         name: "Chris Taylor",
+        gender: "female",
         role: "Senior Developer",
         personaStyle: "Helpful and friendly.",
         knowledge: [
@@ -214,6 +218,7 @@ describe("CandidateExperienceSummary", () => {
     const twoCoworkers: CoworkerBuilderData[] = [
       {
         name: "Manager One",
+        gender: "female",
         role: "Engineering Manager",
         personaStyle: "Strategic.",
         knowledge: [
@@ -233,6 +238,7 @@ describe("CandidateExperienceSummary", () => {
       },
       {
         name: "Developer One",
+        gender: "female",
         role: "Developer",
         personaStyle: "Helpful.",
         knowledge: [

@@ -567,6 +567,7 @@ export function Chat({
                     <CoworkerAvatar
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
+                      gender={coworker.gender}
                       size="md"
                       className="mt-1 shadow-sm border border-border"
                     />
@@ -581,6 +582,7 @@ export function Chat({
                     <CoworkerAvatar
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
+                      gender={coworker.gender}
                       size="lg"
                       className="shadow-md border border-border"
                     />
@@ -610,6 +612,7 @@ export function Chat({
                         <CoworkerAvatar
                           name={coworker.name}
                           avatarUrl={coworker.avatarUrl}
+                          gender={coworker.gender}
                           size="md"
                           className="mt-1 shadow-sm border border-border"
                         />
@@ -675,6 +678,7 @@ export function Chat({
                     <CoworkerAvatar
                       name={coworker.name}
                       avatarUrl={coworker.avatarUrl}
+                      gender={coworker.gender}
                       size="md"
                       className="mt-1 shadow-sm border [border-color:hsl(var(--slack-border))]"
                     />

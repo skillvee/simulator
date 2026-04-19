@@ -25,6 +25,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
   const mockCoworkers: CoworkerBuilderData[] = [
     {
       name: "Jordan Kim",
+      gender: "female",
       role: "Engineering Manager",
       personaStyle: "Warm and supportive but busy.",
       knowledge: [
@@ -44,6 +45,7 @@ describe("POST /api/recruiter/simulations/generate-coworkers", () => {
     },
     {
       name: "Aisha Patel",
+      gender: "female",
       role: "Senior Full-Stack Engineer",
       personaStyle: "Direct and technical.",
       knowledge: [

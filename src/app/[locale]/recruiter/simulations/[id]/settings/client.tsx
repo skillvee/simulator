@@ -66,6 +66,7 @@ interface Coworker {
   role: string;
   voiceName: string | null;
   avatarUrl: string | null;
+  gender: string | null;
 }
 
 interface ScenarioData {
@@ -576,7 +577,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
                   key={coworker.id}
                   className="flex items-center gap-4 p-4 rounded-lg bg-stone-50 border border-stone-100"
                 >
-                  <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} size="md" />
+                  <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} gender={coworker.gender} size="md" />
                   <div className="flex-1">
                     <p className="font-medium text-stone-900">{coworker.name}</p>
                     <div className="flex items-center gap-3 mt-1 text-sm text-stone-500">

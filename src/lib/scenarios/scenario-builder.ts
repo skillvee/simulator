@@ -37,7 +37,7 @@ export const coworkerPersonalitySchema = z.object({
  */
 export const coworkerBuilderSchema = z.object({
   name: z.string().min(1),
-  gender: z.enum(["male", "female", "non-binary"]).optional(),
+  gender: z.enum(["male", "female"]),
   role: z.string().min(1),
   personaStyle: z.string().min(1),
   personality: coworkerPersonalitySchema.optional(),
