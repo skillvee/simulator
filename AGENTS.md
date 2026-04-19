@@ -64,6 +64,8 @@ These look unusual but are correct by design:
 - Minor naming preferences.
 - Missing JSDoc or docstrings.
 - Suggestions to add comments that restate the code.
+- Types that TypeScript already infers — don't suggest adding explicit annotations for locals or return types unless the inference is actually wrong.
+- Missing translation keys in `src/messages/es.json` or `en.json` — the separate `i18n-coverage` workflow handles this.
 
 ## Severity
 
