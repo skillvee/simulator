@@ -122,22 +122,28 @@ async function uploadRecordingData(
   }
 }
 
-// Helper to manage recording sessions
+// Helper to manage recording sessions.
+//
+// Throws on failure instead of returning null so the caller can't silently
+// proceed into active-recording state with a missing segment id — that
+// masks the underlying failure and causes the next unrelated request to
+// look like the culprit.
 async function startRecordingSession(
   assessmentId: string
-): Promise<{ segmentId: string; segmentIndex: number } | null> {
-  try {
-    const response = await fetch("/api/recording/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assessmentId, action: "start" }),
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
-  } catch {
-    return null;
+): Promise<{ segmentId: string; segmentIndex: number }> {
+  const response = await fetch("/api/recording/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assessmentId, action: "start" }),
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `Failed to start recording session (HTTP ${response.status}): ${body || response.statusText}`
+    );
   }
+  const data = await response.json();
+  return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
 }
 
 async function interruptRecordingSession(
@@ -196,22 +202,25 @@ async function getSessionStatus(
   }
 }
 
-// Helper to start a fake recording session for E2E tests
+// Helper to start a fake recording session for E2E tests.
+// Same reasoning as startRecordingSession — throw so failures surface at
+// the call site instead of being silently swallowed.
 async function startFakeRecordingSession(
   assessmentId: string
-): Promise<{ segmentId: string; segmentIndex: number } | null> {
-  try {
-    const response = await fetch("/api/recording/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assessmentId, action: "start", testMode: true }),
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
-  } catch {
-    return null;
+): Promise<{ segmentId: string; segmentIndex: number }> {
+  const response = await fetch("/api/recording/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assessmentId, action: "start", testMode: true }),
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `Failed to start fake recording session (HTTP ${response.status}): ${body || response.statusText}`
+    );
   }
+  const data = await response.json();
+  return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
 }
 
 export function ScreenRecordingProvider({
@@ -455,15 +464,16 @@ export function ScreenRecordingProvider({
       // Initialize start time
       startTimeRef.current = Date.now();
 
-      // Start a new recording segment in the database
+      // Start a new recording segment in the database. If this throws, the
+      // outer catch will surface it as a recording error — we deliberately
+      // don't continue into active recording without a segment id, because
+      // subsequent uploads would be orphaned and the failure would look like
+      // it came from the next unrelated request (e.g. /api/call/token).
       const sessionResult = await startRecordingSession(assessmentId);
-      if (sessionResult) {
-        segmentIdRef.current = sessionResult.segmentId;
-        // Reset chunk index for the new segment
-        chunkIndexRef.current = 0;
-        setChunkCount(0);
-        setScreenshotCount(0);
-      }
+      segmentIdRef.current = sessionResult.segmentId;
+      chunkIndexRef.current = 0;
+      setChunkCount(0);
+      setScreenshotCount(0);
 
       // Step 4: Capture best webcam snapshot for profile photo (5 frames over 2s, picks sharpest)
       captureBestWebcamSnapshot(webcamMediaStream, 0.9)
@@ -603,16 +613,30 @@ export function ScreenRecordingProvider({
     return () => clearInterval(interval);
   }, [state, handleStreamStopped]);
 
-  // Load session status on mount (for persistence across page reloads/laptop close)
+  // Load session status on mount (for persistence across page reloads/laptop close).
+  // Guarded so React Strict Mode's dev-only double-invoke doesn't fire two
+  // concurrent POSTs to /api/recording/session — those race on the Recording
+  // row's FOR UPDATE lock and the second one crashes with a Prisma transaction
+  // timeout, which destabilized the dev server during adjacent /api/call/token
+  // requests and caused the first voice call to fail.
+  const sessionLoadStartedRef = useRef(false);
   useEffect(() => {
+    if (sessionLoadStartedRef.current) return;
+    sessionLoadStartedRef.current = true;
+
     async function loadSession() {
       // In E2E test mode or when screen recording is skipped, auto-start a fake recording session
       if (shouldSkipScreenRecording()) {
-        const sessionResult = await startFakeRecordingSession(assessmentId);
-        if (sessionResult) {
+        try {
+          const sessionResult = await startFakeRecordingSession(assessmentId);
           segmentIdRef.current = sessionResult.segmentId;
+        } catch (err) {
+          logger.error("Failed to start fake recording session", { err: String(err) });
+          setError(err instanceof Error ? err.message : "Failed to start fake recording session");
+          setState("error");
+          setSessionLoaded(true);
+          return;
         }
-        // Set state to recording so downstream code works as expected
         setState("recording");
         setPermissionState("granted");
         setWebcamState("active");
