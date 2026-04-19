@@ -540,6 +540,8 @@ export function ScreenRecordingProvider({
       sessionStorage.setItem(`screen-recording-${assessmentId}`, "active");
       return true;
     } catch (err) {
+      cleanup();
+
       const errorMessage =
         err instanceof Error ? err.message : "Failed to start screen recording";
 
