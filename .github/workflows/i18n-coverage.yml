@@ -50,13 +50,14 @@ jobs:
 
       - name: Start PostgreSQL
         run: |
+          # pgvector/pgvector ships the `vector` extension Prisma requires.
           docker run -d \
             --name postgres \
             -e POSTGRES_USER=test \
             -e POSTGRES_PASSWORD=test \
             -e POSTGRES_DB=testdb \
             -p 5432:5432 \
-            postgres:15
+            pgvector/pgvector:pg15
 
       - name: Wait for PostgreSQL
         run: |
@@ -68,6 +69,12 @@ jobs:
             echo "Waiting for PostgreSQL..."
             sleep 1
           done
+
+      - name: Prepare Supabase-compatible schemas
+        # The Prisma schema declares `uuid-ossp` in the `extensions` schema
+        # (Supabase convention). Create it before `db push` can CREATE EXTENSION there.
+        run: |
+          docker exec postgres psql -U test -d testdb -c "CREATE SCHEMA IF NOT EXISTS extensions;"
 
       - name: Run database migrations
         run: npx prisma db push --skip-generate
