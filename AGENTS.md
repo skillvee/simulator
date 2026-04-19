@@ -64,6 +64,7 @@ These look unusual but are correct by design:
 - Minor naming preferences.
 - Missing JSDoc or docstrings.
 - Suggestions to add comments that restate the code.
+- Swapping dependencies that are already in `package.json` — if something works, don't suggest replacing it.
 
 ## Severity
 
