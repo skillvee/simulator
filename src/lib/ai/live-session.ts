@@ -23,7 +23,7 @@ interface ConnectLiveAudioSessionOptions {
   token: string;
   callbacks: {
     onopen?: () => void;
-    onmessage?: (message: LiveServerMessage) => void;
+    onmessage: (message: LiveServerMessage) => void;
     onerror?: (event: ErrorEvent) => void;
     onclose?: () => void;
   };
