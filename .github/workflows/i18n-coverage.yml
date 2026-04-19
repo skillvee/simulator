@@ -42,6 +42,7 @@ jobs:
         run: |
           cp .env.example .env.local || touch .env.local
           echo "DATABASE_URL=postgresql://test:test@localhost:5432/testdb" >> .env.local
+          echo "DIRECT_URL=postgresql://test:test@localhost:5432/testdb" >> .env.local
           echo "NEXTAUTH_SECRET=test-secret-for-ci" >> .env.local
           echo "NEXTAUTH_URL=http://localhost:3000" >> .env.local
           echo "E2E_TEST_MODE=true" >> .env.local
@@ -70,19 +71,27 @@ jobs:
 
       - name: Run database migrations
         run: npx prisma db push --skip-generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+          DIRECT_URL: postgresql://test:test@localhost:5432/testdb
 
       - name: Seed test database
         run: npx tsx prisma/seed.ts
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+          DIRECT_URL: postgresql://test:test@localhost:5432/testdb
 
       - name: Build Next.js app
         run: npm run build
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+          DIRECT_URL: postgresql://test:test@localhost:5432/testdb
 
       - name: Run i18n coverage test
         run: npm run test:i18n
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+          DIRECT_URL: postgresql://test:test@localhost:5432/testdb
           NEXTAUTH_SECRET: test-secret-for-ci
           NEXTAUTH_URL: http://localhost:3000
 
