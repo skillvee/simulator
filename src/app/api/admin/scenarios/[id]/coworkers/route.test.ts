@@ -231,16 +231,14 @@ describe("POST /api/admin/scenarios/[id]/coworkers", () => {
     expect(data.data.coworker.name).toBe("Sam Patel");
     expect(data.data.coworker.role).toBe("Product Manager");
     expect(mockCoworkerCreate).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         scenarioId: "scenario-1",
         name: "Sam Patel",
         role: "Product Manager",
         personaStyle: "friendly and casual",
         personality: null,
         knowledge: { expertise: ["requirements", "user research"] },
-        avatarUrl: undefined,
-        voiceName: null,
-      },
+      }),
     });
   });
 

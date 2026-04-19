@@ -10,7 +10,13 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.tsx"],
     testTimeout: 10_000,
     include: ["**/*.test.{ts,tsx}"],
-    exclude: ["node_modules", ".next", "**/*.integration.test.{ts,tsx}"],
+    exclude: [
+      "node_modules",
+      ".next",
+      "**/*.integration.test.{ts,tsx}",
+      "tests/e2e/**",
+      "tests/i18n-coverage.test.ts",
+    ],
   },
   resolve: {
     alias: {

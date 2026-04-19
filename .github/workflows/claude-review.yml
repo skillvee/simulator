@@ -1,0 +1,57 @@
+name: Claude Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - '**.md'
+      - '**.lock'
+      - 'public/**'
+      - '.claude/**'
+
+concurrency:
+  group: claude-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: >
+      !github.event.pull_request.draft &&
+      !contains(github.event.pull_request.labels.*.name, 'WIP') &&
+      github.event.pull_request.changed_files < 40
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review the diff on this pull request from three distinct personas.
+            Post ONE review comment with three sections, one per persona.
+            Be specific: cite file paths and line numbers. Skip stylistic nits.
+            If a persona has nothing substantive to flag, say so in one line.
+
+            ## Persona 1 — Correctness Reviewer
+            Logic bugs, edge cases, race conditions, off-by-one errors,
+            incorrect error handling, broken invariants. Ignore style.
+
+            ## Persona 2 — Test Coverage Reviewer
+            Code paths added or changed without matching tests. Weak
+            assertions. Mocked dependencies that should be real (see
+            CLAUDE.md — don't mock the database in integration tests).
+
+            ## Persona 3 — Simplicity Reviewer
+            Overengineering, dead code, premature abstractions, comments
+            that restate the code, unused exports, backwards-compat shims
+            for code that doesn't need them. CLAUDE.md's "don't add
+            features beyond what the task requires" is the bar.
+
+            End with: "No blockers" OR "Blockers: <list>".
+          claude_args: "--max-turns 6 --model claude-sonnet-4-6"

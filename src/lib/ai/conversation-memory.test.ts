@@ -220,7 +220,7 @@ describe("conversation-memory", () => {
 
       const result = formatConversationTimeline(conversations);
 
-      expect(result).toContain("## Conversation History");
+      expect(result).toContain("## Past Conversations");
       expect(result).toContain("### Slack chat");
       expect(result).toContain("### Voice call");
       expect(result).toContain("Candidate: Hi!");

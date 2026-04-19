@@ -372,7 +372,7 @@ describe("POST /api/call/token", () => {
     // Verify Spanish instruction is included
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemInstruction: expect.stringContaining("Respond in neutral Latin American Spanish"),
+        systemInstruction: expect.stringContaining("Respond in natural Latin American Spanish"),
         language: "es", // Verify language parameter is passed
       })
     );

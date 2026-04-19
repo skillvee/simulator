@@ -88,6 +88,31 @@ vi.mock("@/auth", () => ({
 // ============================================================================
 
 /**
+ * Mock next-intl
+ *
+ * Provides a no-op translator so components that call `useTranslations`
+ * render outside a `NextIntlClientProvider`. Returns the key verbatim —
+ * tests asserting on translated strings should override this mock locally.
+ */
+vi.mock("next-intl", async () => {
+  const actual = await vi.importActual<typeof import("next-intl")>("next-intl");
+  return {
+    ...actual,
+    useTranslations: () => (key: string) => key,
+    useLocale: () => "en",
+    useFormatter: () => ({
+      dateTime: (v: Date) => v.toISOString(),
+      number: (v: number) => String(v),
+      relativeTime: () => "",
+      list: (items: string[]) => items.join(", "),
+    }),
+    useMessages: () => ({}),
+    useNow: () => new Date(),
+    useTimeZone: () => "UTC",
+  };
+});
+
+/**
  * Mock next/navigation
  *
  * Provides mock implementations for Next.js navigation hooks.
