@@ -190,6 +190,8 @@ export function ScenarioBuilderClient() {
                 role: coworker.role,
                 personaStyle: coworker.personaStyle,
                 knowledge: coworker.knowledge,
+                personality: coworker.personality,
+                gender: coworker.gender,
               }),
             }
           );

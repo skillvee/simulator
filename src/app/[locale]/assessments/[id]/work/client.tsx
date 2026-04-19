@@ -29,6 +29,7 @@ interface Coworker {
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: string | null;
 }
 
 interface WorkPageClientProps {

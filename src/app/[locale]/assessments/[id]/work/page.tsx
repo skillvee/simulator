@@ -61,6 +61,7 @@ export default async function WorkPage({
     name: c.name,
     role: c.role,
     avatarUrl: c.avatarUrl,
+    gender: c.gender,
   }));
 
   // Default to the manager so the candidate lands on their chat

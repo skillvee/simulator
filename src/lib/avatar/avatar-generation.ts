@@ -37,6 +37,7 @@ interface CoworkerData {
   name: string;
   role: string;
   personaStyle: string;
+  gender?: string | null;
 }
 
 interface GenerationResult {
@@ -55,9 +56,21 @@ function buildAvatarPrompt(coworker: CoworkerData): string {
   // Extract persona style hints for appearance
   const styleHints = extractStyleHints(coworker.personaStyle);
 
-  // Build the prompt — include name so Imagen infers appropriate ethnicity/appearance
-  const prompt = `Professional headshot photograph of a person named ${coworker.name}, who is a ${styleHints} ${coworker.role}.
-The person's appearance should be consistent with their name's cultural background.
+  // Gender descriptor — explicit so Imagen doesn't mis-infer from names like "Mateo"
+  // that are unambiguously male in Spanish but less clear cross-culturally.
+  const genderDescriptor =
+    coworker.gender === "male"
+      ? "a man"
+      : coworker.gender === "female"
+        ? "a woman"
+        : coworker.gender === "non-binary"
+          ? "a non-binary person"
+          : "a person";
+
+  // Build the prompt — include gender AND name so Imagen produces a photo that
+  // matches both the stated gender and the cultural background of the name.
+  const prompt = `Professional headshot photograph of ${genderDescriptor} named ${coworker.name}, who is a ${styleHints} ${coworker.role}.
+The person's appearance should clearly match the stated gender and be consistent with their name's cultural background.
 Corporate style portrait, neutral gray background, professional lighting,
 high quality, photorealistic, head and shoulders only, facing camera,
 friendly expression, business casual attire.`;
@@ -281,6 +294,7 @@ export async function generateAvatarsForScenario(
       name: true,
       role: true,
       personaStyle: true,
+      gender: true,
     },
   });
 
@@ -323,6 +337,7 @@ export async function generateAvatarForCoworker(
       role: true,
       personaStyle: true,
       avatarUrl: true,
+      gender: true,
     },
   });
 

@@ -139,8 +139,15 @@ function hashName(name: string): number {
 
 /**
  * Infer demographics (ethnicity group + gender) from a full name.
+ *
+ * If `explicitGender` is provided, it overrides name-based inference.
+ * Prefer passing it from the DB — name inference misfires on names like
+ * "Mateo" (unambiguously male in Spanish, but not in the name dictionary).
  */
-export function inferDemographics(fullName: string): Demographics {
+export function inferDemographics(
+  fullName: string,
+  explicitGender?: string | null
+): Demographics {
   const parts = fullName.toLowerCase().trim().split(/\s+/);
   const firstName = parts[0] || "";
   const lastName = parts[parts.length - 1] || "";
@@ -148,9 +155,13 @@ export function inferDemographics(fullName: string): Demographics {
   // Try first name, then last name for ethnicity
   const group: EthnicGroup = ETHNICITY_MAP[firstName] || ETHNICITY_MAP[lastName] || "mixed";
 
-  // Infer gender from first name
   let gender: Gender;
-  if (FEMALE_NAMES.has(firstName)) {
+  if (explicitGender === "male" || explicitGender === "female") {
+    gender = explicitGender;
+  } else if (explicitGender === "non-binary") {
+    // Pool only has male/female buckets — deterministically pick one for non-binary.
+    gender = hashName(fullName) % 2 === 0 ? "female" : "male";
+  } else if (FEMALE_NAMES.has(firstName)) {
     gender = "female";
   } else if (MALE_NAMES.has(firstName)) {
     gender = "male";
@@ -189,8 +200,11 @@ const AVATAR_POOL: Record<string, string[]> = {
  * Returns a path like "/avatars/pool/mei-lin.jpg".
  * Deterministic: same name always returns the same avatar.
  */
-export function getPoolAvatarPath(fullName: string): string {
-  const { group, gender } = inferDemographics(fullName);
+export function getPoolAvatarPath(
+  fullName: string,
+  explicitGender?: string | null
+): string {
+  const { group, gender } = inferDemographics(fullName, explicitGender);
   const key = `${group}-${gender}`;
   const pool = AVATAR_POOL[key];
 

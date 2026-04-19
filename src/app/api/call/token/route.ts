@@ -172,7 +172,9 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
     // Generate ephemeral token
     let voiceName = coworker.voiceName || undefined;
     if (!voiceName) {
-      const { gender } = inferDemographics(coworker.name);
+      // Prefer the explicit `gender` column (set by the coworker generator) over
+      // name-based inference — name inference misfires on names like "Mateo".
+      const { gender } = inferDemographics(coworker.name, coworker.gender);
       const voices = gender === "male" ? GEMINI_VOICES.male : GEMINI_VOICES.female;
       const hash = coworker.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
       voiceName = voices[hash % voices.length].name;

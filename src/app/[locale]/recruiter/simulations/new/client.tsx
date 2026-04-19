@@ -544,6 +544,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
             personaStyle: coworker.personaStyle,
             personality: coworker.personality,
             knowledge: coworker.knowledge,
+            gender: coworker.gender,
           }),
         });
 

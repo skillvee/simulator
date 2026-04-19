@@ -107,6 +107,7 @@ model Coworker {
   voiceName     String?
   personality   Json?
   language      String         @default("en")
+  gender        String?
   conversations Conversation[]
   scenario      Scenario       @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 

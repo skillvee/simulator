@@ -9,6 +9,7 @@ interface Coworker {
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: string | null;
 }
 
 interface CoworkerSidebarProps {
@@ -91,6 +92,7 @@ function CoworkerItem({
         <CoworkerAvatar
           name={coworker.name}
           avatarUrl={coworker.avatarUrl}
+          gender={coworker.gender}
           size="sm"
           className="border-2 border-background shadow-sm"
         />

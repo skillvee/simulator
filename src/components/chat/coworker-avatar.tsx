@@ -7,6 +7,7 @@ import { getPoolAvatarPath } from "@/lib/avatar/name-ethnicity";
 interface CoworkerAvatarProps {
   name: string;
   avatarUrl?: string | null;
+  gender?: string | null;
   size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
@@ -22,6 +23,7 @@ interface CoworkerAvatarProps {
 export function CoworkerAvatar({
   name,
   avatarUrl,
+  gender,
   size = "md",
   className = "",
 }: CoworkerAvatarProps) {
@@ -32,8 +34,8 @@ export function CoworkerAvatar({
     xl: "h-32 w-32",
   };
 
-  // Use explicit avatar URL if set, otherwise pick from the static pool by name
-  const imageUrl = avatarUrl || getPoolAvatarPath(name);
+  // Use explicit avatar URL if set, otherwise pick from the static pool by name + gender
+  const imageUrl = avatarUrl || getPoolAvatarPath(name, gender);
 
   // Get initials for fallback
   const initials = name

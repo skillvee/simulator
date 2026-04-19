@@ -50,7 +50,7 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName, language } = body;
+  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName, language, gender } = body;
 
   // Validate required fields
   if (!name || !role || !personaStyle) {
@@ -78,6 +78,7 @@ export async function POST(request: Request, context: RouteContext) {
       avatarUrl,
       voiceName: voiceName || null,
       language: language || scenario.language || 'en',
+      gender: gender || null,
     },
   });
 

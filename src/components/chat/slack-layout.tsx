@@ -53,6 +53,7 @@ interface Coworker {
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: string | null;
 }
 
 // Context for managing call state across the layout

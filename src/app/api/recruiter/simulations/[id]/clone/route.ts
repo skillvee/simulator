@@ -161,6 +161,7 @@ export async function POST(request: Request, context: RouteContext) {
           avatarUrl: null, // Avatar will be generated separately if needed
           voiceName: null, // Voice can be configured later
           language: targetLanguage,
+          gender: coworker.gender || null,
         })),
       });
     }

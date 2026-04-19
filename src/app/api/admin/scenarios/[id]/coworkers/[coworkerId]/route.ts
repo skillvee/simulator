@@ -78,7 +78,7 @@ export async function PUT(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName } = body;
+  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName, gender } = body;
 
   // Build update data with only provided fields
   const updateData: Record<string, unknown> = {};
@@ -89,6 +89,7 @@ export async function PUT(request: Request, context: RouteContext) {
   if (knowledge !== undefined) updateData.knowledge = knowledge;
   if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
   if (voiceName !== undefined) updateData.voiceName = voiceName;
+  if (gender !== undefined) updateData.gender = gender;
 
   const coworker = await db.coworker.update({
     where: { id: coworkerId },
