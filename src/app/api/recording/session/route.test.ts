@@ -40,7 +40,10 @@ vi.mock("@/server/db", () => ({
     segmentAnalysis: {
       upsert: (...args: unknown[]) => mockSegmentAnalysisUpsert(...args),
     },
-    $transaction: (fn: (tx: unknown) => Promise<unknown>) => mockTransaction(fn),
+    $transaction: (
+      fn: (tx: unknown) => Promise<unknown>,
+      opts?: { maxWait?: number; timeout?: number }
+    ) => mockTransaction(fn, opts),
   },
 }));
 
@@ -456,7 +459,10 @@ describe("POST /api/recording/session", () => {
 
     // Verify transaction was called
     expect(mockTransaction).toHaveBeenCalledTimes(1);
-    expect(mockTransaction).toHaveBeenCalledWith(expect.any(Function));
+    expect(mockTransaction).toHaveBeenCalledWith(expect.any(Function), {
+      maxWait: 15_000,
+      timeout: 15_000,
+    });
   });
 
   it("should rollback updateMany if segment create fails", async () => {
