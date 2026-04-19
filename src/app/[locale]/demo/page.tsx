@@ -4,6 +4,7 @@ import { useState } from "react";
 import { InlineWidget, useCalendlyEventListener } from "react-calendly";
 import { Link } from "@/i18n/routing";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ const CALENDLY_URL = "https://calendly.com/german-skillvee/30min";
 type FormState = "form" | "scheduling" | "submitted";
 
 export default function DemoPage() {
+  const t = useTranslations("demo");
   const [formState, setFormState] = useState<FormState>("form");
   const [formData, setFormData] = useState({
     name: "",
@@ -60,29 +62,27 @@ export default function DemoPage() {
               transition={{ duration: 0.8 }}
             >
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-                Book a Demo
+                {t("hero.eyebrow")}
               </p>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-6 leading-tight">
-                See the platform.{" "}
-                <span className="text-primary">Ask the hard questions.</span>
+                {t("hero.titleLine1")}{" "}
+                <span className="text-primary">{t("hero.titleLine2")}</span>
               </h1>
 
               <p className="text-lg sm:text-xl text-slate-600 mb-8">
-                20 minutes. No slides. We&apos;ll show you exactly how Skillvee
-                works with your roles—and you&apos;ll see why algorithm tests
-                are dead.
+                {t("hero.subtitle")}
               </p>
 
               {/* What you'll get */}
               <div className="space-y-4 mb-8">
-                <h3 className="font-semibold text-slate-900">In your demo:</h3>
+                <h3 className="font-semibold text-slate-900">{t("benefits.heading")}</h3>
                 <ul className="space-y-3">
                   {[
-                    "Live walkthrough with your actual job description",
-                    "See how candidates experience the simulation",
-                    "Review sample candidate results and scorecards",
-                    "Get honest answers about fit for your team",
+                    t("benefits.item1"),
+                    t("benefits.item2"),
+                    t("benefits.item3"),
+                    t("benefits.item4"),
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -96,15 +96,15 @@ export default function DemoPage() {
               <div className="flex flex-wrap items-center gap-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center gap-2 text-sm text-slate-500">
                   <Clock className="w-4 h-4" />
-                  <span>20 minutes</span>
+                  <span>{t("trust.duration")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-500">
                   <Users className="w-4 h-4" />
-                  <span>Talk to a founder</span>
+                  <span>{t("trust.founder")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-500">
                   <Calendar className="w-4 h-4" />
-                  <span>Pick your time</span>
+                  <span>{t("trust.pickTime")}</span>
                 </div>
               </div>
             </motion.div>
@@ -119,16 +119,16 @@ export default function DemoPage() {
                 {formState === "form" && (
                   <>
                     <h2 className="text-xl font-semibold text-slate-900 mb-6">
-                      Request your demo
+                      {t("form.title")}
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-5">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="name">Name</Label>
+                          <Label htmlFor="name">{t("form.nameLabel")}</Label>
                           <Input
                             id="name"
                             type="text"
-                            placeholder="Jane Smith"
+                            placeholder={t("form.namePlaceholder")}
                             required
                             value={formData.name}
                             onChange={(e) =>
@@ -138,11 +138,11 @@ export default function DemoPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="email">Work email</Label>
+                          <Label htmlFor="email">{t("form.emailLabel")}</Label>
                           <Input
                             id="email"
                             type="email"
-                            placeholder="jane@company.com"
+                            placeholder={t("form.emailPlaceholder")}
                             required
                             value={formData.email}
                             onChange={(e) =>
@@ -155,11 +155,11 @@ export default function DemoPage() {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="company">Company</Label>
+                          <Label htmlFor="company">{t("form.companyLabel")}</Label>
                           <Input
                             id="company"
                             type="text"
-                            placeholder="Acme Corp"
+                            placeholder={t("form.companyPlaceholder")}
                             required
                             value={formData.company}
                             onChange={(e) =>
@@ -169,11 +169,11 @@ export default function DemoPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="role">Your role</Label>
+                          <Label htmlFor="role">{t("form.roleLabel")}</Label>
                           <Input
                             id="role"
                             type="text"
-                            placeholder="Head of Engineering"
+                            placeholder={t("form.rolePlaceholder")}
                             value={formData.role}
                             onChange={(e) =>
                               setFormData({ ...formData, role: e.target.value })
@@ -189,19 +189,19 @@ export default function DemoPage() {
                         className="w-full h-12 text-base bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         {isSubmitting ? (
-                          "Loading..."
+                          t("form.loading")
                         ) : (
                           <>
-                            Continue to scheduling
+                            {t("form.submit")}
                             <ArrowRight className="w-4 h-4 ml-2" />
                           </>
                         )}
                       </Button>
 
                       <p className="text-xs text-slate-500 text-center">
-                        We&apos;ll never share your info. See our{" "}
+                        {t("form.privacyPrefix")}{" "}
                         <Link href="/privacy" className="text-primary hover:underline">
-                          privacy policy
+                          {t("form.privacyLink")}
                         </Link>
                         .
                       </p>
@@ -217,10 +217,10 @@ export default function DemoPage() {
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold text-slate-900">
-                          Thanks, {formData.name.split(" ")[0]}!
+                          {t("scheduling.title", { name: formData.name.split(" ")[0] })}
                         </h2>
                         <p className="text-sm text-slate-600">
-                          Pick a time that works for you.
+                          {t("scheduling.subtitle")}
                         </p>
                       </div>
                     </div>
@@ -266,16 +266,14 @@ export default function DemoPage() {
                       <CheckCircle className="w-8 h-8 text-emerald-600" />
                     </div>
                     <h2 className="text-2xl font-semibold text-slate-900 mb-3">
-                      You&apos;re all set!
+                      {t("success.title")}
                     </h2>
                     <p className="text-slate-600 mb-6">
-                      Check your email for the calendar invite. We&apos;ll send a
-                      quick prep guide before your demo.
+                      {t("success.description")}
                     </p>
                     <div className="bg-primary/5 rounded-xl p-4 border border-primary/10">
                       <p className="text-sm text-slate-700">
-                        <strong>Pro tip:</strong> Have a job description ready.
-                        We&apos;ll show you exactly how Skillvee would assess that role.
+                        <strong>{t("success.proTipLabel")}</strong> {t("success.proTipBody")}
                       </p>
                     </div>
                   </div>
@@ -380,10 +378,10 @@ export default function DemoPage() {
             className="text-center mb-16"
           >
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-              Why Switch
+              {t("whyTeamsSwitch.eyebrow")}
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4">
-              Why teams switch to Skillvee
+              {t("whyTeamsSwitch.title")}
             </h2>
           </motion.div>
 
@@ -391,24 +389,24 @@ export default function DemoPage() {
             {[
               {
                 icon: TrendingDown,
-                stat: "46%",
-                label: "of new hires fail",
-                desc: "Within 18 months. Traditional interviews miss what matters.",
-                source: "Leadership IQ",
+                stat: t("whyTeamsSwitch.card1.stat"),
+                label: t("whyTeamsSwitch.card1.label"),
+                desc: t("whyTeamsSwitch.card1.description"),
+                source: t("whyTeamsSwitch.card1.source"),
               },
               {
                 icon: Brain,
-                stat: "89%",
-                label: "fail due to attitude, not skills",
-                desc: "Resumes can't show how someone actually works.",
-                source: "Leadership IQ",
+                stat: t("whyTeamsSwitch.card2.stat"),
+                label: t("whyTeamsSwitch.card2.label"),
+                desc: t("whyTeamsSwitch.card2.description"),
+                source: t("whyTeamsSwitch.card2.source"),
               },
               {
                 icon: DollarSign,
-                stat: "$14.9k",
-                label: "wasted per bad hire",
-                desc: "On average. One simulation costs less than one mistake.",
-                source: "CareerBuilder",
+                stat: t("whyTeamsSwitch.card3.stat"),
+                label: t("whyTeamsSwitch.card3.label"),
+                desc: t("whyTeamsSwitch.card3.description"),
+                source: t("whyTeamsSwitch.card3.source"),
               },
             ].map((item, i) => (
               <motion.div
@@ -427,7 +425,7 @@ export default function DemoPage() {
                   {item.label}
                 </div>
                 <p className="text-slate-600 mb-2">{item.desc}</p>
-                <span className="text-xs text-slate-400">Source: {item.source}</span>
+                <span className="text-xs text-slate-400">{t("whyTeamsSwitch.sourceLabel", { source: item.source })}</span>
               </motion.div>
             ))}
           </div>
@@ -452,19 +450,19 @@ export default function DemoPage() {
             viewport={{ once: true }}
           >
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-4">
-              Ready to Start?
+              {t("cta.eyebrow")}
             </p>
             <h2 className="text-4xl lg:text-6xl font-black text-white mb-6">
-              STOP GUESSING.
+              {t("cta.titleLine1")}
               <br />
-              <span className="text-primary">START KNOWING.</span>
+              <span className="text-primary">{t("cta.titleLine2")}</span>
             </h2>
             <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-              See exactly how candidates perform before you make the offer.
+              {t("cta.subtitle")}
             </p>
             <a href="#" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
               <Button className="h-14 px-10 rounded-full bg-white text-slate-900 font-bold text-lg shadow-xl hover:bg-slate-100 group">
-                Book Your Demo
+                {t("cta.button")}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </a>

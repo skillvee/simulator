@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import {
   ChevronLeft,
   ChevronRight,
@@ -26,160 +27,26 @@ import {
   Minimize2,
 } from "lucide-react";
 
-// Slide data
-const slides = [
-  {
-    id: "title",
-    title: "Watch them work.\nThen hire.",
-    subtitle: "See exactly how candidates communicate, collaborate, and solve problems—before you make the offer. No more expensive hiring mistakes.",
-    visual: "logo",
-  },
-  {
-    id: "problem",
-    title: "The Problem",
-    subtitle: "Enterprise engineering teams are drowning in AI-enhanced candidates.",
-    visual: "stats",
-    stats: [
-      { value: "1000s/day", label: "Applications per role", icon: FileText },
-      { value: "74%", label: "AI-generated resumes", icon: Bot },
-      { value: "+42%", label: "Interview rounds since 2021", icon: TrendingUp },
-      { value: "45%", label: "Use AI in interviews", icon: Sparkles },
-    ],
-    footnote: "HackerRank bans AI and tests trivia. Take-homes get AI submissions. None of it works anymore.",
-  },
-  {
-    id: "solution",
-    title: "Our Solution",
-    subtitle: "45-minute work simulation with AI coworkers",
-    visual: "simulation",
-    features: [
-      { title: "Voice Calls", desc: "Real-time conversations with AI stakeholders" },
-      { title: "Real Deliverables", desc: "Candidates produce actual work artifacts" },
-      { title: "Screen Recorded", desc: "See exactly how they work and problem-solve" },
-      { title: "Side-by-Side", desc: "Compare candidates on actual work output" },
-    ],
-  },
-  // DEMO SLIDES - Recruiter creates scenario
-  {
-    id: "demo-builder",
-    title: "Create Simulation",
-    subtitle: "Recruiters build scenarios through natural conversation with AI. No forms - just describe what you want.",
-    visual: "demo-builder",
-  },
-  // DEMO SLIDES - Candidate Flow
-  {
-    id: "demo-join",
-    title: "Candidate Joins",
-    subtitle: "Recruiter shares a unique link. Candidate sees the role and signs up.",
-    visual: "demo-join",
-  },
-  {
-    id: "demo-chat",
-    title: "Slack-like Workspace",
-    subtitle: "Candidates collaborate with AI coworkers via chat and voice calls",
-    visual: "demo-chat",
-  },
-  {
-    id: "demo-call",
-    title: "Voice Calls",
-    subtitle: "Real-time conversations with AI stakeholders powered by Gemini Live",
-    visual: "demo-call",
-  },
-  {
-    id: "demo-analysis",
-    title: "AI Analysis",
-    subtitle: "Screen recording is sent to Gemini multimodal to evaluate how candidates actually work",
-    visual: "demo-analysis",
-    dimensions: [
-      "Problem Solving",
-      "Communication",
-      "AI Tool Usage",
-      "Code Quality",
-      "Time Management",
-      "Collaboration",
-      "Technical Skills",
-      "Autonomy",
-    ],
-  },
-  // DEMO SLIDES - Recruiter Flow
-  {
-    id: "demo-dashboard",
-    title: "Recruiter Dashboard",
-    subtitle: "Track all simulations and candidates in one place",
-    visual: "demo-dashboard",
-  },
-  {
-    id: "demo-scorecard",
-    title: "AI Scorecard",
-    subtitle: "Detailed analysis across 8 dimensions with observable behaviors",
-    visual: "demo-scorecard",
-  },
-  {
-    id: "demo-compare",
-    title: "Compare Candidates",
-    subtitle: "Side-by-side comparison on actual work output",
-    visual: "demo-compare",
-  },
-  // Back to pitch
-  {
-    id: "whynow",
-    title: "Why Now?",
-    subtitle: "The 10X unlock powered by Gemini",
-    visual: "gemini",
-    unlocks: [
-      {
-        title: "Gemini Live",
-        desc: "Real-time voice conversations with AI stakeholders (PM, manager, tech lead) that remember context across the session",
-      },
-      {
-        title: "Gemini Multimodal",
-        desc: "Accurately analyzes hour-long screen recordings to evaluate how candidates work, use AI, and problem-solve",
-      },
-    ],
-  },
-  {
-    id: "market",
-    title: "Market",
-    subtitle: "$3B pre-hire assessment market growing 16%/yr",
-    visual: "market",
-    marketData: {
-      tam: "$3B",
-      growth: "16%/yr",
-      competitors: ["HackerRank", "CodeSignal"],
-      beachhead: "Enterprise teams hiring 5+ engineers/month",
-      moat: "Every simulation generates behavioral data → prediction engine competitors can't replicate",
-    },
-  },
-  {
-    id: "team",
-    title: "Team",
-    subtitle: "HR Tech exits + Meta GenAI + we ship fast",
-    visual: "team",
-    members: [
-      {
-        name: "German Reyes",
-        role: "CEO",
-        highlights: [
-          "2 HR Tech exits (acquired by Buk)",
-          "Grew startup $0→$1.4M ARR",
-          "GPM at Walmart eCommerce",
-          "Berkeley MBA",
-        ],
-      },
-      {
-        name: "Matias Hoyl",
-        role: "CTO",
-        highlights: [
-          "Meta GenAI",
-          "Stanford MS",
-          "Built Zapien (35K users)",
-          "2x Stanford Learning Design winner",
-        ],
-      },
-    ],
-    whyUs: "HR Tech exits (we know the buyer) + Meta GenAI (we can build this) + this prototype (we ship fast)",
-  },
-];
+type Slide = {
+  id: string;
+  title: string;
+  subtitle: string;
+  visual: string;
+  stats?: { value: string; label: string; icon: typeof FileText }[];
+  features?: { title: string; desc: string }[];
+  unlocks?: { title: string; desc: string }[];
+  marketData?: {
+    tam: string;
+    growth: string;
+    competitors: string[];
+    beachhead: string;
+    moat: string;
+  };
+  members?: { name: string; role: string; highlights: string[] }[];
+  whyUs?: string;
+  dimensions?: string[];
+  footnote?: string;
+};
 
 // Visual Components
 function LogoVisual() {
@@ -204,7 +71,7 @@ function LogoVisual() {
   );
 }
 
-function StatsVisual({ stats }: { stats: typeof slides[1]["stats"] }) {
+function StatsVisual({ stats }: { stats: NonNullable<Slide["stats"]> }) {
   return (
     <div className="grid grid-cols-2 gap-6 h-full items-center">
       {stats?.map((stat, index) => {
@@ -229,7 +96,7 @@ function StatsVisual({ stats }: { stats: typeof slides[1]["stats"] }) {
   );
 }
 
-function SimulationVisual({ features }: { features: typeof slides[2]["features"] }) {
+function SimulationVisual({ features }: { features: NonNullable<Slide["features"]> }) {
   const icons = [Phone, FileText, Eye, Users];
 
   return (
@@ -263,7 +130,7 @@ function SimulationVisual({ features }: { features: typeof slides[2]["features"]
   );
 }
 
-function GeminiVisual({ unlocks }: { unlocks: typeof slides[3]["unlocks"] }) {
+function GeminiVisual({ unlocks }: { unlocks: NonNullable<Slide["unlocks"]> }) {
   return (
     <div className="flex flex-col gap-6 h-full justify-center">
       {unlocks?.map((unlock, index) => (
@@ -292,7 +159,8 @@ function GeminiVisual({ unlocks }: { unlocks: typeof slides[3]["unlocks"] }) {
   );
 }
 
-function MarketVisual({ marketData }: { marketData: typeof slides[4]["marketData"] }) {
+function MarketVisual({ marketData }: { marketData: NonNullable<Slide["marketData"]> }) {
+  const tv = useTranslations("presentation.visuals");
   return (
     <div className="h-full flex flex-col justify-center gap-6">
       {/* TAM visualization */}
@@ -303,11 +171,11 @@ function MarketVisual({ marketData }: { marketData: typeof slides[4]["marketData
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-slate-400 text-sm font-medium mb-1">Total Addressable Market</div>
+            <div className="text-slate-400 text-sm font-medium mb-1">{tv("totalAddressableMarket")}</div>
             <div className="text-5xl font-black text-white">{marketData?.tam}</div>
           </div>
           <div className="text-right">
-            <div className="text-slate-400 text-sm font-medium mb-1">Growth Rate</div>
+            <div className="text-slate-400 text-sm font-medium mb-1">{tv("growthRate")}</div>
             <div className="text-3xl font-bold text-primary">{marketData?.growth}</div>
           </div>
         </div>
@@ -319,7 +187,7 @@ function MarketVisual({ marketData }: { marketData: typeof slides[4]["marketData
             className="h-full bg-gradient-to-r from-primary to-blue-400 rounded-full"
           />
         </div>
-        <div className="mt-3 text-xs text-slate-500">Competitors: {marketData?.competitors?.join(", ")}</div>
+        <div className="mt-3 text-xs text-slate-500">{tv("competitorsLabel")} {marketData?.competitors?.join(", ")}</div>
       </motion.div>
 
       {/* Beachhead */}
@@ -331,7 +199,7 @@ function MarketVisual({ marketData }: { marketData: typeof slides[4]["marketData
       >
         <div className="flex items-center gap-3 mb-2">
           <Target className="w-5 h-5 text-primary" />
-          <span className="text-primary font-bold">Beachhead</span>
+          <span className="text-primary font-bold">{tv("beachheadLabel")}</span>
         </div>
         <p className="text-white font-medium">{marketData?.beachhead}</p>
       </motion.div>
@@ -343,14 +211,14 @@ function MarketVisual({ marketData }: { marketData: typeof slides[4]["marketData
         transition={{ delay: 0.5 }}
         className="bg-slate-800/30 border border-slate-700/30 rounded-xl p-4"
       >
-        <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">Moat</div>
+        <div className="text-xs text-slate-500 uppercase tracking-wider mb-2">{tv("moatLabel")}</div>
         <p className="text-slate-300 text-sm">{marketData?.moat}</p>
       </motion.div>
     </div>
   );
 }
 
-function TeamVisual({ members, whyUs }: { members: typeof slides[5]["members"]; whyUs: string }) {
+function TeamVisual({ members, whyUs }: { members: NonNullable<Slide["members"]>; whyUs: string }) {
   return (
     <div className="h-full flex flex-col justify-center gap-8">
       <div className="grid grid-cols-2 gap-8">
@@ -396,20 +264,21 @@ function TeamVisual({ members, whyUs }: { members: typeof slides[5]["members"]; 
 // ============ DEMO VISUAL COMPONENTS ============
 
 function DemoBuilderVisual() {
+  const tv = useTranslations("presentation.visuals");
   const chatMessages = [
-    { from: "ai", text: "Hi! I'll help you create a simulation. What role are you hiring for?" },
-    { from: "user", text: "Senior backend engineer at Acme Corp. They'll build a REST API." },
-    { from: "ai", text: "Got it! What tech stack should they use?" },
-    { from: "user", text: "Node.js, TypeScript, PostgreSQL" },
+    { from: "ai", text: tv("msgAi1") },
+    { from: "user", text: tv("msgUser1") },
+    { from: "ai", text: tv("msgAi2") },
+    { from: "user", text: tv("msgUser2") },
   ];
 
   const previewData = {
-    name: "Backend API Challenge",
-    company: "Acme Corp",
-    task: "Build a REST API...",
+    name: tv("previewName"),
+    company: tv("previewCompany"),
+    task: tv("previewTask"),
     techStack: ["Node.js", "TypeScript", "PostgreSQL"],
     coworkers: [
-      { name: "Sarah Chen", role: "Engineering Manager" },
+      { name: tv("coworkerSarahName"), role: tv("coworkerSarahRole") },
     ],
   };
 
@@ -426,7 +295,7 @@ function DemoBuilderVisual() {
             {/* Header */}
             <div className="h-10 border-b border-slate-200 flex items-center px-4 gap-2">
               <Bot className="w-4 h-4 text-primary" />
-              <span className="text-xs font-semibold text-slate-900">Simulation Builder</span>
+              <span className="text-xs font-semibold text-slate-900">{tv("simulationBuilder")}</span>
             </div>
             {/* Messages */}
             <div className="flex-1 p-3 space-y-2 overflow-y-auto bg-slate-50">
@@ -470,7 +339,7 @@ function DemoBuilderVisual() {
             <div className="h-10 border-t border-slate-200 flex items-center px-3 gap-2">
               <input
                 type="text"
-                placeholder="Describe your simulation..."
+                placeholder={tv("describeSimulation")}
                 className="flex-1 text-[10px] bg-slate-50 border border-slate-200 rounded px-2 py-1"
                 disabled
               />
@@ -482,7 +351,7 @@ function DemoBuilderVisual() {
 
           {/* Right - Preview panel */}
           <div className="w-44 bg-slate-50 p-3 flex flex-col">
-            <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">Preview</div>
+            <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-3">{tv("preview")}</div>
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -491,15 +360,15 @@ function DemoBuilderVisual() {
               className="space-y-2 flex-1"
             >
               <div className="bg-white rounded-lg p-2 border border-slate-200">
-                <div className="text-[8px] text-slate-400 uppercase">Name</div>
+                <div className="text-[8px] text-slate-400 uppercase">{tv("name")}</div>
                 <div className="text-[10px] font-semibold text-slate-900">{previewData.name}</div>
               </div>
               <div className="bg-white rounded-lg p-2 border border-slate-200">
-                <div className="text-[8px] text-slate-400 uppercase">Company</div>
+                <div className="text-[8px] text-slate-400 uppercase">{tv("company")}</div>
                 <div className="text-[10px] font-semibold text-slate-900">{previewData.company}</div>
               </div>
               <div className="bg-white rounded-lg p-2 border border-slate-200">
-                <div className="text-[8px] text-slate-400 uppercase">Tech Stack</div>
+                <div className="text-[8px] text-slate-400 uppercase">{tv("techStack")}</div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {previewData.techStack.map((tech) => (
                     <span key={tech} className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
@@ -509,7 +378,7 @@ function DemoBuilderVisual() {
                 </div>
               </div>
               <div className="bg-white rounded-lg p-2 border border-slate-200">
-                <div className="text-[8px] text-slate-400 uppercase">Coworkers</div>
+                <div className="text-[8px] text-slate-400 uppercase">{tv("coworkers")}</div>
                 {previewData.coworkers.map((cw) => (
                   <div key={cw.name} className="flex items-center gap-1 mt-1">
                     <div className="w-4 h-4 bg-emerald-500 rounded text-white text-[8px] flex items-center justify-center font-bold">S</div>
@@ -527,7 +396,7 @@ function DemoBuilderVisual() {
               className="mt-2"
             >
               <div className="bg-primary text-white text-[10px] font-bold py-1.5 rounded text-center">
-                Save Simulation
+                {tv("saveSimulation")}
               </div>
             </motion.div>
           </div>
@@ -538,6 +407,7 @@ function DemoBuilderVisual() {
 }
 
 function DemoJoinVisual() {
+  const tv = useTranslations("presentation.visuals");
   return (
     <div className="h-full flex items-center justify-center">
       {/* Mock join page - split screen */}
@@ -554,12 +424,19 @@ function DemoJoinVisual() {
               <Image src="/skillvee-logo.png" alt="SkillVee" width={100} height={30} style={{ width: "auto", height: "auto" }} />
             </div>
             <div className="relative z-10">
-              <h3 className="text-2xl font-black text-white leading-tight">YOUR<br />NEXT ROLE.</h3>
-              <p className="text-xs text-slate-400 mt-2">Acme Corp is looking for a Senior Engineer</p>
+              <h3 className="text-2xl font-black text-white leading-tight">
+                {tv("yourNextRole").split("\n").map((line, i) => (
+                  <span key={i}>
+                    {i > 0 && <br />}
+                    {line}
+                  </span>
+                ))}
+              </h3>
+              <p className="text-xs text-slate-400 mt-2">{tv("joinSubtitle")}</p>
             </div>
             <div className="relative z-10 flex gap-4 text-[8px] text-slate-500">
-              <span className="flex items-center gap-1"><Bot className="w-3 h-3 text-primary" /> AI Teammates</span>
-              <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-primary" /> Use Any AI</span>
+              <span className="flex items-center gap-1"><Bot className="w-3 h-3 text-primary" /> {tv("aiTeammates")}</span>
+              <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-primary" /> {tv("useAnyAi")}</span>
             </div>
           </div>
           {/* Right - Light panel */}
@@ -569,15 +446,15 @@ function DemoJoinVisual() {
                 <div key={i} className={`h-1 flex-1 rounded-full ${i <= 1 ? "bg-primary" : "bg-slate-200"}`} />
               ))}
             </div>
-            <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 mb-1">Step 01</div>
-            <h4 className="text-lg font-bold text-slate-900 mb-2">Welcome</h4>
-            <p className="text-xs text-slate-500 mb-4">Experience a day at Acme Corp. This simulation assesses how you work.</p>
+            <div className="text-[8px] font-bold uppercase tracking-widest text-slate-400 mb-1">{tv("step01")}</div>
+            <h4 className="text-lg font-bold text-slate-900 mb-2">{tv("welcome")}</h4>
+            <p className="text-xs text-slate-500 mb-4">{tv("welcomeDesc")}</p>
             <motion.div
               animate={{ scale: [1, 1.02, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
               className="bg-slate-900 text-white text-xs font-bold py-2 px-4 rounded-full text-center"
             >
-              Continue →
+              {tv("continue")}
             </motion.div>
           </div>
         </div>
@@ -587,16 +464,17 @@ function DemoJoinVisual() {
 }
 
 function DemoChatVisual() {
+  const tv = useTranslations("presentation.visuals");
   const coworkers = [
-    { name: "Sarah Chen", role: "Engineering Manager", color: "bg-emerald-500", online: true },
-    { name: "Alex Kim", role: "Product Manager", color: "bg-purple-500", online: true },
-    { name: "Jordan Lee", role: "Senior Engineer", color: "bg-orange-500", online: false },
+    { name: tv("coworkerSarahName"), role: tv("coworkerSarahRole"), color: "bg-emerald-500", online: true },
+    { name: tv("coworkerAlexName"), role: tv("coworkerAlexRole"), color: "bg-purple-500", online: true },
+    { name: tv("coworkerJordanName"), role: tv("coworkerJordanRole"), color: "bg-orange-500", online: false },
   ];
 
   const messages = [
-    { from: "Sarah Chen", text: "Hey! Welcome to the team. I have a task for you today.", time: "9:00 AM", isManager: true },
-    { from: "You", text: "Thanks! Excited to get started. What's the project?", time: "9:01 AM", isYou: true },
-    { from: "Sarah Chen", text: "We need to add a new feature to the checkout flow. I'll send over the requirements.", time: "9:02 AM", isManager: true },
+    { from: tv("coworkerSarahName"), text: tv("chatMsg1"), time: "9:00 AM", isManager: true },
+    { from: tv("chatYou"), text: tv("chatMsg2"), time: "9:01 AM", isYou: true },
+    { from: tv("coworkerSarahName"), text: tv("chatMsg3"), time: "9:02 AM", isManager: true },
   ];
 
   return (
@@ -609,7 +487,7 @@ function DemoChatVisual() {
         <div className="flex h-96">
           {/* Sidebar */}
           <div className="w-48 bg-slate-50 border-r border-slate-200 p-3">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Team</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{tv("team")}</div>
             {coworkers.map((cw, i) => (
               <motion.div
                 key={cw.name}
@@ -636,7 +514,7 @@ function DemoChatVisual() {
               transition={{ duration: 2, repeat: Infinity }}
               className="mt-4 bg-primary text-white text-xs font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Phone className="w-3 h-3" /> Start Call
+              <Phone className="w-3 h-3" /> {tv("startCall")}
             </motion.div>
           </div>
           {/* Chat area */}
@@ -675,7 +553,7 @@ function DemoChatVisual() {
             <div className="h-14 border-t border-slate-200 flex items-center px-4 gap-2">
               <input
                 type="text"
-                placeholder="Type a message..."
+                placeholder={tv("typeMessage")}
                 className="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2"
                 disabled
               />
@@ -691,6 +569,7 @@ function DemoChatVisual() {
 }
 
 function DemoCallVisual() {
+  const tv = useTranslations("presentation.visuals");
   return (
     <div className="h-full flex items-center justify-center">
       <motion.div
@@ -732,8 +611,8 @@ function DemoCallVisual() {
             />
           </div>
 
-          <h3 className="text-xl font-bold text-white mb-1">Sarah Chen</h3>
-          <p className="text-slate-400 text-sm mb-2">Engineering Manager</p>
+          <h3 className="text-xl font-bold text-white mb-1">{tv("coworkerSarahName")}</h3>
+          <p className="text-slate-400 text-sm mb-2">{tv("coworkerSarahRole")}</p>
 
           {/* Voice indicator */}
           <div className="flex items-center justify-center gap-1 mb-6">
@@ -748,7 +627,7 @@ function DemoCallVisual() {
             ))}
           </div>
 
-          <p className="text-xs text-slate-500 mb-6">Call in progress • 2:34</p>
+          <p className="text-xs text-slate-500 mb-6">{tv("callInProgress")}</p>
 
           {/* Controls */}
           <div className="flex items-center justify-center gap-4">
@@ -783,7 +662,7 @@ function DemoCallVisual() {
           className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500"
         >
           <div className="w-4 h-4 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded" />
-          Powered by Gemini Live
+          {tv("poweredByGeminiLive")}
         </motion.div>
       </motion.div>
     </div>
@@ -791,6 +670,7 @@ function DemoCallVisual() {
 }
 
 function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
+  const tv = useTranslations("presentation.visuals");
   return (
     <div className="h-full flex items-center justify-center">
       <div className="w-full max-w-2xl flex gap-6">
@@ -833,7 +713,7 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
               </div>
             </div>
             <div className="mt-3 text-center">
-              <div className="text-xs text-slate-400">45 min screen recording</div>
+              <div className="text-xs text-slate-400">{tv("screenRecording45")}</div>
             </div>
           </div>
 
@@ -860,7 +740,7 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <div className="text-sm font-bold text-white">Gemini Multimodal Analysis</div>
+            <div className="text-sm font-bold text-white">{tv("geminiMultimodalAnalysis")}</div>
           </motion.div>
         </motion.div>
 
@@ -871,7 +751,7 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
           transition={{ delay: 0.3 }}
           className="flex-1"
         >
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">8 Dimensions Assessed</div>
+          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">{tv("dimensionsAssessed")}</div>
           <div className="grid grid-cols-2 gap-2">
             {dimensions.map((dim, i) => (
               <motion.div
@@ -901,19 +781,19 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
             transition={{ delay: 1.5 }}
             className="mt-4 bg-slate-800/30 border border-slate-700/30 rounded-lg p-3"
           >
-            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-2">AI Output</div>
+            <div className="text-[9px] text-slate-500 uppercase tracking-wider mb-2">{tv("aiOutput")}</div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400">Observable behaviors</span>
-                <span className="text-[10px] text-primary font-bold">24 found</span>
+                <span className="text-[10px] text-slate-400">{tv("observableBehaviors")}</span>
+                <span className="text-[10px] text-primary font-bold">{tv("behaviorsCount")}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400">Timestamps linked</span>
-                <span className="text-[10px] text-primary font-bold">12 moments</span>
+                <span className="text-[10px] text-slate-400">{tv("timestampsLinked")}</span>
+                <span className="text-[10px] text-primary font-bold">{tv("timestampsCount")}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400">Hiring signals</span>
-                <span className="text-[10px] text-emerald-400 font-bold">3 green, 1 red</span>
+                <span className="text-[10px] text-slate-400">{tv("hiringSignals")}</span>
+                <span className="text-[10px] text-emerald-400 font-bold">{tv("signalsCount")}</span>
               </div>
             </div>
           </motion.div>
@@ -924,17 +804,18 @@ function DemoAnalysisVisual({ dimensions }: { dimensions: string[] }) {
 }
 
 function DemoDashboardVisual() {
+  const tv = useTranslations("presentation.visuals");
   const stats = [
-    { label: "Simulations", value: "12", icon: FileText },
-    { label: "Candidates", value: "156", icon: Users },
-    { label: "Completed", value: "89", icon: CheckCircle2 },
-    { label: "Completion Rate", value: "57%", icon: BarChart3 },
+    { label: tv("statsSimulations"), value: "12", icon: FileText },
+    { label: tv("statsCandidates"), value: "156", icon: Users },
+    { label: tv("statsCompleted"), value: "89", icon: CheckCircle2 },
+    { label: tv("statsCompletionRate"), value: "57%", icon: BarChart3 },
   ];
 
   const candidates = [
-    { name: "John Smith", score: 4.2, status: "completed", date: "Today" },
-    { name: "Emma Wilson", score: 3.8, status: "completed", date: "Yesterday" },
-    { name: "Mike Chen", score: null, status: "in_progress", date: "2h ago" },
+    { name: tv("candidateJohn"), score: 4.2, status: "completed", date: tv("today") },
+    { name: tv("candidateEmma"), score: 3.8, status: "completed", date: tv("yesterday") },
+    { name: tv("candidateMike"), score: null, status: "in_progress", date: tv("hoursAgo") },
   ];
 
   return (
@@ -947,11 +828,11 @@ function DemoDashboardVisual() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Dashboard</h3>
-            <p className="text-xs text-slate-500">Welcome back, Recruiter</p>
+            <h3 className="text-lg font-bold text-slate-900">{tv("dashboard")}</h3>
+            <p className="text-xs text-slate-500">{tv("welcomeBack")}</p>
           </div>
           <div className="bg-primary text-white text-xs font-bold py-2 px-4 rounded-lg">
-            + New Simulation
+            {tv("newSimulation")}
           </div>
         </div>
 
@@ -977,7 +858,7 @@ function DemoDashboardVisual() {
 
         {/* Recent candidates */}
         <div>
-          <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Recent Activity</div>
+          <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{tv("recentActivity")}</div>
           <div className="space-y-2">
             {candidates.map((c, i) => (
               <motion.div
@@ -1008,7 +889,7 @@ function DemoDashboardVisual() {
                       <span className="text-xs font-bold text-slate-700 ml-1">{c.score}</span>
                     </div>
                   ) : (
-                    <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded-full">In Progress</span>
+                    <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded-full">{tv("inProgress")}</span>
                   )}
                   <Eye className="w-4 h-4 text-slate-400 cursor-pointer" />
                 </div>
@@ -1022,16 +903,17 @@ function DemoDashboardVisual() {
 }
 
 function DemoScorecardVisual() {
+  const tv = useTranslations("presentation.visuals");
   const dimensions = [
-    { name: "Problem Solving", score: 4.5, level: "Exceptional" },
-    { name: "Communication", score: 4.0, level: "Strong" },
-    { name: "Technical Skills", score: 3.5, level: "Proficient" },
-    { name: "AI Leverage", score: 4.2, level: "Strong" },
+    { name: tv("scoreProblemSolving"), score: 4.5, level: tv("levelExceptional"), levelKey: "exceptional" },
+    { name: tv("scoreCommunication"), score: 4.0, level: tv("levelStrong"), levelKey: "strong" },
+    { name: tv("scoreTechnicalSkills"), score: 3.5, level: tv("levelProficient"), levelKey: "proficient" },
+    { name: tv("scoreAiLeverage"), score: 4.2, level: tv("levelStrong"), levelKey: "strong" },
   ];
 
   const signals = {
-    green: ["Asked clarifying questions", "Used AI tools effectively", "Clear code structure"],
-    red: ["Took long on edge cases"],
+    green: [tv("strength1"), tv("strength2"), tv("strength3")],
+    red: [tv("areaToProbe1")],
   };
 
   return (
@@ -1046,20 +928,20 @@ function DemoScorecardVisual() {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white text-xl font-bold">J</div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">John Smith</h3>
-              <p className="text-xs text-slate-500">Senior Engineer • Completed Jan 15</p>
+              <h3 className="text-lg font-bold text-slate-900">{tv("candidateJohn")}</h3>
+              <p className="text-xs text-slate-500">{tv("candidateRoleLabel")}</p>
             </div>
           </div>
           <div className="text-right">
             <div className="text-3xl font-black text-primary">4.2</div>
-            <div className="text-[10px] text-slate-500">Overall Score</div>
+            <div className="text-[10px] text-slate-500">{tv("overallScore")}</div>
           </div>
         </div>
 
         <div className="p-4 grid grid-cols-2 gap-4">
           {/* Dimensions */}
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Skill Dimensions</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{tv("skillDimensions")}</div>
             <div className="space-y-2">
               {dimensions.map((d, i) => (
                 <motion.div
@@ -1072,8 +954,8 @@ function DemoScorecardVisual() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-slate-900">{d.name}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                      d.level === "Exceptional" ? "bg-emerald-100 text-emerald-700" :
-                      d.level === "Strong" ? "bg-blue-100 text-blue-700" :
+                      d.levelKey === "exceptional" ? "bg-emerald-100 text-emerald-700" :
+                      d.levelKey === "strong" ? "bg-blue-100 text-blue-700" :
                       "bg-slate-100 text-slate-700"
                     }`}>{d.level}</span>
                   </div>
@@ -1095,7 +977,7 @@ function DemoScorecardVisual() {
 
           {/* Signals */}
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Hiring Signals</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{tv("hiringSignals")}</div>
             <div className="space-y-3">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -1105,7 +987,7 @@ function DemoScorecardVisual() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span className="text-xs font-bold text-emerald-700">Strengths</span>
+                  <span className="text-xs font-bold text-emerald-700">{tv("strengths")}</span>
                 </div>
                 <ul className="space-y-1">
                   {signals.green.map((s) => (
@@ -1124,7 +1006,7 @@ function DemoScorecardVisual() {
               >
                 <div className="flex items-center gap-2 mb-2">
                   <AlertCircle className="w-4 h-4 text-red-600" />
-                  <span className="text-xs font-bold text-red-700">Areas to Probe</span>
+                  <span className="text-xs font-bold text-red-700">{tv("areasToProbe")}</span>
                 </div>
                 <ul className="space-y-1">
                   {signals.red.map((s) => (
@@ -1148,8 +1030,8 @@ function DemoScorecardVisual() {
                 <Play className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <div className="text-xs font-semibold text-white">Screen Recording</div>
-                <div className="text-[10px] text-slate-400">45 min • Watch full session</div>
+                <div className="text-xs font-semibold text-white">{tv("screenRecording")}</div>
+                <div className="text-[10px] text-slate-400">{tv("watchSession")}</div>
               </div>
             </motion.div>
           </div>
@@ -1160,13 +1042,14 @@ function DemoScorecardVisual() {
 }
 
 function DemoCompareVisual() {
+  const tv = useTranslations("presentation.visuals");
   const candidates = [
-    { name: "John Smith", score: 4.2, percentile: 92, level: "Strong", color: "bg-primary" },
-    { name: "Emma Wilson", score: 3.8, percentile: 75, level: "Proficient", color: "bg-purple-500" },
-    { name: "Alex Johnson", score: 4.5, percentile: 98, level: "Exceptional", color: "bg-emerald-500" },
+    { name: tv("candidateJohn"), score: 4.2, percentile: 92, level: tv("levelStrong"), color: "bg-primary" },
+    { name: tv("candidateEmma"), score: 3.8, percentile: 75, level: tv("levelProficient"), color: "bg-purple-500" },
+    { name: tv("candidateAlex"), score: 4.5, percentile: 98, level: tv("levelExceptional"), color: "bg-emerald-500" },
   ];
 
-  const dimensions = ["Problem Solving", "Communication", "Technical", "AI Leverage"];
+  const dimensions = [tv("compareDim1"), tv("compareDim2"), tv("compareDim3"), tv("compareDim4")];
 
   return (
     <div className="h-full flex items-center justify-center">
@@ -1175,7 +1058,7 @@ function DemoCompareVisual() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 p-6"
       >
-        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Compare Candidates</div>
+        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{tv("compareCandidates")}</div>
 
         {/* Candidate headers */}
         <div className="grid grid-cols-4 gap-3 mb-6">
@@ -1198,7 +1081,7 @@ function DemoCompareVisual() {
                 c.percentile >= 75 ? "bg-blue-100 text-blue-700" :
                 "bg-slate-100 text-slate-700"
               }`}>
-                Top {100 - c.percentile}%
+                {tv("topPercent", { percent: 100 - c.percentile })}
               </div>
             </motion.div>
           ))}
@@ -1244,8 +1127,8 @@ function DemoCompareVisual() {
         >
           <CheckCircle2 className="w-8 h-8 text-emerald-600" />
           <div>
-            <div className="text-sm font-bold text-emerald-800">Recommended: Alex Johnson</div>
-            <div className="text-xs text-emerald-600">Top 2% overall, exceptional problem solving skills</div>
+            <div className="text-sm font-bold text-emerald-800">{tv("recommendedPrefix")}</div>
+            <div className="text-xs text-emerald-600">{tv("recommendedDesc")}</div>
           </div>
         </motion.div>
       </motion.div>
@@ -1254,14 +1137,160 @@ function DemoCompareVisual() {
 }
 
 export default function PresentationPage() {
+  const t = useTranslations("presentation");
+  const tc = useTranslations("presentation.controls");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const slides: Slide[] = useMemo(() => [
+    {
+      id: "title",
+      title: t("title.title"),
+      subtitle: t("title.subtitle"),
+      visual: "logo",
+    },
+    {
+      id: "problem",
+      title: t("problem.title"),
+      subtitle: t("problem.subtitle"),
+      visual: "stats",
+      stats: [
+        { value: "1000s/day", label: t("problem.stat1Label"), icon: FileText },
+        { value: "74%", label: t("problem.stat2Label"), icon: Bot },
+        { value: "+42%", label: t("problem.stat3Label"), icon: TrendingUp },
+        { value: "45%", label: t("problem.stat4Label"), icon: Sparkles },
+      ],
+      footnote: t("problem.footnote"),
+    },
+    {
+      id: "solution",
+      title: t("solution.title"),
+      subtitle: t("solution.subtitle"),
+      visual: "simulation",
+      features: [
+        { title: t("solution.feature1Title"), desc: t("solution.feature1Desc") },
+        { title: t("solution.feature2Title"), desc: t("solution.feature2Desc") },
+        { title: t("solution.feature3Title"), desc: t("solution.feature3Desc") },
+        { title: t("solution.feature4Title"), desc: t("solution.feature4Desc") },
+      ],
+    },
+    {
+      id: "demo-builder",
+      title: t("demoBuilder.title"),
+      subtitle: t("demoBuilder.subtitle"),
+      visual: "demo-builder",
+    },
+    {
+      id: "demo-join",
+      title: t("demoJoin.title"),
+      subtitle: t("demoJoin.subtitle"),
+      visual: "demo-join",
+    },
+    {
+      id: "demo-chat",
+      title: t("demoChat.title"),
+      subtitle: t("demoChat.subtitle"),
+      visual: "demo-chat",
+    },
+    {
+      id: "demo-call",
+      title: t("demoCall.title"),
+      subtitle: t("demoCall.subtitle"),
+      visual: "demo-call",
+    },
+    {
+      id: "demo-analysis",
+      title: t("demoAnalysis.title"),
+      subtitle: t("demoAnalysis.subtitle"),
+      visual: "demo-analysis",
+      dimensions: [
+        t("demoAnalysis.dimension1"),
+        t("demoAnalysis.dimension2"),
+        t("demoAnalysis.dimension3"),
+        t("demoAnalysis.dimension4"),
+        t("demoAnalysis.dimension5"),
+        t("demoAnalysis.dimension6"),
+        t("demoAnalysis.dimension7"),
+        t("demoAnalysis.dimension8"),
+      ],
+    },
+    {
+      id: "demo-dashboard",
+      title: t("demoDashboard.title"),
+      subtitle: t("demoDashboard.subtitle"),
+      visual: "demo-dashboard",
+    },
+    {
+      id: "demo-scorecard",
+      title: t("demoScorecard.title"),
+      subtitle: t("demoScorecard.subtitle"),
+      visual: "demo-scorecard",
+    },
+    {
+      id: "demo-compare",
+      title: t("demoCompare.title"),
+      subtitle: t("demoCompare.subtitle"),
+      visual: "demo-compare",
+    },
+    {
+      id: "whynow",
+      title: t("whyNow.title"),
+      subtitle: t("whyNow.subtitle"),
+      visual: "gemini",
+      unlocks: [
+        { title: t("whyNow.unlock1Title"), desc: t("whyNow.unlock1Desc") },
+        { title: t("whyNow.unlock2Title"), desc: t("whyNow.unlock2Desc") },
+      ],
+    },
+    {
+      id: "market",
+      title: t("market.title"),
+      subtitle: t("market.subtitle"),
+      visual: "market",
+      marketData: {
+        tam: t("market.tam"),
+        growth: t("market.growth"),
+        competitors: ["HackerRank", "CodeSignal"],
+        beachhead: t("market.beachhead"),
+        moat: t("market.moat"),
+      },
+    },
+    {
+      id: "team",
+      title: t("team.title"),
+      subtitle: t("team.subtitle"),
+      visual: "team",
+      members: [
+        {
+          name: "German Reyes",
+          role: t("team.germanRole"),
+          highlights: [
+            t("team.germanHighlight1"),
+            t("team.germanHighlight2"),
+            t("team.germanHighlight3"),
+            t("team.germanHighlight4"),
+          ],
+        },
+        {
+          name: "Matias Hoyl",
+          role: t("team.matiasRole"),
+          highlights: [
+            t("team.matiasHighlight1"),
+            t("team.matiasHighlight2"),
+            t("team.matiasHighlight3"),
+            t("team.matiasHighlight4"),
+          ],
+        },
+      ],
+      whyUs: t("team.whyUs"),
+    },
+  ], [t]);
 
   const goToSlide = useCallback((index: number) => {
     if (index >= 0 && index < slides.length) {
       setCurrentSlide(index);
     }
-  }, []);
+  }, [slides.length]);
 
   const nextSlide = useCallback(() => {
     goToSlide(currentSlide + 1);
@@ -1394,17 +1423,17 @@ export default function PresentationPage() {
               className="w-full h-full max-h-[600px]"
             >
               {slide.visual === "logo" && <LogoVisual />}
-              {slide.visual === "stats" && "stats" in slide && <StatsVisual stats={slide.stats} />}
-              {slide.visual === "simulation" && "features" in slide && <SimulationVisual features={slide.features} />}
-              {slide.visual === "gemini" && "unlocks" in slide && <GeminiVisual unlocks={slide.unlocks} />}
-              {slide.visual === "market" && "marketData" in slide && <MarketVisual marketData={slide.marketData} />}
-              {slide.visual === "team" && "members" in slide && <TeamVisual members={slide.members} whyUs={slide.whyUs || ""} />}
+              {slide.visual === "stats" && slide.stats && <StatsVisual stats={slide.stats} />}
+              {slide.visual === "simulation" && slide.features && <SimulationVisual features={slide.features} />}
+              {slide.visual === "gemini" && slide.unlocks && <GeminiVisual unlocks={slide.unlocks} />}
+              {slide.visual === "market" && slide.marketData && <MarketVisual marketData={slide.marketData} />}
+              {slide.visual === "team" && slide.members && <TeamVisual members={slide.members} whyUs={slide.whyUs || ""} />}
               {/* Demo visuals */}
               {slide.visual === "demo-builder" && <DemoBuilderVisual />}
               {slide.visual === "demo-join" && <DemoJoinVisual />}
               {slide.visual === "demo-chat" && <DemoChatVisual />}
               {slide.visual === "demo-call" && <DemoCallVisual />}
-              {slide.visual === "demo-analysis" && "dimensions" in slide && slide.dimensions && <DemoAnalysisVisual dimensions={slide.dimensions} />}
+              {slide.visual === "demo-analysis" && slide.dimensions && <DemoAnalysisVisual dimensions={slide.dimensions} />}
               {slide.visual === "demo-dashboard" && <DemoDashboardVisual />}
               {slide.visual === "demo-scorecard" && <DemoScorecardVisual />}
               {slide.visual === "demo-compare" && <DemoCompareVisual />}
@@ -1443,7 +1472,7 @@ export default function PresentationPage() {
           <button
             onClick={toggleFullscreen}
             className="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all mr-2"
-            title={isFullscreen ? "Exit fullscreen (F)" : "Enter fullscreen (F)"}
+            title={isFullscreen ? tc("exitFullscreen") : tc("enterFullscreen")}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>

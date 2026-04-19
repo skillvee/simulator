@@ -34,6 +34,9 @@ vi.mock("@/lib/ai/gemini", () => ({
 // Mock @/lib/ai/conversation-memory
 const mockFormatMemoryForPrompt = vi.fn();
 const mockFormatConversationTimeline = vi.fn().mockReturnValue("");
+const mockFormatConversationsForSummary = vi
+  .fn()
+  .mockReturnValue("Summary of prior conversations.");
 vi.mock("@/lib/ai/conversation-memory", () => ({
   buildCoworkerMemory: vi.fn().mockResolvedValue({
     hasPriorConversations: false,
@@ -45,6 +48,8 @@ vi.mock("@/lib/ai/conversation-memory", () => ({
     mockFormatMemoryForPrompt(...args),
   formatConversationTimeline: (...args: unknown[]) =>
     mockFormatConversationTimeline(...args),
+  formatConversationsForSummary: (...args: unknown[]) =>
+    mockFormatConversationsForSummary(...args),
   buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
 }));
 
@@ -470,6 +475,109 @@ describe("POST /api/call/token", () => {
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
         language: "es",
+      })
+    );
+  });
+
+  it("should use defense phase prompt when isPostSubmission=true with a manager", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "test-id",
+      scenarioId: "scenario-id",
+      repoUrl: "https://github.com/test/repo",
+      codeReview: { summary: "Good structure, missing edge-case handling." },
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["TypeScript", "React"],
+      },
+      user: {
+        name: "Test User",
+        email: "test@example.com",
+      },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-id",
+      name: "Matías Valenzuela",
+      role: "Engineering Manager",
+      personaStyle: "Direct and curious",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockGenerateEphemeralToken.mockResolvedValue("ephemeral-token-123");
+
+    const request = new Request("http://localhost/api/call/token", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "test-id",
+        coworkerId: "coworker-id",
+        isPostSubmission: true,
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const json = await response.json();
+    expect(json.data.isDefenseCall).toBe(true);
+
+    // The defense prompt opens with "Work Review Call" section
+    expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        systemInstruction: expect.stringContaining("Work Review Call"),
+      })
+    );
+    // And threads through the code review summary
+    expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        systemInstruction: expect.stringContaining("missing edge-case handling"),
+      })
+    );
+  });
+
+  it("should NOT use defense phase when isPostSubmission=true but coworker is not a manager", async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: "user-123", name: "Test User" },
+    });
+    mockAssessmentFindFirst.mockResolvedValue({
+      id: "test-id",
+      scenarioId: "scenario-id",
+      scenario: {
+        companyName: "Test Corp",
+        taskDescription: "Build a feature",
+        techStack: ["TypeScript", "React"],
+      },
+      user: { name: "Test User", email: "test@example.com" },
+    });
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-id",
+      name: "Elena Petrova",
+      role: "Staff Engineer",
+      personaStyle: "Thoughtful",
+      knowledge: [],
+    });
+    mockConversationFindMany.mockResolvedValue([]);
+    mockGenerateEphemeralToken.mockResolvedValue("ephemeral-token-123");
+
+    const request = new Request("http://localhost/api/call/token", {
+      method: "POST",
+      body: JSON.stringify({
+        assessmentId: "test-id",
+        coworkerId: "coworker-id",
+        isPostSubmission: true,
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+
+    const json = await response.json();
+    expect(json.data.isDefenseCall).toBe(false);
+    expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
+      expect.objectContaining({
+        systemInstruction: expect.not.stringContaining("Work Review Call"),
       })
     );
   });

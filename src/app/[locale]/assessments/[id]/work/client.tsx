@@ -59,6 +59,7 @@ export function WorkPageClient({
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showPostDefenseModal, setShowPostDefenseModal] = useState(false);
   const [isPostSubmission, setIsPostSubmission] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Compute assessmentStartTime from deadline for hooks that need it
   const assessmentStartTime = useMemo(
@@ -180,8 +181,11 @@ export function WorkPageClient({
   const handleSubmitConfirm = useCallback(async (file: File | null) => {
     setShowSubmitModal(false);
     setIsPostSubmission(true);
+    setIsSubmitting(true);
 
-    // Upload deliverable file if provided
+    // Upload deliverable file if provided. The server parses it synchronously
+    // so the manager has context when the defense call starts — this can take
+    // several seconds, so the loading overlay stays up throughout.
     if (file) {
       try {
         await uploadDeliverable(file, assessmentId);
@@ -190,15 +194,19 @@ export function WorkPageClient({
       }
     }
 
-    // Switch to manager chat and auto-start a defense call
+    // Switch to manager chat and auto-start a defense call. The call-bar UI
+    // takes over from here with its own ringing / connecting state, so we
+    // can drop the overlay once the call has been kicked off.
     if (manager) {
       handleSelectCoworker(manager.id);
-      // Small delay so the chat UI mounts before the call starts
       setTimeout(() => {
         if (startCallRef.current) {
           startCallRef.current(manager.id, "coworker");
         }
+        setIsSubmitting(false);
       }, 300);
+    } else {
+      setIsSubmitting(false);
     }
   }, [assessmentId, manager, handleSelectCoworker]);
 
@@ -295,6 +303,22 @@ export function WorkPageClient({
           <h2 className="text-lg font-semibold">{t("wrappingUp.title")}</h2>
           <p className="text-sm text-muted-foreground">
             {t("wrappingUp.description")}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading overlay while submitting work (upload + server-side parse
+  // before the defense call can start)
+  if (isSubmitting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center max-w-md px-4">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <h2 className="text-lg font-semibold">{t("submittingWork.title")}</h2>
+          <p className="text-sm text-muted-foreground">
+            {t("submittingWork.description", { manager: managerName })}
           </p>
         </div>
       </div>

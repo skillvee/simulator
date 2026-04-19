@@ -8,7 +8,7 @@ import {
   getRelativeStrength,
   LEVEL_EXPECTATIONS,
   type TargetLevel,
-  type RelativeStrength,
+  type RelativeStrengthKey,
 } from "@/lib/rubric/level-expectations";
 
 export interface CandidateData {
@@ -18,7 +18,7 @@ export interface CandidateData {
   status: string;
   overallScore: number | null;
   percentile: number | null;
-  strengthLevel: RelativeStrength | null;
+  strengthLevel: RelativeStrengthKey | null;
   dimensionScores: Record<string, number>;
   redFlagCount: number;
   redFlags: string[];

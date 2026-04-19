@@ -507,8 +507,10 @@ export interface VideoEvaluationResult {
 
 /**
  * Candidate-friendly results data.
- * Filters out recruiter-only information like hiring signals,
- * percentiles, red flags, timestamps, and observable behaviors.
+ *
+ * Intentionally narrow: the candidate view is a *positive, evidence-grounded*
+ * recap, not a scorecard. Hiring signals, red flags, rubric scores, dimensions,
+ * percentiles, and "growth areas" live only on the recruiter side.
  */
 export interface CandidateResultsData {
   assessmentId: string;
@@ -516,36 +518,11 @@ export interface CandidateResultsData {
   scenarioName: string;
   companyName: string;
   generatedAt: string;
-  scoreScale: 4 | 5;
-  overallScore: number;
-  strengthLevel: string;
-  dimensionScores: CandidateDimensionScore[];
-  topStrengths: CandidateStrengthOrGrowth[];
-  growthAreas: CandidateStrengthOrGrowth[];
-  overallSummary: string;
+  narrative: string;
+  observations: string[];
   metrics: CandidateWorkStyleMetrics | null;
-  evaluationConfidence: "high" | "medium" | "low";
-}
-
-/**
- * Dimension score safe for candidate viewing.
- * Includes strengths (reframed green flags) but omits red flags and timestamps.
- */
-export interface CandidateDimensionScore {
-  dimension: string;
-  score: number;
-  summary: string;
-  strengths: string[];
-  rationale: string;
-}
-
-/**
- * A strength or growth area for candidate display
- */
-export interface CandidateStrengthOrGrowth {
-  dimension: string;
-  score: number;
-  description: string;
+  isSearchable: boolean;
+  hasVideoAssessment: boolean;
 }
 
 /**

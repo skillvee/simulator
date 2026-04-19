@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ type DeletionMode = "schedule" | "immediate";
 export function AccountDeletionSection({
   deletionRequestedAt,
 }: AccountDeletionSectionProps) {
+  const t = useTranslations("settings.accountDeletion");
   const router = useRouter();
   const [isRequesting, setIsRequesting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -53,7 +55,7 @@ export function AccountDeletionSection({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to request deletion");
+        throw new Error(data.error || t("errors.requestFailed"));
       }
 
       setHasPendingRequest(true);
@@ -61,7 +63,7 @@ export function AccountDeletionSection({
       setSuccess(data.data.message);
       setShowConfirmation(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setIsRequesting(false);
     }
@@ -69,7 +71,7 @@ export function AccountDeletionSection({
 
   const handleImmediateDeletion = async () => {
     if (confirmText !== "DELETE MY ACCOUNT") {
-      setError('Please type "DELETE MY ACCOUNT" to confirm');
+      setError(t("modal.confirm.errorMustType"));
       return;
     }
 
@@ -87,16 +89,16 @@ export function AccountDeletionSection({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to delete account");
+        throw new Error(data.error || t("errors.deleteFailed"));
       }
 
       // Account deleted - redirect to sign-out
-      setSuccess("Account deleted successfully. Redirecting to homepage...");
+      setSuccess(t("successDeleted"));
       setTimeout(() => {
         router.push("/api/auth/signout");
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setIsDeleting(false);
     }
@@ -115,14 +117,14 @@ export function AccountDeletionSection({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to cancel request");
+        throw new Error(data.error || t("errors.cancelFailed"));
       }
 
       setHasPendingRequest(false);
       setRequestDate(null);
       setSuccess(data.message);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setIsCancelling(false);
     }
@@ -130,7 +132,7 @@ export function AccountDeletionSection({
 
   return (
     <section className="mb-12">
-      <h2 className="mb-6 text-2xl font-semibold text-destructive">Danger Zone</h2>
+      <h2 className="mb-6 text-2xl font-semibold text-destructive">{t("dangerZone")}</h2>
 
       <Card className="border-destructive">
         <CardContent className="p-6">
@@ -139,11 +141,9 @@ export function AccountDeletionSection({
               <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
             <div className="flex-1">
-              <h3 className="mb-1 font-semibold">Delete Account</h3>
+              <h3 className="mb-1 font-semibold">{t("deleteAccount.title")}</h3>
               <p className="text-sm text-muted-foreground">
-                Permanently delete your account and all associated data. This
-                includes your profile, all assessments, recordings, uploaded CVs,
-                and reports.
+                {t("deleteAccount.description")}
               </p>
             </div>
           </div>
@@ -154,7 +154,7 @@ export function AccountDeletionSection({
               href="/privacy"
               className="inline-flex items-center gap-2 text-primary transition-colors hover:text-primary/80"
             >
-              <span className="font-medium">Read our Privacy Policy</span>
+              <span className="font-medium">{t("privacyPolicyLink")}</span>
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -182,11 +182,10 @@ export function AccountDeletionSection({
                 </div>
                 <div className="flex-1">
                   <h4 className="font-semibold text-yellow-800 dark:text-yellow-200">
-                    Deletion Scheduled
+                    {t("pending.title")}
                   </h4>
                   <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                    Requested on {formatDate(requestDate)}. Your account and all
-                    data will be permanently deleted within 30 days.
+                    {t("pending.description", { date: formatDate(requestDate) })}
                   </p>
                 </div>
               </div>
@@ -198,7 +197,7 @@ export function AccountDeletionSection({
                   disabled={isCancelling}
                   className="border-yellow-600 text-yellow-800 hover:bg-yellow-100 dark:border-yellow-400 dark:text-yellow-200 dark:hover:bg-yellow-900"
                 >
-                  {isCancelling ? "Cancelling..." : "Cancel Deletion"}
+                  {isCancelling ? t("pending.cancelling") : t("pending.cancel")}
                 </Button>
               </div>
             </div>
@@ -211,7 +210,7 @@ export function AccountDeletionSection({
               onClick={() => setShowConfirmation(true)}
               className="border-destructive text-destructive hover:bg-destructive hover:text-white"
             >
-              Delete Account
+              {t("actions.delete")}
             </Button>
           )}
 
@@ -219,7 +218,7 @@ export function AccountDeletionSection({
           {!hasPendingRequest && showConfirmation && (
             <div className="rounded-lg border border-destructive bg-destructive/5 p-6">
               <h4 className="mb-4 font-semibold text-destructive">
-                Choose Deletion Method
+                {t("modal.title")}
               </h4>
 
               {/* Deletion mode selector */}
@@ -233,10 +232,9 @@ export function AccountDeletionSection({
                     className="mt-1"
                   />
                   <div>
-                    <p className="font-medium">Schedule Deletion (30 days)</p>
+                    <p className="font-medium">{t("modal.method.schedule.title")}</p>
                     <p className="text-sm text-muted-foreground">
-                      Your account will be marked for deletion. You have 30 days
-                      to change your mind before data is permanently removed.
+                      {t("modal.method.schedule.description")}
                     </p>
                   </div>
                 </label>
@@ -250,10 +248,9 @@ export function AccountDeletionSection({
                     className="mt-1"
                   />
                   <div>
-                    <p className="font-medium">Delete Immediately</p>
+                    <p className="font-medium">{t("modal.method.immediate.title")}</p>
                     <p className="text-sm text-muted-foreground">
-                      Permanently delete your account and all data right now. This
-                      action cannot be undone.
+                      {t("modal.method.immediate.description")}
                     </p>
                   </div>
                 </label>
@@ -262,27 +259,27 @@ export function AccountDeletionSection({
               {/* What will be deleted */}
               <Card className="mb-6">
                 <CardContent className="p-4">
-                  <p className="mb-2 font-medium">What will be deleted:</p>
+                  <p className="mb-2 font-medium">{t("whatWillBeDeleted.title")}</p>
                   <ul className="space-y-1 text-sm text-muted-foreground">
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-destructive"></span>
-                      Your profile information
+                      {t("whatWillBeDeleted.items.profile")}
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-destructive"></span>
-                      All assessments and reports
+                      {t("whatWillBeDeleted.items.assessments")}
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-destructive"></span>
-                      Screen recordings and screenshots
+                      {t("whatWillBeDeleted.items.recordings")}
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-destructive"></span>
-                      Uploaded CVs and resumes
+                      {t("whatWillBeDeleted.items.cvs")}
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-destructive"></span>
-                      Conversation transcripts
+                      {t("whatWillBeDeleted.items.transcripts")}
                     </li>
                   </ul>
                 </CardContent>
@@ -292,11 +289,11 @@ export function AccountDeletionSection({
               {deletionMode === "immediate" && (
                 <div className="mb-6">
                   <label className="mb-2 block text-sm font-medium">
-                    Type{" "}
+                    {t("modal.confirm.labelPrefix")}{" "}
                     <span className="rounded bg-muted px-1 py-0.5 font-mono">
                       DELETE MY ACCOUNT
                     </span>{" "}
-                    to confirm:
+                    {t("modal.confirm.labelSuffix")}
                   </label>
                   <Input
                     type="text"
@@ -316,7 +313,7 @@ export function AccountDeletionSection({
                     onClick={handleScheduleDeletion}
                     disabled={isRequesting}
                   >
-                    {isRequesting ? "Scheduling..." : "Schedule Deletion"}
+                    {isRequesting ? t("modal.buttons.scheduling") : t("modal.buttons.schedule")}
                   </Button>
                 ) : (
                   <Button
@@ -324,7 +321,7 @@ export function AccountDeletionSection({
                     onClick={handleImmediateDeletion}
                     disabled={isDeleting || confirmText !== "DELETE MY ACCOUNT"}
                   >
-                    {isDeleting ? "Deleting..." : "Delete Now"}
+                    {isDeleting ? t("modal.buttons.deleting") : t("modal.buttons.deleteNow")}
                   </Button>
                 )}
                 <Button
@@ -335,7 +332,7 @@ export function AccountDeletionSection({
                     setDeletionMode("schedule");
                   }}
                 >
-                  Cancel
+                  {t("actions.cancel")}
                 </Button>
               </div>
             </div>

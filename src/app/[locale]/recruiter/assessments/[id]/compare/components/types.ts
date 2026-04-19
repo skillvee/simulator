@@ -2,7 +2,7 @@
 // Types for the candidate comparison view
 // ============================================================================
 
-export type CandidateStrengthLevel = "Exceptional" | "Strong" | "Meets expectations" | "Below expectations";
+export type CandidateStrengthLevel = "exceptional" | "strong" | "meets" | "below";
 
 export interface TimestampedBehavior {
   timestamp: string;

@@ -42,6 +42,7 @@ export function CandidateCompareClient({
   } | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>("0");
   const t = useTranslations('recruiter.assessments.compare');
+  const tRelativeStrength = useTranslations('rubric.relativeStrength');
 
   // Video modal state
   const [videoModal, setVideoModal] = useState<{
@@ -207,7 +208,7 @@ export function CandidateCompareClient({
                           candidate.strengthLevel
                         )}
                       >
-                        {candidate.strengthLevel}
+                        {tRelativeStrength(candidate.strengthLevel)}
                       </Badge>
                       {showPercentiles && (
                         <Badge variant="outline" className="text-xs">

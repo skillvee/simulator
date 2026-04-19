@@ -41,8 +41,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { RelativeStrength, TargetLevel } from "@/lib/rubric/level-expectations";
+import type { RelativeStrengthKey, TargetLevel } from "@/lib/rubric/level-expectations";
 import { LEVEL_EXPECTATIONS } from "@/lib/rubric/level-expectations";
+import { useTranslations } from "next-intl";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,7 +56,7 @@ interface CandidateData {
   status: string;
   overallScore: number | null;
   percentile: number | null;
-  strengthLevel: RelativeStrength | null;
+  strengthLevel: RelativeStrengthKey | null;
   dimensionScores: Record<string, number>;
   redFlagCount: number;
   redFlags: string[];
@@ -113,11 +114,11 @@ function getDimStatus(score: number, expectedScore: number): ExpectationStatus {
   return "below";
 }
 
-function getOverallFit(level: RelativeStrength | null): ExpectationStatus | null {
+function getOverallFit(level: RelativeStrengthKey | null): ExpectationStatus | null {
   if (!level) return null;
-  if (level === "Exceptional") return "super_exceeds";
-  if (level === "Strong") return "exceeds";
-  if (level === "Meets expectations") return "meets";
+  if (level === "exceptional") return "super_exceeds";
+  if (level === "strong") return "exceeds";
+  if (level === "meets") return "meets";
   return "below";
 }
 
@@ -211,11 +212,12 @@ function ScoreBar({ score }: { score: number }) {
 
 function FitBadge({ fit, strengthLevel, overallScore, expectedScore }: {
   fit: ExpectationStatus;
-  strengthLevel: RelativeStrength | null;
+  strengthLevel: RelativeStrengthKey | null;
   overallScore: number | null;
   expectedScore: number;
 }) {
   const display = FIT_DISPLAY[fit];
+  const tRelativeStrength = useTranslations("rubric.relativeStrength");
 
   return (
     <TooltipProvider>
@@ -231,7 +233,7 @@ function FitBadge({ fit, strengthLevel, overallScore, expectedScore }: {
           <p className="font-medium text-sm">{STATUS_LABEL_MAP[fit]}</p>
           {strengthLevel && (
             <p className="text-xs text-gray-400 mt-0.5">
-              Original assessment: {strengthLevel}
+              Original assessment: {tRelativeStrength(strengthLevel)}
             </p>
           )}
           {overallScore !== null && (
@@ -289,7 +291,12 @@ export function SimulationCandidatesClientV3({
   const [extraColumns, setExtraColumns] = useState<Set<ExtraColumn>>(new Set());
   const [showColumnConfig, setShowColumnConfig] = useState(false);
 
-  const levelInfo = LEVEL_EXPECTATIONS[targetLevel];
+  const tRubricLevels = useTranslations("rubric.levels");
+  const levelInfo = {
+    label: tRubricLevels(`${targetLevel}.label`),
+    yearsRange: tRubricLevels(`${targetLevel}.yearsRange`),
+    expectedScore: LEVEL_EXPECTATIONS[targetLevel].expectedScore,
+  };
 
   const getExpectedForDim = (dimKey: string): number => {
     if (dimensionExpectations && dimensionExpectations[dimKey] !== undefined) {

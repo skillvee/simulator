@@ -65,35 +65,31 @@ export async function deleteResume(path: string): Promise<void> {
  * @param expiresIn - Expiration time in seconds (default: 1 hour)
  */
 /**
- * Upload a deliverable file to Supabase storage
- * @param file - The file to upload
- * @param assessmentId - The assessment's ID (used for organizing files)
- * @returns The signed URL and path of the uploaded file
+ * Upload a deliverable file for an assessment.
+ *
+ * Goes through the API route so the server can persist a reference on the
+ * Assessment row and generate a summary for the defense call prompt.
  */
 export async function uploadDeliverable(
   file: File,
   assessmentId: string
 ): Promise<UploadResult> {
-  const timestamp = Date.now();
-  const extension = file.name.split(".").pop() || "bin";
-  const path = `${assessmentId}/${timestamp}.${extension}`;
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("assessmentId", assessmentId);
 
-  const { error } = await supabase.storage
-    .from(STORAGE_BUCKETS.DELIVERABLES)
-    .upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-    });
+  const response = await fetch("/api/assessment/deliverable", {
+    method: "POST",
+    body: formData,
+  });
 
-  if (error) {
-    throw new Error(`Failed to upload deliverable: ${error.message}`);
+  const json = await response.json().catch(() => null);
+  if (!response.ok || !json?.success) {
+    const message = json?.error || "Failed to upload deliverable";
+    throw new Error(message);
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(STORAGE_BUCKETS.DELIVERABLES).getPublicUrl(path);
-
-  return { url: publicUrl, path };
+  return { url: json.data.url, path: json.data.path };
 }
 
 export async function getSignedResumeUrl(

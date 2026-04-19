@@ -124,6 +124,25 @@ export const AssessmentFinalizeSchema = z.object({
 export type AssessmentFinalize = z.infer<typeof AssessmentFinalizeSchema>;
 
 /**
+ * POST /api/assessment/visibility - Candidate toggles profile visibility
+ */
+export const AssessmentVisibilitySchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  isSearchable: z.boolean(),
+});
+export type AssessmentVisibility = z.infer<typeof AssessmentVisibilitySchema>;
+
+/**
+ * POST /api/assessment/feedback - Candidate rates their experience
+ */
+export const AssessmentFeedbackSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  rating: z.enum(["LIKE", "DISLIKE"]),
+  comment: z.string().max(2000).optional(),
+});
+export type AssessmentFeedbackInput = z.infer<typeof AssessmentFeedbackSchema>;
+
+/**
  * POST /api/recording/session - Recording session actions
  */
 export const RecordingSessionSchema = z.object({

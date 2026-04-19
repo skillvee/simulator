@@ -1,6 +1,6 @@
 # src/app/api - API Routes
 
-38 routes across 16 endpoints following Next.js 15 app router.
+Next.js 15 app-router routes.
 
 ## Rules
 
@@ -118,9 +118,6 @@ return success({ data });
 
 - **Assessment flow:** call/, chat/, assessment/
 - **Admin:** admin/\* (protected by `requireAdmin()`)
-
-Note: The `defense/` routes were removed in RF-006. Defense calls will be
-handled within the Slack interface using the call/ routes after RF-012.
 
 ## Gotchas
 

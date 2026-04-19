@@ -1,9 +1,13 @@
-import Link from "next/link";
+"use client";
+
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function AuthErrorPage() {
+  const t = useTranslations("auth.error");
   return (
     <main className="relative flex min-h-screen animate-page-enter items-center justify-center bg-background px-6 py-12 text-foreground">
       {/* Gradient blur decoration */}
@@ -23,20 +27,20 @@ export default function AuthErrorPage() {
               <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
             <h1 className="text-3xl font-semibold text-destructive">
-              Authentication Error
+              {t("title")}
             </h1>
             <p className="mt-4 text-muted-foreground">
-              Something went wrong during authentication. Please try again.
+              {t("description")}
             </p>
           </div>
 
           {/* Actions */}
           <div className="flex flex-col gap-4">
             <Button asChild size="lg" className="w-full">
-              <Link href="/sign-in">Try Again</Link>
+              <Link href="/sign-in">{t("tryAgain")}</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full">
-              <Link href="/">Back to Home</Link>
+              <Link href="/">{t("backToHome")}</Link>
             </Button>
           </div>
         </CardContent>

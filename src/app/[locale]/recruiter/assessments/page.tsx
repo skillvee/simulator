@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import { VideoAssessmentStatus } from "@prisma/client";
 import {
   getRelativeStrength,
+  type RelativeStrengthKey,
   type TargetLevel,
 } from "@/lib/rubric/level-expectations";
 import { AssessmentsListClient } from "./client";
@@ -31,7 +32,7 @@ export interface AssessmentCardData {
   targetLevel: string;
   techStack: string[];
   avgScore: number | null;
-  strengthLabel: string | null;
+  strengthLabel: RelativeStrengthKey | null;
 }
 
 /**

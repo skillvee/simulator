@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
+import { getPoolAvatarPath, inferDemographics, isEthnicity, isGender, type Ethnicity, type Gender } from "@/lib/avatar/name-ethnicity";
+import { pickVoiceForCoworker } from "@/lib/ai/gemini-config";
 
 interface SessionUser {
   id: string;
@@ -76,12 +78,16 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const body = await request.json();
-  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName } = body;
+  const { name, role, personaStyle, personality, knowledge, avatarUrl, voiceName, gender, ethnicity } = body;
 
   // Validate required fields
   if (!name || !role || !personaStyle) {
     return error("Missing required fields: name, role, personaStyle", 400);
   }
+
+  const inferred = inferDemographics(name);
+  const resolvedGender: Gender = isGender(gender) ? gender : inferred.gender;
+  const resolvedEthnicity: Ethnicity = isEthnicity(ethnicity) ? ethnicity : inferred.ethnicity;
 
   const coworker = await db.coworker.create({
     data: {
@@ -91,8 +97,10 @@ export async function POST(request: Request, context: RouteContext) {
       personaStyle,
       personality: personality || null,
       knowledge: knowledge || {},
-      avatarUrl,
-      voiceName: voiceName || null,
+      gender: resolvedGender,
+      ethnicity: resolvedEthnicity,
+      avatarUrl: avatarUrl || getPoolAvatarPath(name, { gender: resolvedGender, ethnicity: resolvedEthnicity }),
+      voiceName: voiceName || pickVoiceForCoworker(resolvedGender, name),
     },
   });
 

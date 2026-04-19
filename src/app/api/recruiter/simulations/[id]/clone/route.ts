@@ -14,6 +14,8 @@ import { type SupportedLanguage, isSupportedLanguage } from "@/lib/core/language
 import { generateCodingTask } from "@/lib/scenarios/task-generator";
 import { generateResources } from "@/lib/scenarios/resource-generator";
 import { generateCoworkers } from "@/lib/scenarios/coworker-generator";
+import { getPoolAvatarPath, inferDemographics } from "@/lib/avatar/name-ethnicity";
+import { pickVoiceForCoworker } from "@/lib/ai/gemini-config";
 import { z } from "zod";
 
 const logger = createLogger("api:recruiter:clone-scenario");
@@ -148,20 +150,29 @@ export async function POST(request: Request, context: RouteContext) {
       },
     });
 
-    // 5. Create coworkers for the new scenario
+    // 5. Create coworkers for the new scenario.
+    // Avatar + voice are derived from the LLM-provided gender/ethnicity so a coworker's
+    // picture and voice always match their name — no name-based inference downstream.
     if (coworkerResult.coworkers && coworkerResult.coworkers.length > 0) {
       await db.coworker.createMany({
-        data: coworkerResult.coworkers.map((coworker) => ({
-          scenarioId: newScenario.id,
-          name: coworker.name,
-          role: coworker.role,
-          personaStyle: coworker.personaStyle,
-          personality: coworker.personality ? coworker.personality as unknown as import("@prisma/client").Prisma.InputJsonValue : undefined,
-          knowledge: coworker.knowledge || [],
-          avatarUrl: null, // Avatar will be generated separately if needed
-          voiceName: null, // Voice can be configured later
-          language: targetLanguage,
-        })),
+        data: coworkerResult.coworkers.map((coworker) => {
+          const inferred = inferDemographics(coworker.name);
+          const gender = coworker.gender ?? inferred.gender;
+          const ethnicity = coworker.ethnicity ?? inferred.ethnicity;
+          return {
+            scenarioId: newScenario.id,
+            name: coworker.name,
+            role: coworker.role,
+            personaStyle: coworker.personaStyle,
+            personality: coworker.personality ? coworker.personality as unknown as import("@prisma/client").Prisma.InputJsonValue : undefined,
+            knowledge: coworker.knowledge || [],
+            gender,
+            ethnicity,
+            avatarUrl: getPoolAvatarPath(coworker.name, { gender, ethnicity }),
+            voiceName: pickVoiceForCoworker(gender, coworker.name),
+            language: targetLanguage,
+          };
+        }),
       });
     }
 

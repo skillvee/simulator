@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import {
   MessageSquare,
@@ -23,53 +23,7 @@ import { SectionReveal } from "@/components/landing/section-reveal";
 import { CurveDivider } from "@/components/landing/section-divider";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const timelineSteps = [
-    {
-        icon: Users,
-        title: "Gather Requirements",
-        description: "Candidate joins a kickoff call with their AI manager, then chats with stakeholders to clarify the task. Great candidates ask smart questions. Others dive in blind. You'll see the difference.",
-        tags: ["Manager kickoff", "Stakeholder chat"],
-        video: "/videos/product-step1.mp4"
-    },
-    {
-        icon: Code,
-        title: "Do the Actual Work",
-        description: "Build the feature, analyze the data, create the roadmap—whatever the role requires. Screen is recorded. AI tools are encouraged. We want to see how they really work.",
-        tags: ["Screen recorded", "AI tools allowed", "~20-30 minutes"],
-        video: "/videos/product-step2.mp4"
-    },
-    {
-        icon: MessageSquare,
-        title: "Present and Defend",
-        description: "Submit the work and face questions. The AI pushes back on decisions. Do they defend good ideas? Accept valid criticism? Fold at the first sign of disagreement?",
-        tags: ["Voice call", "Challenging questions"],
-        video: "/videos/product-step3.mp4"
-    }
-];
-
-const comparisonData = [
-    {
-        feature: "Signal Quality",
-        oldWay: "Low-fidelity signals from resumes and interviews.",
-        skillveeWay: "High-fidelity signals from real work simulations."
-    },
-    {
-        feature: "Candidate Experience",
-        oldWay: "Stressful, irrelevant algorithm tests and trivia questions.",
-        skillveeWay: "Engaging, relevant tasks that showcase their skills."
-    },
-    {
-        feature: "Time to Hire",
-        oldWay: "Weeks of scheduling and multiple interview rounds.",
-        skillveeWay: "Asynchronous assessments completed in hours."
-    },
-    {
-        feature: "Bias",
-        oldWay: "Prone to unconscious bias and 'culture fit' assessment.",
-        skillveeWay: "Standardized, objective evidence for every candidate."
-    }
-];
+import { useTranslations } from "next-intl";
 
 const FeatureCard = ({ icon: Icon, title, text, iconColor }: { icon: React.ComponentType<{ className?: string }>, title: string, text: string, iconColor: string }) => (
     <motion.div
@@ -88,28 +42,25 @@ const FeatureCard = ({ icon: Icon, title, text, iconColor }: { icon: React.Compo
 );
 
 function ProductFAQ() {
+  const t = useTranslations("product");
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqs = [
     {
-      question: "How long does it take to set up a simulation?",
-      answer:
-        "Most simulations are ready in under 5 minutes. Paste your job description, review the generated scenario, customize if needed, and you're ready to send to candidates. No weeks of test design required.",
+      question: t("faq.q1.question"),
+      answer: t("faq.q1.answer"),
     },
     {
-      question: "Can I customize the simulation for my specific role?",
-      answer:
-        "Yes. The AI generates a baseline from your JD, but you can customize the scenario, stakeholder personas, specific tasks, and evaluation criteria. Enterprise plans include white-glove simulation design support.",
+      question: t("faq.q2.question"),
+      answer: t("faq.q2.answer"),
     },
     {
-      question: "How do candidates feel about this vs. traditional interviews?",
-      answer:
-        "Candidates consistently rate Skillvee higher than algorithm tests. They appreciate that it's relevant to the actual job, respects their time (30-45 min vs. multi-hour interviews), and lets them show their real skills—not trivia recall.",
+      question: t("faq.q3.question"),
+      answer: t("faq.q3.answer"),
     },
     {
-      question: "What if a candidate has technical issues?",
-      answer:
-        "Candidates can pause and resume. If issues persist, they can contact support. All sessions are saved automatically, so no work is lost. We also provide a pre-flight check before they start.",
+      question: t("faq.q4.question"),
+      answer: t("faq.q4.answer"),
     },
   ];
 
@@ -148,7 +99,56 @@ function ProductFAQ() {
 }
 
 export default function ProductPage() {
+    const t = useTranslations("product");
     const [activeStep, setActiveStep] = useState(0);
+
+    const timelineSteps = [
+        {
+            icon: Users,
+            title: t("timeline.step1.title"),
+            description: t("timeline.step1.description"),
+            tags: [t("timeline.step1.tag1"), t("timeline.step1.tag2")],
+            video: "/videos/product-step1.mp4"
+        },
+        {
+            icon: Code,
+            title: t("timeline.step2.title"),
+            description: t("timeline.step2.description"),
+            tags: [t("timeline.step2.tag1"), t("timeline.step2.tag2"), t("timeline.step2.tag3")],
+            video: "/videos/product-step2.mp4"
+        },
+        {
+            icon: MessageSquare,
+            title: t("timeline.step3.title"),
+            description: t("timeline.step3.description"),
+            tags: [t("timeline.step3.tag1"), t("timeline.step3.tag2")],
+            video: "/videos/product-step3.mp4"
+        }
+    ];
+
+    const comparisonData = [
+        {
+            feature: t("comparison.signalQuality.title"),
+            oldWay: t("comparison.signalQuality.oldWay"),
+            skillveeWay: t("comparison.signalQuality.skillveeWay")
+        },
+        {
+            feature: t("comparison.candidateExperience.title"),
+            oldWay: t("comparison.candidateExperience.oldWay"),
+            skillveeWay: t("comparison.candidateExperience.skillveeWay")
+        },
+        {
+            feature: t("comparison.timeToHire.title"),
+            oldWay: t("comparison.timeToHire.oldWay"),
+            skillveeWay: t("comparison.timeToHire.skillveeWay")
+        },
+        {
+            feature: t("comparison.bias.title"),
+            oldWay: t("comparison.bias.oldWay"),
+            skillveeWay: t("comparison.bias.skillveeWay")
+        }
+    ];
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       {/* Dark Hero Section */}
@@ -183,18 +183,17 @@ export default function ProductPage() {
             >
               <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
                 <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-slate-400 text-sm">See it in action</span>
+                <span className="text-slate-400 text-sm">{t("hero.badge")}</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-6">
-                Watch a candidate complete
+                {t("hero.title")}
                 <br />
-                <span className="text-primary">a real simulation.</span>
+                <span className="text-primary">{t("hero.titleHighlight")}</span>
               </h1>
 
               <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-12">
-                This is what your hiring team sees after a candidate finishes. Real
-                conversations. Real work. Real signal.
+                {t("hero.subtitle")}
               </p>
             </motion.div>
 
@@ -233,11 +232,10 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
             <SectionReveal className="text-center mb-16">
                 <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                A realistic day at work—not algorithm puzzles
+                {t("timeline.title")}
                 </h2>
                 <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-                Candidates experience what the job actually feels like. You see how they
-                actually work.
+                {t("timeline.subtitle")}
                 </p>
             </SectionReveal>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -299,19 +297,19 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
           <SectionReveal className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-              Everything you need to make the decision
+              {t("features.title")}
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              Not just a score. Actual evidence of how they work.
+              {t("features.subtitle")}
             </p>
           </SectionReveal>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              <FeatureCard icon={BarChart3} title="Structured Scorecard" text="AI-generated ratings across key dimensions." iconColor="blue" />
-              <FeatureCard icon={MessageSquare} title="Full Transcripts" text="Every conversation with stakeholders." iconColor="purple" />
-              <FeatureCard icon={Video} title="Screen Recording" text="Watch their entire process if you want." iconColor="emerald" />
-              <FeatureCard icon={Brain} title="AI Tool Usage" text="Do they use AI thoughtfully or blindly copy-paste?" iconColor="amber" />
-              <FeatureCard icon={CheckCircle} title="Handling Feedback" text="How do they respond to pushback? Defend ideas when right?" iconColor="rose" />
-              <FeatureCard icon={Users} title="Communication" text="Can they explain their work clearly and professionally?" iconColor="indigo" />
+              <FeatureCard icon={BarChart3} title={t("features.scorecard.title")} text={t("features.scorecard.text")} iconColor="blue" />
+              <FeatureCard icon={MessageSquare} title={t("features.transcripts.title")} text={t("features.transcripts.text")} iconColor="purple" />
+              <FeatureCard icon={Video} title={t("features.recording.title")} text={t("features.recording.text")} iconColor="emerald" />
+              <FeatureCard icon={Brain} title={t("features.aiUsage.title")} text={t("features.aiUsage.text")} iconColor="amber" />
+              <FeatureCard icon={CheckCircle} title={t("features.feedback.title")} text={t("features.feedback.text")} iconColor="rose" />
+              <FeatureCard icon={Users} title={t("features.communication.title")} text={t("features.communication.text")} iconColor="indigo" />
           </div>
         </div>
         <CurveDivider fillColor="fill-slate-50" />
@@ -322,13 +320,13 @@ export default function ProductPage() {
         <div className="max-w-5xl mx-auto px-6 sm:px-8 lg:px-6">
              <SectionReveal className="text-center mb-16">
                 <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-                There&apos;s a better way to hire
+                {t("comparison.title")}
                 </h2>
             </SectionReveal>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* The Old Way */}
                 <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-                    <h2 className="text-2xl font-bold text-red-600 mb-6 text-center">The Old Way</h2>
+                    <h2 className="text-2xl font-bold text-red-600 mb-6 text-center">{t("comparison.oldWayLabel")}</h2>
                     <div className="space-y-6">
                         {comparisonData.map((item, index) => (
                             <div key={index} className="bg-white border border-slate-200 rounded-xl p-6">
@@ -344,7 +342,7 @@ export default function ProductPage() {
 
                 {/* The Skillvee Way */}
                 <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-                    <h2 className="text-2xl font-bold text-emerald-600 mb-6 text-center">The Skillvee Way</h2>
+                    <h2 className="text-2xl font-bold text-emerald-600 mb-6 text-center">{t("comparison.skillveeWayLabel")}</h2>
                      <div className="space-y-6">
                         {comparisonData.map((item, index) => (
                             <div key={index} className="bg-white border border-slate-200 rounded-xl p-6">
@@ -366,10 +364,10 @@ export default function ProductPage() {
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-6">
           <SectionReveal className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Enterprise-ready from day one
+              {t("security.title")}
             </h2>
             <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-              Your candidate data is secure. Your compliance needs are met.
+              {t("security.subtitle")}
             </p>
           </SectionReveal>
 
@@ -379,10 +377,9 @@ export default function ProductPage() {
                 <div className="w-16 h-16 bg-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Shield className="w-8 h-8 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">SOC 2 Type II</h3>
+                <h3 className="text-lg font-bold text-white mb-2">{t("security.soc2.title")}</h3>
                 <p className="text-slate-400 text-sm">
-                  Audited security controls. Your data is protected by industry-standard
-                  practices.
+                  {t("security.soc2.description")}
                 </p>
               </div>
 
@@ -390,10 +387,9 @@ export default function ProductPage() {
                 <div className="w-16 h-16 bg-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Lock className="w-8 h-8 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">GDPR Compliant</h3>
+                <h3 className="text-lg font-bold text-white mb-2">{t("security.gdpr.title")}</h3>
                 <p className="text-slate-400 text-sm">
-                  Full data privacy compliance for EU candidates. Automatic data retention
-                  policies.
+                  {t("security.gdpr.description")}
                 </p>
               </div>
 
@@ -401,10 +397,9 @@ export default function ProductPage() {
                 <div className="w-16 h-16 bg-blue-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Globe className="w-8 h-8 text-blue-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">SSO & Integrations</h3>
+                <h3 className="text-lg font-bold text-white mb-2">{t("security.sso.title")}</h3>
                 <p className="text-slate-400 text-sm">
-                  SAML SSO, Greenhouse, Lever, and Workday integrations available for
-                  Enterprise.
+                  {t("security.sso.description")}
                 </p>
               </div>
             </div>
@@ -416,7 +411,7 @@ export default function ProductPage() {
                 variant="outline"
                 className="bg-transparent border-white/50 text-white hover:bg-white/10 hover:border-white"
               >
-                Contact us for Enterprise
+                {t("security.contactCta")}
               </Button>
             </Link>
           </SectionReveal>
@@ -428,7 +423,7 @@ export default function ProductPage() {
         <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-6">
           <SectionReveal className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
-              Common questions
+              {t("faq.title")}
             </h2>
           </SectionReveal>
           <ProductFAQ />
@@ -453,23 +448,23 @@ export default function ProductPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl lg:text-6xl font-black text-white mb-6">
-              READY TO UPGRADE
+              {t("cta.title")}
               <br />
-              <span className="text-primary">YOUR HIRING?</span>
+              <span className="text-primary">{t("cta.titleHighlight")}</span>
             </h2>
             <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-              Get a personalized demo or try a sample assessment as a candidate.
+              {t("cta.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/demo">
                 <Button className="h-14 px-10 rounded-full bg-white text-slate-900 font-bold text-lg shadow-xl hover:bg-slate-100 group">
-                  Request Demo
+                  {t("cta.requestDemo")}
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/demo#sample">
                 <Button variant="ghost" className="h-14 px-8 rounded-full text-white hover:bg-white/10 font-semibold">
-                  Try Sample Assessment
+                  {t("cta.trySample")}
                 </Button>
               </Link>
             </div>

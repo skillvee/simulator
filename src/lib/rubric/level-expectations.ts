@@ -11,13 +11,19 @@
  * These expectations provide role-relative context when viewing candidate
  * scores. A score of 3 for a Junior hire "exceeds expectations" while the
  * same score for a Staff hire merely "meets expectations."
+ *
+ * Display strings (level labels, year ranges, relative-strength labels) are
+ * intentionally NOT defined here. They live in `src/messages/{en,es}.json`
+ * under the `rubric` namespace so they can be localised. Consumers should
+ * resolve the slug keys returned by `getRelativeStrength()` and the level
+ * keys in `LEVEL_EXPECTATIONS` via `useTranslations("rubric.levels")` /
+ * `useTranslations("rubric.relativeStrength")` (or `getTranslations` in
+ * server components).
  */
 
 export type TargetLevel = "junior" | "mid" | "senior" | "staff";
 
 export interface LevelExpectation {
-  label: string;
-  yearsRange: string;
   expectedScore: number;
 }
 
@@ -30,23 +36,15 @@ export interface LevelExpectation {
  */
 export const LEVEL_EXPECTATIONS: Record<TargetLevel, LevelExpectation> = {
   junior: {
-    label: "Junior",
-    yearsRange: "0-2 years",
     expectedScore: 2, // Competent — can do the work with guidance
   },
   mid: {
-    label: "Mid-Level",
-    yearsRange: "2-5 years",
     expectedScore: 2.5, // Between Competent and Advanced
   },
   senior: {
-    label: "Senior",
-    yearsRange: "5-8 years",
     expectedScore: 3, // Advanced — works independently, elevates others
   },
   staff: {
-    label: "Staff",
-    yearsRange: "8+ years",
     expectedScore: 3.5, // Between Advanced and Expert
   },
 };
@@ -72,7 +70,19 @@ export function getScoreFit(
 }
 
 /**
- * Determine the overall strength label relative to the target level.
+ * Slug keys for relative-strength labels. Use these as i18n keys under the
+ * `rubric.relativeStrength` namespace.
+ */
+export type RelativeStrengthKey =
+  | "exceptional"
+  | "strong"
+  | "meets"
+  | "below";
+
+/**
+ * @deprecated Use `RelativeStrengthKey` instead. This English-string union
+ * is retained only for legacy callers; new code should pass slug keys back
+ * to the UI and translate at the rendering layer.
  */
 export type RelativeStrength =
   | "Exceptional"
@@ -83,12 +93,12 @@ export type RelativeStrength =
 export function getRelativeStrength(
   overallScore: number,
   targetLevel: TargetLevel
-): RelativeStrength {
+): RelativeStrengthKey {
   const expected = LEVEL_EXPECTATIONS[targetLevel].expectedScore;
   const diff = overallScore - expected;
 
-  if (diff >= 1.0) return "Exceptional";
-  if (diff >= 0.5) return "Strong";
-  if (diff >= -0.5) return "Meets expectations";
-  return "Below expectations";
+  if (diff >= 1.0) return "exceptional";
+  if (diff >= 0.5) return "strong";
+  if (diff >= -0.5) return "meets";
+  return "below";
 }

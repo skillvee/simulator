@@ -1,10 +1,11 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { generateEphemeralToken } from "@/lib/ai/gemini";
-import { GEMINI_VOICES } from "@/lib/ai/gemini-config";
+import { pickVoiceForCoworker } from "@/lib/ai/gemini-config";
 import {
   buildCrossCoworkerContext,
   formatConversationTimeline,
+  formatConversationsForSummary,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
 import { inferDemographics } from "@/lib/avatar";
@@ -15,7 +16,7 @@ import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
 import { logAICall } from "@/lib/analysis";
-import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
+import { buildAgentPrompt, buildDefensePhaseContext } from "@/prompts/build-agent-prompt";
 import { DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/language";
 
 const logger = createLogger("server:api:call:token");
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
   try {
     const validated = await validateRequest(request, CallTokenRequestSchema);
     if ("error" in validated) return validated.error;
-    const { assessmentId, coworkerId, isPostSubmission: _isPostSubmission, language: requestLanguage } = validated.data;
+    const { assessmentId, coworkerId, isPostSubmission, language: requestLanguage } = validated.data;
 
     // Fetch assessment, coworker, and conversations in parallel
     const [assessment, allConversations] = await Promise.all([
@@ -134,7 +135,38 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
       avatarUrl: coworker.avatarUrl,
     };
 
-    // Defense calls removed — PR submission flow no longer used
+    // A defense call is a call with the manager AFTER the candidate submitted their work.
+    // The client sets isPostSubmission=true on the token request from that flow.
+    const isDefenseCall = Boolean(isPostSubmission) && isManagerCoworker;
+
+    let defensePhaseContext: string | undefined;
+    if (isDefenseCall) {
+      const conversationSummary = formatConversationsForSummary(
+        allConversations.map((c) => ({
+          type: c.type as "text" | "voice",
+          coworkerId: c.coworkerId,
+          messages: (c.transcript as unknown as ChatMessage[]) || [],
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+        })),
+        coworkerMap
+      );
+      const codeReviewSummary = assessment.codeReview
+        ? JSON.stringify(assessment.codeReview).slice(0, 4000)
+        : undefined;
+
+      // Screen recording analysis lives on SegmentAnalysis (nested under recordings).
+      // Skip for now — prompt handles missing values. Can enrich later.
+      defensePhaseContext = buildDefensePhaseContext({
+        repoUrl: assessment.repoUrl || assessment.scenario.repoUrl || "",
+        taskDescription: assessment.scenario.taskDescription,
+        techStack: assessment.scenario.techStack,
+        conversationSummary,
+        submissionSummary: assessment.deliverableSummary ?? undefined,
+        submissionFilename: assessment.deliverableFilename ?? undefined,
+        codeReviewSummary,
+      });
+    }
 
     // Extract resource labels for manager awareness
     const resourceLabels = Array.isArray(assessment.scenario.resources)
@@ -152,7 +184,8 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
       candidateName: session.user.name || undefined,
       conversationHistory: memoryContext,
       crossAgentContext: crossCoworkerContext,
-      phase: "ongoing",
+      phase: isDefenseCall ? "defense" : "ongoing",
+      phaseContext: defensePhaseContext,
       media: "voice",
       resourceLabels: isManagerCoworker ? resourceLabels : undefined,
       language,
@@ -164,18 +197,19 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
       endpoint: "/api/call/token",
       promptText: systemInstruction,
       modelVersion: "gemini-live",
-      promptType: "VOICE_CALL",
+      promptType: isDefenseCall ? "DEFENSE_CALL" : "VOICE_CALL",
       promptVersion: "1.0",
       modelUsed: "gemini-live",
     }).catch(() => null);
 
-    // Generate ephemeral token
+    // Generate ephemeral token. Prefer the stored voice; else derive deterministically
+    // from the coworker's persisted gender (or name-inferred gender for legacy rows).
     let voiceName = coworker.voiceName || undefined;
     if (!voiceName) {
-      const { gender } = inferDemographics(coworker.name);
-      const voices = gender === "male" ? GEMINI_VOICES.male : GEMINI_VOICES.female;
-      const hash = coworker.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-      voiceName = voices[hash % voices.length].name;
+      const storedGender = coworker.gender === "male" || coworker.gender === "female"
+        ? coworker.gender
+        : inferDemographics(coworker.name).gender;
+      voiceName = pickVoiceForCoworker(storedGender, coworker.name);
     }
     const token = await generateEphemeralToken({
       systemInstruction,
@@ -191,7 +225,7 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
       coworkerId: coworker.id,
       coworkerName: coworker.name,
       coworkerRole: coworker.role,
-      isDefenseCall: false,
+      isDefenseCall,
     });
   } catch (err) {
     logger.error("Error generating call token", { err });

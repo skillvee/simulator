@@ -13,5 +13,12 @@ export {
 
 export type { CoworkerData, GenerationResult } from "./avatar-generation";
 
-export { getPoolAvatarPath, inferDemographics } from "./name-ethnicity";
-export type { EthnicGroup, Gender, Demographics } from "./name-ethnicity";
+export {
+  getPoolAvatarPath,
+  inferDemographics,
+  isEthnicity,
+  isGender,
+  ETHNICITIES,
+  GENDERS,
+} from "./name-ethnicity";
+export type { Ethnicity, Gender, Demographics } from "./name-ethnicity";

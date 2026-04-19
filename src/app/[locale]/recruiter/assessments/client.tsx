@@ -49,13 +49,13 @@ function normalizeTitle(name: string): string {
 
 function getScoreColor(strengthLabel: string | null) {
   switch (strengthLabel) {
-    case "Exceptional":
+    case "exceptional":
       return "border-green-400 bg-green-50 text-green-700";
-    case "Strong":
+    case "strong":
       return "border-blue-400 bg-blue-50 text-blue-700";
-    case "Meets expectations":
+    case "meets":
       return "border-stone-300 bg-stone-50 text-stone-600";
-    case "Below expectations":
+    case "below":
       return "border-amber-300 bg-amber-50 text-amber-700";
     default:
       return "border-stone-300 bg-stone-50 text-stone-600";
@@ -69,13 +69,13 @@ function getStrengthShortLabel(
 ): string {
   const level = t(`levels.${targetLevel}`);
   switch (strengthLabel) {
-    case "Exceptional":
+    case "exceptional":
       return t('strengthLabels.exceptional', { level });
-    case "Strong":
+    case "strong":
       return t('strengthLabels.strong', { level });
-    case "Meets expectations":
+    case "meets":
       return t('strengthLabels.meets', { level });
-    case "Below expectations":
+    case "below":
       return t('strengthLabels.below', { level });
     default:
       return "";

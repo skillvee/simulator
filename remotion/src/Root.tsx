@@ -25,6 +25,20 @@ import { ProductStep1 } from "./scenes/ProductStep1";
 import { ProductStep2 } from "./scenes/ProductStep2";
 import { ProductStep3 } from "./scenes/ProductStep3";
 
+// Homepage hero loop
+import { HeroLoop } from "./scenes/HeroLoop";
+
+// Hackathon deck
+import {
+  HP1Problem,
+  HP2Solution,
+  HP3CandidateExperience,
+  HP4RecruiterDashboard,
+  HP5WhyNow,
+  HP6Team,
+  HP7Closing,
+} from "./scenes/hackathon";
+
 // Video configuration
 const FPS = 30;
 const WIDTH = 1920;
@@ -247,6 +261,78 @@ export const RemotionRoot: React.FC = () => {
         id="ProductStep3"
         component={ProductStep3}
         durationInFrames={10 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* ============================================
+          HOMEPAGE HERO LOOP — 8 seconds, loopable
+          ============================================ */}
+      <Composition
+        id="HeroLoop"
+        component={HeroLoop}
+        durationInFrames={8 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* ============================================
+          HACKATHON DECK — 7 scenes, 160s total
+          ============================================ */}
+      <Composition
+        id="HP1Problem"
+        component={HP1Problem}
+        durationInFrames={25 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="HP2Solution"
+        component={HP2Solution}
+        durationInFrames={15 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="HP3CandidateExperience"
+        component={HP3CandidateExperience}
+        durationInFrames={40 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="HP4RecruiterDashboard"
+        component={HP4RecruiterDashboard}
+        durationInFrames={30 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="HP5WhyNow"
+        component={HP5WhyNow}
+        durationInFrames={15 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="HP6Team"
+        component={HP6Team}
+        durationInFrames={20 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="HP7Closing"
+        component={HP7Closing}
+        durationInFrames={15 * FPS}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
