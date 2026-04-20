@@ -325,24 +325,34 @@ export default function OnePageInvestorPage() {
             </div>
             <div
               style={{
-                fontSize: 14,
+                fontSize: 13,
                 color: "#334155",
-                margin: "0 0 12px",
-                lineHeight: 1.6,
+                lineHeight: 1.7,
+                margin: "0 0 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
               }}
             >
-              <span
-                style={{ fontSize: 40, fontWeight: 900, color: "#0f172a" }}
-              >
-                $3B
-              </span>
-              <span style={{ fontSize: 13, color: "#64748b" }}>
-                {t("market.tamLabel")}
-              </span>
+              <div>
+                <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {t("market.todayValue")}
+                </span>{" "}
+                {t("market.todayDescription")}
+              </div>
+              <div>
+                <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {t("market.expandValue")}
+                </span>{" "}
+                {t("market.expandDescription")}
+              </div>
+              <div>
+                <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {t("market.visionValue")}
+                </span>{" "}
+                {t("market.visionDescription")}
+              </div>
             </div>
-            <p style={{ fontSize: 14, color: "#334155", fontWeight: 700, margin: "0 0 16px" }}>
-              {t("market.growth")}
-            </p>
             <div
               style={{
                 fontSize: 13,
@@ -373,18 +383,32 @@ export default function OnePageInvestorPage() {
               <Shield size={16} color="#237CF1" />
               <SectionLabel style={{ marginBottom: 0 }}>{t("moat.label")}</SectionLabel>
             </div>
-            <p
+            <div
               style={{
                 fontSize: 13,
                 color: "#334155",
-                margin: "0 0 12px",
-                lineHeight: 1.6,
+                lineHeight: 1.7,
+                margin: "0 0 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
               }}
             >
-              {t("moat.introPre")}
-              <span style={{ fontWeight: 700 }}>{t("moat.introHighlight")}</span>
-              {t("moat.introPost")}
-            </p>
+              <div>
+                <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {t("moat.pillar1Label")}
+                </span>
+                {" — "}
+                {t("moat.pillar1Desc")}
+              </div>
+              <div>
+                <span style={{ fontWeight: 700, color: "#0f172a" }}>
+                  {t("moat.pillar3Label")}
+                </span>
+                {" — "}
+                {t("moat.pillar3Desc")}
+              </div>
+            </div>
             <div
               style={{
                 background: "#f8fafc",

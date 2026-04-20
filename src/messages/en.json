@@ -1973,11 +1973,11 @@
       "label": "The Solution",
       "title": "A 45-min simulation of the real job",
       "item1Title": "Live AI stakeholders",
-      "item1Desc": "Voice conversations with PM, manager, and tech lead — with memory and context",
+      "item1Desc": "Voice conversations with PM, manager, and tech lead",
       "item2Title": "Real deliverables, not trivia",
       "item2Desc": "Candidates produce actual work output — code, PRs, and decisions",
       "item3Title": "Full capture & structured evaluation",
-      "item3Desc": "Screen + voice recorded end-to-end, with scorecards, transcripts, and artifacts",
+      "item3Desc": "Screen + voice recorded end-to-end",
       "footer": "Compare candidates side-by-side on real work."
     },
     "whyNow": {
@@ -1995,16 +1995,21 @@
     },
     "market": {
       "label": "Market",
-      "tamLabel": "pre-hire assessment market",
-      "growth": "Growing 16% CAGR",
+      "todayValue": "$3B",
+      "todayDescription": "pre-hire assessments — today's beachhead, growing 16% CAGR",
+      "expandValue": "$20B+",
+      "expandDescription": "talent acq. software — ATS, sourcing, interview intelligence",
+      "visionValue": "$250B+",
+      "visionDescription": "global recruitment spend as verified work data becomes the matching layer",
       "comparablesLabel": "Comparables:",
-      "comparablesText": "Mercor ($10B), Juicebox ($850M) — AI solved sourcing. HackerRank ($500M, $221M rev) — the incumbent we replace. Evaluation is the missing layer."
+      "comparablesText": "Mercor ($10B), Juicebox ($850M), HackerRank ($500M)"
     },
     "moat": {
       "label": "Moat",
-      "introPre": "Every simulation teaches us what \"good\" looks like ",
-      "introHighlight": "for each company",
-      "introPost": ". As we track which hires succeed, we can predict who will thrive where — not generically, but for each team specifically.",
+      "pillar1Label": "Proprietary data",
+      "pillar1Desc": "every simulation generates behavioral signal competitors don't have",
+      "pillar3Label": "Outcome feedback loop",
+      "pillar3Desc": "we track which hires succeed and sharpen predictions over time",
       "footer": "Competitors can copy the product. They can't copy the data. Starting with engineering, expanding to every white-collar role."
     },
     "businessModel": {
