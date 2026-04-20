@@ -324,10 +324,14 @@ export function FloatingCallBar({
       isConnectingRef.current = false;
     } catch (err) {
       isConnectingRef.current = false;
-      logger.error("Connection error", { err });
-      openingTurnControllerRef.current?.reset();
       const errorMessage =
         err instanceof Error ? err.message : "Connection failed";
+      logger.error("Connection error", {
+        message: errorMessage,
+        name: err instanceof Error ? err.name : undefined,
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+      openingTurnControllerRef.current?.reset();
       setError(errorMessage);
 
       // Stop ring sound on error (if it was started)
@@ -451,21 +455,33 @@ export function FloatingCallBar({
         <div className="rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-destructive/30 overflow-hidden" style={{background: "hsl(var(--slack-bg-surface))"}}>
           <div className="h-1 bg-destructive" />
           <div className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive shrink-0">
                   <PhoneOff size={16} className="text-destructive-foreground" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-bold text-destructive">Call Failed</p>
-                  <p className="max-w-[150px] truncate text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>
+                  <p className="truncate text-xs" style={{color: "hsl(var(--slack-text-muted))"}}>
                     {error || "Connection error"}
                   </p>
                 </div>
               </div>
-              <Button onClick={onCallEnd} variant="outline" size="sm" className="rounded-full">
-                Dismiss
-              </Button>
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  onClick={() => {
+                    setError(null);
+                    setCallState("idle");
+                  }}
+                  size="sm"
+                  className="rounded-full"
+                >
+                  Retry
+                </Button>
+                <Button onClick={onCallEnd} variant="outline" size="sm" className="rounded-full">
+                  Dismiss
+                </Button>
+              </div>
             </div>
           </div>
         </div>

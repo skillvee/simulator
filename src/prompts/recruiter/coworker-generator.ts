@@ -5,7 +5,7 @@
  * Used by the simulation builder to create 2-3 coworker personas with relevant knowledge.
  */
 
-export const COWORKER_GENERATOR_PROMPT_VERSION = "2.3";
+export const COWORKER_GENERATOR_PROMPT_VERSION = "2.4";
 
 export const COWORKER_GENERATOR_PROMPT_V1 = `You are a coworker persona generator for Skillvee, a developer assessment platform. Your job is to generate EXACTLY 2-3 realistic coworker personas based on a role and company context.
 
@@ -226,6 +226,7 @@ Return ONLY a JSON array matching this exact schema:
 ## Language Instructions
 
 **CRITICAL**: When generating coworkers for non-English languages:
+- Translate the \`role\` title into the target language (e.g., "Engineering Manager" → "Gerente de Ingeniería"). Keep well-known anglicisms that teams actually use on-the-job in English (e.g., "DevOps", "Frontend", "Backend", "Machine Learning").
 - Generate ALL persona bios (personaStyle) in the target language - how they communicate and interact
 - Generate ALL knowledge responses in the target language - what they tell candidates
 - Generate personality descriptions and pet peeves in the target language
@@ -233,6 +234,7 @@ Return ONLY a JSON array matching this exact schema:
 - Names should be culturally appropriate for the target language region
 
 For example, for Spanish (es):
+- role: "Gerente de Ingeniería" (not "Engineering Manager"), "Ingeniera Backend Senior" (not "Senior Backend Engineer"), "Gerente de Producto" (not "Product Manager")
 - personaStyle: "Directo y técnico. Prefiere puntos concretos. Responde rápido pero brevemente."
 - knowledge response: "Estamos migrando de REST a GraphQL. El endpoint de pagos todavía usa REST por cumplimiento PCI."
 - petPeeve: "Odia las preguntas vagas como '¿cómo funciona esto?' sin especificar qué es 'esto'"

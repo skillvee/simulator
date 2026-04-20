@@ -13,6 +13,24 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CoworkerSidebar } from "./coworker-sidebar";
 
+// Mock next-intl — return reasonable English defaults for the keys this component uses.
+vi.mock("next-intl", () => ({
+  useTranslations: (namespace?: string) => (key: string) => {
+    if (namespace === "work.sidebar") {
+      const map: Record<string, string> = {
+        yourTeam: "Team",
+        others: "Others",
+      };
+      return map[key] ?? key;
+    }
+    if (namespace === "work.decorativeTeam") {
+      // Return the i18n key path itself; tests below only assert on names/initials.
+      return key;
+    }
+    return key;
+  },
+}));
+
 // ============================================================================
 // Coworker Factory (local to this test, demonstrates pattern)
 // ============================================================================

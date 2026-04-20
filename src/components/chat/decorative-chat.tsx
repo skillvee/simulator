@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Send } from "lucide-react";
 import { getInitials } from "@/lib/ai";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,11 @@ interface Message {
  * Shows status banner and sends a single canned response after first message.
  */
 export function DecorativeChat({ member, managerName }: DecorateChatProps) {
+  const t = useTranslations("work.decorativeTeam");
+  const role = t(`${member.id}.role`);
+  const statusMessage = t(`${member.id}.initialStatusMessage`);
+  const cannedResponse = t(`${member.id}.cannedResponse`, { managerName });
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [hasResponded, setHasResponded] = useState(false);
@@ -53,8 +59,8 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-    // If this is the first message and member has a canned response, send it after delay
-    if (!hasResponded && member.cannedResponse) {
+    // If this is the first message, send the canned response after a delay
+    if (!hasResponded && cannedResponse) {
       setHasResponded(true);
       setIsTyping(true);
 
@@ -63,13 +69,9 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
 
       setTimeout(() => {
         setIsTyping(false);
-        const cannedText = member.cannedResponse!.replace(
-          "{managerName}",
-          managerName
-        );
         const modelMessage: Message = {
           role: "model",
-          text: cannedText,
+          text: cannedResponse,
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, modelMessage]);
@@ -109,19 +111,27 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
               <div className="flex flex-col">
                 <h2 className="text-lg font-bold">{member.name}</h2>
                 <span className="text-xs text-muted-foreground">
-                  {member.role}
+                  {role}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Status Banner */}
-          {member.statusMessage && (
+          {statusMessage && (
             <div
               className={`px-6 py-3 border-t ${statusBannerColor}`}
             >
               <p className={`text-sm font-medium ${statusTextColor}`}>
-                {member.name} is {member.availability === "in-meeting" ? "in a meeting" : "away"} - {member.statusMessage}
+                {t("banner", {
+                  name: member.name,
+                  statusLabel: t(
+                    member.availability === "in-meeting"
+                      ? "inMeetingLabel"
+                      : "awayLabel"
+                  ),
+                  message: statusMessage,
+                })}
               </p>
             </div>
           )}
@@ -140,14 +150,13 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
                   </div>
                 </div>
                 <h2 className="mb-2 text-lg font-semibold">
-                  {member.name} is currently unavailable
+                  {t("currentlyUnavailable", { name: member.name })}
                 </h2>
                 <p className="max-w-md text-sm text-muted-foreground">
-                  {member.statusMessage || "This team member is away."}
+                  {statusMessage || t("defaultUnavailable")}
                 </p>
                 <p className="max-w-md text-sm text-muted-foreground mt-2">
-                  You can still send them a message and they&apos;ll respond when
-                  available.
+                  {t("awayResponseNote")}
                 </p>
               </div>
             ) : (
@@ -213,7 +222,7 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
                 {hasResponded && !isTyping && messages.length > 1 && (
                   <div className="flex justify-center">
                     <div className="text-xs text-muted-foreground bg-muted/50 border border-border rounded-full px-4 py-1.5">
-                      {member.name} is currently unavailable
+                      {t("currentlyUnavailable", { name: member.name })}
                     </div>
                   </div>
                 )}
@@ -233,7 +242,7 @@ export function DecorativeChat({ member, managerName }: DecorateChatProps) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
+              placeholder={t("typePlaceholder")}
               className="flex-1 bg-transparent border-none outline-none text-sm px-2 placeholder:text-muted-foreground"
             />
             <Button

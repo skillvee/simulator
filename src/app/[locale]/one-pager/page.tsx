@@ -462,7 +462,9 @@ export default function OnePageInvestorPage() {
               <span style={{ fontWeight: 600, color: "#1e293b" }}>
                 {t("progress.stackLabel")}
               </span>{" "}
-              {t("progress.stackText")}
+              {t("progress.hackathon")}
+              {" · "}
+              {t("progress.startx")}
             </div>
           </div>
         </div>

@@ -190,6 +190,96 @@
       "openMenu": "Abrir menú",
       "closeMenu": "Cerrar menú"
     },
+    "decorativeTeam": {
+      "banner": "{name} está {statusLabel} - {message}",
+      "inMeetingLabel": "en una reunión",
+      "awayLabel": "ausente",
+      "currentlyUnavailable": "{name} no está disponible en este momento",
+      "defaultUnavailable": "Esta persona del equipo está ausente.",
+      "awayResponseNote": "Aun así puedes enviarle un mensaje y te responderá cuando esté disponible.",
+      "typePlaceholder": "Escribe un mensaje...",
+      "maya-torres": {
+        "role": "Diseñadora de Producto",
+        "initialStatusMessage": "En una revisión de diseño",
+        "cannedResponse": "¡Hola! Estoy en una revisión de diseño ahora mismo. Estaré libre en unos 30 min - ¡escríbeme entonces! Mientras tanto, {managerName} debería poder ayudarte.",
+        "scheduleMessages": {
+          "0": "En una revisión de diseño",
+          "1": "",
+          "2": "Hora de almuerzo"
+        }
+      },
+      "derek-washington": {
+        "role": "Científico de Datos",
+        "initialStatusMessage": "Concentrado en un pipeline de datos",
+        "cannedResponse": "¡Hola! Estoy saturado ahora trabajando en un pipeline de datos, pero {managerName} podría ayudarte con eso. ¡Te aviso cuando esté libre!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Sync del equipo",
+          "2": ""
+        }
+      },
+      "priya-sharma": {
+        "role": "Ingeniera DevOps",
+        "initialStatusMessage": "Desplegando a staging",
+        "cannedResponse": "¡Hola! Estoy en medio de un despliegue a staging ahora mismo. {managerName} debería poder ayudarte mientras tanto. ¡Te escribo cuando termine!",
+        "scheduleMessages": {
+          "0": "Desplegando a staging",
+          "1": "",
+          "2": "Reunión de planificación",
+          "3": ""
+        }
+      },
+      "marcus-lee": {
+        "role": "Ingeniero Frontend",
+        "initialStatusMessage": "",
+        "cannedResponse": "¡Hola! Estoy en nuestro standup del equipo. Debería terminar en unos 15 minutos. Consulta con {managerName} si es urgente, si no te contacto después.",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Tomando un café",
+          "2": ""
+        }
+      },
+      "sofia-andersson": {
+        "role": "Investigadora de UX",
+        "initialStatusMessage": "Haciendo entrevistas con usuarios",
+        "cannedResponse": "¡Hola! Estoy haciendo entrevistas con usuarios toda la mañana. {managerName} probablemente pueda ayudarte. ¡Estaré disponible esta tarde si aún me necesitas!",
+        "scheduleMessages": {
+          "0": "Entrevistas con usuarios",
+          "1": ""
+        }
+      },
+      "james-obrien": {
+        "role": "Ingeniero Backend",
+        "initialStatusMessage": "",
+        "cannedResponse": "¡Hola! Estoy saturado depurando un problema de producción ahora mismo, pero {managerName} podría ayudarte con eso. ¡Te aviso cuando esté libre!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Depurando bug en prod",
+          "2": ""
+        }
+      },
+      "nina-volkov": {
+        "role": "Gerente de Ingeniería",
+        "initialStatusMessage": "",
+        "cannedResponse": "¡Hola! Estoy en un 1:1 ahora mismo. {managerName} debería poder ayudarte. ¡Estaré libre en unos 20 minutos si me necesitas después!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Reunión 1:1",
+          "2": "",
+          "3": "Almuerzo"
+        }
+      },
+      "carlos-mendez": {
+        "role": "Ingeniero de Machine Learning",
+        "initialStatusMessage": "",
+        "cannedResponse": "¡Hola! Estoy monitoreando un entrenamiento de modelo ahora mismo y bastante concentrado. {managerName} podría ayudarte con eso. ¡Te aviso cuando esté libre!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Entrenando modelo - AFK",
+          "2": ""
+        }
+      }
+    },
     "submitWorkModal": {
       "title": "¿Listo para Entregar?",
       "description": "Presentarás tu trabajo a {manager} para finalizar.",
@@ -610,7 +700,9 @@
         "draft": "Borrador",
         "noCandidatesYet": "No hay candidatos aún",
         "copyInviteLink": "Copiar enlace de invitación",
-        "linkCopied": "Enlace de simulación copiado"
+        "linkCopied": "Enlace de simulación copiado",
+        "openAssessment": "Abrir evaluación",
+        "avg": "prom"
       },
       "activity": {
         "completed": "{name} completó",
@@ -1923,9 +2015,10 @@
     },
     "progress": {
       "label": "Progreso",
-      "intro": "Prototipo funcionando. 2 pilotos comprometidos. Flujo completo de simulación en vivo — conversaciones de voz con IA, entorno de código real, captura de pantalla y scorecards automatizadas.",
-      "stackLabel": "Stack:",
-      "stackText": "Next.js, Supabase, Gemini Live (voz), Gemini Flash (evaluación). Construido y enviando rápido."
+      "intro": "Prototipo construido y lanzado. 2 pilotos comprometidos.",
+      "stackLabel": "Validación:",
+      "hackathon": "Ganadores del Hackathon de DeepMind + Stanford",
+      "startx": "Acelerados por StartX"
     },
     "team": {
       "label": "Equipo",

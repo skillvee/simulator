@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect, useMemo } from "react";
+import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -15,36 +15,33 @@ import { Markdown } from "@/components/shared/markdown";
 import type { DecorativeTeamMember, ScenarioResource } from "@/types";
 
 /**
- * Get the current status for a decorative member based on elapsed time
+ * Resolve the active schedule entry for a decorative member based on elapsed time.
+ * Returns the current status and the index of the schedule entry (or -1 for initial).
  */
 function getCurrentStatus(
   member: DecorativeTeamMember,
   elapsedMinutes: number
-): { status: "online" | "away" | "in-meeting" | "offline"; statusMessage: string } {
+): { status: "online" | "away" | "in-meeting" | "offline"; scheduleIndex: number } {
   if (!member.statusSchedule || member.statusSchedule.length === 0) {
-    return {
-      status: member.availability || "online",
-      statusMessage: member.statusMessage || "",
-    };
+    return { status: member.availability || "online", scheduleIndex: -1 };
   }
 
-  // Find the most recent schedule entry that has started
-  const applicableEntries = member.statusSchedule
-    .filter((entry) => entry.startMinutes <= elapsedMinutes)
-    .sort((a, b) => b.startMinutes - a.startMinutes);
+  let activeIndex = -1;
+  let latestStart = -1;
+  member.statusSchedule.forEach((entry, idx) => {
+    if (entry.startMinutes <= elapsedMinutes && entry.startMinutes > latestStart) {
+      activeIndex = idx;
+      latestStart = entry.startMinutes;
+    }
+  });
 
-  if (applicableEntries.length === 0) {
-    // No schedule entry has started yet, use initial status
-    return {
-      status: member.availability || "online",
-      statusMessage: member.statusMessage || "",
-    };
+  if (activeIndex === -1) {
+    return { status: member.availability || "online", scheduleIndex: -1 };
   }
 
-  const currentEntry = applicableEntries[0];
   return {
-    status: currentEntry.status,
-    statusMessage: currentEntry.statusMessage,
+    status: member.statusSchedule[activeIndex].status,
+    scheduleIndex: activeIndex,
   };
 }
 
@@ -311,6 +308,22 @@ function SlackLayoutInner({
     }
   }, [onStartCallRef]);
 
+  // Auto-start the defense call when the parent signals post-submission.
+  // Guarded by a ref so a hung-up defense call isn't restarted.
+  const defenseCallStartedRef = useRef(false);
+  useEffect(() => {
+    if (!isPostSubmission || defenseCallStartedRef.current || activeCall) {
+      return;
+    }
+    const manager = coworkers.find((c) =>
+      c.role.toLowerCase().includes("manager")
+    );
+    if (manager) {
+      defenseCallStartedRef.current = true;
+      startCall(manager.id, "coworker");
+    }
+  }, [isPostSubmission, activeCall, coworkers]);
+
   // Expose incrementUnread to parent via callback ref
   useEffect(() => {
     if (onIncrementUnreadRef) {
@@ -528,9 +541,9 @@ function SlackLayoutInner({
               <div className="space-y-1">
                 {DECORATIVE_TEAM_MEMBERS.map((member) => (
                   <AwayTeamMember
-                    key={member.name}
+                    key={member.id}
                     member={member}
-                    isSelected={selectedCoworkerId === `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    isSelected={selectedCoworkerId === `decorative-${member.id}`}
                     elapsedMinutes={elapsedMinutes}
                     onSelect={selectCoworker}
                   />
@@ -554,8 +567,11 @@ function SlackLayoutInner({
             </div>
           )}
 
-          {/* Floating Call Bar - fixed at bottom when call is active */}
-          {activeCall && callingCoworker && (
+          {/* Floating Call Bar — sidebar placement for regular calls.
+              Defense calls (isPostSubmission) are rendered prominently in the
+              main content area instead, so a failed auto-connect can't be
+              missed by the candidate. */}
+          {activeCall && callingCoworker && !isPostSubmission && (
             <div className="p-4 relative animate-in slide-in-from-bottom-5 duration-300 fade-in">
               <FloatingCallBar
                 assessmentId={assessmentId}
@@ -572,6 +588,19 @@ function SlackLayoutInner({
 
         {/* Main content area */}
         <main className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden" style={{background: "hsl(var(--slack-bg-main))"}}>
+          {activeCall && callingCoworker && isPostSubmission ? (
+            <div className="mb-4 animate-in slide-in-from-top-5 duration-300 fade-in">
+              <FloatingCallBar
+                assessmentId={assessmentId}
+                coworker={callingCoworker}
+                callType={activeCall.callType}
+                onCallEnd={endCall}
+                onDefenseComplete={onDefenseComplete}
+                isPostSubmission={isPostSubmission}
+                language={language}
+              />
+            </div>
+          ) : null}
           {selectedResourceIndex != null && resources?.[selectedResourceIndex] ? (
             <ResourceViewer
               resource={resources[selectedResourceIndex]}
@@ -912,12 +941,17 @@ function ResourceViewer({
 }
 
 function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTeamMemberProps) {
-  const decorativeId = `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`;
+  const t = useTranslations("work.decorativeTeam");
+  const decorativeId = `decorative-${member.id}`;
 
-  // Get current status based on elapsed time
   const currentStatus = getCurrentStatus(member, elapsedMinutes);
 
-  // Determine status dot color based on current availability
+  const role = t(`${member.id}.role`);
+  const scheduleMessage =
+    currentStatus.scheduleIndex >= 0
+      ? t(`${member.id}.scheduleMessages.${currentStatus.scheduleIndex}`)
+      : t(`${member.id}.initialStatusMessage`);
+
   const statusDotColor = {
     online: "bg-green-500",
     away: "bg-yellow-500",
@@ -947,7 +981,7 @@ function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTe
           e.currentTarget.style.background = "transparent";
         }
       }}
-      title={currentStatus.statusMessage || currentStatus.status}
+      title={scheduleMessage || currentStatus.status}
     >
       <div className="relative">
         <div className="inline-block rounded-full grayscale-[30%]" style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}}>
@@ -964,7 +998,7 @@ function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTe
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate" style={{color: "hsl(var(--slack-text))"}}>{member.name}</div>
         <div className="text-[10px] truncate italic" style={{color: "hsl(var(--slack-text-muted))"}}>
-          {currentStatus.statusMessage || member.role}
+          {scheduleMessage || role}
         </div>
       </div>
     </div>

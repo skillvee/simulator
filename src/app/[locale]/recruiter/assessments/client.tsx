@@ -1,43 +1,52 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   Copy,
   Check,
-  Users,
-  Clock,
+  ArrowUpRight,
   ClipboardCheck,
-  Eye,
-  Link as LinkIcon,
-  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import type { AssessmentCardData } from "./page";
+import type { AssessmentCardData } from "./_shared/data";
 
 type TranslationFn = ReturnType<typeof useTranslations>;
 
-function formatRelativeTime(dateString: string, t: TranslationFn) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+// Skillvee palette — blue / indigo / slate family around #237CF1
+const POSTERS = [
+  { from: "#1E40AF", via: "#237CF1", to: "#60A5FA" },
+  { from: "#1E3A8A", via: "#4338CA", to: "#6366F1" },
+  { from: "#0369A1", via: "#0EA5E9", to: "#38BDF8" },
+  { from: "#0F172A", via: "#1E3A8A", to: "#3B82F6" },
+  { from: "#4338CA", via: "#6366F1", to: "#A5B4FC" },
+  { from: "#1E293B", via: "#334155", to: "#64748B" },
+  { from: "#0C4A6E", via: "#0369A1", to: "#0EA5E9" },
+  { from: "#312E81", via: "#4F46E5", to: "#818CF8" },
+  { from: "#237CF1", via: "#6366F1", to: "#8B5CF6" },
+  { from: "#1E40AF", via: "#334155", to: "#1C1917" },
+];
 
-  if (diffHours < 1) return t('time.justNow');
-  if (diffHours < 24) return t('time.hoursAgo', { hours: diffHours });
-  if (diffDays === 1) return t('time.yesterday');
-  if (diffDays < 7) return t('time.daysAgo', { days: diffDays });
-  if (diffDays < 30) return t('time.weeksAgo', { weeks: Math.floor(diffDays / 7) });
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(date);
+function hashString(str: string): number {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h << 5) - h + str.charCodeAt(i);
+  return Math.abs(h);
+}
+
+function posterFor(id: string) {
+  return POSTERS[hashString(id) % POSTERS.length]!;
+}
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 function normalizeTitle(name: string): string {
@@ -47,39 +56,22 @@ function normalizeTitle(name: string): string {
   return name;
 }
 
-function getScoreColor(strengthLabel: string | null) {
-  switch (strengthLabel) {
-    case "exceptional":
-      return "border-green-400 bg-green-50 text-green-700";
-    case "strong":
-      return "border-blue-400 bg-blue-50 text-blue-700";
-    case "meets":
-      return "border-stone-300 bg-stone-50 text-stone-600";
-    case "below":
-      return "border-amber-300 bg-amber-50 text-amber-700";
-    default:
-      return "border-stone-300 bg-stone-50 text-stone-600";
-  }
-}
+function formatRelativeTime(dateString: string, t: TranslationFn): string {
+  const date = new Date(dateString);
+  const diffMs = Date.now() - date.getTime();
+  const diffHours = Math.floor(diffMs / 3_600_000);
+  const diffDays = Math.floor(diffMs / 86_400_000);
 
-function getStrengthShortLabel(
-  strengthLabel: string | null,
-  targetLevel: string,
-  t: TranslationFn
-): string {
-  const level = t(`levels.${targetLevel}`);
-  switch (strengthLabel) {
-    case "exceptional":
-      return t('strengthLabels.exceptional', { level });
-    case "strong":
-      return t('strengthLabels.strong', { level });
-    case "meets":
-      return t('strengthLabels.meets', { level });
-    case "below":
-      return t('strengthLabels.below', { level });
-    default:
-      return "";
-  }
+  if (diffHours < 1) return t("time.justNow");
+  if (diffHours < 24) return t("time.hoursAgo", { hours: diffHours });
+  if (diffDays === 1) return t("time.yesterday");
+  if (diffDays < 7) return t("time.daysAgo", { days: diffDays });
+  if (diffDays < 30)
+    return t("time.weeksAgo", { weeks: Math.floor(diffDays / 7) });
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
 }
 
 interface AssessmentsListClientProps {
@@ -89,18 +81,40 @@ interface AssessmentsListClientProps {
 export function AssessmentsListClient({
   simulations,
 }: AssessmentsListClientProps) {
+  const t = useTranslations("recruiter.assessments");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const t = useTranslations('recruiter.assessments');
 
-  const handleCopyLink = async (
-    e: React.MouseEvent,
-    simulationId: string
-  ) => {
+  const totals = useMemo(() => {
+    const candidates = simulations.reduce(
+      (s, x) => s + x.totalCandidates,
+      0
+    );
+    const review = simulations.reduce(
+      (s, x) => s + x.needsReviewCount,
+      0
+    );
+    return { candidates, review };
+  }, [simulations]);
+
+  const sorted = useMemo(() => {
+    return [...simulations].sort((a, b) => {
+      const stateA =
+        a.needsReviewCount > 0 ? 0 : a.totalCandidates > 0 ? 1 : 2;
+      const stateB =
+        b.needsReviewCount > 0 ? 0 : b.totalCandidates > 0 ? 1 : 2;
+      if (stateA !== stateB) return stateA - stateB;
+      const dateA = a.lastActivityDate ?? a.createdAt;
+      const dateB = b.lastActivityDate ?? b.createdAt;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    });
+  }, [simulations]);
+
+  const handleCopy = async (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     const baseUrl =
       typeof window !== "undefined" ? window.location.origin : "";
-    const link = `${baseUrl}/invite/${simulationId}`;
+    const link = `${baseUrl}/invite/${id}`;
     try {
       await navigator.clipboard.writeText(link);
     } catch {
@@ -111,572 +125,254 @@ export function AssessmentsListClient({
       document.execCommand("copy");
       document.body.removeChild(textArea);
     }
-    setCopiedId(simulationId);
-    toast.success(t('card.linkCopied'));
+    setCopiedId(id);
+    toast.success(t("card.linkCopied"));
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Aggregate stats
-  const totalCandidates = simulations.reduce(
-    (sum, s) => sum + s.totalCandidates,
-    0
-  );
-  const totalCompleted = simulations.reduce(
-    (sum, s) => sum + s.completedCount,
-    0
-  );
-  const totalInProgress = simulations.reduce(
-    (sum, s) => sum + s.inProgressCount,
-    0
-  );
-  const totalNeedsReview = simulations.reduce(
-    (sum, s) => sum + s.needsReviewCount,
-    0
-  );
-
-  // Sort by urgency: needs-review first, then active, then empty
-  const sorted = useMemo(() => {
-    return [...simulations].sort((a, b) => {
-      const stateA =
-        a.needsReviewCount > 0 ? 0 : a.totalCandidates > 0 ? 1 : 2;
-      const stateB =
-        b.needsReviewCount > 0 ? 0 : b.totalCandidates > 0 ? 1 : 2;
-      if (stateA !== stateB) return stateA - stateB;
-      // Within same state, sort by most recent activity, then creation date
-      const dateA = a.lastActivityDate ?? a.createdAt;
-      const dateB = b.lastActivityDate ?? b.createdAt;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
-    });
-  }, [simulations]);
-
-  return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-stone-900">{t('title')}</h1>
-        <Button asChild className="bg-blue-600 hover:bg-blue-700">
-          <Link href="/recruiter/simulations/new">
-            <Plus className="mr-2 h-4 w-4" />
-            {t('createSimulation')}
-          </Link>
-        </Button>
-      </div>
-
-      {/* Stat pills */}
-      {simulations.length > 0 && (
-        <div className="flex items-center gap-3 mb-6 flex-wrap">
-          <StatPill t={t} label="simulations" value={simulations.length} />
-          <StatPill t={t} label="candidates" value={totalCandidates} />
-          <StatPill t={t} label="completed" value={totalCompleted} />
-          {totalInProgress > 0 && (
-            <StatPill t={t} label="inProgress" value={totalInProgress} />
-          )}
-          {totalNeedsReview > 0 && (
-            <StatPill
-              t={t}
-              label="toReview"
-              value={totalNeedsReview}
-              highlight
-            />
-          )}
-        </div>
-      )}
-
-      {/* Grid */}
-      {simulations.length === 0 ? (
-        <Card className="border-stone-200 bg-white">
-          <CardContent className="p-12 text-center">
-            <ClipboardCheck className="mx-auto h-16 w-16 text-stone-300" />
-            <h2 className="mt-6 text-xl font-semibold text-stone-900">
-              {t('empty.title')}
-            </h2>
-            <p className="mt-2 text-stone-500">
-              {t('empty.description')}
-            </p>
+  if (simulations.length === 0) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="mx-auto max-w-[1320px] px-8 py-12">
+          <div className="mb-10 flex items-end justify-between">
+            <h1 className="text-4xl font-semibold tracking-tight text-stone-900">
+              {t("title")}
+            </h1>
             <Button
               asChild
-              className="mt-6 bg-blue-600 hover:bg-blue-700"
+              className="h-10 rounded-full bg-stone-900 px-5 text-sm font-medium text-white hover:bg-stone-800"
             >
               <Link href="/recruiter/simulations/new">
                 <Plus className="mr-2 h-4 w-4" />
-                {t('empty.createButton')}
+                {t("createSimulation")}
               </Link>
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          </div>
+          <Card className="border-stone-200 bg-white">
+            <CardContent className="p-12 text-center">
+              <ClipboardCheck className="mx-auto h-16 w-16 text-stone-300" />
+              <h2 className="mt-6 text-xl font-semibold text-stone-900">
+                {t("empty.title")}
+              </h2>
+              <p className="mt-2 text-stone-500">{t("empty.description")}</p>
+              <Button
+                asChild
+                className="mt-6 rounded-full bg-stone-900 px-5 text-white hover:bg-stone-800"
+              >
+                <Link href="/recruiter/simulations/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t("empty.createButton")}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto max-w-[1320px] px-8 py-12">
+        {/* Header */}
+        <div className="mb-10 flex items-end justify-between">
+          <div>
+            <h1 className="text-4xl font-semibold tracking-tight text-stone-900">
+              {t("title")}
+            </h1>
+            <p className="mt-2 text-sm text-stone-500">
+              {simulations.length} {t("stats.simulations")}
+              <span className="mx-2 text-stone-300">·</span>
+              {totals.candidates} {t("stats.candidates")}
+              {totals.review > 0 && (
+                <>
+                  <span className="mx-2 text-stone-300">·</span>
+                  <span className="font-medium text-stone-900">
+                    {totals.review} {t("stats.toReview")}
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+          <Button
+            asChild
+            className="h-10 rounded-full bg-stone-900 px-5 text-sm font-medium text-white hover:bg-stone-800"
+          >
+            <Link href="/recruiter/simulations/new">
+              <Plus className="mr-2 h-4 w-4" />
+              {t("createSimulation")}
+            </Link>
+          </Button>
+        </div>
+
+        {/* Poster grid */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sorted.map((sim) => (
-            <AssessmentCard
+            <PosterTile
               key={sim.id}
               sim={sim}
-              copiedId={copiedId}
-              onCopyLink={handleCopyLink}
+              copied={copiedId === sim.id}
+              onCopy={handleCopy}
               t={t}
             />
           ))}
         </div>
-      )}
-    </div>
-  );
-}
-
-// --- Stat Pill ---
-
-function StatPill({
-  t,
-  label,
-  value,
-  highlight,
-}: {
-  t: TranslationFn;
-  label: string;
-  value: number;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-lg px-3.5 py-2 border ${
-        highlight
-          ? "bg-blue-50 border-blue-200"
-          : "bg-stone-50 border-stone-100"
-      }`}
-    >
-      <div
-        className={`text-lg font-semibold tabular-nums ${
-          highlight ? "text-blue-700" : "text-stone-900"
-        }`}
-      >
-        {value}
-      </div>
-      <div
-        className={`text-[11px] ${
-          highlight ? "text-blue-600" : "text-stone-500"
-        }`}
-      >
-        {t(`stats.${label}`)}
       </div>
     </div>
   );
 }
 
-// --- Score Circle ---
-
-function ScoreCircle({
-  score,
-  strengthLabel,
-  targetLevel,
+function PosterTile({
+  sim,
+  copied,
+  onCopy,
   t,
 }: {
-  score: number;
-  strengthLabel: string | null;
-  targetLevel: string;
+  sim: AssessmentCardData;
+  copied: boolean;
+  onCopy: (e: React.MouseEvent, id: string) => void;
   t: TranslationFn;
 }) {
-  const colorClass = getScoreColor(strengthLabel);
-  const shortLabel = getStrengthShortLabel(strengthLabel, targetLevel, t);
+  const poster = posterFor(sim.id);
+  const empty = sim.totalCandidates === 0;
 
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border-2 flex-shrink-0 ${colorClass}`}
-      >
-        {score.toFixed(1)}
-      </div>
-      {shortLabel && (
-        <span className="text-[11px] text-stone-500">{shortLabel}</span>
-      )}
-    </div>
-  );
-}
-
-// --- Progress Bar ---
-
-function PipelineBar({ sim, t }: { sim: AssessmentCardData; t: TranslationFn }) {
-  return (
-    <div>
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <Users className="h-3.5 w-3.5 text-stone-400" />
-        <span className="text-xs text-stone-600">
-          <span className="font-medium text-stone-900">
-            {sim.totalCandidates}
-          </span>{" "}
-          {sim.totalCandidates !== 1 ? t('card.candidates') : t('card.candidate')}
-        </span>
-      </div>
-
-      <div className="flex h-2 w-full rounded-full overflow-hidden bg-stone-100 mb-2">
-        {sim.completedCount > 0 && (
-          <div
-            className="bg-green-500"
-            style={{
-              width: `${(sim.completedCount / sim.totalCandidates) * 100}%`,
-            }}
-          />
-        )}
-        {sim.inProgressCount > 0 && (
-          <div
-            className="bg-blue-500"
-            style={{
-              width: `${(sim.inProgressCount / sim.totalCandidates) * 100}%`,
-            }}
-          />
-        )}
-        {sim.pendingCount > 0 && (
-          <div
-            className="bg-stone-300"
-            style={{
-              width: `${(sim.pendingCount / sim.totalCandidates) * 100}%`,
-            }}
-          />
-        )}
-      </div>
-
-      <div className="flex items-center gap-3 text-xs text-stone-500">
-        {sim.completedCount > 0 && (
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
-            {sim.completedCount} {t('card.completed')}
-          </span>
-        )}
-        {sim.inProgressCount > 0 && (
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-blue-500" />
-            {sim.inProgressCount} {t('card.active')}
-          </span>
-        )}
-        {sim.pendingCount > 0 && (
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-stone-300" />
-            {sim.pendingCount} {t('card.pending')}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// --- Tech Stack Tags ---
-
-function TechStackTags({ techStack }: { techStack: string[] }) {
-  if (techStack.length === 0) return null;
-  const visible = techStack.slice(0, 3);
-  const overflow = techStack.length - 3;
-
-  return (
-    <div className="flex items-center gap-1 flex-wrap">
-      {visible.map((tech) => (
-        <Badge
-          key={tech}
-          variant="secondary"
-          className="bg-stone-100 text-stone-500 text-[10px] px-1.5 py-0 font-normal border-0"
-        >
-          {tech}
-        </Badge>
-      ))}
-      {overflow > 0 && (
-        <span className="text-[10px] text-stone-400">+{overflow}</span>
-      )}
-    </div>
-  );
-}
-
-// --- Last Activity Footer ---
-
-function LastActivity({ sim, t }: { sim: AssessmentCardData; t: TranslationFn }) {
-  if (!sim.lastActivityDate) return null;
-
-  const getActivityText = () => {
-    if (sim.lastActivityType && sim.lastActivityUserName) {
-      return t(`activity.${sim.lastActivityType}`, { name: sim.lastActivityUserName });
-    } else if (sim.lastActivityType) {
-      return t(`activity.${sim.lastActivityType}`, { name: t('activity.someone') });
-    }
-    return sim.lastActivityDescription;
+  const gradientStyle = {
+    background: `linear-gradient(135deg, ${poster.from} 0%, ${poster.via} 50%, ${poster.to} 100%)`,
   };
 
-  return (
-    <div className="pt-2 border-t border-stone-100">
-      <div className="flex items-center gap-1 text-xs text-stone-400">
-        <Clock className="h-3 w-3 flex-shrink-0" />
-        <span className="truncate">
-          {getActivityText()}
-          {sim.lastActivityDate && ` ${formatRelativeTime(sim.lastActivityDate, t)}`}
-        </span>
-      </div>
-    </div>
-  );
-}
+  const activityText =
+    sim.lastActivityDate && sim.lastActivityType
+      ? `${t(`activity.${sim.lastActivityType}`, {
+          name: sim.lastActivityUserName ?? t("activity.someone"),
+        })} ${formatRelativeTime(sim.lastActivityDate, t)}`
+      : null;
 
-// --- Company + Status Line ---
-
-function CompanyStatus({
-  sim,
-  dimmed,
-  t,
-}: {
-  sim: AssessmentCardData;
-  dimmed?: boolean;
-  t: TranslationFn;
-}) {
-  // Hide company if title already contains it
-  const showCompany = !sim.name
-    .toLowerCase()
-    .includes(sim.companyName.toLowerCase());
-
-  return (
-    <div className="flex items-center gap-1.5">
-      {showCompany && (
-        <>
-          <span
-            className={`text-xs truncate ${dimmed ? "text-stone-400" : "text-stone-400"}`}
-          >
-            {sim.companyName}
-          </span>
-          <span className="text-stone-200">·</span>
-        </>
-      )}
-      {sim.isPublished ? (
-        <span className="flex items-center gap-1 text-[11px] text-green-600 flex-shrink-0">
-          <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-          {t('card.open')}
-        </span>
-      ) : (
-        <span className="text-[11px] text-stone-400 flex-shrink-0">
-          {t('card.draft')}
-        </span>
-      )}
-    </div>
-  );
-}
-
-// --- Main Card Component ---
-
-function AssessmentCard({
-  sim,
-  copiedId,
-  onCopyLink,
-  t,
-}: {
-  sim: AssessmentCardData;
-  copiedId: string | null;
-  onCopyLink: (e: React.MouseEvent, id: string) => void;
-  t: TranslationFn;
-}) {
-  const hasUnreviewed = sim.needsReviewCount > 0;
-  const hasCandidates = sim.totalCandidates > 0;
-
-  // State A: Needs attention
-  if (hasUnreviewed) {
-    return (
-      <Link
-        href={`/recruiter/assessments/${sim.id}`}
-        className="block group"
-      >
-        <Card className="bg-white shadow-sm hover:shadow-md transition-all h-full flex flex-col rounded-xl border border-stone-200 hover:border-blue-300">
-          <CardContent className="p-4 flex flex-col flex-1 gap-3">
-            {/* Review CTA — primary element */}
-            <div className="flex items-center gap-1.5">
-              <Eye className="h-4 w-4 text-blue-600 flex-shrink-0" />
-              <span className="text-base font-semibold text-blue-700">
-                {sim.needsReviewCount} to review
-              </span>
-              <ArrowRight className="h-3.5 w-3.5 ml-auto text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-
-            {/* Title + level + copy */}
-            <div className="flex items-start justify-between">
-              <h3 className="text-sm font-medium text-stone-900 group-hover:text-blue-600 transition-colors leading-tight line-clamp-1">
-                {normalizeTitle(sim.name)}
-              </h3>
-              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <Badge
-                  variant="outline"
-                  className="text-[10px] px-1.5 py-0 text-stone-500 border-stone-200"
-                >
-                  {t(`levels.${sim.targetLevel}`)}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => onCopyLink(e, sim.id)}
-                  className={`h-6 w-6 p-0 ${
-                    copiedId === sim.id
-                      ? "text-blue-700"
-                      : "text-stone-300 hover:text-stone-500"
-                  }`}
-                >
-                  {copiedId === sim.id ? (
-                    <Check className="h-3 w-3" />
-                  ) : (
-                    <Copy className="h-3 w-3" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Company + status */}
-            <CompanyStatus sim={sim} t={t} />
-
-            {/* Tech stack */}
-            <TechStackTags techStack={sim.techStack} />
-
-            {/* Pipeline */}
-            <PipelineBar sim={sim} t={t} />
-
-            {/* Score with context */}
-            {sim.avgScore !== null && (
-              <div className="pt-2 border-t border-stone-100">
-                <ScoreCircle
-                  score={sim.avgScore}
-                  strengthLabel={sim.strengthLabel}
-                  targetLevel={sim.targetLevel}
-                  t={t}
-                />
-              </div>
-            )}
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Last activity */}
-            <LastActivity sim={sim} t={t} />
-          </CardContent>
-        </Card>
-      </Link>
-    );
-  }
-
-  // State B: Active (has candidates, none to review)
-  if (hasCandidates) {
-    return (
-      <Link
-        href={`/recruiter/assessments/${sim.id}`}
-        className="block group"
-      >
-        <Card className="bg-white shadow-sm hover:shadow-md transition-all h-full flex flex-col rounded-xl border border-stone-200 hover:border-blue-300">
-          <CardContent className="p-4 flex flex-col flex-1 gap-2.5">
-            {/* Title + level + copy */}
-            <div className="flex items-start justify-between">
-              <h3 className="text-sm font-semibold text-stone-900 group-hover:text-blue-600 transition-colors leading-tight line-clamp-2">
-                {normalizeTitle(sim.name)}
-              </h3>
-              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <Badge
-                  variant="outline"
-                  className="text-[10px] px-1.5 py-0 text-stone-500 border-stone-200"
-                >
-                  {t(`levels.${sim.targetLevel}`)}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => onCopyLink(e, sim.id)}
-                  className={`h-6 w-6 p-0 ${
-                    copiedId === sim.id
-                      ? "text-blue-700"
-                      : "text-stone-300 hover:text-stone-500"
-                  }`}
-                >
-                  {copiedId === sim.id ? (
-                    <Check className="h-3 w-3" />
-                  ) : (
-                    <Copy className="h-3 w-3" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Company + status */}
-            <CompanyStatus sim={sim} t={t} />
-
-            {/* Tech stack */}
-            <TechStackTags techStack={sim.techStack} />
-
-            {/* Pipeline */}
-            <PipelineBar sim={sim} t={t} />
-
-            {/* Score with context */}
-            {sim.avgScore !== null && (
-              <div className="pt-2 border-t border-stone-100">
-                <ScoreCircle
-                  score={sim.avgScore}
-                  strengthLabel={sim.strengthLabel}
-                  targetLevel={sim.targetLevel}
-                  t={t}
-                />
-              </div>
-            )}
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Last activity — more prominent for active cards */}
-            {sim.lastActivityDate && (
-              <div className="pt-2 border-t border-stone-100">
-                <div className="flex items-center gap-1 text-xs text-stone-500">
-                  <Clock className="h-3 w-3 flex-shrink-0" />
-                  <span className="truncate">
-                    {sim.lastActivityDescription
-                      ? `${sim.lastActivityDescription} ${formatRelativeTime(sim.lastActivityDate, t)}`
-                      : formatRelativeTime(sim.lastActivityDate, t)}
-                  </span>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </Link>
-    );
-  }
-
-  // State C: Empty (no candidates)
   return (
     <Link
       href={`/recruiter/assessments/${sim.id}`}
-      className="block group"
+      className="group relative block aspect-[4/5]"
     >
-      <Card className="bg-stone-50/50 shadow-none hover:shadow-sm transition-all h-full flex flex-col rounded-xl border border-stone-200 hover:border-blue-300">
-        <CardContent className="p-3.5 flex flex-col flex-1 gap-2">
-          {/* Title + copy */}
-          <div className="flex items-start justify-between">
-            <h3 className="text-sm font-semibold text-stone-700 group-hover:text-blue-600 transition-colors leading-tight line-clamp-1">
-              {normalizeTitle(sim.name)}
-            </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => onCopyLink(e, sim.id)}
-              className={`h-6 w-6 p-0 flex-shrink-0 ml-2 ${
-                copiedId === sim.id
-                  ? "text-blue-700"
-                  : "text-stone-300 hover:text-stone-500"
-              }`}
-            >
-              {copiedId === sim.id ? (
-                <Check className="h-3 w-3" />
+      <div className="absolute inset-0 isolate overflow-hidden rounded-3xl shadow-[0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-stone-200/70 transition-[transform,box-shadow] duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.3)] group-hover:ring-stone-300">
+        {/* Full-bleed gradient */}
+        <div
+          className="absolute inset-0 transition-[filter] duration-500 ease-out group-hover:brightness-110 group-hover:saturate-110"
+          style={gradientStyle}
+        />
+
+        {/* Soft noise */}
+        <div
+          className="absolute inset-0 opacity-[0.08] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
+
+        {/* Highlight orb */}
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/30 blur-3xl" />
+
+        {/* Bottom shade for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+
+        {/* Review badge */}
+        {sim.needsReviewCount > 0 && (
+          <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-stone-900 shadow-sm backdrop-blur">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            {t("card.needsReview", { count: sim.needsReviewCount })}
+          </div>
+        )}
+
+        {/* Copy button */}
+        <button
+          onClick={(e) => onCopy(e, sim.id)}
+          className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition-all ${
+            copied
+              ? "bg-white text-emerald-600"
+              : "bg-white/25 text-white opacity-0 hover:bg-white/40 group-hover:opacity-100"
+          }`}
+          aria-label={t("card.copyInviteLink")}
+        >
+          {copied ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+        </button>
+
+        {/* Monogram + company pill */}
+        <div className="absolute left-1/2 top-[34%] flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2.5">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 text-3xl font-semibold text-white shadow-lg ring-1 ring-white/25 backdrop-blur-md transition-[background-color,box-shadow] duration-300 group-hover:bg-white/30 group-hover:shadow-[0_0_40px_rgba(255,255,255,0.35)]">
+            {initials(sim.companyName || sim.name)}
+          </div>
+          <div className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white backdrop-blur-md ring-1 ring-white/15 transition-colors duration-300 group-hover:bg-white/25 group-hover:ring-white/25">
+            {sim.companyName}
+          </div>
+        </div>
+
+        {/* Bottom content */}
+        <div className="absolute inset-x-0 bottom-0 p-5">
+          <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-white/85">
+            <span>{t(`levels.${sim.targetLevel}`)}</span>
+            <span className="text-white/50">·</span>
+            {sim.isPublished ? (
+              <span className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                {t("card.open")}
+              </span>
+            ) : (
+              <span className="text-white/75">{t("card.draft")}</span>
+            )}
+          </div>
+          <h2 className="mt-1.5 line-clamp-2 text-lg font-semibold leading-tight text-white">
+            {normalizeTitle(sim.name)}
+          </h2>
+
+          {/* Default state */}
+          <div className="mt-3 flex items-end justify-between transition-opacity duration-300 group-hover:opacity-0">
+            <div>
+              {!empty ? (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-semibold tabular-nums text-white">
+                    {sim.totalCandidates}
+                  </span>
+                  <span className="text-xs text-white/75">
+                    {sim.totalCandidates === 1
+                      ? t("card.candidate")
+                      : t("card.candidates")}
+                  </span>
+                </div>
               ) : (
-                <Copy className="h-3 w-3" />
+                <span className="text-xs text-white/75">
+                  {t("card.noCandidatesYet")}
+                </span>
               )}
-            </Button>
+              {activityText && !empty && (
+                <div className="mt-0.5 line-clamp-1 text-[11px] text-white/65">
+                  {activityText}
+                </div>
+              )}
+            </div>
+            {sim.avgScore !== null && (
+              <div className="text-right">
+                <div className="text-xl font-semibold tabular-nums text-white">
+                  {sim.avgScore.toFixed(1)}
+                </div>
+                <div className="text-[10px] uppercase tracking-wider text-white/65">
+                  {t("card.avg")}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Company + status */}
-          <CompanyStatus sim={sim} dimmed t={t} />
-
-          {/* Empty state */}
-          <div className="py-2">
-            <p className="text-xs text-stone-400 mb-2">No candidates yet</p>
-            <button
-              onClick={(e) => onCopyLink(e, sim.id)}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
-            >
-              <LinkIcon className="h-3 w-3" />
-              Copy invite link
-            </button>
+          {/* Hover CTA */}
+          <div className="pointer-events-none absolute inset-x-5 bottom-5 flex translate-y-1 items-center justify-between text-white opacity-0 transition-[opacity,transform] duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100">
+            <span className="text-sm font-medium">
+              {t("card.openAssessment")}
+            </span>
+            <ArrowUpRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 }
