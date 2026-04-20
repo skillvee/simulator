@@ -1973,11 +1973,11 @@
       "label": "La Solución",
       "title": "Una simulación de 45 min del trabajo real",
       "item1Title": "Stakeholders de IA en vivo",
-      "item1Desc": "Conversaciones de voz con PM, gerente y tech lead — con memoria y contexto",
+      "item1Desc": "Conversaciones de voz con PM, gerente y tech lead",
       "item2Title": "Entregables reales, no trivia",
       "item2Desc": "Los candidatos producen trabajo real — código, PRs y decisiones",
       "item3Title": "Captura completa y evaluación estructurada",
-      "item3Desc": "Pantalla y voz grabadas de principio a fin, con scorecards, transcripciones y artefactos",
+      "item3Desc": "Pantalla y voz grabadas de principio a fin",
       "footer": "Compara candidatos lado a lado en trabajo real."
     },
     "whyNow": {
@@ -1995,16 +1995,21 @@
     },
     "market": {
       "label": "Mercado",
-      "tamLabel": "mercado de evaluación pre-contratación",
-      "growth": "Creciendo 16% CAGR",
+      "todayValue": "$3B",
+      "todayDescription": "evaluación pre-contratación — cabeza de playa actual, creciendo 16% CAGR",
+      "expandValue": "$20B+",
+      "expandDescription": "software de adq. de talento — ATS, sourcing, interview intelligence",
+      "visionValue": "$250B+",
+      "visionDescription": "gasto global en reclutamiento a medida que la data de trabajo verificada se convierte en la capa de matching",
       "comparablesLabel": "Comparables:",
-      "comparablesText": "Mercor ($10B), Juicebox ($850M) — la IA resolvió el sourcing. HackerRank ($500M, $221M ingresos) — el incumbente que reemplazamos. La evaluación es la capa que falta."
+      "comparablesText": "Mercor ($10B), Juicebox ($850M), HackerRank ($500M)"
     },
     "moat": {
       "label": "Moat",
-      "introPre": "Cada simulación nos enseña cómo se ve lo \"bueno\" ",
-      "introHighlight": "para cada empresa",
-      "introPost": ". A medida que rastreamos qué contrataciones tienen éxito, podemos predecir quién prosperará dónde — no de forma genérica, sino para cada equipo en específico.",
+      "pillar1Label": "Data propietaria",
+      "pillar1Desc": "cada simulación genera señal de comportamiento que los competidores no tienen",
+      "pillar3Label": "Loop de retroalimentación de outcomes",
+      "pillar3Desc": "rastreamos qué contrataciones tienen éxito y afinamos las predicciones con el tiempo",
       "footer": "Los competidores pueden copiar el producto. No pueden copiar la data. Empezando con ingeniería, expandiéndonos a todo rol white-collar."
     },
     "businessModel": {
