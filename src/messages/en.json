@@ -190,6 +190,96 @@
       "openMenu": "Open menu",
       "closeMenu": "Close menu"
     },
+    "decorativeTeam": {
+      "banner": "{name} is {statusLabel} - {message}",
+      "inMeetingLabel": "in a meeting",
+      "awayLabel": "away",
+      "currentlyUnavailable": "{name} is currently unavailable",
+      "defaultUnavailable": "This team member is away.",
+      "awayResponseNote": "You can still send them a message and they'll respond when available.",
+      "typePlaceholder": "Type a message...",
+      "maya-torres": {
+        "role": "Product Designer",
+        "initialStatusMessage": "In a design review",
+        "cannedResponse": "Hey! I'm in a design review right now. I'll be free in about 30 min - ping me then! In the meantime, {managerName} should be able to help.",
+        "scheduleMessages": {
+          "0": "In a design review",
+          "1": "",
+          "2": "Lunch break"
+        }
+      },
+      "derek-washington": {
+        "role": "Data Scientist",
+        "initialStatusMessage": "Heads down on a data pipeline",
+        "cannedResponse": "Hey! I'm swamped right now working on a data pipeline, but {managerName} might be able to help with that. I'll ping you when I'm free!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Team sync",
+          "2": ""
+        }
+      },
+      "priya-sharma": {
+        "role": "DevOps Engineer",
+        "initialStatusMessage": "Deploying to staging",
+        "cannedResponse": "Hey! I'm in the middle of a staging deployment right now. {managerName} should be able to help in the meantime. I'll reach out once this is done!",
+        "scheduleMessages": {
+          "0": "Deploying to staging",
+          "1": "",
+          "2": "Planning meeting",
+          "3": ""
+        }
+      },
+      "marcus-lee": {
+        "role": "Frontend Engineer",
+        "initialStatusMessage": "",
+        "cannedResponse": "Hey! I'm in our team standup at the moment. Should be done in about 15 minutes. Check with {managerName} if it's urgent, otherwise I'll catch up with you after!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Grabbing coffee",
+          "2": ""
+        }
+      },
+      "sofia-andersson": {
+        "role": "UX Researcher",
+        "initialStatusMessage": "Running user interviews",
+        "cannedResponse": "Hey! I'm running user interviews all morning. {managerName} can probably help you out. I'll be available this afternoon if you still need me!",
+        "scheduleMessages": {
+          "0": "User interviews",
+          "1": ""
+        }
+      },
+      "james-obrien": {
+        "role": "Backend Engineer",
+        "initialStatusMessage": "",
+        "cannedResponse": "Hey! I'm swamped debugging a production issue right now, but {managerName} might be able to help with that. I'll ping you when I'm free!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Debugging prod issue",
+          "2": ""
+        }
+      },
+      "nina-volkov": {
+        "role": "Engineering Manager",
+        "initialStatusMessage": "",
+        "cannedResponse": "Hey! I'm in a 1:1 right now. {managerName} should be able to help you out. I'll be free in about 20 minutes if you need me after!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "1:1 meeting",
+          "2": "",
+          "3": "Lunch"
+        }
+      },
+      "carlos-mendez": {
+        "role": "Machine Learning Engineer",
+        "initialStatusMessage": "",
+        "cannedResponse": "Hey! I'm monitoring a model training run right now and pretty heads down. {managerName} might be able to help with that. I'll ping you when I'm free!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Training model - AFK",
+          "2": ""
+        }
+      }
+    },
     "submitWorkModal": {
       "title": "Ready to Submit?",
       "description": "You'll present your work to {manager} to wrap up.",
@@ -610,7 +700,9 @@
         "draft": "Draft",
         "noCandidatesYet": "No candidates yet",
         "copyInviteLink": "Copy invite link",
-        "linkCopied": "Shareable simulation link copied"
+        "linkCopied": "Shareable simulation link copied",
+        "openAssessment": "Open assessment",
+        "avg": "avg"
       },
       "activity": {
         "completed": "{name} completed",
@@ -1923,9 +2015,10 @@
     },
     "progress": {
       "label": "Progress",
-      "intro": "Working prototype built. 2 committed pilots. Full simulation flow live — AI voice conversations, real coding environment, screen capture, and automated scorecards.",
-      "stackLabel": "Stack:",
-      "stackText": "Next.js, Supabase, Gemini Live (voice), Gemini Flash (evaluation). Built and shipping fast."
+      "intro": "Working prototype built and launched. 2 committed pilots.",
+      "stackLabel": "Validation:",
+      "hackathon": "DeepMind + Stanford Hackathon Winners",
+      "startx": "Accelerated by StartX"
     },
     "team": {
       "label": "Team",

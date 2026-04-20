@@ -22,6 +22,7 @@ import { isManager } from "@/lib/utils/coworker";
 import { SubmitWorkModal } from "@/components/chat/submit-work-modal";
 import { PostDefenseModal } from "@/components/chat/post-defense-modal";
 import { uploadDeliverable } from "@/lib/external/storage";
+import { requestMicrophoneAccess } from "@/lib/media";
 
 const logger = createLogger("client:app:work-page");
 
@@ -84,14 +85,17 @@ export function WorkPageClient({
   const handleSelectCoworker = useCallback((coworkerId: string) => {
     setSelectedCoworkerId(coworkerId);
     setSelectedResourceIndex(null); // Deselect resource when switching to chat
-    // Sync URL without triggering server navigation
-    window.history.replaceState(null, "", `/assessments/${assessmentId}/work?coworkerId=${coworkerId}`);
-  }, [assessmentId]);
+    // Sync URL without triggering server navigation. Preserve the current
+    // path prefix (including the locale segment) — stripping it sends the
+    // next server fetch through middleware's default-locale redirect.
+    const { pathname } = window.location;
+    const basePath = pathname.replace(/\?.*$/, "");
+    window.history.replaceState(null, "", `${basePath}?coworkerId=${coworkerId}`);
+  }, []);
 
   // Refs to store functions exposed from SlackLayout
   const incrementUnreadRef = useRef<((coworkerId: string) => void) | null>(null);
   const incrementGeneralUnreadRef = useRef<(() => void) | null>(null);
-  const startCallRef = useRef<((coworkerId: string, callType: "coworker") => void) | null>(null);
 
   // State to store ambient messages that arrive while user is viewing the channel
   const [ambientMessages, setAmbientMessages] = useState<ChannelMessage[]>([]);
@@ -166,7 +170,7 @@ export function WorkPageClient({
   const isDecorativeCoworker = selectedCoworkerId?.startsWith("decorative-");
   const decorativeMember = isDecorativeCoworker
     ? DECORATIVE_TEAM_MEMBERS.find(
-        (m) => `decorative-${m.name.toLowerCase().replace(/\s+/g, '-')}` === selectedCoworkerId
+        (m) => `decorative-${m.id}` === selectedCoworkerId
       )
     : null;
 
@@ -180,11 +184,23 @@ export function WorkPageClient({
     setShowSubmitModal(true);
   }, []);
 
-  // Handle submit modal confirmation — upload deliverable, switch to manager, start defense call
+  // Handle submit modal confirmation — upload deliverable, switch to manager, trigger defense call
   const handleSubmitConfirm = useCallback(async (file: File | null) => {
     setShowSubmitModal(false);
-    setIsPostSubmission(true);
     setIsSubmitting(true);
+
+    // Pre-warm the mic permission inside the user's click so the defense
+    // call's getUserMedia (which fires several async ticks later from
+    // FloatingCallBar) isn't rejected by browsers that scope the permission
+    // prompt to a direct user gesture (incognito, Safari, Firefox strict).
+    // The stream is closed immediately — we only needed the grant to persist.
+    try {
+      const stream = await requestMicrophoneAccess();
+      stream.getTracks().forEach((t) => t.stop());
+    } catch (err) {
+      logger.warn("Mic permission unavailable at submit", { error: String(err) });
+      // Don't block — FloatingCallBar will surface the same error itself.
+    }
 
     // Upload deliverable file if provided. The server parses it synchronously
     // so the manager has context when the defense call starts — this can take
@@ -197,20 +213,14 @@ export function WorkPageClient({
       }
     }
 
-    // Switch to manager chat and auto-start a defense call. The call-bar UI
-    // takes over from here with its own ringing / connecting state, so we
-    // can drop the overlay once the call has been kicked off.
+    // Switch to manager chat and flip isPostSubmission. SlackLayout's internal
+    // effect detects the flag transition and auto-starts the defense call, so
+    // the ringing/connecting UI takes over once the overlay drops.
     if (manager) {
       handleSelectCoworker(manager.id);
-      setTimeout(() => {
-        if (startCallRef.current) {
-          startCallRef.current(manager.id, "coworker");
-        }
-        setIsSubmitting(false);
-      }, 300);
-    } else {
-      setIsSubmitting(false);
     }
+    setIsPostSubmission(true);
+    setIsSubmitting(false);
   }, [assessmentId, manager, handleSelectCoworker]);
 
   // Handle defense call completion — show post-defense confirmation instead of immediate finalize
@@ -312,24 +322,21 @@ export function WorkPageClient({
     );
   }
 
-  // Show loading overlay while submitting work (upload + server-side parse
-  // before the defense call can start)
-  if (isSubmitting) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center max-w-md px-4">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <h2 className="text-lg font-semibold">{t("submittingWork.title")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {t("submittingWork.description", { manager: managerName })}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
+      {/* Submitting overlay — rendered on top of SlackLayout so the layout
+          stays mounted and its isPostSubmission effect can start the defense call */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background">
+          <div className="text-center max-w-md px-4">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <h2 className="text-lg font-semibold">{t("submittingWork.title")}</h2>
+            <p className="text-sm text-muted-foreground">
+              {t("submittingWork.description", { manager: managerName })}
+            </p>
+          </div>
+        </div>
+      )}
       <SlackLayout
         assessmentId={assessmentId}
         coworkers={coworkers}
@@ -345,9 +352,6 @@ export function WorkPageClient({
         }}
         onIncrementGeneralUnreadRef={(fn) => {
           incrementGeneralUnreadRef.current = fn;
-        }}
-        onStartCallRef={(fn) => {
-          startCallRef.current = fn;
         }}
         selectedResourceIndex={selectedResourceIndex}
         onSelectResource={setSelectedResourceIndex}

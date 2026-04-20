@@ -1,6 +1,6 @@
 # Skillvee Simulator
 
-AI-driven assessment platform for technical candidates (software engineers, data scientists, product managers, and adjacent roles). Candidates experience a simulated "day at work" — HR-style intro, manager kickoff, task execution, PR defense — via AI-powered conversations while the screen is recorded.
+AI-driven assessment platform for technical candidates (software engineers, data scientists, product managers, and adjacent roles). Candidates experience a simulated "day at work": they're given a real challenge to solve, talk to AI-powered peers to extract the information they need, and defend their decisions with an AI manager — all while the screen is recorded.
 
 The assessment measures **how** candidates work (communication, AI leverage, problem-solving, collaboration, quality of output, time management), not just what they produce. This shapes prompt design, UX copy, and scoring logic throughout the codebase.
 

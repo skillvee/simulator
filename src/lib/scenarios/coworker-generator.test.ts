@@ -100,7 +100,7 @@ describe("generateCoworkers", () => {
     expect(result.coworkers[0].name).toBe("Jordan Kim");
     expect(result.coworkers[0].role).toBe("Engineering Manager");
     expect(result.coworkers[1].name).toBe("Aisha Patel");
-    expect(result._meta.promptVersion).toBe("2.3");
+    expect(result._meta.promptVersion).toBe("2.4");
     expect(result._meta.generatedAt).toBeDefined();
   });
 

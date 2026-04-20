@@ -15,12 +15,13 @@ export function PostDefenseModal({
 }: PostDefenseModalProps) {
   const t = useTranslations("work.postDefenseModal");
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-md mx-4 rounded-2xl shadow-xl p-6 animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-md mx-4 rounded-2xl p-6 animate-in zoom-in-95 duration-200"
         style={{
-          background: "hsl(var(--slack-bg-main))",
-          border: "1px solid hsl(var(--slack-border))",
+          background: "#f8f9fb",
+          border: "2px solid #c4c8d0",
+          boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1)",
         }}
       >
         {/* Header */}
