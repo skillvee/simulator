@@ -39,8 +39,20 @@ next-env.d.ts
 prisma/migrations/**/migration_lock.toml
 supabase/.temp/
 .env*.local
-# Test videos
+# Videos — ignore by default so local experiments / test fixtures stay out,
+# but explicitly un-ignore files shipped as production assets and referenced
+# from src/app/.../page.tsx. Add new production videos to the allow-list below.
 public/videos/*.mp4
+!public/videos/hero-pitch.mp4
+!public/videos/hero-preview.mp4
+!public/videos/hero-video.mp4
+!public/videos/how-it-works-step1.mp4
+!public/videos/how-it-works-step2.mp4
+!public/videos/how-it-works-step3.mp4
+!public/videos/product-demo.mp4
+!public/videos/product-step1.mp4
+!public/videos/product-step2.mp4
+!public/videos/product-step3.mp4
 
 # Investor docs
 investor-target-list.md
