@@ -14,12 +14,10 @@ import {
   Sparkles,
   AppWindow,
   ExternalLink,
-  MessageSquare,
   Loader2,
   Clock,
   Wifi,
   Coffee,
-  PlayCircle,
 } from "lucide-react";
 
 interface ScenarioData {
@@ -51,7 +49,7 @@ export function WelcomePageClient({
   const [step, setStep] = useState(1);
   const [isLaunching, setIsLaunching] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   const handleStart = async () => {
     setIsLaunching(true);
@@ -160,24 +158,6 @@ export function WelcomePageClient({
               </motion.div>
             )}
 
-            {step === 4 && (
-              <motion.div
-                key="step4-left"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-8"
-              >
-                <h2 className="text-5xl lg:text-[90px] font-black tracking-tight leading-[0.85] text-primary">
-                  {t("step4.leftPanel.title")}
-                  <br />
-                  {t("step4.leftPanel.titleLine2")}
-                </h2>
-                <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-xl">
-                  {t("step4.leftPanel.description")}
-                </p>
-              </motion.div>
-            )}
           </AnimatePresence>
         </main>
 
@@ -325,16 +305,6 @@ export function WelcomePageClient({
                       {t("step2.rightPanel.points.screenRecord.descriptionEnd")}
                     </p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <MessageSquare className="w-4 h-4 text-slate-500" />
-                    </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
-                      {t("step2.rightPanel.points.comeBack.description")}
-                      <strong>{t("step2.rightPanel.points.comeBack.strong")}</strong>
-                      {t("step2.rightPanel.points.comeBack.descriptionEnd")}
-                    </p>
-                  </div>
                 </div>
 
                 <Button
@@ -411,69 +381,7 @@ export function WelcomePageClient({
                       {t("step3.rightPanel.points.internet.descriptionEnd")}
                     </p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <PlayCircle className="w-4 h-4 text-slate-500" />
-                    </div>
-                    <p className="text-slate-600 text-sm leading-relaxed">
-                      {t("step3.rightPanel.points.continuous.description")}
-                      <strong>{t("step3.rightPanel.points.continuous.strong")}</strong>
-                      {t("step3.rightPanel.points.continuous.descriptionEnd")}
-                    </p>
-                  </div>
                 </div>
-
-                <div className="p-4 bg-slate-100 rounded-xl border border-slate-200">
-                  <p className="text-sm text-slate-600">
-                    <strong className="text-slate-700">{t("step3.rightPanel.reminder.label")}</strong>
-                    {t("step3.rightPanel.reminder.text")}
-                  </p>
-                </div>
-
-                <Button
-                  onClick={() => setStep(4)}
-                  className="w-full h-14 rounded-full bg-slate-900 text-white font-bold text-lg group hover:bg-slate-800"
-                >
-                  {t("step3.rightPanel.continueButton")}
-                  <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-
-                <button
-                  onClick={() => setStep(2)}
-                  className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  {t("step3.rightPanel.backButton")}
-                </button>
-              </motion.div>
-            )}
-
-            {step === 4 && (
-              <motion.div
-                key="step4-right"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-8"
-              >
-                <div className="space-y-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-                    {t("step4.rightPanel.stepLabel")}
-                  </h4>
-                  <h3 className="text-2xl lg:text-3xl font-bold tracking-tight">
-                    {t("step4.rightPanel.title")}
-                  </h3>
-                </div>
-                <p className="text-slate-500 leading-relaxed font-medium">
-                  {t("step4.rightPanel.description.start")}
-                  <strong className="text-slate-900">
-                    {t("step4.rightPanel.description.strong")}
-                  </strong>
-                  {t("step4.rightPanel.description.end")}
-                </p>
-
-                <p className="text-xs text-center text-slate-500">
-                  {t("step4.rightPanel.consent")}
-                </p>
 
                 {startError && (
                   <p className="text-sm text-center text-destructive font-medium">
@@ -489,19 +397,19 @@ export function WelcomePageClient({
                   {isLaunching ? (
                     <>
                       <Loader2 className="mr-2 w-5 h-5 animate-spin" />
-                      {t("step4.rightPanel.launchingButton")}
+                      {t("step3.rightPanel.launchingButton")}
                     </>
                   ) : (
-                    t("step4.rightPanel.startButton")
+                    t("step3.rightPanel.startButton")
                   )}
                 </Button>
 
                 <button
-                  onClick={() => setStep(3)}
+                  onClick={() => setStep(2)}
                   className="flex items-center gap-1 mx-auto text-sm text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  {t("step4.rightPanel.backButton")}
+                  {t("step3.rightPanel.backButton")}
                 </button>
               </motion.div>
             )}

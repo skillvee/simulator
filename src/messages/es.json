@@ -454,11 +454,6 @@
             "description": "",
             "strong": "Grabamos tu pantalla todo el tiempo",
             "descriptionEnd": " — todo lo que hagas es parte de tu evaluación."
-          },
-          "comeBack": {
-            "description": "",
-            "strong": "Regresa a SkillVee para chatear",
-            "descriptionEnd": " con tu gerente y compañeros cuando lo necesites."
           }
         },
         "continueButton": "Continuar",
@@ -492,36 +487,8 @@
             "description": "",
             "strong": "Asegúrate de tener internet estable.",
             "descriptionEnd": " Si pierdes conexión, puedes volver a unirte y continuar donde lo dejaste."
-          },
-          "continuous": {
-            "description": "",
-            "strong": "Esta es una sesión continua.",
-            "descriptionEnd": " Una vez que comiences, trabaja hasta completarlo de una sola vez."
           }
         },
-        "reminder": {
-          "label": "Recuerda:",
-          "text": " Trabaja a tu ritmo natural. No hay bonificación por apurarse — queremos ver cómo trabajas normalmente."
-        },
-        "continueButton": "Continuar",
-        "backButton": "Atrás"
-      }
-    },
-    "step4": {
-      "leftPanel": {
-        "title": "LISTO.",
-        "titleLine2": "VAMOS.",
-        "description": "Tu entorno está listo. Comencemos."
-      },
-      "rightPanel": {
-        "stepLabel": "Paso 04",
-        "title": "Lanzar Simulación",
-        "description": {
-          "start": "Recibirás una tarea de tu gerente. El contexto es ",
-          "strong": "intencionalmente incompleto",
-          "end": " — parte de la evaluación es ver cómo haces preguntas y recopilas requisitos."
-        },
-        "consent": "Al continuar, aceptas la grabación de pantalla y cámara web durante esta evaluación.",
         "startButton": "Iniciar Simulación",
         "launchingButton": "Lanzando...",
         "backButton": "Atrás"

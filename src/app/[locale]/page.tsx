@@ -83,13 +83,13 @@ function HeroProductDemo() {
         {/* Video - autoplays, loops, muted - brightness boosted for dark content */}
         <div className="relative aspect-video bg-slate-900">
           <video
-            className="absolute inset-0 w-full h-full object-cover brightness-125 contrast-110"
+            className="absolute inset-0 w-full h-full object-cover"
             autoPlay
             loop
             muted
             playsInline
           >
-            <source src="/videos/hero-video.mp4" type="video/mp4" />
+            <source src="/videos/hero-pitch.mp4" type="video/mp4" />
           </video>
 
           {/* Subtle edge vignette to lift video from background */}
