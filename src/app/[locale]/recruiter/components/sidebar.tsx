@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -47,10 +48,19 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
     <aside
       className={`${
         sidebarOpen ? "w-64" : "w-16"
-      } flex flex-col bg-[#0B1437] transition-all duration-300`}
+      } flex flex-col bg-[#020617] transition-all duration-300 relative overflow-hidden`}
     >
+      <motion.div
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.5, 0.8, 0.5],
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[-30%] left-[-60%] w-[200%] h-[60%] bg-primary/50 rounded-full blur-[100px] pointer-events-none"
+      />
+
       {/* Logo */}
-      <div className="flex h-[72px] items-center justify-between px-4 border-b border-white/10">
+      <div className="relative z-10 flex h-[72px] items-center justify-between px-4 border-b border-white/10">
         {sidebarOpen && (
           <Link href="/recruiter/simulations" className="flex items-center gap-2">
             <Image
@@ -79,7 +89,7 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
 
       {/* Create Button */}
       {sidebarOpen && (
-        <div className="p-3">
+        <div className="relative z-10 p-3">
           <Button asChild className="w-full bg-blue-600 hover:bg-blue-700">
             <Link href="/recruiter/simulations/new">
               <Plus className="mr-2 h-4 w-4" />
@@ -90,7 +100,7 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 p-3">
+      <nav className="relative z-10 flex-1 p-3">
         <div className="space-y-1">
           {navItems.map((item) => {
             const active = isActive(item.href);
@@ -117,13 +127,13 @@ export function RecruiterSidebar({ user }: RecruiterSidebarProps) {
 
       {/* Language Switcher */}
       {sidebarOpen && (
-        <div className="px-3 pb-3">
+        <div className="relative z-10 px-3 pb-3">
           <LanguageSwitcher variant="dark" />
         </div>
       )}
 
       {/* Footer */}
-      <div className="flex h-[72px] items-center border-t border-white/10 px-3">
+      <div className="relative z-10 flex h-[72px] items-center border-t border-white/10 px-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             {sidebarOpen ? (

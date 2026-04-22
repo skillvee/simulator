@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -48,10 +49,19 @@ export function CandidateSidebar({ user }: CandidateSidebarProps) {
     <aside
       className={`${
         sidebarOpen ? "w-64" : "w-16"
-      } flex flex-col bg-[#0B1437] transition-all duration-300`}
+      } flex flex-col bg-[#020617] transition-all duration-300 relative overflow-hidden`}
     >
+      <motion.div
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.5, 0.8, 0.5],
+        }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[-30%] left-[-60%] w-[200%] h-[60%] bg-primary/50 rounded-full blur-[100px] pointer-events-none"
+      />
+
       {/* Logo */}
-      <div className="flex h-[72px] items-center justify-between px-4 border-b border-white/10">
+      <div className="relative z-10 flex h-[72px] items-center justify-between px-4 border-b border-white/10">
         {sidebarOpen && (
           <Link href="/candidate/dashboard" className="flex items-center gap-2">
             <Image
@@ -79,7 +89,7 @@ export function CandidateSidebar({ user }: CandidateSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3">
+      <nav className="relative z-10 flex-1 p-3">
         <div className="space-y-1">
           {navItems.map((item) => {
             const active = isActive(item.href, item.exact);
@@ -105,7 +115,7 @@ export function CandidateSidebar({ user }: CandidateSidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="flex h-[72px] items-center border-t border-white/10 px-3">
+      <div className="relative z-10 flex h-[72px] items-center border-t border-white/10 px-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             {sidebarOpen ? (
