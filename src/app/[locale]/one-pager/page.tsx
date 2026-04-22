@@ -18,10 +18,12 @@ export default function OnePageInvestorPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <div
+        className="op-container"
         style={{ maxWidth: 960, margin: "0 auto", padding: "48px 32px" }}
       >
         {/* ── HEADER ── */}
         <header
+          className="op-header"
           style={{
             display: "flex",
             alignItems: "center",
@@ -29,15 +31,16 @@ export default function OnePageInvestorPage() {
             paddingBottom: 24,
             marginBottom: 40,
             borderBottom: "3px solid #237CF1",
+            gap: 16,
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
             <Image
               src="/skillvee-logo.png"
               alt="SkillVee"
               width={747}
               height={226}
-              style={{ width: 180, height: "auto" }}
+              style={{ width: 180, height: "auto", maxWidth: "100%" }}
             />
             <p
               style={{
@@ -57,6 +60,7 @@ export default function OnePageInvestorPage() {
               gap: 6,
               fontSize: 12,
               color: "#94a3b8",
+              flexShrink: 0,
             }}
           >
             <Globe size={14} />
@@ -66,6 +70,7 @@ export default function OnePageInvestorPage() {
 
         {/* ── PROBLEM + SOLUTION ── */}
         <div
+          className="op-grid-2"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
@@ -77,6 +82,7 @@ export default function OnePageInvestorPage() {
           <div>
             <SectionLabel>{t("problem.label")}</SectionLabel>
             <h3
+              className="op-headline"
               style={{
                 fontSize: 20,
                 fontWeight: 900,
@@ -102,6 +108,7 @@ export default function OnePageInvestorPage() {
                   }}
                 >
                   <span
+                    className="op-metric-num"
                     style={{
                       fontSize: 28,
                       fontWeight: 900,
@@ -139,6 +146,7 @@ export default function OnePageInvestorPage() {
           <div>
             <SectionLabel>{t("solution.label")}</SectionLabel>
             <h3
+              className="op-headline"
               style={{
                 fontSize: 20,
                 fontWeight: 900,
@@ -181,6 +189,7 @@ export default function OnePageInvestorPage() {
 
         {/* ── WHY NOW + KEY INSIGHT ── */}
         <div
+          className="op-grid-2"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
@@ -303,6 +312,7 @@ export default function OnePageInvestorPage() {
 
         {/* ── MARKET + MOAT ── */}
         <div
+          className="op-grid-2"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
@@ -425,6 +435,7 @@ export default function OnePageInvestorPage() {
 
         {/* ── BUSINESS MODEL + PROGRESS ── */}
         <div
+          className="op-grid-2"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
@@ -497,6 +508,7 @@ export default function OnePageInvestorPage() {
         <div style={{ marginBottom: 40 }}>
           <SectionLabel>{t("team.label")}</SectionLabel>
           <div
+            className="op-grid-2"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr",
@@ -610,6 +622,7 @@ export default function OnePageInvestorPage() {
 
           {/* Why Us pills */}
           <div
+            className="op-grid-3"
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 1fr 1fr",
@@ -653,12 +666,15 @@ export default function OnePageInvestorPage() {
 
         {/* ── FOOTER / CTA ── */}
         <footer
+          className="op-footer"
           style={{
             borderTop: "3px solid #237CF1",
             paddingTop: 24,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
           }}
         >
           <div>
@@ -678,6 +694,41 @@ export default function OnePageInvestorPage() {
           </div>
         </footer>
       </div>
+
+      {/* ── Mobile responsive overrides ── */}
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .op-container {
+            padding: 24px 16px !important;
+          }
+          .op-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 12px !important;
+            margin-bottom: 28px !important;
+          }
+          .op-grid-2 {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+          .op-grid-3 {
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+          }
+          .op-headline {
+            font-size: 18px !important;
+          }
+          .op-metric-num {
+            font-size: 24px !important;
+            min-width: 64px !important;
+          }
+          .op-footer {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 8px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
