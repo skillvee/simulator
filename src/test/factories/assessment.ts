@@ -21,9 +21,8 @@ import { AssessmentStatus } from "@prisma/client";
  * const completed = createMockAssessment({ status: AssessmentStatus.COMPLETED });
  *
  * @example
- * // Create with PR submitted (stays in WORKING until defense call completes)
- * const withPr = createMockAssessment({
- *   prUrl: "https://github.com/test/repo/pull/1",
+ * // Create in WORKING status
+ * const working = createMockAssessment({
  *   status: AssessmentStatus.WORKING,
  * });
  */
@@ -38,17 +37,18 @@ export function createMockAssessment(
     scenarioId: "test-scenario-id",
     status: AssessmentStatus.WELCOME,
     startedAt: now,
+    workingStartedAt: null,
     completedAt: null,
+    targetLevel: null,
     repoUrl: null,
     repoStatus: "pending",
-    prUrl: null,
-    prSnapshot: null,
-    ciStatus: null,
     codeReview: null,
-    managerMessagesStarted: false,
     report: null,
     reviewedAt: null,
     supersededBy: null,
+    deliverablePath: null,
+    deliverableFilename: null,
+    deliverableSummary: null,
     createdAt: now,
     updatedAt: now,
     ...overrides,

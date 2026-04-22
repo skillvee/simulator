@@ -1,28 +1,9 @@
-import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next";
-import "./globals.css";
-import { Providers } from "@/components/shared";
+import { ReactNode } from "react";
 
-export const metadata: Metadata = {
-  title: "Skillvee - Practice Real Developer Scenarios",
-  description:
-    "Assess and improve your developer skills through realistic work simulations",
-  icons: {
-    icon: "/favicon.ico",
-  },
+type Props = {
+  children: ReactNode;
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return (
-    <html lang="en">
-      <body className="antialiased">
-        <Providers>{children}</Providers>
-        <Analytics />
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: Props) {
+  return children;
 }

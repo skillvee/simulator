@@ -3,14 +3,14 @@ import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
-import { getRelativeStrength, type TargetLevel, type RelativeStrength } from "@/lib/rubric/level-expectations";
+import { getRelativeStrength, type TargetLevel, type RelativeStrengthKey } from "@/lib/rubric/level-expectations";
 import type { AssessmentMetrics, TimestampedBehavior, RubricAssessmentOutput, AssessmentStrengthOrGap } from "@/types";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type CandidateStrengthLevel = RelativeStrength;
+type CandidateStrengthLevel = RelativeStrengthKey;
 
 /**
  * Session user interface for type safety
@@ -195,7 +195,7 @@ export async function GET(request: Request) {
       // Parse report JSON for metrics
       const report = assessment.report as { metrics?: AssessmentMetrics } | null;
       const metrics = report?.metrics;
-      const targetLevel = (assessment.scenario.targetLevel || "mid") as TargetLevel;
+      const targetLevel = (assessment.targetLevel || assessment.scenario.targetLevel || "mid") as TargetLevel;
 
       // Parse rawAiResponse for v3 rubric data (top_strengths, growth_areas, dimension summaries)
       const rawAiResponse = videoAssessment?.summary?.rawAiResponse as unknown as RubricAssessmentOutput | null;

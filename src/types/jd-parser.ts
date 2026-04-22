@@ -59,6 +59,7 @@ export interface ConfidentField<T> {
  */
 export interface ParseJDRequest {
   jobDescription: string;
+  creationLogId?: string;
 }
 
 /**
@@ -73,4 +74,5 @@ export interface ParseJDResponse {
   keyResponsibilities: ConfidentField<string[]>;
   domainContext: ConfidentField<string>;
   roleArchetype: ConfidentField<RoleArchetypeSlug>;
+  language: ConfidentField<"en" | "es">;
 }

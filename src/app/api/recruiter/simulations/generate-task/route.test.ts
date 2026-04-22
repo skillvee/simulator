@@ -45,6 +45,11 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
       promptVersion: "1.1",
       generatedAt: "2026-02-06T00:00:00.000Z",
     },
+    _debug: {
+      promptText: "test prompt",
+      responseText: "test response",
+      attempts: 1,
+    },
   };
 
   const validRequestBody = {
@@ -334,8 +339,12 @@ describe("POST /api/recruiter/simulations/generate-task", () => {
     expect(data.data._meta.promptVersion).toBe("1.1");
     expect(data.data._meta.generatedAt).toBeDefined();
 
-    // Verify generateCodingTask was called with correct input
-    expect(mockGenerateCodingTask).toHaveBeenCalledWith(validRequestBody);
+    // Verify generateCodingTask was called with correct input (includes simulationDepth and language defaults)
+    expect(mockGenerateCodingTask).toHaveBeenCalledWith({
+      ...validRequestBody,
+      simulationDepth: "medium",
+      language: "en",
+    });
   });
 
   it("returns 500 if generation fails", async () => {

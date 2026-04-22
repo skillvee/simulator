@@ -1,0 +1,2340 @@
+{
+  "metadata": {
+    "title": "Skillvee - Obsérvalos trabajar. Luego contrata.",
+    "description": "Ve exactamente cómo los candidatos se comunican, colaboran y resuelven problemas, antes de hacer la oferta. No más errores costosos de contratación."
+  },
+  "auth": {
+    "signIn": {
+      "title": "Bienvenido de nuevo",
+      "subtitle": "Inicia sesión en tu cuenta para continuar",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Ingresa tu contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "continueWithGoogle": "Continuar con Google",
+      "or": "o",
+      "signInButton": "Iniciar sesión",
+      "signingIn": "Iniciando sesión...",
+      "dontHaveAccount": "¿No tienes una cuenta?",
+      "signUp": "Regístrate",
+      "loading": "Cargando...",
+      "errors": {
+        "invalid": "Correo electrónico o contraseña inválidos",
+        "oauthNotLinked": "Este correo ya está asociado con otro método de inicio de sesión.",
+        "general": "Ocurrió un error durante el inicio de sesión. Por favor intenta de nuevo."
+      }
+    },
+    "signUp": {
+      "title": "Crea tu cuenta",
+      "subtitle": "Comienza a practicar entrevistas con IA",
+      "recruiterTitle": "Crea tu cuenta de reclutador",
+      "recruiterSubtitle": "Comienza a evaluar candidatos con simulaciones impulsadas por IA",
+      "firstName": "Nombre",
+      "firstNamePlaceholder": "Juan",
+      "lastName": "Apellido",
+      "lastNamePlaceholder": "Pérez",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "workEmail": "Correo de trabajo",
+      "workEmailPlaceholder": "tu@empresa.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Al menos 8 caracteres",
+      "confirmPassword": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "Confirma tu contraseña",
+      "continueWithGoogle": "Continuar con Google",
+      "or": "o",
+      "createAccountButton": "Crear cuenta",
+      "createRecruiterAccountButton": "Crear cuenta de reclutador",
+      "creatingAccount": "Creando cuenta...",
+      "termsPrefix": "Al registrarte, aceptas nuestros",
+      "termsOfService": "Términos de Servicio",
+      "and": "y",
+      "privacyPolicy": "Política de Privacidad",
+      "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Iniciar sesión",
+      "lookingForAssessment": "¿Buscas tomar una evaluación?",
+      "signUpAsCandidate": "Regístrate como candidato",
+      "loading": "Cargando...",
+      "errors": {
+        "passwordsDontMatch": "Las contraseñas no coinciden",
+        "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+        "registrationFailed": "El registro falló",
+        "accountCreatedButSignInFailed": "Cuenta creada pero el inicio de sesión falló. Por favor inicia sesión manualmente.",
+        "general": "Ocurrió un error. Por favor intenta de nuevo."
+      }
+    },
+    "error": {
+      "title": "Error de autenticación",
+      "description": "Algo salió mal durante la autenticación. Por favor intenta de nuevo.",
+      "tryAgain": "Intentar de nuevo",
+      "backToHome": "Volver al inicio"
+    }
+  },
+  "demo": {
+    "hero": {
+      "eyebrow": "Reserva una Demo",
+      "titleLine1": "Conoce la plataforma.",
+      "titleLine2": "Haz las preguntas difíciles.",
+      "subtitle": "20 minutos. Sin diapositivas. Te mostraremos exactamente cómo Skillvee funciona con tus roles, y verás por qué los tests de algoritmos están muertos."
+    },
+    "benefits": {
+      "heading": "En tu demo:",
+      "item1": "Recorrido en vivo con tu descripción de puesto real",
+      "item2": "Mira cómo los candidatos experimentan la simulación",
+      "item3": "Revisa resultados de muestra y scorecards de candidatos",
+      "item4": "Obtén respuestas honestas sobre el encaje con tu equipo"
+    },
+    "trust": {
+      "duration": "20 minutos",
+      "founder": "Habla con un fundador",
+      "pickTime": "Elige tu horario"
+    },
+    "form": {
+      "title": "Solicita tu demo",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Juan Pérez",
+      "emailLabel": "Correo de trabajo",
+      "emailPlaceholder": "juan@empresa.com",
+      "companyLabel": "Empresa",
+      "companyPlaceholder": "Empresa SA",
+      "roleLabel": "Tu rol",
+      "rolePlaceholder": "Director de Ingeniería",
+      "loading": "Cargando...",
+      "submit": "Continuar a agendar",
+      "privacyPrefix": "Nunca compartiremos tu información. Consulta nuestra",
+      "privacyLink": "política de privacidad"
+    },
+    "scheduling": {
+      "title": "¡Gracias, {name}!",
+      "subtitle": "Elige un horario que te funcione."
+    },
+    "success": {
+      "title": "¡Todo listo!",
+      "description": "Revisa tu correo para la invitación al calendario. Te enviaremos una guía rápida de preparación antes de tu demo.",
+      "proTipLabel": "Consejo:",
+      "proTipBody": "Ten lista una descripción de puesto. Te mostraremos exactamente cómo Skillvee evaluaría ese rol."
+    },
+    "whyTeamsSwitch": {
+      "eyebrow": "Por Qué Cambiar",
+      "title": "Por qué los equipos se cambian a Skillvee",
+      "card1": {
+        "stat": "46%",
+        "label": "de los nuevos empleados fracasan",
+        "description": "En menos de 18 meses. Las entrevistas tradicionales no detectan lo que importa.",
+        "source": "Leadership IQ"
+      },
+      "card2": {
+        "stat": "89%",
+        "label": "fracasan por actitud, no por habilidades",
+        "description": "Los currículums no muestran cómo trabaja realmente una persona.",
+        "source": "Leadership IQ"
+      },
+      "card3": {
+        "stat": "$14.9k",
+        "label": "desperdiciados por mala contratación",
+        "description": "En promedio. Una simulación cuesta menos que un solo error.",
+        "source": "CareerBuilder"
+      },
+      "sourceLabel": "Fuente: {source}"
+    },
+    "cta": {
+      "eyebrow": "¿Listo para empezar?",
+      "titleLine1": "DEJA DE ADIVINAR.",
+      "titleLine2": "EMPIEZA A SABER.",
+      "subtitle": "Mira exactamente cómo se desempeñan los candidatos antes de hacer la oferta.",
+      "button": "Reserva tu Demo"
+    }
+  },
+  "work": {
+    "sessionComplete": {
+      "title": "Sesión Completa",
+      "description": "Tu sesión de simulación ha terminado. Estamos guardando tu trabajo y preparando tus resultados."
+    },
+    "wrappingUp": {
+      "title": "Terminando...",
+      "description": "Finalizando tu evaluación"
+    },
+    "submittingWork": {
+      "title": "Compartiendo tu trabajo...",
+      "description": "Dándole a {manager} un momento para revisarlo antes de tu llamada."
+    },
+    "noCoworkers": {
+      "title": "No Hay Compañeros Disponibles",
+      "description": "No hay compañeros configurados para este escenario."
+    },
+    "chat": {
+      "loading": "Cargando...",
+      "startConversation": "Inicia una conversación con {name}",
+      "startConversationDescription": "{name} es {role}. Haz preguntas sobre el proyecto, la base de código o cualquier cosa en la que necesites ayuda.",
+      "typePlaceholder": "Escribe un mensaje...",
+      "typingIndicator": "{name} está escribiendo...",
+      "you": "Tú",
+      "callStarted": "Llamada iniciada",
+      "now": "Ahora",
+      "callToWalkThrough": "Llama a tu gerente para revisar tu PR",
+      "textInputDisabled": "La entrada de texto está deshabilitada",
+      "callNow": "Llamar Ahora",
+      "inCall": "En Llamada",
+      "callManager": "Llamar al Gerente",
+      "startCall": "Iniciar Llamada",
+      "inCallStatus": "En llamada"
+    },
+    "sidebar": {
+      "channels": "Canales",
+      "yourTeam": "Tu Equipo",
+      "others": "Otros",
+      "general": "general",
+      "submitWork": "Entregar Trabajo",
+      "remainingTime": "Tiempo restante: {time}",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú"
+    },
+    "decorativeTeam": {
+      "banner": "{name} está {statusLabel} - {message}",
+      "inMeetingLabel": "en una reunión",
+      "awayLabel": "ausente",
+      "currentlyUnavailable": "{name} no está disponible en este momento",
+      "defaultUnavailable": "Esta persona del equipo está ausente.",
+      "awayResponseNote": "Aun así puedes enviarle un mensaje y te responderá cuando esté disponible.",
+      "typePlaceholder": "Escribe un mensaje...",
+      "maya-torres": {
+        "role": "Diseñadora de Producto",
+        "initialStatusMessage": "En una revisión de diseño",
+        "cannedResponse": "¡Hola! Estoy en una revisión de diseño ahora mismo. Estaré libre en unos 30 min - ¡escríbeme entonces! Mientras tanto, {managerName} debería poder ayudarte.",
+        "scheduleMessages": {
+          "0": "En una revisión de diseño",
+          "1": "",
+          "2": "Hora de almuerzo"
+        }
+      },
+      "derek-washington": {
+        "role": "Científico de Datos",
+        "initialStatusMessage": "Concentrado en un pipeline de datos",
+        "cannedResponse": "¡Hola! Estoy saturado ahora trabajando en un pipeline de datos, pero {managerName} podría ayudarte con eso. ¡Te aviso cuando esté libre!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Sync del equipo",
+          "2": ""
+        }
+      },
+      "priya-sharma": {
+        "role": "Ingeniera DevOps",
+        "initialStatusMessage": "Desplegando a staging",
+        "cannedResponse": "¡Hola! Estoy en medio de un despliegue a staging ahora mismo. {managerName} debería poder ayudarte mientras tanto. ¡Te escribo cuando termine!",
+        "scheduleMessages": {
+          "0": "Desplegando a staging",
+          "1": "",
+          "2": "Reunión de planificación",
+          "3": ""
+        }
+      },
+      "marcus-lee": {
+        "role": "Ingeniero Frontend",
+        "initialStatusMessage": "",
+        "cannedResponse": "¡Hola! Estoy en nuestro standup del equipo. Debería terminar en unos 15 minutos. Consulta con {managerName} si es urgente, si no te contacto después.",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Tomando un café",
+          "2": ""
+        }
+      },
+      "sofia-andersson": {
+        "role": "Investigadora de UX",
+        "initialStatusMessage": "Haciendo entrevistas con usuarios",
+        "cannedResponse": "¡Hola! Estoy haciendo entrevistas con usuarios toda la mañana. {managerName} probablemente pueda ayudarte. ¡Estaré disponible esta tarde si aún me necesitas!",
+        "scheduleMessages": {
+          "0": "Entrevistas con usuarios",
+          "1": ""
+        }
+      },
+      "james-obrien": {
+        "role": "Ingeniero Backend",
+        "initialStatusMessage": "",
+        "cannedResponse": "¡Hola! Estoy saturado depurando un problema de producción ahora mismo, pero {managerName} podría ayudarte con eso. ¡Te aviso cuando esté libre!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Depurando bug en prod",
+          "2": ""
+        }
+      },
+      "nina-volkov": {
+        "role": "Gerente de Ingeniería",
+        "initialStatusMessage": "",
+        "cannedResponse": "¡Hola! Estoy en un 1:1 ahora mismo. {managerName} debería poder ayudarte. ¡Estaré libre en unos 20 minutos si me necesitas después!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Reunión 1:1",
+          "2": "",
+          "3": "Almuerzo"
+        }
+      },
+      "carlos-mendez": {
+        "role": "Ingeniero de Machine Learning",
+        "initialStatusMessage": "",
+        "cannedResponse": "¡Hola! Estoy monitoreando un entrenamiento de modelo ahora mismo y bastante concentrado. {managerName} podría ayudarte con eso. ¡Te aviso cuando esté libre!",
+        "scheduleMessages": {
+          "0": "",
+          "1": "Entrenando modelo - AFK",
+          "2": ""
+        }
+      }
+    },
+    "submitWorkModal": {
+      "title": "¿Listo para Entregar?",
+      "description": "Presentarás tu trabajo a {manager} para finalizar.",
+      "uploadLabel": "Adjuntar entregable (opcional):",
+      "uploadDescription": "Sube un archivo para compartir con tu gerente",
+      "uploadButton": "Elegir Archivo",
+      "submitButton": "Entregar Trabajo",
+      "cancelButton": "Cancelar",
+      "uploadError": "El archivo debe ser menor a 10MB"
+    },
+    "postDefenseModal": {
+      "title": "¡Excelente Trabajo!",
+      "description": "Has presentado exitosamente tu solución.",
+      "finalizeButton": "Finalizar Evaluación",
+      "finalizeDescription": "Completa tu evaluación y ver resultados",
+      "continueButton": "Continuar Trabajando",
+      "continueDescription": "Hacer mejoras adicionales si es necesario"
+    }
+  },
+  "results": {
+    "backToAssessments": "Volver a Mis Evaluaciones",
+    "assessmentResults": "Resultados de la Evaluación",
+    "noReport": {
+      "generating": {
+        "title": "Generando Reporte",
+        "description": "Estamos analizando tu desempeño y generando tu reporte personalizado. Esto puede tomar un momento."
+      },
+      "notReady": {
+        "title": "Reporte No Listo",
+        "description": "Tu reporte de evaluación aún no ha sido generado. Haz clic abajo para generarlo ahora.",
+        "generateButton": "Generar Reporte",
+        "generateError": "No pudimos generar tu reporte en este momento. Intenta de nuevo en un minuto."
+      }
+    },
+    "overview": {
+      "thanks": "Gracias por completar esta sesión con nosotros, {name}.",
+      "whatWeSawTitle": "Lo que vimos",
+      "momentsTitle": "Cosas que hiciste"
+    },
+    "howToThink": {
+      "title": "Cómo pensar sobre esto",
+      "body": "Es una foto de una sola sesión, no un veredicto sobre ti como ingeniero. Las empresas lo usan junto a tu CV y entrevistas — es un insumo más, no la decisión final."
+    },
+    "nextSteps": {
+      "title": "Qué sigue",
+      "companyNotified": "Tus resultados fueron compartidos con {company}. Ellos se contactarán contigo con los próximos pasos.",
+      "marketplaceTitle": "Mantente en nuestro radar para futuras oportunidades",
+      "marketplaceBody": "Skillvee es una empresa pequeña pero en crecimiento — estamos construyendo una red de empresas que contratan según cómo la gente realmente trabaja. Si activas esto, mostraremos tu perfil a otras empresas que encajen con tu estilo de trabajo. Sin promesas de tiempo — solo te contactaremos cuando haya un encaje real.",
+      "marketplaceDisclosure": "Compartiríamos este resumen y tu estilo de trabajo — nunca la grabación completa.",
+      "marketplaceToggleLabel": "Permitir que Skillvee muestre mi perfil a otras empresas",
+      "saved": "Guardado"
+    },
+    "workStyle": {
+      "title": "Estilo de Trabajo",
+      "totalDuration": "Duración Total",
+      "activeWorkingTime": "Tiempo de Trabajo Activo",
+      "coworkersContacted": "Compañeros Contactados",
+      "aiToolsUsed": "Herramientas IA Usadas",
+      "ciTests": "Pruebas CI",
+      "yes": "Sí",
+      "no": "No"
+    },
+    "experienceFeedback": {
+      "title": "¿Qué te pareció?",
+      "subtitle": "Tu retroalimentación nos ayuda a hacer la evaluación más justa para todos.",
+      "like": "Me gustó",
+      "dislike": "No tanto",
+      "commentPlaceholder": "¿Algo que quieras contarnos? (opcional)",
+      "commentHelp": "Se guarda cuando haces clic fuera del cuadro.",
+      "saved": "Guardado",
+      "saveError": "No se pudo guardar — intenta de nuevo"
+    }
+  },
+  "assessment": {
+    "dimensions": {
+      "COMMUNICATION": "Comunicación",
+      "PRACTICAL_MATURITY": "Madurez Práctica",
+      "COLLABORATION_COACHABILITY": "Colaboración y Receptividad",
+      "PROBLEM_DECOMPOSITION_DESIGN": "Descomposición y Diseño de Problemas",
+      "TECHNICAL_EXECUTION": "Ejecución Técnica",
+      "LEARNING_VELOCITY": "Velocidad de Aprendizaje",
+      "WORK_PROCESS": "Proceso de Trabajo",
+      "PROBLEM_STRUCTURING": "Estructuración de Problemas",
+      "PRIORITIZATION_TRADEOFFS": "Priorización y Compensaciones",
+      "DATA_REASONING": "Razonamiento con Datos",
+      "STAKEHOLDER_INFLUENCE": "Influencia con Stakeholders",
+      "ANALYTICAL_REASONING": "Razonamiento Analítico",
+      "TECHNICAL_PROFICIENCY_DS": "Competencia Técnica",
+      "INSIGHT_COMMUNICATION": "Comunicación de Insights",
+      "METHODOLOGY_RIGOR": "Metodología y Rigor",
+      "PROGRAM_STRUCTURING": "Estructuración de Programas",
+      "RISK_IDENTIFICATION": "Identificación y Mitigación de Riesgos",
+      "CROSS_TEAM_COORDINATION": "Coordinación Entre Equipos",
+      "EXECUTION_TRACKING": "Seguimiento de Ejecución y Responsabilidad",
+      "DISCOVERY_QUALIFICATION": "Descubrimiento y Calificación",
+      "VALUE_ARTICULATION": "Articulación de Valor",
+      "OBJECTION_HANDLING": "Manejo de Objeciones",
+      "CLOSING_NEXT_STEPS": "Cierre y Próximos Pasos",
+      "ONBOARDING_ENABLEMENT": "Onboarding y Habilitación",
+      "ESCALATION_HANDLING": "Manejo de Escalaciones",
+      "VALUE_REALIZATION": "Realización de Valor y Retención",
+      "RELATIONSHIP_MANAGEMENT": "Gestión de Relaciones"
+    },
+    "levels": {
+      "exceptional": "Excepcional",
+      "strong": "Fuerte",
+      "adequate": "Adecuado",
+      "developing": "En Desarrollo",
+      "needs_improvement": "Necesita Mejorar"
+    }
+  },
+  "welcome": {
+    "footer": {
+      "aiTeammates": "Compañeros IA",
+      "yourOwnTools": "Tus Herramientas",
+      "screenRecorded": "Pantalla Grabada"
+    },
+    "step1": {
+      "leftPanel": {
+        "title": "NO ES",
+        "titleLine2": "UN TEST.",
+        "description": "Esto es una simulación de trabajo real. Colaborarás con compañeros IA, usarás tus herramientas favoritas y resolverás problemas reales."
+      },
+      "rightPanel": {
+        "stepLabel": "Paso 01",
+        "title": "La Experiencia",
+        "points": {
+          "teammates": {
+            "description": "Trabaja con ",
+            "strong": "compañeros impulsados por IA",
+            "descriptionEnd": " mediante chat. Responderán como colegas reales."
+          },
+          "recording": {
+            "description": "Tu ",
+            "strong": "pantalla completa será grabada",
+            "descriptionEnd": ". Evaluamos cómo trabajas, no solo el resultado final."
+          },
+          "aiTools": {
+            "description": "",
+            "strong": "Usa cualquier herramienta IA",
+            "descriptionEnd": " que quieras. Copilot, ChatGPT, Claude — lo que te ayude a trabajar mejor."
+          }
+        },
+        "tip": {
+          "label": "Consejo:",
+          "text": " No dudes en contactar a tus compañeros para aclaraciones. ¡Eso es exactamente lo que queremos ver!"
+        },
+        "continueButton": "Continuar"
+      }
+    },
+    "step2": {
+      "leftPanel": {
+        "title": "TU",
+        "titleLine2": "ENTORNO.",
+        "description": "Usa tu propio IDE, navegador, terminal — todo en tu computadora. Grabamos tu pantalla y evaluamos cómo trabajas realmente."
+      },
+      "rightPanel": {
+        "stepLabel": "Paso 02",
+        "title": "Tu Espacio, Tus Reglas",
+        "points": {
+          "ownComputer": {
+            "description": "",
+            "strong": "Trabaja en tu propia computadora.",
+            "descriptionEnd": " Usa tu IDE, terminal, navegador, repositorios — cualquier herramienta que uses normalmente."
+          },
+          "workOutside": {
+            "description": "",
+            "strong": "Se espera que trabajes fuera de SkillVee.",
+            "descriptionEnd": " Escribe código en VS Code, busca información, usa el flujo de trabajo que prefieras."
+          },
+          "screenRecord": {
+            "description": "",
+            "strong": "Grabamos tu pantalla todo el tiempo",
+            "descriptionEnd": " — todo lo que hagas es parte de tu evaluación."
+          },
+          "comeBack": {
+            "description": "",
+            "strong": "Regresa a SkillVee para chatear",
+            "descriptionEnd": " con tu gerente y compañeros cuando lo necesites."
+          }
+        },
+        "continueButton": "Continuar",
+        "backButton": "Atrás"
+      }
+    },
+    "step3": {
+      "leftPanel": {
+        "title": "TÓMATE",
+        "titleLine2": "TU",
+        "titleLine3": "TIEMPO.",
+        "description": "Trabaja a tu ritmo natural. No hay bonificación por terminar rápido — solo haz tu mejor trabajo."
+      },
+      "rightPanel": {
+        "stepLabel": "Paso 03",
+        "title": "Antes de Comenzar",
+        "points": {
+          "timing": {
+            "descriptionStart": "Esta simulación está diseñada para tomar unos ",
+            "targetTime": "{target} minutos",
+            "descriptionMid": ". Tendrás hasta ",
+            "maxTime": "{max} minutos",
+            "descriptionEnd": " antes de que la sesión se cierre automáticamente."
+          },
+          "quietSpot": {
+            "description": "",
+            "strong": "Encuentra un lugar tranquilo",
+            "descriptionEnd": " sin distracciones. Trátalo como un bloque de trabajo concentrado."
+          },
+          "internet": {
+            "description": "",
+            "strong": "Asegúrate de tener internet estable.",
+            "descriptionEnd": " Si pierdes conexión, puedes volver a unirte y continuar donde lo dejaste."
+          },
+          "continuous": {
+            "description": "",
+            "strong": "Esta es una sesión continua.",
+            "descriptionEnd": " Una vez que comiences, trabaja hasta completarlo de una sola vez."
+          }
+        },
+        "reminder": {
+          "label": "Recuerda:",
+          "text": " Trabaja a tu ritmo natural. No hay bonificación por apurarse — queremos ver cómo trabajas normalmente."
+        },
+        "continueButton": "Continuar",
+        "backButton": "Atrás"
+      }
+    },
+    "step4": {
+      "leftPanel": {
+        "title": "LISTO.",
+        "titleLine2": "VAMOS.",
+        "description": "Tu entorno está listo. Comencemos."
+      },
+      "rightPanel": {
+        "stepLabel": "Paso 04",
+        "title": "Lanzar Simulación",
+        "description": {
+          "start": "Recibirás una tarea de tu gerente. El contexto es ",
+          "strong": "intencionalmente incompleto",
+          "end": " — parte de la evaluación es ver cómo haces preguntas y recopilas requisitos."
+        },
+        "consent": "Al continuar, aceptas la grabación de pantalla y cámara web durante esta evaluación.",
+        "startButton": "Iniciar Simulación",
+        "launchingButton": "Lanzando...",
+        "backButton": "Atrás"
+      }
+    },
+    "errors": {
+      "startFailed": "Error al iniciar la simulación",
+      "networkError": "Error de red. Por favor verifica tu conexión e inténtalo de nuevo."
+    }
+  },
+  "dashboard": {
+    "header": {
+      "welcomeBack": "Bienvenido de nuevo, {name}",
+      "myAssessments": "Mis Evaluaciones",
+      "subtitle": "Rastrea tus simulaciones y revisa tus resultados"
+    },
+    "stats": {
+      "total": "total",
+      "inProgress": "en progreso",
+      "pending": "pendiente",
+      "completed": "completado"
+    },
+    "sections": {
+      "inProgress": "En Progreso",
+      "readyToStart": "Listo para Comenzar",
+      "completed": "Completado"
+    },
+    "status": {
+      "inProgress": "En progreso",
+      "readyToStart": "Listo para comenzar",
+      "completed": "Completado",
+      "scheduled": "Programado"
+    },
+    "emptyState": {
+      "title": "Aún no hay evaluaciones",
+      "description": "Verás tus evaluaciones aquí cuando un reclutador te invite a una simulación. Revisa tu correo electrónico para ver los enlaces de invitación."
+    },
+    "card": {
+      "processingFailed": "Error al procesar la evaluación",
+      "resultsBeingProcessed": "Procesando resultados...",
+      "completedTime": "Completado {time}",
+      "startedTime": "Iniciado {time}",
+      "invitedTime": "Invitado {time}",
+      "start": "Comenzar",
+      "continue": "Continuar",
+      "more": "+{count}"
+    },
+    "levels": {
+      "junior": "Junior",
+      "mid": "Intermedio",
+      "senior": "Senior",
+      "staff": "Staff"
+    },
+    "time": {
+      "justNow": "justo ahora",
+      "hoursAgo": "hace {hours}h",
+      "yesterday": "ayer",
+      "daysAgo": "hace {days}d",
+      "weeksAgo": "hace {weeks}s",
+      "minutes": "{minutes}m",
+      "hours": "{hours}h",
+      "hoursMinutes": "{hours}h {minutes}m"
+    },
+    "sidebar": {
+      "myAssessments": "Mis Evaluaciones",
+      "profile": "Perfil",
+      "candidate": "Candidato",
+      "signOut": "Cerrar sesión"
+    }
+  },
+  "common": {
+    "error": {
+      "title": "Algo salió mal",
+      "description": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo, y si el problema persiste, contacta a soporte.",
+      "tryAgain": "Intentar de nuevo",
+      "errorDetails": "Detalles del error"
+    },
+    "loading": {
+      "default": "Cargando...",
+      "pleaseWait": "Por favor espera..."
+    },
+    "actions": {
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "confirm": "Confirmar",
+      "close": "Cerrar",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "submit": "Enviar",
+      "continue": "Continuar",
+      "dismiss": "Descartar"
+    },
+    "status": {
+      "success": "Éxito",
+      "error": "Error",
+      "warning": "Advertencia",
+      "info": "Información"
+    },
+    "notFound": {
+      "title": "404",
+      "description": "Página no encontrada",
+      "goHome": "Ir al inicio"
+    }
+  },
+  "invite": {
+    "hero": {
+      "title": {
+        "line1": "TU",
+        "line2": "PRÓXIMO ROL."
+      },
+      "subtitle": "{companyName} está buscando a alguien para unirse a su equipo. Experimenta un día en el rol antes de comprometerte."
+    },
+    "features": {
+      "aiTeammates": "Compañeros IA",
+      "useAnyAiTools": "Usa Cualquier Herramienta IA"
+    },
+    "auth": {
+      "notYou": "¿No eres tú?",
+      "signOut": "Cerrar sesión",
+      "settingUpSimulation": "Configurando tu simulación...",
+      "getStarted": "Comenzar",
+      "continueWithGoogle": "Continuar con Google",
+      "orSignUpWithEmail": "o regístrate con email",
+      "orSignInWithEmail": "o inicia sesión con email",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "emailAddress": "Correo electrónico",
+      "password": "Contraseña",
+      "passwordWithRequirement": "Contraseña (8+ caracteres)",
+      "confirmPassword": "Confirmar contraseña",
+      "creatingAccount": "Creando cuenta...",
+      "signingIn": "Iniciando sesión...",
+      "createAccount": "Crear cuenta",
+      "signIn": "Iniciar sesión",
+      "signUp": "Registrarse",
+      "consent": "Al registrarte, aceptas la grabación de pantalla y cámara web y nuestros <terms>Términos</terms> y <privacy>Política de Privacidad</privacy>",
+      "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+      "dontHaveAccount": "¿No tienes una cuenta?"
+    },
+    "errors": {
+      "failedToCreateAssessment": "Error al crear la evaluación",
+      "genericError": "Ocurrió un error. Por favor, inténtalo de nuevo.",
+      "passwordsDontMatch": "Las contraseñas no coinciden",
+      "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+      "registrationFailed": "Error en el registro",
+      "accountCreatedButSignInFailed": "Cuenta creada pero falló el inicio de sesión. Por favor, inicia sesión manualmente.",
+      "invalidCredentials": "Correo electrónico o contraseña inválidos"
+    },
+    "loading": "Cargando..."
+  },
+  "recruiter": {
+    "assessments": {
+      "title": "Evaluaciones",
+      "createSimulation": "Crear Simulación",
+      "stats": {
+        "simulations": "simulaciones",
+        "candidates": "candidatos",
+        "completed": "completadas",
+        "inProgress": "en progreso",
+        "toReview": "por revisar"
+      },
+      "empty": {
+        "title": "No hay evaluaciones aún",
+        "description": "Crea una simulación e invita candidatos para ver sus resultados de evaluación aquí.",
+        "createButton": "Crea Tu Primera Simulación"
+      },
+      "card": {
+        "needsReview": "{count} por revisar",
+        "candidate": "candidato",
+        "candidates": "candidatos",
+        "completed": "completadas",
+        "active": "activas",
+        "pending": "pendientes",
+        "open": "Abierta",
+        "draft": "Borrador",
+        "noCandidatesYet": "No hay candidatos aún",
+        "copyInviteLink": "Copiar enlace de invitación",
+        "linkCopied": "Enlace de simulación copiado",
+        "openAssessment": "Abrir evaluación",
+        "avg": "prom"
+      },
+      "activity": {
+        "completed": "{name} completó",
+        "started": "{name} comenzó",
+        "signedUp": "{name} se registró",
+        "someone": "Alguien"
+      },
+      "levels": {
+        "junior": "Junior",
+        "mid": "Medio",
+        "senior": "Senior",
+        "staff": "Staff"
+      },
+      "strengthLabels": {
+        "exceptional": "Excepcional para {level}",
+        "strong": "Fuerte para {level}",
+        "meets": "Cumple el estándar {level}",
+        "below": "Por debajo del estándar {level}"
+      },
+      "time": {
+        "justNow": "justo ahora",
+        "hoursAgo": "hace {hours}h",
+        "yesterday": "ayer",
+        "daysAgo": "hace {days}d",
+        "weeksAgo": "hace {weeks}s"
+      },
+      "compare": {
+        "backTo": "Volver a {name}",
+        "compareWithOthers": "Comparar con otros",
+        "top": "Top {percent}%",
+        "of": "de {total}",
+        "noSummary": "Sin resumen disponible",
+        "errors": {
+          "accessDenied": "Acceso Denegado",
+          "accessDeniedDescription": "No tienes permiso para ver uno o más de estos candidatos.",
+          "backToCandidates": "Volver a Candidatos",
+          "unableToLoad": "No se pudo cargar la comparación",
+          "failedToLoad": "Error al cargar datos de comparación",
+          "genericError": "Ocurrió un error al obtener los datos"
+        }
+      },
+      "candidateDetail": {
+        "backToCandidates": "Volver a Candidatos",
+        "accessDenied": "Acceso Denegado",
+        "accessDeniedDescription": "No tienes permiso para ver la evaluación de este candidato. Esto puede deberse a que la evaluación pertenece a otro reclutador.",
+        "unableToLoad": "No se pudieron cargar los datos del candidato",
+        "fetchError": "Ocurrió un error al obtener los detalles de la evaluación.",
+        "anonymousCandidate": "Candidato Anónimo",
+        "completed": "Completado {date}",
+        "compareWithOthers": "Comparar con otros",
+        "overallScore": "Puntuación General",
+        "topPercent": "Top {percent}%",
+        "dimensionScores": "Puntuaciones por Dimensión"
+      }
+    },
+    "simulations": {
+      "new": {
+        "title": "Crear una Nueva Simulación",
+        "subtitle": "Comienza con una descripción de trabajo o responde algunas preguntas",
+        "pasteJD": {
+          "title": "Pegar una Descripción de Trabajo",
+          "subtitle": "Recomendado — extraeremos todo automáticamente",
+          "placeholder": "Pega tu descripción de trabajo aquí...\n\nEjemplo:\nIngeniero Frontend Senior en Acme Corp\n\nEstamos buscando un desarrollador frontend experimentado para unirse a nuestro equipo. Trabajarás en nuestro dashboard basado en React, construyendo nuevas funcionalidades para nuestra plataforma de análisis...",
+          "continueButton": "Continuar",
+          "analyzing": "Analizando tu descripción de trabajo...",
+          "keyboardTip": "Consejo: Presiona",
+          "toContine": "para continuar",
+          "tryAgain": "Intentar de nuevo",
+          "errors": {
+            "notEnoughInfo": "No pudimos extraer suficientes detalles. Por favor completa los campos faltantes a continuación."
+          }
+        },
+        "guidedPath": {
+          "link": "Responde algunas preguntas en su lugar",
+          "dontHaveJD": "¿No tienes una descripción de trabajo?"
+        },
+        "guided": {
+          "title": "Cuéntanos Sobre Tu Rol",
+          "subtitle": "Responde algunas preguntas para crear tu simulación",
+          "roleTitle": "¿Cuál es el título del rol?",
+          "roleTitlePlaceholder": "ej., Ingeniero Backend Senior",
+          "companyName": "¿Cuál es el nombre de la empresa?",
+          "companyNamePlaceholder": "ej., Acme Corp",
+          "companyDescription": "¿Qué hace tu empresa?",
+          "companyDescriptionPlaceholder": "ej., Somos una startup fintech construyendo infraestructura de pagos para pequeños negocios",
+          "techStack": "¿Qué tecnologías usa este rol?",
+          "addCustomTech": "Agregar otra tecnología...",
+          "addButton": "Agregar",
+          "seniorityLevel": "¿Qué nivel de experiencia?",
+          "junior": "Junior",
+          "midLevel": "Medio",
+          "senior": "Senior",
+          "staffPlus": "Staff+",
+          "roleArchetype": "Arquetipo de rol",
+          "roleArchetypeDescription": "ajusta las expectativas de puntuación por dimensión",
+          "selectArchetype": "Seleccionar un arquetipo de rol...",
+          "archetypeNote": "Las expectativas de puntuación se ajustarán para este rol — diferentes dimensiones tendrán diferentes puntuaciones esperadas según la experiencia.",
+          "back": "Atrás",
+          "continue": "Continuar",
+          "generating": "Generando tu simulación...",
+          "optional": "(opcional)",
+          "required": "*"
+        },
+        "generating": {
+          "title": "Construyendo tu simulación",
+          "steps": [
+            "Extrayendo información clave de la descripción del trabajo...",
+            "Identificando habilidades técnicas requeridas...",
+            "Analizando expectativas de experiencia...",
+            "Creando desafíos de trabajo realistas...",
+            "Diseñando dinámicas y personalidades del equipo...",
+            "Calibrando dificultad para el nivel del rol...",
+            "Construyendo escenarios de trabajo auténticos...",
+            "Ensamblando tu equipo de simulación...",
+            "Finalizando detalles de la simulación..."
+          ]
+        },
+        "preview": {
+          "title": "Confirma Tu Simulación",
+          "subtitle": "Elige un desafío, luego revisa los detalles generados automáticamente",
+          "autoGeneratedDetails": "Detalles generados automáticamente",
+          "simulationName": "Nombre de la Simulación",
+          "company": "Empresa",
+          "companyNamePlaceholder": "Nombre de la empresa",
+          "companyDescriptionPlaceholder": "Descripción de la empresa",
+          "techStack": "Stack Tecnológico",
+          "addTechnology": "Agregar tecnología + Enter",
+          "teamMembers": "Miembros del Equipo",
+          "members": "{count} miembros",
+          "seniorityLevel": "Nivel de Experiencia",
+          "juniorDesc": "0-2 años — puede hacer el trabajo con guía, enfocado en aprender",
+          "midDesc": "2-5 años — colaborador independiente, fundamentos sólidos",
+          "seniorDesc": "5-8 años — trabaja independientemente, mentoría a otros, dueño de sistemas",
+          "staffDesc": "8+ años — establece dirección técnica, impacto entre equipos",
+          "juniorExp": "0-2 años de experiencia",
+          "midExp": "2-5 años de experiencia",
+          "seniorExp": "5-8 años de experiencia",
+          "staffExp": "8+ años de experiencia",
+          "simulationDepth": "Duración de la Simulación",
+          "roleArchetype": "Arquetipo de Rol",
+          "required": "Requerido",
+          "previewCandidateExperience": "Ver experiencia del candidato",
+          "chooseChallenge": "Elige un Desafío",
+          "selectChallenge": "Selecciona el desafío en el que trabajarán los candidatos durante la evaluación",
+          "showCandidateBrief": "Mostrar resumen del candidato",
+          "hideCandidateBrief": "Ocultar resumen del candidato",
+          "writeMyOwn": "Escribir el mío",
+          "describechallenge": "Describe el desafío...",
+          "selectChallengeAndArchetype": "Selecciona un desafío y arquetipo de rol para continuar",
+          "selectChallengeOnly": "Selecciona un desafío para continuar",
+          "selectArchetypeOnly": "Selecciona un arquetipo de rol para continuar",
+          "createSimulation": "Crear Simulación",
+          "creating": "Creando...",
+          "saveProgress": {
+            "creating": "Creando simulación...",
+            "teamMembers": "Configurando miembros del equipo...",
+            "almostDone": "Casi listo..."
+          },
+          "done": "Listo",
+          "more": "+{count} más",
+          "scoringNote": "Las expectativas de puntuación variarán por dimensión para este rol"
+        },
+        "teamSheet": {
+          "title": "Miembros del Equipo",
+          "description": "Equipo generado por IA que interactuará con el candidato",
+          "personaStyle": "Estilo de Persona",
+          "knowledgeItems": "Elementos de Conocimiento",
+          "critical": "Crítico"
+        },
+        "candidateExperienceSheet": {
+          "title": "Experiencia del Candidato",
+          "description": "Esto es lo que verán los candidatos cuando comiencen la simulación"
+        },
+        "cancel": "Cancelar",
+        "language": "Idioma",
+        "english": "English",
+        "spanish": "Español",
+        "errors": {
+          "generationFailed": "La generación falló — por favor revisa los detalles a continuación e intenta de nuevo."
+        }
+      },
+      "settings": {
+        "cloneToLanguage": "Clonar a otro idioma",
+        "language": "Idioma",
+        "readOnly": "(solo lectura)",
+        "backToSimulations": "Volver a Simulaciones",
+        "successBanner": {
+          "title": "¡Simulación creada!",
+          "description": "Comparte el enlace de abajo con los candidatos para comenzar"
+        },
+        "shareableLink": {
+          "title": "Enlace para Compartir",
+          "description": "Comparte este enlace con los candidatos para iniciar su evaluación",
+          "copied": "¡Copiado!",
+          "copy": "Copiar Enlace"
+        },
+        "details": {
+          "title": "Detalles de la Simulación",
+          "taskDescription": "Descripción de la Tarea",
+          "techStack": "Stack Tecnológico",
+          "languageHeading": "Idioma",
+          "english": "Inglés",
+          "spanish": "Español",
+          "languageImmutable": "El idioma del escenario es inmutable una vez creado.",
+          "cloneToCreateInOther": "Clona el escenario para crear una versión en otro idioma.",
+          "targetLevel": "Nivel Objetivo",
+          "yearsExperience": "{years} de experiencia",
+          "expectedScore": "· Puntuación esperada: {score}/4",
+          "archetypeNote": "Las expectativas de puntuación por dimensión se ajustan para este arquetipo de rol y nivel de experiencia",
+          "repository": "Repositorio",
+          "repoUnavailable": "No disponible — verifica la configuración de GITHUB_ORG_TOKEN",
+          "settingUp": "Configurando...",
+          "created": "Creado"
+        },
+        "resources": {
+          "title": "Recursos ({count})",
+          "showContent": "Mostrar contenido",
+          "hideContent": "Ocultar contenido"
+        },
+        "coworkers": {
+          "title": "Compañeros ({count})",
+          "none": "No hay compañeros configurados."
+        },
+        "cloneModal": {
+          "title": "Clonar a Otro Idioma",
+          "description": "Crea una copia de esta simulación en otro idioma. El contenido del escenario (tarea, equipo, recursos) se regenerará en el idioma seleccionado.",
+          "dialogTitle": "Clonar Escenario a Otro Idioma",
+          "dialogDescription": "Esto creará un nuevo escenario con todo el contenido (tarea, recursos y compañeros) regenerado en el idioma seleccionado.",
+          "noteLabel": "Nota:",
+          "noteText": "Las personalizaciones del reclutador NO se transferirán. El nuevo escenario tendrá contenido recién generado.",
+          "targetLanguage": "Idioma Objetivo",
+          "selectLanguage": "Selecciona un idioma",
+          "cancel": "Cancelar",
+          "cloning": "Clonando...",
+          "clone": "Clonar",
+          "cloneScenario": "Clonar Escenario",
+          "cloneFailed": "Error al clonar el escenario"
+        }
+      },
+      "list": {
+        "title": "Simulaciones",
+        "countSingular": "{count} simulación",
+        "countPlural": "{count} simulaciones",
+        "emptyHelper": "Crea tu primera simulación para comenzar a evaluar candidatos",
+        "createSimulation": "Crear Simulación",
+        "empty": {
+          "title": "No hay simulaciones aún",
+          "description": "Crea tu primera simulación de trabajo para comenzar a evaluar candidatos.",
+          "createButton": "Crea Tu Primera Simulación"
+        },
+        "table": {
+          "simulation": "Simulación",
+          "company": "Empresa",
+          "status": "Estado",
+          "level": "Nivel",
+          "candidates": "Candidatos",
+          "created": "Creado"
+        },
+        "status": {
+          "open": "Abierta",
+          "draft": "Borrador"
+        },
+        "levels": {
+          "junior": "Junior",
+          "mid": "Medio",
+          "senior": "Senior",
+          "lead": "Líder"
+        },
+        "toast": {
+          "linkCopied": "Enlace de invitación copiado",
+          "deleted": "Simulación eliminada",
+          "deleteFailed": "Error al eliminar"
+        },
+        "delete": {
+          "confirmTitle": "¿Eliminar simulación?",
+          "confirmDescriptionBefore": "Esto eliminará permanentemente ",
+          "confirmDescriptionAfter": " y todos los resultados, grabaciones y puntuaciones de candidatos asociados. Esta acción no se puede deshacer.",
+          "cancel": "Cancelar",
+          "delete": "Eliminar",
+          "deleting": "Eliminando..."
+        }
+      }
+    }
+  },
+  "product": {
+    "hero": {
+      "badge": "Míralo en acción",
+      "title": "Mira a un candidato completar",
+      "titleHighlight": "una simulación real.",
+      "subtitle": "Esto es lo que tu equipo de contratación ve después de que un candidato termina. Conversaciones reales. Trabajo real. Señal real."
+    },
+    "timeline": {
+      "title": "Un día de trabajo realista, no acertijos de algoritmos",
+      "subtitle": "Los candidatos viven cómo se siente realmente el rol. Tú ves cómo trabajan de verdad.",
+      "step1": {
+        "title": "Recopilar Requisitos",
+        "description": "El candidato se une a una llamada de inicio con su gerente de IA y luego conversa con las partes interesadas para aclarar la tarea. Los grandes candidatos hacen preguntas inteligentes. Otros se lanzan a ciegas. Verás la diferencia.",
+        "tag1": "Reunión inicial con el gerente",
+        "tag2": "Chat con partes interesadas"
+      },
+      "step2": {
+        "title": "Hacer el Trabajo Real",
+        "description": "Construir la funcionalidad, analizar los datos, crear la hoja de ruta: lo que sea que el rol requiera. La pantalla se graba. Las herramientas de IA están permitidas. Queremos ver cómo trabajan de verdad.",
+        "tag1": "Pantalla grabada",
+        "tag2": "Herramientas de IA permitidas",
+        "tag3": "~20-30 minutos"
+      },
+      "step3": {
+        "title": "Presentar y Defender",
+        "description": "Entregan el trabajo y enfrentan preguntas. La IA cuestiona sus decisiones. ¿Defienden las buenas ideas? ¿Aceptan críticas válidas? ¿Ceden ante el primer desacuerdo?",
+        "tag1": "Llamada de voz",
+        "tag2": "Preguntas desafiantes"
+      }
+    },
+    "features": {
+      "title": "Todo lo que necesitas para tomar la decisión",
+      "subtitle": "No solo un puntaje. Evidencia real de cómo trabajan.",
+      "scorecard": {
+        "title": "Tarjeta de Puntuación Estructurada",
+        "text": "Calificaciones generadas por IA en dimensiones clave."
+      },
+      "transcripts": {
+        "title": "Transcripciones Completas",
+        "text": "Cada conversación con las partes interesadas."
+      },
+      "recording": {
+        "title": "Grabación de Pantalla",
+        "text": "Mira todo su proceso si quieres."
+      },
+      "aiUsage": {
+        "title": "Uso de Herramientas de IA",
+        "text": "¿Usan la IA con criterio o copian y pegan a ciegas?"
+      },
+      "feedback": {
+        "title": "Manejo de Retroalimentación",
+        "text": "¿Cómo responden ante el cuestionamiento? ¿Defienden sus ideas cuando tienen razón?"
+      },
+      "communication": {
+        "title": "Comunicación",
+        "text": "¿Pueden explicar su trabajo de forma clara y profesional?"
+      }
+    },
+    "comparison": {
+      "title": "Hay una mejor forma de contratar",
+      "oldWayLabel": "La Forma Antigua",
+      "skillveeWayLabel": "La Forma Skillvee",
+      "signalQuality": {
+        "title": "Calidad de la Señal",
+        "oldWay": "Señales de baja fidelidad de currículums y entrevistas.",
+        "skillveeWay": "Señales de alta fidelidad de simulaciones de trabajo real."
+      },
+      "candidateExperience": {
+        "title": "Experiencia del Candidato",
+        "oldWay": "Pruebas de algoritmos estresantes e irrelevantes y preguntas de trivia.",
+        "skillveeWay": "Tareas atractivas y relevantes que muestran sus habilidades."
+      },
+      "timeToHire": {
+        "title": "Tiempo de Contratación",
+        "oldWay": "Semanas de coordinación y múltiples rondas de entrevistas.",
+        "skillveeWay": "Evaluaciones asíncronas completadas en horas."
+      },
+      "bias": {
+        "title": "Sesgo",
+        "oldWay": "Propenso al sesgo inconsciente y a evaluaciones de 'ajuste cultural'.",
+        "skillveeWay": "Evidencia estandarizada y objetiva para cada candidato."
+      }
+    },
+    "security": {
+      "title": "Listo para empresas desde el primer día",
+      "subtitle": "Los datos de tus candidatos están seguros. Cumplimos con tus requisitos de cumplimiento.",
+      "soc2": {
+        "title": "SOC 2 Type II",
+        "description": "Controles de seguridad auditados. Tus datos están protegidos por prácticas estándar de la industria."
+      },
+      "gdpr": {
+        "title": "GDPR Compliant",
+        "description": "Cumplimiento total de privacidad de datos para candidatos de la UE. Políticas automáticas de retención de datos."
+      },
+      "sso": {
+        "title": "SSO e Integraciones",
+        "description": "Integraciones con SAML SSO, Greenhouse, Lever y Workday disponibles para Enterprise."
+      },
+      "contactCta": "Contáctanos para Enterprise"
+    },
+    "faq": {
+      "title": "Preguntas comunes",
+      "q1": {
+        "question": "¿Cuánto tiempo toma configurar una simulación?",
+        "answer": "La mayoría de las simulaciones están listas en menos de 5 minutos. Pega tu descripción de trabajo, revisa el escenario generado, personalízalo si lo necesitas y estás listo para enviarlo a los candidatos. Sin semanas de diseño de pruebas."
+      },
+      "q2": {
+        "question": "¿Puedo personalizar la simulación para mi rol específico?",
+        "answer": "Sí. La IA genera una base a partir de tu descripción de trabajo, pero puedes personalizar el escenario, las personas de las partes interesadas, las tareas específicas y los criterios de evaluación. Los planes Enterprise incluyen soporte de diseño de simulación a medida."
+      },
+      "q3": {
+        "question": "¿Cómo se sienten los candidatos respecto a esto frente a las entrevistas tradicionales?",
+        "answer": "Los candidatos califican consistentemente a Skillvee por encima de las pruebas de algoritmos. Aprecian que sea relevante para el trabajo real, que respete su tiempo (30-45 min frente a entrevistas de varias horas) y que les permita mostrar sus habilidades reales, no memorización de trivia."
+      },
+      "q4": {
+        "question": "¿Qué pasa si un candidato tiene problemas técnicos?",
+        "answer": "Los candidatos pueden pausar y reanudar. Si los problemas persisten, pueden contactar a soporte. Todas las sesiones se guardan automáticamente, así que no se pierde ningún trabajo. También ofrecemos una verificación previa antes de comenzar."
+      }
+    },
+    "cta": {
+      "title": "¿LISTO PARA MEJORAR",
+      "titleHighlight": "TU CONTRATACIÓN?",
+      "subtitle": "Obtén una demo personalizada o prueba una evaluación de muestra como candidato.",
+      "requestDemo": "Solicitar Demo",
+      "trySample": "Probar Evaluación de Muestra"
+    }
+  },
+  "landing": {
+    "nav": {
+      "product": "Producto",
+      "candidates": "Candidatos",
+      "pricing": "Precios",
+      "faq": "Preguntas",
+      "dashboard": "Panel",
+      "signIn": "Iniciar sesión",
+      "requestDemo": "Solicitar Demo"
+    },
+    "footer": {
+      "tagline": "Mira cómo trabajan los candidatos antes de contratarlos.",
+      "productHeading": "Producto",
+      "howItWorks": "Cómo funciona",
+      "requestDemo": "Solicitar Demo",
+      "pricing": "Precios",
+      "resourcesHeading": "Recursos",
+      "questionBank": "Banco de preguntas",
+      "interviewGuides": "Guías de entrevista",
+      "faq": "Preguntas frecuentes",
+      "legalHeading": "Legal",
+      "privacyPolicy": "Política de privacidad",
+      "termsOfService": "Términos de servicio",
+      "copyright": "© {year} Skillvee. Todos los derechos reservados."
+    },
+    "hero": {
+      "badge": "Simulaciones de trabajo que realmente funcionan",
+      "title": "Obsérvalos trabajar.",
+      "titleHighlight": "Luego contrata.",
+      "subtitle": "Ve exactamente cómo los candidatos se comunican, colaboran y resuelven problemas, antes de hacer la oferta. No más errores costosos de contratación.",
+      "requestDemo": "Solicitar Demo"
+    },
+    "credibility": {
+      "deepmindWinner": "Ganador del Hackathon",
+      "backedBy": "Respaldado por"
+    },
+    "problem": {
+      "label": "El Problema",
+      "title": "Has contratado a la persona equivocada antes",
+      "subtitle": "Todos lo han hecho. El 75% de las empresas lo admiten. Por eso sigue ocurriendo.",
+      "stat1": {
+        "value": "72%",
+        "text": "de los currículums ahora están escritos por IA y se ven iguales. No puedes saber quién está calificado."
+      },
+      "stat2": {
+        "value": "46%",
+        "text": "de las nuevas contrataciones fracasan en 18 meses. Error costoso."
+      },
+      "stat3": {
+        "value": "<1%",
+        "text": "de los solicitantes están verdaderamente calificados. Aguja en un pajar."
+      }
+    },
+    "howItWorks": {
+      "label": "Cómo Funciona",
+      "title": "De la descripción del puesto a la decisión de contratación",
+      "subtitle": "Tres pasos. Sin dolores de cabeza de programación. Evidencia real.",
+      "step1": {
+        "number": "1",
+        "title": "Crea Tu Simulación",
+        "description": "Pega tu descripción de trabajo y generamos un escenario de trabajo realista. Sin pruebas genéricas: tu simulación coincide con el rol real.",
+        "point1": {
+          "title": "Escenarios específicos del rol",
+          "desc": "IA genera tareas que coinciden con tu descripción"
+        },
+        "point2": {
+          "title": "Personas de partes interesadas personalizadas",
+          "desc": "PM, gerente y miembros del equipo adaptados a ti"
+        },
+        "point3": {
+          "title": "Listo en minutos",
+          "desc": "No se requieren semanas de diseño de pruebas"
+        }
+      },
+      "step2": {
+        "number": "2",
+        "title": "Los Candidatos Hacen Trabajo Real",
+        "description": "Envía un enlace. Los candidatos experimentan un primer día realista: recopilan requisitos, toman decisiones y entregan trabajo. 30-45 minutos, sin programación.",
+        "point1": {
+          "title": "Llamadas de voz en tiempo real que no pueden falsificar",
+          "desc": "Conversaciones sin guión con partes interesadas de IA: sin ensayar, sin hacer trampa"
+        },
+        "point2": {
+          "title": "Herramientas de IA alentadas",
+          "desc": "Ve cómo realmente trabajan en 2025"
+        },
+        "point3": {
+          "title": "Transparencia total",
+          "desc": "Los candidatos ven exactamente lo que tú ves: sin evaluación oculta"
+        }
+      },
+      "step3": {
+        "number": "3",
+        "title": "Revisa Evidencia Estandarizada",
+        "description": "Compara candidatos lado a lado con datos consistentes y objetivos. No más intuición: ve exactamente lo que obtienes.",
+        "point1": {
+          "title": "Tarjetas de puntuación estructuradas",
+          "desc": "Comunicación, resolución de problemas, ejecución, uso de IA"
+        },
+        "point2": {
+          "title": "Transcripciones de conversación",
+          "desc": "Ve cómo aclararon requisitos y colaboraron"
+        },
+        "point3": {
+          "title": "Artefactos de trabajo",
+          "desc": "Revisa su producción y código real"
+        }
+      }
+    },
+    "roles": {
+      "label": "Plataforma Universal",
+      "title": "Funciona para cada rol",
+      "subtitle": "Simulaciones personalizadas adaptadas a tus necesidades específicas",
+      "softwareEngineers": {
+        "title": "Ingenieros de Software",
+        "desc": "Construir características, revisar código, colaborar con partes interesadas"
+      },
+      "productManagers": {
+        "title": "Gerentes de Producto",
+        "desc": "Priorizar backlogs, dirigir reuniones, presentar hojas de ruta"
+      },
+      "dataScientists": {
+        "title": "Científicos de Datos",
+        "desc": "Analizar datos, comunicar hallazgos, hacer recomendaciones"
+      },
+      "programManagers": {
+        "title": "Gerentes de Programa",
+        "desc": "Coordinar equipos, resolver conflictos, impulsar alineación"
+      },
+      "sales": {
+        "title": "Ventas",
+        "desc": "Realizar llamadas de descubrimiento, manejar objeciones, cerrar tratos"
+      },
+      "customerSuccess": {
+        "title": "Éxito del Cliente",
+        "desc": "Incorporar clientes, manejar escaladas, impulsar renovaciones"
+      }
+    },
+    "faq": {
+      "label": "¿Tienes Preguntas?",
+      "title": "Preguntas Frecuentes",
+      "viewAll": "Ver todas las preguntas →",
+      "question1": {
+        "question": "¿Cuánto tiempo toma la evaluación a los candidatos?",
+        "answer": "30-45 minutos. Los candidatos completan la simulación de una sola vez, sin necesidad de programación. Reciben un enlace, completan el trabajo y obtienes resultados."
+      },
+      "question2": {
+        "question": "¿Pueden los candidatos hacer trampa con IA?",
+        "answer": "Alentamos el uso de IA: así es como la gente realmente trabaja en 2025. Lo que importa es <em>cómo</em> la usan. <strong>Nuestras conversaciones de voz en tiempo real son imposibles de falsificar</strong>: los candidatos no pueden ensayar, escribir guiones o hacer que alguien más tome la llamada. Combinado con grabaciones de pantalla de todo su proceso, ves a la persona real, no solo resultados pulidos."
+      },
+      "question3": {
+        "question": "¿Podemos personalizar la simulación para nuestro rol?",
+        "answer": "Sí. Pega tu descripción de trabajo y generamos una simulación adaptada a tu rol específico, stack tecnológico y contexto de empresa. Sin pruebas genéricas: los candidatos trabajan en escenarios que coinciden con lo que realmente harían el primer día."
+      },
+      "question4": {
+        "question": "¿Qué integraciones de ATS soportan?",
+        "answer": "Nos integramos con las principales plataformas ATS incluyendo Greenhouse, Lever, Ashby y Workday. Los resultados se sincronizan automáticamente con los perfiles de candidatos. ¿No ves la tuya? Contáctanos: estamos agregando nuevas integraciones regularmente."
+      },
+      "question5": {
+        "question": "¿Es esto justo para todos los candidatos?",
+        "answer": "<strong>Más justo que las entrevistas tradicionales.</strong> Piensa en lo que enfrentan los candidatos hoy: ser juzgados por apariencia, nerviosismo y humor del entrevistador. Evaluaciones subjetivas de \"ajuste cultural\". Ventajas para personas que entrevistan bien pero trabajan mal.<br /><br />Con SkillVee, cada candidato recibe el escenario idéntico. Sin dinámicas de poder, sin preguntas sorpresa, sin sesgo. Eligen cuándo completarlo, usan sus herramientas preferidas y su trabajo habla por sí mismo. Medimos lo que la gente realmente hace, no cómo se desempeña bajo presión artificial."
+      },
+      "question6": {
+        "question": "¿Qué pasa con la privacidad del candidato?",
+        "answer": "Los candidatos saben exactamente qué se está evaluando: no hay puntuación oculta ni criterios secretos. Ven los mismos materiales que ven los revisores. Compara esto con las entrevistas tradicionales donde los candidatos no tienen idea de lo que se está escribiendo sobre ellos, o pruebas de personalidad con algoritmos opacos.<br /><br />Nuestro enfoque es <strong>transparente por diseño</strong>: los candidatos demuestran habilidades reales, los revisores ven trabajo real y todos conocen las reglas desde el principio."
+      }
+    },
+    "cta": {
+      "title": "DEJA DE ADIVINAR.",
+      "titleHighlight": "EMPIEZA A SABER.",
+      "subtitle": "Ve exactamente cómo se desempeñan los candidatos antes de hacer la oferta.",
+      "requestDemo": "Solicitar Demo"
+    }
+  },
+  "pricing": {
+    "hero": {
+      "badge": "Precios simples y transparentes",
+      "title": "Comienza gratis.",
+      "titleHighlight": "Escala mientras creces.",
+      "subtitle": "Sin tarifas por evaluación, sin sorpresas. Actualiza cuando necesites más capacidad."
+    },
+    "billing": {
+      "monthly": "Mensual",
+      "annual": "Anual",
+      "save": "Ahorra 17%"
+    },
+    "perMonth": "/mes",
+    "perYear": "/año",
+    "tiers": {
+      "free": {
+        "name": "Gratis",
+        "price": "$0",
+        "description": "Prueba antes de comprometerte",
+        "badge": "",
+        "features": {
+          "1": "3 evaluaciones por mes",
+          "2": "Simulaciones de trabajo específicas del rol",
+          "3": "Evaluación potenciada por IA",
+          "4": "Enlaces de evaluación compartibles",
+          "5": "Soporte de la comunidad"
+        },
+        "cta": "Empezar Gratis"
+      },
+      "starter": {
+        "name": "Inicial",
+        "description": "Para equipos de contratación pequeños",
+        "badge": "",
+        "features": {
+          "1": "{count} evaluaciones por {period}",
+          "2": "Todo en Gratis",
+          "3": "Panel de comparación de candidatos",
+          "4": "Análisis de evaluaciones",
+          "5": "Soporte por email"
+        },
+        "cta": "Iniciar Prueba"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Para equipos en crecimiento",
+        "badge": "Mejor Valor",
+        "features": {
+          "1": "{count} evaluaciones por {period}",
+          "2": "Todo en Inicial",
+          "3": "Escenarios de simulación personalizados",
+          "4": "Herramientas de colaboración en equipo",
+          "5": "Soporte prioritario"
+        },
+        "cta": "Iniciar Prueba"
+      },
+      "enterprise": {
+        "name": "Empresa",
+        "price": "Personalizado",
+        "description": "Para equipos contratando a escala",
+        "badge": "",
+        "features": {
+          "1": "Evaluaciones ilimitadas",
+          "2": "Todo en Pro",
+          "3": "Integración ATS",
+          "4": "Gerente de éxito dedicado",
+          "5": "SSO y seguridad avanzada"
+        },
+        "cta": "Hablar con Ventas"
+      }
+    },
+    "valueProps": {
+      "setupFee": {
+        "stat": "$0",
+        "label": "Tarifas de configuración"
+      },
+      "cancel": {
+        "stat": "Cancelar",
+        "label": "En cualquier momento, sin contratos"
+      },
+      "trial": {
+        "stat": "14 días",
+        "label": "Prueba gratuita en planes pagos"
+      }
+    },
+    "faq": {
+      "label": "Preguntas Comunes",
+      "title": "Preguntas Frecuentes sobre Precios",
+      "viewAll": "Ver todas las preguntas →",
+      "question1": {
+        "question": "¿Qué cuenta como una evaluación?",
+        "answer": "Cada candidato único que completa una simulación de trabajo cuenta como una evaluación. Puedes enviar invitaciones ilimitadas."
+      },
+      "question2": {
+        "question": "¿Qué pasa si excedo mi límite mensual?",
+        "answer": "Te notificaremos cuando te acerques a tu límite. Puedes actualizar en cualquier momento o comprar evaluaciones adicionales a $10 cada una."
+      },
+      "question3": {
+        "question": "¿Las evaluaciones no utilizadas se acumulan?",
+        "answer": "Las asignaciones mensuales se reinician cada ciclo de facturación. Los planes anuales obtienen un bono del 20% y más flexibilidad."
+      }
+    },
+    "cta": {
+      "title": "¿NO ESTÁS SEGURO DE QUÉ PLAN?",
+      "titleHighlight": "HABLEMOS.",
+      "subtitle": "Comienza con Gratis y actualiza cuando necesites más capacidad. O agenda una demo para ver cómo funciona.",
+      "scheduleDemo": "Agendar una Demo",
+      "viewFaq": "Ver Preguntas Frecuentes"
+    }
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: {date}",
+    "sections": {
+      "intro": {
+        "title": "Introducción",
+        "content": "En Skillvee, tomamos tu privacidad en serio. Esta Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos tu información cuando usas nuestro servicio."
+      },
+      "informationWeCollect": {
+        "title": "Información que Recopilamos",
+        "content": "Recopilamos información que nos proporcionas directamente, como cuando creas una cuenta, participas en evaluaciones o nos contactas para soporte.",
+        "personalInfo": {
+          "title": "Información Personal",
+          "items": {
+            "1": "Nombre e información de contacto",
+            "2": "Información profesional (currículum, historial laboral)",
+            "3": "Respuestas y grabaciones de evaluación",
+            "4": "Credenciales de cuenta"
+          }
+        },
+        "usageInfo": {
+          "title": "Información de Uso",
+          "items": {
+            "1": "Información del navegador y dispositivo",
+            "2": "Dirección IP y datos de ubicación",
+            "3": "Patrones de uso y preferencias",
+            "4": "Métricas de rendimiento"
+          }
+        }
+      },
+      "howWeUse": {
+        "title": "Cómo Usamos Tu Información",
+        "content": "Usamos la información que recopilamos para:",
+        "items": {
+          "1": "Proporcionar y mejorar nuestros servicios",
+          "2": "Procesar y evaluar evaluaciones",
+          "3": "Comunicarnos contigo sobre nuestros servicios",
+          "4": "Garantizar la seguridad de la plataforma y prevenir fraude",
+          "5": "Cumplir con obligaciones legales"
+        }
+      },
+      "dataSharing": {
+        "title": "Compartir Información",
+        "content": "No vendemos ni alquilamos tu información personal. Podemos compartir tu información en las siguientes circunstancias:",
+        "items": {
+          "1": "Con empleadores cuando solicitas posiciones",
+          "2": "Con proveedores de servicios que asisten nuestras operaciones",
+          "3": "Cuando lo requiere la ley o proceso legal",
+          "4": "Para proteger derechos y seguridad"
+        }
+      },
+      "dataSecurity": {
+        "title": "Seguridad de Datos",
+        "content": "Implementamos medidas técnicas y organizacionales apropiadas para proteger tu información personal contra acceso no autorizado, alteración, divulgación o destrucción."
+      },
+      "yourRights": {
+        "title": "Tus Derechos",
+        "content": "Tienes derecho a:",
+        "items": {
+          "1": "Acceder a tu información personal",
+          "2": "Corregir datos inexactos",
+          "3": "Solicitar eliminación de tus datos",
+          "4": "Oponerte a cierto procesamiento",
+          "5": "Portabilidad de datos"
+        }
+      },
+      "contact": {
+        "title": "Contáctanos",
+        "content": "Si tienes preguntas sobre esta Política de Privacidad, por favor contáctanos en privacy@skillvee.com"
+      }
+    }
+  },
+  "terms": {
+    "title": "Términos de Servicio",
+    "lastUpdated": "Última actualización: {date}",
+    "sections": {
+      "acceptance": {
+        "title": "Aceptación de Términos",
+        "content": "Al acceder o usar Skillvee, aceptas estar sujeto a estos Términos de Servicio y todas las leyes y regulaciones aplicables."
+      },
+      "useOfService": {
+        "title": "Uso del Servicio",
+        "content": "Puedes usar nuestro servicio solo para propósitos legales y de acuerdo con estos Términos. Aceptas no usar nuestro servicio:",
+        "items": {
+          "1": "De cualquier manera que viole leyes aplicables",
+          "2": "Para transmitir código dañino o malicioso",
+          "3": "Para intentar acceso no autorizado",
+          "4": "Para interferir con la operación del servicio",
+          "5": "Para hacerse pasar por otros"
+        }
+      },
+      "accounts": {
+        "title": "Cuentas de Usuario",
+        "content": "Cuando creas una cuenta, debes proporcionar información precisa y completa. Eres responsable de:",
+        "items": {
+          "1": "Mantener la seguridad de la cuenta",
+          "2": "Todas las actividades bajo tu cuenta",
+          "3": "Notificar uso no autorizado",
+          "4": "Mantener la información actualizada"
+        }
+      },
+      "intellectualProperty": {
+        "title": "Propiedad Intelectual",
+        "content": "El servicio y su contenido original, características y funcionalidad son propiedad de Skillvee y están protegidos por leyes internacionales de derechos de autor, marcas registradas y otras leyes de propiedad intelectual."
+      },
+      "userContent": {
+        "title": "Contenido del Usuario",
+        "content": "Al enviar contenido a nuestro servicio, nos otorgas una licencia mundial, no exclusiva y libre de regalías para usar, reproducir y distribuir tu contenido en conexión con el servicio."
+      },
+      "privacy": {
+        "title": "Privacidad",
+        "content": "Tu uso de nuestro servicio también está regido por nuestra Política de Privacidad. Por favor revisa nuestra Política de Privacidad para entender nuestras prácticas."
+      },
+      "termination": {
+        "title": "Terminación",
+        "content": "Podemos terminar o suspender tu cuenta y acceso al servicio inmediatamente, sin previo aviso, por cualquier razón, incluido el incumplimiento de estos Términos."
+      },
+      "disclaimers": {
+        "title": "Descargos de Responsabilidad",
+        "content": "El servicio se proporciona \"tal cual\" sin garantías de ningún tipo. No garantizamos que el servicio será ininterrumpido, seguro o libre de errores."
+      },
+      "limitation": {
+        "title": "Limitación de Responsabilidad",
+        "content": "En la máxima medida permitida por la ley, Skillvee no será responsable por ningún daño indirecto, incidental, especial o consecuente que surja de tu uso del servicio."
+      },
+      "governing": {
+        "title": "Ley Aplicable",
+        "content": "Estos Términos se regirán e interpretarán de acuerdo con las leyes de los Estados Unidos, sin tener en cuenta las disposiciones sobre conflicto de leyes."
+      },
+      "changes": {
+        "title": "Cambios a los Términos",
+        "content": "Nos reservamos el derecho de modificar estos Términos en cualquier momento. Te notificaremos de cualquier cambio publicando los nuevos Términos en esta página."
+      },
+      "contact": {
+        "title": "Información de Contacto",
+        "content": "Si tienes alguna pregunta sobre estos Términos, por favor contáctanos en legal@skillvee.com"
+      }
+    }
+  },
+  "candidateTerms": {
+    "nav": {
+      "backToTerms": "← Volver a los Términos",
+      "home": "Inicio"
+    },
+    "title": "Términos de servicio para candidatos de SkillVee",
+    "intro": "Este Acuerdo se celebra entre la persona que utiliza nuestra plataforma ('Candidato') y SkillVee Corporation ('SkillVee'). Los Candidatos pueden acceder a prácticas de entrevista, validación de habilidades y servicios de colocación laboral a través de nuestra plataforma impulsada por IA.",
+    "sections": {
+      "platformUsage": {
+        "title": "1. Uso de la Plataforma y Cuenta",
+        "intro": "Los Candidatos aceptan utilizar la plataforma SkillVee con fines legítimos de desarrollo profesional y búsqueda de empleo. Al crear una cuenta, garantizas que:",
+        "bullets": {
+          "0": "Toda la información proporcionada es precisa y veraz",
+          "1": "Eres el propietario autorizado de tus credenciales y muestras de trabajo",
+          "2": "Mantendrás la seguridad de las credenciales de tu cuenta",
+          "3": "No compartirás tu cuenta con terceros ni crearás múltiples cuentas"
+        }
+      },
+      "assessmentConduct": {
+        "title": "2. Conducta en Evaluaciones y Entrevistas",
+        "intro": "Al participar en evaluaciones, entrevistas de práctica o evaluaciones de empresas, los Candidatos aceptan:",
+        "bullets": {
+          "0": "Completar las evaluaciones de manera independiente y sin asistencia no autorizada",
+          "1": "Consentir la grabación de pantalla y de audio/video durante las sesiones de evaluación",
+          "2": "Representar sus propias habilidades y experiencia de manera auténtica",
+          "3": "No intentar manipular, hacer trampa ni eludir los sistemas de evaluación de IA",
+          "4": "Mantener una conducta profesional durante todas las interacciones en la plataforma"
+        }
+      },
+      "platformExclusive": {
+        "title": "3. Comunicaciones Exclusivas en la Plataforma",
+        "body1": "Cuando se les presente a una Empresa a través de SkillVee, los Candidatos aceptan llevar a cabo todas las comunicaciones iniciales, la programación de entrevistas y las conversaciones de contratación exclusivamente a través de la plataforma SkillVee.",
+        "body2": "Esto incluye abstenerse de contactar directamente a las Empresas fuera de la plataforma hasta que se haya extendido una oferta formal y la colocación se haya registrado debidamente a través de SkillVee."
+      },
+      "nonCircumvention": {
+        "title": "4. Acuerdo de No Elusión",
+        "body1": "SkillVee invierte recursos significativos en conectar a los Candidatos con oportunidades de empleo. Los Candidatos reconocen esta inversión y aceptan no eludir la plataforma al interactuar con Empresas presentadas a través de SkillVee.",
+        "body2": "Durante un período de <strong>12 meses</strong> a partir de una presentación a una Empresa a través de SkillVee, los Candidatos aceptan no:",
+        "bullets": {
+          "0": "Postularse o contactar directamente a la Empresa fuera de la plataforma para eludir las tarifas de colocación",
+          "1": "Aceptar empleo con la Empresa sin completar el proceso de colocación de SkillVee",
+          "2": "Referir a otros candidatos a la Empresa como medio de elusión"
+        },
+        "body3": "Las infracciones pueden resultar en la cancelación de la cuenta y en acciones legales para recuperar las tarifas de colocación aplicables."
+      },
+      "dataPrivacy": {
+        "title": "5. Uso de Datos y Privacidad",
+        "intro": "Al utilizar SkillVee, los Candidatos consienten la recopilación y el uso de sus datos de la siguiente manera:",
+        "bullets": {
+          "0": "La información del perfil, currículum y materiales de portafolio pueden compartirse con Empresas para fines de evaluación",
+          "1": "Las grabaciones de evaluaciones, capturas de pantalla y conocimientos generados por IA pasan a formar parte de tu perfil de SkillVee",
+          "2": "Los datos de desempeño anonimizados pueden utilizarse para mejorar nuestros sistemas de IA y la plataforma",
+          "3": "Los registros de comunicación dentro de la plataforma pueden revisarse para garantizar la calidad y resolver disputas"
+        }
+      },
+      "dataRights": {
+        "title": "6. Tus Derechos sobre tus Datos",
+        "intro": "Los Candidatos conservan los siguientes derechos respecto a sus datos personales:",
+        "bullets": {
+          "0": "Solicitar acceso a todos los datos que SkillVee posee sobre ti",
+          "1": "Solicitar la corrección de información inexacta",
+          "2": "Solicitar la eliminación de tu cuenta y los datos asociados (sujeto a los requisitos legales de retención)",
+          "3": "Retirar el consentimiento para el procesamiento futuro de datos (puede limitar la funcionalidad de la plataforma)",
+          "4": "Exportar los datos de tu perfil en un formato portable"
+        },
+        "note": "Las solicitudes de eliminación de datos se procesarán en un plazo de 30 días. Ten en cuenta que algunos datos pueden conservarse por cumplimiento legal u obligaciones comerciales en curso con Empresas."
+      },
+      "intellectualProperty": {
+        "title": "7. Propiedad Intelectual",
+        "intro": "Los Candidatos conservan la propiedad de su trabajo original, incluidas muestras de código, piezas de portafolio y otros materiales enviados a la plataforma. Sin embargo, al enviar materiales, los Candidatos otorgan a SkillVee una licencia para:",
+        "bullets": {
+          "0": "Mostrar los materiales a las Empresas con fines de evaluación",
+          "1": "Utilizar muestras de código anonimizadas para mejorar los sistemas de evaluación de IA",
+          "2": "Almacenar y procesar los materiales según sea necesario para el funcionamiento de la plataforma"
+        }
+      },
+      "freeServices": {
+        "title": "8. Servicios Gratuitos y Funciones Pagas",
+        "body": "SkillVee proporciona servicios principales de práctica de entrevistas y colocación laboral sin costo para los Candidatos. Las funciones premium, mayor visibilidad o servicios adicionales pueden ofrecerse por una tarifa y se divulgarán claramente antes de la compra."
+      },
+      "prohibitedConduct": {
+        "title": "9. Conducta Prohibida",
+        "intro": "Los Candidatos aceptan no:",
+        "bullets": {
+          "0": "Proporcionar información falsa o engañosa sobre sus calificaciones",
+          "1": "Utilizar herramientas automatizadas para interactuar con la plataforma sin autorización",
+          "2": "Intentar acceder a las cuentas o datos de otros usuarios",
+          "3": "Compartir contenido confidencial de evaluaciones o información de Empresas con terceros",
+          "4": "Utilizar la plataforma con cualquier fin ilegal"
+        }
+      },
+      "termination": {
+        "title": "10. Cancelación de Cuenta",
+        "intro": "Cualquiera de las partes puede dar por terminado este acuerdo en cualquier momento. Los Candidatos pueden eliminar su cuenta a través de la configuración de la cuenta. SkillVee puede cancelar cuentas por infracciones a estos términos. Tras la cancelación:",
+        "bullets": {
+          "0": "Las obligaciones de no elusión permanecen vigentes durante el período especificado",
+          "1": "Los datos se eliminarán de acuerdo con nuestra política de retención, salvo que la ley exija lo contrario",
+          "2": "Se revocará el acceso a la plataforma y a todos los servicios"
+        }
+      },
+      "liability": {
+        "title": "11. Limitación de Responsabilidad",
+        "body": "SkillVee proporciona la plataforma \"tal cual\" y no garantiza resultados de empleo. No somos responsables de las decisiones de contratación tomadas por las Empresas, los resultados de las entrevistas ni los efectos profesionales derivados del uso de la plataforma. Nuestra responsabilidad se limita a las tarifas pagadas por el Candidato, si las hubiera, en los 12 meses anteriores a cualquier reclamación."
+      },
+      "modification": {
+        "title": "12. Modificación de los Términos",
+        "body": "SkillVee se reserva el derecho de modificar estos Términos de Servicio con 30 días de aviso a los Candidatos por correo electrónico o notificación en la plataforma. El uso continuado de la plataforma después del período de aviso constituye la aceptación de los términos revisados."
+      },
+      "governingLaw": {
+        "title": "13. Ley Aplicable y Disputas",
+        "body": "Este acuerdo se regirá por las leyes del Estado de California, EE. UU. Cualquier disputa se resolverá mediante arbitraje vinculante, y la parte ganadora tendrá derecho a honorarios razonables de abogados."
+      }
+    },
+    "footer": {
+      "lastUpdatedLabel": "Última actualización:",
+      "lastUpdatedDate": "26 de noviembre de 2025",
+      "acknowledgement": "Al utilizar la plataforma de SkillVee, reconoces la aceptación de estos Términos de Servicio y aceptas quedar legalmente vinculado por sus disposiciones."
+    }
+  },
+  "email": {
+    "report": {
+      "subject": "{candidateName}, ¡tu informe de evaluación de Skillvee está listo!",
+      "subjectNoName": "¡Tu informe de evaluación de Skillvee está listo!",
+      "greeting": "Hola {candidateName},",
+      "greetingNoName": "Hola,",
+      "intro": "¡Tu evaluación de desarrollador está completa! Aquí hay un resumen de tu desempeño.",
+      "overallScoreLabel": "{emoji} Desempeño {levelText}",
+      "topSkillsTitle": "Habilidades Principales",
+      "summaryTitle": "Resumen",
+      "keyStrengthsTitle": "Fortalezas Clave",
+      "recommendationsTitle": "Recomendaciones",
+      "viewFullReportButton": "Ver Informe Completo",
+      "fullReportDescription": "Tu informe completo incluye desgloses detallados de habilidades, puntuaciones basadas en evidencia y pasos accionables para mejorar. Haz clic en el botón de arriba para verlo todo.",
+      "footerText": "Este correo fue enviado por {link}. Lo recibiste porque completaste una evaluación de desarrollador.",
+      "skillCategories": {
+        "communication": "Comunicación",
+        "problem_decomposition": "Descomposición de Problemas",
+        "ai_leverage": "Aprovechamiento de IA",
+        "code_quality": "Calidad del Código",
+        "xfn_collaboration": "Colaboración Multifuncional",
+        "time_management": "Gestión del Tiempo",
+        "technical_decision_making": "Toma de Decisiones Técnicas",
+        "presentation": "Presentación"
+      },
+      "levels": {
+        "exceptional": "Excepcional",
+        "strong": "Fuerte",
+        "adequate": "Adecuado",
+        "developing": "En Desarrollo",
+        "needs_improvement": "Necesita Mejorar"
+      }
+    }
+  },
+  "faqPage": {
+    "metadata": {
+      "title": "Preguntas Frecuentes - Evaluaciones de Simulación de Trabajo para Contratación Técnica",
+      "description": "Obtén respuestas sobre la plataforma de simulación de trabajo de Skillvee. Aprende a evaluar candidatos con tareas reales del puesto, precios, integraciones y más."
+    },
+    "hero": {
+      "label": "¿Tienes Preguntas?",
+      "title": "Preguntas Frecuentes",
+      "subtitle": "Todo lo que necesitas saber sobre cómo usar Skillvee para contratar mejor"
+    },
+    "categories": {
+      "gettingStarted": {
+        "title": "Primeros Pasos",
+        "questions": {
+          "q1": {
+            "question": "¿Cómo funciona Skillvee?",
+            "answer": "Pega tu descripción de trabajo. Generamos una simulación de trabajo realista. Envía el enlace a los candidatos. Completan una simulación de 30-45 minutos en su propio tiempo. Tú revisas cómo se desempeñaron realmente: su comunicación, ejecución y enfoque para resolver problemas."
+          },
+          "q2": {
+            "question": "¿Cuánto tiempo lleva comenzar?",
+            "answer": "Unos 5 minutos. Pega tu descripción de trabajo, revisa la simulación generada y estás listo para enviar enlaces a los candidatos. Sin incorporación ni capacitación prolongada."
+          },
+          "q3": {
+            "question": "¿Qué roles soporta Skillvee?",
+            "answer": "Cualquier rol donde quieras ver cómo trabajan realmente los candidatos. Soportamos roles técnicos (Ingenieros de Software, Científicos de Datos), roles de negocio (Gerentes de Producto, Gerentes de Programa) y roles de cara al cliente (Ventas, Centro de Contacto, Éxito del Cliente). Cada simulación se adapta a tu descripción de trabajo específica, no se extrae de una biblioteca de pruebas genéricas."
+          },
+          "q4": {
+            "question": "¿Puedo personalizar los escenarios de simulación?",
+            "answer": "Sí. Generamos simulaciones basadas en tu descripción de trabajo. Los clientes empresariales pueden trabajar con nosotros para crear escenarios totalmente personalizados que coincidan con los desafíos específicos y el stack tecnológico de su equipo."
+          }
+        }
+      },
+      "howAssessmentsWork": {
+        "title": "Cómo Funcionan las Evaluaciones",
+        "questions": {
+          "q1": {
+            "question": "¿Qué hacen realmente los candidatos en una simulación?",
+            "answer": "Experimentan un primer día realista: conocen a su \"manager\", recopilan requisitos de stakeholders impulsados por IA, completan una tarea de trabajo y defienden su enfoque. Son 30-45 minutos de trabajo real, no acertijos algorítmicos que nadie usa después de la entrevista."
+          },
+          "q2": {
+            "question": "¿Pueden los candidatos usar herramientas de IA como ChatGPT?",
+            "answer": "Sí, lo alentamos. En el trabajo real, las personas usan herramientas de IA. Queremos ver cómo las usan los candidatos: ¿con criterio o a ciegas? ¿Verifican el resultado? ¿Pueden explicar lo que generó la IA? Esta es la habilidad que realmente importa ahora."
+          },
+          "q3": {
+            "question": "¿Cómo previenen las trampas?",
+            "answer": "Damos vuelta el modelo. Las pruebas tradicionales intentan prohibir la IA y esperan que nadie haga trampa. Con conversaciones en vivo con stakeholders y 30-45 minutos de trabajo continuo, no hay nada en lo que hacer trampa. No puedes fingir trabajo real con interacciones en tiempo real."
+          },
+          "q4": {
+            "question": "¿Cómo es la experiencia del candidato?",
+            "answer": "Los candidatos prefieren consistentemente las simulaciones de trabajo a las pruebas algorítmicas. Pueden mostrar habilidades reales en lugar de trivia memorizada. Y se van entendiendo cómo sería realmente el trabajo: una mejor experiencia para todos."
+          },
+          "q5": {
+            "question": "¿Cuánto duran las evaluaciones?",
+            "answer": "30-45 minutos. Suficientemente largo para ver trabajo real, suficientemente corto para respetar el tiempo de todos. Los candidatos lo completan de forma asíncrona, sin necesidad de coordinar horarios."
+          }
+        }
+      },
+      "resultsEvaluation": {
+        "title": "Resultados y Evaluación",
+        "questions": {
+          "q1": {
+            "question": "¿Qué veo en los resultados?",
+            "answer": "Ves cómo trabajaron realmente los candidatos: cómo recopilaron requisitos, usaron herramientas de IA, ejecutaron la tarea, comunicaron su enfoque y manejaron la retroalimentación. No solo una puntuación: evidencia real de cómo se desempeñarán el primer día."
+          },
+          "q2": {
+            "question": "¿Cómo funciona la evaluación impulsada por IA?",
+            "answer": "Nuestra IA analiza la simulación completa: conversaciones, resultados de trabajo y defensa de decisiones. Puntúa en comunicación, ejecución técnica, enfoque para resolver problemas y ajuste. Cada candidato recibe los mismos criterios, eliminando la inconsistencia del revisor humano."
+          },
+          "q3": {
+            "question": "¿Puedo comparar candidatos fácilmente?",
+            "answer": "Sí. El mismo escenario para cada candidato significa que puedes comparar directamente cómo diferentes personas abordaron el mismo problema. Manzanas con manzanas, no manzanas con puntuaciones de pruebas algorítmicas."
+          },
+          "q4": {
+            "question": "¿Cómo reducen el sesgo en la contratación?",
+            "answer": "El mismo escenario para cada candidato. La puntuación impulsada por IA elimina la inconsistencia del revisor humano. Medimos lo que las personas realmente hacen, no lo que dice su currículum o dónde estudiaron. El trabajo habla por sí mismo."
+          }
+        }
+      },
+      "integrationTechnical": {
+        "title": "Integración y Técnico",
+        "questions": {
+          "q1": {
+            "question": "¿Skillvee se integra con nuestro ATS?",
+            "answer": "Los clientes empresariales obtienen integración ATS con las principales plataformas, incluyendo Greenhouse, Lever y Ashby. Contáctanos para requisitos de integración específicos."
+          },
+          "q2": {
+            "question": "¿Los datos de los candidatos están seguros?",
+            "answer": "Sí. Cumplimos con SOC 2. Los datos de evaluación están encriptados en reposo y en tránsito. No vendemos datos de candidatos a terceros. Tú controlas quién ve los resultados."
+          },
+          "q3": {
+            "question": "¿Podemos usar nuestra propia marca?",
+            "answer": "Los clientes empresariales pueden personalizar la experiencia del candidato con su logotipo y marca de empresa."
+          },
+          "q4": {
+            "question": "¿Qué navegadores y dispositivos funcionan?",
+            "answer": "Skillvee funciona en todos los navegadores modernos (Chrome, Safari, Firefox, Edge) en escritorio. Recomendamos el escritorio para la mejor experiencia del candidato durante las simulaciones."
+          }
+        }
+      }
+    },
+    "cta": {
+      "label": "¿Aún Tienes Preguntas?",
+      "title": "HABLEMOS.",
+      "subtitle": "¿No encuentras lo que buscas? Responderemos tus preguntas y te mostraremos cómo funciona.",
+      "requestDemo": "Solicitar Demo",
+      "emailUs": "Escríbenos"
+    }
+  },
+  "candidatesPage": {
+    "metadata": {
+      "title": "Valida tus habilidades | Skillvee",
+      "description": "Realiza una evaluación gratuita impulsada por IA que simula un día real de trabajo. Sin leetcode. Sin pizarra. Muestra cómo realmente trabajas."
+    },
+    "roleFamilies": {
+      "engineering": "Ingeniería de Software",
+      "product_management": "Gestión de Producto",
+      "data_science": "Ciencia de Datos",
+      "program_management": "Gestión de Programas",
+      "sales": "Ventas",
+      "customer_success": "Atención al Cliente"
+    },
+    "archetypes": {
+      "frontend_engineer": {
+        "name": "Ingeniero Frontend",
+        "description": "Construye y mantiene interfaces web/móviles; optimiza el rendimiento; garantiza la accesibilidad."
+      },
+      "backend_engineer": {
+        "name": "Ingeniero Backend",
+        "description": "Construye servicios escalables; diseña APIs; gestiona pipelines de datos."
+      },
+      "fullstack_engineer": {
+        "name": "Ingeniero Full Stack",
+        "description": "Combina habilidades de frontend y backend; integra sistemas; entrega funcionalidades de extremo a extremo."
+      },
+      "tech_lead": {
+        "name": "Tech Lead / Arquitecto",
+        "description": "Define la arquitectura; guía equipos de ingeniería; asegura la mantenibilidad y la estrategia técnica."
+      },
+      "devops_sre": {
+        "name": "Ingeniero DevOps / SRE",
+        "description": "Construye pipelines de CI/CD; monitorea sistemas; optimiza la infraestructura y la fiabilidad."
+      },
+      "growth_pm": {
+        "name": "Product Manager de Growth",
+        "description": "Optimiza la adquisición, activación y retención mediante experimentación y decisiones basadas en datos."
+      },
+      "platform_pm": {
+        "name": "Product Manager de Plataforma",
+        "description": "Construye plataformas internas, herramientas para desarrolladores y productos de infraestructura que sirven a otros equipos."
+      },
+      "core_pm": {
+        "name": "Product Manager Core",
+        "description": "Lidera un área de producto de extremo a extremo: define la estrategia, gestiona el roadmap, lanza funcionalidades y mide resultados."
+      },
+      "analytics_engineer": {
+        "name": "Analytics Engineer",
+        "description": "Construye pipelines de datos, mantiene modelos de datos y crea conjuntos de datos confiables para el análisis."
+      },
+      "data_analyst": {
+        "name": "Analista de Datos",
+        "description": "Analiza datos de negocio, crea dashboards y proporciona insights para impulsar decisiones."
+      },
+      "ml_engineer": {
+        "name": "Ingeniero ML",
+        "description": "Construye y despliega modelos de machine learning; ingeniería de features; optimización e implementación de investigación."
+      },
+      "technical_program_manager": {
+        "name": "Technical Program Manager",
+        "description": "Coordina programas técnicos complejos entre equipos de ingeniería, infraestructura y plataforma."
+      },
+      "business_program_manager": {
+        "name": "Business Program Manager",
+        "description": "Impulsa iniciativas de negocio multifuncionales que abarcan producto, marketing, operaciones y go-to-market."
+      },
+      "account_executive": {
+        "name": "Account Executive",
+        "description": "Ventas de ciclo completo: prospecta, califica, presenta, negocia y cierra nuevos negocios."
+      },
+      "sales_development_rep": {
+        "name": "Sales Development Representative",
+        "description": "Prospecta y califica leads; agenda reuniones; construye pipeline para los account executives."
+      },
+      "solutions_engineer": {
+        "name": "Solutions Engineer",
+        "description": "Soporte técnico de ventas: demos de producto, pruebas de concepto y validación técnica con prospectos."
+      },
+      "onboarding_specialist": {
+        "name": "Especialista de Onboarding",
+        "description": "Guía a nuevos clientes desde la compra hasta el uso productivo; asegura una adopción inicial exitosa."
+      },
+      "customer_success_manager": {
+        "name": "Customer Success Manager",
+        "description": "Lidera la relación continua con el cliente tras el onboarding; impulsa retención, expansión y promoción."
+      },
+      "renewals_manager": {
+        "name": "Renewals Manager",
+        "description": "Impulsa renovaciones de contratos; negocia términos; identifica y mitiga riesgos de churn."
+      }
+    },
+    "hero": {
+      "badge": "Gratis para siempre para candidatos",
+      "titleLine1": "Muestra cómo",
+      "titleLine2": "realmente trabajas.",
+      "subtitle": "Sin leetcode. Sin pizarra. Toma una simulación gratuita impulsada por IA que refleja un día de trabajo real: habla con tu manager, aborda una tarea real y obtén un informe detallado de habilidades.",
+      "stats": {
+        "duration": "30-45 minutos",
+        "teammates": "Compañeros con IA",
+        "report": "Informe detallado"
+      }
+    },
+    "levels": {
+      "junior": {
+        "label": "Junior",
+        "years": "0-2 años",
+        "description": "Estás al inicio de tu carrera. La simulación se enfoca en ejecutar tareas bien definidas con algo de orientación disponible.",
+        "expectations": [
+          "Seguir instrucciones claras",
+          "Hacer buenas preguntas",
+          "Entregar código funcional"
+        ]
+      },
+      "mid": {
+        "label": "Nivel Medio",
+        "years": "2-5 años",
+        "description": "Trabajas de forma independiente en funcionalidades. La simulación pone a prueba tu capacidad para recopilar requisitos y entregar de extremo a extremo.",
+        "expectations": [
+          "Clarificar requisitos ambiguos",
+          "Tomar decisiones razonables",
+          "Comunicar el progreso proactivamente"
+        ]
+      },
+      "senior": {
+        "label": "Senior",
+        "years": "5-8 años",
+        "description": "Eres dueño de áreas grandes y mentorizas a otros. Espera requisitos ambiguos y desafíos de coordinación entre equipos.",
+        "expectations": [
+          "Navegar la ambigüedad con confianza",
+          "Cuestionar el alcance cuando sea necesario",
+          "Considerar el impacto del sistema más amplio"
+        ]
+      },
+      "staff": {
+        "label": "Staff+",
+        "years": "8+ años",
+        "description": "Impulsas la estrategia técnica entre equipos. La simulación involucra decisiones de diseño de sistemas e influencia organizacional.",
+        "expectations": [
+          "Definir el problema, no solo resolverlo",
+          "Alinear stakeholders con prioridades en conflicto",
+          "Tomar decisiones a nivel de arquitectura"
+        ]
+      }
+    },
+    "dialog": {
+      "title": "Elige tu nivel de experiencia",
+      "subtitle": "para {name}. Esto calibra la dificultad de la simulación y cómo se evalúan tus resultados.",
+      "startChallenge": "Comenzar Reto"
+    },
+    "card": {
+      "duration": "~30-45 min",
+      "takeChallenge": "Tomar Reto"
+    },
+    "section": {
+      "challengesAvailable": "{count} reto{plural} disponible{plural}"
+    },
+    "empty": {
+      "title": "Próximamente",
+      "description": "Estamos preparando retos en múltiples roles. Vuelve pronto para validar tus habilidades."
+    }
+  },
+  "onePager": {
+    "tagline": "Simulaciones de trabajo que muestran quién realmente puede hacer el trabajo",
+    "problem": {
+      "label": "El Problema",
+      "title": "Contratar está roto en la era de la IA",
+      "stat1": "de los currículums ahora están escritos por IA y se ven iguales",
+      "stat2": "de los candidatos usan IA durante las entrevistas",
+      "stat3": "de los postulantes están realmente calificados",
+      "callout": "La pregunta clave sigue siendo:",
+      "calloutEmphasis": "¿Esta persona realmente puede hacer el trabajo?"
+    },
+    "solution": {
+      "label": "La Solución",
+      "title": "Una simulación de 45 min del trabajo real",
+      "item1Title": "Stakeholders de IA en vivo",
+      "item1Desc": "Conversaciones de voz con PM, gerente y tech lead",
+      "item2Title": "Entregables reales, no trivia",
+      "item2Desc": "Los candidatos producen trabajo real — código, PRs y decisiones",
+      "item3Title": "Captura completa y evaluación estructurada",
+      "item3Desc": "Pantalla y voz grabadas de principio a fin",
+      "footer": "Compara candidatos lado a lado en trabajo real."
+    },
+    "whyNow": {
+      "label": "Por Qué Ahora",
+      "item1Title": "Modelos de IA en vivo",
+      "item1Desc": "Voz en tiempo real + contexto hacen posibles conversaciones realistas con stakeholders a escala.",
+      "item2Title": "IA Multimodal",
+      "item2Desc": "Analiza sesiones de trabajo de una hora con precisión — ve cómo trabajan realmente los candidatos.",
+      "footer": "Esto era imposible hace 6 meses. Ahora funciona."
+    },
+    "keyInsight": {
+      "label": "Insight Clave",
+      "headline": "Las entrevistas están desapareciendo. El futuro de contratar es ver a la gente trabajar.",
+      "detail": "Currículums, take-homes y entrevistas ahora se pueden manipular. Ver el trabajo real, no."
+    },
+    "market": {
+      "label": "Mercado",
+      "todayValue": "$3B",
+      "todayDescription": "evaluación pre-contratación — cabeza de playa actual, creciendo 16% CAGR",
+      "expandValue": "$20B+",
+      "expandDescription": "software de adq. de talento — ATS, sourcing, interview intelligence",
+      "visionValue": "$250B+",
+      "visionDescription": "gasto global en reclutamiento a medida que la data de trabajo verificada se convierte en la capa de matching",
+      "comparablesLabel": "Comparables:",
+      "comparablesText": "Mercor ($10B), Juicebox ($850M), HackerRank ($500M)"
+    },
+    "moat": {
+      "label": "Moat",
+      "pillar1Label": "Data propietaria",
+      "pillar1Desc": "cada simulación genera señal de comportamiento que los competidores no tienen",
+      "pillar3Label": "Loop de retroalimentación de outcomes",
+      "pillar3Desc": "rastreamos qué contrataciones tienen éxito y afinamos las predicciones con el tiempo",
+      "footer": "Los competidores pueden copiar el producto. No pueden copiar la data. Empezando con ingeniería, expandiéndonos a todo rol white-collar."
+    },
+    "businessModel": {
+      "label": "Modelo de Negocio",
+      "intro": "SaaS con freemium. Planes pagos desde $79/mes hasta precios enterprise personalizados.",
+      "beachheadLabel": "Beachhead:",
+      "beachheadText": "Equipos de ingeniería que contratan 5+ desarrolladores/mes — los roles más difíciles de evaluar, el mayor costo de una mala contratación. Se expande a diseño, producto y todos los roles white-collar."
+    },
+    "progress": {
+      "label": "Progreso",
+      "intro": "Prototipo construido y lanzado. 2 pilotos comprometidos.",
+      "stackLabel": "Validación:",
+      "hackathon": "Ganadores del Hackathon de DeepMind + Stanford",
+      "startx": "Acelerados por StartX"
+    },
+    "team": {
+      "label": "Equipo",
+      "germanRole": "CEO",
+      "germanItem1": "2 exits de HR Tech (adq. por Buk)",
+      "germanItem2Pre": "Llevó a ",
+      "germanItem2Highlight": "$1.4M ARR",
+      "germanItem3": "ex-GPM, Walmart eCommerce",
+      "germanItem4": "MBA de Berkeley",
+      "matiasRole": "CTO",
+      "matiasItem1": "Meta GenAI",
+      "matiasItem2Pre": "Construyó Zapien (",
+      "matiasItem2Highlight": "35K usuarios",
+      "matiasItem2Post": ")",
+      "matiasItem3": "MS de Stanford",
+      "matiasItem4": "2x ganador del Stanford Learning Design",
+      "pill1Label": "Conocemos al comprador",
+      "pill1Detail": "Exits en HR Tech",
+      "pill2Label": "Podemos construir esto",
+      "pill2Detail": "Meta GenAI",
+      "pill3Label": "Nos movemos rápido",
+      "pill3Detail": "Prototipo funcionando"
+    },
+    "footer": {
+      "title": "Actualmente levantando seed"
+    }
+  },
+  "presentation": {
+    "title": {
+      "title": "Obsérvalos trabajar.\nLuego contrata.",
+      "subtitle": "Ve exactamente cómo los candidatos se comunican, colaboran y resuelven problemas, antes de hacer la oferta. No más errores costosos de contratación."
+    },
+    "problem": {
+      "title": "El Problema",
+      "subtitle": "Los equipos de ingeniería enterprise se están ahogando en candidatos potenciados con IA.",
+      "stat1Label": "Postulaciones por rol",
+      "stat2Label": "Currículums generados por IA",
+      "stat3Label": "Rondas de entrevista desde 2021",
+      "stat4Label": "Usan IA en entrevistas",
+      "footnote": "HackerRank prohíbe la IA y evalúa trivia. Los take-homes reciben entregas hechas con IA. Nada de eso funciona ya."
+    },
+    "solution": {
+      "title": "Nuestra Solución",
+      "subtitle": "Simulación de trabajo de 45 minutos con compañeros de IA",
+      "feature1Title": "Llamadas de Voz",
+      "feature1Desc": "Conversaciones en tiempo real con stakeholders de IA",
+      "feature2Title": "Entregables Reales",
+      "feature2Desc": "Los candidatos producen artefactos de trabajo reales",
+      "feature3Title": "Pantalla Grabada",
+      "feature3Desc": "Ve exactamente cómo trabajan y resuelven problemas",
+      "feature4Title": "Lado a Lado",
+      "feature4Desc": "Compara candidatos en trabajo real producido"
+    },
+    "demoBuilder": {
+      "title": "Crear Simulación",
+      "subtitle": "Los reclutadores construyen escenarios mediante una conversación natural con IA. Sin formularios — solo describe lo que quieres."
+    },
+    "demoJoin": {
+      "title": "El Candidato Entra",
+      "subtitle": "El reclutador comparte un enlace único. El candidato ve el rol y se registra."
+    },
+    "demoChat": {
+      "title": "Espacio de Trabajo Estilo Slack",
+      "subtitle": "Los candidatos colaboran con compañeros de IA por chat y llamadas de voz"
+    },
+    "demoCall": {
+      "title": "Llamadas de Voz",
+      "subtitle": "Conversaciones en tiempo real con stakeholders de IA potenciadas por Gemini Live"
+    },
+    "demoAnalysis": {
+      "title": "Análisis con IA",
+      "subtitle": "La grabación de pantalla se envía a Gemini multimodal para evaluar cómo trabajan realmente los candidatos",
+      "dimension1": "Resolución de Problemas",
+      "dimension2": "Comunicación",
+      "dimension3": "Uso de Herramientas IA",
+      "dimension4": "Calidad del Código",
+      "dimension5": "Gestión del Tiempo",
+      "dimension6": "Colaboración",
+      "dimension7": "Habilidades Técnicas",
+      "dimension8": "Autonomía"
+    },
+    "demoDashboard": {
+      "title": "Panel del Reclutador",
+      "subtitle": "Lleva el control de todas las simulaciones y candidatos en un solo lugar"
+    },
+    "demoScorecard": {
+      "title": "Scorecard con IA",
+      "subtitle": "Análisis detallado en 8 dimensiones con comportamientos observables"
+    },
+    "demoCompare": {
+      "title": "Comparar Candidatos",
+      "subtitle": "Comparación lado a lado sobre trabajo real producido"
+    },
+    "whyNow": {
+      "title": "¿Por Qué Ahora?",
+      "subtitle": "El desbloqueo 10X potenciado por Gemini",
+      "unlock1Title": "Gemini Live",
+      "unlock1Desc": "Conversaciones de voz en tiempo real con stakeholders de IA (PM, gerente, tech lead) que recuerdan el contexto durante toda la sesión",
+      "unlock2Title": "Gemini Multimodal",
+      "unlock2Desc": "Analiza con precisión grabaciones de pantalla de una hora para evaluar cómo trabajan los candidatos, usan IA y resuelven problemas"
+    },
+    "market": {
+      "title": "Mercado",
+      "subtitle": "Mercado de evaluación pre-contratación de $3B creciendo 16%/año",
+      "tam": "$3B",
+      "growth": "16%/año",
+      "beachhead": "Equipos enterprise que contratan 5+ ingenieros/mes",
+      "moat": "Cada simulación genera data de comportamiento → motor de predicción que los competidores no pueden replicar"
+    },
+    "team": {
+      "title": "Equipo",
+      "subtitle": "Exits en HR Tech + Meta GenAI + entregamos rápido",
+      "germanRole": "CEO",
+      "germanHighlight1": "2 exits en HR Tech (adquirido por Buk)",
+      "germanHighlight2": "Llevó startup de $0→$1.4M ARR",
+      "germanHighlight3": "GPM en Walmart eCommerce",
+      "germanHighlight4": "MBA de Berkeley",
+      "matiasRole": "CTO",
+      "matiasHighlight1": "Meta GenAI",
+      "matiasHighlight2": "MS de Stanford",
+      "matiasHighlight3": "Construyó Zapien (35K usuarios)",
+      "matiasHighlight4": "2x ganador del Stanford Learning Design",
+      "whyUs": "Exits en HR Tech (conocemos al comprador) + Meta GenAI (podemos construir esto) + este prototipo (entregamos rápido)"
+    },
+    "visuals": {
+      "totalAddressableMarket": "Mercado Total Direccionable",
+      "growthRate": "Tasa de Crecimiento",
+      "competitorsLabel": "Competidores:",
+      "beachheadLabel": "Beachhead",
+      "moatLabel": "Moat",
+      "simulationBuilder": "Constructor de Simulaciones",
+      "describeSimulation": "Describe tu simulación...",
+      "preview": "Vista previa",
+      "name": "Nombre",
+      "company": "Empresa",
+      "techStack": "Stack Técnico",
+      "coworkers": "Compañeros",
+      "saveSimulation": "Guardar Simulación",
+      "team": "Equipo",
+      "startCall": "Iniciar Llamada",
+      "typeMessage": "Escribe un mensaje...",
+      "callInProgress": "Llamada en curso • 2:34",
+      "poweredByGeminiLive": "Potenciado por Gemini Live",
+      "screenRecording45": "Grabación de pantalla de 45 min",
+      "geminiMultimodalAnalysis": "Análisis con Gemini Multimodal",
+      "dimensionsAssessed": "8 Dimensiones Evaluadas",
+      "aiOutput": "Salida de IA",
+      "observableBehaviors": "Comportamientos observables",
+      "behaviorsCount": "24 encontrados",
+      "timestampsLinked": "Timestamps vinculados",
+      "timestampsCount": "12 momentos",
+      "hiringSignals": "Señales de contratación",
+      "signalsCount": "3 verdes, 1 roja",
+      "dashboard": "Panel",
+      "welcomeBack": "Bienvenido de nuevo, Reclutador",
+      "newSimulation": "+ Nueva Simulación",
+      "statsSimulations": "Simulaciones",
+      "statsCandidates": "Candidatos",
+      "statsCompleted": "Completadas",
+      "statsCompletionRate": "Tasa de Finalización",
+      "recentActivity": "Actividad Reciente",
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "hoursAgo": "Hace 2h",
+      "inProgress": "En Progreso",
+      "candidateRoleLabel": "Senior Engineer • Completado el 15 de enero",
+      "overallScore": "Puntaje General",
+      "skillDimensions": "Dimensiones de Habilidad",
+      "scoreProblemSolving": "Resolución de Problemas",
+      "scoreCommunication": "Comunicación",
+      "scoreTechnicalSkills": "Habilidades Técnicas",
+      "scoreAiLeverage": "Uso de IA",
+      "levelExceptional": "Excepcional",
+      "levelStrong": "Fuerte",
+      "levelProficient": "Competente",
+      "strengths": "Fortalezas",
+      "areasToProbe": "Áreas a Explorar",
+      "strength1": "Hizo preguntas para clarificar",
+      "strength2": "Usó herramientas de IA con eficacia",
+      "strength3": "Estructura de código clara",
+      "areaToProbe1": "Tardó en los casos borde",
+      "screenRecording": "Grabación de Pantalla",
+      "watchSession": "45 min • Ver sesión completa",
+      "compareCandidates": "Comparar Candidatos",
+      "topPercent": "Top {percent}%",
+      "compareDim1": "Resolución de Problemas",
+      "compareDim2": "Comunicación",
+      "compareDim3": "Técnica",
+      "compareDim4": "Uso de IA",
+      "recommendedPrefix": "Recomendado: Alex Johnson",
+      "recommendedDesc": "Top 2% general, habilidades excepcionales de resolución de problemas",
+      "yourNextRole": "TU\nPRÓXIMO ROL.",
+      "joinSubtitle": "Acme Corp está buscando un Senior Engineer",
+      "aiTeammates": "Compañeros IA",
+      "useAnyAi": "Usa Cualquier IA",
+      "step01": "Paso 01",
+      "welcome": "Bienvenido",
+      "welcomeDesc": "Vive un día en Acme Corp. Esta simulación evalúa cómo trabajas.",
+      "continue": "Continuar →",
+      "msgAi1": "¡Hola! Te ayudo a crear una simulación. ¿Para qué rol estás contratando?",
+      "msgUser1": "Senior backend engineer en Acme Corp. Va a construir una API REST.",
+      "msgAi2": "¡Listo! ¿Qué stack técnico debería usar?",
+      "msgUser2": "Node.js, TypeScript, PostgreSQL",
+      "previewName": "Backend API Challenge",
+      "previewCompany": "Acme Corp",
+      "previewTask": "Construir una API REST...",
+      "coworkerSarahName": "Sarah Chen",
+      "coworkerSarahRole": "Engineering Manager",
+      "coworkerAlexName": "Alex Kim",
+      "coworkerAlexRole": "Product Manager",
+      "coworkerJordanName": "Jordan Lee",
+      "coworkerJordanRole": "Senior Engineer",
+      "chatMsg1": "¡Hola! Bienvenido al equipo. Tengo una tarea para ti hoy.",
+      "chatYou": "Tú",
+      "chatMsg2": "¡Gracias! Emocionado por empezar. ¿Cuál es el proyecto?",
+      "chatMsg3": "Necesitamos agregar una nueva feature al flujo de checkout. Te paso los requisitos.",
+      "candidateJohn": "John Smith",
+      "candidateEmma": "Emma Wilson",
+      "candidateMike": "Mike Chen",
+      "candidateAlex": "Alex Johnson"
+    },
+    "controls": {
+      "exitFullscreen": "Salir de pantalla completa (F)",
+      "enterFullscreen": "Entrar a pantalla completa (F)"
+    }
+  },
+  "settings": {
+    "accountDeletion": {
+      "dangerZone": "Zona de Peligro",
+      "deleteAccount": {
+        "title": "Eliminar Cuenta",
+        "description": "Elimina permanentemente tu cuenta y todos los datos asociados. Esto incluye tu perfil, todas las evaluaciones, grabaciones, CVs cargados e informes."
+      },
+      "privacyPolicyLink": "Lee nuestra Política de Privacidad",
+      "pending": {
+        "title": "Eliminación Programada",
+        "description": "Solicitada el {date}. Tu cuenta y todos los datos serán eliminados permanentemente en un plazo de 30 días.",
+        "cancel": "Cancelar Eliminación",
+        "cancelling": "Cancelando..."
+      },
+      "actions": {
+        "delete": "Eliminar Cuenta",
+        "cancel": "Cancelar"
+      },
+      "modal": {
+        "title": "Elige el Método de Eliminación",
+        "method": {
+          "schedule": {
+            "title": "Programar Eliminación (30 días)",
+            "description": "Tu cuenta quedará marcada para eliminación. Tienes 30 días para cambiar de opinión antes de que los datos se eliminen permanentemente."
+          },
+          "immediate": {
+            "title": "Eliminar Inmediatamente",
+            "description": "Elimina permanentemente tu cuenta y todos los datos ahora mismo. Esta acción no se puede deshacer."
+          }
+        },
+        "confirm": {
+          "labelPrefix": "Escribe",
+          "labelSuffix": "para confirmar:",
+          "errorMustType": "Por favor escribe \"DELETE MY ACCOUNT\" para confirmar"
+        },
+        "buttons": {
+          "schedule": "Programar Eliminación",
+          "scheduling": "Programando...",
+          "deleteNow": "Eliminar Ahora",
+          "deleting": "Eliminando..."
+        }
+      },
+      "whatWillBeDeleted": {
+        "title": "Lo que se eliminará:",
+        "items": {
+          "profile": "La información de tu perfil",
+          "assessments": "Todas las evaluaciones e informes",
+          "recordings": "Grabaciones de pantalla y capturas",
+          "cvs": "CVs y currículums cargados",
+          "transcripts": "Transcripciones de conversaciones"
+        }
+      },
+      "errors": {
+        "generic": "Ocurrió un error",
+        "requestFailed": "No se pudo solicitar la eliminación",
+        "deleteFailed": "No se pudo eliminar la cuenta",
+        "cancelFailed": "No se pudo cancelar la solicitud"
+      },
+      "successDeleted": "Cuenta eliminada con éxito. Redirigiendo a la página de inicio..."
+    }
+  },
+  "rubric": {
+    "levels": {
+      "junior": {
+        "label": "Junior",
+        "yearsRange": "0-2 años"
+      },
+      "mid": {
+        "label": "Nivel Medio",
+        "yearsRange": "2-5 años"
+      },
+      "senior": {
+        "label": "Senior",
+        "yearsRange": "5-8 años"
+      },
+      "staff": {
+        "label": "Staff",
+        "yearsRange": "8+ años"
+      }
+    },
+    "relativeStrength": {
+      "exceptional": "Excepcional",
+      "strong": "Sólido",
+      "meets": "Cumple expectativas",
+      "below": "Por debajo de expectativas"
+    }
+  }
+}

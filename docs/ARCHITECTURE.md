@@ -34,14 +34,14 @@ Skillvee assesses **HOW developers work**, not just WHAT they produce. Candidate
 ## Assessment Flow
 
 ### Phase 1: HR Interview
-- **Model:** `gemini-2.5-flash-native-audio-latest` via Gemini Live
+- **Model:** `gemini-3.1-flash-live-preview` via Gemini Live
 - **Purpose:** Verify CV claims, assess communication skills
 - **Prompt:** `src/prompts/hr/interview.ts`
 - **Duration:** ~20 minutes voice conversation
 - **Output:** Transcript, communication/CV verification scores
 
 ### Phase 2: Manager Kickoff
-- **Model:** `gemini-2.5-flash-native-audio-latest` via Gemini Live
+- **Model:** `gemini-3.1-flash-live-preview` via Gemini Live
 - **Purpose:** Brief candidate on task (intentionally vague to test clarifying questions)
 - **Prompt:** `src/prompts/manager/kickoff.ts`
 - **Key Design:** Manager is vague - good candidates ask questions
@@ -58,7 +58,7 @@ Skillvee assesses **HOW developers work**, not just WHAT they produce. Candidate
   - Screen recording captures work process
 
 ### Phase 4: PR Defense
-- **Model:** `gemini-2.5-flash-native-audio-latest` via Gemini Live
+- **Model:** `gemini-3.1-flash-live-preview` via Gemini Live
 - **Purpose:** Candidate defends their PR to the manager
 - **Prompt:** `src/prompts/manager/defense.ts`
 - **Context injected:** Code review, conversation history, screen analysis
@@ -152,11 +152,11 @@ HR_INTERVIEW → ONBOARDING → WORKING → FINAL_DEFENSE → PROCESSING → COM
 
 | Stage | Model | Purpose |
 |-------|-------|---------|
-| HR Interview | `gemini-2.5-flash-native-audio-latest` | Voice conversation via Gemini Live |
-| Manager Kickoff | `gemini-2.5-flash-native-audio-latest` | Voice briefing via Gemini Live |
+| HR Interview | `gemini-3.1-flash-live-preview` | Voice conversation via Gemini Live |
+| Manager Kickoff | `gemini-3.1-flash-live-preview` | Voice briefing via Gemini Live |
 | Coworker Chat | `gemini-3-flash-preview` | Text chat responses |
-| Coworker Voice | `gemini-2.5-flash-native-audio-latest` | Voice calls via Gemini Live |
-| PR Defense | `gemini-2.5-flash-native-audio-latest` | Voice review via Gemini Live |
+| Coworker Voice | `gemini-3.1-flash-live-preview` | Voice calls via Gemini Live |
+| PR Defense | `gemini-3.1-flash-live-preview` | Voice review via Gemini Live |
 | Code Review | `gemini-3-flash-preview` | PR analysis |
 | CV Parsing | `gemini-3-flash-preview` | Extract structured data from CVs |
 | Video Evaluation | `gemini-3-flash-preview` | Full assessment analysis |

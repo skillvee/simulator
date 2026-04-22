@@ -5,6 +5,7 @@ export const STORAGE_BUCKETS = {
   RECORDINGS: "recordings",
   SCREENSHOTS: "screenshots",
   AVATARS: "avatars",
+  DELIVERABLES: "deliverables",
 } as const;
 
 interface UploadResult {
@@ -63,6 +64,34 @@ export async function deleteResume(path: string): Promise<void> {
  * @param path - The path of the file
  * @param expiresIn - Expiration time in seconds (default: 1 hour)
  */
+/**
+ * Upload a deliverable file for an assessment.
+ *
+ * Goes through the API route so the server can persist a reference on the
+ * Assessment row and generate a summary for the defense call prompt.
+ */
+export async function uploadDeliverable(
+  file: File,
+  assessmentId: string
+): Promise<UploadResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("assessmentId", assessmentId);
+
+  const response = await fetch("/api/assessment/deliverable", {
+    method: "POST",
+    body: formData,
+  });
+
+  const json = await response.json().catch(() => null);
+  if (!response.ok || !json?.success) {
+    const message = json?.error || "Failed to upload deliverable";
+    throw new Error(message);
+  }
+
+  return { url: json.data.url, path: json.data.path };
+}
+
 export async function getSignedResumeUrl(
   path: string,
   expiresIn = 3600

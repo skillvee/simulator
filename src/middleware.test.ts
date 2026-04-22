@@ -17,6 +17,19 @@ vi.mock("@/auth", () => ({
   },
 }));
 
+// Mock next-intl/middleware to pass through requests
+vi.mock("next-intl/middleware", () => ({
+  default: () => () => NextResponse.next(),
+}));
+
+// Mock i18n routing
+vi.mock("@/i18n/routing", () => ({
+  routing: {
+    locales: ["en", "es"],
+    defaultLocale: "en",
+  },
+}))
+
 vi.mock("@/lib/rate-limiter", () => ({
   aiChatLimiter: {},
   aiGenerationLimiter: {},
@@ -55,7 +68,7 @@ describe("middleware security headers", () => {
   });
 
   it("adds base security headers to public page routes", async () => {
-    const req = createMockRequest("/sign-in");
+    const req = createMockRequest("/en/sign-in");
     const response = middlewareCallback(req) as NextResponse;
 
     for (const [key, value] of Object.entries(EXPECTED_BASE_HEADERS)) {
@@ -92,7 +105,7 @@ describe("middleware security headers", () => {
   });
 
   it("adds assessment headers with camera/microphone for assessment routes", async () => {
-    const req = createMockRequest("/assessments/test-123/work", { id: "1", role: "USER" });
+    const req = createMockRequest("/en/assessments/test-123/work", { id: "1", role: "USER" });
     const response = middlewareCallback(req) as NextResponse;
 
     for (const [key, value] of Object.entries(EXPECTED_ASSESSMENT_HEADERS)) {
@@ -110,12 +123,13 @@ describe("middleware security headers", () => {
   });
 
   it("adds security headers to redirect responses", async () => {
-    const req = createMockRequest("/recruiter/dashboard");
+    const req = createMockRequest("/en/recruiter/dashboard");
     // No auth — should redirect to sign-in
     const response = middlewareCallback(req) as NextResponse;
 
     expect(response.status).toBe(307);
-    for (const [key, value] of Object.entries(EXPECTED_BASE_HEADERS)) {
+    // Recruiter routes get assessment headers (camera/microphone enabled)
+    for (const [key, value] of Object.entries(EXPECTED_ASSESSMENT_HEADERS)) {
       expect(response.headers.get(key)).toBe(value);
     }
   });

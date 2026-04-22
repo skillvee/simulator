@@ -12,6 +12,7 @@
  */
 
 import { GoogleGenAI } from "@google/genai";
+import type { CoworkerGender, CoworkerEthnicity } from "@prisma/client";
 import { env } from "@/lib/core/env";
 import { createLogger } from "@/lib/core";
 import { supabaseAdmin } from "@/lib/external/supabase";
@@ -37,6 +38,8 @@ interface CoworkerData {
   name: string;
   role: string;
   personaStyle: string;
+  gender?: CoworkerGender | null;
+  ethnicity?: CoworkerEthnicity | null;
 }
 
 interface GenerationResult {
@@ -55,9 +58,21 @@ function buildAvatarPrompt(coworker: CoworkerData): string {
   // Extract persona style hints for appearance
   const styleHints = extractStyleHints(coworker.personaStyle);
 
-  // Build the prompt — include name so Imagen infers appropriate ethnicity/appearance
-  const prompt = `Professional headshot photograph of a person named ${coworker.name}, who is a ${styleHints} ${coworker.role}.
-The person's appearance should be consistent with their name's cultural background.
+  // Gender/ethnicity descriptors — explicit so Imagen doesn't mis-infer from names
+  // like "Mateo" (unambiguously male in Spanish, less clear cross-culturally).
+  const genderDescriptor =
+    coworker.gender === "male"
+      ? "a man"
+      : coworker.gender === "female"
+        ? "a woman"
+        : "a person";
+
+  const ethnicityDescriptor = coworker.ethnicity
+    ? `, of ${coworker.ethnicity.replace(/_/g, " ")} background`
+    : "";
+
+  const prompt = `Professional headshot photograph of ${genderDescriptor}${ethnicityDescriptor} named ${coworker.name}, who is a ${styleHints} ${coworker.role}.
+The person's appearance must clearly match the stated gender${coworker.ethnicity ? " and ethnicity" : " and be consistent with the name's cultural background"}.
 Corporate style portrait, neutral gray background, professional lighting,
 high quality, photorealistic, head and shoulders only, facing camera,
 friendly expression, business casual attire.`;
@@ -281,6 +296,8 @@ export async function generateAvatarsForScenario(
       name: true,
       role: true,
       personaStyle: true,
+      gender: true,
+      ethnicity: true,
     },
   });
 
@@ -323,6 +340,8 @@ export async function generateAvatarForCoworker(
       role: true,
       personaStyle: true,
       avatarUrl: true,
+      gender: true,
+      ethnicity: true,
     },
   });
 

@@ -63,7 +63,7 @@ export async function GET() {
         config: {
           uses: 1,
           liveConnectConstraints: {
-            model: "gemini-2.5-flash-native-audio-latest",
+            model: "gemini-3.1-flash-live-preview",
             config: {
               responseModalities: [Modality.AUDIO],
             },

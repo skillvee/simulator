@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
-import { NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import { NextRequest, NextResponse } from "next/server";
 import type { UserRole } from "@prisma/client";
+import { routing } from "@/i18n/routing";
 import {
   aiChatLimiter,
   aiGenerationLimiter,
@@ -128,11 +130,17 @@ const ASSESSMENT_SECURITY_HEADERS: Record<string, string> = {
 function applySecurityHeaders(
   response: NextResponse,
   pathname: string,
-  traceId?: string
+  traceId?: string,
+  pathWithoutLocale?: string
 ): NextResponse {
-  const headers = pathname.startsWith("/assessments/")
-    ? ASSESSMENT_SECURITY_HEADERS
-    : BASE_SECURITY_HEADERS;
+  // For page routes, check the pathWithoutLocale; for API routes, check pathname
+  const pathToCheck = pathWithoutLocale || pathname;
+
+  const headers =
+    pathToCheck.startsWith("/assessments/") ||
+    pathToCheck.startsWith("/recruiter/")
+      ? ASSESSMENT_SECURITY_HEADERS
+      : BASE_SECURITY_HEADERS;
 
   for (const [key, value] of Object.entries(headers)) {
     response.headers.set(key, value);
@@ -146,9 +154,15 @@ function applySecurityHeaders(
 }
 
 /**
- * Centralized authentication middleware for API and page routes.
+ * Create the base i18n middleware
+ */
+const intlMiddleware = createMiddleware(routing);
+
+/**
+ * Combined middleware for i18n and authentication.
  *
  * This middleware:
+ * - Handles locale routing for all page routes
  * - Adds security headers to all responses
  * - Protects all /api/* routes except /api/auth/* and PUBLIC_API_ROUTES
  * - Requires ADMIN role for /api/admin/* routes
@@ -174,18 +188,13 @@ export default auth((req) => {
   const traceId =
     req.headers.get("x-trace-id") || crypto.randomUUID();
 
-  // Skip auth routes (handled by NextAuth)
-  if (isAuthRoute(pathname)) {
-    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
-  }
-
-  // Allow public page routes without authentication
-  if (isPublicPageRoute(pathname)) {
-    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
-  }
-
-  // Handle API routes
+  // For API routes, skip i18n processing
   if (pathname.startsWith("/api/")) {
+    // Skip auth routes (handled by NextAuth)
+    if (isAuthRoute(pathname)) {
+      return applySecurityHeaders(NextResponse.next(), pathname, traceId);
+    }
+
     // Apply rate limiting to AI endpoints BEFORE authentication
     // This prevents unauthenticated DoS attacks
     if (pathname.startsWith("/api/chat")) {
@@ -307,100 +316,131 @@ export default auth((req) => {
     return applySecurityHeaders(NextResponse.next(), pathname, traceId);
   }
 
+  // For page routes, we need to handle i18n
+  const locales = routing.locales;
+  const pathnameHasLocale = locales.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
+
+  // Extract locale and pathname without locale for route checks
+  let pathWithoutLocale = pathname;
+  let currentLocale = routing.defaultLocale;
+
+  if (pathnameHasLocale) {
+    const pathSegments = pathname.split("/");
+    currentLocale = pathSegments[1] as "en" | "es";
+    pathWithoutLocale = "/" + pathSegments.slice(2).join("/") || "/";
+  }
+
+  // Skip auth routes (handled by NextAuth)
+  if (isAuthRoute(pathname)) {
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
+  }
+
+  // Allow public page routes without authentication
+  if (isPublicPageRoute(pathWithoutLocale)) {
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
+  }
+
   // Handle candidate dashboard routes (any authenticated user)
-  if (isCandidateDashboardRoute(pathname)) {
+  if (isCandidateDashboardRoute(pathWithoutLocale)) {
     if (!session?.user) {
-      const signInUrl = new URL("/sign-in", req.url);
+      const signInUrl = new URL(`/${currentLocale}/sign-in`, req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId, pathWithoutLocale);
     }
-    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Handle recruiter page routes
-  if (isRecruiterPageRoute(pathname)) {
+  if (isRecruiterPageRoute(pathWithoutLocale)) {
     // Redirect to sign-in if not authenticated
     if (!session?.user) {
-      const signInUrl = new URL("/sign-in", req.url);
+      const signInUrl = new URL(`/${currentLocale}/sign-in`, req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId, pathWithoutLocale);
     }
 
     // Check recruiter role (RECRUITER or ADMIN allowed)
     if (user?.role !== "RECRUITER" && user?.role !== "ADMIN") {
       // Redirect candidates to their own dashboard instead of showing an error
-      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname, traceId);
+      const redirectUrl = new URL(`/${currentLocale}/candidate/dashboard`, req.url);
+      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
     }
 
-    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Handle assessment page routes
-  if (isAssessmentPageRoute(pathname)) {
+  if (isAssessmentPageRoute(pathWithoutLocale)) {
     // Redirect to sign-in if not authenticated
     if (!session?.user) {
-      const signInUrl = new URL("/sign-in", req.url);
+      const signInUrl = new URL(`/${currentLocale}/sign-in`, req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId, pathWithoutLocale);
     }
 
     // Note: Assessment ownership is verified at the page level, not middleware
     // This is because middleware doesn't have access to database queries
-    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Handle admin page routes
-  if (isAdminPageRoute(pathname)) {
+  if (isAdminPageRoute(pathWithoutLocale)) {
     // Redirect to sign-in if not authenticated
     if (!session?.user) {
-      const signInUrl = new URL("/sign-in", req.url);
+      const signInUrl = new URL(`/${currentLocale}/sign-in`, req.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId);
+      return applySecurityHeaders(NextResponse.redirect(signInUrl), pathname, traceId, pathWithoutLocale);
     }
 
     // Check admin role (only ADMIN allowed)
     if (user?.role !== "ADMIN") {
       // Redirect to the user's appropriate dashboard
       if (user?.role === "RECRUITER") {
-        return applySecurityHeaders(NextResponse.redirect(new URL("/recruiter/dashboard", req.url)), pathname, traceId);
+        const redirectUrl = new URL(`/${currentLocale}/recruiter/dashboard`, req.url);
+        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
       }
-      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname, traceId);
+      const redirectUrl = new URL(`/${currentLocale}/candidate/dashboard`, req.url);
+      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
     }
 
-    return applySecurityHeaders(NextResponse.next(), pathname, traceId);
+    return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
   }
 
   // Redirect authenticated users from home page to their dashboard
-  if (pathname === "/") {
+  if (pathWithoutLocale === "/") {
     if (session?.user) {
       if (user?.role === "ADMIN") {
-        return applySecurityHeaders(NextResponse.redirect(new URL("/admin", req.url)), pathname, traceId);
+        const redirectUrl = new URL(`/${currentLocale}/admin`, req.url);
+        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
       }
       if (user?.role === "RECRUITER") {
-        return applySecurityHeaders(NextResponse.redirect(new URL("/recruiter/dashboard", req.url)), pathname, traceId);
+        const redirectUrl = new URL(`/${currentLocale}/recruiter/dashboard`, req.url);
+        return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
       }
       // Candidates (USER role) go to candidate dashboard
-      return applySecurityHeaders(NextResponse.redirect(new URL("/candidate/dashboard", req.url)), pathname, traceId);
+      const redirectUrl = new URL(`/${currentLocale}/candidate/dashboard`, req.url);
+      return applySecurityHeaders(NextResponse.redirect(redirectUrl), pathname, traceId, pathWithoutLocale);
     }
   }
 
-  return applySecurityHeaders(NextResponse.next(), pathname, traceId);
+  // For all other routes, apply i18n middleware
+  return applySecurityHeaders(intlMiddleware(req as NextRequest), pathname, traceId, pathWithoutLocale);
 });
 
 /**
  * Middleware matcher configuration.
- * Run middleware on API routes and protected page routes.
+ * Run middleware on all routes except static files and _next paths.
  *
  * Note: /invite/* routes are explicitly public.
  */
 export const config = {
   matcher: [
     "/",
+    "/(en|es)/:path*",
+    "/((?!_next|_vercel|.*\\..*).*)",
     "/api/:path*",
-    "/admin/:path*",
-    "/candidate/dashboard/:path*",
-    "/recruiter/:path*",
-    "/assessments/:path*",
   ],
 };
 

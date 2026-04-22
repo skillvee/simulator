@@ -50,6 +50,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
       confidence: "high",
     },
     roleArchetype: { value: "frontend_engineer", confidence: "high" },
+    language: { value: "en", confidence: "high" },
   };
 
   it("returns 401 if not authenticated", async () => {
@@ -233,7 +234,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     expect(data.data.seniorityLevel).toEqual({ value: "senior", confidence: "high" });
     expect(data.data.techStack.value).toContain("React");
     expect(data.data._meta).toBeDefined();
-    expect(data.data._meta.promptVersion).toBe("1.1");
+    expect(data.data._meta.promptVersion).toBe("1.2");
     expect(data.data._meta.parsedAt).toBeDefined();
   });
 
@@ -417,6 +418,7 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
       keyResponsibilities: { value: null, confidence: "low" },
       domainContext: { value: null, confidence: "low" },
       roleArchetype: { value: "frontend_engineer", confidence: "medium" },
+      language: { value: "en", confidence: "low" },
     };
 
     mockGenerateContent.mockResolvedValue({
@@ -475,6 +477,149 @@ describe("POST /api/recruiter/simulations/parse-jd", () => {
     expect(data.data.companyName.confidence).toBe("high");
     expect(data.data.techStack.confidence).toBe("medium");
     expect(data.data.keyResponsibilities.confidence).toBe("medium");
+  });
+
+  it("detects English language in English job description", async () => {
+    mockAuth.mockResolvedValue({
+      user: {
+        id: "recruiter-123",
+        email: "recruiter@test.com",
+        role: "RECRUITER",
+      },
+    });
+
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify(mockParsedJD),
+    });
+
+    const request = new Request(
+      "http://localhost/api/recruiter/simulations/parse-jd",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobDescription: "We are looking for a Senior Frontend Engineer to join our team at Stripe. You will build React components and optimize performance.",
+        }),
+      }
+    );
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.data.language).toEqual({ value: "en", confidence: "high" });
+  });
+
+  it("detects Spanish language in Spanish job description", async () => {
+    mockAuth.mockResolvedValue({
+      user: {
+        id: "recruiter-123",
+        email: "recruiter@test.com",
+        role: "RECRUITER",
+      },
+    });
+
+    const spanishJDResponse: ParseJDResponse = {
+      ...mockParsedJD,
+      roleName: { value: "Ingeniero Frontend Senior", confidence: "high" },
+      language: { value: "es", confidence: "high" },
+    };
+
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify(spanishJDResponse),
+    });
+
+    const request = new Request(
+      "http://localhost/api/recruiter/simulations/parse-jd",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobDescription: "Buscamos un Ingeniero Frontend Senior para unirse a nuestro equipo. Responsabilidades: Desarrollar componentes en React, optimizar el rendimiento, mentorear a ingenieros junior.",
+        }),
+      }
+    );
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.data.language).toEqual({ value: "es", confidence: "high" });
+  });
+
+  it("falls back to English for unsupported language (French)", async () => {
+    mockAuth.mockResolvedValue({
+      user: {
+        id: "recruiter-123",
+        email: "recruiter@test.com",
+        role: "RECRUITER",
+      },
+    });
+
+    const frenchJDResponse: ParseJDResponse = {
+      ...mockParsedJD,
+      roleName: { value: "Ingénieur Frontend Senior", confidence: "high" },
+      language: { value: "fr" as "en" | "es", confidence: "high" }, // AI returns French (unsupported)
+    };
+
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify(frenchJDResponse),
+    });
+
+    const request = new Request(
+      "http://localhost/api/recruiter/simulations/parse-jd",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobDescription: "Nous recherchons un Ingénieur Frontend Senior pour rejoindre notre équipe.",
+        }),
+      }
+    );
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    // Should fall back to English since French is not supported
+    expect(data.data.language).toEqual({ value: "en", confidence: "low" });
+  });
+
+  it("handles null language detection gracefully", async () => {
+    mockAuth.mockResolvedValue({
+      user: {
+        id: "recruiter-123",
+        email: "recruiter@test.com",
+        role: "RECRUITER",
+      },
+    });
+
+    const noLanguageResponse: ParseJDResponse = {
+      ...mockParsedJD,
+      language: { value: null, confidence: "low" },
+    };
+
+    mockGenerateContent.mockResolvedValue({
+      text: JSON.stringify(noLanguageResponse),
+    });
+
+    const request = new Request(
+      "http://localhost/api/recruiter/simulations/parse-jd",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobDescription: "Engineer",
+        }),
+      }
+    );
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    // Should default to English when detection returns null
+    expect(data.data.language).toEqual({ value: "en", confidence: "low" });
   });
 
   it("calls Gemini with correct model and prompt", async () => {

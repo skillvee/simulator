@@ -11,6 +11,33 @@ import type {
   CoworkerPersonality,
 } from "@/lib/ai";
 
+/**
+ * Voice rules for English conversations
+ */
+export const VOICE_RULES_EN = [
+  "Speak naturally and conversationally",
+  "Use appropriate pauses and intonation",
+  "Avoid robotic or monotone delivery",
+  "Use natural fillers: um, uh, let me think, so, well, you know",
+  "Keep a casual, friendly tone appropriate for a tech workplace"
+];
+
+/**
+ * Voice rules for Spanish conversations
+ */
+export const VOICE_RULES_ES = [
+  "Habla naturalmente, como un compañero de trabajo real",
+  "Usa muletillas: eh, este, bueno, pues, o sea, mira",
+  "Mantén tu rol consistentemente durante toda la conversación",
+  "Reconoce menciones de colegas: 'Sí, Alex me dijo...'",
+  "Usa 'tú', nunca 'usted'",
+  "Código y APIs en inglés, conversación en español",
+  "Evita frases de AI: no digas 'excelente pregunta'",
+  "Vocabulario latinoamericano: computadora, celular, está bien",
+  "Si eres el manager, habla con autoridad y usa 'nuestro equipo'",
+  "Mantén la perspectiva de tu rol específico en todas las respuestas"
+];
+
 export interface CoworkerContext {
   companyName: string;
   candidateName?: string;
@@ -661,7 +688,7 @@ export const VOICE_GUIDELINES = `
 - Sound like a support bot
 - Be too formal
 
-Start the call with a natural greeting like "Hey, what's up?" or "Hey [name], how's it going?"`;
+**CALL START:** The candidate just called you — YOU answer first with a natural greeting. The candidate has NOT said anything yet, so do NOT respond as if they greeted you or thanked you. Just pick up naturally: "Hey, what's up?" or "Hey [name], how's it going?"`;
 
 /**
  * Build the full chat system prompt

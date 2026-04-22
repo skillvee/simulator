@@ -33,7 +33,7 @@ export async function GET() {
       config: {
         uses: 1,
         liveConnectConstraints: {
-          model: "gemini-2.5-flash-native-audio-latest",
+          model: "gemini-3.1-flash-live-preview",
           config: {
             responseModalities: [Modality.AUDIO],
           },
@@ -68,7 +68,7 @@ export async function GET() {
 
     // Step 4: Check model availability
     const modelInfo = {
-      requested: "gemini-2.5-flash-native-audio-latest",
+      requested: "gemini-3.1-flash-live-preview",
       note: "Using native audio model for live conversations",
     };
     (results.steps as unknown[]).push({

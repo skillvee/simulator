@@ -1,20 +1,45 @@
 import type { AssessmentReport, SkillScore, ScoreLevel, RubricAssessmentOutput } from "@/types";
 import type { Prisma } from "@prisma/client";
-import { RUBRIC_TO_ASSESSMENT_DIMENSION } from "@/lib/rubric/dimension-mapping";
 
 /**
- * Maps assessment dimension keys to report skill categories.
- * Assessment dimensions (UPPERCASE) -> report categories (lowercase).
+ * Maps rubric dimension slugs directly to report skill categories.
+ * Rubric slugs are used as-is from Gemini evaluation output.
  */
-export const ASSESSMENT_DIM_TO_CATEGORY: Record<string, string> = {
-  COMMUNICATION: "communication",
-  PROBLEM_SOLVING: "problem_decomposition",
-  TECHNICAL_KNOWLEDGE: "code_quality",
-  COLLABORATION: "xfn_collaboration",
-  ADAPTABILITY: "technical_decision_making",
-  LEADERSHIP: "presentation",
-  CREATIVITY: "ai_leverage",
-  TIME_MANAGEMENT: "time_management",
+export const RUBRIC_DIM_TO_CATEGORY: Record<string, string> = {
+  // Universal
+  communication: "communication",
+  practical_maturity: "technical_decision_making",
+  collaboration_coachability: "xfn_collaboration",
+  // Engineering
+  problem_decomposition_design: "problem_decomposition",
+  technical_execution: "code_quality",
+  learning_velocity: "learning_velocity",
+  work_process: "time_management",
+  // Product Management
+  problem_structuring: "problem_decomposition",
+  prioritization_tradeoffs: "prioritization",
+  data_reasoning: "data_reasoning",
+  stakeholder_influence: "communication",
+  // Data Science
+  analytical_reasoning: "problem_decomposition",
+  technical_proficiency_ds: "code_quality",
+  insight_communication: "communication",
+  methodology_rigor: "methodology_rigor",
+  // Program Management
+  program_structuring: "problem_decomposition",
+  risk_identification: "risk_identification",
+  cross_team_coordination: "xfn_collaboration",
+  execution_tracking: "time_management",
+  // Sales
+  discovery_qualification: "problem_decomposition",
+  value_articulation: "communication",
+  objection_handling: "objection_handling",
+  closing_next_steps: "closing_next_steps",
+  // Customer Success
+  onboarding_enablement: "communication",
+  escalation_handling: "escalation_handling",
+  value_realization: "value_realization",
+  relationship_management: "xfn_collaboration",
 };
 
 /**
@@ -40,7 +65,8 @@ export function convertRubricToReport(
   assessmentId: string,
   candidateName?: string,
   timing?: { totalDurationMinutes: number | null; workingPhaseMinutes: number | null },
-  coworkersContacted?: number
+  coworkersContacted?: number,
+  language?: string
 ): AssessmentReport {
   const skillScores: SkillScore[] = [];
 
@@ -50,11 +76,9 @@ export function convertRubricToReport(
   for (const dimScore of rubricResult.dimensionScores) {
     if (dimScore.score === null) continue;
 
-    // Map rubric slug -> assessment dimension -> report category
-    const assessmentDim = RUBRIC_TO_ASSESSMENT_DIMENSION[dimScore.dimensionSlug];
-    const category = assessmentDim
-      ? ASSESSMENT_DIM_TO_CATEGORY[assessmentDim]
-      : dimScore.dimensionSlug; // Fall back to slug itself if no mapping
+    // Map rubric slug directly to report category
+    const category = RUBRIC_DIM_TO_CATEGORY[dimScore.dimensionSlug]
+      ?? dimScore.dimensionSlug; // Fall back to slug itself if no mapping
 
     if (!category) continue;
 
@@ -99,8 +123,9 @@ export function convertRubricToReport(
     generatedAt: new Date().toISOString(),
     assessmentId,
     candidateName,
-    overallScore: rubricResult.overallScore,
-    overallLevel: scoreToLevel(rubricResult.overallScore),
+    language,
+    overallScore: rubricResult.overallScore ?? 0,
+    overallLevel: scoreToLevel(rubricResult.overallScore ?? 0),
     skillScores,
     narrative: {
       overallSummary: rubricResult.overallSummary,

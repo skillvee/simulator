@@ -16,19 +16,53 @@ export function checkScreenCaptureSupport(): boolean {
   );
 }
 
-// Request screen capture permission and return stream
+// Request screen capture permission and return stream.
+// Enforces entire-screen capture — tabs and windows are rejected.
 export async function requestScreenCapture(): Promise<MediaStream> {
   if (!checkScreenCaptureSupport()) {
     throw new Error("Screen capture is not supported in this browser");
   }
 
-  return navigator.mediaDevices.getDisplayMedia({
+  const stream = await navigator.mediaDevices.getDisplayMedia({
     video: {
       displaySurface: "monitor", // Prefer entire screen
       frameRate: { ideal: 5, max: 10 }, // Low frame rate for assessment
     },
-    audio: false, // Audio captured separately via microphone
+    audio: false, // Audio captured via mic + AudioStreamer mixer in screen-recording-context
+    // @ts-expect-error -- newer Screen Capture API options, not yet in all TS libs
+    selfBrowserSurface: "exclude", // Hide "this tab" option
+    monitorTypeSurfaces: "include", // Ensure monitors are shown
+    preferCurrentTab: false, // Don't default to current tab
+    surfaceSwitching: "exclude", // Prevent switching to a different surface mid-session
   });
+
+  // Validate the user actually selected an entire screen, not a tab or window
+  const videoTrack = stream.getVideoTracks()[0];
+  if (videoTrack) {
+    const settings = videoTrack.getSettings();
+    const surface = (settings as Record<string, unknown>).displaySurface;
+
+    if (surface && surface !== "monitor") {
+      // User selected a tab or window — stop the stream and reject
+      stream.getTracks().forEach((track) => track.stop());
+      throw new ScreenSurfaceError(
+        `You must share your entire screen, not a ${surface === "browser" ? "tab" : "window"}. Please try again and select a full screen.`
+      );
+    }
+  }
+
+  return stream;
+}
+
+/**
+ * Error thrown when the user selects a tab or window instead of their entire screen.
+ * The guard component uses this to show a specific error message.
+ */
+export class ScreenSurfaceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ScreenSurfaceError";
+  }
 }
 
 // Stop screen capture stream

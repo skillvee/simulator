@@ -7,6 +7,8 @@ import {
   JD_PARSER_PROMPT,
   JD_PARSER_PROMPT_VERSION,
 } from "@/prompts/recruiter/jd-parser";
+import { logGenerationStep } from "@/lib/scenarios/generation-logger";
+import { isSupportedLanguage } from "@/lib/core/language";
 import type { ParseJDResponse } from "@/types";
 
 const logger = createLogger("api:recruiter:parse-jd");
@@ -24,6 +26,7 @@ const PARSING_MODEL = "gemini-3-flash-preview";
 // Zod schema for request validation
 const parseJDRequestSchema = z.object({
   jobDescription: z.string().min(1, "Job description cannot be empty"),
+  creationLogId: z.string().optional(),
 });
 
 /**
@@ -52,10 +55,22 @@ export async function POST(request: Request) {
       return validationError(validationResult.error);
     }
 
-    const { jobDescription } = validationResult.data;
+    const { jobDescription, creationLogId } = validationResult.data;
 
     // Build the full prompt with the job description
     const fullPrompt = JD_PARSER_PROMPT + jobDescription;
+
+    // Start generation step logging if creationLogId is provided
+    const tracker = creationLogId
+      ? await logGenerationStep({
+          creationLogId,
+          stepName: "parse_jd",
+          modelUsed: PARSING_MODEL,
+          promptVersion: JD_PARSER_PROMPT_VERSION,
+          promptText: fullPrompt,
+          inputData: { jobDescription: jobDescription.slice(0, 500) + (jobDescription.length > 500 ? "..." : "") },
+        })
+      : null;
 
     // Call Gemini Flash for parsing
     const response = await gemini.models.generateContent({
@@ -71,6 +86,7 @@ export async function POST(request: Request) {
     const responseText = response.text;
 
     if (!responseText) {
+      await tracker?.fail(new Error("Empty response from AI"));
       return error("Failed to parse job description - empty response from AI", 500);
     }
 
@@ -86,6 +102,7 @@ export async function POST(request: Request) {
       parsedData = JSON.parse(cleanedResponse) as ParseJDResponse;
     } catch (parseErr) {
       logger.error("Failed to parse AI response as JSON", { error: parseErr instanceof Error ? parseErr.message : String(parseErr), responseText });
+      await tracker?.fail(new Error(`Invalid JSON response: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`));
       return error("Failed to parse job description - invalid JSON response", 500);
     }
 
@@ -99,6 +116,7 @@ export async function POST(request: Request) {
       "keyResponsibilities",
       "domainContext",
       "roleArchetype",
+      "language",
     ];
 
     const missingFields = expectedFields.filter(
@@ -107,6 +125,7 @@ export async function POST(request: Request) {
 
     if (missingFields.length > 0) {
       logger.error("Missing fields in parsed response", { missingFields });
+      await tracker?.fail(new Error(`Missing fields: ${missingFields.join(", ")}`));
       return error(`Incomplete parsing result - missing fields: ${missingFields.join(", ")}`, 500);
     }
 
@@ -120,11 +139,36 @@ export async function POST(request: Request) {
     });
 
     if (!hasAnyValue) {
+      await tracker?.fail(new Error("No extractable content from job description"));
       return error(
         "Could not extract job details from this text. Make sure to paste the full job description including the title and responsibilities.",
         422
       );
     }
+
+    // Validate and handle language detection
+    if (parsedData.language?.value) {
+      const detectedLanguage = parsedData.language.value;
+      if (!isSupportedLanguage(detectedLanguage)) {
+        // Log the raw detector output for observability
+        logger.warn("Unsupported language detected, falling back to English", {
+          detectedLanguage,
+          jobDescriptionPreview: jobDescription.slice(0, 200)
+        });
+        // Fall back to English
+        parsedData.language = { value: "en", confidence: "low" };
+      }
+    } else {
+      // If language detection failed entirely, default to English
+      logger.warn("Language detection returned null, defaulting to English");
+      parsedData.language = { value: "en", confidence: "low" };
+    }
+
+    // Log successful completion
+    await tracker?.complete({
+      responseText,
+      outputData: parsedData as unknown as Record<string, unknown>,
+    });
 
     // Return the parsed data with version metadata
     return success({

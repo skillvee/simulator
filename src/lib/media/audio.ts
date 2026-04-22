@@ -98,6 +98,7 @@ export class AudioStreamer {
   private processingBuffer = new Float32Array(0);
   private scheduledTime = 0;
   private gainNode: GainNode;
+  private analyserNode: AnalyserNode;
   private isInitialized = false;
   private scheduledSources = new Set<AudioBufferSourceNode>();
 
@@ -105,7 +106,40 @@ export class AudioStreamer {
     this.context = context;
     this.bufferSize = Math.floor(this.sampleRate * 0.32); // 320ms buffer
     this.gainNode = this.context.createGain();
-    this.gainNode.connect(this.context.destination);
+    this.analyserNode = this.context.createAnalyser();
+    this.analyserNode.fftSize = 64;
+    this.analyserNode.smoothingTimeConstant = 0.4;
+    this.gainNode.connect(this.analyserNode);
+    this.analyserNode.connect(this.context.destination);
+  }
+
+  /**
+   * Get frequency data from the analyser node for waveform visualization.
+   * Returns a Uint8Array of frequency bin values (0-255).
+   */
+  getFrequencyData(): Uint8Array {
+    const data = new Uint8Array(this.analyserNode.frequencyBinCount);
+    this.analyserNode.getByteFrequencyData(data);
+    return data;
+  }
+
+  /**
+   * Connect the audio output to an additional destination node.
+   * Used by the screen recording mixer to capture AI voice responses.
+   */
+  connectToDestination(destination: MediaStreamAudioDestinationNode): void {
+    this.analyserNode.connect(destination);
+  }
+
+  /**
+   * Disconnect from an additional destination node.
+   */
+  disconnectFromDestination(destination: MediaStreamAudioDestinationNode): void {
+    try {
+      this.analyserNode.disconnect(destination);
+    } catch {
+      // Ignore if not connected
+    }
   }
 
   async initialize(): Promise<void> {
@@ -282,6 +316,33 @@ export function stopAudioPlayback(): void {
   }
 }
 
+// Get frequency data from the audio streamer for waveform visualization
+export function getOutputFrequencyData(): Uint8Array | null {
+  if (!audioStreamer) return null;
+  return audioStreamer.getFrequencyData();
+}
+
+/**
+ * Connect the singleton AudioStreamer to a capture destination so that
+ * AI voice responses are included in the screen recording.
+ */
+export async function connectAudioStreamerToCapture(
+  destination: MediaStreamAudioDestinationNode
+): Promise<void> {
+  const streamer = await getAudioStreamer();
+  streamer.connectToDestination(destination);
+}
+
+/**
+ * Disconnect the singleton AudioStreamer from a capture destination.
+ */
+export async function disconnectAudioStreamerFromCapture(
+  destination: MediaStreamAudioDestinationNode
+): Promise<void> {
+  const streamer = await getAudioStreamer();
+  streamer.disconnectFromDestination(destination);
+}
+
 // Audio worklet processor for capturing audio
 export const AUDIO_WORKLET_CODE = `
 class AudioProcessor extends AudioWorkletProcessor {
@@ -290,6 +351,7 @@ class AudioProcessor extends AudioWorkletProcessor {
     this.bufferSize = 2048;
     this.buffer = new Float32Array(this.bufferSize);
     this.bufferIndex = 0;
+    this.volumeFrameCount = 0;
   }
 
   process(inputs, outputs, parameters) {
@@ -297,6 +359,18 @@ class AudioProcessor extends AudioWorkletProcessor {
     if (!input || !input[0]) return true;
 
     const channelData = input[0];
+
+    // Compute RMS volume every ~6 frames (~23ms at 128 samples/frame)
+    this.volumeFrameCount++;
+    if (this.volumeFrameCount >= 6) {
+      this.volumeFrameCount = 0;
+      let sum = 0;
+      for (let i = 0; i < channelData.length; i++) {
+        sum += channelData[i] * channelData[i];
+      }
+      const rms = Math.sqrt(sum / channelData.length);
+      this.port.postMessage({ type: 'volume', volume: rms });
+    }
 
     for (let i = 0; i < channelData.length; i++) {
       this.buffer[this.bufferIndex++] = channelData[i];

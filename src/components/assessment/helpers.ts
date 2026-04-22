@@ -3,31 +3,22 @@
  * Used by both recruiter comparison and candidate results views.
  */
 
-export type StrengthLevel = "Exceptional" | "Strong" | "Meets expectations" | "Below expectations";
+export type StrengthLevel = "exceptional" | "strong" | "meets" | "below";
 
 /**
- * Convert SCREAMING_SNAKE_CASE to Title Case
- * PROBLEM_SOLVING -> Problem Solving
- */
-export function formatDimensionName(dimension: string): string {
-  return dimension
-    .replace(/_/g, " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-/**
- * Get strength level badge styling
+ * Get strength level badge styling. Accepts the slug keys from
+ * `RelativeStrengthKey` (in `@/lib/rubric/level-expectations`); display
+ * text should be resolved separately via `useTranslations("rubric.relativeStrength")`.
  */
 export function getStrengthBadgeStyles(level: StrengthLevel | string): string {
   switch (level) {
-    case "Exceptional":
+    case "exceptional":
       return "bg-green-100 text-green-800 hover:bg-green-100";
-    case "Strong":
+    case "strong":
       return "bg-blue-100 text-blue-800 hover:bg-blue-100";
-    case "Meets expectations":
+    case "meets":
       return "bg-stone-100 text-stone-700 hover:bg-stone-100";
-    case "Below expectations":
+    case "below":
       return "bg-red-100 text-red-800 hover:bg-red-100";
     default:
       return "bg-stone-100 text-stone-700 hover:bg-stone-100";
@@ -62,4 +53,15 @@ export function getConfidenceBadgeStyles(confidence: string): string {
     default:
       return "bg-stone-100 text-stone-600";
   }
+}
+
+/**
+ * Convert score to bucket (0-3) for visualization
+ */
+export function scoreToBucket(score: number, scoreScale: 4 | 5): number {
+  const normalizedScore = scoreScale === 5 ? (score - 1) / 4 : score / 4;
+  if (normalizedScore >= 0.875) return 3; // Exceptional
+  if (normalizedScore >= 0.625) return 2; // Strong
+  if (normalizedScore >= 0.375) return 1; // Meets expectations
+  return 0; // Below expectations
 }

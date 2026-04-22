@@ -6,11 +6,13 @@
 
 import { gemini } from "@/lib/ai/gemini";
 import { createLogger } from "@/lib/core";
+import { DEFAULT_LANGUAGE, type SupportedLanguage, buildLanguageInstruction } from "@/lib/core/language";
 import {
   COWORKER_GENERATOR_PROMPT_V1,
   COWORKER_GENERATOR_PROMPT_VERSION,
 } from "@/prompts/recruiter/coworker-generator";
 import { type CoworkerBuilderData, coworkerBuilderSchema } from "./scenario-builder";
+import { inferDemographics } from "@/lib/avatar/name-ethnicity";
 
 const logger = createLogger("lib:scenarios:coworker-generator");
 
@@ -27,6 +29,7 @@ export type GenerateCoworkersInput = {
   techStack: string[];
   taskDescription: string;
   keyResponsibilities: string[];
+  language?: SupportedLanguage;
 };
 
 /**
@@ -37,6 +40,11 @@ export type GenerateCoworkersResponse = {
   _meta: {
     promptVersion: string;
     generatedAt: string;
+  };
+  _debug: {
+    promptText: string;
+    responseText: string;
+    attempts: number;
   };
 };
 
@@ -68,7 +76,25 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
   }
 
   const coworkers = parsed.map((coworker, index) => {
-    const result = coworkerBuilderSchema.safeParse(coworker);
+    // Backfill gender/ethnicity from name if LLM omitted them, so one missing field
+    // doesn't fail the whole generation. The name-based dictionary now covers common
+    // international names; the hash fallback is a last resort.
+    const candidate = coworker && typeof coworker === "object" ? { ...coworker } : coworker;
+    if (candidate && typeof candidate === "object" && typeof candidate.name === "string") {
+      if (!candidate.gender || !candidate.ethnicity) {
+        const inferred = inferDemographics(candidate.name);
+        if (!candidate.gender) {
+          candidate.gender = inferred.gender;
+          logger.warn("LLM omitted gender; inferred from name", { name: candidate.name, inferred: inferred.gender });
+        }
+        if (!candidate.ethnicity) {
+          candidate.ethnicity = inferred.ethnicity;
+          logger.warn("LLM omitted ethnicity; inferred from name", { name: candidate.name, inferred: inferred.ethnicity });
+        }
+      }
+    }
+
+    const result = coworkerBuilderSchema.safeParse(candidate);
     if (!result.success) {
       throw new Error(
         `Invalid coworker at index ${index}: ${result.error.message}`
@@ -90,9 +116,20 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
   for (const coworker of coworkers) {
     const criticalCount = coworker.knowledge.filter((k) => k.isCritical).length;
     if (criticalCount < 2) {
-      throw new Error(
-        `Coworker "${coworker.name}" has only ${criticalCount} critical knowledge items, need at least 2`
-      );
+      // Auto-fix: promote non-critical knowledge items to critical
+      const needed = 2 - criticalCount;
+      let promoted = 0;
+      for (const k of coworker.knowledge) {
+        if (!k.isCritical && promoted < needed) {
+          k.isCritical = true;
+          promoted++;
+        }
+      }
+      logger.warn("Auto-promoted knowledge items to critical", {
+        coworkerName: coworker.name,
+        originalCritical: criticalCount,
+        promoted,
+      });
     }
 
     // Validate that knowledge doesn't contain specific file paths
@@ -143,8 +180,12 @@ function parseAndValidateCoworkers(responseText: string): CoworkerBuilderData[] 
 export async function generateCoworkers(
   input: GenerateCoworkersInput
 ): Promise<GenerateCoworkersResponse> {
+  const lang = input.language || DEFAULT_LANGUAGE;
+  const langInstruction = buildLanguageInstruction(lang);
   const contextPrompt = buildContextPrompt(input);
+  const fullPrompt = `${COWORKER_GENERATOR_PROMPT_V1}\n\n${langInstruction ? `## Language Instructions\n\n${langInstruction}\n\n` : ''}## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
+  let _lastResponseText = "";
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
@@ -153,11 +194,7 @@ export async function generateCoworkers(
         contents: [
           {
             role: "user",
-            parts: [
-              {
-                text: `${COWORKER_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`,
-              },
-            ],
+            parts: [{ text: fullPrompt }],
           },
         ],
       });
@@ -166,6 +203,7 @@ export async function generateCoworkers(
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }
+      _lastResponseText = responseText;
 
       const coworkers = parseAndValidateCoworkers(responseText);
 
@@ -191,6 +229,11 @@ export async function generateCoworkers(
           promptVersion: COWORKER_GENERATOR_PROMPT_VERSION,
           generatedAt: new Date().toISOString(),
         },
+        _debug: {
+          promptText: fullPrompt,
+          responseText,
+          attempts: attempt,
+        },
       };
     } catch (error) {
       lastError =
@@ -214,6 +257,7 @@ export async function generateCoworkers(
  * Build the context prompt from input parameters
  */
 function buildContextPrompt(input: GenerateCoworkersInput): string {
+  const lang = input.language || DEFAULT_LANGUAGE;
   return `**Role Name:** ${input.roleName}
 **Seniority Level:** ${input.seniorityLevel}
 **Company Name:** ${input.companyName}
@@ -222,6 +266,7 @@ function buildContextPrompt(input: GenerateCoworkersInput): string {
 **Task Description:** ${input.taskDescription}
 **Key Responsibilities:**
 ${input.keyResponsibilities.map((r) => `- ${r}`).join("\n")}
+**Language:** ${lang}
 
 Now generate 2-3 coworkers for this context.`;
 }

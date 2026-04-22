@@ -77,12 +77,28 @@ Extract the following fields from the job description text. Use the exact struct
 - For ambiguous roles, prefer the archetype that best matches the primary responsibilities
 - Confidence: HIGH if role clearly maps to one archetype, MEDIUM if 2+ could fit, LOW if very unclear or no match
 
+### 9. language ("en" | "es")
+- Detect the primary language of the job description text
+- **CRITICAL: Return ONLY "en" or "es" as the value - these are ISO 639-1 codes**
+- Guidelines:
+  - "en": English (any variant - US, UK, etc.)
+  - "es": Spanish (any variant - Latin American, Spain, etc.)
+- Detection signals (in order of importance):
+  - Overall text language - if >80% of content is in one language, use that
+  - Key Spanish indicators: "Responsabilidades", "Requisitos", "Sobre nosotros", "Experiencia", "Beneficios", "años de experiencia"
+  - Key English indicators: "Responsibilities", "Requirements", "About us", "Experience", "Benefits", "years of experience"
+  - Company location mentions (e.g., "Ciudad de México" → es, "San Francisco" → en)
+- If mixed languages, choose the primary language used for responsibilities and requirements
+- If completely ambiguous or another language entirely, default to "en"
+- Confidence: HIGH if consistently one language, MEDIUM if mixed but clear primary, LOW if ambiguous or non-English/Spanish
+
 ## Edge Cases
 
 ### Very Short JDs (just a title)
 - Extract what's available (roleName with HIGH confidence)
 - Return null for missing fields with LOW confidence
-- Example: "Senior React Engineer" → roleName: "Senior React Engineer", techStack: ["React"], seniorityLevel: "senior", roleArchetype: "frontend_engineer", all others null
+- Language defaults to "en" with LOW confidence for pure titles
+- Example: "Senior React Engineer" → roleName: "Senior React Engineer", techStack: ["React"], seniorityLevel: "senior", roleArchetype: "frontend_engineer", language: "en" (LOW), all others null
 
 ### Very Long JDs (5+ pages)
 - Focus on the first 2-3 sections (title, company, responsibilities, requirements)
@@ -106,7 +122,8 @@ Return ONLY valid JSON (no markdown, no additional text) in this exact structure
   "seniorityLevel": { "value": "junior|mid|senior|staff" or null, "confidence": "high|medium|low" },
   "keyResponsibilities": { "value": ["array", "of", "strings"] or null, "confidence": "high|medium|low" },
   "domainContext": { "value": "string or null", "confidence": "high|medium|low" },
-  "roleArchetype": { "value": "archetype_slug or null", "confidence": "high|medium|low" }
+  "roleArchetype": { "value": "archetype_slug or null", "confidence": "high|medium|low" },
+  "language": { "value": "en" or "es", "confidence": "high|medium|low" }
 }
 
 ## Example Output
@@ -121,7 +138,8 @@ For "Senior React Engineer at Stripe":
   "seniorityLevel": { "value": "senior", "confidence": "high" },
   "keyResponsibilities": { "value": ["Build payment UI components", "Optimize frontend performance", "Mentor junior engineers"], "confidence": "medium" },
   "domainContext": { "value": "Online payments and financial infrastructure", "confidence": "high" },
-  "roleArchetype": { "value": "frontend_engineer", "confidence": "high" }
+  "roleArchetype": { "value": "frontend_engineer", "confidence": "high" },
+  "language": { "value": "en", "confidence": "high" }
 }
 
 IMPORTANT: Return ONLY the JSON object, no markdown code fences, no explanations, no additional text.
@@ -138,4 +156,4 @@ export const JD_PARSER_PROMPT = JD_PARSER_PROMPT_V1;
 /**
  * Prompt version for audit trail
  */
-export const JD_PARSER_PROMPT_VERSION = "1.1";
+export const JD_PARSER_PROMPT_VERSION = "1.2";

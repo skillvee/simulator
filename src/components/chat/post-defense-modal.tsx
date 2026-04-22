@@ -1,0 +1,60 @@
+"use client";
+
+import { CheckCircle2, ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+
+interface PostDefenseModalProps {
+  onFinalize: () => void;
+  onContinueWorking: () => void;
+}
+
+export function PostDefenseModal({
+  onFinalize,
+  onContinueWorking,
+}: PostDefenseModalProps) {
+  const t = useTranslations("work.postDefenseModal");
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-200">
+      <div
+        className="relative w-full max-w-md mx-4 rounded-2xl p-6 animate-in zoom-in-95 duration-200"
+        style={{
+          background: "#f8f9fb",
+          border: "2px solid #c4c8d0",
+          boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        {/* Header */}
+        <div className="mb-5 text-center">
+          <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <CheckCircle2 className="h-6 w-6 text-primary" />
+          </div>
+          <h2
+            className="text-xl font-bold"
+            style={{ color: "hsl(var(--slack-text))" }}
+          >
+            {t("title")}
+          </h2>
+          <p
+            className="text-sm mt-1.5"
+            style={{ color: "hsl(var(--slack-text-muted))" }}
+          >
+            {t("description")}
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 justify-center">
+          <Button variant="outline" size="sm" onClick={onContinueWorking}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t("continueButton")}
+          </Button>
+          <Button size="sm" onClick={onFinalize}>
+            <CheckCircle2 className="h-4 w-4 mr-2" />
+            {t("finalizeButton")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

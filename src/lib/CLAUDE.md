@@ -34,15 +34,11 @@ import { env } from "@/lib/core";
 - Transcription MUST be enabled server-side in ephemeral token config (see `ai/gemini.ts:45`)
 - Use `Modality.AUDIO` import, not string "AUDIO"
 - For text chat, `systemInstruction` not supported - use first message pair instead
-- Models: `gemini-3-flash-preview` (text), `gemini-2.5-flash-native-audio-latest` (voice)
+- Models: `gemini-3-flash-preview` (text), `gemini-3.1-flash-live-preview` (voice)
 
-## Prisma JSON
+## Prisma
 
-Always double-cast: `data as unknown as Type` (read) and `as unknown as Prisma.InputJsonValue` (write).
-
-## pgvector
-
-Must use raw SQL (`$executeRaw`, `$queryRaw`) - Prisma ORM doesn't support vector ops.
+See `prisma/CLAUDE.md` for JSON field casting, pgvector raw SQL, and migration gotchas.
 
 ## AI Call Logging
 

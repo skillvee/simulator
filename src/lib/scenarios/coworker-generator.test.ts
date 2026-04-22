@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { CoworkerBuilderData } from "./scenario-builder";
+import type { SupportedLanguage } from "@/lib/core/language";
 
 // Mock Gemini before importing the module
 const mockGenerateContent = vi.fn();
@@ -99,7 +100,7 @@ describe("generateCoworkers", () => {
     expect(result.coworkers[0].name).toBe("Jordan Kim");
     expect(result.coworkers[0].role).toBe("Engineering Manager");
     expect(result.coworkers[1].name).toBe("Aisha Patel");
-    expect(result._meta.promptVersion).toBe("2.0");
+    expect(result._meta.promptVersion).toBe("2.4");
     expect(result._meta.generatedAt).toBeDefined();
   });
 
@@ -311,7 +312,7 @@ describe("generateCoworkers", () => {
     expect(result.coworkers[0].name).toBe("Jordan Kim");
   });
 
-  it("throws error if coworker has less than 2 critical knowledge items after retries", async () => {
+  it("auto-promotes non-critical knowledge items when coworker has less than 2 critical items", async () => {
     const insufficientCritical = [
       {
         name: "Jordan Kim",
@@ -357,11 +358,15 @@ describe("generateCoworkers", () => {
       text: JSON.stringify(insufficientCritical),
     });
 
-    await expect(generateCoworkers(mockInput)).rejects.toThrow(
-      'Coworker "Jordan Kim" has only 1 critical knowledge items, need at least 2'
-    );
-    // Should have retried (3 calls = MAX_GENERATION_ATTEMPTS)
-    expect(mockGenerateContent).toHaveBeenCalledTimes(3);
+    const result = await generateCoworkers(mockInput);
+    // Implementation auto-promotes non-critical knowledge items to critical instead of throwing
+    // Jordan Kim should have had a non-critical item promoted to critical
+    const jordan = result.coworkers.find((c) => c.name === "Jordan Kim");
+    expect(jordan).toBeDefined();
+    const jordanCriticalCount = jordan!.knowledge.filter((k) => k.isCritical).length;
+    expect(jordanCriticalCount).toBeGreaterThanOrEqual(2);
+    // Only called once since auto-fix doesn't trigger retry
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
   });
 
   it("accepts exactly 3 coworkers", async () => {
@@ -396,5 +401,86 @@ describe("generateCoworkers", () => {
 
     expect(result.coworkers).toHaveLength(3);
     expect(result.coworkers[2].name).toBe("Carlos Martinez");
+  });
+
+  it("should include language in prompt when provided", async () => {
+    const spanishCoworkers: CoworkerBuilderData[] = [
+      {
+        name: "María García",
+        role: "Engineering Manager",  // Keep role in English to pass validation
+        personaStyle: "Cálida y solidaria pero ocupada. Da orientación de alto nivel.",
+        knowledge: [
+          {
+            topic: "expectativas_revision_codigo",
+            triggerKeywords: ["revisión de código", "pr", "pull request"],
+            response: "Hacemos revisiones de código asíncronas. Etiquétame cuando esté listo.",
+            isCritical: true,
+          },
+          {
+            topic: "contexto_proyecto",
+            triggerKeywords: ["contexto", "prioridad", "importante"],
+            response: "Esta función es para nuestros clientes empresariales. Es prioritaria.",
+            isCritical: true,
+          },
+        ],
+      },
+      {
+        name: "Carlos Rodríguez",
+        role: "Ingeniero Senior",
+        personaStyle: "Directo y técnico. Prefiere puntos concretos.",
+        knowledge: [
+          {
+            topic: "configuracion_local",
+            triggerKeywords: ["configuración", "local", "desarrollo"],
+            response: "Usa Docker para el entorno local. El README tiene todos los detalles.",
+            isCritical: true,
+          },
+          {
+            topic: "arquitectura_api",
+            triggerKeywords: ["api", "endpoint", "backend"],
+            response: "Estamos migrando a GraphQL pero pagos todavía usa REST por PCI.",
+            isCritical: true,
+          },
+        ],
+      },
+    ];
+
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify(spanishCoworkers),
+    });
+
+    const spanishInput: GenerateCoworkersInput = {
+      ...mockInput,
+      language: "es" as SupportedLanguage,
+    };
+
+    const result = await generateCoworkers(spanishInput);
+
+    // Verify the prompt contains Spanish language instruction
+    expect(mockGenerateContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contents: expect.arrayContaining([
+          expect.objectContaining({
+            parts: expect.arrayContaining([
+              expect.objectContaining({
+                text: expect.stringContaining("Language:** es"),
+              }),
+            ]),
+          }),
+        ]),
+      })
+    );
+
+    // Verify the prompt includes language instructions section
+    const callArgs = mockGenerateContent.mock.calls[0][0];
+    const promptText = callArgs.contents[0].parts[0].text;
+    expect(promptText).toContain("## Language Instructions");
+    expect(promptText).toContain("Generate ALL persona bios (personaStyle) in the target language");
+    expect(promptText).toContain("Generate ALL knowledge responses in the target language");
+
+    // Verify the result contains Spanish content
+    expect(result.coworkers).toHaveLength(2);
+    expect(result.coworkers[0].personaStyle).toContain("orientación");
+    expect(result.coworkers[0].knowledge[0].response).toContain("revisiones de código asíncronas");
   });
 });

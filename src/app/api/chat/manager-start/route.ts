@@ -1,32 +1,41 @@
 /**
  * POST /api/chat/manager-start
  *
- * RF-015: Triggers manager auto-start messages for an assessment.
- * Called shortly after a candidate first lands on the chat page.
+ * Generates the manager's first message via LLM and persists it.
+ * Replaces the old hardcoded greeting + Gemini blast approach.
  *
- * Returns the messages that should be displayed, allowing the client to
- * stagger their display with typing indicators for a realistic feel.
+ * GET /api/chat/manager-start
+ *
+ * Check if a text conversation with the manager already exists.
  */
 
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { AssessmentStatus } from "@prisma/client";
-import { generateManagerGreetings } from "@/lib/chat/greeting-generator";
+import { gemini } from "@/lib/ai/gemini";
+import {
+  buildCoworkerMemory,
+  formatMemoryForPrompt,
+  buildCrossCoworkerContext,
+} from "@/lib/ai/conversation-memory";
+import { parseCoworkerKnowledge } from "@/lib/ai";
+import { buildAgentPrompt } from "@/prompts/build-agent-prompt";
 import { success, error, validateRequest } from "@/lib/api";
 import { z } from "zod";
-import type { CoworkerPersonality } from "@/types";
+import type { ChatMessage, CoworkerPersona, ConversationWithMeta } from "@/types";
 import type { Prisma } from "@prisma/client";
 import { isManager } from "@/lib/utils/coworker";
+import { createLogger } from "@/lib/core";
+import { DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/language";
+
+const logger = createLogger("api:chat:manager-start");
+
+const GREETING_MODEL = "gemini-3-flash-preview";
 
 const ManagerStartRequestSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
-  postVoiceKickoff: z.boolean().optional().default(false),
 });
 
-/**
- * Find the manager coworker from a list of coworkers.
- * Returns the first coworker with "manager" in their role, or the first coworker as fallback.
- */
 function findManagerCoworker<T extends { id: string; role: string }>(
   coworkers: T[]
 ): T | undefined {
@@ -44,7 +53,7 @@ export async function POST(request: Request) {
   if ("error" in validated) return validated.error;
   const { assessmentId } = validated.data;
 
-  // Verify assessment belongs to user and get scenario context
+  // Verify assessment belongs to user
   const assessment = await db.assessment.findFirst({
     where: {
       id: assessmentId,
@@ -52,9 +61,7 @@ export async function POST(request: Request) {
     },
     include: {
       scenario: {
-        include: {
-          coworkers: true,
-        },
+        include: { coworkers: true },
       },
     },
   });
@@ -63,24 +70,12 @@ export async function POST(request: Request) {
     return error("Assessment not found", 404, "NOT_FOUND");
   }
 
-  // Check if manager messages have already been started
-  if (assessment.managerMessagesStarted) {
-    return success({
-      alreadyStarted: true,
-      messages: [],
-    });
-  }
-
   // Only start messages for WELCOME or WORKING status
   if (
     assessment.status !== AssessmentStatus.WELCOME &&
     assessment.status !== AssessmentStatus.WORKING
   ) {
-    return error(
-      "Cannot start manager messages for completed assessments",
-      400,
-      "INVALID_STATUS"
-    );
+    return error("Cannot start manager messages for completed assessments", 400, "INVALID_STATUS");
   }
 
   // Find the manager coworker
@@ -89,43 +84,7 @@ export async function POST(request: Request) {
     return error("No coworkers configured for this scenario", 400, "NO_COWORKERS");
   }
 
-  // Build list of non-manager teammates to introduce
-  const teammates = assessment.scenario.coworkers
-    .filter((c) => c.id !== managerCoworker.id)
-    .map((c) => ({ name: c.name, role: c.role }));
-
-  // Wait briefly for repo provisioning if it's still pending
-  let repoUrl = assessment.repoUrl;
-  if (!repoUrl && assessment.repoStatus === "pending") {
-    for (let i = 0; i < 5; i++) {
-      await new Promise((r) => setTimeout(r, 2000));
-      const updated = await db.assessment.findUnique({
-        where: { id: assessmentId },
-        select: { repoUrl: true, repoStatus: true },
-      });
-      if (updated?.repoUrl) {
-        repoUrl = updated.repoUrl;
-        break;
-      }
-      if (updated?.repoStatus === "failed") break;
-    }
-  }
-
-  // Generate greeting messages (async — uses Gemini for natural phrasing)
-  const greetingMessages = await generateManagerGreetings({
-    userName: session.user.name || "there",
-    managerName: managerCoworker.name,
-    managerRole: managerCoworker.role,
-    companyName: assessment.scenario.companyName,
-    repoUrl,
-    taskDescription: assessment.scenario.taskDescription,
-    personaStyle: managerCoworker.personaStyle,
-    personality: managerCoworker.personality as CoworkerPersonality | null,
-    teammates,
-    postVoiceKickoff: validated.data.postVoiceKickoff,
-  });
-
-  // Check if conversation already exists with this manager
+  // Check if a text conversation with the manager already exists (idempotency)
   const existingConversation = await db.conversation.findFirst({
     where: {
       assessmentId,
@@ -134,53 +93,156 @@ export async function POST(request: Request) {
     },
   });
 
-  // Save greeting messages to database
   if (existingConversation) {
-    // Append to existing conversation
-    const existingMessages = (existingConversation.transcript as unknown as { role: string; text: string; timestamp: string }[]) || [];
+    const messages = (existingConversation.transcript as unknown as ChatMessage[]) || [];
+    if (messages.length > 0) {
+      return success({ alreadyStarted: true, managerId: managerCoworker.id, managerName: managerCoworker.name });
+    }
+  }
+
+  // Build context for LLM greeting generation
+  const allConversations = await db.conversation.findMany({
+    where: { assessmentId },
+    include: { coworker: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const coworkerConversations: ConversationWithMeta[] = allConversations
+    .filter((c) => c.coworkerId === managerCoworker.id)
+    .map((c) => ({
+      type: c.type as "text" | "voice",
+      coworkerId: c.coworkerId,
+      messages: (c.transcript as unknown as ChatMessage[]) || [],
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    }));
+
+  const memory = await buildCoworkerMemory(coworkerConversations, managerCoworker.name, {});
+  const memoryContext = formatMemoryForPrompt(memory, managerCoworker.name);
+
+  const coworkerMap = new Map<string, string>();
+  for (const c of allConversations) {
+    if (c.coworker) coworkerMap.set(c.coworker.id, c.coworker.name);
+  }
+  const crossAgentContext = buildCrossCoworkerContext(
+    allConversations.map((c) => ({
+      type: c.type as "text" | "voice",
+      coworkerId: c.coworkerId,
+      messages: (c.transcript as unknown as ChatMessage[]) || [],
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    })),
+    managerCoworker.id,
+    coworkerMap
+  );
+
+
+  const persona: CoworkerPersona = {
+    name: managerCoworker.name,
+    role: managerCoworker.role,
+    personaStyle: managerCoworker.personaStyle,
+    personality: managerCoworker.personality as CoworkerPersona["personality"],
+    knowledge: parseCoworkerKnowledge(managerCoworker.knowledge),
+    avatarUrl: managerCoworker.avatarUrl,
+  };
+
+  // Use initial_greeting phase — this is the only place it's needed
+  const phase = "initial_greeting" as const;
+
+  // Extract resource labels for manager awareness
+  const resourceLabels = Array.isArray(assessment.scenario.resources)
+    ? (assessment.scenario.resources as unknown as Array<{ label: string }>).map((r) => r.label)
+    : undefined;
+
+  const language = (assessment.scenario.language as SupportedLanguage) || DEFAULT_LANGUAGE;
+  const systemPrompt = buildAgentPrompt({
+    companyName: assessment.scenario.companyName,
+    techStack: assessment.scenario.techStack,
+    agent: persona,
+    taskDescription: assessment.scenario.taskDescription,
+    candidateName: session.user.name || undefined,
+    conversationHistory: memoryContext,
+    crossAgentContext,
+    phase,
+    media: "chat",
+    resourceLabels,
+    language,
+  });
+
+  // Generate greeting via LLM
+  let greetingText: string;
+  try {
+    const response = await gemini.models.generateContent({
+      model: GREETING_MODEL,
+      contents: [
+        { role: "user", parts: [{ text: systemPrompt }] },
+        { role: "model", parts: [{ text: "I understand my role. I'll send my first message now." }] },
+        { role: "user", parts: [{ text: "Go ahead — send your first Slack message to the candidate." }] },
+      ],
+    });
+
+    greetingText = response.text?.trim() || "";
+    if (!greetingText) throw new Error("Empty response");
+  } catch (err) {
+    logger.warn("LLM greeting generation failed, using fallback", { error: err instanceof Error ? err.message : String(err) });
+    const firstName = managerCoworker.name.split(" ")[0];
+    greetingText = `Hey! Welcome to the team! I'm ${firstName} — how's it going, got everything set up ok?`;
+  }
+
+  const greetingMessage: ChatMessage = {
+    role: "model",
+    text: greetingText,
+    timestamp: new Date().toISOString(),
+  };
+
+  // Persist the greeting — re-check for existing conversation to avoid
+  // race conditions where another request created one while we were generating
+  const latestConversation = await db.conversation.findFirst({
+    where: {
+      assessmentId,
+      coworkerId: managerCoworker.id,
+      type: "text",
+    },
+  });
+
+  if (latestConversation) {
+    const existingMessages = (latestConversation.transcript as unknown as ChatMessage[]) || [];
+    if (existingMessages.length > 0) {
+      // Conversation was created by another concurrent request — don't overwrite
+      return success({ alreadyStarted: true, managerId: managerCoworker.id, managerName: managerCoworker.name });
+    }
+    // Empty transcript — safe to update with the greeting
     await db.conversation.update({
-      where: { id: existingConversation.id },
-      data: {
-        transcript: [...existingMessages, ...greetingMessages] as unknown as Prisma.InputJsonValue,
-      },
+      where: { id: latestConversation.id },
+      data: { transcript: [greetingMessage] as unknown as Prisma.InputJsonValue },
     });
   } else {
-    // Create new conversation
     await db.conversation.create({
       data: {
         assessmentId,
         coworkerId: managerCoworker.id,
         type: "text",
-        transcript: greetingMessages as unknown as Prisma.InputJsonValue,
+        transcript: [greetingMessage] as unknown as Prisma.InputJsonValue,
       },
     });
   }
 
-  // Mark manager messages as started and update status to WORKING if needed
-  await db.assessment.update({
-    where: { id: assessmentId },
-    data: {
-      managerMessagesStarted: true,
-      ...(assessment.status === AssessmentStatus.WELCOME && {
-        status: AssessmentStatus.WORKING,
-      }),
-    },
-  });
+  // Transition WELCOME → WORKING
+  if (assessment.status === AssessmentStatus.WELCOME) {
+    await db.assessment.update({
+      where: { id: assessmentId },
+      data: { status: AssessmentStatus.WORKING },
+    });
+  }
 
   return success({
     alreadyStarted: false,
-    messages: greetingMessages,
+    greeting: greetingText,
     managerId: managerCoworker.id,
     managerName: managerCoworker.name,
   });
 }
 
-/**
- * GET /api/chat/manager-start
- *
- * Check if manager messages have been started for an assessment.
- * Used by the client to determine if it should trigger the messages.
- */
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -194,7 +256,6 @@ export async function GET(request: Request) {
     return error("Missing required parameter: assessmentId", 400);
   }
 
-  // Verify assessment belongs to user
   const assessment = await db.assessment.findFirst({
     where: {
       id: assessmentId,
@@ -202,9 +263,7 @@ export async function GET(request: Request) {
     },
     include: {
       scenario: {
-        include: {
-          coworkers: true,
-        },
+        include: { coworkers: true },
       },
     },
   });
@@ -213,13 +272,28 @@ export async function GET(request: Request) {
     return error("Assessment not found", 404, "NOT_FOUND");
   }
 
-  // Find manager coworker
   const managerCoworker = findManagerCoworker(assessment.scenario.coworkers);
+  if (!managerCoworker) {
+    return success({ hasConversation: false, managerId: null, managerName: null, status: assessment.status });
+  }
+
+  // Check for existing text conversation with the manager
+  const existingConversation = await db.conversation.findFirst({
+    where: {
+      assessmentId,
+      coworkerId: managerCoworker.id,
+      type: "text",
+    },
+  });
+
+  const messages = existingConversation
+    ? (existingConversation.transcript as unknown as ChatMessage[]) || []
+    : [];
 
   return success({
-    managerMessagesStarted: assessment.managerMessagesStarted,
-    managerId: managerCoworker?.id || null,
-    managerName: managerCoworker?.name || null,
+    hasConversation: messages.length > 0,
+    managerId: managerCoworker.id,
+    managerName: managerCoworker.name,
     status: assessment.status,
   });
 }

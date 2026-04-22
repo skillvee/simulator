@@ -39,7 +39,15 @@ next-env.d.ts
 prisma/migrations/**/migration_lock.toml
 supabase/.temp/
 .env*.local
+# Test videos
+public/videos/*.mp4
+
+# Investor docs
+investor-target-list.md
+skillvee-investor-list.xlsx
+
 # Plan artifacts
 .nightshift-plan
 .claude/plans/
+.claude/worktrees/
 docs/plans/

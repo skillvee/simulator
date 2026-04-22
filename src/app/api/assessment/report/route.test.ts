@@ -215,7 +215,7 @@ describe("Assessment Report API", () => {
       expect(mockEvaluateVideo).not.toHaveBeenCalled();
     });
 
-    it("should return 400 if no video recording exists", async () => {
+    it("returns a no-evidence fallback report when no video recording exists", async () => {
       mockAuthFn.mockResolvedValue({ user: { id: "user-1" } });
       mockFindUnique.mockResolvedValue({
         id: "assessment-1",
@@ -226,9 +226,10 @@ describe("Assessment Report API", () => {
         startedAt: new Date(),
         completedAt: new Date(),
         conversations: [],
-        recordings: [], // No recordings
-        scenario: { taskDescription: "Test task" },
+        recordings: [], // No recordings — exercise the fallback path
+        scenario: { taskDescription: "Test task", language: "en" },
       });
+      mockUpdate.mockResolvedValue({ id: "assessment-1" });
 
       const request = new Request(
         "http://localhost:3000/api/assessment/report",
@@ -241,8 +242,8 @@ describe("Assessment Report API", () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.error).toContain("No video recording found");
+      expect(response.status).toBe(200);
+      expect(data.data.report).toBeDefined();
     });
 
     it("should use existing video evaluation if completed", async () => {
@@ -363,6 +364,62 @@ describe("Assessment Report API", () => {
       expect(data.success).toBe(true);
       expect(mockEvaluateVideo).toHaveBeenCalled();
       expect(data.data.report.overallScore).toBe(4.0);
+    });
+
+    it("should use report.language for email when generating Spanish report", async () => {
+      // Import and setup mocks
+      const { sendReportEmail, isEmailServiceConfigured } = await import("@/lib/external");
+      vi.mocked(isEmailServiceConfigured).mockReturnValue(true);
+      vi.mocked(sendReportEmail).mockClear();
+
+      mockAuthFn.mockResolvedValue({ user: { id: "user-1" } });
+      mockFindUnique.mockResolvedValue({
+        id: "assessment-1",
+        userId: "user-1",
+        status: "COMPLETED",
+        report: null,
+        user: { name: "Test User", email: "test@example.com" },
+        startedAt: new Date(),
+        completedAt: new Date(),
+        conversations: [],
+        recordings: [{ storageUrl: "https://example.com/video.mp4" }],
+        scenario: {
+          taskDescription: "Test task",
+          language: "es" // Spanish scenario
+        },
+      });
+      mockFindUniqueVideoAssessment.mockResolvedValue({
+        id: "video-assessment-1",
+        status: VideoAssessmentStatus.COMPLETED,
+        summary: { rawAiResponse: sampleVideoEvaluationOutput },
+      });
+      mockUpdate.mockResolvedValue({ id: "assessment-1" });
+
+      const request = new Request(
+        "http://localhost:3000/api/assessment/report",
+        {
+          method: "POST",
+          headers: { "host": "localhost:3000" },
+          body: JSON.stringify({ assessmentId: "assessment-1" }),
+        }
+      );
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+
+      // Verify sendReportEmail was called with Spanish language from the report
+      expect(sendReportEmail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: "test@example.com",
+          language: "es", // Should use the report's language
+          report: expect.objectContaining({
+            language: "es", // Report should have Spanish language
+          }),
+        })
+      );
     });
   });
 

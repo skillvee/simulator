@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/routing";
 import { AuthButton, useAuth } from "@/components/auth";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 
 interface NavigationProps {
   currentPage?: string;
@@ -17,6 +18,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
   const [isOpen, setIsOpen] = useState(false);
   const { isSignedIn, user } = useAuth();
   const pathname = usePathname();
+  const t = useTranslations("landing.nav");
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const isDark = variant === "dark";
@@ -68,7 +70,20 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
                   : "text-stone-600 hover:text-stone-900"
             }`}
           >
-            Product
+            {t("product")}
+          </Link>
+
+          <Link
+            href="/candidates"
+            className={`text-base font-medium transition-colors ${
+              currentPage === "candidates"
+                ? "text-primary"
+                : isDark
+                  ? "text-slate-400 hover:text-white"
+                  : "text-stone-600 hover:text-stone-900"
+            }`}
+          >
+            {t("candidates")}
           </Link>
 
           <Link
@@ -81,7 +96,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
                   : "text-stone-600 hover:text-stone-900"
             }`}
           >
-            Pricing
+            {t("pricing")}
           </Link>
 
           <Link
@@ -94,7 +109,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
                   : "text-stone-600 hover:text-stone-900"
             }`}
           >
-            FAQ
+            {t("faq")}
           </Link>
 
           <div className="flex items-center gap-4">
@@ -102,7 +117,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
               <>
                 <Link href={dashboardHref}>
                   <Button variant={isDark ? "ghost" : "outline"} className={isDark ? "text-slate-400 hover:text-white hover:bg-white/10" : ""}>
-                    Dashboard
+                    {t("dashboard")}
                   </Button>
                 </Link>
                 <AuthButton
@@ -126,16 +141,17 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
                         : "text-stone-700 hover:text-stone-900 hover:bg-stone-100"
                     }`}
                   >
-                    Sign in
+                    {t("signIn")}
                   </Button>
                 </Link>
                 <Link href="/demo">
                   <Button className="bg-primary hover:bg-primary/90 text-white rounded-full px-6">
-                    Request Demo
+                    {t("requestDemo")}
                   </Button>
                 </Link>
               </>
             )}
+            <LanguageSwitcher variant={variant} />
           </div>
         </div>
 
@@ -171,7 +187,21 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
               }`}
               onClick={() => setIsOpen(false)}
             >
-              Product
+              {t("product")}
+            </Link>
+
+            <Link
+              href="/candidates"
+              className={`block py-2 px-2 text-lg rounded-lg transition-colors ${
+                currentPage === "candidates"
+                  ? "text-primary font-medium bg-primary/5"
+                  : isDark
+                    ? "text-slate-400 hover:text-white hover:bg-white/5"
+                    : "text-stone-600 hover:text-stone-900 hover:bg-stone-50"
+              }`}
+              onClick={() => setIsOpen(false)}
+            >
+              {t("candidates")}
             </Link>
 
             <Link
@@ -185,7 +215,7 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
               }`}
               onClick={() => setIsOpen(false)}
             >
-              Pricing
+              {t("pricing")}
             </Link>
 
             <Link
@@ -199,15 +229,18 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
               }`}
               onClick={() => setIsOpen(false)}
             >
-              FAQ
+              {t("faq")}
             </Link>
 
             <div className={`pt-4 space-y-4 ${isDark ? "border-t border-white/10" : "border-t border-stone-200"}`}>
+              <div className="mb-4">
+                <LanguageSwitcher />
+              </div>
               {isSignedIn ? (
                 <div className="space-y-4">
                   <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
                     <Button variant="outline" className={`w-full ${isDark ? "border-white/20 text-white hover:bg-white/10" : ""}`}>
-                      Dashboard
+                      {t("dashboard")}
                     </Button>
                   </Link>
                   <AuthButton
@@ -224,12 +257,12 @@ export default function Navigation({ currentPage, variant = "light" }: Navigatio
                 <div className="space-y-4">
                   <Link href={getSignInUrl()} onClick={() => setIsOpen(false)}>
                     <Button variant="outline" className={`w-full ${isDark ? "border-white/20 text-white hover:bg-white/10" : ""}`}>
-                      Sign in
+                      {t("signIn")}
                     </Button>
                   </Link>
                   <Link href="/demo" onClick={() => setIsOpen(false)}>
                     <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-full">
-                      Request Demo
+                      {t("requestDemo")}
                     </Button>
                   </Link>
                 </div>

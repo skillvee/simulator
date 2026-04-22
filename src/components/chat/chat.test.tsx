@@ -38,6 +38,34 @@ vi.mock("./slack-layout", () => ({
   })),
 }));
 
+// Mock next-intl
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => {
+    const translations: Record<string, string> = {
+      "loading": "Loading...",
+      "startConversation": "Start a conversation with {name}",
+      "startConversationDescription": "{name} is a {role}. Ask questions about the project, codebase, or anything else you need help with.",
+      "typePlaceholder": "Type a message...",
+      "typingIndicator": "{name} is typing...",
+      "you": "You",
+      "callStarted": "Call started",
+      "now": "Now",
+      "callToWalkThrough": "Call your manager to walk through your PR",
+      "textInputDisabled": "Text input is disabled",
+      "callNow": "Call Now",
+      "inCall": "In Call",
+      "callManager": "Call Manager",
+      "startCall": "Start Call",
+      "inCallStatus": "In call"
+    };
+    if (key.includes("{")) {
+      // Handle interpolations
+      return (values: Record<string, string>) => key.replace(/{(\w+)}/g, (_, k) => values[k] || k);
+    }
+    return translations[key] || key;
+  },
+}));
+
 // ============================================================================
 // Test Factories
 // ============================================================================

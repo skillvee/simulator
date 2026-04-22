@@ -89,23 +89,31 @@ export async function POST(request: Request) {
   // Validate request body using Zod schema
   const validated = await validateRequest(request, ScenarioCreateSchema);
   if ("error" in validated) return validated.error;
-  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, targetLevel, archetypeId } = validated.data;
+  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, targetLevel, archetypeId, simulationDepth, resources, language } = validated.data;
 
   // Create scenario with createdById set to current user and isPublished true
-  const scenario = await db.scenario.create({
-    data: {
-      name,
-      companyName,
-      companyDescription,
-      taskDescription,
-      repoUrl,
-      techStack,
-      targetLevel,
-      archetypeId,
-      isPublished: true, // Recruiter scenarios are always active
-      createdById: user.id, // Set ownership to current user
-    },
-  });
+  try {
+    const scenario = await db.scenario.create({
+      data: {
+        name,
+        companyName,
+        companyDescription,
+        taskDescription,
+        repoUrl,
+        techStack,
+        targetLevel,
+        simulationDepth,
+        archetypeId,
+        resources: resources as unknown as import("@prisma/client").Prisma.InputJsonValue,
+        language, // Persist the language field
+        isPublished: true, // Recruiter scenarios are always active
+        createdById: user.id, // Set ownership to current user
+      },
+    });
 
-  return success({ scenario }, 201);
+    return success({ scenario }, 201);
+  } catch (err) {
+    logger.error("Failed to create scenario", { err });
+    return error("Failed to create simulation", 500);
+  }
 }

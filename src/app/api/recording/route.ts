@@ -87,12 +87,17 @@ export async function POST(request: NextRequest) {
         contentType:
           file.type || (type === "video" ? "video/webm" : "image/jpeg"),
         cacheControl: "3600",
-        upsert: !!snapshotId, // Allow overwriting named snapshots (e.g., webcam profile photo on retry)
+        upsert: true, // Allow overwriting on path collision (interrupted segments, retries)
       });
 
     if (uploadError) {
-      logger.error("Supabase upload error", { error: String(uploadError) });
-      return error("Failed to upload file", 500);
+      logger.error("Supabase upload error", {
+        bucket,
+        path,
+        message: uploadError.message,
+        name: uploadError.name,
+      });
+      return error(`Failed to upload file: ${uploadError.message}`, 500);
     }
 
     // Create signed URL for access
@@ -109,6 +114,14 @@ export async function POST(request: NextRequest) {
 
     // For video chunks, update or create Recording record and add to segment
     if (type === "video") {
+      // Check if a merged recording already exists — don't overwrite its URL
+      const existing = await db.recording.findUnique({
+        where: { id: `${assessmentId}-screen` },
+        select: { storageUrl: true },
+      });
+      const shouldUpdateUrl =
+        !existing || !existing.storageUrl.includes("/merged.webm");
+
       await db.recording.upsert({
         where: {
           id: `${assessmentId}-screen`, // Single recording per assessment
@@ -121,7 +134,7 @@ export async function POST(request: NextRequest) {
           startTime: new Date(),
         },
         update: {
-          storageUrl: storageUrl,
+          ...(shouldUpdateUrl ? { storageUrl: storageUrl } : {}),
           endTime: new Date(),
         },
       });

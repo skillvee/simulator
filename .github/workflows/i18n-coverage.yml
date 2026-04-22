@@ -1,0 +1,137 @@
+name: i18n Coverage Test
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - "src/**/*.tsx"
+      - "src/**/*.ts"
+      - "src/messages/**"
+      - "tests/i18n-coverage.test.ts"
+      - "scripts/run-i18n-coverage.ts"
+      - ".github/workflows/i18n-coverage.yml"
+  push:
+    branches:
+      - main
+
+jobs:
+  i18n-coverage:
+    name: Check for English leaks in Spanish pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Setup environment
+        # Dummy values for every var validated in src/lib/core/env.ts.
+        # The i18n coverage test only renders pages, it doesn't hit
+        # Google/Gemini/Supabase — but env.ts fails the build if any
+        # required var is missing, so we satisfy the schema with
+        # valid-shaped placeholders.
+        run: |
+          cp .env.example .env.local || touch .env.local
+          echo "DATABASE_URL=postgresql://test:test@localhost:5432/testdb" >> .env.local
+          echo "DIRECT_URL=postgresql://test:test@localhost:5432/testdb" >> .env.local
+          echo "AUTH_SECRET=test-secret-for-ci" >> .env.local
+          echo "NEXTAUTH_SECRET=test-secret-for-ci" >> .env.local
+          echo "NEXTAUTH_URL=http://localhost:3000" >> .env.local
+          echo "GOOGLE_CLIENT_ID=test-google-client-id" >> .env.local
+          echo "GOOGLE_CLIENT_SECRET=test-google-client-secret" >> .env.local
+          echo "GEMINI_API_KEY=test-gemini-api-key" >> .env.local
+          echo "SUPABASE_SERVICE_ROLE_KEY=test-supabase-service-role-key" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co" >> .env.local
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=test-supabase-anon-key" >> .env.local
+          echo "E2E_TEST_MODE=true" >> .env.local
+          echo "NEXT_PUBLIC_E2E_TEST_MODE=true" >> .env.local
+
+      - name: Start PostgreSQL
+        run: |
+          # pgvector/pgvector ships the `vector` extension Prisma requires.
+          docker run -d \
+            --name postgres \
+            -e POSTGRES_USER=test \
+            -e POSTGRES_PASSWORD=test \
+            -e POSTGRES_DB=testdb \
+            -p 5432:5432 \
+            pgvector/pgvector:pg15
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if docker exec postgres pg_isready -U test; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
+
+      - name: Prepare Supabase-compatible schemas
+        # The Prisma schema declares `uuid-ossp` in the `extensions` schema
+        # (Supabase convention). Create it before `db push` can CREATE EXTENSION there.
+        run: |
+          docker exec postgres psql -U test -d testdb -c "CREATE SCHEMA IF NOT EXISTS extensions;"
+
+      - name: Run database migrations
+        run: npx prisma db push --skip-generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+          DIRECT_URL: postgresql://test:test@localhost:5432/testdb
+
+      - name: Seed test database
+        run: npx tsx prisma/seed.ts
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+          DIRECT_URL: postgresql://test:test@localhost:5432/testdb
+
+      - name: Build Next.js app
+        # SKIP_ENV_VALIDATION lets the build skip t3-oss env schema checks
+        # for secrets we don't carry into CI (Gemini, Google OAuth, Supabase
+        # admin). The test harness doesn't exercise those code paths.
+        run: npm run build
+        env:
+          SKIP_ENV_VALIDATION: "1"
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+          DIRECT_URL: postgresql://test:test@localhost:5432/testdb
+
+      - name: Run i18n coverage test
+        run: npm run test:i18n
+        env:
+          SKIP_ENV_VALIDATION: "1"
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+          DIRECT_URL: postgresql://test:test@localhost:5432/testdb
+          AUTH_SECRET: test-secret-for-ci
+          NEXTAUTH_SECRET: test-secret-for-ci
+          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-supabase-anon-key
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: i18n-coverage-failures
+          path: screenshots/
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop postgres || true
+          docker rm postgres || true

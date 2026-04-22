@@ -59,7 +59,12 @@ export async function POST(request: NextRequest) {
       case "start": {
         // Wrap all segment operations in a transaction with FOR UPDATE lock
         // This ensures segment indices are always sequential with no gaps
-        // and prevents race conditions between concurrent requests
+        // and prevents race conditions between concurrent requests.
+        //
+        // Timeout raised above the 5s Prisma default: on a cold dev server the
+        // first request holds the lock for 30+ seconds while Next compiles the
+        // route, which would otherwise abort any concurrent caller mid-transaction
+        // and surface as a 500 + unhandledRejection in the server.
         const segmentResult = await db.$transaction(async (tx) => {
           // Lock the recording row to prevent concurrent reads/writes
           // This ensures only one request can determine the next segment index at a time
@@ -124,7 +129,7 @@ export async function POST(request: NextRequest) {
             segmentId: newSegment.id,
             segmentIndex: newSegment.segmentIndex,
           };
-        });
+        }, { maxWait: 15_000, timeout: 15_000 });
 
         return success(segmentResult);
       }

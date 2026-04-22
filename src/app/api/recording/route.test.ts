@@ -137,7 +137,6 @@ describe("Recording API", () => {
         startedAt: new Date(),
         completedAt: null,
         cvUrl: null,
-        prUrl: null,
         report: null,
         createdAt: new Date(),
         updatedAt: new Date(),

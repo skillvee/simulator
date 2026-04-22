@@ -4,9 +4,9 @@ import { success, error } from "@/lib/api";
 import { VideoAssessmentStatus } from "@prisma/client";
 import type { CodeReviewData } from "@/types";
 import { getStoredPercentiles } from "@/lib/candidate/percentile-calculator";
-import { getRelativeStrength, type TargetLevel, type RelativeStrength } from "@/lib/rubric/level-expectations";
+import { getRelativeStrength, type TargetLevel, type RelativeStrengthKey } from "@/lib/rubric/level-expectations";
 
-type CandidateStrengthLevel = RelativeStrength;
+type CandidateStrengthLevel = RelativeStrengthKey;
 
 /**
  * Session user interface for type safety
@@ -45,7 +45,6 @@ interface CandidateDetailResponse {
   videoUrl: string | null;
   overallSummary: string;
   codeReview: CodeReviewData | null;
-  prUrl: string | null;
 }
 
 /**
@@ -159,13 +158,12 @@ export async function GET(
       email: assessment.user.email,
     },
     overallScore,
-    strengthLevel: getRelativeStrength(overallScore, (assessment.scenario.targetLevel || "mid") as TargetLevel),
+    strengthLevel: getRelativeStrength(overallScore, (assessment.targetLevel || assessment.scenario.targetLevel || "mid") as TargetLevel),
     dimensionScores,
     percentiles,
     videoUrl: videoAssessment?.videoUrl ?? null,
     overallSummary,
     codeReview,
-    prUrl: assessment.prUrl,
   };
 
   return success(response);

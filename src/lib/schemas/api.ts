@@ -24,6 +24,8 @@ export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 export const CallTokenRequestSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
   coworkerId: z.string().min(1, "Coworker ID is required"),
+  isPostSubmission: z.boolean().optional(),
+  language: z.string().optional(),
 });
 export type CallTokenRequest = z.infer<typeof CallTokenRequestSchema>;
 
@@ -52,6 +54,15 @@ export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
  * POST /api/admin/scenarios - Create a new scenario
  * Note: repoUrl is now optional - it will be provisioned by the system
  */
+const ScenarioResourceSchema = z.object({
+  type: z.enum(["repository", "database", "spreadsheet", "api", "dashboard", "document", "custom"]),
+  label: z.string().min(1),
+  url: z.string().optional(),
+  credentials: z.string().optional(),
+  instructions: z.string().optional(),
+  content: z.string().optional(),
+});
+
 export const ScenarioCreateSchema = z.object({
   name: z.string().min(1, "Name is required"),
   companyName: z.string().min(1, "Company name is required"),
@@ -61,7 +72,10 @@ export const ScenarioCreateSchema = z.object({
   techStack: z.array(z.string()).optional().default([]),
   targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional().default("mid"),
   archetypeId: z.string().min(1, "Role archetype is required"),
+  simulationDepth: z.enum(["short", "medium", "long"]).optional().default("medium"),
   isPublished: z.boolean().optional().default(false),
+  resources: z.array(ScenarioResourceSchema).optional(),
+  language: z.string().optional().default("en"),
 });
 export type ScenarioCreate = z.infer<typeof ScenarioCreateSchema>;
 
@@ -77,7 +91,10 @@ export const ScenarioUpdateSchema = z.object({
   techStack: z.array(z.string()).optional(),
   targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional(),
   archetypeId: z.string().nullable().optional(),
+  simulationDepth: z.enum(["short", "medium", "long"]).optional(),
   isPublished: z.boolean().optional(),
+  resources: z.array(ScenarioResourceSchema).optional(),
+  language: z.string().optional(),
 });
 export type ScenarioUpdate = z.infer<typeof ScenarioUpdateSchema>;
 
@@ -86,8 +103,17 @@ export type ScenarioUpdate = z.infer<typeof ScenarioUpdateSchema>;
  */
 export const AssessmentCreateSchema = z.object({
   scenarioId: z.string().min(1, "Scenario ID is required"),
+  targetLevel: z.enum(["junior", "mid", "senior", "staff"]).optional(),
 });
 export type AssessmentCreate = z.infer<typeof AssessmentCreateSchema>;
+
+/**
+ * POST /api/assessment/start - Start the assessment timer
+ */
+export const AssessmentStartSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+});
+export type AssessmentStart = z.infer<typeof AssessmentStartSchema>;
 
 /**
  * POST /api/assessment/finalize - Finalize an assessment
@@ -96,6 +122,25 @@ export const AssessmentFinalizeSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
 });
 export type AssessmentFinalize = z.infer<typeof AssessmentFinalizeSchema>;
+
+/**
+ * POST /api/assessment/visibility - Candidate toggles profile visibility
+ */
+export const AssessmentVisibilitySchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  isSearchable: z.boolean(),
+});
+export type AssessmentVisibility = z.infer<typeof AssessmentVisibilitySchema>;
+
+/**
+ * POST /api/assessment/feedback - Candidate rates their experience
+ */
+export const AssessmentFeedbackSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  rating: z.enum(["LIKE", "DISLIKE"]),
+  comment: z.string().max(2000).optional(),
+});
+export type AssessmentFeedbackInput = z.infer<typeof AssessmentFeedbackSchema>;
 
 /**
  * POST /api/recording/session - Recording session actions
@@ -130,6 +175,7 @@ export const ScenarioBuilderRequestSchema = z.object({
     .optional()
     .default([]),
   scenarioData: z.record(z.unknown()).optional().default({}),
+  language: z.string().optional(),
 });
 export type ScenarioBuilderRequest = z.infer<
   typeof ScenarioBuilderRequestSchema
@@ -245,8 +291,6 @@ export const ChatStreamChunkSchema = z.object({
 export const ChatStreamDoneSchema = z.object({
   type: z.literal("done"),
   timestamp: z.string(),
-  prSubmitted: z.boolean(),
-  defenseCallRequired: z.boolean(),
 });
 
 /**
@@ -264,24 +308,6 @@ export const ChatGetResponseSchema = apiSuccessSchema(
   })
 );
 
-/**
- * POST /api/assessment/complete — response data shape
- */
-export const AssessmentCompleteResponseSchema = apiSuccessSchema(
-  z.object({
-    assessment: z.object({
-      id: z.string(),
-      status: z.string(),
-      prUrl: z.string().nullable(),
-      startedAt: z.union([z.string(), z.date()]),
-    }),
-    timing: z.object({
-      startedAt: z.string(),
-      completedWorkingAt: z.string(),
-      workingDurationSeconds: z.number(),
-    }),
-  })
-);
 
 /**
  * POST /api/assessment/create — response data shape

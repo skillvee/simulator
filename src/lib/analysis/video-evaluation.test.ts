@@ -377,7 +377,7 @@ describe("evaluateVideo", () => {
             {
               fileData: {
                 fileUri: "https://storage.example.com/video.mp4",
-                mimeType: "video/mp4",
+                mimeType: "video/webm",
               },
             },
             {
@@ -388,6 +388,9 @@ describe("evaluateVideo", () => {
           ],
         },
       ],
+      config: {
+        responseMimeType: "application/json",
+      },
     });
   });
 
@@ -540,12 +543,12 @@ describe("evaluateVideo", () => {
     expect(result.error).toBeDefined();
   });
 
-  it("should handle missing overall_score in response", async () => {
-    const invalidResponse = { ...mockEvaluationResponse };
-    delete (invalidResponse as Record<string, unknown>).overall_score;
+  it("should handle missing overall_score in response by deriving from dimension scores", async () => {
+    const responseWithoutOverall = { ...mockEvaluationResponse };
+    delete (responseWithoutOverall as Record<string, unknown>).overall_score;
 
     mockGenerateContent.mockResolvedValue({
-      text: JSON.stringify(invalidResponse),
+      text: JSON.stringify(responseWithoutOverall),
     });
     mockVideoAssessmentFindUnique.mockResolvedValue({
       id: "test-assessment-id",
@@ -557,8 +560,9 @@ describe("evaluateVideo", () => {
       videoUrl: "https://storage.example.com/video.mp4",
     });
 
-    expect(result.success).toBe(false);
-    expect(result.error).toContain("overall_score");
+    // Implementation auto-derives overall_score from dimension score averages
+    expect(result.success).toBe(true);
+    expect(result.overallScore).toBeGreaterThan(0);
   });
 
   it("should handle missing dimension_scores in response", async () => {

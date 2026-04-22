@@ -11,6 +11,7 @@ import {
 } from "@/prompts/recruiter/task-generator";
 import { z } from "zod";
 import { createLogger } from "@/lib/core";
+import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
 
 const logger = createLogger("lib:scenarios:task-generator");
 
@@ -43,6 +44,8 @@ export type GenerateCodingTaskInput = {
   keyResponsibilities: string[];
   domainContext: string;
   companyName: string;
+  simulationDepth?: "short" | "medium" | "long";
+  language: SupportedLanguage;
 };
 
 /**
@@ -59,18 +62,24 @@ export type GenerateCodingTaskResponse = {
     promptVersion: string;
     generatedAt: string;
   };
+  _debug: {
+    promptText: string;
+    responseText: string;
+    attempts: number;
+  };
 };
 
 /**
  * Generate 2-3 realistic work challenge options based on role and company context
  *
  * Each task option includes:
- * - summary: 1-line description for display
- * - description: 2-4 paragraphs written as a manager assigning work
+ * - summary: 1-line title for display
+ * - recruiterSummary: recruiter-facing summary of what the challenge tests
+ * - description: task brief describing the problem, requirements, and constraints
  *
  * Tasks are:
- * - Written in manager voice (not test questions)
- * - Completable in 60-90 minutes
+ * - Written as neutral task briefs (not chat messages)
+ * - Completable within the simulation depth time budget
  * - Domain-specific (fintech → payments, e-commerce → cart, etc)
  * - Calibrated to seniority level (junior: well-scoped, senior: ambiguous)
  * - Deliberately vague to force collaboration with coworkers
@@ -84,7 +93,12 @@ export async function generateCodingTask(
 ): Promise<GenerateCodingTaskResponse> {
   // Build the context prompt
   const contextPrompt = buildContextPrompt(input);
+  const languageInstruction = buildLanguageInstruction(input.language);
+  const fullPrompt = languageInstruction
+    ? `${languageInstruction}\n\n${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`
+    : `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`;
   let lastError: Error | null = null;
+  let _lastResponseText = "";
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
     try {
@@ -94,11 +108,7 @@ export async function generateCodingTask(
         contents: [
           {
             role: "user",
-            parts: [
-              {
-                text: `${TASK_GENERATOR_PROMPT_V1}\n\n## Context for Generation\n\n${contextPrompt}`,
-              },
-            ],
+            parts: [{ text: fullPrompt }],
           },
         ],
       });
@@ -107,6 +117,7 @@ export async function generateCodingTask(
       if (!responseText) {
         throw new Error("Empty response from Gemini");
       }
+      _lastResponseText = responseText;
 
       // Clean response (remove markdown fences if present)
       const cleanedText = cleanJsonResponse(responseText);
@@ -145,6 +156,11 @@ export async function generateCodingTask(
           promptVersion: TASK_GENERATOR_PROMPT_VERSION,
           generatedAt: new Date().toISOString(),
         },
+        _debug: {
+          promptText: fullPrompt,
+          responseText,
+          attempts: attempt,
+        },
       };
     } catch (error) {
       lastError =
@@ -168,15 +184,23 @@ export async function generateCodingTask(
  * Build the context prompt from input parameters
  */
 function buildContextPrompt(input: GenerateCodingTaskInput): string {
+  const depth = input.simulationDepth || "medium";
+  const depthLabels = {
+    short: "short (~30 min target, up to 60 min)",
+    medium: "medium (~45 min target, up to 75 min)",
+    long: "long (~60 min target, up to 90 min)",
+  };
+
   return `**Role Name:** ${input.roleName}
 **Seniority Level:** ${input.seniorityLevel}
 **Company Name:** ${input.companyName}
 **Domain Context:** ${input.domainContext}
 **Tech Stack:** ${input.techStack.join(", ")}
+**Simulation Depth:** ${depthLabels[depth]}
 **Key Responsibilities:**
 ${input.keyResponsibilities.map((r) => `- ${r}`).join("\n")}
 
-Now generate 2-3 work challenge options appropriate for this role and context.`;
+Now generate 2-3 work challenge options appropriate for this role, context, and simulation depth.`;
 }
 
 /**

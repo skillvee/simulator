@@ -1,0 +1,659 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
+import { useSearchParams } from "next/navigation";
+import { Markdown } from "@/components/shared/markdown";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  ArrowLeft,
+  Copy,
+  Check,
+  Link as LinkIcon,
+  Code,
+  Calendar,
+  Users,
+  Briefcase,
+  Mic,
+  ExternalLink,
+  CheckCircle2,
+  X,
+  GraduationCap,
+  Package,
+  Database,
+  FileSpreadsheet,
+  Globe,
+  LayoutDashboard,
+  FileText,
+  ChevronDown,
+  ChevronRight,
+  Languages,
+  Info,
+  FolderOpen,
+} from "lucide-react";
+import type { ScenarioResource } from "@/types";
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
+import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
+import { LEVEL_EXPECTATIONS, type TargetLevel } from "@/lib/rubric/level-expectations";
+import { LANGUAGES } from "@/lib/core/language";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+
+interface Coworker {
+  id: string;
+  name: string;
+  role: string;
+  voiceName: string | null;
+  avatarUrl: string | null;
+  gender: Gender | null;
+  ethnicity: Ethnicity | null;
+}
+
+interface ScenarioData {
+  id: string;
+  name: string;
+  companyName: string;
+  companyDescription: string;
+  taskDescription: string;
+  repoUrl: string | null;
+  resources: ScenarioResource[];
+  techStack: string[];
+  targetLevel: string;
+  language: string;
+  archetypeName: string | null;
+  roleFamilyName: string | null;
+  createdAt: string;
+  coworkers: Coworker[];
+  assessmentCount: number;
+}
+
+interface SimulationSettingsClientProps {
+  scenario: ScenarioData;
+}
+
+const RESOURCE_ICONS: Record<ScenarioResource["type"], React.ElementType> = {
+  repository: Code,
+  database: Database,
+  spreadsheet: FileSpreadsheet,
+  api: Globe,
+  dashboard: LayoutDashboard,
+  document: FileText,
+  custom: Package,
+};
+
+export function SimulationSettingsClient({ scenario }: SimulationSettingsClientProps) {
+  const router = useRouter();
+  const t = useTranslations("recruiter.simulations.settings");
+  const tRubricLevels = useTranslations("rubric.levels");
+  const [copied, setCopied] = useState(false);
+  const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
+  const [showCloneModal, setShowCloneModal] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [isCloning, setIsCloning] = useState(false);
+
+  const toggleResource = (index: number) => {
+    setExpandedResources((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [repoUrl, setRepoUrl] = useState(scenario.repoUrl);
+  const [repoStatus, setRepoStatus] = useState<"loading" | "ready" | "failed">(
+    scenario.repoUrl ? "ready" : "loading"
+  );
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      setShowSuccessBanner(true);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("success");
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+  }, [searchParams]);
+
+  // Poll for repo URL if not yet available
+  useEffect(() => {
+    if (repoUrl) return;
+
+    let attempts = 0;
+    const maxAttempts = 24; // 2 minutes (24 * 5s)
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch(`/api/recruiter/simulations/${scenario.id}`);
+        if (res.ok) {
+          const json = await res.json();
+          const url = json.data?.repoUrl;
+          if (url) {
+            setRepoUrl(url);
+            setRepoStatus("ready");
+            clearInterval(interval);
+          } else if (attempts >= maxAttempts) {
+            setRepoStatus("failed");
+            clearInterval(interval);
+          }
+        }
+      } catch {
+        // Network error, keep polling
+      }
+      if (attempts >= maxAttempts) {
+        setRepoStatus("failed");
+        clearInterval(interval);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [repoUrl, scenario.id]);
+
+  const getShareableLink = () => {
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    return `${baseUrl}/invite/${scenario.id}`;
+  };
+
+  const handleCopyLink = async () => {
+    const link = getShareableLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const textArea = document.createElement("textarea");
+      textArea.value = link;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }).format(new Date(dateString));
+  };
+
+  const handleClone = async () => {
+    if (!selectedLanguage || selectedLanguage === scenario.language) return;
+
+    setIsCloning(true);
+    try {
+      const response = await fetch(`/api/recruiter/simulations/${scenario.id}/clone`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: selectedLanguage })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || t("cloneModal.cloneFailed"));
+      }
+
+      const result = await response.json();
+      const newScenarioId = result.data?.scenarioId;
+
+      if (newScenarioId) {
+        router.push(`/recruiter/simulations/${newScenarioId}/settings?success=true`);
+      }
+    } catch (error) {
+      console.error("Clone failed:", error);
+      alert(error instanceof Error ? error.message : t("cloneModal.cloneFailed"));
+    } finally {
+      setIsCloning(false);
+      setShowCloneModal(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-4xl px-6 py-12">
+      {/* Success Banner */}
+      {showSuccessBanner && (
+        <div className="mb-6 flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <div>
+              <p className="font-medium text-green-900">{t("successBanner.title")}</p>
+              <p className="text-sm text-green-700">
+                {t("successBanner.description")}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSuccessBanner(false)}
+            className="text-green-700 hover:text-green-900"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="mb-8">
+        <Link
+          href="/recruiter/simulations"
+          className="inline-flex items-center gap-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          {t("backToSimulations")}
+        </Link>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-stone-900">
+              {scenario.name}
+            </h1>
+            <p className="mt-1 text-lg text-stone-600">{scenario.companyName}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Shareable Link Section */}
+      <Card className="mb-8 border-blue-200 bg-blue-50/50 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg text-blue-900">
+            <LinkIcon className="h-5 w-5" />
+            {t("shareableLink.title")}
+          </CardTitle>
+          <p className="text-sm text-blue-700">
+            {t("shareableLink.description")}
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 flex items-center rounded-lg border border-blue-200 bg-white px-4 py-3">
+              <code className="text-sm text-stone-800 break-all">
+                {getShareableLink()}
+              </code>
+            </div>
+            <Button
+              size="lg"
+              onClick={handleCopyLink}
+              className={`px-6 transition-colors ${
+                copied
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {copied ? (
+                <>
+                  <Check className="mr-2 h-5 w-5" />
+                  {t("shareableLink.copied")}
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-5 w-5" />
+                  {t("shareableLink.copy")}
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Simulation Details */}
+      <Card className="mb-6 border-stone-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg">{t("details.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <h3 className="text-sm font-medium text-stone-500 mb-2">
+              {t("details.taskDescription")}
+            </h3>
+            <p className="text-stone-900 whitespace-pre-wrap">
+              {scenario.taskDescription}
+            </p>
+          </div>
+
+          {scenario.techStack.length > 0 && (
+            <div>
+              <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
+                <Code className="h-4 w-4" />
+                {t("details.techStack")}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {scenario.techStack.map((tech) => (
+                  <Badge
+                    key={tech}
+                    variant="secondary"
+                    className="bg-blue-50 text-blue-700 hover:bg-blue-50"
+                  >
+                    {tech}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
+              <Languages className="h-4 w-4" />
+              {t("details.languageHeading")}
+            </h3>
+            <div className="flex items-center gap-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative">
+                      <Select value={scenario.language} disabled>
+                        <SelectTrigger className="w-48 cursor-not-allowed opacity-75">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(LANGUAGES).map(([code]) => (
+                            <SelectItem key={code} value={code}>
+                              {code === "en" ? t("details.english") : code === "es" ? t("details.spanish") : code}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Info className="h-3.5 w-3.5 text-stone-400 ml-32" />
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t("details.languageImmutable")}</p>
+                    <p className="text-xs mt-1 text-stone-400">{t("details.cloneToCreateInOther")}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedLanguage(scenario.language === "en" ? "es" : "en");
+                  setShowCloneModal(true);
+                }}
+                className="flex items-center gap-2"
+              >
+                <FolderOpen className="h-4 w-4" />
+                {t("cloneToLanguage")}
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
+              <GraduationCap className="h-4 w-4" />
+              {t("details.targetLevel")}
+            </h3>
+            {(() => {
+              const levelKey = (scenario.targetLevel || "mid") as TargetLevel;
+              const level = LEVEL_EXPECTATIONS[levelKey];
+              return (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+                    {tRubricLevels(`${levelKey}.label`)}
+                  </Badge>
+                  <span className="text-sm text-stone-500">{t("details.yearsExperience", { years: tRubricLevels(`${levelKey}.yearsRange`) })}</span>
+                  {scenario.archetypeName ? (
+                    <>
+                      <span className="text-sm text-stone-400">·</span>
+                      <Badge variant="secondary" className="bg-purple-50 text-purple-700 hover:bg-purple-50">
+                        {scenario.archetypeName}
+                      </Badge>
+                      {scenario.roleFamilyName && (
+                        <span className="text-sm text-stone-400">({scenario.roleFamilyName})</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-sm text-stone-400">{t("details.expectedScore", { score: level.expectedScore })}</span>
+                  )}
+                </div>
+              );
+            })()}
+            {scenario.archetypeName && (
+              <p className="text-xs text-stone-400 mt-1">
+                {t("details.archetypeNote")}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-stone-500 mb-2">
+              {t("details.repository")}
+            </h3>
+            {repoStatus === "ready" && repoUrl ? (
+              <a
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                {repoUrl}
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            ) : repoStatus === "failed" ? (
+              <span className="text-sm text-stone-400">
+                {t("details.repoUnavailable")}
+              </span>
+            ) : (
+              <div className="flex items-center gap-2 text-stone-500">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-blue-600" />
+                <span className="text-sm">{t("details.settingUp")}</span>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h3 className="flex items-center gap-1.5 text-sm font-medium text-stone-500 mb-2">
+              <Calendar className="h-4 w-4" />
+              {t("details.created")}
+            </h3>
+            <p className="text-stone-900">{formatDate(scenario.createdAt)}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resources Section */}
+      {scenario.resources.length > 0 && (
+        <Card className="mb-6 border-stone-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Package className="h-5 w-5" />
+              {t("resources.title", { count: scenario.resources.length })}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {scenario.resources.map((resource, index) => {
+                const Icon = RESOURCE_ICONS[resource.type] ?? Package;
+                const isExpanded = expandedResources.has(index);
+                return (
+                  <div
+                    key={index}
+                    className="rounded-lg border border-stone-100 bg-stone-50 p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 rounded-md bg-blue-50 p-2">
+                        <Icon className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-stone-900">
+                            {resource.label}
+                          </p>
+                          <Badge
+                            variant="secondary"
+                            className="bg-stone-100 text-stone-500 text-xs"
+                          >
+                            {resource.type}
+                          </Badge>
+                        </div>
+                        {resource.url && (
+                          <a
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors break-all"
+                          >
+                            {resource.url}
+                            <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                          </a>
+                        )}
+                        {resource.credentials && (
+                          <p className="mt-1.5 text-sm text-stone-500">
+                            {resource.credentials}
+                          </p>
+                        )}
+                        {resource.instructions && (
+                          <p className="mt-1 text-sm text-stone-500">
+                            {resource.instructions}
+                          </p>
+                        )}
+                        {resource.content && (
+                          <div className="mt-2">
+                            <button
+                              onClick={() => toggleResource(index)}
+                              className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              ) : (
+                                <ChevronRight className="h-3.5 w-3.5" />
+                              )}
+                              {isExpanded ? t("resources.hideContent") : t("resources.showContent")}
+                            </button>
+                            {isExpanded && (
+                              <div className="mt-2 rounded-md bg-white border border-stone-200 p-4 text-sm text-stone-700">
+                                <Markdown>{resource.content}</Markdown>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Coworkers Section */}
+      <Card className="border-stone-200 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Users className="h-5 w-5" />
+            {t("coworkers.title", { count: scenario.coworkers.length })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {scenario.coworkers.length === 0 ? (
+            <p className="text-stone-500 text-sm">{t("coworkers.none")}</p>
+          ) : (
+            <div className="space-y-4">
+              {scenario.coworkers.map((coworker) => (
+                <div
+                  key={coworker.id}
+                  className="flex items-center gap-4 p-4 rounded-lg bg-stone-50 border border-stone-100"
+                >
+                  <CoworkerAvatar name={coworker.name} avatarUrl={coworker.avatarUrl} gender={coworker.gender} ethnicity={coworker.ethnicity} size="md" />
+                  <div className="flex-1">
+                    <p className="font-medium text-stone-900">{coworker.name}</p>
+                    <div className="flex items-center gap-3 mt-1 text-sm text-stone-500">
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="h-3.5 w-3.5" />
+                        {coworker.role}
+                      </span>
+                      {coworker.voiceName && (
+                        <span className="flex items-center gap-1">
+                          <Mic className="h-3.5 w-3.5" />
+                          {coworker.voiceName}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Clone Language Modal */}
+      <Dialog open={showCloneModal} onOpenChange={setShowCloneModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("cloneModal.dialogTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("cloneModal.dialogDescription")}
+              <br />
+              <br />
+              <strong>{t("cloneModal.noteLabel")}</strong> {t("cloneModal.noteText")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="block text-sm font-medium text-stone-700 mb-2">
+              {t("cloneModal.targetLanguage")}
+            </label>
+            <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t("cloneModal.selectLanguage")} />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(LANGUAGES)
+                  .filter(([code]) => code !== scenario.language)
+                  .map(([code]) => (
+                    <SelectItem key={code} value={code}>
+                      {code === "en" ? t("details.english") : code === "es" ? t("details.spanish") : code}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCloneModal(false)} disabled={isCloning}>
+              {t("cloneModal.cancel")}
+            </Button>
+            <Button onClick={handleClone} disabled={!selectedLanguage || isCloning}>
+              {isCloning ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  {t("cloneModal.cloning")}
+                </>
+              ) : (
+                t("cloneModal.cloneScenario")
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

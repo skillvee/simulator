@@ -6,11 +6,15 @@ import { Button } from "@/components/ui/button";
 import { CoworkerAvatar } from "./coworker-avatar";
 import { playCallRingSound } from "@/lib/sounds";
 
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
+
 interface Coworker {
   id: string;
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: Gender | null;
+  ethnicity?: Ethnicity | null;
 }
 
 interface IncomingCallModalProps {
@@ -54,6 +58,8 @@ export function IncomingCallModal({ coworker, onAccept, onDecline }: IncomingCal
           <CoworkerAvatar
             name={coworker.name}
             avatarUrl={coworker.avatarUrl}
+            gender={coworker.gender}
+            ethnicity={coworker.ethnicity}
             size="lg"
             className="relative h-20 w-20 shadow-lg ring-4 ring-primary/30"
           />

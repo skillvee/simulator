@@ -91,6 +91,19 @@ export interface CoworkerPersona {
   avatarUrl?: string | null;
   /** Gemini Live voice name for calls (e.g., "Orus", "Aoede") */
   voiceName?: string | null;
+  /** Coworker gender — used to keep avatar + voice aligned with the character */
+  gender?: "male" | "female" | null;
+  /** Ethnic group — used to pick a matching avatar pool */
+  ethnicity?:
+    | "east_asian"
+    | "south_asian"
+    | "southeast_asian"
+    | "white"
+    | "black"
+    | "hispanic"
+    | "middle_eastern"
+    | "mixed"
+    | null;
 }
 
 /**
@@ -99,8 +112,6 @@ export interface CoworkerPersona {
 export interface StatusScheduleEntry {
   /** Availability status */
   status: "online" | "away" | "in-meeting" | "offline";
-  /** Status message shown below role (e.g., "In a design review") */
-  statusMessage: string;
   /** Minutes after assessment start when this status begins */
   startMinutes: number;
 }
@@ -108,22 +119,18 @@ export interface StatusScheduleEntry {
 /**
  * Decorative team member for sidebar display.
  * These members appear as "away" or "in-meeting" and respond with a single canned message.
+ * Strings (role, statusMessage, cannedResponse, schedule messages) are localized via
+ * the `work.decorativeTeam.<id>` i18n namespace — no English text lives on the object.
  */
 export interface DecorativeTeamMember {
-  /** Display name */
+  /** Stable identifier used as the i18n lookup key */
+  id: string;
+  /** Display name (proper noun, not translated) */
   name: string;
-  /** Job title/role */
-  role: string;
-  /** Avatar initials (derived from name if not provided) */
-  initials?: string;
   /** Optional avatar URL */
   avatarUrl?: string;
-  /** Status message shown in chat banner (e.g., "In a meeting until 10:45 AM") */
-  statusMessage?: string;
   /** Availability state - affects status indicator color */
   availability?: "online" | "away" | "in-meeting" | "offline";
-  /** One-time auto-reply sent after user's first message. Use {managerName} placeholder. */
-  cannedResponse?: string;
   /** Optional schedule of status changes over time during assessment */
   statusSchedule?: StatusScheduleEntry[];
 }

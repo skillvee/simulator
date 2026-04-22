@@ -90,13 +90,6 @@ export async function POST(request: Request) {
         scenarioId: originalAssessment.scenarioId,
         status: AssessmentStatus.WORKING,
         // Copy relevant data from original assessment
-        prUrl: originalAssessment.prUrl,
-        prSnapshot: originalAssessment.prSnapshot as
-          | Prisma.InputJsonValue
-          | undefined,
-        ciStatus: originalAssessment.ciStatus as
-          | Prisma.InputJsonValue
-          | undefined,
         codeReview: originalAssessment.codeReview as
           | Prisma.InputJsonValue
           | undefined,

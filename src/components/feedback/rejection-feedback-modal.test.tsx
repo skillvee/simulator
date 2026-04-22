@@ -141,13 +141,10 @@ describe("RejectionFeedbackModal", () => {
 
     it("shows loading state during submission", async () => {
       const user = userEvent.setup();
-      // Mock a slow submission
-      const slowSubmit = vi
-        .fn()
-        .mockImplementation(
-          () => new Promise((resolve) => setTimeout(resolve, 100))
-        );
-      renderModal({ onSubmit: slowSubmit });
+      // Never-resolving mock keeps the component pending so the assertion
+      // isn't racing the promise resolution under parallel load.
+      const pendingSubmit = vi.fn().mockImplementation(() => new Promise(() => {}));
+      renderModal({ onSubmit: pendingSubmit });
 
       const input = screen.getByTestId("feedback-input");
       await user.type(input, "Feedback text");
@@ -155,7 +152,7 @@ describe("RejectionFeedbackModal", () => {
       const submitButton = screen.getByTestId("submit-feedback-button");
       await user.click(submitButton);
 
-      expect(screen.getByTestId("submit-loading")).toBeInTheDocument();
+      expect(await screen.findByTestId("submit-loading")).toBeInTheDocument();
     });
 
     it("clears input after successful submission", async () => {

@@ -1,54 +1,59 @@
 "use client";
 
-import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect } from "react";
+import { useState, Suspense, createContext, useContext, cloneElement, isValidElement, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { Menu, X, Headphones, Hash } from "lucide-react";
+import { Menu, X, Headphones, Hash, GitBranch, Database, FileSpreadsheet, Globe, LayoutDashboard, FileText, Box, ExternalLink, ArrowLeft, Send, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { markUserInteraction, playMessageSound } from "@/lib/sounds";
 import { FloatingCallBar } from "./floating-call-bar";
 import { CoworkerAvatar } from "./coworker-avatar";
-import type { DecorativeTeamMember } from "@/types";
+import { Markdown } from "@/components/shared/markdown";
+import type { DecorativeTeamMember, ScenarioResource } from "@/types";
 
 /**
- * Get the current status for a decorative member based on elapsed time
+ * Resolve the active schedule entry for a decorative member based on elapsed time.
+ * Returns the current status and the index of the schedule entry (or -1 for initial).
  */
 function getCurrentStatus(
   member: DecorativeTeamMember,
   elapsedMinutes: number
-): { status: "online" | "away" | "in-meeting" | "offline"; statusMessage: string } {
+): { status: "online" | "away" | "in-meeting" | "offline"; scheduleIndex: number } {
   if (!member.statusSchedule || member.statusSchedule.length === 0) {
-    return {
-      status: member.availability || "online",
-      statusMessage: member.statusMessage || "",
-    };
+    return { status: member.availability || "online", scheduleIndex: -1 };
   }
 
-  // Find the most recent schedule entry that has started
-  const applicableEntries = member.statusSchedule
-    .filter((entry) => entry.startMinutes <= elapsedMinutes)
-    .sort((a, b) => b.startMinutes - a.startMinutes);
+  let activeIndex = -1;
+  let latestStart = -1;
+  member.statusSchedule.forEach((entry, idx) => {
+    if (entry.startMinutes <= elapsedMinutes && entry.startMinutes > latestStart) {
+      activeIndex = idx;
+      latestStart = entry.startMinutes;
+    }
+  });
 
-  if (applicableEntries.length === 0) {
-    // No schedule entry has started yet, use initial status
-    return {
-      status: member.availability || "online",
-      statusMessage: member.statusMessage || "",
-    };
+  if (activeIndex === -1) {
+    return { status: member.availability || "online", scheduleIndex: -1 };
   }
 
-  const currentEntry = applicableEntries[0];
   return {
-    status: currentEntry.status,
-    statusMessage: currentEntry.statusMessage,
+    status: member.statusSchedule[activeIndex].status,
+    scheduleIndex: activeIndex,
   };
 }
+
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
 
 interface Coworker {
   id: string;
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: Gender | null;
+  ethnicity?: Ethnicity | null;
 }
 
 // Context for managing call state across the layout
@@ -79,13 +84,21 @@ export function useCallContext() {
 interface SlackLayoutProps {
   assessmentId: string;
   coworkers: Coworker[];
+  /** Resources the candidate needs (repos, databases, dashboards, etc.) */
+  resources?: ScenarioResource[];
+  /** ISO string deadline — when provided, a subtle time-remaining indicator is shown */
+  deadlineAt?: string;
   children: React.ReactNode;
   /** Override the selected coworker (instead of getting from URL) */
   selectedCoworkerId?: string;
   /** Callback when a coworker or channel is selected — keeps navigation client-side */
   onSelectCoworker?: (coworkerId: string) => void;
-  /** Callback when a defense call is completed (PR was submitted, call with manager ended) */
+  /** Callback when a defense call is completed (work was submitted, call with manager ended) */
   onDefenseComplete?: () => void;
+  /** When true, the next call will be flagged as post-submission (defense call) */
+  isPostSubmission?: boolean;
+  /** Callback when candidate clicks "Submit Work" button */
+  onSubmitWork?: () => void;
   /** Callback when any call ends — receives the coworkerId of the ended call */
   onCallEnd?: (coworkerId: string) => void;
   /** Callback to expose startCall function to parent (for programmatic call initiation) */
@@ -94,6 +107,12 @@ interface SlackLayoutProps {
   onIncrementUnreadRef?: (incrementUnread: (coworkerId: string) => void) => void;
   /** Callback to expose incrementGeneralUnread function to parent */
   onIncrementGeneralUnreadRef?: (incrementGeneralUnread: () => void) => void;
+  /** Index of the currently selected resource (null = show chat) */
+  selectedResourceIndex?: number | null;
+  /** Callback when a resource is selected or deselected */
+  onSelectResource?: (index: number | null) => void;
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 /**
@@ -157,17 +176,25 @@ function SlackLayoutSkeleton({ children }: { children: React.ReactNode }) {
 function SlackLayoutInner({
   assessmentId,
   coworkers,
+  resources,
+  deadlineAt,
   children,
   selectedCoworkerId: overrideSelectedId,
   onSelectCoworker,
   onDefenseComplete,
+  isPostSubmission,
+  onSubmitWork,
   onCallEnd: onCallEndCallback,
   onStartCallRef,
   onIncrementUnreadRef,
   onIncrementGeneralUnreadRef,
+  selectedResourceIndex,
+  onSelectResource,
+  language,
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("work.sidebar");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeCall, setActiveCall] = useState<{
     coworkerId: string;
@@ -192,6 +219,42 @@ function SlackLayoutInner({
 
     return () => clearInterval(interval);
   }, []);
+
+  // Time remaining display — updates every minute, subtle and non-pressuring
+  const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
+  const [isLowTime, setIsLowTime] = useState(false);
+
+  const deadlineMs = useMemo(
+    () => (deadlineAt ? new Date(deadlineAt).getTime() : null),
+    [deadlineAt]
+  );
+
+  useEffect(() => {
+    if (!deadlineMs) return;
+
+    function update() {
+      const remaining = deadlineMs! - Date.now();
+      if (remaining <= 0) {
+        setTimeRemaining("0:00");
+        setIsLowTime(true);
+        return;
+      }
+      const totalMinutes = Math.floor(remaining / 60000);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      setTimeRemaining(
+        hours > 0
+          ? `${hours}h ${minutes}m`
+          : `${minutes}m`
+      );
+      // Only flag low time under 10 minutes
+      setIsLowTime(totalMinutes < 10);
+    }
+
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, [deadlineMs]);
 
   // Determine selected view from URL - can be coworkerId or "general" for channel
   const selectedCoworkerId =
@@ -244,6 +307,22 @@ function SlackLayoutInner({
       onStartCallRef(startCall);
     }
   }, [onStartCallRef]);
+
+  // Auto-start the defense call when the parent signals post-submission.
+  // Guarded by a ref so a hung-up defense call isn't restarted.
+  const defenseCallStartedRef = useRef(false);
+  useEffect(() => {
+    if (!isPostSubmission || defenseCallStartedRef.current || activeCall) {
+      return;
+    }
+    const manager = coworkers.find((c) =>
+      c.role.toLowerCase().includes("manager")
+    );
+    if (manager) {
+      defenseCallStartedRef.current = true;
+      startCall(manager.id, "coworker");
+    }
+  }, [isPostSubmission, activeCall, coworkers]);
 
   // Expose incrementUnread to parent via callback ref
   useEffect(() => {
@@ -335,7 +414,7 @@ function SlackLayoutInner({
           onMouseLeave={(e) => {
             e.currentTarget.style.background = "hsl(var(--slack-bg-surface))";
           }}
-          aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+          aria-label={isSidebarOpen ? t("closeMenu") : t("openMenu")}
         >
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -353,8 +432,8 @@ function SlackLayoutInner({
           className={`fixed inset-y-0 left-0 z-40 flex h-screen w-[280px] transform flex-col transition-transform duration-200 ease-in-out md:static shrink-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
           style={{background: "hsl(var(--slack-bg-sidebar))", borderRight: "1px solid hsl(var(--slack-border))"}}
         >
-          {/* Header with Skillvee logo */}
-          <div className="h-16 flex items-center px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
+          {/* Header with Skillvee logo and time remaining */}
+          <div className="h-16 flex items-center justify-between px-6" style={{borderBottom: "1px solid hsl(var(--slack-border))"}}>
             <Image
               src="/skillvee-logo.png"
               alt="Skillvee"
@@ -364,14 +443,41 @@ function SlackLayoutInner({
               style={{ width: "auto", height: "auto" }}
               priority
             />
+            {timeRemaining !== null && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="flex items-center gap-1.5 text-xs font-medium cursor-default"
+                      style={{ color: isLowTime ? "hsl(var(--destructive, 0 84% 60%))" : "hsl(var(--slack-text-muted))" }}
+                    >
+                      <Clock size={12} />
+                      <span>{timeRemaining}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{t("remainingTime", { time: timeRemaining })}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
+
+          {/* Resources bookmarks bar */}
+          {resources && resources.length > 0 && (
+            <ResourcesBookmarkBar
+              resources={resources}
+              selectedIndex={selectedResourceIndex ?? null}
+              onSelect={(index) => onSelectResource?.(index)}
+            />
+          )}
 
           {/* Coworker List - scrollable, shrinks when call widget appears */}
           <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
             {/* Channels Section */}
             <div>
               <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
-                Channels
+                {t("channels")}
               </h3>
               <div className="space-y-0.5">
                 <button
@@ -397,7 +503,7 @@ function SlackLayoutInner({
                   }}
                 >
                   <Hash size={14} style={{color: "hsl(var(--slack-text-muted))"}} />
-                  <span className={`text-sm flex-1 ${generalUnread > 0 ? "font-bold" : "font-medium"}`}>general</span>
+                  <span className={`text-sm flex-1 ${generalUnread > 0 ? "font-bold" : "font-medium"}`}>{t("general")}</span>
                   {generalUnread > 0 && (
                     <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                       {generalUnread > 9 ? "9+" : generalUnread}
@@ -410,7 +516,7 @@ function SlackLayoutInner({
             {/* Your Team Section - interactive coworkers */}
             <div>
               <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
-                Your Team
+                {t("yourTeam")}
               </h3>
               <div className="space-y-1">
                 {coworkers.map((coworker) => (
@@ -430,24 +536,42 @@ function SlackLayoutInner({
             {/* Others Section - decorative team members */}
             <div>
               <h3 className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{color: "hsl(var(--slack-text-muted))"}}>
-                Others
+                {t("others")}
               </h3>
               <div className="space-y-1">
                 {DECORATIVE_TEAM_MEMBERS.map((member) => (
                   <AwayTeamMember
-                    key={member.name}
+                    key={member.id}
                     member={member}
-                    isSelected={selectedCoworkerId === `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    isSelected={selectedCoworkerId === `decorative-${member.id}`}
                     elapsedMinutes={elapsedMinutes}
                     onSelect={selectCoworker}
                   />
                 ))}
               </div>
             </div>
+
           </div>
 
-          {/* Floating Call Bar - fixed at bottom when call is active */}
-          {activeCall && callingCoworker && (
+          {/* Submit Work button */}
+          {onSubmitWork && !activeCall && (
+            <div className="shrink-0 px-4 py-3" style={{ borderTop: "1px solid hsl(var(--slack-border))" }}>
+              <Button
+                onClick={onSubmitWork}
+                className="w-full rounded-lg shadow-sm"
+                size="sm"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {t("submitWork")}
+              </Button>
+            </div>
+          )}
+
+          {/* Floating Call Bar — sidebar placement for regular calls.
+              Defense calls (isPostSubmission) are rendered prominently in the
+              main content area instead, so a failed auto-connect can't be
+              missed by the candidate. */}
+          {activeCall && callingCoworker && !isPostSubmission && (
             <div className="p-4 relative animate-in slide-in-from-bottom-5 duration-300 fade-in">
               <FloatingCallBar
                 assessmentId={assessmentId}
@@ -455,6 +579,8 @@ function SlackLayoutInner({
                 callType={activeCall.callType}
                 onCallEnd={endCall}
                 onDefenseComplete={onDefenseComplete}
+                isPostSubmission={isPostSubmission}
+                language={language}
               />
             </div>
           )}
@@ -462,15 +588,37 @@ function SlackLayoutInner({
 
         {/* Main content area */}
         <main className="flex flex-1 flex-col p-4 min-h-0 overflow-hidden" style={{background: "hsl(var(--slack-bg-main))"}}>
-          {/* Pass incrementUnread function to children if they're Chat components */}
-          {/* eslint-disable @typescript-eslint/no-explicit-any */}
-          {isValidElement(children) && children.type && (children.type as any).name === 'Chat'
-            ? cloneElement(children as React.ReactElement<any>, {
-                onNewMessage: incrementUnread
-              })
-            : children
-          }
-          {/* eslint-enable @typescript-eslint/no-explicit-any */}
+          {activeCall && callingCoworker && isPostSubmission ? (
+            <div className="mb-4 animate-in slide-in-from-top-5 duration-300 fade-in">
+              <FloatingCallBar
+                assessmentId={assessmentId}
+                coworker={callingCoworker}
+                callType={activeCall.callType}
+                onCallEnd={endCall}
+                onDefenseComplete={onDefenseComplete}
+                isPostSubmission={isPostSubmission}
+                language={language}
+              />
+            </div>
+          ) : null}
+          {selectedResourceIndex != null && resources?.[selectedResourceIndex] ? (
+            <ResourceViewer
+              resource={resources[selectedResourceIndex]}
+              onBack={() => onSelectResource?.(null)}
+            />
+          ) : (
+            <>
+              {/* Pass incrementUnread function to children if they're Chat components */}
+              {/* eslint-disable @typescript-eslint/no-explicit-any */}
+              {isValidElement(children) && children.type && (children.type as any).name === 'Chat'
+                ? cloneElement(children as React.ReactElement<any>, {
+                    onNewMessage: incrementUnread
+                  })
+                : children
+              }
+              {/* eslint-enable @typescript-eslint/no-explicit-any */}
+            </>
+          )}
         </main>
       </div>
     </CallContext.Provider>
@@ -494,6 +642,7 @@ function CoworkerItem({
   onChat,
   onCall,
 }: CoworkerItemProps) {
+  const t = useTranslations("work.chat");
   return (
     <div
       onClick={onChat}
@@ -522,6 +671,8 @@ function CoworkerItem({
           <CoworkerAvatar
             name={coworker.name}
             avatarUrl={coworker.avatarUrl}
+            gender={coworker.gender}
+            ethnicity={coworker.ethnicity}
             size="sm"
             className="shadow-sm"
           />
@@ -538,7 +689,7 @@ function CoworkerItem({
         <div className={`text-sm truncate ${unreadCount > 0 ? "font-bold" : "font-semibold"}`} style={{color: "hsl(var(--slack-text))"}}>{coworker.name}</div>
         <div className="text-[10px] truncate" style={{color: "hsl(var(--slack-text-muted))"}}>
           {isInCall ? (
-            <span className="text-green-600 dark:text-green-400 font-medium">In call</span>
+            <span className="text-green-600 dark:text-green-400 font-medium">{t("inCallStatus")}</span>
           ) : (
             coworker.role
           )}
@@ -563,7 +714,7 @@ function CoworkerItem({
             : "hover:bg-primary hover:text-primary-foreground"
         }`}
         style={{color: "hsl(var(--slack-text-muted))"}}
-        aria-label={isInCall ? "In call" : `Call ${coworker.name}`}
+        aria-label={isInCall ? t("inCallStatus") : `Call ${coworker.name}`}
       >
         <Headphones size={14} />
       </button>
@@ -578,13 +729,229 @@ interface AwayTeamMemberProps {
   onSelect: (decorativeId: string) => void;
 }
 
-function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTeamMemberProps) {
-  const decorativeId = `decorative-${member.name.toLowerCase().replace(/\s+/g, '-')}`;
+// ─── Resources Components ──────────────────────────────────────────────────
 
-  // Get current status based on elapsed time
+const RESOURCE_TYPE_ICONS: Record<ScenarioResource["type"], React.ReactNode> = {
+  repository: <GitBranch size={14} />,
+  database: <Database size={14} />,
+  spreadsheet: <FileSpreadsheet size={14} />,
+  api: <Globe size={14} />,
+  dashboard: <LayoutDashboard size={14} />,
+  document: <FileText size={14} />,
+  custom: <Box size={14} />,
+};
+
+/**
+ * Compact bookmarks bar in the sidebar — shows resource icons/labels.
+ * Clicking a resource switches the main content to the document viewer.
+ */
+function ResourcesBookmarkBar({
+  resources,
+  selectedIndex,
+  onSelect,
+}: {
+  resources: ScenarioResource[];
+  selectedIndex: number | null;
+  onSelect: (index: number | null) => void;
+}) {
+  return (
+    <div
+      className="px-3 py-2 space-y-0.5"
+      style={{ borderBottom: "1px solid hsl(var(--slack-border))" }}
+    >
+      <h3
+        className="px-3 text-xs font-semibold uppercase tracking-wider mb-1.5"
+        style={{ color: "hsl(var(--slack-text-muted))" }}
+      >
+        Resources
+      </h3>
+      {resources.map((resource, index) => (
+        <button
+          key={index}
+          onClick={() => onSelect(selectedIndex === index ? null : index)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-md w-full text-left transition-all border-l-2 ${
+            selectedIndex === index
+              ? "border-primary"
+              : "border-transparent"
+          }`}
+          style={{
+            background: selectedIndex === index ? "hsl(var(--slack-bg-hover))" : "transparent",
+            color: "hsl(var(--slack-text))",
+          }}
+          onMouseEnter={(e) => {
+            if (selectedIndex !== index) {
+              e.currentTarget.style.background = "hsl(var(--slack-bg-hover))";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (selectedIndex !== index) {
+              e.currentTarget.style.background = "transparent";
+            }
+          }}
+        >
+          <span style={{ color: "hsl(var(--slack-text-muted))" }}>
+            {RESOURCE_TYPE_ICONS[resource.type]}
+          </span>
+          <span className="text-sm font-medium truncate">{resource.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Inline document viewer — replaces the chat area when a resource is selected.
+ * Renders the resource's markdown content, or falls back to metadata display.
+ */
+function ResourceViewer({
+  resource,
+  onBack,
+}: {
+  resource: ScenarioResource;
+  onBack: () => void;
+}) {
+  const icon = RESOURCE_TYPE_ICONS[resource.type];
+
+  return (
+    <div className="flex flex-col min-h-0 h-full">
+      <div
+        className="flex-1 min-h-0 shadow-sm flex flex-col"
+        style={{
+          background: "hsl(var(--slack-bg-main))",
+          border: "1px solid hsl(var(--slack-border))",
+        }}
+      >
+        {/* Header */}
+        <header
+          className="shrink-0 h-16 flex items-center gap-4 px-6"
+          style={{ borderBottom: "1px solid hsl(var(--slack-border))" }}
+        >
+          <button
+            onClick={onBack}
+            className="rounded-lg p-1.5 transition-colors"
+            style={{ color: "hsl(var(--slack-text-muted))" }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "hsl(var(--slack-bg-hover))";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+            aria-label="Back to chat"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div
+            className="rounded-md p-1.5"
+            style={{
+              background: "hsl(var(--slack-bg-surface))",
+              color: "hsl(var(--slack-text-muted))",
+            }}
+          >
+            {icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2
+              className="text-lg font-bold truncate"
+              style={{ color: "hsl(var(--slack-text))" }}
+            >
+              {resource.label}
+            </h2>
+            {resource.url && (
+              <a
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs hover:underline"
+                style={{ color: "hsl(var(--slack-text-muted))" }}
+              >
+                {resource.url}
+                <ExternalLink size={10} />
+              </a>
+            )}
+          </div>
+        </header>
+
+        {/* Document content */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-8 py-6">
+            {resource.content ? (
+              <Markdown>{resource.content}</Markdown>
+            ) : (
+              /* Fallback for resources without content (legacy data) */
+              <div className="space-y-4">
+                {resource.instructions && (
+                  <div
+                    className="rounded-lg p-4"
+                    style={{
+                      background: "hsl(var(--slack-bg-surface))",
+                      border: "1px solid hsl(var(--slack-border))",
+                    }}
+                  >
+                    <h3
+                      className="text-sm font-semibold mb-2"
+                      style={{ color: "hsl(var(--slack-text))" }}
+                    >
+                      Instructions
+                    </h3>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: "hsl(var(--slack-text-muted))" }}
+                    >
+                      {resource.instructions}
+                    </p>
+                  </div>
+                )}
+                {resource.credentials && (
+                  <div
+                    className="rounded-lg p-4"
+                    style={{
+                      background: "hsl(var(--slack-bg-surface))",
+                      border: "1px solid hsl(var(--slack-border))",
+                    }}
+                  >
+                    <h3
+                      className="text-sm font-semibold mb-2"
+                      style={{ color: "hsl(var(--slack-text))" }}
+                    >
+                      Access
+                    </h3>
+                    <p
+                      className="text-sm leading-relaxed italic"
+                      style={{ color: "hsl(var(--slack-text-muted))" }}
+                    >
+                      {resource.credentials}
+                    </p>
+                  </div>
+                )}
+                {!resource.instructions && !resource.credentials && (
+                  <p
+                    className="text-sm text-center py-8"
+                    style={{ color: "hsl(var(--slack-text-muted))" }}
+                  >
+                    No document content available for this resource.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTeamMemberProps) {
+  const t = useTranslations("work.decorativeTeam");
+  const decorativeId = `decorative-${member.id}`;
+
   const currentStatus = getCurrentStatus(member, elapsedMinutes);
 
-  // Determine status dot color based on current availability
+  const role = t(`${member.id}.role`);
+  const scheduleMessage =
+    currentStatus.scheduleIndex >= 0
+      ? t(`${member.id}.scheduleMessages.${currentStatus.scheduleIndex}`)
+      : t(`${member.id}.initialStatusMessage`);
+
   const statusDotColor = {
     online: "bg-green-500",
     away: "bg-yellow-500",
@@ -614,7 +981,7 @@ function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTe
           e.currentTarget.style.background = "transparent";
         }
       }}
-      title={currentStatus.statusMessage || currentStatus.status}
+      title={scheduleMessage || currentStatus.status}
     >
       <div className="relative">
         <div className="inline-block rounded-full grayscale-[30%]" style={{border: "2px solid hsl(var(--slack-bg-sidebar))"}}>
@@ -631,7 +998,7 @@ function AwayTeamMember({ member, isSelected, elapsedMinutes, onSelect }: AwayTe
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate" style={{color: "hsl(var(--slack-text))"}}>{member.name}</div>
         <div className="text-[10px] truncate italic" style={{color: "hsl(var(--slack-text-muted))"}}>
-          {currentStatus.statusMessage || member.role}
+          {scheduleMessage || role}
         </div>
       </div>
     </div>

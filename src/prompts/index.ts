@@ -2,29 +2,26 @@
  * Centralized Prompts Module
  *
  * All AI prompts are organized by domain:
+ * - build-agent-prompt - Universal prompt builder for all LLM interactions
  * - manager/   - Manager defense call and PR submission prompts
- * - coworker/  - Coworker chat and voice prompts
+ * - coworker/  - Coworker persona base prompts and guidelines
  * - analysis/  - Rubric evaluation, CV parsing, feedback/entity extraction prompts
  */
 
-// Manager Calls
-export { buildDefensePrompt, type DefenseContext } from "./manager/defense";
+// Universal Agent Prompt Builder
 export {
-  buildKickoffVoicePrompt,
-  type KickoffVoiceContext,
-} from "./manager/kickoff";
-export {
-  PR_ACKNOWLEDGMENT_PROMPT,
-  buildPRAcknowledgmentContext,
-  INVALID_PR_PROMPT,
-  DUPLICATE_PR_PROMPT,
-} from "./manager/pr-submission";
-export {
-  buildGreetingPrompt,
-  type GreetingPromptContext,
-} from "./manager/greeting";
+  buildAgentPrompt,
+  buildDefensePhaseContext,
+  type AgentPromptContext,
+  type SimulationPhase,
+  type DefensePhaseContext,
+} from "./build-agent-prompt";
 
-// Coworker Personas
+// Manager - Defense (used by unified builder for phase context)
+export { buildDefensePrompt, type DefenseContext } from "./manager/defense";
+
+
+// Coworker Personas (base builders still used by unified builder)
 export {
   buildCoworkerBasePrompt,
   buildChatPrompt,

@@ -3,16 +3,10 @@ import { success, error, validateRequest } from "@/lib/api";
 import { AssessmentFinalizeSchema } from "@/lib/schemas";
 import { db } from "@/server/db";
 import { createLogger } from "@/lib/core";
-import { AssessmentStatus, Prisma } from "@prisma/client";
-import {
-  cleanupPrAfterAssessment,
-  fetchPrCiStatus,
-  type PrCleanupResult,
-  type PrCiStatus,
-} from "@/lib/external";
+import { AssessmentStatus } from "@prisma/client";
 import {
   triggerVideoAssessment,
-  type TriggerVideoAssessmentResult,
+  mergeRecordingChunks,
 } from "@/lib/analysis";
 import {
   generateProfilePhoto,
@@ -26,8 +20,7 @@ const logger = createLogger("api:assessment:finalize");
  * Marks assessment as fully completed after the defense call
  * - Transitions status from WORKING to COMPLETED
  * - Records final completion timestamp
- * - Cleans up (closes) the submitted PR to prevent scenario leakage
- * - Preserves PR content in prSnapshot for historical reference
+ * - Records final completion timestamp
  */
 export async function POST(request: Request) {
   try {
@@ -48,7 +41,7 @@ export async function POST(request: Request) {
         userId: true,
         status: true,
         startedAt: true,
-        prUrl: true,
+        workingStartedAt: true,
         codeReview: true,
         scenario: {
           select: {
@@ -81,85 +74,72 @@ export async function POST(request: Request) {
       );
     }
 
-    // Calculate total duration
+    // Calculate total duration (use workingStartedAt if available, else fall back to startedAt)
     const now = new Date();
-    const totalDurationMs = now.getTime() - assessment.startedAt.getTime();
+    const timerStart = assessment.workingStartedAt ?? assessment.startedAt;
+    const totalDurationMs = now.getTime() - timerStart.getTime();
     const totalDurationSeconds = Math.floor(totalDurationMs / 1000);
 
-    // Fetch final CI status before cleanup (to capture test pass/fail status)
-    // This is the authoritative CI status used in the final assessment
-    let finalCiStatus: PrCiStatus | null = null;
-    if (assessment.prUrl) {
-      try {
-        finalCiStatus = await fetchPrCiStatus(assessment.prUrl);
-      } catch (err) {
-        logger.warn("CI status fetch failed", { assessmentId, error: String(err) });
-        // Continue without CI status - don't block finalization
-      }
-    }
-
-    // Clean up PR after assessment (close it to prevent scenario leakage)
-    // This is done gracefully - failure doesn't block finalization
-    let prCleanupResult: PrCleanupResult | null = null;
-    if (assessment.prUrl) {
-      try {
-        prCleanupResult = await cleanupPrAfterAssessment(assessment.prUrl);
-        if (!prCleanupResult.success) {
-          logger.warn("PR cleanup warning", { assessmentId, message: prCleanupResult.message });
-        }
-      } catch (err) {
-        logger.error("PR cleanup error", { assessmentId, error: String(err) });
-        // Don't fail the finalization if PR cleanup fails
-      }
-    }
-
-    // Update assessment status to COMPLETED and store PR snapshot + CI status
+    // Update assessment status to COMPLETED
     const updatedAssessment = await db.assessment.update({
       where: { id: assessmentId },
       data: {
         status: AssessmentStatus.COMPLETED,
         completedAt: now,
-        // Store PR snapshot for historical reference
-        ...(prCleanupResult?.prSnapshot && {
-          prSnapshot:
-            prCleanupResult.prSnapshot as unknown as Prisma.InputJsonValue,
-        }),
-        // Store final CI status for assessment
-        ...(finalCiStatus && {
-          ciStatus: finalCiStatus as unknown as Prisma.InputJsonValue,
-        }),
       },
       select: {
         id: true,
         status: true,
         startedAt: true,
         completedAt: true,
-        prUrl: true,
-        ciStatus: true,
         codeReview: true,
       },
     });
 
-    // Trigger video assessment if recording exists (async, non-blocking)
-    let videoAssessmentResult: TriggerVideoAssessmentResult | null = null;
+    // Merge recording chunks and trigger video assessment (async, non-blocking)
+    // The merge + Gemini upload + ACTIVE polling can take minutes for large videos,
+    // so we fire-and-forget to avoid blocking the HTTP response.
+    let videoAssessmentTriggered = false;
     const recordingUrl = assessment.recordings[0]?.storageUrl;
 
     if (recordingUrl) {
-      try {
-        videoAssessmentResult = await triggerVideoAssessment({
-          assessmentId,
-          candidateId: session.user.id,
-          videoUrl: recordingUrl,
-          taskDescription: assessment.scenario.taskDescription,
-        });
+      videoAssessmentTriggered = true;
+      const candidateId = session.user.id;
+      const taskDescription = assessment.scenario.taskDescription;
 
-        if (!videoAssessmentResult.success) {
-          logger.warn("Video assessment trigger warning", { assessmentId, error: videoAssessmentResult.error });
-        }
-      } catch (err) {
-        logger.warn("Video assessment trigger error", { assessmentId, error: String(err) });
-        // Don't fail the finalization if video assessment trigger fails
-      }
+      // Fire-and-forget: merge + evaluate in background
+      mergeRecordingChunks(assessmentId)
+        .then((mergeResult) => {
+          if (mergeResult.success && mergeResult.geminiFileUri) {
+            logger.info("Recording merged successfully", {
+              assessmentId,
+              segments: String(mergeResult.totalSegments),
+              chunks: String(mergeResult.totalChunks),
+              sizeBytes: String(mergeResult.totalSizeBytes),
+            });
+          } else {
+            logger.warn("Recording merge failed, falling back to last chunk URL", {
+              assessmentId,
+              error: mergeResult.error,
+            });
+          }
+
+          return triggerVideoAssessment({
+            assessmentId,
+            candidateId,
+            videoUrl: recordingUrl,
+            geminiFileUri: mergeResult.geminiFileUri,
+            taskDescription,
+          });
+        })
+        .then((result) => {
+          if (result && !result.success) {
+            logger.warn("Video assessment trigger warning", { assessmentId, error: result.error });
+          }
+        })
+        .catch((err) => {
+          logger.warn("Video assessment trigger error", { assessmentId, error: String(err) });
+        });
     }
 
     // Trigger profile photo generation (async, non-blocking)
@@ -185,33 +165,11 @@ export async function POST(request: Request) {
         completedAt: now.toISOString(),
         totalDurationSeconds,
       },
-      prCleanup: prCleanupResult
-        ? {
-            success: prCleanupResult.success,
-            action: prCleanupResult.action,
-            message: prCleanupResult.message,
-          }
-        : null,
-      ciStatus: finalCiStatus
-        ? {
-            overallStatus: finalCiStatus.overallStatus,
-            checksCount: finalCiStatus.checksCount,
-            checksPassed: finalCiStatus.checksPassed,
-            checksFailed: finalCiStatus.checksFailed,
-            testResults: finalCiStatus.testResults,
-          }
-        : null,
-      videoAssessment: videoAssessmentResult
-        ? {
-            triggered: true,
-            videoAssessmentId: videoAssessmentResult.videoAssessmentId,
-            hasRecording: !!recordingUrl,
-          }
-        : {
-            triggered: false,
-            videoAssessmentId: null,
-            hasRecording: false,
-          },
+      videoAssessment: {
+          triggered: videoAssessmentTriggered,
+          videoAssessmentId: null, // Resolved async after response
+          hasRecording: !!recordingUrl,
+        },
       profilePhoto: profilePhotoResult
         ? {
             generated: profilePhotoResult.success,

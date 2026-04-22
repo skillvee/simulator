@@ -1,7 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Headphones } from "lucide-react";
 import { DECORATIVE_TEAM_MEMBERS, getInitials } from "@/lib/ai";
+import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
 import { CoworkerAvatar } from "./coworker-avatar";
 
 interface Coworker {
@@ -9,6 +11,8 @@ interface Coworker {
   name: string;
   role: string;
   avatarUrl: string | null;
+  gender?: Gender | null;
+  ethnicity?: Ethnicity | null;
 }
 
 interface CoworkerSidebarProps {
@@ -22,6 +26,8 @@ export function CoworkerSidebar({
   onSelectCoworker,
   selectedCoworkerId,
 }: CoworkerSidebarProps) {
+  const tSidebar = useTranslations("work.sidebar");
+  const tDecorative = useTranslations("work.decorativeTeam");
   return (
     <aside className="flex h-full w-[280px] flex-col border-r border-border bg-background shrink-0">
       {/* Header with Skillvee logo */}
@@ -36,7 +42,7 @@ export function CoworkerSidebar({
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
         <div>
           <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Team
+            {tSidebar("yourTeam")}
           </h3>
           <div className="space-y-1">
             {/* Online/Interactive coworkers */}
@@ -53,9 +59,9 @@ export function CoworkerSidebar({
             {/* Offline/Decorative team members */}
             {DECORATIVE_TEAM_MEMBERS.map((member) => (
               <OfflineTeamMember
-                key={member.name}
+                key={member.id}
                 name={member.name}
-                role={member.role}
+                role={tDecorative(`${member.id}.role`)}
               />
             ))}
           </div>
@@ -91,6 +97,8 @@ function CoworkerItem({
         <CoworkerAvatar
           name={coworker.name}
           avatarUrl={coworker.avatarUrl}
+          gender={coworker.gender}
+          ethnicity={coworker.ethnicity}
           size="sm"
           className="border-2 border-background shadow-sm"
         />

@@ -1,22 +1,23 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { generateEphemeralToken } from "@/lib/ai/gemini";
-import { GEMINI_VOICES } from "@/lib/ai/gemini-config";
+import { pickVoiceForCoworker } from "@/lib/ai/gemini-config";
 import {
-  buildCoworkerMemory,
-  formatMemoryForPrompt,
   buildCrossCoworkerContext,
+  formatConversationTimeline,
   formatConversationsForSummary,
 } from "@/lib/ai/conversation-memory";
 import { parseCoworkerKnowledge } from "@/lib/ai";
 import { inferDemographics } from "@/lib/avatar";
 import type { CoworkerPersona, ChatMessage, ConversationWithMeta } from "@/types";
-import { buildVoicePrompt, buildDefensePrompt, type DefenseContext, buildKickoffVoicePrompt } from "@/prompts";
 import { AssessmentStatus } from "@prisma/client";
 import { success, error, validateRequest } from "@/lib/api";
 import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
+import { logAICall } from "@/lib/analysis";
+import { buildAgentPrompt, buildDefensePhaseContext } from "@/prompts/build-agent-prompt";
+import { DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/language";
 
 const logger = createLogger("server:api:call:token");
 
@@ -30,24 +31,36 @@ export async function POST(request: Request) {
   try {
     const validated = await validateRequest(request, CallTokenRequestSchema);
     if ("error" in validated) return validated.error;
-    const { assessmentId, coworkerId } = validated.data;
+    const { assessmentId, coworkerId, isPostSubmission, language: requestLanguage } = validated.data;
 
-    // Fetch the assessment and verify ownership
-    const assessment = await db.assessment.findFirst({
-      where: {
-        id: assessmentId,
-        userId: session.user.id,
-      },
-      include: {
-        scenario: true,
-        user: {
-          select: {
-            name: true,
-            email: true,
+    // Fetch assessment, coworker, and conversations in parallel
+    const [assessment, allConversations] = await Promise.all([
+      db.assessment.findFirst({
+        where: {
+          id: assessmentId,
+          userId: session.user.id,
+        },
+        include: {
+          scenario: true,
+          user: {
+            select: {
+              name: true,
+              email: true,
+              preferredLanguage: true,
+            },
           },
         },
-      },
-    });
+      }),
+      db.conversation.findMany({
+        where: { assessmentId },
+        include: {
+          coworker: {
+            select: { id: true, name: true },
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      }),
+    ]);
 
     if (!assessment) {
       return error("Assessment not found", 404, "NOT_FOUND");
@@ -58,7 +71,7 @@ export async function POST(request: Request) {
       return error("Assessment is completed", 400);
     }
 
-    // Get coworker persona
+    // Coworker query needs scenarioId from assessment, so it runs after
     const coworker = await db.coworker.findFirst({
       where: {
         id: coworkerId,
@@ -70,25 +83,7 @@ export async function POST(request: Request) {
       return error("Coworker not found", 404, "NOT_FOUND");
     }
 
-    // Get ALL conversations for this assessment (for cross-coworker context)
-    const allConversations = await db.conversation.findMany({
-      where: {
-        assessmentId,
-      },
-      include: {
-        coworker: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    });
-
-    // Get all conversations with this coworker (text + voice) for memory
+    // Build conversation timeline for this coworker (chat + voice, chronological)
     const coworkerConversations: ConversationWithMeta[] = allConversations
       .filter((c) => c.coworkerId === coworkerId)
       .map((c) => ({
@@ -99,17 +94,18 @@ export async function POST(request: Request) {
         updatedAt: c.updatedAt,
       }));
 
-    // Build memory context for this coworker (with summarization)
-    // Voice calls get more recent messages since Gemini Live can only
-    // receive context via systemInstruction (no history param).
-    const memory = await buildCoworkerMemory(
-      coworkerConversations,
-      coworker.name,
-      { maxRecentMessages: 20 }
-    );
-    const memoryContext = formatMemoryForPrompt(memory, coworker.name);
+    // Past conversations (all ended). The active new call gets its own
+    // marker appended below so the model doesn't confuse history with now.
+    const pastHistory = formatConversationTimeline(coworkerConversations);
 
-    // Build cross-coworker context (awareness of other conversations)
+    const activeCallMarker = `\n\n## 📞 Active Call — Happening NOW
+The candidate's phone just rang and they picked up. They are silent on the line, waiting for YOU to speak. Everything in "Past Conversations" above is memory of earlier events — those calls have ALREADY ENDED. Do NOT continue any prior thread, do NOT resume a mid-sentence question, do NOT respond as if they just said something.
+
+Open THIS brand-new call right now with your persona's natural greeting (the "YOU must speak first" rule below applies to this moment).`;
+
+    const memoryContext = pastHistory + activeCallMarker;
+
+    // Build cross-coworker context
     const coworkerMap = new Map<string, string>();
     for (const c of allConversations) {
       if (c.coworker) {
@@ -128,7 +124,8 @@ export async function POST(request: Request) {
       coworkerMap
     );
 
-    // Build coworker persona for system prompt
+    // Build persona
+    const isManagerCoworker = isManager(coworker.role);
     const persona: CoworkerPersona = {
       name: coworker.name,
       role: coworker.role,
@@ -138,96 +135,89 @@ export async function POST(request: Request) {
       avatarUrl: coworker.avatarUrl,
     };
 
-    // Determine call type: defense, kickoff, or regular
-    const isManagerCoworker = isManager(coworker.role);
-    const isDefenseCall = Boolean(assessment.prUrl) && isManagerCoworker;
-    const isKickoffCall = !assessment.prUrl && !assessment.managerMessagesStarted && isManagerCoworker;
+    // A defense call is a call with the manager AFTER the candidate submitted their work.
+    // The client sets isPostSubmission=true on the token request from that flow.
+    const isDefenseCall = Boolean(isPostSubmission) && isManagerCoworker;
 
-    let systemInstruction: string;
-
+    let defensePhaseContext: string | undefined;
     if (isDefenseCall) {
-      // Build defense prompt for PR review call
-      const allConvsMapped = allConversations.map((c) => ({
-        type: c.type as "text" | "voice",
-        coworkerId: c.coworkerId,
-        messages: (c.transcript as unknown as ChatMessage[]) || [],
-        createdAt: c.createdAt,
-        updatedAt: c.updatedAt,
-      }));
       const conversationSummary = formatConversationsForSummary(
-        allConvsMapped,
+        allConversations.map((c) => ({
+          type: c.type as "text" | "voice",
+          coworkerId: c.coworkerId,
+          messages: (c.transcript as unknown as ChatMessage[]) || [],
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+        })),
         coworkerMap
       );
+      const codeReviewSummary = assessment.codeReview
+        ? JSON.stringify(assessment.codeReview).slice(0, 4000)
+        : undefined;
 
-      const defenseContext: DefenseContext = {
-        managerName: coworker.name,
-        managerRole: coworker.role,
-        companyName: assessment.scenario.companyName,
-        candidateName: session.user.name || undefined,
+      // Screen recording analysis lives on SegmentAnalysis (nested under recordings).
+      // Skip for now — prompt handles missing values. Can enrich later.
+      defensePhaseContext = buildDefensePhaseContext({
+        repoUrl: assessment.repoUrl || assessment.scenario.repoUrl || "",
         taskDescription: assessment.scenario.taskDescription,
         techStack: assessment.scenario.techStack,
-        repoUrl: assessment.repoUrl || "",
-        prUrl: assessment.prUrl!,
         conversationSummary,
-        // Screen analysis and code review may not be available yet
-        screenAnalysisSummary: "",
-        ciStatusSummary: "CI status will be checked after the call.",
-        codeReviewSummary: "",
-      };
-
-      systemInstruction = buildDefensePrompt(defenseContext);
-    } else if (isKickoffCall) {
-      // First call with the manager — explain the task from scratch
-      // Fetch all coworkers to provide teammate context (prevents hallucinated names)
-      const allCoworkers = await db.coworker.findMany({
-        where: { scenarioId: assessment.scenarioId },
-        select: { id: true, name: true, role: true },
+        submissionSummary: assessment.deliverableSummary ?? undefined,
+        submissionFilename: assessment.deliverableFilename ?? undefined,
+        codeReviewSummary,
       });
-      const teammates = allCoworkers
-        .filter((c) => c.id !== coworkerId)
-        .map((c) => ({ name: c.name, role: c.role }));
-
-      systemInstruction = buildKickoffVoicePrompt({
-        managerName: coworker.name,
-        managerRole: coworker.role,
-        companyName: assessment.scenario.companyName,
-        candidateName: session.user.name || undefined,
-        taskDescription: assessment.scenario.taskDescription,
-        techStack: assessment.scenario.techStack,
-        repoUrl: assessment.repoUrl || "",
-        personaStyle: coworker.personaStyle,
-        personality: coworker.personality as import("@/types").CoworkerPersonality | null,
-        teammates,
-      });
-    } else {
-      // Regular coworker voice prompt (mid-work calls, non-manager calls)
-      systemInstruction = buildVoicePrompt(
-        persona,
-        {
-          companyName: assessment.scenario.companyName,
-          candidateName: session.user.name || undefined,
-          taskDescription: undefined,
-          techStack: assessment.scenario.techStack,
-        },
-        memoryContext,
-        crossCoworkerContext
-      );
     }
 
-    // Generate ephemeral token for client-side connection
-    // Use coworker's configured voice, or infer from name gender
+    // Extract resource labels for manager awareness
+    const resourceLabels = Array.isArray(assessment.scenario.resources)
+      ? (assessment.scenario.resources as unknown as Array<{ label: string }>).map((r) => r.label)
+      : undefined;
+
+    // Build unified system prompt
+    // Use request language if provided (from frontend), otherwise fall back to scenario language
+    const language = (requestLanguage as SupportedLanguage) || (assessment.scenario.language as SupportedLanguage) || DEFAULT_LANGUAGE;
+    const systemInstruction = buildAgentPrompt({
+      companyName: assessment.scenario.companyName,
+      techStack: assessment.scenario.techStack,
+      agent: persona,
+      taskDescription: isManagerCoworker ? assessment.scenario.taskDescription : undefined,
+      candidateName: session.user.name || undefined,
+      conversationHistory: memoryContext,
+      crossAgentContext: crossCoworkerContext,
+      phase: isDefenseCall ? "defense" : "ongoing",
+      phaseContext: defensePhaseContext,
+      media: "voice",
+      resourceLabels: isManagerCoworker ? resourceLabels : undefined,
+      language,
+    });
+
+    // Log voice system instruction (same as chat logs prompts)
+    const tracker = await logAICall({
+      assessmentId,
+      endpoint: "/api/call/token",
+      promptText: systemInstruction,
+      modelVersion: "gemini-live",
+      promptType: isDefenseCall ? "DEFENSE_CALL" : "VOICE_CALL",
+      promptVersion: "1.0",
+      modelUsed: "gemini-live",
+    }).catch(() => null);
+
+    // Generate ephemeral token. Prefer the stored voice; else derive deterministically
+    // from the coworker's persisted gender (or name-inferred gender for legacy rows).
     let voiceName = coworker.voiceName || undefined;
     if (!voiceName) {
-      const { gender } = inferDemographics(coworker.name);
-      const voices = gender === "male" ? GEMINI_VOICES.male : GEMINI_VOICES.female;
-      // Pick a deterministic voice based on name hash
-      const hash = coworker.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-      voiceName = voices[hash % voices.length].name;
+      const storedGender = coworker.gender === "male" || coworker.gender === "female"
+        ? coworker.gender
+        : inferDemographics(coworker.name).gender;
+      voiceName = pickVoiceForCoworker(storedGender, coworker.name);
     }
     const token = await generateEphemeralToken({
       systemInstruction,
       voiceName,
+      language,
     });
+
+    await tracker?.complete({ responseText: "Token generated", statusCode: 200 }).catch(() => {});
 
     return success({
       token,

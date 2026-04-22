@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { success, error, validateRequest } from "@/lib/api";
 import { ScenarioBuilderRequestSchema } from "@/lib/schemas";
 import { createLogger } from "@/lib/core";
+import { DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/language";
 import { gemini } from "@/lib/ai/gemini";
 import {
   buildCompleteSystemPrompt,
@@ -42,11 +43,12 @@ export async function POST(request: Request) {
 
   const validated = await validateRequest(request, ScenarioBuilderRequestSchema);
   if ("error" in validated) return validated.error;
-  const { message, history, scenarioData } = validated.data;
+  const { message, history, scenarioData, language } = validated.data;
 
   // Build the system prompt with current scenario state
   const builderData = (scenarioData || {}) as ScenarioBuilderData;
-  const systemPrompt = buildCompleteSystemPrompt(builderData);
+  const lang = (language as SupportedLanguage) || DEFAULT_LANGUAGE;
+  const systemPrompt = buildCompleteSystemPrompt(builderData, lang);
 
   // Build conversation history for Gemini
   const conversationHistory = (history || []).map((msg) => ({
@@ -125,7 +127,7 @@ export async function GET() {
     return error("Recruiter access required", 403);
   }
 
-  const systemPrompt = buildCompleteSystemPrompt({});
+  const systemPrompt = buildCompleteSystemPrompt({}, DEFAULT_LANGUAGE);
 
   try {
     // Generate initial greeting

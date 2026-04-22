@@ -55,6 +55,7 @@ vi.mock("@/lib/ai/conversation-memory", () => ({
     totalMessageCount: 0,
   }),
   formatMemoryForPrompt: vi.fn().mockReturnValue(""),
+  formatConversationTimeline: vi.fn().mockReturnValue(""),
   buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
 }));
 
@@ -63,14 +64,17 @@ vi.mock("@/lib/ai", () => ({
   parseCoworkerKnowledge: vi.fn().mockReturnValue([]),
 }));
 
-// Spy on buildChatPrompt to verify context passed
-const mockBuildChatPrompt = vi.fn().mockReturnValue("mock system prompt");
+// Mock @/prompts
 vi.mock("@/prompts", () => ({
-  buildChatPrompt: (...args: unknown[]) => mockBuildChatPrompt(...args),
-  buildCallNudgeInstruction: vi.fn().mockReturnValue(""),
   buildPRAcknowledgmentContext: vi.fn().mockReturnValue(""),
   INVALID_PR_PROMPT: "invalid pr prompt",
   DUPLICATE_PR_PROMPT: "duplicate pr prompt",
+}));
+
+// Spy on buildAgentPrompt to verify context passed
+const mockBuildAgentPrompt = vi.fn().mockReturnValue("mock system prompt");
+vi.mock("@/prompts/build-agent-prompt", () => ({
+  buildAgentPrompt: (...args: unknown[]) => mockBuildAgentPrompt(...args),
 }));
 
 import { POST, GET } from "./route";
@@ -590,11 +594,9 @@ describe("POST /api/chat", () => {
     const response = await POST(request);
     await readSSEResponse(response);
 
-    // Verify buildChatPrompt was called with gated task description
-    const context = mockBuildChatPrompt.mock.calls[0][1];
-    expect(context.taskDescription).toContain("Your Background Knowledge (NOT shared with the candidate)");
-    expect(context.taskDescription).toContain("Build a feature");
-    expect(context.taskDescription).toContain("do NOT assume the candidate has read or understood any of it");
+    // Verify buildAgentPrompt was called with task description for manager
+    const context = mockBuildAgentPrompt.mock.calls[0][0];
+    expect(context.taskDescription).toBe("Build a feature");
   });
 
   it("should pass undefined taskDescription for non-manager coworkers", async () => {
@@ -637,8 +639,8 @@ describe("POST /api/chat", () => {
     const response = await POST(request);
     await readSSEResponse(response);
 
-    // Verify buildChatPrompt was called with undefined task description
-    const context = mockBuildChatPrompt.mock.calls[0][1];
+    // Verify buildAgentPrompt was called with undefined task description
+    const context = mockBuildAgentPrompt.mock.calls[0][0];
     expect(context.taskDescription).toBeUndefined();
   });
 
@@ -958,13 +960,20 @@ describe("GET /api/chat", () => {
       id: "assessment-1",
       userId: "user-1",
     });
-    mockConversationFindFirst.mockResolvedValue({
-      id: "conv-1",
-      transcript: [
-        { role: "user", text: "Hello", timestamp: "2025-01-01T00:00:00Z" },
-        { role: "model", text: "Hi there!", timestamp: "2025-01-01T00:00:01Z" },
-      ],
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Test Coworker",
+      role: "peer",
     });
+    mockConversationFindMany.mockResolvedValue([
+      {
+        id: "conv-1",
+        transcript: [
+          { role: "user", text: "Hello", timestamp: "2025-01-01T00:00:00Z" },
+          { role: "model", text: "Hi there!", timestamp: "2025-01-01T00:00:01Z" },
+        ],
+      },
+    ]);
 
     const request = new Request(
       "http://localhost/api/chat?assessmentId=assessment-1&coworkerId=coworker-1"
@@ -988,7 +997,12 @@ describe("GET /api/chat", () => {
       id: "assessment-1",
       userId: "user-1",
     });
-    mockConversationFindFirst.mockResolvedValue(null);
+    mockCoworkerFindFirst.mockResolvedValue({
+      id: "coworker-1",
+      name: "Test Coworker",
+      role: "peer",
+    });
+    mockConversationFindMany.mockResolvedValue([]);
 
     const request = new Request(
       "http://localhost/api/chat?assessmentId=assessment-1&coworkerId=coworker-1"

@@ -97,6 +97,8 @@ describe("Avatar Generation Service", () => {
           role: true,
           personaStyle: true,
           avatarUrl: true,
+          gender: true,
+          ethnicity: true,
         },
       });
     });
@@ -132,6 +134,8 @@ describe("Avatar Generation Service", () => {
           name: true,
           role: true,
           personaStyle: true,
+          gender: true,
+          ethnicity: true,
         },
       });
     });

@@ -56,8 +56,6 @@ export type {
   HiringManagerOutput,
   // Candidate results types (candidate-facing view)
   CandidateResultsData,
-  CandidateDimensionScore,
-  CandidateStrengthOrGrowth,
   CandidateWorkStyleMetrics,
 } from "./assessment";
 
@@ -95,6 +93,10 @@ export type {
   ParseQuality,
   ParsedProfile,
 } from "./cv";
+
+// Scenario types
+export type { ScenarioResource, SimulationDepth } from "./scenario";
+export { SIMULATION_DEPTH_CONFIG } from "./scenario";
 
 // API response types
 export type { ApiSuccess, ApiError, ApiResponse } from "./api";

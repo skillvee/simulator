@@ -1,22 +1,24 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import {
-  GoogleGenAI,
-  Modality,
-  type Session,
-  type LiveServerMessage,
-} from "@google/genai";
+import { type Session, type LiveServerMessage } from "@google/genai";
 import {
   checkAudioSupport,
   checkMicrophonePermission,
   requestMicrophoneAccess,
   playAudioChunk,
   stopAudioPlayback,
-  createAudioWorkletBlobUrl,
   type AudioPermissionState,
 } from "@/lib/media";
 import type { TranscriptMessage } from "@/lib/ai";
+import {
+  connectLiveAudioSession,
+  createOpeningTurnController,
+  disconnectLiveAudioResources,
+  fetchLiveToken,
+  handleLiveServerMessage,
+  initializeLiveAudioCapture,
+} from "@/lib/ai/live-session";
 import {
   categorizeError,
   calculateBackoffDelay,
@@ -43,6 +45,8 @@ export interface UseVoiceBaseOptions extends VoiceBaseOptions {
   tokenRequestBody?: Record<string, unknown>;
   /** Callback when token response is received (to extract additional data) */
   onTokenResponse?: (data: Record<string, unknown>) => void;
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 export interface ConnectionEvent {
@@ -82,6 +86,7 @@ export interface UseVoiceBaseReturn extends VoiceBaseReturn {
  * Base hook for all voice conversation functionality.
  * Extracts common logic for connection management, audio handling,
  * transcript management, retry logic, and session recovery.
+ * Shared Gemini Live transport/bootstrap details live in `@/lib/ai/live-session`.
  */
 export function useVoiceBase({
   assessmentId,
@@ -92,6 +97,7 @@ export function useVoiceBase({
   config,
   tokenRequestBody = {},
   onTokenResponse,
+  language,
 }: UseVoiceBaseOptions): UseVoiceBaseReturn {
   // Connection state
   const [connectionState, setConnectionState] =
@@ -146,6 +152,22 @@ export function useVoiceBase({
     []
   );
 
+  const openingTurnControllerRef = useRef<ReturnType<
+    typeof createOpeningTurnController
+  > | null>(null);
+
+  if (!openingTurnControllerRef.current) {
+    openingTurnControllerRef.current = createOpeningTurnController({
+      getSession: () => sessionRef.current,
+      onOpeningTurnSent: () => {
+        recordConnectionEvent("opening-turn-sent");
+      },
+      onError: (context, err) => {
+        logger.error(context, { err });
+      },
+    });
+  }
+
   // Update connection state with callback and event tracking
   const updateConnectionState = useCallback(
     (state: VoiceConnectionState, details?: string) => {
@@ -180,16 +202,28 @@ export function useVoiceBase({
     ]
   );
 
-  // Add message to transcript
+  // Add message to transcript, merging consecutive chunks from the same role
   const addToTranscript = useCallback(
     (role: "user" | "model", text: string) => {
-      const message: TranscriptMessage = {
-        role,
-        text,
-        timestamp: new Date().toISOString(),
-      };
-      const newTranscript = [...transcriptRef.current, message];
-      updateTranscript(newTranscript);
+      const current = transcriptRef.current;
+      const lastMessage = current[current.length - 1];
+
+      // If the last message is from the same role, append to it
+      if (lastMessage && lastMessage.role === role) {
+        const merged = [...current];
+        merged[merged.length - 1] = {
+          ...lastMessage,
+          text: lastMessage.text + " " + text,
+        };
+        updateTranscript(merged);
+      } else {
+        const message: TranscriptMessage = {
+          role,
+          text,
+          timestamp: new Date().toISOString(),
+        };
+        updateTranscript([...current, message]);
+      }
     },
     [updateTranscript]
   );
@@ -221,84 +255,50 @@ export function useVoiceBase({
   // Handle incoming messages from Gemini
   const handleServerMessage = useCallback(
     (message: LiveServerMessage) => {
-      // Handle audio data
-      if (message.serverContent?.modelTurn?.parts) {
-        for (const part of message.serverContent.modelTurn.parts) {
-          if (part.inlineData?.data) {
-            audioQueueRef.current.push(part.inlineData.data);
-            playNextAudio();
-          }
-        }
-      }
-
-      // Handle input transcription (user speech)
-      if (message.serverContent?.inputTranscription?.text) {
-        const text = message.serverContent.inputTranscription.text;
-        if (text.trim()) {
+      handleLiveServerMessage(message, {
+        onSetupComplete: () => {
+          recordConnectionEvent("setup-complete");
+          openingTurnControllerRef.current?.markSetupComplete();
+        },
+        onAudioChunk: (audioData) => {
+          audioQueueRef.current.push(audioData);
+          playNextAudio();
+        },
+        onInputTranscription: (text) => {
           addToTranscript("user", text);
-        }
-      }
-
-      // Handle output transcription (model speech)
-      if (message.serverContent?.outputTranscription?.text) {
-        const text = message.serverContent.outputTranscription.text;
-        if (text.trim()) {
+        },
+        onOutputTranscription: (text) => {
           addToTranscript("model", text);
-        }
-      }
-
-      // Handle turn complete
-      if (message.serverContent?.turnComplete) {
-        setIsSpeaking(false);
-      }
-
-      // Handle interruption
-      if (message.serverContent?.interrupted) {
-        audioQueueRef.current = [];
-        stopAudioPlayback();
-        setIsSpeaking(false);
-      }
+        },
+        onTurnComplete: () => {
+          setIsSpeaking(false);
+        },
+        onInterrupted: () => {
+          audioQueueRef.current = [];
+          stopAudioPlayback();
+          setIsSpeaking(false);
+        },
+      });
     },
-    [addToTranscript, playNextAudio]
+    [addToTranscript, playNextAudio, recordConnectionEvent]
   );
 
   // Initialize audio capture
   const initializeAudioCapture = useCallback(
     async (stream: MediaStream, session: Session) => {
-      const audioContext = new AudioContext({ sampleRate: 16000 });
+      const { audioContext, workletNode } = await initializeLiveAudioCapture({
+        stream,
+        session,
+        onReady: () => {
+          openingTurnControllerRef.current?.markAudioCaptureReady();
+        },
+        onError: (context, err) => {
+          logger.error(context, { err });
+        },
+      });
+
       audioContextRef.current = audioContext;
-
-      // Create audio worklet
-      const workletUrl = createAudioWorkletBlobUrl();
-      await audioContext.audioWorklet.addModule(workletUrl);
-      URL.revokeObjectURL(workletUrl);
-
-      const source = audioContext.createMediaStreamSource(stream);
-      const workletNode = new AudioWorkletNode(audioContext, "audio-processor");
       workletNodeRef.current = workletNode;
-
-      // Handle audio data from worklet
-      workletNode.port.onmessage = (event) => {
-        if (event.data.type === "audio" && session) {
-          const audioData = new Uint8Array(event.data.data);
-          const base64 = btoa(String.fromCharCode(...audioData));
-
-          try {
-            session.sendRealtimeInput({
-              audio: {
-                data: base64,
-                mimeType: "audio/pcm;rate=16000",
-              },
-            });
-          } catch (err) {
-            logger.error("Error sending audio", { err });
-          }
-        }
-      };
-
-      source.connect(workletNode);
-      workletNode.connect(audioContext.destination);
-
       setIsListening(true);
     },
     []
@@ -326,43 +326,23 @@ export function useVoiceBase({
 
       updateConnectionState("connecting");
 
-      // Get ephemeral token from server
-      const { buildTracedHeaders } = await import("@/lib/api/client");
-      const tokenResponse = await fetch(config.tokenEndpoint, {
-        method: "POST",
-        headers: buildTracedHeaders(undefined, { "Content-Type": "application/json" }),
-        body: JSON.stringify({ assessmentId, ...tokenRequestBody }),
+      const tokenData = await fetchLiveToken({
+        endpoint: config.tokenEndpoint,
+        body: {
+          assessmentId,
+          ...tokenRequestBody,
+          ...(language ? { language } : {}),
+        },
       });
-
-      if (!tokenResponse.ok) {
-        const data = await tokenResponse.json();
-        throw new Error(data.error || "Failed to get token");
-      }
-
-      const response = await tokenResponse.json();
-      const tokenData = response.data;
 
       // Let caller extract additional data from token response
       onTokenResponse?.(tokenData);
 
-      // Connect to Gemini Live using the ephemeral token as API key
-      // Note: Must use httpOptions.baseUrl WITHOUT trailing slash to avoid double slash bug in SDK
-      const ai = new GoogleGenAI({
-        apiKey: tokenData.token,
-        httpOptions: {
-          apiVersion: "v1alpha",
-          baseUrl: "https://generativelanguage.googleapis.com", // No trailing slash!
-        },
-      });
+      openingTurnControllerRef.current?.markOpeningTurnPending();
 
       let sessionConnected = false;
-      const session = await ai.live.connect({
-        model: "gemini-2.5-flash-native-audio-latest",
-        config: {
-          responseModalities: [Modality.AUDIO],
-          inputAudioTranscription: {},
-          outputAudioTranscription: {},
-        },
+      const session = await connectLiveAudioSession({
+        token: tokenData.token,
         callbacks: {
           onopen: () => {
             sessionConnected = true;
@@ -386,18 +366,16 @@ export function useVoiceBase({
         },
       });
 
+      if (sessionRef.current) {
+        sessionRef.current.close();
+      }
       sessionRef.current = session;
 
       // Initialize audio capture
       await initializeAudioCapture(stream, session);
-
-      // Start the conversation by sending a greeting trigger
-      session.sendClientContent({
-        turns: [{ role: "user", parts: [{ text: config.initialGreeting }] }],
-        turnComplete: true,
-      });
     } catch (err) {
       logger.error("Connection error", { err });
+      openingTurnControllerRef.current?.reset();
       const catError = categorizeError(err);
       setCategorizedError(catError);
       setError(catError.userMessage);
@@ -415,8 +393,8 @@ export function useVoiceBase({
     connectionState,
     assessmentId,
     config.tokenEndpoint,
-    config.initialGreeting,
     tokenRequestBody,
+    language,
     updateConnectionState,
     handleServerMessage,
     initializeAudioCapture,
@@ -490,28 +468,19 @@ export function useVoiceBase({
 
   // Disconnect from Gemini Live
   const disconnect = useCallback(() => {
-    // Stop audio capture
-    if (workletNodeRef.current) {
-      workletNodeRef.current.disconnect();
-      workletNodeRef.current = null;
-    }
+    disconnectLiveAudioResources({
+      workletNode: workletNodeRef.current,
+      audioContext: audioContextRef.current,
+      mediaStream: mediaStreamRef.current,
+      session: sessionRef.current,
+      onPlaybackStopped: stopAudioPlayback,
+    });
 
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
-
-    // Close Gemini session
-    if (sessionRef.current) {
-      sessionRef.current.close();
-      sessionRef.current = null;
-    }
-
+    workletNodeRef.current = null;
+    audioContextRef.current = null;
+    mediaStreamRef.current = null;
+    sessionRef.current = null;
+    openingTurnControllerRef.current?.reset();
     setIsListening(false);
     setIsSpeaking(false);
     audioQueueRef.current = [];

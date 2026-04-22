@@ -23,9 +23,15 @@ import {
   isWebcamStreamActive,
   onWebcamStreamEnded,
   captureBestWebcamSnapshot,
+  requestMicrophoneAccess,
 } from "@/lib/media";
 import { CanvasCompositor } from "@/lib/media";
 import { VideoRecorder, checkMediaRecorderSupport } from "@/lib/media";
+import { createAudioMixer, type AudioMixer } from "@/lib/media/audio-mixer";
+import {
+  connectAudioStreamerToCapture,
+  disconnectAudioStreamerFromCapture,
+} from "@/lib/media";
 import { shouldSkipScreenRecording, createLogger } from "@/lib/core";
 
 const logger = createLogger("client:contexts:screen-recording");
@@ -50,6 +56,10 @@ interface ScreenRecordingContextValue {
   webcamState: WebcamState;
   webcamStream: MediaStream | null;
   sessionLoaded: boolean;
+  /** AudioContext destination node for capturing system audio in the recording.
+   *  Voice hooks should connect their audio output here (in addition to speakers)
+   *  so that AI voice responses are included in the screen recording. */
+  audioMixer: AudioMixer | null;
   startRecording: () => Promise<boolean>;
   stopRecording: () => void;
   retryRecording: () => Promise<boolean>;
@@ -97,8 +107,11 @@ async function uploadRecordingData(
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      logger.error("Upload failed", { error });
+      const body = await response.json().catch(() => null);
+      logger.error("Upload failed", {
+        status: String(response.status),
+        message: body?.error ?? "Unknown error",
+      });
       return false;
     }
 
@@ -109,22 +122,28 @@ async function uploadRecordingData(
   }
 }
 
-// Helper to manage recording sessions
+// Helper to manage recording sessions.
+//
+// Throws on failure instead of returning null so the caller can't silently
+// proceed into active-recording state with a missing segment id — that
+// masks the underlying failure and causes the next unrelated request to
+// look like the culprit.
 async function startRecordingSession(
   assessmentId: string
-): Promise<{ segmentId: string; segmentIndex: number } | null> {
-  try {
-    const response = await fetch("/api/recording/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assessmentId, action: "start" }),
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
-  } catch {
-    return null;
+): Promise<{ segmentId: string; segmentIndex: number }> {
+  const response = await fetch("/api/recording/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assessmentId, action: "start" }),
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `Failed to start recording session (HTTP ${response.status}): ${body || response.statusText}`
+    );
   }
+  const data = await response.json();
+  return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
 }
 
 async function interruptRecordingSession(
@@ -183,22 +202,25 @@ async function getSessionStatus(
   }
 }
 
-// Helper to start a fake recording session for E2E tests
+// Helper to start a fake recording session for E2E tests.
+// Same reasoning as startRecordingSession — throw so failures surface at
+// the call site instead of being silently swallowed.
 async function startFakeRecordingSession(
   assessmentId: string
-): Promise<{ segmentId: string; segmentIndex: number } | null> {
-  try {
-    const response = await fetch("/api/recording/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ assessmentId, action: "start", testMode: true }),
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
-  } catch {
-    return null;
+): Promise<{ segmentId: string; segmentIndex: number }> {
+  const response = await fetch("/api/recording/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assessmentId, action: "start", testMode: true }),
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `Failed to start fake recording session (HTTP ${response.status}): ${body || response.statusText}`
+    );
   }
+  const data = await response.json();
+  return { segmentId: data.data.segmentId, segmentIndex: data.data.segmentIndex };
 }
 
 export function ScreenRecordingProvider({
@@ -221,6 +243,8 @@ export function ScreenRecordingProvider({
   const cleanupRef = useRef<(() => void) | null>(null);
   const webcamCleanupRef = useRef<(() => void) | null>(null);
   const videoRecorderRef = useRef<VideoRecorder | null>(null);
+  const audioMixerRef = useRef<AudioMixer | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
   const chunkIndexRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
   const segmentIdRef = useRef<string | null>(null);
@@ -249,6 +273,17 @@ export function ScreenRecordingProvider({
     if (compositorRef.current) {
       compositorRef.current.stop();
       compositorRef.current = null;
+    }
+
+    // Stop audio mixer
+    if (audioMixerRef.current) {
+      disconnectAudioStreamerFromCapture(audioMixerRef.current.systemAudioDestination).catch(() => {});
+      audioMixerRef.current.stop();
+      audioMixerRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
     }
 
     // Stop webcam stream
@@ -302,6 +337,15 @@ export function ScreenRecordingProvider({
       webcamStreamRef.current = null;
       setWebcamStream(null);
       setWebcamState("idle");
+    }
+    if (audioMixerRef.current) {
+      disconnectAudioStreamerFromCapture(audioMixerRef.current.systemAudioDestination).catch(() => {});
+      audioMixerRef.current.stop();
+      audioMixerRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
     }
 
     // Reset counters
@@ -361,7 +405,41 @@ export function ScreenRecordingProvider({
         return false;
       }
 
-      // Step 3: Create composite stream via canvas compositor
+      // Step 3: Request microphone for audio recording (mandatory)
+      let mixer: AudioMixer | null = null;
+      try {
+        const micStream = await requestMicrophoneAccess();
+        micStreamRef.current = micStream;
+        mixer = createAudioMixer(micStream);
+        audioMixerRef.current = mixer;
+        // Route AI voice responses through the mixer so they're captured in recording
+        connectAudioStreamerToCapture(mixer.systemAudioDestination).catch(
+          (err) => logger.warn("Failed to connect audio streamer to mixer", { err: String(err) })
+        );
+        logger.info("Audio mixer initialized for recording");
+      } catch (micErr) {
+        // Microphone is mandatory — clean up screen and webcam streams and fail
+        stopScreenCapture(screenStream);
+        streamRef.current = null;
+        stopWebcamCapture(webcamMediaStream);
+        webcamStreamRef.current = null;
+        setWebcamStream(null);
+        setWebcamState("idle");
+
+        if (
+          micErr instanceof DOMException &&
+          (micErr.name === "NotAllowedError" ||
+            micErr.name === "PermissionDeniedError")
+        ) {
+          setError("Microphone permission was denied. Screen, webcam, and microphone are all required.");
+        } else {
+          setError("Failed to access microphone. Please ensure your microphone is connected and not in use by another application.");
+        }
+        setState("error");
+        return false;
+      }
+
+      // Step 4: Create composite stream via canvas compositor
       const compositor = new CanvasCompositor({
         webcamWidth: 320,
         webcamHeight: 240,
@@ -377,18 +455,25 @@ export function ScreenRecordingProvider({
         webcamMediaStream
       );
 
+      // Add audio track to composite stream if mixer is available
+      if (mixer?.audioTrack) {
+        compositeStream.addTrack(mixer.audioTrack);
+        logger.info("Audio track added to composite stream");
+      }
+
       // Initialize start time
       startTimeRef.current = Date.now();
 
-      // Start a new recording segment in the database
+      // Start a new recording segment in the database. If this throws, the
+      // outer catch will surface it as a recording error — we deliberately
+      // don't continue into active recording without a segment id, because
+      // subsequent uploads would be orphaned and the failure would look like
+      // it came from the next unrelated request (e.g. /api/call/token).
       const sessionResult = await startRecordingSession(assessmentId);
-      if (sessionResult) {
-        segmentIdRef.current = sessionResult.segmentId;
-        // Reset chunk index for the new segment
-        chunkIndexRef.current = 0;
-        setChunkCount(0);
-        setScreenshotCount(0);
-      }
+      segmentIdRef.current = sessionResult.segmentId;
+      chunkIndexRef.current = 0;
+      setChunkCount(0);
+      setScreenshotCount(0);
 
       // Step 4: Capture best webcam snapshot for profile photo (5 frames over 2s, picks sharpest)
       captureBestWebcamSnapshot(webcamMediaStream, 0.9)
@@ -411,7 +496,7 @@ export function ScreenRecordingProvider({
       videoRecorderRef.current = new VideoRecorder(
         {
           videoBitsPerSecond: 1_000_000, // 1 Mbps
-          timeslice: 10_000, // 10 second chunks
+          timeslice: 60_000, // 60 second chunks
           screenshotIntervalMs: 30_000, // Screenshot every 30 seconds
         },
         {
@@ -455,6 +540,8 @@ export function ScreenRecordingProvider({
       sessionStorage.setItem(`screen-recording-${assessmentId}`, "active");
       return true;
     } catch (err) {
+      cleanup();
+
       const errorMessage =
         err instanceof Error ? err.message : "Failed to start screen recording";
 
@@ -528,16 +615,30 @@ export function ScreenRecordingProvider({
     return () => clearInterval(interval);
   }, [state, handleStreamStopped]);
 
-  // Load session status on mount (for persistence across page reloads/laptop close)
+  // Load session status on mount (for persistence across page reloads/laptop close).
+  // Guarded so React Strict Mode's dev-only double-invoke doesn't fire two
+  // concurrent POSTs to /api/recording/session — those race on the Recording
+  // row's FOR UPDATE lock and the second one crashes with a Prisma transaction
+  // timeout, which destabilized the dev server during adjacent /api/call/token
+  // requests and caused the first voice call to fail.
+  const sessionLoadStartedRef = useRef(false);
   useEffect(() => {
+    if (sessionLoadStartedRef.current) return;
+    sessionLoadStartedRef.current = true;
+
     async function loadSession() {
       // In E2E test mode or when screen recording is skipped, auto-start a fake recording session
       if (shouldSkipScreenRecording()) {
-        const sessionResult = await startFakeRecordingSession(assessmentId);
-        if (sessionResult) {
+        try {
+          const sessionResult = await startFakeRecordingSession(assessmentId);
           segmentIdRef.current = sessionResult.segmentId;
+        } catch (err) {
+          logger.error("Failed to start fake recording session", { err: String(err) });
+          setError(err instanceof Error ? err.message : "Failed to start fake recording session");
+          setState("error");
+          setSessionLoaded(true);
+          return;
         }
-        // Set state to recording so downstream code works as expected
         setState("recording");
         setPermissionState("granted");
         setWebcamState("active");
@@ -618,6 +719,7 @@ export function ScreenRecordingProvider({
     webcamState,
     webcamStream,
     sessionLoaded,
+    audioMixer: audioMixerRef.current,
     startRecording,
     stopRecording,
     retryRecording,

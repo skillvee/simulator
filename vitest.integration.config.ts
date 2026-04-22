@@ -11,7 +11,7 @@ export default defineConfig({
     globals: true,
     include: ["**/*.integration.test.{ts,tsx}"],
     exclude: ["node_modules", ".next"],
-    testTimeout: 30000, // Database operations may take longer
+    testTimeout: 120000, // Gemini API + database calls may take a while
     hookTimeout: 30000,
   },
   resolve: {

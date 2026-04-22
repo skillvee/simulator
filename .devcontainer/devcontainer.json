@@ -1,0 +1,48 @@
+{
+  "name": "skillvee-simulator",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm",
+
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true
+    },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {}
+  },
+
+  "forwardPorts": [3000, 5555],
+  "portsAttributes": {
+    "3000": { "label": "Next.js dev", "onAutoForward": "notify" },
+    "5555": { "label": "Prisma Studio", "onAutoForward": "silent" }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "Prisma.prisma",
+        "bradlc.vscode-tailwindcss",
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+
+  "remoteEnv": {
+    "SKIP_ENV_VALIDATION": "1"
+  },
+
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind,consistency=cached"
+  ],
+
+  "remoteUser": "node"
+}

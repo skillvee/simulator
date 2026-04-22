@@ -84,7 +84,6 @@ vi.mock("@/lib/external", () => ({
 // ─── Import route handlers AFTER all mocks ────────────────────────
 import { POST as chatPOST } from "@/app/api/chat/route";
 import { POST as callTokenPOST } from "@/app/api/call/token/route";
-import { POST as completePOST } from "@/app/api/assessment/complete/route";
 import { POST as recordingPOST } from "@/app/api/recording/route";
 import { NextRequest } from "next/server";
 
@@ -117,8 +116,6 @@ function mockAssessment(status: AssessmentStatus, extra: Record<string, unknown>
     status,
     scenarioId: "scenario-1",
     startedAt: new Date("2025-01-01T10:00:00Z"),
-    prUrl: null,
-    managerMessagesStarted: false,
     repoUrl: "https://github.com/org/repo",
     scenario: {
       companyName: "Test Corp",
@@ -198,44 +195,6 @@ describe("Assessment Lifecycle State Guards", () => {
       expect(response.status).toBe(400);
       const json = await response.json();
       expect(json.error).toContain("completed");
-    });
-  });
-
-  // ─── Assessment complete route (/api/assessment/complete) ─────
-  describe("POST /api/assessment/complete — status guards", () => {
-    const completeBody = {
-      assessmentId: "assessment-1",
-      prUrl: "https://github.com/org/repo/pull/123",
-    };
-
-    it("rejects completion when assessment is already COMPLETED (double-completion)", async () => {
-      authedSession();
-      mockAssessmentFindUnique.mockResolvedValue(
-        mockAssessment(AssessmentStatus.COMPLETED)
-      );
-
-      const response = await completePOST(
-        makeJsonRequest("http://localhost/api/assessment/complete", completeBody)
-      );
-
-      expect(response.status).toBe(400);
-      const json = await response.json();
-      expect(json.error).toContain("Cannot complete assessment");
-    });
-
-    it("rejects completion when assessment is still in WELCOME", async () => {
-      authedSession();
-      mockAssessmentFindUnique.mockResolvedValue(
-        mockAssessment(AssessmentStatus.WELCOME)
-      );
-
-      const response = await completePOST(
-        makeJsonRequest("http://localhost/api/assessment/complete", completeBody)
-      );
-
-      expect(response.status).toBe(400);
-      const json = await response.json();
-      expect(json.error).toContain("Cannot complete assessment");
     });
   });
 

@@ -15,7 +15,6 @@ import {
   ChatStreamChunkSchema,
   ChatStreamDoneSchema,
   ChatGetResponseSchema,
-  AssessmentCompleteResponseSchema,
   AssessmentCreateResponseSchema,
   CallTokenResponseSchema,
   RecordingUploadResponseSchema,
@@ -101,6 +100,7 @@ vi.mock("@/lib/ai/conversation-memory", () => ({
     totalMessageCount: 0,
   }),
   formatMemoryForPrompt: vi.fn().mockReturnValue(""),
+  formatConversationTimeline: vi.fn().mockReturnValue(""),
   buildCrossCoworkerContext: vi.fn().mockReturnValue(""),
   formatConversationsForSummary: vi.fn().mockReturnValue(""),
 }));
@@ -109,8 +109,15 @@ vi.mock("@/lib/ai", () => ({
   parseCoworkerKnowledge: vi.fn().mockReturnValue([]),
 }));
 
+vi.mock("@/lib/analysis", () => ({
+  logAICall: vi.fn().mockResolvedValue({
+    complete: vi.fn().mockResolvedValue(undefined),
+    fail: vi.fn().mockResolvedValue(undefined),
+  }),
+}));
+
 vi.mock("@/lib/avatar", () => ({
-  inferDemographics: vi.fn().mockReturnValue({ gender: "male" }),
+  inferDemographics: vi.fn().mockReturnValue({ gender: "male", ethnicity: "white" }),
 }));
 
 vi.mock("@/lib/ai/gemini-config", () => ({
@@ -118,6 +125,7 @@ vi.mock("@/lib/ai/gemini-config", () => ({
     male: [{ name: "Puck" }],
     female: [{ name: "Kore" }],
   },
+  pickVoiceForCoworker: vi.fn().mockReturnValue("Puck"),
 }));
 
 vi.mock("@/lib/scenarios/repo-templates", () => ({
@@ -159,9 +167,7 @@ const mockAssessment = {
   status: AssessmentStatus.WORKING,
   startedAt: new Date("2026-01-01T00:00:00Z"),
   completedAt: null,
-  prUrl: null,
   repoUrl: null,
-  managerMessagesStarted: false,
   scenario: {
     id: SCENARIO_ID,
     companyName: "TestCo",
@@ -313,43 +319,6 @@ describe("API Response Contract Tests", () => {
     });
   });
 
-  // ── POST /api/assessment/complete ────────────────────────────────────────
-
-  describe("POST /api/assessment/complete — response contract", () => {
-    it("response matches AssessmentCompleteResponseSchema", async () => {
-      const { POST } = await import("@/app/api/assessment/complete/route");
-
-      mockAssessmentFindUnique.mockResolvedValue({
-        ...mockAssessment,
-        userId: USER_ID,
-      });
-      mockAssessmentUpdate.mockResolvedValue({
-        id: ASSESSMENT_ID,
-        status: AssessmentStatus.WORKING,
-        prUrl: "https://github.com/org/repo/pull/1",
-        startedAt: new Date("2026-01-01T00:00:00Z"),
-      });
-
-      const request = new Request(
-        "http://localhost/api/assessment/complete",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            assessmentId: ASSESSMENT_ID,
-            prUrl: "https://github.com/org/repo/pull/1",
-          }),
-        }
-      );
-
-      const response = await POST(request);
-      expect(response.status).toBe(200);
-
-      const body = await response.json();
-      const result = AssessmentCompleteResponseSchema.safeParse(body);
-      expect(result.success).toBe(true);
-    });
-  });
-
   // ── POST /api/assessment/create ──────────────────────────────────────────
 
   describe("POST /api/assessment/create — response contract", () => {
@@ -372,7 +341,6 @@ describe("API Response Contract Tests", () => {
         updatedAt: new Date(),
         startedAt: new Date(),
         completedAt: null,
-        prUrl: null,
         repoUrl: null,
         repoStatus: null,
       });

@@ -3,7 +3,7 @@
 // For the actual Gemini client, import from "./gemini" (server-only)
 
 // Model for live voice conversations
-export const LIVE_MODEL = "gemini-2.5-flash-native-audio-latest";
+export const LIVE_MODEL = "gemini-3.1-flash-live-preview";
 
 // Model for text-based AI operations (CV parsing, assessments, chat, etc.)
 export const TEXT_MODEL = "gemini-3-flash-preview";
@@ -36,6 +36,17 @@ export const ALL_VOICE_NAMES = [
 ] as const;
 
 export type VoiceName = (typeof ALL_VOICE_NAMES)[number];
+
+/**
+ * Deterministically pick a voice for a coworker given their gender + name.
+ * Same (gender, name) pair always returns the same voice.
+ * Use this to assign voices at coworker creation so they never drift from the character.
+ */
+export function pickVoiceForCoworker(gender: "male" | "female", name: string): string {
+  const voices = gender === "male" ? GEMINI_VOICES.male : GEMINI_VOICES.female;
+  const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return voices[hash % voices.length].name;
+}
 
 // Re-export TranscriptMessage from centralized types for backwards compatibility
 export type { TranscriptMessage } from "@/types";

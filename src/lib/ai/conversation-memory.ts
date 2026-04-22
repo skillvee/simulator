@@ -12,6 +12,7 @@ import type {
   CoworkerMemory,
 } from "@/types";
 import { createLogger } from "@/lib/core";
+import { logAICall } from "@/lib/analysis";
 
 const logger = createLogger("lib:ai:conversation-memory");
 
@@ -21,8 +22,8 @@ export type { ChatMessage, ConversationWithMeta, CoworkerMemory } from "@/types"
 // Summarization model - use Flash for speed
 const SUMMARY_MODEL = "gemini-3-flash-preview";
 
-// Maximum messages to include verbatim (recent context)
-const MAX_RECENT_MESSAGES = 10;
+// Include all messages verbatim — modern models have large context windows
+const MAX_RECENT_MESSAGES = Infinity;
 
 // Minimum messages before triggering summarization
 const MIN_MESSAGES_FOR_SUMMARY = 5;
@@ -39,7 +40,7 @@ const MIN_MESSAGES_FOR_SUMMARY = 5;
 export async function buildCoworkerMemory(
   conversations: ConversationWithMeta[],
   coworkerName: string,
-  options?: { maxRecentMessages?: number; skipSummary?: boolean }
+  options?: { maxRecentMessages?: number; skipSummary?: boolean; assessmentId?: string }
 ): Promise<CoworkerMemory> {
   const maxRecent = options?.maxRecentMessages ?? MAX_RECENT_MESSAGES;
 
@@ -78,7 +79,7 @@ export async function buildCoworkerMemory(
     );
 
     if (messagesToSummarize.length > 0) {
-      summary = await summarizeConversation(messagesToSummarize, coworkerName);
+      summary = await summarizeConversation(messagesToSummarize, coworkerName, options?.assessmentId);
     }
   }
 
@@ -132,7 +133,8 @@ Summary:`;
  */
 async function summarizeConversation(
   messages: ChatMessage[],
-  coworkerName: string
+  coworkerName: string,
+  assessmentId?: string
 ): Promise<string> {
   const conversationText = messages
     .map((m) => `${m.role === "user" ? "Candidate" : coworkerName}: ${m.text}`)
@@ -140,15 +142,31 @@ async function summarizeConversation(
 
   const prompt = buildConversationSummaryPrompt(coworkerName, conversationText, messages.length);
 
+  // Log AI call if assessmentId is available
+  const tracker = assessmentId
+    ? await logAICall({
+        assessmentId,
+        endpoint: "conversation-memory",
+        promptText: prompt,
+        modelVersion: SUMMARY_MODEL,
+        promptType: "CONVERSATION_SUMMARY",
+        promptVersion: "1.0",
+        modelUsed: SUMMARY_MODEL,
+      }).catch(() => null)
+    : null;
+
   try {
     const response = await gemini.models.generateContent({
       model: SUMMARY_MODEL,
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
-    return response.text || "";
-  } catch (error) {
-    logger.error("Error summarizing conversation", { error: error instanceof Error ? error.message : String(error) });
+    const text = response.text || "";
+    await tracker?.complete({ responseText: text, statusCode: 200 }).catch(() => {});
+    return text;
+  } catch (err) {
+    await tracker?.fail(err instanceof Error ? err : new Error(String(err))).catch(() => {});
+    logger.error("Error summarizing conversation", { error: err instanceof Error ? err.message : String(err) });
     // Fallback: return a basic summary
     return `We have had ${messages.length} previous exchanges.`;
   }
@@ -169,36 +187,130 @@ export function formatMemoryForPrompt(
     return "";
   }
 
-  const sections: string[] = ["\n## Prior Conversation History"];
-  sections.push(
-    "The messages below are the ONLY interactions you have had with this candidate. Do not reference any other conversations, meetings, or discussions that are not shown here."
-  );
+  const sections: string[] = ["\n## Conversation History"];
 
-  // Add summary if available
-  if (memory.summary) {
-    sections.push(`\n### Summary of Earlier Conversations\n${memory.summary}`);
-  }
-
-  // Add recent messages
   if (memory.recentMessages.length > 0) {
-    sections.push("\n### Recent Messages");
-    const formattedMessages = memory.recentMessages
+    const merged = mergeConsecutiveMessages(memory.recentMessages);
+    const formattedMessages = merged
       .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
       .join("\n");
     sections.push(formattedMessages);
   }
 
-  sections.push(
-    "\n**CRITICAL INCREMENTAL SHARING RULES:**",
-    "- If the candidate brings up a topic from a prior conversation, you may BUILD on what you already told them. Do NOT proactively bring up past topics — let the candidate re-engage.",
-    "- Use 'As I mentioned...' or 'Building on what we discussed...' ONLY when the candidate asks about a topic you previously discussed, NOT to proactively reference old topics",
-    "- If they ask about the SAME topic again, share NEW details you didn't mention before",
-    "- NEVER repeat the exact same information - always add something new or go deeper",
-    "- Example: If you previously said 'We use Redis for caching', next time say 'The Redis setup I mentioned also handles our pub/sub for real-time updates'",
-    "\nContinue the conversation naturally. Only reference prior discussions when the candidate brings up a related topic. Don't repeat information unless specifically asked to clarify."
-  );
+  return sections.join("\n");
+}
+
+/**
+ * Format conversation history with modality and time boundaries.
+ * Groups messages by conversation (chat vs call) in chronological order,
+ * so the agent sees a timeline like:
+ *
+ *   ## Conversation History
+ *   ### Slack chat — 2:15 PM
+ *   Candidate: Hi Elena!
+ *   You: Hey, welcome!
+ *   ### Voice call — 3:03 PM
+ *   You: Just circling back on the logging bug...
+ *   ### Slack chat — 3:20 PM
+ *   Candidate: Talked to Chloe, bug is confirmed.
+ */
+export function formatConversationTimeline(
+  conversations: ConversationWithMeta[]
+): string {
+  // Filter to conversations with messages, sort chronologically
+  const withMessages = conversations
+    .filter((c) => c.messages.length > 0)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  if (withMessages.length === 0) {
+    return "";
+  }
+
+  const sections: string[] = ["\n## Past Conversations (memory — NOT ongoing)"];
+
+  for (const conv of withMessages) {
+    if (conv.type === "voice") {
+      // Split a voice conversation into discrete call sessions using
+      // timestamp gaps — consecutive voice calls persist into the same
+      // DB row, so we segment on idle gaps > 60s.
+      const callSessions = splitVoiceCallSessions(conv.messages);
+      for (const session of callSessions) {
+        const firstTs = session[0]?.timestamp ?? conv.createdAt;
+        const header = `### Voice call — ${formatConversationTime(firstTs)} (${formatRelativeTime(firstTs)}, ended)`;
+        sections.push(header);
+
+        const merged = mergeConsecutiveMessages(session);
+        const formatted = merged
+          .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
+          .join("\n");
+        sections.push(formatted);
+      }
+    } else {
+      const time = formatConversationTime(conv.createdAt);
+      sections.push(`### Slack chat — ${time}`);
+
+      const merged = mergeConsecutiveMessages(conv.messages);
+      const formatted = merged
+        .map((m) => `${m.role === "user" ? "Candidate" : "You"}: ${m.text}`)
+        .join("\n");
+      sections.push(formatted);
+    }
+  }
 
   return sections.join("\n");
+}
+
+/** Split voice messages into discrete call sessions by timestamp gap */
+function splitVoiceCallSessions(
+  messages: ChatMessage[],
+  gapSeconds = 60
+): ChatMessage[][] {
+  if (messages.length === 0) return [];
+  const sessions: ChatMessage[][] = [[messages[0]]];
+  for (let i = 1; i < messages.length; i++) {
+    const prev = new Date(messages[i - 1].timestamp).getTime();
+    const curr = new Date(messages[i].timestamp).getTime();
+    if (!isNaN(prev) && !isNaN(curr) && (curr - prev) / 1000 > gapSeconds) {
+      sessions.push([messages[i]]);
+    } else {
+      sessions[sessions.length - 1].push(messages[i]);
+    }
+  }
+  return sessions;
+}
+
+/** Format a timestamp as relative time (e.g., "2 min ago", "about 1 hour ago") */
+function formatRelativeTime(timestamp: Date | string): string {
+  const d = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+  const diffMs = Date.now() - d.getTime();
+  if (isNaN(diffMs) || diffMs < 0) return "just now";
+  const minutes = Math.round(diffMs / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes === 1) return "1 min ago";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  return hours === 1 ? "about 1 hour ago" : `about ${hours} hours ago`;
+}
+
+/** Merge consecutive messages from the same role (fixes voice word-by-word fragments) */
+function mergeConsecutiveMessages(messages: ChatMessage[]): ChatMessage[] {
+  if (messages.length === 0) return [];
+  const merged: ChatMessage[] = [{ ...messages[0] }];
+  for (let i = 1; i < messages.length; i++) {
+    const last = merged[merged.length - 1];
+    if (messages[i].role === last.role) {
+      last.text += " " + messages[i].text;
+    } else {
+      merged.push({ ...messages[i] });
+    }
+  }
+  return merged;
+}
+
+/** Format a date for the conversation timeline header */
+function formatConversationTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
 /**
@@ -224,34 +336,20 @@ export function buildCrossCoworkerContext(
     return "";
   }
 
-  // Build brief context about other interactions
-  const otherInteractions: string[] = [];
-
+  // Collect names of coworkers the candidate has talked to
+  const names = new Set<string>();
   for (const conv of otherCoworkerConversations) {
-    const coworkerName = coworkerMap.get(conv.coworkerId!) || "a coworker";
-    const messageCount = conv.messages.length;
-
-    if (messageCount > 0) {
-      otherInteractions.push(
-        `- The candidate has chatted with ${coworkerName} (${messageCount} messages).`
-      );
+    if (conv.messages.length > 0) {
+      const name = coworkerMap.get(conv.coworkerId!) || "a coworker";
+      names.add(name);
     }
   }
 
-  if (otherInteractions.length === 0) {
+  if (names.size === 0) {
     return "";
   }
 
-  return `\n## Context About Other Conversations
-The candidate has been reaching out to other team members. This is normal and encouraged.
-${otherInteractions.join("\n")}
-
-**IMPORTANT RULES about cross-coworker awareness:**
-- You can acknowledge that the candidate has been talking to specific coworkers listed above (e.g., "I heard you were talking to Alex")
-- If the candidate ASKS "who have I been chatting with?" — ONLY list the coworkers named above. Do NOT list team members they haven't talked to
-- Do NOT assume you know what the candidate discussed with other team members. If they mention talking to someone, ask what came up rather than guessing.
-- Do NOT independently confirm specific technical details from another person's private conversation. If the candidate says "Alex told me about X", you may acknowledge they talked, but share your OWN perspective on X (not echoing what Alex said)
-- Do NOT pry into their conversations with others`;
+  return `\nThe candidate has also talked to: ${Array.from(names).join(", ")}. Don't assume you know what they discussed.`;
 }
 
 /**

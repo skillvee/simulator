@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod";
+import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
 
 /**
  * Schema for structured personality dimensions
@@ -39,6 +40,22 @@ export const coworkerBuilderSchema = z.object({
   role: z.string().min(1),
   personaStyle: z.string().min(1),
   personality: coworkerPersonalitySchema.optional(),
+  // Optional at schema level for backward compat with legacy fixtures.
+  // The coworker generator post-fills these via name-based inference when the LLM omits them,
+  // and call sites fall back to inference if still missing.
+  gender: z.enum(["male", "female"]).optional(),
+  ethnicity: z
+    .enum([
+      "east_asian",
+      "south_asian",
+      "southeast_asian",
+      "white",
+      "black",
+      "hispanic",
+      "middle_eastern",
+      "mixed",
+    ])
+    .optional(),
   knowledge: z.array(
     z.object({
       topic: z.string(),
@@ -372,11 +389,15 @@ export function applyExtraction(
  * Build the complete system prompt including current state
  */
 export function buildCompleteSystemPrompt(
-  currentData: ScenarioBuilderData
+  currentData: ScenarioBuilderData,
+  language: SupportedLanguage
 ): string {
-  return (
-    SCENARIO_BUILDER_SYSTEM_PROMPT +
+  const languageInstruction = buildLanguageInstruction(language);
+  const basePrompt = SCENARIO_BUILDER_SYSTEM_PROMPT +
     formatCurrentStateForPrompt(currentData) +
-    extractionInstructionsPrompt
-  );
+    extractionInstructionsPrompt;
+
+  return languageInstruction
+    ? `${languageInstruction}\n\n${basePrompt}`
+    : basePrompt;
 }

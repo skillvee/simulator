@@ -37,6 +37,12 @@ import { CoworkerAvatar } from "./coworker-avatar";
 
 Rounded corners (0.5rem default), subtle shadows, blue (#237CF1) primary, Figtree + Space Mono fonts.
 
+## Voice Call Paths
+
+- `src/components/chat/slack-layout.tsx` mounts `src/components/chat/floating-call-bar.tsx` for active calls on the assessment work page. This is the real Gemini Live call path candidates hit in the Slack-style UI.
+- `src/components/chat/floating-call-bar.tsx` owns the work-page call UI, but the underlying Gemini Live protocol/bootstrap code now lives in `src/lib/ai/live-session.ts`.
+- If the bug is "the coworker did/didn't say X when the call connected" or anything around Live API setup/order-of-operations, start with `FloatingCallBar` and `src/lib/ai/live-session.ts`.
+
 ## Server/Client Split
 
 Server components fetch data and pass serialized (JSON-safe) props to client components. Prisma Dates need serialization.

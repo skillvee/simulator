@@ -54,6 +54,7 @@ const fullScenarioMock = {
   techStack: ["react", "typescript", "nextjs"],
   targetLevel: "senior",
   repoUrl: null,
+  resources: null,
   createdById: "recruiter-1",
   coworkers: [
     {
@@ -271,13 +272,18 @@ describe("POST /api/recruiter/simulations/[id]/provision-repo", () => {
         })
       );
 
-      // Verify scenario was updated with repo URL and cached spec
+      // Verify scenario was updated with repo URL, cached spec, and resources
       expect(mockUpdate).toHaveBeenCalledWith({
         where: { id: mockScenarioId },
-        data: {
+        data: expect.objectContaining({
           repoUrl: mockRepoUrl,
-          repoSpec: { projectName: "payment-gateway" },
-        },
+          resources: expect.arrayContaining([
+            expect.objectContaining({
+              type: "repository",
+              url: mockRepoUrl,
+            }),
+          ]),
+        }),
       });
     });
   });

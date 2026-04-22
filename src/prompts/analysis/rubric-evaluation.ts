@@ -8,6 +8,8 @@
  * @since 2026-02-06
  */
 
+import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
+
 export const RUBRIC_EVALUATION_PROMPT_VERSION = "3.0.0";
 
 // ============================================================================
@@ -45,6 +47,7 @@ export interface RubricPromptInput {
     taskDescription?: string;
     expectedOutcomes?: string[];
   };
+  language?: string;
 }
 
 // ============================================================================
@@ -107,7 +110,7 @@ function buildOutputSchema(
   const dimScores = dimensions
     .map(
       (d) => `    "${d.slug}": {
-      "score": "<integer 1-4 or null if insufficient evidence>",
+      "score": <JSON_NUMBER integer 1-4 OR null — unquoted number literal, never a string>,
       "summary": "<1 sentence summarizing this dimension's performance — e.g. 'Quickly breaks ambiguous problems into structured subcomponents.'>",
       "confidence": "high" | "medium" | "low",
       "rationale": "<why this score was given, with specific evidence>",
@@ -115,7 +118,7 @@ function buildOutputSchema(
         { "timestamp": "MM:SS", "behavior": "<specific observed behavior at this timestamp>" },
         { "timestamp": "MM:SS", "behavior": "<specific observed behavior at this timestamp>" }
       ],
-      "trainable_gap": "<boolean - true if this is a skill that can be improved>",
+      "trainable_gap": <JSON_BOOLEAN true if this skill is improvable, else false — unquoted>,
       "green_flags": ["<positive signal 1>"],
       "red_flags": ["<concern 1>"]
     }`
@@ -136,7 +139,7 @@ function buildOutputSchema(
   return `\`\`\`json
 {
   "evaluation_version": "${RUBRIC_EVALUATION_PROMPT_VERSION}",
-  "overall_score": "<number 1.0-4.0, one decimal place — weighted average of non-null dimension scores>",
+  "overall_score": <JSON_NUMBER 1.0-4.0 with one decimal place — weighted average of non-null dimension scores. Unquoted number literal. Use null ONLY if every dimension is null.>,
   "dimension_scores": {
 ${dimScores}
   },
@@ -144,14 +147,14 @@ ${redFlagSchema}
   "top_strengths": [
     {
       "dimension": "<dimension name>",
-      "score": "<integer 1-4>",
+      "score": <JSON_NUMBER integer 1-4, unquoted>,
       "description": "<1-2 sentence explanation of why this is a strength, referencing specific evidence>"
     }
   ],
   "growth_areas": [
     {
       "dimension": "<dimension name>",
-      "score": "<integer 1-4>",
+      "score": <JSON_NUMBER integer 1-4, unquoted>,
       "description": "<1-2 sentence explanation of the gap and what improvement looks like>"
     }
   ],
@@ -169,7 +172,7 @@ ${redFlagSchema}
  * @returns Complete evaluation prompt string
  */
 export function buildRubricEvaluationPrompt(input: RubricPromptInput): string {
-  const { roleFamilyName, dimensions, redFlags, videoContext } = input;
+  const { roleFamilyName, dimensions, redFlags, videoContext, language } = input;
 
   const dimensionSections = dimensions
     .map((d, i) => buildDimensionSection(d, i))
@@ -193,7 +196,16 @@ ${videoContext.expectedOutcomes?.length ? `- Expected Outcomes:\n${videoContext.
 `
     : "";
 
-  return `You are an objective, evidence-based evaluator assessing a candidate's recorded work session for a **${roleFamilyName}** role. Your evaluation must be fair, consistent, and grounded exclusively in observable behaviors.
+  // Add language instruction for narrative fields if non-English
+  const langInstruction = language && language !== 'en'
+    ? buildLanguageInstruction(language as SupportedLanguage)
+    : '';
+
+  const languageNote = langInstruction
+    ? `\n\n## LANGUAGE INSTRUCTION FOR NARRATIVE FIELDS\n\n${langInstruction}\n\nIMPORTANT: Apply this language instruction ONLY to the narrative fields: overall_summary, descriptions in top_strengths, and descriptions in growth_areas. Keep all dimension names, slugs, JSON keys, and scoring rubric references in English.`
+    : '';
+
+  return `You are an objective, evidence-based evaluator assessing a candidate's recorded work session for a **${roleFamilyName}** role. Your evaluation must be fair, consistent, and grounded exclusively in observable behaviors.${languageNote}
 
 ## CRITICAL RULES
 
@@ -215,6 +227,13 @@ ${videoContext.expectedOutcomes?.length ? `- Expected Outcomes:\n${videoContext.
 - NO seniority assumptions based on appearance, speech patterns, or demographics
 - NO role assumptions about background, experience, or job history
 - NO implicit bias: evaluate only observable behaviors
+
+### JSON Types (strict)
+- Placeholders shown as \`<JSON_NUMBER ...>\` MUST be replaced with an unquoted JSON number literal (e.g. \`3\` or \`3.4\`), NEVER a string like \`"3"\` or \`"N/A"\`
+- Placeholders shown as \`<JSON_BOOLEAN ...>\` MUST be replaced with \`true\` or \`false\`, unquoted
+- \`overall_score\` MUST be a number or \`null\` — never a string, never omitted
+- Any \`score\` field MUST be a number or \`null\` — never a string
+- Do NOT include comments (\`//\` or \`/* */\`) anywhere in the output
 
 ---
 

@@ -19,6 +19,8 @@ export interface UseDefenseCallOptions extends Omit<VoiceBaseOptions, "maxRetrie
   /** Endpoint to save the transcript. Will be configured when integrated with Slack. */
   transcriptEndpoint?: string;
   onCallEnded?: () => void;
+  /** Language of the assessment scenario */
+  language?: string;
 }
 
 export interface UseDefenseCallReturn {
@@ -34,7 +36,6 @@ export interface UseDefenseCallReturn {
   callEndedAt: Date | null;
   managerName: string | null;
   managerRole: string | null;
-  prUrl: string | null;
   retryCount: number;
   maxRetries: number;
   connect: () => Promise<void>;
@@ -63,12 +64,12 @@ export function useDefenseCall({
   onConnectionStateChange,
   onError,
   onCallEnded,
+  language,
 }: UseDefenseCallOptions): UseDefenseCallReturn {
   // Defense-specific state from token response
   const [managerName, setManagerName] = useState<string | null>(null);
   const [managerRole, setManagerRole] = useState<string | null>(null);
   const [managerId, setManagerId] = useState<string | null>(null);
-  const [prUrl, setPrUrl] = useState<string | null>(null);
 
   const base = useVoiceBase({
     assessmentId,
@@ -77,15 +78,14 @@ export function useDefenseCall({
     onError,
     config: {
       tokenEndpoint,
-      initialGreeting: "Hi, I'm ready to walk you through my PR!",
       enableSessionRecovery: false,
     },
     onTokenResponse: (tokenData) => {
       setManagerName(tokenData.managerName as string | null);
       setManagerRole(tokenData.managerRole as string | null);
       setManagerId(tokenData.managerId as string | null);
-      setPrUrl(tokenData.prUrl as string | null);
     },
+    language,
   });
 
   // Fire-and-forget session log to /api/call/log
@@ -163,7 +163,6 @@ export function useDefenseCall({
     callEndedAt: base.endedAt,
     managerName,
     managerRole,
-    prUrl,
     retryCount: base.retryCount,
     maxRetries: base.maxRetries,
     connect: base.connect,
