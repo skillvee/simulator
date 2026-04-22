@@ -43,6 +43,7 @@ export default function OnePageInvestorPage() {
               style={{ width: 180, height: "auto", maxWidth: "100%" }}
             />
             <p
+              className="op-tagline"
               style={{
                 fontSize: 16,
                 color: "#475569",
@@ -199,6 +200,7 @@ export default function OnePageInvestorPage() {
         >
           {/* WHY NOW */}
           <div
+            className="op-panel"
             style={{
               background: "rgba(35, 124, 241, 0.04)",
               border: "1px solid rgba(35, 124, 241, 0.2)",
@@ -264,6 +266,7 @@ export default function OnePageInvestorPage() {
 
           {/* KEY INSIGHT */}
           <div
+            className="op-panel"
             style={{
               background: "rgba(35, 124, 241, 0.04)",
               border: "1px solid rgba(35, 124, 241, 0.2)",
@@ -701,15 +704,24 @@ export default function OnePageInvestorPage() {
           .op-container {
             padding: 24px 16px !important;
           }
+          .op-container > * {
+            margin-bottom: 32px !important;
+          }
+          .op-container > footer {
+            margin-bottom: 0 !important;
+          }
           .op-header {
             flex-direction: column;
             align-items: flex-start !important;
-            gap: 12px !important;
-            margin-bottom: 28px !important;
+            gap: 10px !important;
+          }
+          .op-tagline {
+            font-size: 13px !important;
+            font-weight: 500 !important;
           }
           .op-grid-2 {
             grid-template-columns: 1fr !important;
-            gap: 32px !important;
+            gap: 24px !important;
           }
           .op-grid-3 {
             grid-template-columns: 1fr !important;
@@ -720,7 +732,10 @@ export default function OnePageInvestorPage() {
           }
           .op-metric-num {
             font-size: 24px !important;
-            min-width: 64px !important;
+            min-width: 56px !important;
+          }
+          .op-panel {
+            padding: 20px 18px !important;
           }
           .op-footer {
             flex-direction: column;
