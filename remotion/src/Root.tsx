@@ -28,6 +28,9 @@ import { ProductStep3 } from "./scenes/ProductStep3";
 // Homepage hero loop
 import { HeroLoop } from "./scenes/HeroLoop";
 
+// Concept-driven hero (synthetic visuals, no real footage)
+import { HeroPitch } from "./scenes/HeroPitch";
+
 // Hackathon deck
 import {
   HP1Problem,
@@ -273,6 +276,18 @@ export const RemotionRoot: React.FC = () => {
         id="HeroLoop"
         component={HeroLoop}
         durationInFrames={8 * FPS}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+
+      {/* ============================================
+          HERO PITCH — 30s concept-driven loop (synthetic visuals)
+          ============================================ */}
+      <Composition
+        id="HeroPitch"
+        component={HeroPitch}
+        durationInFrames={30 * FPS}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}

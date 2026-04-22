@@ -1,10 +1,37 @@
 // remotion/src/lib/design-system.ts
+//
+// Video design tokens. Palette aligns with the Skillvee web app:
+//   - Primary brand: #237CF1 (Tailwind `primary`)
+//   - Dark site bg:  #020617 (Tailwind `slate-950`)
+// Token names mirror shadcn/ui so scene code reads like the website.
 export const colors = {
+  // Surfaces
   background: '#FFFFFF',
-  text: '#000000',
-  accent: '#237CF1',
-  border: '#e2e8f0',
-  success: '#22c55e',
+  dark: '#020617',           // matches the site's hero bg
+  muted: '#F1F5F9',          // slate-100 — subtle surface
+  border: '#E2E8F0',         // slate-200
+
+  // Text
+  text: '#000000',           // legacy alias, prefer `foreground`
+  foreground: '#0F172A',     // slate-900 — primary text
+  mutedForeground: '#64748B',// slate-500 — secondary text
+
+  // Brand
+  accent: '#237CF1',         // legacy alias, prefer `primary`
+  primary: '#237CF1',
+  primaryForeground: '#FFFFFF',
+
+  // Status
+  success: '#22C55E',        // green-500
+  successLight: '#DCFCE7',   // green-100
+  warning: '#F59E0B',        // amber-500
+  destructive: '#EF4444',    // red-500
+
+  // Evaluation tier colors (matches scorecard semantics)
+  developing: '#F59E0B',     // amber — needs improvement
+  proficient: '#22C55E',     // green — meets bar
+  strong: '#237CF1',         // brand blue — above bar
+  exceptional: '#0F766E',    // teal-700 — top tier
 } as const;
 
 export const spacing = {

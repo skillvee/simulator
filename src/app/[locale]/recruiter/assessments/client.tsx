@@ -140,7 +140,7 @@ export function AssessmentsListClient({
             </h1>
             <Button
               asChild
-              className="h-10 rounded-full bg-stone-900 px-5 text-sm font-medium text-white hover:bg-stone-800"
+              className="h-10 rounded-full bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700"
             >
               <Link href="/recruiter/simulations/new">
                 <Plus className="mr-2 h-4 w-4" />
@@ -157,7 +157,7 @@ export function AssessmentsListClient({
               <p className="mt-2 text-stone-500">{t("empty.description")}</p>
               <Button
                 asChild
-                className="mt-6 rounded-full bg-stone-900 px-5 text-white hover:bg-stone-800"
+                className="mt-6 rounded-full bg-blue-600 px-5 text-white hover:bg-blue-700"
               >
                 <Link href="/recruiter/simulations/new">
                   <Plus className="mr-2 h-4 w-4" />
@@ -196,7 +196,7 @@ export function AssessmentsListClient({
           </div>
           <Button
             asChild
-            className="h-10 rounded-full bg-stone-900 px-5 text-sm font-medium text-white hover:bg-stone-800"
+            className="h-10 rounded-full bg-blue-600 px-5 text-sm font-medium text-white hover:bg-blue-700"
           >
             <Link href="/recruiter/simulations/new">
               <Plus className="mr-2 h-4 w-4" />
