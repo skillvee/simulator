@@ -21,6 +21,12 @@ export const gemini = new GoogleGenAI({
   httpOptions: { apiVersion: "v1alpha" },
 });
 
+// Embedding endpoints are not exposed under v1alpha — use the SDK default
+// (v1beta) for embedContent calls.
+export const geminiEmbeddings = new GoogleGenAI({
+  apiKey: env.GEMINI_API_KEY,
+});
+
 // Generate an ephemeral token for client-side Gemini Live connections
 export async function generateEphemeralToken(config?: {
   systemInstruction?: string;

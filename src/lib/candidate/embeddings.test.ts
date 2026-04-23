@@ -10,7 +10,7 @@ import { AssessmentDimension, VideoAssessmentStatus } from "@prisma/client";
 
 // Mock the gemini module
 vi.mock("@/lib/ai/gemini", () => ({
-  gemini: {
+  geminiEmbeddings: {
     models: {
       embedContent: vi.fn(),
     },
@@ -34,7 +34,7 @@ vi.mock("@/lib/core/error-recovery", () => ({
 }));
 
 // Import after mocks
-import { gemini } from "@/lib/ai/gemini";
+import { geminiEmbeddings } from "@/lib/ai/gemini";
 import { db } from "@/server/db";
 import {
   EMBEDDING_MODEL,
@@ -52,7 +52,7 @@ import {
 } from "./embeddings";
 
 // Cast mocks for type-safe access
-const mockEmbedContent = gemini.models.embedContent as ReturnType<typeof vi.fn>;
+const mockEmbedContent = geminiEmbeddings.models.embedContent as ReturnType<typeof vi.fn>;
 const mockDbVideoAssessment = db.videoAssessment as unknown as {
   findUnique: ReturnType<typeof vi.fn>;
 };
