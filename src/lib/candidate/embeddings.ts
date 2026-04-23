@@ -20,13 +20,17 @@ import { AssessmentDimension, VideoAssessmentStatus } from "@prisma/client";
 // ============================================================================
 
 /**
- * Model ID for text embeddings
- * Using text-embedding-004 which produces 768-dimensional embeddings
+ * Model ID for text embeddings.
+ *
+ * `text-embedding-004` was deprecated by Google. Switched to
+ * `gemini-embedding-001` which is the current GA embedding model.
+ * Native output is 3072 dims; we request 768 via outputDimensionality
+ * to match the existing `vector(768)` column.
  */
-export const EMBEDDING_MODEL = "text-embedding-004";
+export const EMBEDDING_MODEL = "gemini-embedding-001";
 
 /**
- * Embedding dimensions (fixed for text-embedding-004)
+ * Embedding dimensions — fixed by the existing `vector(768)` column.
  */
 export const EMBEDDING_DIMENSIONS = 768;
 
@@ -76,6 +80,7 @@ export async function generateEmbedding(
   const response = await geminiEmbeddings.models.embedContent({
     model: EMBEDDING_MODEL,
     contents: [{ parts: [{ text }] }],
+    config: { outputDimensionality: EMBEDDING_DIMENSIONS },
   });
 
   if (!response.embeddings?.[0]?.values) {

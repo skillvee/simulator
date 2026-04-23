@@ -64,8 +64,8 @@ const mockQueryRaw = db.$queryRaw as unknown as ReturnType<typeof vi.fn>;
 // ============================================================================
 
 describe("Embedding Constants", () => {
-  it("should use text-embedding-004 model", () => {
-    expect(EMBEDDING_MODEL).toBe("text-embedding-004");
+  it("should use gemini-embedding-001 model", () => {
+    expect(EMBEDDING_MODEL).toBe("gemini-embedding-001");
   });
 
   it("should have 768 dimensions", () => {
@@ -93,6 +93,7 @@ describe("generateEmbedding", () => {
     expect(mockEmbedContent).toHaveBeenCalledWith({
       model: EMBEDDING_MODEL,
       contents: [{ parts: [{ text: "Test text" }] }],
+      config: { outputDimensionality: 768 },
     });
     expect(result).toEqual(mockEmbedding);
   });
@@ -450,7 +451,7 @@ describe("getEmbeddingMetadata", () => {
     mockQueryRaw.mockResolvedValue([
       {
         id: "embedding-id",
-        embeddingModel: "text-embedding-004",
+        embeddingModel: "gemini-embedding-001",
         createdAt,
       },
     ]);
@@ -459,7 +460,7 @@ describe("getEmbeddingMetadata", () => {
 
     expect(result).toEqual({
       id: "embedding-id",
-      embeddingModel: "text-embedding-004",
+      embeddingModel: "gemini-embedding-001",
       createdAt,
     });
   });
