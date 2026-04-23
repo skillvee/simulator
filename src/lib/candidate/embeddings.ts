@@ -8,7 +8,7 @@
  * @see Issue #67: US-011
  */
 
-import { gemini } from "@/lib/ai/gemini";
+import { geminiEmbeddings } from "@/lib/ai/gemini";
 import { db } from "@/server/db";
 import { withRetry, createLogger } from "@/lib/core";
 
@@ -73,7 +73,7 @@ export type EmbeddingVector = number[];
 export async function generateEmbedding(
   text: string
 ): Promise<EmbeddingVector> {
-  const response = await gemini.models.embedContent({
+  const response = await geminiEmbeddings.models.embedContent({
     model: EMBEDDING_MODEL,
     contents: [{ parts: [{ text }] }],
   });
