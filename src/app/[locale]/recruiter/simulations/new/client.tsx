@@ -26,12 +26,12 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
-import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
+import { CoworkerAvatar } from "@/components/chat/coworker-avatar";
 import type { ParseJDResponse, InferredSeniorityLevel, ScenarioResource, SimulationDepth } from "@/types";
 import { SIMULATION_DEPTH_CONFIG } from "@/types";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
 import type { TaskOption } from "@/lib/scenarios/task-generator";
-import { CandidateExperienceSummary } from "@/components/recruiter/candidate-experience-summary"; // eslint-disable-line no-restricted-imports -- Component import allowed for UI
+import { CandidateExperienceSummary } from "@/components/recruiter/candidate-experience-summary";
 import {
   Sheet,
   SheetTrigger,
@@ -184,7 +184,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
       );
     }, 2800);
     return () => clearInterval(interval);
-  }, [step, resetGeneratingProgress]);
+  }, [step, resetGeneratingProgress, GENERATING_STEPS.length]);
 
   // Fetch archetypes on mount
   useEffect(() => {

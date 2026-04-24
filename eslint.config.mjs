@@ -25,7 +25,7 @@ const eslintConfig = [
         {
           patterns: [
             {
-              group: ["@/components/*/*", "!@/components/ui/*", "!@/components/landing/*", "!@/components/assessment/*"],
+              group: ["@/components/*/*", "!@/components/ui/*", "!@/components/landing/*", "!@/components/assessment/*", "!@/components/shared/*", "!@/components/layout/*", "!@/components/chat/*", "!@/components/recruiter/*"],
               message:
                 "Import types from @/types instead of component implementation files. (Note: @/components/ui/* and @/components/landing/* imports are allowed)",
             },
