@@ -89,7 +89,24 @@ export async function POST(request: Request) {
   // Validate request body using Zod schema
   const validated = await validateRequest(request, ScenarioCreateSchema);
   if ("error" in validated) return validated.error;
-  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, targetLevel, archetypeId, simulationDepth, resources, language } = validated.data;
+  const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, targetLevel, archetypeId, simulationDepth, resources, language, creationLogId } = validated.data;
+
+  // Fallback: if the client didn't send resources but we have a creation log,
+  // look up the completed generate_resources step and use its output.
+  // This closes a race where the client's fetch to generate-resources times
+  // out but the backend step eventually succeeds and persists its output.
+  let finalResources = resources;
+  if ((!finalResources || finalResources.length === 0) && creationLogId) {
+    const step = await db.simulationGenerationStep.findFirst({
+      where: { creationLogId, stepName: "generate_resources", status: "completed" },
+      orderBy: { createdAt: "desc" },
+    });
+    const recovered = (step?.outputData as { resources?: unknown } | null)?.resources;
+    if (Array.isArray(recovered) && recovered.length > 0) {
+      logger.info("Recovered resources from generate_resources step", { creationLogId, count: recovered.length });
+      finalResources = recovered as typeof resources;
+    }
+  }
 
   // Create scenario with createdById set to current user and isPublished true
   try {
@@ -104,7 +121,7 @@ export async function POST(request: Request) {
         targetLevel,
         simulationDepth,
         archetypeId,
-        resources: resources as unknown as import("@prisma/client").Prisma.InputJsonValue,
+        resources: finalResources as unknown as import("@prisma/client").Prisma.InputJsonValue,
         language, // Persist the language field
         isPublished: true, // Recruiter scenarios are always active
         createdById: user.id, // Set ownership to current user
