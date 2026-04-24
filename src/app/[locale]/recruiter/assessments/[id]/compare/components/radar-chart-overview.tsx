@@ -151,7 +151,7 @@ export function RadarChartOverview({
         });
         return point;
       });
-  }, [candidates]);
+  }, [candidates, translateDimension]);
 
   // Build chart config for colors and labels
   const chartConfig = useMemo(() => {

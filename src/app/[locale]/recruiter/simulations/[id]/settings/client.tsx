@@ -44,7 +44,7 @@ import {
 } from "lucide-react";
 import type { ScenarioResource } from "@/types";
 import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
-import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
+import { CoworkerAvatar } from "@/components/chat/coworker-avatar";
 import { LEVEL_EXPECTATIONS, type TargetLevel } from "@/lib/rubric/level-expectations";
 import { LANGUAGES } from "@/lib/core/language";
 import {

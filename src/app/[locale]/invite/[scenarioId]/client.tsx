@@ -84,7 +84,7 @@ function InvitePageContent({ scenario, user }: InvitePageClientProps) {
         hasStartedRedirect.current = false;
       }
     })();
-  }, [user, scenario.id, router]);
+  }, [user, scenario.id, router, t, targetLevel]);
 
   const handleGoogleAuth = () => {
     setIsLoading(true);

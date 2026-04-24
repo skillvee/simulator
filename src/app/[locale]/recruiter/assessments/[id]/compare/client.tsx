@@ -98,7 +98,7 @@ export function CandidateCompareClient({
     }
 
     fetchData();
-  }, [simulationId, assessmentIds]);
+  }, [simulationId, assessmentIds, t]);
 
   // Find winner(s) for overall score
   const winnerIds = useMemo(() => {
