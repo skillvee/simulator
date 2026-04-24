@@ -24,6 +24,10 @@ Stack: Next.js 15 (App Router), React, Supabase (Postgres + Auth + Storage), Ver
 - **Types:** import from `@/types`, not from component/lib implementation files. ESLint enforces.
 - **Auth redirect validation:** check `url.startsWith("/")` BEFORE `url.startsWith(baseUrl)`. Relative URLs never start with baseUrl — order matters for preventing open redirects.
 
+## Workflow
+
+- **Never use git worktrees for this project.** Edit files directly in `/Users/greyesma/Simulator/` and run the dev server from there. Do NOT pass `isolation: "worktree"` to the Agent tool, and do NOT use `mcp__ccd_session__spawn_task` (it spawns a worktree). Worktrees break the browser-verification loop — only one can bind port 3000, stale copies pollute `vitest` runs, and it's easy to end up editing main while the preview server serves a stale worktree. If you truly need parallelism, ask first.
+
 ## Test login
 
 `user@test.com` / `testpassword123` → `/assessments/test-assessment-chat/work`.
