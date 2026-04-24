@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Monitor, Mic, Camera, AlertTriangle, ArrowRight } from "lucide-react";
+import { Monitor, Mic, Camera, AlertTriangle, ArrowRight, RotateCw } from "lucide-react";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
+import type { PermissionBlock } from "@/contexts/screen-recording-context";
 import { shouldSkipScreenRecording } from "@/lib/core";
 import {
   Dialog,
@@ -18,15 +19,17 @@ interface ScreenRecordingGuardProps {
   children: React.ReactNode;
   assessmentId: string;
   companyName?: string;
+  bypassRecording?: boolean;
 }
 
 export function ScreenRecordingGuard({
   children,
   assessmentId,
   companyName = "the company",
+  bypassRecording,
 }: ScreenRecordingGuardProps) {
-  // In E2E test mode or when screen recording is skipped, bypass the guard entirely
-  if (shouldSkipScreenRecording()) {
+  // Bypass the guard for E2E test mode, dev skip flag, or demo-user prod path.
+  if (bypassRecording || shouldSkipScreenRecording()) {
     return <>{children}</>;
   }
 
@@ -50,6 +53,7 @@ function ScreenRecordingGuardInner({
     error,
     isRecording,
     sessionLoaded,
+    permissionBlock,
     startRecording,
     retryRecording,
   } = useScreenRecordingContext();
@@ -79,9 +83,28 @@ function ScreenRecordingGuardInner({
     return null;
   }
 
+  // Assessment was deliberately finalized — pass through while navigation to
+  // /results is in flight. Without this, stopRecording() would flip the guard
+  // into showing the initial consent modal again.
+  if (state === "ended") {
+    return <>{children}</>;
+  }
+
   // Recording is active or browser permission dialogs are showing — allow access
   if (!shouldBlock) {
     return <>{children}</>;
+  }
+
+  // Browser-level block (site setting or Chrome embargo) — "Resume Recording"
+  // can't fix this because the browser won't show another prompt. Show the
+  // device-specific instructions modal instead.
+  if (permissionBlock) {
+    return (
+      <>
+        <BlockedPermissionModal block={permissionBlock} />
+        <div className="pointer-events-none blur-sm">{children}</div>
+      </>
+    );
   }
 
   // Recording stopped or errored — show retry modal
@@ -277,5 +300,129 @@ function ScreenRecordingGuardInner({
       {/* Render children behind the overlay (hidden) */}
       <div className="pointer-events-none blur-sm">{children}</div>
     </>
+  );
+}
+
+function BlockedPermissionModal({ block }: { block: NonNullable<PermissionBlock> }) {
+  const deviceLabel = block.device === "camera" ? "Camera" : "Microphone";
+  const DeviceIcon = block.device === "camera" ? Camera : Mic;
+
+  // Both remediation paths end in "reload the page" because neither a changed
+  // site setting nor a cleared embargo takes effect until the next navigation.
+  const handleReload = () => {
+    window.location.reload();
+  };
+
+  // Copy differs by cause — embargo needs "Reset permissions", site block
+  // needs "change to Allow". Generic fallback covers cases where the
+  // Permissions API couldn't classify.
+  const instructions =
+    block.reason === "site-block" ? (
+      <>
+        <p className="mb-3 font-medium text-foreground">
+          Your browser is blocking {deviceLabel.toLowerCase()} access for this site.
+        </p>
+        <ol className="space-y-2 text-sm text-muted-foreground">
+          <li>
+            <strong className="text-foreground">1.</strong> Click the tune icon
+            (⚙︎) or lock icon to the left of the URL at the top of your browser.
+          </li>
+          <li>
+            <strong className="text-foreground">2.</strong> Find{" "}
+            <strong>{deviceLabel}</strong> in the list and change it from{" "}
+            <strong>Block</strong> to <strong>Allow</strong>.
+          </li>
+          <li>
+            <strong className="text-foreground">3.</strong> Reload this page
+            using the button below.
+          </li>
+        </ol>
+      </>
+    ) : block.reason === "embargo" ? (
+      <>
+        <p className="mb-3 font-medium text-foreground">
+          Your browser auto-rejected the {deviceLabel.toLowerCase()} prompt
+          after it was dismissed a few times.
+        </p>
+        <p className="mb-3 text-sm text-muted-foreground">
+          This is a privacy feature — the site setting still shows{" "}
+          <strong>Ask</strong>, but the browser won&apos;t show the prompt
+          again until you reset it.
+        </p>
+        <ol className="space-y-2 text-sm text-muted-foreground">
+          <li>
+            <strong className="text-foreground">1.</strong> Click the tune icon
+            (⚙︎) or lock icon to the left of the URL at the top of your browser.
+          </li>
+          <li>
+            <strong className="text-foreground">2.</strong> Click{" "}
+            <strong>Reset permissions</strong>.
+          </li>
+          <li>
+            <strong className="text-foreground">3.</strong> Reload this page —
+            the {deviceLabel.toLowerCase()} prompt will appear again.
+          </li>
+        </ol>
+      </>
+    ) : (
+      <>
+        <p className="mb-3 font-medium text-foreground">
+          Your browser blocked {deviceLabel.toLowerCase()} access for this site.
+        </p>
+        <ol className="space-y-2 text-sm text-muted-foreground">
+          <li>
+            <strong className="text-foreground">1.</strong> Click the tune icon
+            (⚙︎) or lock icon to the left of the URL at the top of your browser.
+          </li>
+          <li>
+            <strong className="text-foreground">2.</strong> Set{" "}
+            <strong>{deviceLabel}</strong> to <strong>Allow</strong>, or click{" "}
+            <strong>Reset permissions</strong>.
+          </li>
+          <li>
+            <strong className="text-foreground">3.</strong> Reload this page
+            using the button below.
+          </li>
+        </ol>
+      </>
+    );
+
+  return (
+    <Dialog open={true}>
+      <DialogContent
+        className="max-w-md"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
+        <DialogHeader>
+          <div className="mb-4 flex justify-center">
+            <div className="rounded-xl bg-destructive/10 p-4">
+              <DeviceIcon className="h-12 w-12 text-destructive" />
+            </div>
+          </div>
+
+          <DialogTitle className="text-center text-2xl">
+            Allow {deviceLabel} Access
+          </DialogTitle>
+          <DialogDescription className="text-center">
+            We need {deviceLabel.toLowerCase()} access to continue the assessment
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="rounded-lg bg-muted p-6">{instructions}</div>
+
+        <DialogFooter className="flex-col gap-3 sm:flex-col">
+          <Button onClick={handleReload} size="lg" className="w-full">
+            <RotateCw className="h-4 w-4" />
+            Reload Page
+          </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Still stuck? On macOS, also check System Settings → Privacy &
+            Security → {deviceLabel} and make sure your browser is enabled.
+          </p>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

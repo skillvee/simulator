@@ -57,7 +57,7 @@ export function WorkPageClient({
 }: WorkPageClientProps) {
   const router = useRouter();
   const t = useTranslations("work");
-  const { stopRecording } = useScreenRecordingContext();
+  const { stopRecording, flushFinalChunk } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
   const [showTimeUpModal, setShowTimeUpModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
@@ -236,7 +236,13 @@ export function WorkPageClient({
     setShowPostDefenseModal(false);
 
     try {
-      stopRecording();
+      // Flush the final in-flight chunk BEFORE finalizing. Once the assessment
+      // flips to COMPLETED, /api/recording rejects uploads with a 400, so the
+      // last seconds of the recording (including the end of the defense call)
+      // would be lost. Streams stay alive — tear down only on finalize success
+      // so a transient failure leaves the user able to retry without being
+      // bounced to /results with a dead recording.
+      await flushFinalChunk();
 
       const response = await fetch("/api/assessment/finalize", {
         method: "POST",
@@ -246,14 +252,17 @@ export function WorkPageClient({
 
       if (!response.ok) {
         logger.error("Failed to finalize assessment", { response: await response.text() });
+        setIsCompleting(false);
+        return;
       }
 
+      stopRecording();
       router.push(`/assessments/${assessmentId}/results`);
     } catch (err) {
-      logger.error("Error completing defense", { error: err });
-      router.push(`/assessments/${assessmentId}/results`);
+      logger.error("Error completing defense", { error: String(err) });
+      setIsCompleting(false);
     }
-  }, [assessmentId, isCompleting, router, stopRecording]);
+  }, [assessmentId, isCompleting, router, stopRecording, flushFinalChunk]);
 
   // Handle post-defense "Continue Working" — dismiss modal and go back to work
   const handleContinueWorking = useCallback(() => {
@@ -267,13 +276,17 @@ export function WorkPageClient({
     setShowTimeUpModal(true);
 
     try {
-      stopRecording();
+      // Flush before finalize so the tail of the recording survives the
+      // COMPLETED status flip (see handleFinalize for the full reasoning).
+      await flushFinalChunk();
 
       await fetch("/api/assessment/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ assessmentId }),
       });
+
+      stopRecording();
     } catch (err) {
       logger.error("Error finalizing on timeout", { error: String(err) });
     }
@@ -282,7 +295,7 @@ export function WorkPageClient({
     setTimeout(() => {
       router.push(`/assessments/${assessmentId}/results`);
     }, 4000);
-  }, [assessmentId, isCompleting, router, stopRecording]);
+  }, [assessmentId, isCompleting, router, stopRecording, flushFinalChunk]);
 
   // Set up the deadline timer
   useAssessmentDeadline({

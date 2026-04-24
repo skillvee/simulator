@@ -2,6 +2,7 @@ import { db } from "@/server/db";
 import Link from "next/link";
 import { getAnalytics } from "@/lib/core";
 import { AnalyticsDashboard } from "./analytics-dashboard";
+import { ResetDemoButton } from "./components/reset-demo-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ export default async function AdminDashboard() {
           <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-shadow">
             <Link href="/admin/users">Manage Users</Link>
           </Button>
+          <ResetDemoButton />
         </div>
       </section>
 
