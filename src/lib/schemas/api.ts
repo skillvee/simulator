@@ -76,6 +76,7 @@ export const ScenarioCreateSchema = z.object({
   isPublished: z.boolean().optional().default(false),
   resources: z.array(ScenarioResourceSchema).optional(),
   language: z.string().optional().default("en"),
+  creationLogId: z.string().optional(),
 });
 export type ScenarioCreate = z.infer<typeof ScenarioCreateSchema>;
 

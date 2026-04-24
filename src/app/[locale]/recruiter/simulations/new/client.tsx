@@ -77,6 +77,7 @@ type PreviewData = {
   selectedTask: TaskChoice | null;
   coworkers: CoworkerBuilderData[];
   resources: ScenarioResource[];
+  resourcesFailed?: boolean;
   language: "en" | "es";
 };
 
@@ -520,6 +521,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
           simulationDepth,
           resources: previewData.resources.length > 0 ? previewData.resources : undefined,
           language: previewData.language,
+          creationLogId: creationLogIdRef.current ?? undefined,
           // repoUrl is intentionally omitted - it will be set by repo provisioning
         }),
       });
@@ -697,8 +699,13 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
       const coworkersData = coworkersJson.data || coworkersJson;
       const coworkers: CoworkerBuilderData[] = coworkersData.coworkers || [];
 
-      // Generate resources based on task + company context
+      // Generate resources based on task + company context.
+      // If the client-side fetch fails (timeout, network) the backend may still
+      // complete the step — the server-side fallback in POST /api/recruiter/simulations
+      // will recover the output by creationLogId. But we surface it as a warning
+      // so the user knows to verify or retry rather than shipping empty.
       let resources: ScenarioResource[] = [];
+      let resourceGenerationWarning = false;
       try {
         const resourcesResponse = await fetch("/api/recruiter/simulations/generate-resources", {
           method: "POST",
@@ -719,10 +726,12 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
           const resourcesData = resourcesJson.data || resourcesJson;
           resources = resourcesData.resources || [];
         } else {
-          logger.warn("Resource generation failed, continuing without resources");
+          logger.error("Resource generation failed", { status: resourcesResponse.status });
+          resourceGenerationWarning = true;
         }
       } catch (resourceErr) {
-        logger.warn("Resource generation error, continuing without resources", { err: String(resourceErr) });
+        logger.error("Resource generation error", { err: String(resourceErr) });
+        resourceGenerationWarning = true;
       }
 
       // Set up preview data
@@ -735,6 +744,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
         selectedTask: null, // User must select
         coworkers,
         resources,
+        resourcesFailed: resourceGenerationWarning,
         language,
       });
 
@@ -1240,6 +1250,17 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
             </p>
           </div>
         </div>
+
+        {previewData.resourcesFailed && previewData.resources.length === 0 && (
+          <div className="border-b bg-amber-50 px-6 py-3 dark:bg-amber-950/30">
+            <div className="mx-auto flex max-w-6xl items-start gap-2 text-sm">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <p className="text-amber-900 dark:text-amber-200">
+                Resource generation didn&apos;t finish in time. The simulation will be created without reference materials — you can retry by going back, or proceed and add them later.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Two-column body */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
