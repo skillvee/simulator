@@ -9,3 +9,4 @@ export * from "./report-migration";
 export * from "./report-scoring";
 export * from "./translation-helpers";
 export * from "./generate-report";
+export * from "./candidate-narrative";

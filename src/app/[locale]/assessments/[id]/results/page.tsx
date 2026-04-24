@@ -1,12 +1,9 @@
 import { redirect } from "next/navigation";
-import { requireCandidate, createLogger } from "@/lib/core";
-
-const logger = createLogger("server:app:results-page");
+import { requireCandidate } from "@/lib/core";
 import { db } from "@/server/db";
 import { transformToCandidateResults } from "@/lib/candidate/results-transformer";
-import { generateOrFetchReport } from "@/lib/analysis/generate-report";
 import { CandidateSidebar } from "@/app/[locale]/candidate/dashboard/components/sidebar";
-import { CandidateResultsClient, type NoReportReason } from "./client";
+import { CandidateResultsClient } from "./client";
 import type { AssessmentReport } from "@/types";
 
 interface ResultsPageProps {
@@ -48,26 +45,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     redirect(`/assessments/${id}/work`);
   }
 
-  let report = assessment.report as AssessmentReport | null;
-  let noReportReason: NoReportReason | null = null;
-
-  if (!report) {
-    const result = await generateOrFetchReport(id, user.id);
-    if (result.status === "ready") {
-      report = result.report;
-    } else if (result.status === "processing") {
-      noReportReason = "processing";
-    } else if (result.status === "error") {
-      logger.error("Failed to generate report on results page", {
-        assessmentId: id,
-        message: result.message,
-      });
-      noReportReason = "error";
-    } else {
-      // not_found / unauthorized — fall through to dashboard redirect safety
-      redirect("/candidate/dashboard");
-    }
-  }
+  // The RSC is intentionally non-blocking: if the report isn't persisted
+  // yet, we render the waiting state and let the client poll
+  // /api/assessment/report-status. That endpoint is self-healing — it
+  // re-triggers evaluation, recovers from stuck PROCESSING, and finalizes
+  // COMPLETED-but-no-report cases — all without the candidate having to
+  // click anything.
+  const report = assessment.report as AssessmentReport | null;
 
   // Transform to candidate-safe format
   const candidateResults = report
@@ -98,7 +82,6 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           assessmentId={id}
           results={candidateResults}
           initialFeedback={initialFeedback}
-          noReportReason={noReportReason}
         />
       </main>
     </div>

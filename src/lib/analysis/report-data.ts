@@ -18,7 +18,7 @@ export interface AssessmentReportData {
   user: { name: string | null; email: string | null };
   conversations: { coworkerId: string | null }[];
   recordings: { storageUrl: string }[];
-  scenario: { taskDescription: string; language: string };
+  scenario: { name: string; companyName: string; taskDescription: string; language: string };
 }
 
 /**
@@ -47,7 +47,12 @@ export async function fetchAssessmentForReport(assessmentId: string): Promise<As
         take: 1,
       },
       scenario: {
-        select: { taskDescription: true, language: true },
+        select: {
+          name: true,
+          companyName: true,
+          taskDescription: true,
+          language: true,
+        },
       },
     },
   });

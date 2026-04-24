@@ -7,6 +7,7 @@ import {
   countUniqueCoworkers,
 } from "./report-data";
 import { convertRubricToReport, reportToPrismaJson } from "./report-scoring";
+import { generateCandidateNarrative } from "./candidate-narrative";
 import type { AssessmentReport, RubricAssessmentOutput } from "@/types";
 
 const logger = createLogger("analysis:generate-report");
@@ -84,15 +85,20 @@ export async function generateOrFetchReport(
   const videoUrl = assessment.recordings[0]?.storageUrl;
   if (!videoUrl) {
     // No recording available — build a minimal report so the results page
-    // still has something to render instead of a dead end.
+    // still has something to render instead of a dead end. The hardcoded
+    // no-evidence message is already candidate-friendly, so we reuse it as
+    // the candidate summary and skip the LLM coach pass.
+    const emptyRubric = buildEmptyRubric(assessment.scenario.language);
     const fallback = convertRubricToReport(
-      buildEmptyRubric(assessment.scenario.language),
+      emptyRubric,
       assessmentId,
       assessment.user?.name || undefined,
       timing,
       coworkersContacted,
       assessment.scenario.language
     );
+    fallback.candidateSummary = emptyRubric.overallSummary;
+    fallback.candidateObservations = [];
     await persistReport(assessmentId, fallback);
     return { status: "ready", report: fallback };
   }
@@ -118,6 +124,24 @@ export async function generateOrFetchReport(
     coworkersContacted,
     assessment.scenario.language
   );
+
+  // Softened, candidate-facing recap. Non-blocking in spirit: on failure we
+  // persist the report without the coach fields and the transformer falls
+  // back to the recruiter summary. That fallback is imperfect (it's why this
+  // pass exists), but it's strictly better than blocking the results page.
+  const narrative = await generateCandidateNarrative({
+    assessmentId,
+    rubricOutput: videoResult.data,
+    scenarioName: assessment.scenario.name,
+    companyName: assessment.scenario.companyName,
+    candidateName: assessment.user?.name || undefined,
+    language: assessment.scenario.language,
+  });
+  if (narrative) {
+    report.candidateSummary = narrative.candidateSummary;
+    report.candidateObservations = narrative.candidateObservations;
+  }
+
   await persistReport(assessmentId, report);
   return { status: "ready", report };
 }

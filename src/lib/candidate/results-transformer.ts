@@ -41,6 +41,21 @@ function dedupe(items: string[]): string[] {
 }
 
 function extractObservations(report: AssessmentReport): string[] {
+  // Prefer the coach-pass output when available — it's already filtered and
+  // tone-checked for candidate consumption.
+  if (
+    Array.isArray(report.candidateObservations) &&
+    report.candidateObservations.length > 0
+  ) {
+    return dedupe(report.candidateObservations).slice(0, 6);
+  }
+
+  // Legacy fallback for reports generated before the coach pass existed.
+  // IMPORTANT: skillScores[].evidence mixes greenFlags (prefixed "+ ") and
+  // redFlags (prefixed "- ") — see report-scoring.ts. cleanObservation() strips
+  // those prefixes unconditionally, which is why pre-coach reports leaked
+  // negative items onto the candidate view. Filter to green-flag-prefixed
+  // entries before cleaning.
   const items: string[] = [];
   if (report.videoEvaluation && Array.isArray(report.videoEvaluation.skills)) {
     for (const skill of report.videoEvaluation.skills) {
@@ -49,7 +64,9 @@ function extractObservations(report: AssessmentReport): string[] {
   }
   if (Array.isArray(report.skillScores)) {
     for (const skill of report.skillScores) {
-      for (const ev of skill.evidence ?? []) items.push(ev);
+      for (const ev of skill.evidence ?? []) {
+        if (ev.startsWith("+ ")) items.push(ev);
+      }
     }
   }
   for (const s of report.narrative?.strengths ?? []) items.push(s);
@@ -57,7 +74,10 @@ function extractObservations(report: AssessmentReport): string[] {
 }
 
 function extractNarrative(report: AssessmentReport): string {
+  // Coach-pass summary is the intended candidate-facing string. Older reports
+  // fall back to the recruiter summary — imperfect, but the best we have.
   return (
+    report.candidateSummary ||
     report.videoEvaluation?.overallSummary ||
     report.narrative?.overallSummary ||
     ""
