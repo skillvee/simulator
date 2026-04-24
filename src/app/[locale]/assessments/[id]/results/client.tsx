@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,56 +17,34 @@ import { ExperienceFeedback } from "./components/experience-feedback";
 
 const logger = createLogger("client:app:results");
 
-export type NoReportReason = "processing" | "error";
+/** How often to poll the self-healing report-status endpoint. */
+const POLL_INTERVAL_MS = 5_000;
+
+/**
+ * After this long with no "ready", switch the spinner copy to a calmer
+ * "this is taking longer than expected" message. We keep polling — the
+ * pipeline is self-healing — but the candidate gets a more honest signal.
+ */
+const LONG_WAIT_THRESHOLD_MS = 90_000;
 
 interface CandidateResultsClientProps {
   assessmentId: string;
   results: CandidateResultsData | null;
   initialFeedback: { rating: "LIKE" | "DISLIKE"; comment: string } | null;
-  noReportReason?: NoReportReason | null;
 }
 
-function NoReportState({
-  onGenerate,
-  isGenerating,
-  errorMessage,
-  initialReason,
-}: {
-  onGenerate: () => void;
-  isGenerating: boolean;
-  errorMessage: string | null;
-  initialReason: NoReportReason | null;
-}) {
-  const t = useTranslations("results.noReport");
-  // If the server already knows the report is being processed, show that
-  // state immediately (don't require the user to click "Generate").
-  const showGenerating = isGenerating || initialReason === "processing";
+type ReportPollState = "ready" | "processing" | "exhausted";
+
+function GeneratingState({ longWait }: { longWait: boolean }) {
+  const t = useTranslations("results.noReport.generating");
   return (
     <div className="flex min-h-full items-center justify-center p-8">
       <Card className="max-w-md p-12 text-center shadow-lg">
-        {showGenerating ? (
-          <>
-            <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <h2 className="mb-4 text-2xl font-semibold">{t("generating.title")}</h2>
-            <p className="mb-6 text-muted-foreground">
-              {t("generating.description")}
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <AlertCircle className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="mb-4 text-2xl font-semibold">{t("notReady.title")}</h2>
-            <p className="mb-6 text-muted-foreground">{t("notReady.description")}</p>
-            {errorMessage && (
-              <p className="mb-6 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                {errorMessage}
-              </p>
-            )}
-            <Button onClick={onGenerate}>{t("notReady.generateButton")}</Button>
-          </>
-        )}
+        <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <h2 className="mb-4 text-2xl font-semibold">{t("title")}</h2>
+        <p className="text-muted-foreground">
+          {longWait ? t("descriptionLong") : t("description")}
+        </p>
       </Card>
     </div>
   );
@@ -73,56 +52,76 @@ function NoReportState({
 
 export function CandidateResultsClient({
   assessmentId,
-  results: initialResults,
+  results,
   initialFeedback,
-  noReportReason = null,
 }: CandidateResultsClientProps) {
   const t = useTranslations("results");
-  const tGen = useTranslations("results.noReport.notReady");
-  const [results] = useState<CandidateResultsData | null>(initialResults);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const router = useRouter();
+  const [longWait, setLongWait] = useState(false);
 
-  const handleGenerateReport = async () => {
-    setIsGenerating(true);
-    setErrorMessage(null);
-    try {
-      const response = await fetch("/api/assessment/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessmentId }),
-      });
+  // Poll the self-healing endpoint while no report is available. Each call
+  // is a fresh serverless invocation, so any individual failure (Vercel
+  // killed the previous fire-and-forget, Gemini blip, etc.) heals on the
+  // next tick. The candidate only ever sees a spinner.
+  const pollingRef = useRef(false);
+  useEffect(() => {
+    if (results) return;
+    if (pollingRef.current) return;
+    pollingRef.current = true;
 
-      if (response.ok) {
-        window.location.reload();
-        return;
-      }
+    let cancelled = false;
+    const startedAt = Date.now();
 
-      let message = tGen("generateError");
+    const tick = async () => {
+      if (cancelled) return;
       try {
-        const body = (await response.json()) as { error?: string };
-        if (body?.error) message = body.error;
-      } catch {
-        // ignore body parse errors — fall back to default message
+        const res = await fetch(
+          `/api/assessment/report-status?assessmentId=${encodeURIComponent(assessmentId)}`,
+          { cache: "no-store" }
+        );
+        if (cancelled) return;
+
+        if (res.ok) {
+          const body = (await res.json()) as {
+            data?: { state?: ReportPollState };
+          };
+          const state = body.data?.state;
+          if (state === "ready") {
+            // Pull the freshly persisted report by refetching the RSC.
+            router.refresh();
+            return; // stop polling
+          }
+          if (state === "exhausted") {
+            // Self-healing has given up — usually means a stale Gemini
+            // file URI or a structural failure that will need an admin
+            // retry. Don't surface a button to the candidate; show the
+            // calm long-wait copy and stop polling silently.
+            setLongWait(true);
+            return; // stop polling
+          }
+        }
+
+        if (Date.now() - startedAt > LONG_WAIT_THRESHOLD_MS) {
+          setLongWait(true);
+        }
+      } catch (err) {
+        logger.warn("report-status poll failed", { err: String(err) });
       }
-      setErrorMessage(message);
-    } catch (error) {
-      logger.error("Error generating report", { error: String(error) });
-      setErrorMessage(tGen("generateError"));
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+
+      if (cancelled) return;
+      window.setTimeout(tick, POLL_INTERVAL_MS);
+    };
+
+    void tick();
+
+    return () => {
+      cancelled = true;
+      pollingRef.current = false;
+    };
+  }, [assessmentId, results, router]);
 
   if (!results) {
-    return (
-      <NoReportState
-        onGenerate={handleGenerateReport}
-        isGenerating={isGenerating}
-        errorMessage={errorMessage}
-        initialReason={noReportReason}
-      />
-    );
+    return <GeneratingState longWait={longWait} />;
   }
 
   const formattedDate = new Date(results.generatedAt).toLocaleDateString(

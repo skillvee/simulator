@@ -305,13 +305,8 @@
     "noReport": {
       "generating": {
         "title": "Generating Report",
-        "description": "We're analyzing your performance and generating your personalized report. This may take a moment."
-      },
-      "notReady": {
-        "title": "Report Not Ready",
-        "description": "Your assessment report hasn't been generated yet. Click below to generate it now.",
-        "generateButton": "Generate Report",
-        "generateError": "We couldn't generate your report right now. Please try again in a minute."
+        "description": "We're analyzing your performance and generating your personalized report. This may take a moment.",
+        "descriptionLong": "This is taking a little longer than usual. We're still on it — no need to refresh."
       }
     },
     "overview": {

@@ -44,6 +44,11 @@ export {
   type RedFlagData,
 } from "./analysis/rubric-evaluation";
 export {
+  CANDIDATE_FEEDBACK_PROMPT_VERSION,
+  buildCandidateFeedbackPrompt,
+  type CandidateFeedbackInput,
+} from "./analysis/candidate-feedback";
+export {
   FEEDBACK_PARSING_PROMPT,
   buildFeedbackParsingContext,
 } from "./analysis/feedback-parsing";
