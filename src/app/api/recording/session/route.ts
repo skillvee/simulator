@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/server/db";
-import { shouldAllowTestModeRecording } from "@/lib/core/env";
+import { shouldAllowTestModeRecording, isDemoUser } from "@/lib/core/env";
 import { createLogger } from "@/lib/core";
 import { success, error, validateRequest } from "@/lib/api";
 import { RecordingSessionSchema } from "@/lib/schemas";
@@ -23,8 +23,13 @@ export async function POST(request: NextRequest) {
     if ("error" in validated) return validated.error;
     const { assessmentId, action, segmentId, chunkPath, screenshotPath, testMode } = validated.data;
 
-    // Reject testMode requests if not in development mode (double-gate safety)
-    if (testMode && !shouldAllowTestModeRecording()) {
+    // Reject testMode requests unless this is a dev/E2E environment OR the
+    // caller is a designated demo user (prod demos bypass recording too).
+    if (
+      testMode &&
+      !shouldAllowTestModeRecording() &&
+      !isDemoUser(session.user.id)
+    ) {
       return error("Test mode is only available in development environment", 403);
     }
 

@@ -203,6 +203,49 @@ export class VideoRecorder {
     return null;
   }
 
+  // Stop recording and wait until the final `ondataavailable` + `onstop`
+  // events have fired. Unlike `stop()`, the returned blob includes the
+  // buffered data flushed by MediaRecorder.stop() — so callers who await
+  // this can be sure the per-chunk upload fired by `onDataAvailable` has
+  // been enqueued before they continue.
+  stopAndWait(): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      this.stopScreenshotCapture();
+
+      const mr = this.mediaRecorder;
+      if (!mr || mr.state === "inactive") {
+        const mimeType =
+          mr?.mimeType || this.config.mimeType || "video/webm";
+        const blob =
+          this.recordedChunks.length > 0
+            ? new Blob(this.recordedChunks, { type: mimeType })
+            : null;
+        this.recordedChunks = [];
+        this.isRecording = false;
+        this.stream = null;
+        resolve(blob);
+        return;
+      }
+
+      // Chain onto the existing onstop handler set in start().
+      const existingOnStop = mr.onstop;
+      mr.onstop = (evt) => {
+        if (existingOnStop) existingOnStop.call(mr, evt);
+        const mimeType = mr.mimeType || this.config.mimeType || "video/webm";
+        const blob =
+          this.recordedChunks.length > 0
+            ? new Blob(this.recordedChunks, { type: mimeType })
+            : null;
+        this.recordedChunks = [];
+        resolve(blob);
+      };
+
+      mr.stop();
+      this.isRecording = false;
+      this.stream = null;
+    });
+  }
+
   // Pause recording
   pause(): void {
     if (this.mediaRecorder && this.mediaRecorder.state === "recording") {

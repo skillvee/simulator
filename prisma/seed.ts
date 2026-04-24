@@ -29,6 +29,15 @@ const TEST_USERS = {
     name: "Test User",
     role: "USER" as const,
   },
+  // Live-demo account — bypasses screen recording when listed in DEMO_USER_IDS.
+  // Fixed id so DEMO_USER_IDS is deterministic across seeds and environments.
+  demo: {
+    id: "demo-user",
+    email: "demo@test.com",
+    password: "testpassword123",
+    name: "Demo Candidate",
+    role: "USER" as const,
+  },
   // Recruiter-focused flow test users (RF-001)
   recruiter: {
     email: "recruiter@test.com",
@@ -187,6 +196,8 @@ const TEST_USERS = {
 // Fixed test assessment IDs - used by AI agents for visual testing
 const TEST_ASSESSMENT_IDS = {
   chat: "test-assessment-chat", // Status: WORKING - for chat/sidebar testing
+  demo: "demo-assessment", // Status: WORKING - for live product demos (recording bypassed)
+  demoCompleted: "demo-completed-assessment", // Status: COMPLETED - polished results demo
   // Recruiter-focused flow test assessments (RF-001)
   welcome: "test-assessment-welcome", // Status: WELCOME - for welcome page testing
   workingRecruiter: "test-assessment-working-recruiter", // Status: WORKING - for recruiter flow testing
@@ -250,6 +261,7 @@ async function main() {
   const hashedPassword = await hash(TEST_USERS.admin.password, 12);
 
   for (const [key, userData] of Object.entries(TEST_USERS)) {
+    const fixedId = "id" in userData ? (userData as { id: string }).id : undefined;
     const user = await prisma.user.upsert({
       where: { email: userData.email },
       update: {
@@ -259,6 +271,7 @@ async function main() {
         deletedAt: null, // Ensure not soft-deleted
       },
       create: {
+        ...(fixedId ? { id: fixedId } : {}),
         email: userData.email,
         password: hashedPassword,
         name: userData.name,
@@ -405,6 +418,33 @@ Acceptance Criteria:
     console.log(
       `   URL: /assessment/${TEST_ASSESSMENT_IDS.chat}/chat`
     );
+
+    // Demo assessment for the demo user — starts at WELCOME so the live demo
+    // walkthrough begins on the intro screen (candidate clicks "Start
+    // Simulation" to kick off the 90-min timer). Paired with
+    // DEMO_USER_IDS="demo-user" to skip the screen-recording prompt on /work.
+    const demoUser = await prisma.user.findUnique({
+      where: { email: TEST_USERS.demo.email },
+    });
+    if (demoUser) {
+      await prisma.assessment.upsert({
+        where: { id: TEST_ASSESSMENT_IDS.demo },
+        update: {
+          status: "WELCOME",
+          workingStartedAt: null,
+        },
+        create: {
+          id: TEST_ASSESSMENT_IDS.demo,
+          userId: demoUser.id,
+          scenarioId: defaultScenario.id,
+          status: "WELCOME",
+          workingStartedAt: null,
+        },
+      });
+      console.log(
+        `\n🎬 Demo user assessment: /assessments/${TEST_ASSESSMENT_IDS.demo}/welcome (user id: ${demoUser.id})`
+      );
+    }
 
     // Create VideoAssessment with dimension scores for candidate profile testing
     const existingVideoAssessment = await prisma.videoAssessment.findFirst({
@@ -1616,6 +1656,7 @@ Acceptance Criteria:
     TEST_ASSESSMENT_IDS.charlotteBackend, TEST_ASSESSMENT_IDS.henryBackendWorking, TEST_ASSESSMENT_IDS.ameliaBackendWelcome,
     TEST_ASSESSMENT_IDS.carlaBackend, TEST_ASSESSMENT_IDS.alexBackend, TEST_ASSESSMENT_IDS.matiasBackendWelcome,
     TEST_ASSESSMENT_IDS.pepitoBackendWorking,
+    TEST_ASSESSMENT_IDS.demoCompleted,
   ];
   const staleBackend = await prisma.assessment.findMany({
     where: { scenarioId: backendScenario.id, id: { notIn: knownBackendIds } },
@@ -1811,6 +1852,17 @@ Acceptance Criteria:
 
   // === Backend scenario candidates (24 total: 18 completed, 3 working, 3 welcome) ===
   const backendCandidates: Parameters<typeof createCompletedCandidate>[0][] = [
+    // Polished results for the live-demo user — mirrors Sarah Chen's top-performer
+    // scores so the recruiter-view walkthrough looks great on screen.
+    { emailKey: "demo", assessmentId: TEST_ASSESSMENT_IDS.demoCompleted, videoAssessmentId: "va-demo-completed", scenarioId: backendScenario.id, overallScore: 3.75, recommendation: "strong_hire", percentile: 96, daysAgo: 2, summary: "Exceptional systems thinker who designed an elegant rate-limiting solution with sliding windows. Deep Python and Redis expertise, outstanding architectural decisions.", scores: [
+      { dimension: "communication", score: 4, observableBehaviors: "Proactively documented design decisions and trade-offs.", trainableGap: false, timestamps: ["02:00", "15:00", "35:00"] },
+      { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Expert decomposition of rate-limiting into composable middleware layers.", trainableGap: false, timestamps: ["05:00", "20:00"] },
+      { dimension: "technical_execution", score: 4, observableBehaviors: "Deep Redis and Python expertise. Implemented sliding window with atomic operations.", trainableGap: false, timestamps: ["08:00", "22:00", "40:00"] },
+      { dimension: "collaboration_coachability", score: 3, observableBehaviors: "Engaged well with the team, shared progress updates regularly.", trainableGap: false, timestamps: ["12:00", "30:00"] },
+      { dimension: "practical_maturity", score: 4, observableBehaviors: "Handled edge cases proactively, designed for failure modes.", trainableGap: false, timestamps: ["25:00"] },
+      { dimension: "learning_velocity", score: 4, observableBehaviors: "Owned the design end-to-end, drove decisions confidently.", trainableGap: false, timestamps: ["18:00", "42:00"] },
+      { dimension: "work_process", score: 3, observableBehaviors: "Solid engineering process. Tests first, then implementation.", trainableGap: false, timestamps: ["10:00", "35:00"] },
+    ]},
     { emailKey: "candidateSarah", assessmentId: TEST_ASSESSMENT_IDS.sarahBackend, videoAssessmentId: "va-sarah-backend", scenarioId: backendScenario.id, overallScore: 3.75, recommendation: "strong_hire", percentile: 96, daysAgo: 2, summary: "Exceptional systems thinker who designed an elegant rate-limiting solution with sliding windows. Deep Python and Redis expertise, outstanding architectural decisions.", scores: [
       { dimension: "communication", score: 4, observableBehaviors: "Proactively documented design decisions and trade-offs.", trainableGap: false, timestamps: ["02:00", "15:00", "35:00"] },
       { dimension: "problem_decomposition_design", score: 4, observableBehaviors: "Expert decomposition of rate-limiting into composable middleware layers.", trainableGap: false, timestamps: ["05:00", "20:00"] },

@@ -4,6 +4,7 @@ import { getAssessmentForChat } from "@/server/queries/assessment";
 import { WorkPageClient } from "./client";
 import { AssessmentScreenWrapper } from "@/components/assessment";
 import { isAssessmentExpired, getDeadlineAt } from "@/lib/core/assessment-timer";
+import { isDemoUser } from "@/lib/core/env";
 import { db } from "@/server/db";
 import { AssessmentStatus } from "@prisma/client";
 import type { ScenarioResource, SimulationDepth } from "@/types";
@@ -75,8 +76,10 @@ export default async function WorkPage({
   const resources = (assessment.scenario.resources as unknown as ScenarioResource[]) || [];
   const language = assessment.scenario.language || undefined;
 
+  const bypassRecording = isDemoUser(session.user.id);
+
   return (
-    <AssessmentScreenWrapper assessmentId={id}>
+    <AssessmentScreenWrapper assessmentId={id} bypassRecording={bypassRecording}>
       <WorkPageClient
         assessmentId={id}
         coworkers={coworkers}

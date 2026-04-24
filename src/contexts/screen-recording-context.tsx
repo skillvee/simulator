@@ -41,9 +41,27 @@ export type ScreenRecordingState =
   | "requesting"
   | "recording"
   | "stopped"
-  | "error";
+  | "error"
+  | "ended";
 
 export type WebcamState = "idle" | "requesting" | "active" | "denied" | "error";
+
+/**
+ * Describes the specific reason a camera/mic permission request failed,
+ * which determines what instructions to show the user.
+ *
+ * - `site-block`: the browser has camera/mic set to "Block" for this origin
+ *   (explicit deny or Chrome Settings). Fix: change the setting to Allow.
+ * - `embargo`: Chrome silently auto-rejected the prompt after the user
+ *   dismissed it 2-3 times. Site setting still shows "Ask" in the UI.
+ *   Fix: Reset permissions to clear the embargo counter.
+ * - `unknown`: the Permissions API didn't give us a useful answer (old
+ *   browser, extension interference, etc.) — show generic instructions.
+ */
+export type PermissionBlock = {
+  device: "camera" | "microphone";
+  reason: "site-block" | "embargo" | "unknown";
+} | null;
 
 interface ScreenRecordingContextValue {
   state: ScreenRecordingState;
@@ -56,6 +74,11 @@ interface ScreenRecordingContextValue {
   webcamState: WebcamState;
   webcamStream: MediaStream | null;
   sessionLoaded: boolean;
+  /** Non-null when the last getUserMedia call rejected with NotAllowedError
+   *  and the Permissions API lets us classify why. Guard uses this to pick
+   *  the right remediation copy instead of the generic "Resume Recording"
+   *  button, which can't recover from a browser-level block. */
+  permissionBlock: PermissionBlock;
   /** AudioContext destination node for capturing system audio in the recording.
    *  Voice hooks should connect their audio output here (in addition to speakers)
    *  so that AI voice responses are included in the screen recording. */
@@ -63,6 +86,39 @@ interface ScreenRecordingContextValue {
   startRecording: () => Promise<boolean>;
   stopRecording: () => void;
   retryRecording: () => Promise<boolean>;
+  /** Stop the MediaRecorder and await all pending chunk uploads WITHOUT
+   *  tearing down streams or marking the segment complete. Call before
+   *  /api/assessment/finalize so the final chunk lands before the
+   *  assessment flips to COMPLETED (which would reject the upload 400).
+   *  Idempotent. */
+  flushFinalChunk: () => Promise<void>;
+}
+
+/**
+ * Classify why a getUserMedia call rejected with NotAllowedError.
+ *
+ * getUserMedia collapses distinct failure modes into one error. The
+ * Permissions API lets us disambiguate: `denied` means site-level block,
+ * `prompt` after a rejected request means embargo (Chrome silently
+ * auto-rejecting after repeated dismissals). Returns "unknown" for
+ * browsers/states where we can't tell.
+ */
+async function classifyPermissionBlock(
+  device: "camera" | "microphone"
+): Promise<"site-block" | "embargo" | "unknown"> {
+  try {
+    if (typeof navigator === "undefined" || !navigator.permissions) {
+      return "unknown";
+    }
+    const status = await navigator.permissions.query({
+      name: device as PermissionName,
+    });
+    if (status.state === "denied") return "site-block";
+    if (status.state === "prompt") return "embargo";
+    return "unknown";
+  } catch {
+    return "unknown";
+  }
 }
 
 const ScreenRecordingContext =
@@ -71,6 +127,10 @@ const ScreenRecordingContext =
 interface ScreenRecordingProviderProps {
   children: ReactNode;
   assessmentId: string;
+  /** Server-computed flag: when true, take the same fake-session path as
+   *  the E2E skip flag. Enables demoing the candidate flow in production
+   *  without triggering getUserMedia. */
+  bypassRecording?: boolean;
 }
 
 // Helper function to upload a chunk or screenshot
@@ -226,6 +286,7 @@ async function startFakeRecordingSession(
 export function ScreenRecordingProvider({
   children,
   assessmentId,
+  bypassRecording,
 }: ScreenRecordingProviderProps) {
   const [state, setState] = useState<ScreenRecordingState>("idle");
   const [permissionState, setPermissionState] =
@@ -236,6 +297,7 @@ export function ScreenRecordingProvider({
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [webcamState, setWebcamState] = useState<WebcamState>("idle");
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
+  const [permissionBlock, setPermissionBlock] = useState<PermissionBlock>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
   const webcamStreamRef = useRef<MediaStream | null>(null);
@@ -248,6 +310,25 @@ export function ScreenRecordingProvider({
   const chunkIndexRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
   const segmentIdRef = useRef<string | null>(null);
+  // Tracks in-flight upload promises so `flushFinalChunk` can await them all.
+  const pendingUploadsRef = useRef<Set<Promise<unknown>>>(new Set());
+  // Set once `flushFinalChunk` has stopped the recorder + awaited uploads, so
+  // the subsequent `stopRecording()` teardown doesn't double-stop or re-upload.
+  const flushedRef = useRef(false);
+
+  // Wraps a fire-and-forget upload so `flushFinalChunk` can await all
+  // in-flight uploads before finalize. Returns the same promise so callers
+  // that do await still work.
+  const trackUpload = useCallback(
+    <T,>(promise: Promise<T>): Promise<T> => {
+      pendingUploadsRef.current.add(promise);
+      promise.finally(() => {
+        pendingUploadsRef.current.delete(promise);
+      });
+      return promise;
+    },
+    []
+  );
 
   const isSupported =
     checkScreenCaptureSupport() && checkMediaRecorderSupport();
@@ -257,13 +338,15 @@ export function ScreenRecordingProvider({
     if (videoRecorderRef.current) {
       const finalBlob = videoRecorderRef.current.stop();
       if (finalBlob && finalBlob.size > 0) {
-        uploadRecordingData(
-          assessmentId,
-          finalBlob,
-          "video",
-          chunkIndexRef.current,
-          startTimeRef.current || Date.now(),
-          segmentIdRef.current || undefined
+        trackUpload(
+          uploadRecordingData(
+            assessmentId,
+            finalBlob,
+            "video",
+            chunkIndexRef.current,
+            startTimeRef.current || Date.now(),
+            segmentIdRef.current || undefined
+          )
         );
       }
       videoRecorderRef.current = null;
@@ -305,7 +388,7 @@ export function ScreenRecordingProvider({
     streamRef.current = null;
     // Clear session storage
     sessionStorage.removeItem(`screen-recording-${assessmentId}`);
-  }, [assessmentId]);
+  }, [assessmentId, trackUpload]);
 
   const cleanup = useCallback(() => {
     // Stop video recording
@@ -364,6 +447,7 @@ export function ScreenRecordingProvider({
     cleanup();
     setState("requesting");
     setError(null);
+    setPermissionBlock(null);
 
     try {
       // Step 1: Request screen capture
@@ -390,6 +474,16 @@ export function ScreenRecordingProvider({
         stopScreenCapture(screenStream);
         streamRef.current = null;
 
+        // Diagnostic: the catch branch below collapses multiple distinct failure
+        // modes (site block, OS block, Chrome embargo, dismissed prompt, extension
+        // interference, device in use) into one "NotAllowedError" bucket. Log the
+        // raw DOMException details so we can tell them apart.
+        logger.error("Webcam request failed", {
+          name: webcamErr instanceof DOMException ? webcamErr.name : "non-DOMException",
+          message: webcamErr instanceof Error ? webcamErr.message : String(webcamErr),
+          constructor: webcamErr?.constructor?.name ?? "unknown",
+        });
+
         if (
           webcamErr instanceof DOMException &&
           (webcamErr.name === "NotAllowedError" ||
@@ -397,6 +491,8 @@ export function ScreenRecordingProvider({
         ) {
           setWebcamState("denied");
           setError("Webcam permission was denied. Both screen and webcam recording are required.");
+          const reason = await classifyPermissionBlock("camera");
+          setPermissionBlock({ device: "camera", reason });
         } else {
           setWebcamState("error");
           setError("Failed to access webcam. Please ensure your camera is connected and not in use by another application.");
@@ -426,12 +522,23 @@ export function ScreenRecordingProvider({
         setWebcamStream(null);
         setWebcamState("idle");
 
+        // Same classification as the webcam catch — the error bucket for
+        // "NotAllowedError" hides whether this is a site block, a Chrome
+        // embargo, or something else, and each needs different copy.
+        logger.error("Microphone request failed", {
+          name: micErr instanceof DOMException ? micErr.name : "non-DOMException",
+          message: micErr instanceof Error ? micErr.message : String(micErr),
+          constructor: micErr?.constructor?.name ?? "unknown",
+        });
+
         if (
           micErr instanceof DOMException &&
           (micErr.name === "NotAllowedError" ||
             micErr.name === "PermissionDeniedError")
         ) {
           setError("Microphone permission was denied. Screen, webcam, and microphone are all required.");
+          const reason = await classifyPermissionBlock("microphone");
+          setPermissionBlock({ device: "microphone", reason });
         } else {
           setError("Failed to access microphone. Please ensure your microphone is connected and not in use by another application.");
         }
@@ -478,14 +585,16 @@ export function ScreenRecordingProvider({
       // Step 4: Capture best webcam snapshot for profile photo (5 frames over 2s, picks sharpest)
       captureBestWebcamSnapshot(webcamMediaStream, 0.9)
         .then((snapshot) => {
-          uploadRecordingData(
-            assessmentId,
-            snapshot,
-            "screenshot",
-            undefined,
-            Date.now(),
-            segmentIdRef.current || undefined,
-            "webcam-profile"
+          trackUpload(
+            uploadRecordingData(
+              assessmentId,
+              snapshot,
+              "screenshot",
+              undefined,
+              Date.now(),
+              segmentIdRef.current || undefined,
+              "webcam-profile"
+            )
           );
         })
         .catch((err) => {
@@ -506,25 +615,29 @@ export function ScreenRecordingProvider({
             chunkIndexRef.current += 1;
             setChunkCount((prev) => prev + 1);
 
-            uploadRecordingData(
-              assessmentId,
-              chunk,
-              "video",
-              currentIndex,
-              startTimeRef.current || Date.now(),
-              segmentIdRef.current || undefined
+            trackUpload(
+              uploadRecordingData(
+                assessmentId,
+                chunk,
+                "video",
+                currentIndex,
+                startTimeRef.current || Date.now(),
+                segmentIdRef.current || undefined
+              )
             );
           },
           onScreenshot: (screenshot) => {
             // Upload screenshot
             setScreenshotCount((prev) => prev + 1);
-            uploadRecordingData(
-              assessmentId,
-              screenshot,
-              "screenshot",
-              undefined,
-              Date.now(),
-              segmentIdRef.current || undefined
+            trackUpload(
+              uploadRecordingData(
+                assessmentId,
+                screenshot,
+                "screenshot",
+                undefined,
+                Date.now(),
+                segmentIdRef.current || undefined
+              )
             );
           },
           onError: (err) => {
@@ -561,24 +674,69 @@ export function ScreenRecordingProvider({
       setState("error");
       return false;
     }
-  }, [isSupported, cleanup, handleStreamStopped, assessmentId]);
+  }, [isSupported, cleanup, handleStreamStopped, assessmentId, trackUpload]);
+
+  // Stop the MediaRecorder and await all pending chunk uploads WITHOUT
+  // tearing down streams or marking the segment complete. This must run
+  // before /api/assessment/finalize — once that endpoint flips status to
+  // COMPLETED, /api/recording rejects further uploads with a 400, which
+  // drops the final in-flight video chunk (the last seconds of the defense
+  // call). Teardown is left for stopRecording() so the caller can leave
+  // the streams alive and retry finalize on failure without re-prompting
+  // for screen-share consent.
+  const flushFinalChunk = useCallback(async (): Promise<void> => {
+    if (flushedRef.current) return;
+    flushedRef.current = true;
+
+    const recorder = videoRecorderRef.current;
+    if (recorder) {
+      // stopAndWait resolves after the final ondataavailable + onstop have
+      // fired — so the per-chunk upload (via the onDataAvailable callback)
+      // has been enqueued into pendingUploadsRef by the time this awaits.
+      const finalBlob = await recorder.stopAndWait();
+      videoRecorderRef.current = null;
+
+      if (finalBlob && finalBlob.size > 0) {
+        trackUpload(
+          uploadRecordingData(
+            assessmentId,
+            finalBlob,
+            "video",
+            chunkIndexRef.current,
+            startTimeRef.current || Date.now(),
+            segmentIdRef.current || undefined
+          )
+        );
+      }
+    }
+
+    // Await all in-flight uploads (final chunk + any still-pending earlier
+    // chunks/screenshots). allSettled so a single failed upload doesn't
+    // reject and block finalize — failures are already logged by uploadRecordingData.
+    await Promise.allSettled([...pendingUploadsRef.current]);
+  }, [assessmentId, trackUpload]);
 
   const stopRecording = useCallback(() => {
-    // Stop and upload final video chunk
-    if (videoRecorderRef.current) {
+    // Skip the stop+upload path if flushFinalChunk already ran. This keeps
+    // the public API unchanged for callers who call stopRecording on its
+    // own (e.g. error paths), but avoids double-stop after flushFinalChunk.
+    if (!flushedRef.current && videoRecorderRef.current) {
       const finalBlob = videoRecorderRef.current.stop();
       if (finalBlob && finalBlob.size > 0) {
-        uploadRecordingData(
-          assessmentId,
-          finalBlob,
-          "video",
-          chunkIndexRef.current,
-          startTimeRef.current || Date.now(),
-          segmentIdRef.current || undefined
+        trackUpload(
+          uploadRecordingData(
+            assessmentId,
+            finalBlob,
+            "video",
+            chunkIndexRef.current,
+            startTimeRef.current || Date.now(),
+            segmentIdRef.current || undefined
+          )
         );
       }
       videoRecorderRef.current = null;
     }
+    flushedRef.current = false;
 
     // Mark segment as completed in database
     if (segmentIdRef.current) {
@@ -587,15 +745,19 @@ export function ScreenRecordingProvider({
     }
 
     cleanup();
-    setState("idle");
+    // "ended" signals deliberate finalization — distinct from "idle" (never started)
+    // so the guard doesn't re-prompt for recording consent while the user is
+    // navigating away to /results.
+    setState("ended");
     sessionStorage.removeItem(`screen-recording-${assessmentId}`);
-  }, [cleanup, assessmentId]);
+  }, [cleanup, assessmentId, trackUpload]);
 
   const retryRecording = useCallback(async (): Promise<boolean> => {
     setState("idle");
     setPermissionState("prompt");
     setWebcamState("idle");
     setError(null);
+    setPermissionBlock(null);
     return startRecording();
   }, [startRecording]);
 
@@ -627,8 +789,9 @@ export function ScreenRecordingProvider({
     sessionLoadStartedRef.current = true;
 
     async function loadSession() {
-      // In E2E test mode or when screen recording is skipped, auto-start a fake recording session
-      if (shouldSkipScreenRecording()) {
+      // In E2E test mode, when screen recording is skipped, or for the
+      // designated demo user, auto-start a fake recording session.
+      if (bypassRecording || shouldSkipScreenRecording()) {
         try {
           const sessionResult = await startFakeRecordingSession(assessmentId);
           segmentIdRef.current = sessionResult.segmentId;
@@ -719,10 +882,12 @@ export function ScreenRecordingProvider({
     webcamState,
     webcamStream,
     sessionLoaded,
+    permissionBlock,
     audioMixer: audioMixerRef.current,
     startRecording,
     stopRecording,
     retryRecording,
+    flushFinalChunk,
   };
 
   // Don't render children until session is loaded to avoid flash of content

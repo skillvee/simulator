@@ -16,6 +16,9 @@ export const env = createEnv({
       .enum(["true", "false"])
       .optional()
       .transform((val) => val === "true"),
+    // Comma-separated list of user IDs that bypass screen recording for demos.
+    // Server-only so the allowlist isn't shipped to the browser.
+    DEMO_USER_IDS: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -46,6 +49,7 @@ export const env = createEnv({
     NEXT_PUBLIC_E2E_TEST_MODE: process.env.NEXT_PUBLIC_E2E_TEST_MODE,
     NEXT_PUBLIC_SKIP_SCREEN_RECORDING:
       process.env.NEXT_PUBLIC_SKIP_SCREEN_RECORDING,
+    DEMO_USER_IDS: process.env.DEMO_USER_IDS,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
@@ -105,4 +109,20 @@ export function shouldAllowTestModeRecording(): boolean {
       env.NEXT_PUBLIC_SKIP_SCREEN_RECORDING === true ||
       env.NEXT_PUBLIC_E2E_TEST_MODE === true)
   );
+}
+
+/**
+ * Check whether a given user ID belongs to a designated demo account that
+ * bypasses screen recording (for live product demos). Server-only — the
+ * allowlist is not exposed to the browser. Works in any NODE_ENV.
+ */
+export function isDemoUser(userId: string | null | undefined): boolean {
+  if (!userId) return false;
+  const raw = env.DEMO_USER_IDS ?? "";
+  if (!raw) return false;
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .includes(userId);
 }

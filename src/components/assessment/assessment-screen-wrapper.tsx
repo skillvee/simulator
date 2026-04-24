@@ -8,20 +8,29 @@ interface AssessmentScreenWrapperProps {
   children: React.ReactNode;
   assessmentId: string;
   companyName?: string;
+  /** Skip screen/webcam/mic capture entirely — used for live product demos
+   *  where the recorder competes with screen sharing (e.g. Google Meet). */
+  bypassRecording?: boolean;
 }
 
 export function AssessmentScreenWrapper({
   children,
   assessmentId,
   companyName,
+  bypassRecording,
 }: AssessmentScreenWrapperProps) {
   return (
-    <ScreenRecordingProvider key={assessmentId} assessmentId={assessmentId}>
+    <ScreenRecordingProvider
+      key={assessmentId}
+      assessmentId={assessmentId}
+      bypassRecording={bypassRecording}
+    >
       <ScreenRecordingGuard
         assessmentId={assessmentId}
         companyName={companyName}
+        bypassRecording={bypassRecording}
       >
-        <WebcamPreview />
+        {!bypassRecording && <WebcamPreview />}
         {children}
       </ScreenRecordingGuard>
     </ScreenRecordingProvider>

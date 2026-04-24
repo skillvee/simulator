@@ -28,9 +28,13 @@ const mockContextValue = {
   webcamState: "idle" as string,
   webcamStream: null,
   sessionLoaded: true,
+  permissionBlock: null as
+    | null
+    | { device: "camera" | "microphone"; reason: "site-block" | "embargo" | "unknown" },
   startRecording: vi.fn().mockResolvedValue(true),
   stopRecording: vi.fn(),
   retryRecording: vi.fn().mockResolvedValue(true),
+  flushFinalChunk: vi.fn().mockResolvedValue(undefined),
 };
 
 vi.mock("@/contexts/screen-recording-context", () => ({
@@ -46,6 +50,7 @@ describe("ScreenRecordingGuard", () => {
     mockContextValue.error = null;
     mockContextValue.isRecording = false;
     mockContextValue.sessionLoaded = true;
+    mockContextValue.permissionBlock = null;
   });
 
   it("shows initial consent modal for fresh start (idle state)", () => {
@@ -181,6 +186,62 @@ describe("ScreenRecordingGuard", () => {
 
     expect(screen.queryByText("Recording Notice")).not.toBeInTheDocument();
     expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+  });
+
+  it("shows embargo-specific instructions when permissionBlock.reason is 'embargo'", () => {
+    mockContextValue.state = "error";
+    mockContextValue.permissionBlock = { device: "camera", reason: "embargo" };
+
+    render(
+      <ScreenRecordingGuard assessmentId="test-id">
+        <div>Assessment Content</div>
+      </ScreenRecordingGuard>
+    );
+
+    expect(screen.getByText("Allow Camera Access")).toBeInTheDocument();
+    expect(
+      screen.getByText(/auto-rejected the camera prompt/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Reset permissions/)).toBeInTheDocument();
+    // Should NOT fall through to the generic retry modal
+    expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+    expect(screen.queryByText("Resume Recording")).not.toBeInTheDocument();
+  });
+
+  it("shows site-block instructions when permissionBlock.reason is 'site-block'", () => {
+    mockContextValue.state = "error";
+    mockContextValue.permissionBlock = {
+      device: "microphone",
+      reason: "site-block",
+    };
+
+    render(
+      <ScreenRecordingGuard assessmentId="test-id">
+        <div>Assessment Content</div>
+      </ScreenRecordingGuard>
+    );
+
+    expect(screen.getByText("Allow Microphone Access")).toBeInTheDocument();
+    expect(
+      screen.getByText(/blocking microphone access for this site/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+  });
+
+  it("shows generic instructions when permissionBlock.reason is 'unknown'", () => {
+    mockContextValue.state = "error";
+    mockContextValue.permissionBlock = { device: "camera", reason: "unknown" };
+
+    render(
+      <ScreenRecordingGuard assessmentId="test-id">
+        <div>Assessment Content</div>
+      </ScreenRecordingGuard>
+    );
+
+    expect(screen.getByText("Allow Camera Access")).toBeInTheDocument();
+    expect(
+      screen.getByText(/blocked camera access for this site/i)
+    ).toBeInTheDocument();
   });
 
   it("shows resume modal when DB has prior recording (simulates browser close + reopen)", () => {
