@@ -7,7 +7,6 @@ import {
   ChevronRight,
   FileText,
   Bot,
-  Target,
   Sparkles,
   Phone,
   PhoneOff,

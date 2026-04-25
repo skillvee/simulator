@@ -954,7 +954,20 @@
       "badge": "Míralo en acción",
       "title": "Mira a un candidato completar",
       "titleHighlight": "una simulación real.",
-      "subtitle": "Esto es lo que tu equipo de contratación ve después de que un candidato termina. Conversaciones reales. Trabajo real. Señal real."
+      "subtitle": "Esto es lo que tu equipo de contratación ve después de que un candidato termina. Conversaciones reales. Trabajo real. Señal real.",
+      "rolesLabel": "Diseñado para contratar",
+      "roles": {
+        "engineering": "Ingeniería",
+        "product": "Producto",
+        "dataScience": "Ciencia de Datos",
+        "sales": "Ventas",
+        "customerSuccess": "Éxito del Cliente"
+      },
+      "chatRole": "· Gerente de Ingeniería",
+      "chatMsg1": "Hola — hay un bug de checkout en producción. ¿Puedes revisarlo?",
+      "chatYou": "Tú",
+      "chatMsg2": "¿Te parece si nos llamamos rápido para entender el contexto?",
+      "startCall": "Iniciar llamada de voz"
     },
     "timeline": {
       "title": "Un día de trabajo realista, no acertijos de algoritmos",
@@ -1066,7 +1079,108 @@
       "q4": {
         "question": "¿Qué pasa si un candidato tiene problemas técnicos?",
         "answer": "Los candidatos pueden pausar y reanudar. Si los problemas persisten, pueden contactar a soporte. Todas las sesiones se guardan automáticamente, así que no se pierde ningún trabajo. También ofrecemos una verificación previa antes de comenzar."
+      },
+      "q5": {
+        "question": "¿Cómo evitan que los candidatos hagan trampa con IA?",
+        "answer": "No tratamos de bloquear la IA: la fomentamos y observamos cómo se usa. La pantalla se graba, las llamadas de voz son en tiempo real y el gerente cuestiona las decisiones. La IA ayuda a quien ya entiende el trabajo y delata a quien no."
+      },
+      "q6": {
+        "question": "¿Cuánto le toma a un candidato completar una simulación?",
+        "answer": "Entre 30 y 45 minutos de principio a fin. Hacen el kickoff, recopilan requisitos, ejecutan el trabajo y lo defienden en una llamada de voz. Sin tareas de varios días ni rondas de coordinación: terminan en una sola sesión."
+      },
+      "q7": {
+        "question": "¿Esto reemplaza nuestras entrevistas actuales?",
+        "answer": "La mayoría de los equipos usan Skillvee para reemplazar el screening técnico y la prueba para casa. La ronda final on-site sigue siendo tuya. La idea es llegar a esa ronda con una shortlist de alta señal antes de quemar tiempo en agendas."
+      },
+      "q8": {
+        "question": "¿Cómo manejan los datos de los candidatos?",
+        "answer": "Estamos auditados con SOC 2 Type II, somos GDPR-compliant y los datos están encriptados en tránsito y en reposo. Las grabaciones y transcripciones siguen políticas de retención configurables, y los candidatos pueden solicitar su eliminación en cualquier momento."
       }
+    },
+    "voiceCall": {
+      "role": "Gerente de Ingeniería · equipo de Stripe",
+      "callInProgress": "Llamada en curso",
+      "poweredBy": "Voz en tiempo real con Gemini Live"
+    },
+    "ide": {
+      "recordingStatus": "Grabando sesión",
+      "onCall": "En llamada"
+    },
+    "defendThread": {
+      "you": "Tú",
+      "role": "Gerente de Ingeniería",
+      "defendingDecisions": "Defendiendo decisiones",
+      "msg1": "¿Por qué usaste Redis aquí en lugar de ir directo a Postgres?",
+      "msg2": "Las lecturas del carrito son críticas — necesitamos p99 sub-10ms en checkout. Postgres mete latencia que no queremos en esa ruta.",
+      "msg3": "Tiene sentido. ¿Y si Redis se cae?",
+      "msg4": "Caemos a Postgres con un circuit breaker. Más lento, pero el checkout sigue funcionando.",
+      "replyPlaceholder": "Responder a Sarah Chen…"
+    },
+    "hiringManagers": {
+      "badge": "PARA HIRING MANAGERS",
+      "title": "Elige al candidato correcto desde un ranking claro",
+      "subtitle": "No es decidir por intuición. Es una shortlist ordenada con evidencia detrás de cada puntaje, para que quienes están más cerca del trabajo decidan rápido.",
+      "card1": {
+        "title": "Shortlist ordenada",
+        "desc": "Ve a los mejores candidatos en segundos, evaluados en las dimensiones que predicen el desempeño real."
+      },
+      "card2": {
+        "title": "Evidencia, no intuición",
+        "desc": "Cada calificación apunta al momento exacto en que ocurrió: la pregunta que hicieron, la decisión que defendieron."
+      },
+      "card3": {
+        "title": "Calibren como equipo",
+        "desc": "Hiring managers, recruiters e ICs ven la misma señal. Se acabó debatir desde la memoria."
+      },
+      "mock": {
+        "role": "Senior Backend Engineer",
+        "rankedByOverall": "Ordenados por puntaje general",
+        "completed": "12 completados",
+        "topMatch": "Top match",
+        "candidateRoleTime": "Senior Backend Engineer · 32 min",
+        "overall": "GENERAL",
+        "observedEvidence": "EVIDENCIA OBSERVADA",
+        "evidence1": "Hizo preguntas para aclarar la expiración del carrito antes de escribir código.",
+        "evidence2": "Eligió Redis con fallback a Postgres — explicó el tradeoff de latencia con claridad.",
+        "evidence3": "Defendió el patrón de circuit breaker cuando lo cuestionaron. No se dobló.",
+        "dimensions": {
+          "problemSolving": "Resolución de problemas",
+          "aiLeverage": "Uso de IA",
+          "communication": "Comunicación",
+          "technicalDepth": "Profundidad técnica",
+          "collaboration": "Colaboración",
+          "timeManagement": "Gestión del tiempo"
+        }
+      }
+    },
+    "workflow": {
+      "badge": "ENCAJA EN TU FLUJO DE CONTRATACIÓN",
+      "title": "En marcha en minutos, no en semanas",
+      "subtitle": "Pega una descripción de trabajo, revisa la simulación generada y envía el link a los candidatos. Eso es todo.",
+      "step1": {
+        "title": "Pega una descripción de trabajo",
+        "desc": "Skillvee lee la JD y genera un escenario realista, los compañeros de IA y el entregable en menos de un minuto.",
+        "label": "DESCRIPCIÓN DE TRABAJO"
+      },
+      "step2": {
+        "title": "Revisa las personas de IA",
+        "desc": "Ajusta el manager, los stakeholders y el reto si quieres — o publícalo tal cual. La mayoría lo publica tal cual.",
+        "persona1": "Sarah Chen — Gerente de Ingeniería",
+        "persona2": "Diego Ramos — Senior Designer",
+        "persona3": "Taylor Kim — Líder de Producto"
+      },
+      "step3": {
+        "title": "Envía el link a los candidatos",
+        "desc": "Pega el link en tu ATS o envíalo directo. Los candidatos arrancan la simulación cuando estén listos.",
+        "linkLabel": "LINK DE SIMULACIÓN",
+        "ready": "LISTO",
+        "copyLink": "Copiar link"
+      }
+    },
+    "ats": {
+      "badge": "INTEGRACIONES ATS",
+      "description": "Skillvee se conecta al stack de reclutamiento que ya usas — sin reemplazar nada.",
+      "footer": "¿No ves el tuyo? Los planes Enterprise incluyen integraciones a medida."
     },
     "cta": {
       "title": "¿LISTO PARA MEJORAR",
