@@ -29,6 +29,10 @@ vi.mock("@/server/db", () => ({
       create: (...args: unknown[]) => mockCreateVideoAssessment(...args),
       update: (...args: unknown[]) => mockUpdateVideoAssessment(...args),
     },
+    assessmentApiCall: {
+      create: vi.fn().mockResolvedValue({ id: "test-api-call" }),
+      update: vi.fn().mockResolvedValue({ id: "test-api-call" }),
+    },
   },
 }));
 
