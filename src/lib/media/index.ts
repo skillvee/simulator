@@ -4,3 +4,4 @@ export * from "./screen";
 export * from "./webcam";
 export * from "./video-recorder";
 export * from "./canvas-compositor";
+export * from "./webm-seekable";

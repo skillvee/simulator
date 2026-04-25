@@ -2,6 +2,7 @@ import { requireAdmin, createLogger } from "@/lib/core";
 import { success, error } from "@/lib/api";
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
+import { makeWebmSeekable } from "@/lib/media";
 
 const logger = createLogger("api:admin:recording:merge");
 
@@ -152,7 +153,8 @@ export async function POST(request: Request) {
       return error("All chunk downloads failed", 500);
     }
 
-    const merged = Buffer.concat(chunkBuffers);
+    const concatenated = Buffer.concat(chunkBuffers);
+    const merged = await makeWebmSeekable(concatenated);
 
     // Upload merged file to Supabase
     const mergedPath = `${assessmentId}/merged.webm`;
