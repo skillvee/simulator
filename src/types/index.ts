@@ -95,7 +95,19 @@ export type {
 } from "./cv";
 
 // Scenario types
-export type { ScenarioResource, SimulationDepth } from "./scenario";
+export type {
+  ScenarioResource,
+  SimulationDepth,
+  // v2 resource pipeline
+  ScenarioDoc,
+  ScenarioDataFileShape,
+  ScenarioDataFileSchema,
+  ResourcePlanItem,
+  ResourcePlan,
+  ResourcePipelineStatus,
+  ResourcePipelineMeta,
+  JudgeVerdict,
+} from "./scenario";
 export { SIMULATION_DEPTH_CONFIG } from "./scenario";
 
 // API response types

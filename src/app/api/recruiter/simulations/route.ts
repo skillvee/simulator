@@ -3,6 +3,9 @@ import { db } from "@/server/db";
 import { success, error, validateRequest } from "@/lib/api";
 import { ScenarioCreateSchema } from "@/lib/schemas";
 import { createLogger } from "@/lib/core";
+import { env } from "@/lib/core/env";
+import type { ResourcePipelineMeta } from "@/types";
+import type { Prisma } from "@prisma/client";
 
 const logger = createLogger("server:api:recruiter:simulations");
 
@@ -91,6 +94,45 @@ export async function POST(request: Request) {
   if ("error" in validated) return validated.error;
   const { name, companyName, companyDescription, taskDescription, repoUrl, techStack, targetLevel, archetypeId, simulationDepth, resources, language, creationLogId } = validated.data;
 
+  // ----- v2 path: pre-create scenario in "planning" status, no resources, isPublished=false.
+  // The client follows up with POST /simulations/[id]/start-pipeline which runs Step 1
+  // synchronously and Steps 2-4 via Vercel after().
+  if (env.RESOURCE_PIPELINE_V2) {
+    try {
+      const initialMeta: ResourcePipelineMeta = {
+        version: "v2",
+        status: "planning",
+        attempts: 0,
+        startedAt: new Date().toISOString(),
+      };
+
+      const scenario = await db.scenario.create({
+        data: {
+          name,
+          companyName,
+          companyDescription,
+          taskDescription,
+          repoUrl,
+          techStack,
+          targetLevel,
+          simulationDepth,
+          archetypeId,
+          language,
+          isPublished: false, // v2: explicit publish gate
+          pipelineVersion: "v2",
+          resourcePipelineMeta: initialMeta as unknown as Prisma.InputJsonValue,
+          createdById: user.id,
+        },
+      });
+
+      return success({ scenario }, 201);
+    } catch (err) {
+      logger.error("Failed to create scenario (v2)", { err });
+      return error("Failed to create simulation", 500);
+    }
+  }
+
+  // ----- v1 path (default): create with resources and isPublished=true.
   // Fallback: if the client didn't send resources but we have a creation log,
   // look up the completed generate_resources step and use its output.
   // This closes a race where the client's fetch to generate-resources times
@@ -121,7 +163,7 @@ export async function POST(request: Request) {
         targetLevel,
         simulationDepth,
         archetypeId,
-        resources: finalResources as unknown as import("@prisma/client").Prisma.InputJsonValue,
+        resources: finalResources as unknown as Prisma.InputJsonValue,
         language, // Persist the language field
         isPublished: true, // Recruiter scenarios are always active
         createdById: user.id, // Set ownership to current user

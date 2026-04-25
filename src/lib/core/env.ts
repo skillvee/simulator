@@ -19,6 +19,12 @@ export const env = createEnv({
     // Comma-separated list of user IDs that bypass screen recording for demos.
     // Server-only so the allowlist isn't shipped to the browser.
     DEMO_USER_IDS: z.string().optional(),
+    // v2 resource pipeline feature flag — "on" enables Gemini 3.1 Pro plan→artifacts→judge flow.
+    RESOURCE_PIPELINE_V2: z
+      .enum(["on", "off"])
+      .optional()
+      .default("off")
+      .transform((val) => val === "on"),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -50,6 +56,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SKIP_SCREEN_RECORDING:
       process.env.NEXT_PUBLIC_SKIP_SCREEN_RECORDING,
     DEMO_USER_IDS: process.env.DEMO_USER_IDS,
+    RESOURCE_PIPELINE_V2: process.env.RESOURCE_PIPELINE_V2,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

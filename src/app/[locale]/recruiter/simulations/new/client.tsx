@@ -581,18 +581,45 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
         logger.error("Avatar generation failed (non-blocking)", { err });
       });
 
-      // Step 5: Trigger repo provisioning (background — errors logged)
-      fetch(`/api/recruiter/simulations/${scenario.id}/provision-repo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      }).then(async (res) => {
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          logger.error("Repo provisioning failed", { status: res.status, details: data.details || data.error || "Unknown error" });
-        }
-      }).catch((err) => {
-        logger.error("Repo provisioning network error", { err });
-      });
+      // Step 5: Kick off the resource pipeline.
+      //
+      // v2 (pipelineVersion === "v2"): backend created the scenario in
+      // "planning" state with isPublished=false. Call /start-pipeline which
+      // runs Step 1 sync and kicks Steps 2-4 via after(). The recruiter
+      // settings page polls /resource-pipeline for status.
+      //
+      // v1 (default): the legacy fire-and-forget /provision-repo flow.
+      if (scenario.pipelineVersion === "v2") {
+        fetch(`/api/recruiter/simulations/${scenario.id}/start-pipeline`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }).then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            logger.error("Resource pipeline start failed", {
+              status: res.status,
+              details: data.error || "Unknown error",
+            });
+          }
+        }).catch((err) => {
+          logger.error("Resource pipeline network error", { err });
+        });
+      } else {
+        fetch(`/api/recruiter/simulations/${scenario.id}/provision-repo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }).then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            logger.error("Repo provisioning failed", {
+              status: res.status,
+              details: data.details || data.error || "Unknown error",
+            });
+          }
+        }).catch((err) => {
+          logger.error("Repo provisioning network error", { err });
+        });
+      }
 
       // Step 6: Mark log as completed and redirect
       await updateLog({

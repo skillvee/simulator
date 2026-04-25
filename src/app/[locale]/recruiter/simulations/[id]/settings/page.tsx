@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireRecruiter } from "@/lib/core";
 import { db } from "@/server/db";
 import { SimulationSettingsClient } from "./client";
-import type { ScenarioResource } from "@/types";
+import type { ScenarioResource, ResourcePipelineMeta } from "@/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,6 +24,9 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
       language: true,
       createdById: true,
       createdAt: true,
+      isPublished: true,
+      pipelineVersion: true,
+      resourcePipelineMeta: true,
       archetype: {
         select: {
           name: true,
@@ -70,6 +73,10 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
     createdAt: scenario.createdAt.toISOString(),
     coworkers: scenario.coworkers,
     assessmentCount: scenario._count.assessments,
+    isPublished: scenario.isPublished,
+    pipelineVersion: scenario.pipelineVersion,
+    resourcePipelineMeta:
+      (scenario.resourcePipelineMeta as unknown as ResourcePipelineMeta | null) ?? null,
   };
 }
 

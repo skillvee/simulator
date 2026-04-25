@@ -66,6 +66,7 @@ export async function POST(
       repoUrl: true,
       resources: true,
       createdById: true,
+      pipelineVersion: true,
       coworkers: {
         select: {
           name: true,
@@ -79,6 +80,16 @@ export async function POST(
 
   if (!scenario) {
     return error("Scenario not found", 404);
+  }
+
+  // v2 scenarios provision their repo through the orchestrator. Reject early
+  // so callers can route to /start-pipeline instead.
+  if (scenario.pipelineVersion === "v2") {
+    return error(
+      "Scenario is on v2 pipeline; use POST /start-pipeline instead",
+      410,
+      "GONE_V2_PIPELINE"
+    );
   }
 
   // Security: Only allow the scenario owner (or admin) to trigger provisioning

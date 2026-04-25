@@ -16,7 +16,12 @@ export type StepName =
   | "generate_tasks"
   | "generate_coworkers"
   | "generate_resources"
-  | "provision_repo";
+  | "provision_repo"
+  // v2 resource pipeline
+  | "generate_plan"
+  | "generate_artifacts"
+  | "validate_artifacts"
+  | "judge_artifacts";
 
 export interface LogGenerationStepOptions {
   creationLogId: string;
