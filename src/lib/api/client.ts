@@ -68,6 +68,40 @@ export function buildTracedHeaders(
  *   }
  * }
  */
+/**
+ * fetch() wrapper that retries transient network failures.
+ *
+ * Retries only on TypeError (DNS/connection refused, dev-server HMR reload,
+ * browser-level abort). HTTP error responses (4xx/5xx) are returned as-is so
+ * real server bugs still surface.
+ *
+ * Why: Long-running user actions (e.g. simulation creation) occasionally hit
+ * a "Failed to fetch" when the dev server reloads or the network blips. A
+ * couple of short retries hides the noise without masking real failures.
+ */
+export async function fetchWithRetry(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+  options?: { retries?: number; backoffMs?: number[] }
+): Promise<Response> {
+  const retries = options?.retries ?? 2;
+  const backoff = options?.backoffMs ?? [300, 900];
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetch(input, init);
+    } catch (err) {
+      if (!(err instanceof TypeError)) throw err;
+      lastErr = err;
+      if (attempt < retries) {
+        const delay = backoff[attempt] ?? backoff[backoff.length - 1] ?? 300;
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 export async function api<T>(endpoint: string, options?: ApiOptions): Promise<T> {
   const response = await fetch(endpoint, {
     method: options?.method ?? "GET",

@@ -7,6 +7,6 @@
  * - validation: Request body validation using Zod schemas
  */
 
-export { api, ApiClientError, buildTracedHeaders } from "./client";
+export { api, ApiClientError, buildTracedHeaders, fetchWithRetry } from "./client";
 export { success, error, validationError } from "./response";
 export { validateRequest } from "./validation";
