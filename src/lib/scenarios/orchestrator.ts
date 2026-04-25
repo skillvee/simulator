@@ -254,7 +254,17 @@ export async function runArtifactPipeline(
           blockingIssues: undefined,
           passedAt: new Date().toISOString(),
         };
-        await persistMeta(scenarioId, meta);
+        // Auto-publish: once the judge accepts the bundle there's no further
+        // human gate, so the candidate-facing invite link starts working
+        // immediately. Recruiters wanted "ready means shareable" — no
+        // separate Publish click.
+        await db.scenario.update({
+          where: { id: scenarioId },
+          data: {
+            resourcePipelineMeta: meta as unknown as Prisma.InputJsonValue,
+            isPublished: true,
+          },
+        });
         return;
       }
       // else: loop to retry

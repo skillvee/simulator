@@ -93,6 +93,7 @@ interface ScenarioData {
   isPublished: boolean;
   pipelineVersion: string;
   resourcePipelineMeta: ResourcePipelineMeta | null;
+  resourceType: "repo" | "data";
 }
 
 interface SimulationSettingsClientProps {
@@ -128,10 +129,10 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
     });
   };
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-  const [repoUrl, setRepoUrl] = useState(scenario.repoUrl);
-  const [repoStatus, setRepoStatus] = useState<"loading" | "ready" | "failed">(
-    scenario.repoUrl ? "ready" : "loading"
-  );
+  // Mirrors scenario.isPublished — flips automatically when the orchestrator
+  // sets the scenario passed (auto-publish). The ResourcePipelineStatus
+  // component polls and reports back via onPublishedChange.
+  const [isPublished, setIsPublished] = useState<boolean>(scenario.isPublished);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -144,40 +145,6 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
       }
     }
   }, [searchParams]);
-
-  // Poll for repo URL if not yet available
-  useEffect(() => {
-    if (repoUrl) return;
-
-    let attempts = 0;
-    const maxAttempts = 24; // 2 minutes (24 * 5s)
-    const interval = setInterval(async () => {
-      attempts++;
-      try {
-        const res = await fetch(`/api/recruiter/simulations/${scenario.id}`);
-        if (res.ok) {
-          const json = await res.json();
-          const url = json.data?.repoUrl;
-          if (url) {
-            setRepoUrl(url);
-            setRepoStatus("ready");
-            clearInterval(interval);
-          } else if (attempts >= maxAttempts) {
-            setRepoStatus("failed");
-            clearInterval(interval);
-          }
-        }
-      } catch {
-        // Network error, keep polling
-      }
-      if (attempts >= maxAttempts) {
-        setRepoStatus("failed");
-        clearInterval(interval);
-      }
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [repoUrl, scenario.id]);
 
   const getShareableLink = () => {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -241,8 +208,67 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
     }
   };
 
+  // Right-sidebar content: pipeline status (v2 only) + shareable link
+  // (always visible for v1; only after auto-publish for v2).
+  const sidebar = (
+    <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+      {scenario.pipelineVersion === "v2" && (
+        <ResourcePipelineStatus
+          scenarioId={scenario.id}
+          initialMeta={scenario.resourcePipelineMeta}
+          initialIsPublished={scenario.isPublished}
+          onPublishedChange={setIsPublished}
+          resourceType={scenario.resourceType}
+        />
+      )}
+
+      {(scenario.pipelineVersion !== "v2" || isPublished) && (
+        <Card className="border-blue-200 bg-blue-50/50 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base text-blue-900">
+              <LinkIcon className="h-4 w-4" />
+              {t("shareableLink.title")}
+            </CardTitle>
+            <p className="text-xs text-blue-700">
+              {t("shareableLink.description")}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center rounded-lg border border-blue-200 bg-white px-3 py-2">
+                <code className="text-xs text-stone-800 break-all">
+                  {getShareableLink()}
+                </code>
+              </div>
+              <Button
+                onClick={handleCopyLink}
+                className={`w-full transition-colors ${
+                  copied
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {copied ? (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    {t("shareableLink.copied")}
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-4 w-4" />
+                    {t("shareableLink.copy")}
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </aside>
+  );
+
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12">
+    <div className="mx-auto max-w-6xl px-6 py-12">
       {/* Success Banner */}
       {showSuccessBanner && (
         <div className="mb-6 flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4">
@@ -285,57 +311,10 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
         </div>
       </div>
 
-      {/* v2 resource pipeline status — only renders for v2 scenarios */}
-      {scenario.pipelineVersion === "v2" && (
-        <ResourcePipelineStatus
-          scenarioId={scenario.id}
-          initialMeta={scenario.resourcePipelineMeta}
-          initialIsPublished={scenario.isPublished}
-        />
-      )}
-
-      {/* Shareable Link Section */}
-      <Card className="mb-8 border-blue-200 bg-blue-50/50 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg text-blue-900">
-            <LinkIcon className="h-5 w-5" />
-            {t("shareableLink.title")}
-          </CardTitle>
-          <p className="text-sm text-blue-700">
-            {t("shareableLink.description")}
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 flex items-center rounded-lg border border-blue-200 bg-white px-4 py-3">
-              <code className="text-sm text-stone-800 break-all">
-                {getShareableLink()}
-              </code>
-            </div>
-            <Button
-              size="lg"
-              onClick={handleCopyLink}
-              className={`px-6 transition-colors ${
-                copied
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
-              {copied ? (
-                <>
-                  <Check className="mr-2 h-5 w-5" />
-                  {t("shareableLink.copied")}
-                </>
-              ) : (
-                <>
-                  <Copy className="mr-2 h-5 w-5" />
-                  {t("shareableLink.copy")}
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Two-column layout: pipeline + share link in a sticky right
+          sidebar; details, resources, and coworkers on the left. */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-6">
 
       {/* Simulation Details */}
       <Card className="mb-6 border-stone-200 shadow-sm">
@@ -454,32 +433,6 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
               <p className="text-xs text-stone-400 mt-1">
                 {t("details.archetypeNote")}
               </p>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-sm font-medium text-stone-500 mb-2">
-              {t("details.repository")}
-            </h3>
-            {repoStatus === "ready" && repoUrl ? (
-              <a
-                href={repoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                {repoUrl}
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            ) : repoStatus === "failed" ? (
-              <span className="text-sm text-stone-400">
-                {t("details.repoUnavailable")}
-              </span>
-            ) : (
-              <div className="flex items-center gap-2 text-stone-500">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-blue-600" />
-                <span className="text-sm">{t("details.settingUp")}</span>
-              </div>
             )}
           </div>
 
@@ -619,6 +572,10 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           )}
         </CardContent>
       </Card>
+
+        </div>
+        {sidebar}
+      </div>
 
       {/* Clone Language Modal */}
       <Dialog open={showCloneModal} onOpenChange={setShowCloneModal}>
