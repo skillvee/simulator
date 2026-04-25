@@ -66,7 +66,7 @@ const SLIDES: Slide[] = [
     eyebrow: "The Problem",
     title: "Hiring broke\nin the AI era.",
     subtitle:
-      "The signals recruiters relied on for 30 years stopped working overnight. Resumes, take-homes, and coding tests are all gameable now.",
+      "Every filter recruiters used to vet candidates stopped working overnight.",
   },
   {
     id: "insight",
@@ -160,33 +160,27 @@ function CoverSlide() {
         <div className="w-[900px] h-[900px] bg-primary/25 rounded-full blur-[180px]" />
       </div>
 
-      <div className="relative z-10 max-w-5xl text-center px-12">
-        <div className="mb-12 flex justify-center">
+      <div className="relative z-10 max-w-5xl text-center px-16">
+        <div className="mb-14 flex justify-center">
           <Image
             src="/skillvee-logo.png"
             alt="SkillVee"
             width={320}
             height={96}
-            style={{ width: "auto", height: 80 }}
+            style={{ width: "auto", height: 88, filter: "brightness(0) invert(1)" }}
             priority
           />
         </div>
 
         <h1 className="text-6xl lg:text-8xl font-black tracking-tight leading-[0.95] text-white mb-8">
-          The future of hiring is{" "}
-          <span className="text-primary">watching people work.</span>
+          Watch them work.
+          <br />
+          <span className="text-primary">Then hire.</span>
         </h1>
 
-        <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-3xl mx-auto leading-relaxed mb-12">
-          Skillvee runs 45-minute work simulations that show who can actually do the job — before you make the offer.
+        <p className="text-xl lg:text-2xl text-slate-400 font-medium max-w-3xl mx-auto leading-relaxed">
+          See exactly how candidates communicate, collaborate, and solve problems — before you make the offer. No more expensive hiring mistakes.
         </p>
-
-        <div className="inline-flex items-center gap-3 bg-primary/10 border border-primary/40 rounded-full px-6 py-3">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-primary font-bold tracking-wide">
-            Seed round · Raising $1.5M on a SAFE
-          </span>
-        </div>
       </div>
     </div>
   );
@@ -197,40 +191,37 @@ function CoverSlide() {
    ============================================================ */
 
 function ProblemVisual() {
-  const stats = [
-    { value: "1000s/day", label: "Applications per role", icon: FileText, sub: "AI-written, indistinguishable" },
-    { value: "72%", label: "AI-generated resumes", icon: Bot, sub: "up from 12% in 2022" },
-    { value: "<1%", label: "Truly qualified", icon: Target, sub: "after manual screening" },
-    { value: "45%", label: "Use AI in interviews", icon: Sparkles, sub: "even live coding rounds" },
+  const broken = [
+    { label: "Resumes", reason: "AI-written — all look alike" },
+    { label: "Take-homes", reason: "AI-submitted — can't tell who did the work" },
+    { label: "Interviews", reason: "45% of candidates use AI live, undetectable" },
   ];
 
   return (
-    <div className="h-full flex flex-col justify-center gap-5">
-      <div className="grid grid-cols-2 gap-5 flex-1">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
+    <div className="h-full flex flex-col justify-center gap-6">
+      <div>
+        <div className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">
+          Gameable now
+        </div>
+        <div className="space-y-3">
+          {broken.map((item) => (
             <div
-              key={stat.label}
-              className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-2xl p-7 flex flex-col justify-between"
+              key={item.label}
+              className="flex items-center gap-4 bg-slate-800/40 border border-slate-700/50 rounded-xl p-5"
             >
-              <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                <Icon className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <div className="text-5xl font-black text-white mb-2 leading-none">{stat.value}</div>
-                <div className="text-base text-slate-300 font-semibold">{stat.label}</div>
-                <div className="text-xs text-slate-500 mt-1">{stat.sub}</div>
+              <XCircle className="w-7 h-7 text-red-500 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="text-xl font-bold text-slate-200 line-through decoration-red-500/60 decoration-2">{item.label}</div>
+                <div className="text-sm text-slate-400 mt-0.5">{item.reason}</div>
               </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
       <div className="bg-slate-900/60 border-l-4 border-primary rounded-r-xl p-5">
-        <p className="text-sm text-slate-300 leading-relaxed">
-          <span className="text-white font-semibold">HackerRank bans AI and tests trivia. Take-homes get AI submissions. Resumes are AI slop.</span>{" "}
-          The signals recruiters trusted for 30 years are gone — and nothing has replaced them.
+        <p className="text-base text-slate-200 leading-relaxed font-medium">
+          The signals recruiters trusted for 30 years are gone — and nothing has replaced them yet.
         </p>
       </div>
     </div>
@@ -242,68 +233,22 @@ function ProblemVisual() {
    ============================================================ */
 
 function InsightSlide() {
-  const broken = [
-    { label: "Resumes", reason: "AI-written, all look alike" },
-    { label: "Take-homes", reason: "AI-submitted, can't tell who did the work" },
-    { label: "Coding tests", reason: "Cheated with copilots, banned the tools instead" },
-    { label: "Interviews", reason: "45% candidates use AI live, undetectable" },
-  ];
-
   return (
-    <div className="h-full w-full flex items-center justify-center relative overflow-hidden px-16 py-12">
+    <div className="h-full w-full flex items-center justify-center relative overflow-hidden px-24">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[700px] h-[700px] bg-primary/15 rounded-full blur-[160px]" />
+        <div className="w-[900px] h-[900px] bg-primary/20 rounded-full blur-[180px]" />
       </div>
 
-      <div className="relative z-10 max-w-6xl w-full flex flex-col justify-center gap-12">
-        <div className="text-center">
-          <div className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-6">
-            The Insight
-          </div>
-          <h2 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.05] text-white mb-4">
-            Interviews are going away.
-          </h2>
-          <h2 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.05] text-primary">
-            Watching people work isn&apos;t gameable.
-          </h2>
+      <div className="relative z-10 max-w-5xl w-full text-center">
+        <div className="text-xs font-black uppercase tracking-[0.3em] text-primary mb-8">
+          The Insight
         </div>
-
-        <div className="grid grid-cols-5 gap-6 items-stretch">
-          <div className="col-span-3">
-            <div className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">
-              Gameable now
-            </div>
-            <div className="space-y-3">
-              {broken.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-4 bg-slate-800/40 border border-slate-700/50 rounded-xl p-4"
-                >
-                  <XCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-lg font-bold text-slate-300 line-through decoration-red-500/60 decoration-2">{item.label}</div>
-                    <div className="text-sm text-slate-500">{item.reason}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="col-span-2">
-            <div className="text-xs font-bold uppercase tracking-widest text-primary mb-4">
-              Survives the AI era
-            </div>
-            <div className="bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/50 rounded-xl p-7 h-full flex flex-col justify-center">
-              <CheckCircle2 className="w-10 h-10 text-primary mb-4" />
-              <div className="text-3xl font-black text-white leading-tight mb-3">
-                A 45-min recorded simulation of the actual job.
-              </div>
-              <div className="text-base text-slate-300 leading-relaxed">
-                You can&apos;t fake an hour of work that 10 stakeholders, an AI judge, and a screen recording all witnessed.
-              </div>
-            </div>
-          </div>
-        </div>
+        <h2 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.1] text-white mb-4">
+          Interviews are going away.
+        </h2>
+        <h2 className="text-5xl lg:text-7xl font-black tracking-tight leading-[1.1] text-white">
+          The future of hiring is <span className="text-primary">watching people work.</span>
+        </h2>
       </div>
     </div>
   );
@@ -907,7 +852,7 @@ function AskSlide() {
   ];
 
   return (
-    <div className="h-full w-full flex items-center justify-center px-16 py-12 relative overflow-hidden">
+    <div className="h-full w-full flex items-center justify-center px-24 py-12 relative overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-[800px] h-[800px] bg-primary/25 rounded-full blur-[180px]" />
       </div>
@@ -1090,7 +1035,7 @@ export default function PresentationV2Page() {
           </div>
         ) : (
           <div className="flex w-full">
-            <div className="w-1/2 p-12 lg:p-16 flex flex-col justify-center relative">
+            <div className="w-1/2 pl-16 pr-10 lg:pl-24 lg:pr-14 py-12 flex flex-col justify-center relative">
               <div className="absolute top-[-20%] left-[-20%] w-full h-full bg-primary/15 rounded-full blur-[150px] pointer-events-none" />
               <div className="relative z-10">
                 {slide.eyebrow && (
@@ -1114,7 +1059,7 @@ export default function PresentationV2Page() {
               </div>
             </div>
 
-            <div className="w-1/2 p-8 lg:p-12 flex items-center justify-center">
+            <div className="w-1/2 pl-10 pr-16 lg:pl-14 lg:pr-24 py-12 flex items-center justify-center">
               <div className="w-full h-full">{renderVisual(slide.kind)}</div>
             </div>
           </div>
