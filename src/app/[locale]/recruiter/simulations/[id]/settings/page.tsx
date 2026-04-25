@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireRecruiter } from "@/lib/core";
 import { db } from "@/server/db";
 import { SimulationSettingsClient } from "./client";
-import type { ScenarioResource } from "@/types";
+import type { ScenarioResource, ResourcePipelineMeta } from "@/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,9 +24,13 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
       language: true,
       createdById: true,
       createdAt: true,
+      isPublished: true,
+      pipelineVersion: true,
+      resourcePipelineMeta: true,
       archetype: {
         select: {
           name: true,
+          slug: true,
           roleFamily: { select: { name: true } },
         },
       },
@@ -54,6 +58,19 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
     return null;
   }
 
+  // Slug→branch mapping mirrors the orchestrator. Used to render branch-
+  // specific copy on the recruiter UI (e.g. "Building the GitHub repo" vs
+  // "Generating CSVs in a Python sandbox") without it depending on whether
+  // the artifact has finished generating yet.
+  const DATA_SLUGS = new Set([
+    "data_analyst",
+    "data_scientist",
+    "analytics_engineer",
+    "ml_engineer",
+  ]);
+  const slug = scenario.archetype?.slug ?? "";
+  const resourceType: "repo" | "data" = DATA_SLUGS.has(slug) ? "data" : "repo";
+
   return {
     id: scenario.id,
     name: scenario.name,
@@ -70,6 +87,11 @@ async function getScenarioDetails(scenarioId: string, userId: string, userRole: 
     createdAt: scenario.createdAt.toISOString(),
     coworkers: scenario.coworkers,
     assessmentCount: scenario._count.assessments,
+    isPublished: scenario.isPublished,
+    pipelineVersion: scenario.pipelineVersion,
+    resourcePipelineMeta:
+      (scenario.resourcePipelineMeta as unknown as ResourcePipelineMeta | null) ?? null,
+    resourceType,
   };
 }
 

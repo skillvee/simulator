@@ -15,7 +15,7 @@
  */
 
 import type { RepoSpec, FileSpec, Scaffold } from "./repo-spec";
-import { SCAFFOLDS } from "./repo-spec";
+import { SCAFFOLDS, diffRepoSpecs } from "./repo-spec";
 import { createLogger } from "@/lib/core";
 
 const logger = createLogger("lib:scenarios:repo-builder");
@@ -509,6 +509,124 @@ async function markRepoAsTemplate(
   } catch (err) {
     logger.warn("Error marking as template", { error: String(err) });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Patch application — used on retry attempts to update an existing repo
+// without deleting and recreating it.
+// ---------------------------------------------------------------------------
+
+export interface ApplySpecPatchResult {
+  added: number;
+  modified: number;
+  removed: number;
+  readmeUpdated: boolean;
+}
+
+/**
+ * Apply a diff between `prior` and `next` to an existing GitHub repo.
+ *
+ * Used by the v2 orchestrator on retry attempts to avoid the delete-and-rebuild
+ * cycle. Each changed file becomes a separate Contents API commit (simpler
+ * than building a custom tree; commits attribute to the bot user).
+ *
+ * Non-throwing: logs warnings on partial failures, never blocks. The caller
+ * should re-judge after the patch — the new commits are the new state.
+ */
+export async function applySpecPatch(args: {
+  repoUrl: string;
+  prior: RepoSpec;
+  next: RepoSpec;
+  githubToken: string;
+}): Promise<ApplySpecPatchResult> {
+  const { repoUrl, prior, next, githubToken } = args;
+  const { owner, repo } = parseRepoUrl(repoUrl);
+  const diff = diffRepoSpecs(prior, next);
+
+  logger.info("Applying spec patch", {
+    repoUrl,
+    added: diff.added.length,
+    modified: diff.modified.length,
+    removed: diff.removed.length,
+    unchanged: diff.unchangedCount,
+  });
+
+  for (const file of diff.added) {
+    await updateFile(
+      owner,
+      repo,
+      file.path,
+      file.content,
+      `feat: add ${file.path}`,
+      githubToken
+    );
+  }
+
+  for (const file of diff.modified) {
+    await updateFile(
+      owner,
+      repo,
+      file.path,
+      file.content,
+      `fix: update ${file.path}`,
+      githubToken
+    );
+  }
+
+  for (const file of diff.removed) {
+    await deleteFile(
+      owner,
+      repo,
+      file.path,
+      `chore: remove ${file.path}`,
+      githubToken
+    );
+  }
+
+  let readmeUpdated = false;
+  if (prior.readmeContent !== next.readmeContent) {
+    readmeUpdated = await updateFile(
+      owner,
+      repo,
+      "README.md",
+      next.readmeContent,
+      "docs: update README",
+      githubToken
+    );
+  }
+
+  return {
+    added: diff.added.length,
+    modified: diff.modified.length,
+    removed: diff.removed.length,
+    readmeUpdated,
+  };
+}
+
+async function deleteFile(
+  owner: string,
+  repo: string,
+  path: string,
+  message: string,
+  githubToken: string
+): Promise<boolean> {
+  const existing = await fetchFileContent(owner, repo, path, githubToken);
+  if (!existing) {
+    logger.warn("Cannot delete: file not found", { path });
+    return false;
+  }
+  const res = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+    {
+      method: "DELETE",
+      headers: GITHUB_API_HEADERS(githubToken),
+      body: JSON.stringify({ message, sha: existing.sha }),
+    }
+  );
+  if (!res.ok) {
+    logger.warn("Failed to delete file", { path, status: res.status });
+  }
+  return res.ok;
 }
 
 // ---------------------------------------------------------------------------

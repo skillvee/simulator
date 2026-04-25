@@ -12,9 +12,13 @@ import { gemini } from "@/lib/ai/gemini";
 import {
   REPO_SPEC_GENERATOR_PROMPT,
   REPO_SPEC_GENERATOR_PROMPT_VERSION,
+  REPO_SPEC_PATCH_PROMPT_VERSION,
+  buildRepoSpecPatchSection,
 } from "@/prompts/recruiter/repo-spec-generator";
 import {
   repoSpecSchema,
+  patchSpecSchema,
+  mergePatchSpec,
   selectScaffold,
   type RepoSpec,
   type ScenarioMetadata,
@@ -39,14 +43,19 @@ export interface GenerateRepoSpecResponse {
  * Generate a complete RepoSpec from scenario metadata.
  *
  * @param metadata - Scenario context (company, task, tech stack, coworkers)
+ * @param options - Optional v2-pipeline context (plan + docs + judgeFeedback)
  * @returns Validated RepoSpec ready for the builder
  * @throws Error if generation fails after all attempts
  */
 export async function generateRepoSpec(
-  metadata: ScenarioMetadata
+  metadata: ScenarioMetadata,
+  options: { extraContext?: string } = {}
 ): Promise<GenerateRepoSpecResponse> {
   const scaffold = selectScaffold(metadata.techStack);
-  const contextPrompt = buildContextPrompt(metadata, scaffold.id);
+  const baseContext = buildContextPrompt(metadata, scaffold.id);
+  const contextPrompt = options.extraContext
+    ? `${baseContext}\n\n## Additional Context (v2 plan / judge feedback)\n\n${options.extraContext}`
+    : baseContext;
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
@@ -57,6 +66,10 @@ export async function generateRepoSpec(
         companyName: metadata.companyName,
       });
 
+      const retryNote = lastError
+        ? `\n\n## Previous attempt failed validation\n\nFix this exact issue in your output:\n\n  ${lastError.message}\n\nIf the missing file should exist, add it to \`files[]\`. If the import is wrong, change the import path. Do not regenerate from scratch — just fix the specific issue.`
+        : "";
+
       const response = await gemini.models.generateContent({
         model: GENERATION_MODEL,
         contents: [
@@ -64,7 +77,7 @@ export async function generateRepoSpec(
             role: "user",
             parts: [
               {
-                text: `${REPO_SPEC_GENERATOR_PROMPT}\n\n## Context for Generation\n\n${contextPrompt}`,
+                text: `${REPO_SPEC_GENERATOR_PROMPT}\n\n## Context for Generation\n\n${contextPrompt}${retryNote}`,
               },
             ],
           },
@@ -114,6 +127,105 @@ export async function generateRepoSpec(
   }
 
   throw lastError ?? new Error("Failed to generate repo spec");
+}
+
+export interface GenerateRepoSpecPatchInput {
+  metadata: ScenarioMetadata;
+  priorSpec: RepoSpec;
+  judgeFeedback: string;
+}
+
+export interface GenerateRepoSpecPatchResponse {
+  spec: RepoSpec;
+  unchangedCount: number;
+  modifiedCount: number;
+  addedCount: number;
+  _meta: {
+    promptVersion: string;
+    generatedAt: string;
+  };
+}
+
+/**
+ * Generate a RepoSpec on retry using PATCH MODE.
+ *
+ * Instead of asking the model to re-emit every file from scratch (which lets
+ * "lazy regeneration" drift creep into untargeted files), the model emits
+ * `{path, unchanged: true}` markers for files it doesn't touch, and the
+ * caller merges those from the baseline. By construction, drift can only
+ * occur in files the model explicitly chose to emit.
+ *
+ * Validated by `repo-spec-edit.integration.test.ts`: 100% file preservation,
+ * ~99-100% README similarity, ~12s wall time on Flash.
+ */
+export async function generateRepoSpecPatch(
+  input: GenerateRepoSpecPatchInput
+): Promise<GenerateRepoSpecPatchResponse> {
+  const { metadata, priorSpec, judgeFeedback } = input;
+  const scaffold = selectScaffold(metadata.techStack);
+  const baseContext = buildContextPrompt(metadata, scaffold.id);
+
+  const patchSection = buildRepoSpecPatchSection({
+    priorSpec: {
+      files: priorSpec.files.map((f) => ({ path: f.path, purpose: f.purpose })),
+      readmeContentSummary: priorSpec.readmeContent.slice(0, 200),
+    },
+    judgeFeedback,
+  });
+
+  const fullPrompt = `${REPO_SPEC_GENERATOR_PROMPT}\n\n## Context for Generation\n\n${baseContext}\n\n${patchSection}`;
+
+  logger.info("Patch generation attempt", {
+    companyName: metadata.companyName,
+    priorFileCount: priorSpec.files.length,
+  });
+
+  const response = await gemini.models.generateContent({
+    model: GENERATION_MODEL,
+    contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
+  });
+
+  const responseText = response.text;
+  if (!responseText) throw new Error("Empty response from Gemini (patch mode)");
+
+  const cleaned = cleanJsonResponse(responseText);
+  const parsed = JSON.parse(cleaned);
+  const patch = patchSpecSchema.parse(parsed);
+
+  // Count patch-shape stats before merge.
+  let unchangedCount = 0;
+  let modifiedCount = 0;
+  let addedCount = 0;
+  const baselinePaths = new Set(priorSpec.files.map((f) => f.path));
+  for (const file of patch.files) {
+    if ("unchanged" in file && file.unchanged === true) {
+      unchangedCount += 1;
+    } else if (baselinePaths.has(file.path)) {
+      modifiedCount += 1;
+    } else {
+      addedCount += 1;
+    }
+  }
+
+  const merged = mergePatchSpec(priorSpec, patch);
+
+  logger.info("Patch generation succeeded", {
+    fileCount: merged.files.length,
+    unchanged: unchangedCount,
+    modified: modifiedCount,
+    added: addedCount,
+  });
+
+  return {
+    spec: merged,
+    unchangedCount,
+    modifiedCount,
+    addedCount,
+    _meta: {
+      promptVersion: REPO_SPEC_PATCH_PROMPT_VERSION,
+      generatedAt: new Date().toISOString(),
+    },
+  };
 }
 
 /**
@@ -286,13 +398,12 @@ function validateInternalConsistency(spec: RepoSpec): void {
       const importPath = match[1];
       const resolved = resolveRelativeImport(file.path, importPath);
       if (resolved && !filePaths.has(resolved)) {
-        // Also check with common extensions
         const withExt = [resolved, `${resolved}.ts`, `${resolved}.tsx`, `${resolved}/index.ts`];
-        if (!withExt.some((p) => filePaths.has(p))) {
-          throw new Error(
-            `File "${file.path}" imports "${importPath}" which resolves to "${resolved}" but file not found in spec.`
-          );
-        }
+        if (withExt.some((p) => filePaths.has(p))) continue;
+        if (tryAutoCreateScaffoldStub(spec, filePaths, resolved)) continue;
+        throw new Error(
+          `File "${file.path}" imports "${importPath}" which resolves to "${resolved}" but file not found in spec.`
+        );
       }
     }
 
@@ -305,39 +416,11 @@ function validateInternalConsistency(spec: RepoSpec): void {
     for (const match of aliasImports) {
       const aliasPath = `src/${match[1]}`;
       const withExt = [aliasPath, `${aliasPath}.ts`, `${aliasPath}.tsx`, `${aliasPath}/index.ts`];
-      if (!withExt.some((p) => filePaths.has(p))) {
-        // Special handling for common database client files - auto-create if missing
-        if (aliasPath === "src/lib/prisma" || aliasPath === "src/lib/db") {
-          logger.info("Auto-adding missing database client file", { path: `${aliasPath}.ts` });
-          spec.files.push({
-            path: `${aliasPath}.ts`,
-            content: `// Database client configuration
-import { PrismaClient } from '@prisma/client';
-
-const globalForPrisma = global as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  });
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-
-export default prisma;
-`,
-            purpose: "working",
-            addedInCommit: 0
-          });
-          filePaths.add(`${aliasPath}.ts`);
-        } else {
-          throw new Error(
-            `File "${file.path}" imports "@/${match[1]}" which resolves to "${aliasPath}" but file not found in spec.`
-          );
-        }
-      }
+      if (withExt.some((p) => filePaths.has(p))) continue;
+      if (tryAutoCreateScaffoldStub(spec, filePaths, aliasPath)) continue;
+      throw new Error(
+        `File "${file.path}" imports "@/${match[1]}" which resolves to "${aliasPath}" but file not found in spec.`
+      );
     }
   }
 
@@ -351,6 +434,104 @@ export default prisma;
       seen.add(file.path);
     }
   }
+}
+
+/**
+ * Stubs for canonical scaffold-baseline files the model commonly imports
+ * but forgets to define (Prisma client, tRPC bootstrap, etc). Keyed by the
+ * resolved-without-extension path. Anything not in this table still throws
+ * — we don't want auto-create to mask real hallucinations.
+ */
+const PRISMA_STUB = `import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = global as unknown as { prisma: PrismaClient | undefined };
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+export const db = prisma;
+export default prisma;
+`;
+
+const TRPC_STUB = `import { initTRPC, TRPCError } from '@trpc/server';
+import superjson from 'superjson';
+import { prisma } from '@/lib/prisma';
+
+export interface Context {
+  prisma: typeof prisma;
+  userId?: string;
+}
+
+export const createContext = async (): Promise<Context> => ({ prisma });
+
+const t = initTRPC.context<Context>().create({ transformer: superjson });
+
+export const router = t.router;
+export const publicProcedure = t.procedure;
+export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
+  if (!ctx.userId) throw new TRPCError({ code: 'UNAUTHORIZED' });
+  return next({ ctx });
+});
+`;
+
+const TRPC_CLIENT_STUB = `import { createTRPCReact } from '@trpc/react-query';
+import type { AppRouter } from '@/server/routers/_app';
+
+export const trpc = createTRPCReact<AppRouter>();
+`;
+
+const LOGGER_STUB = `type Level = 'info' | 'warn' | 'error' | 'debug';
+
+function log(level: Level, msg: string, data?: unknown) {
+  // eslint-disable-next-line no-console
+  const fn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
+  fn(\`[\${level}] \${msg}\`, data ?? '');
+}
+
+export const logger = {
+  info: (msg: string, data?: unknown) => log('info', msg, data),
+  warn: (msg: string, data?: unknown) => log('warn', msg, data),
+  error: (msg: string, data?: unknown) => log('error', msg, data),
+  debug: (msg: string, data?: unknown) => log('debug', msg, data),
+};
+`;
+
+const SCAFFOLD_STUBS: Record<string, string> = {
+  "src/lib/prisma": PRISMA_STUB,
+  "src/lib/db": PRISMA_STUB,
+  "src/server/db": PRISMA_STUB,
+  "src/server/prisma": PRISMA_STUB,
+  "src/server/trpc": TRPC_STUB,
+  "src/lib/trpc": TRPC_STUB,
+  "src/server/api/trpc": TRPC_STUB,
+  "src/utils/trpc": TRPC_CLIENT_STUB,
+  "src/lib/trpc-client": TRPC_CLIENT_STUB,
+  "src/lib/logger": LOGGER_STUB,
+  "src/server/logger": LOGGER_STUB,
+};
+
+function tryAutoCreateScaffoldStub(
+  spec: RepoSpec,
+  filePaths: Set<string>,
+  resolved: string
+): boolean {
+  const stub = SCAFFOLD_STUBS[resolved];
+  if (!stub) return false;
+  const path = `${resolved}.ts`;
+  logger.info("Auto-adding missing scaffold stub", { path });
+  spec.files.push({
+    path,
+    content: stub,
+    purpose: "working",
+    addedInCommit: 0,
+  });
+  filePaths.add(path);
+  return true;
 }
 
 /**

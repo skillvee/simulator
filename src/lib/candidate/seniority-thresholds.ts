@@ -101,6 +101,16 @@ export const ARCHETYPE_KEY_DIMENSIONS: Record<
     AssessmentDimension.PROBLEM_SOLVING,
     AssessmentDimension.ADAPTABILITY,
   ],
+  DATA_ANALYST: [
+    AssessmentDimension.PROBLEM_SOLVING,
+    AssessmentDimension.COMMUNICATION,
+    AssessmentDimension.TECHNICAL_KNOWLEDGE,
+  ],
+  DATA_SCIENTIST: [
+    AssessmentDimension.PROBLEM_SOLVING,
+    AssessmentDimension.TECHNICAL_KNOWLEDGE,
+    AssessmentDimension.CREATIVITY,
+  ],
   GENERAL_SOFTWARE_ENGINEER: [
     AssessmentDimension.TECHNICAL_KNOWLEDGE,
     AssessmentDimension.PROBLEM_SOLVING,

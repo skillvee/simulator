@@ -35,6 +35,8 @@ export type RoleArchetype =
   | "TECH_LEAD"
   | "DEVOPS_ENGINEER"
   | "DATA_ENGINEER"
+  | "DATA_ANALYST"
+  | "DATA_SCIENTIST"
   | "GENERAL_SOFTWARE_ENGINEER";
 
 /**
@@ -158,6 +160,26 @@ export const ARCHETYPE_CONFIGS: Record<
     [AssessmentDimension.COLLABORATION]: "MEDIUM",
     [AssessmentDimension.LEADERSHIP]: "MEDIUM",
   },
+  DATA_ANALYST: {
+    [AssessmentDimension.PROBLEM_SOLVING]: "VERY_HIGH",
+    [AssessmentDimension.COMMUNICATION]: "VERY_HIGH",
+    [AssessmentDimension.TECHNICAL_KNOWLEDGE]: "VERY_HIGH",
+    [AssessmentDimension.CREATIVITY]: "HIGH",
+    [AssessmentDimension.COLLABORATION]: "HIGH",
+    [AssessmentDimension.ADAPTABILITY]: "HIGH",
+    [AssessmentDimension.TIME_MANAGEMENT]: "MEDIUM",
+    [AssessmentDimension.LEADERSHIP]: "MEDIUM",
+  },
+  DATA_SCIENTIST: {
+    [AssessmentDimension.PROBLEM_SOLVING]: "VERY_HIGH",
+    [AssessmentDimension.TECHNICAL_KNOWLEDGE]: "VERY_HIGH",
+    [AssessmentDimension.CREATIVITY]: "VERY_HIGH",
+    [AssessmentDimension.COMMUNICATION]: "HIGH",
+    [AssessmentDimension.ADAPTABILITY]: "HIGH",
+    [AssessmentDimension.COLLABORATION]: "HIGH",
+    [AssessmentDimension.TIME_MANAGEMENT]: "MEDIUM",
+    [AssessmentDimension.LEADERSHIP]: "MEDIUM",
+  },
   GENERAL_SOFTWARE_ENGINEER: {
     [AssessmentDimension.TECHNICAL_KNOWLEDGE]: "VERY_HIGH",
     [AssessmentDimension.PROBLEM_SOLVING]: "VERY_HIGH",
@@ -181,6 +203,8 @@ const ARCHETYPE_DISPLAY_NAMES: Record<RoleArchetype, string> = {
   TECH_LEAD: "Tech Lead",
   DEVOPS_ENGINEER: "DevOps Engineer",
   DATA_ENGINEER: "Data Engineer",
+  DATA_ANALYST: "Data Analyst",
+  DATA_SCIENTIST: "Data Scientist",
   GENERAL_SOFTWARE_ENGINEER: "General Software Engineer",
 };
 
