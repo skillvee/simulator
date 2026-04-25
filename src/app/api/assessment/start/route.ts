@@ -11,10 +11,18 @@ const logger = createLogger("api:assessment:start");
 
 /**
  * POST /api/assessment/start
- * Marks the assessment as WORKING and records when the candidate started.
- * This is called when the candidate clicks "Start Simulation" on the welcome page.
+ * Transitions WELCOME → REVIEW_MATERIALS and starts the session clock.
+ * Called when the candidate clicks "Start Simulation" on the welcome page.
  *
- * Idempotent: if workingStartedAt is already set, returns the existing value.
+ * The candidate's first phase is now "review the brief + materials." Subsequent
+ * phases (KICKOFF_CALL → WORKING → WALKTHROUGH_CALL → COMPLETED) move via
+ * /api/assessment/transition.
+ *
+ * `workingStartedAt` is kept set to the same moment for backwards compatibility —
+ * the deadline math and any legacy consumers reading that field continue working.
+ *
+ * Idempotent: if the session clock is already running, returns the existing
+ * timestamp without changing status.
  */
 export async function POST(request: Request) {
   try {
@@ -34,6 +42,7 @@ export async function POST(request: Request) {
         userId: true,
         status: true,
         workingStartedAt: true,
+        reviewStartedAt: true,
         scenario: {
           select: { simulationDepth: true },
         },
@@ -50,16 +59,18 @@ export async function POST(request: Request) {
 
     const depth = (assessment.scenario.simulationDepth || "medium") as SimulationDepth;
 
-    // Idempotent: if already started, return existing timestamp
-    if (assessment.workingStartedAt) {
-      const deadlineAt = getDeadlineAt(assessment.workingStartedAt, depth);
+    // Idempotent: if the session clock is already running, return the existing
+    // anchor. Prefer reviewStartedAt, fall back to workingStartedAt for rows
+    // that started before the phase split.
+    const existingClockStart = assessment.reviewStartedAt ?? assessment.workingStartedAt;
+    if (existingClockStart) {
+      const deadlineAt = getDeadlineAt(existingClockStart, depth);
       return success({
-        workingStartedAt: assessment.workingStartedAt.toISOString(),
+        workingStartedAt: existingClockStart.toISOString(),
         deadlineAt: deadlineAt.toISOString(),
       });
     }
 
-    // Only allow starting from WELCOME or WORKING (for backward compat)
     if (assessment.status === AssessmentStatus.COMPLETED) {
       return error("Assessment is already completed", 400);
     }
@@ -70,14 +81,15 @@ export async function POST(request: Request) {
     await db.assessment.update({
       where: { id: assessmentId },
       data: {
-        status: AssessmentStatus.WORKING,
+        status: AssessmentStatus.REVIEW_MATERIALS,
+        reviewStartedAt: now,
         workingStartedAt: now,
       },
     });
 
     logger.info("Assessment started", {
       assessmentId,
-      workingStartedAt: now.toISOString(),
+      reviewStartedAt: now.toISOString(),
       deadlineAt: deadlineAt.toISOString(),
     });
 

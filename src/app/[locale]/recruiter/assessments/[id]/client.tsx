@@ -43,6 +43,8 @@ import {
 } from "@/components/ui/select";
 import type { RelativeStrengthKey, TargetLevel } from "@/lib/rubric/level-expectations";
 import { LEVEL_EXPECTATIONS } from "@/lib/rubric/level-expectations";
+import { isInProgressStatus } from "@/lib/core";
+import type { AssessmentStatus } from "@prisma/client";
 import { useTranslations } from "next-intl";
 
 // ---------------------------------------------------------------------------
@@ -414,7 +416,17 @@ export function SimulationCandidatesClientV3({
 
   const filteredAndSortedCandidates = useMemo(() => {
     let filtered = [...candidates];
-    if (statusFilter !== "all") filtered = filtered.filter((c) => c.status === statusFilter);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((c) =>
+        // The "WORKING" filter bucket now covers every active phase in the
+        // 4-phase flow (REVIEW_MATERIALS / KICKOFF_CALL / WORKING /
+        // WALKTHROUGH_CALL) since recruiters only care about "mid-assessment"
+        // vs the discrete start and end states.
+        statusFilter === "WORKING"
+          ? isInProgressStatus(c.status as AssessmentStatus)
+          : c.status === statusFilter
+      );
+    }
     if (fitFilter !== "all") {
       filtered = filtered.filter((c) => {
         const fit = getOverallFit(c.strengthLevel);
@@ -867,7 +879,7 @@ export function SimulationCandidatesClientV3({
                               <>
                                 <span className="text-gray-300">&middot;</span>
                                 <span className="text-gray-400">
-                                  {candidate.status === "WORKING" ? "Working" : "Invited"}
+                                  {isInProgressStatus(candidate.status as AssessmentStatus) ? "Working" : "Invited"}
                                 </span>
                               </>
                             )}

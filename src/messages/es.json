@@ -152,8 +152,9 @@
       "description": "Tu sesión de simulación ha terminado. Estamos guardando tu trabajo y preparando tus resultados."
     },
     "wrappingUp": {
-      "title": "Terminando...",
-      "description": "Finalizando tu evaluación"
+      "title": "Cerrando tu sesión...",
+      "titleWithName": "Buen trabajo, {name}.",
+      "description": "Guardando tu trabajo y armando tus resultados. Es solo un momento."
     },
     "submittingWork": {
       "title": "Compartiendo tu trabajo...",
@@ -280,16 +281,6 @@
         }
       }
     },
-    "submitWorkModal": {
-      "title": "¿Listo para Entregar?",
-      "description": "Presentarás tu trabajo a {manager} para finalizar.",
-      "uploadLabel": "Adjuntar entregable (opcional):",
-      "uploadDescription": "Sube un archivo para compartir con tu gerente",
-      "uploadButton": "Elegir Archivo",
-      "submitButton": "Entregar Trabajo",
-      "cancelButton": "Cancelar",
-      "uploadError": "El archivo debe ser menor a 10MB"
-    },
     "postDefenseModal": {
       "title": "¡Excelente Trabajo!",
       "description": "Has presentado exitosamente tu solución.",
@@ -297,6 +288,30 @@
       "finalizeDescription": "Completa tu evaluación y ver resultados",
       "continueButton": "Continuar Trabajando",
       "continueDescription": "Hacer mejoras adicionales si es necesario"
+    },
+    "agenda": {
+      "title": "Tu día",
+      "phases": {
+        "reviewMaterials": "Revisar materiales",
+        "kickoff": "Reunión inicial con {manager}",
+        "work": "Trabajo concentrado",
+        "walkthrough": "Presentación con {manager}"
+      },
+      "elapsedMinutes": "{minutes} min transcurridos",
+      "pacingHint": "La mayoría termina alrededor de {target} min"
+    },
+    "reviewMaterials": {
+      "startKickoffCta": "Llamar a {manager}"
+    },
+    "walkthrough": {
+      "startCta": "Presentar tu trabajo a {manager}",
+      "startHint": "Cuando estés listo, haz una llamada y muéstrale a {manager} lo que construiste."
+    },
+    "capPrompt": {
+      "title": "Es hora de presentar tu trabajo",
+      "description": "{manager} está listo cuando tú lo estés. Haz la llamada de presentación ahora y muéstrale dónde llegaste.",
+      "startCta": "Presentar a {manager}",
+      "snooze": "Unos minutos más"
     }
   },
   "results": {
@@ -310,7 +325,8 @@
       }
     },
     "overview": {
-      "thanks": "Gracias por completar esta sesión con nosotros, {name}.",
+      "youreDone": "Terminaste, {name}.",
+      "thanks": "Gracias por el trabajo de hoy, {name}. Esto es lo que notamos.",
       "whatWeSawTitle": "Lo que vimos",
       "momentsTitle": "Cosas que hiciste"
     },
@@ -320,7 +336,8 @@
     },
     "nextSteps": {
       "title": "Qué sigue",
-      "companyNotified": "Tus resultados fueron compartidos con {company}. Ellos se contactarán contigo con los próximos pasos.",
+      "sentLabel": "Enviado",
+      "companyNotified": "Tus resultados ya están con {company}. Ellos se contactarán contigo con los próximos pasos.",
       "marketplaceTitle": "Mantente en nuestro radar para futuras oportunidades",
       "marketplaceBody": "Skillvee es una empresa pequeña pero en crecimiento — estamos construyendo una red de empresas que contratan según cómo la gente realmente trabaja. Si activas esto, mostraremos tu perfil a otras empresas que encajen con tu estilo de trabajo. Sin promesas de tiempo — solo te contactaremos cuando haya un encaje real.",
       "marketplaceDisclosure": "Compartiríamos este resumen y tu estilo de trabajo — nunca la grabación completa.",
@@ -1188,6 +1205,91 @@
       "subtitle": "Obtén una demo personalizada o prueba una evaluación de muestra como candidato.",
       "requestDemo": "Solicitar Demo",
       "trySample": "Probar Evaluación de Muestra"
+    },
+    "voiceCall": {
+      "role": "Gerente de Ingeniería",
+      "callInProgress": "Llamada en curso · 2:34",
+      "poweredBy": "Con tecnología de Gemini Live"
+    },
+    "ide": {
+      "recordingStatus": "Grabando · 18:42",
+      "onCall": "en llamada"
+    },
+    "defendThread": {
+      "role": "Gerente de Ingeniería",
+      "defendingDecisions": "Defendiendo decisiones",
+      "you": "Tú",
+      "replyPlaceholder": "Responder a Sarah…",
+      "msg1": "¿Por qué elegiste Redis en lugar de Postgres para el almacén de sesiones?",
+      "msg2": "Las sesiones son de corta duración, con muchas lecturas/escrituras. Redis encaja; Postgres añade latencia que no necesitamos.",
+      "msg3": "¿Y si Redis se cae a mitad del checkout?",
+      "msg4": "Fallback elegante a cookies firmadas; la sesión se reconcilia eventualmente. La compensación es 30s de datos del carrito desactualizados."
+    },
+    "hiringManagers": {
+      "badge": "Para gerentes de contratación",
+      "title": "Luego elige al candidato correcto — con evidencia.",
+      "subtitle": "Cada candidato regresa con una tarjeta de puntuación clasificada y prueba de cómo demostró cada habilidad. Compara las compensaciones. Toma la decisión con confianza.",
+      "card1": {
+        "title": "Clasifica con confianza",
+        "desc": "Ordena el grupo por puntaje general, por dimensión o por fortaleza de señal — ve quién está realmente adelante."
+      },
+      "card2": {
+        "title": "Ve las compensaciones",
+        "desc": "Conoce exactamente dónde es fuerte cada uno. Dos 4.2 no son el mismo candidato."
+      },
+      "card3": {
+        "title": "Cita la evidencia",
+        "desc": "Cada puntaje se vincula a un momento con marca de tiempo en la grabación. Se acabaron las corazonadas."
+      },
+      "mock": {
+        "role": "Ing. Backend Sr.",
+        "rankedByOverall": "Clasificado por puntaje general",
+        "completed": "12 completados",
+        "topMatch": "Mejor coincidencia",
+        "candidateRoleTime": "Ingeniera Backend Senior · 38 min",
+        "overall": "general",
+        "observedEvidence": "Evidencia observada",
+        "dimensions": {
+          "problemSolving": "Resolución de problemas",
+          "aiLeverage": "Uso de IA",
+          "communication": "Comunicación",
+          "technicalDepth": "Profundidad técnica",
+          "collaboration": "Colaboración",
+          "timeManagement": "Gestión del tiempo"
+        },
+        "evidence1": "Hizo tres preguntas aclaratorias antes de escribir una sola línea de código.",
+        "evidence2": "Detectó la condición de carrera en el camino de respaldo de sesión.",
+        "evidence3": "Defendió la elección de Redis con una compensación clara entre latencia y durabilidad."
+      }
+    },
+    "workflow": {
+      "badge": "Se adapta a tu flujo de trabajo",
+      "title": "Listo en 5 minutos. Se conecta con tu ATS.",
+      "subtitle": "Sin proyecto de implementación. Pega una descripción de trabajo, revisa el escenario, envía el enlace.",
+      "step1": {
+        "title": "Pega tu descripción de trabajo",
+        "desc": "Suelta la descripción del puesto. Generamos el escenario, los personajes de las partes interesadas y la rúbrica automáticamente.",
+        "label": "Descripción del trabajo"
+      },
+      "step2": {
+        "title": "Revisa el escenario",
+        "desc": "Ve la tarea generada de un día de trabajo, ajusta a las partes interesadas o las tareas, y modifica la rúbrica si quieres.",
+        "persona1": "Sarah · Gerente de Ing.",
+        "persona2": "Devon · Producto",
+        "persona3": "Theo · Líder técnico"
+      },
+      "step3": {
+        "title": "Envía el enlace",
+        "desc": "Comparte un enlace con tu lista corta. Los candidatos completan a su propio ritmo. Las tarjetas de puntuación llegan automáticamente.",
+        "linkLabel": "Enlace para compartir",
+        "ready": "Listo",
+        "copyLink": "Copiar enlace"
+      }
+    },
+    "ats": {
+      "badge": "Se conecta con tu ATS",
+      "description": "Sincroniza puntajes y transcripciones de candidatos directamente en tu ATS — sin exportar CSV, sin copiar manualmente.",
+      "footer": "Más Zapier y API REST para todo lo demás."
     }
   },
   "landing": {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Network, Check, Lock } from "lucide-react";
+import { CheckCircle2, Network, Check, Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -55,13 +55,18 @@ export function NextStepsSection({
       </div>
 
       <div className="px-6">
-        <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/30 p-3.5">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Mail className="h-4 w-4" />
+        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3.5">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <CheckCircle2 className="h-4 w-4" />
           </div>
-          <p className="pt-0.5 text-sm leading-relaxed text-foreground/80">
-            {t("companyNotified", { company: companyName })}
-          </p>
+          <div className="pt-0.5">
+            <p className="font-mono text-[10px] uppercase tracking-wider text-primary">
+              {t("sentLabel")}
+            </p>
+            <p className="mt-0.5 text-sm leading-relaxed text-foreground/85">
+              {t("companyNotified", { company: companyName })}
+            </p>
+          </div>
         </div>
       </div>
 

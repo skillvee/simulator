@@ -49,6 +49,13 @@ vi.mock("@/lib/external", () => ({
   isEmailServiceConfigured: vi.fn().mockReturnValue(false),
 }));
 
+// Candidate narrative makes a Gemini call and writes to db.assessmentApiCall via
+// logAICall. Stubbing it lets the route exercise its happy path without needing
+// to mock the AI SDK or extend the db mock with the assessmentApiCall model.
+vi.mock("@/lib/analysis/candidate-narrative", () => ({
+  generateCandidateNarrative: vi.fn().mockResolvedValue(null),
+}));
+
 // Sample video evaluation output in v3 (RubricAssessmentOutput) format
 const sampleVideoEvaluationOutput = {
   evaluationVersion: "3.0.0",

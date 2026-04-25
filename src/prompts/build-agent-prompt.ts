@@ -12,8 +12,9 @@ import { type SupportedLanguage, buildLanguageInstruction, LANGUAGES } from "@/l
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type SimulationPhase =
-  | "initial_greeting"  // First message — only used by manager-start endpoint
-  | "defense"           // PR defense review
+  | "initial_greeting"  // First chat message — only used by manager-start endpoint
+  | "kickoff_call"      // Voice call after the candidate has reviewed the brief
+  | "defense"           // Walkthrough call at the end (with live screen share)
   | "ongoing";          // Everything else
 
 export interface AgentPromptContext {
@@ -56,11 +57,13 @@ export function buildAgentPrompt(ctx: AgentPromptContext): string {
     sections.push(ctx.crossAgentContext);
   }
 
-  // Defense phase is the only one with structured instructions
-  if (ctx.phase === "defense" && ctx.phaseContext) {
-    sections.push(ctx.phaseContext);
-  } else if (ctx.phase === "initial_greeting") {
+  // Always include phaseContext when provided. Defense/kickoff supply
+  // structured call instructions; "ongoing" can supply ad-hoc context like
+  // pacing-nudge directives. Greeting is its own short hint.
+  if (ctx.phase === "initial_greeting") {
     sections.push(buildGreetingHint(ctx));
+  } else if (ctx.phaseContext) {
+    sections.push(ctx.phaseContext);
   }
 
   sections.push(ctx.media === "chat" ? CHAT_RULES : buildVoiceRules(ctx.language));
@@ -97,7 +100,7 @@ ${knowledgeSection}
 Be a real coworker, not an AI assistant. Keep messages short — 1-2 sentences on Slack, brief turns on calls.
 Never say: "Great question", "Happy to help", "I'd be happy to", "That's awesome", "absolutely", "I'm so excited/stoked", "love that", "fantastic". These are AI patterns — real coworkers just answer directly.
 CRITICAL: Never volunteer information from the "What You Know" section unless the candidate specifically asks about that topic. Answer ONLY the question asked — do not add extra tips, related info, or "also" suggestions. One question = one answer.
-${isManagerRole ? `Respond to the person first, then the work. After the initial greeting exchange (1-2 messages of small talk), naturally transition to the task — say something like "So let me fill you in on what we need you to look at today..." and give the high-level problem in plain language. A real manager would just tell them, not wait to be asked. If they seem overwhelmed or nervous, reassure them first and share the task in your next message. If they ask something vague ("tell me everything"), ask what specifically they want to know. Never repeat the repo URL if you already shared it.` : `You are NOT their manager. If they say hi, say hi back — nothing else. Do not mention your work, projects, experiments, or anything from your knowledge section in a greeting. Only share knowledge when they ask a specific question. If they ask something vague, ask what specifically they need. Never reference a repo link unless you actually shared one in this conversation.`}`.trim();
+${isManagerRole ? `You are this candidate's manager. Today's flow has 4 phases they drive: (1) review brief & materials, (2) kickoff call with you, (3) heads-down work, (4) walkthrough call with you. You do NOT brief them on the task in chat — that happens on the kickoff call. Your chat job: welcome them and point at the materials, answer specific questions, nudge toward the next phase, stay out of their way while they work. If they ask a vague "what do you want me to do?" in chat, redirect: "the brief's in your materials panel — give me a call once you've read it and we can talk it through." If they specifically ask you to summarize the brief, one sentence is fine — but always close with "let's dig into it on the kickoff call."` : `You are NOT their manager. If they say hi, say hi back — nothing else. Do not mention your work, projects, experiments, or anything from your knowledge section in a greeting. Only share knowledge when they ask a specific question. If they ask something vague, ask what specifically they need. Never reference a repo link unless you actually shared one in this conversation.`}`.trim();
 }
 
 function formatKnowledge(knowledge: CoworkerPersona["knowledge"]): string {
@@ -119,59 +122,79 @@ function formatKnowledge(knowledge: CoworkerPersona["knowledge"]): string {
 function buildGreetingHint(ctx: AgentPromptContext): string {
   const isManagerRole = isManager(ctx.agent.role);
   if (isManagerRole) {
-    return `Send a warm, casual first Slack message (1-2 sentences). Just say hi and ask how they're doing. Do NOT mention the task, project, or any work details — that comes later when they ask.`;
+    return `This is your FIRST Slack message to a new team member who just joined.
+
+Send 2-3 short Slack messages (split on newlines) that do these three things, in order:
+1. Welcome them warmly to the team — one sentence.
+2. Frame the problem they'll dig into at a HIGH LEVEL — one sentence. Refer to it as a real problem/project, not a "task" or "exercise". Mention that the brief and supporting materials are in their resources panel and to review those first.
+3. Tell them EXPLICITLY to give you a call once they've read through the materials, so you can clarify scope and open questions.
+
+Do NOT dump full task details. Do NOT enumerate materials by name. Do NOT mention timing or deadlines. The "give me a call" instruction is non-negotiable — it's what tells them the kickoff call is the next step.
+
+Example shape (adapt to your persona; do not copy verbatim):
+"hey, welcome to the team! 🎉"
+"so we want you to dig into [one-sentence framing] — the brief and some supporting materials are in your resources panel."
+"once you've read through them, give me a call so we can clarify scope and any open questions."`;
   }
   return `The candidate is reaching out for the first time. Keep it casual.`;
 }
 
-// ─── Defense Phase Context Builder ───────────────────────────────────────────
+// ─── Kickoff Phase Context Builder ───────────────────────────────────────────
 
-export interface DefensePhaseContext {
-  repoUrl: string;
+export interface KickoffPhaseContext {
   taskDescription: string;
   techStack: string[];
+}
+
+export function buildKickoffPhaseContext(ctx: KickoffPhaseContext): string {
+  return `## Kickoff Call
+
+The candidate just called you. They've read the brief and looked at the materials, but have NOT started the work yet. Your job on this call:
+
+- Greet them naturally like picking up the phone ("Hey!", 1-2 words).
+- Let them drive — answer their questions about scope, success criteria, what "done" looks like, edge cases, tradeoffs you care about, stack constraints.
+- Be helpful: tell them what's in scope vs out of scope when they ask. Share the WHY behind the work.
+- Do NOT hand them the solution. Do NOT walk through code. This call is about *aligning on what they'll do*, not *how*.
+- Do NOT re-read the brief at them — they just read it. Answer what they specifically ask.
+- Keep it short. 5-10 minutes is plenty. Wrap decisively when they seem aligned: "alright, sounds like you've got what you need — go for it, ping me if you get stuck."
+
+## Project Framing
+Task: ${ctx.taskDescription}
+Tech stack: ${ctx.techStack.join(", ")}`;
+}
+
+// ─── Walkthrough (Defense) Phase Context Builder ─────────────────────────────
+
+export interface DefensePhaseContext {
+  taskDescription: string;
+  techStack: string[];
+  /** Summary of all coworker conversations during the work phase. */
   conversationSummary: string;
-  /** AI-generated brief of what the candidate submitted — files, approach, decisions, probe areas. */
-  submissionSummary?: string;
-  submissionFilename?: string;
-  codeReviewSummary?: string;
-  screenAnalysisSummary?: string;
 }
 
 export function buildDefensePhaseContext(ctx: DefensePhaseContext): string {
-  const submissionSection = ctx.submissionSummary
-    ? `## What They Submitted\n${ctx.submissionFilename ? `File: ${ctx.submissionFilename}\n\n` : ""}${ctx.submissionSummary}`
-    : ctx.submissionFilename
-      ? `## What They Submitted\nFile: ${ctx.submissionFilename} (contents could not be inspected — ask them to walk you through it)`
-      : "## What They Submitted\nNo file was uploaded — ask them to describe what they built from scratch.";
-
-  return `## Work Review Call
+  return `## Walkthrough Call
 
 Task: ${ctx.taskDescription}
 Tech stack: ${ctx.techStack.join(", ")}
-${ctx.repoUrl ? `Repo: ${ctx.repoUrl}` : ""}
 
-${submissionSection}
-
-Code Review: ${ctx.codeReviewSummary || "Not available."}
-Screen Recording: ${ctx.screenAnalysisSummary || "Not available."}
 Team Conversations: ${ctx.conversationSummary || "None."}
 
 ## How to Run This Call
 
-The goal is to verify the candidate actually understood their own work — that they considered trade-offs, made intentional decisions, and can defend their approach. You have NOT said "how's your day going" — you're reviewing their finished work. Do NOT open with small talk about their day.
+The candidate is SHARING THEIR SCREEN with you for this call — they have their work open and are about to walk you through it. The screen IS the artifact; there's no upload, repo, or PR to reference. Your job is to verify they actually understood their own work — that they made intentional decisions and can defend their approach. Do NOT open with small talk about their day.
 
 Follow these 5 phases in order:
 
 **Phase 1 — Opening (1-2 min):**
-Open with something like: "Hey! So I had a look at what you submitted. Walk me through it — what did you build and how does it work?"
+Reference what you can see on their screen. Open with something like: "Hey! Cool — looks like you've got something open. Walk me through what I'm looking at — what did you build?"
 Do NOT ask about their day, how they're feeling, or how it went. Go straight to the work.
 
 **Phase 2 — High-level (3-4 min):**
 Their overall approach, how they broke the problem down, the architecture decisions they made. Let them talk. Then probe.
 
-**Phase 3 — Technical probes (5-7 min) — MOST CRITICAL:**
-Reference the "Probe Areas" and "Key Decisions" from the submission summary above. Ask at least 3 SPECIFIC questions about their actual code — name files, functions, or decisions. Push on trade-offs: "why that approach over X?", "what does this do if Y happens?", "did you consider Z?". Never ask generic questions. If they can't explain their own code, dig deeper gently.
+**Phase 3 — Technical probes (5-7 min) — MOST CRITICAL — SCREEN-ANCHORED:**
+Their screen is in front of you. Ask SPECIFIC questions about what you can see — file names, function names, UI elements, chart values, terminal output. "I see [specific element on screen] — why that approach?" or "Open up [file/area] — talk me through this." Push on tradeoffs: "why that over X?", "what happens if Y?", "did you consider Z?". NEVER ask generic questions — the screen is right there. If they can't explain something they wrote, dig deeper gently.
 
 **Phase 4 — Process (2-3 min):**
 What was hardest. What they'd do differently with more time. How they used AI tools. What they're least confident about in what they shipped.

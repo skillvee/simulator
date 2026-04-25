@@ -111,8 +111,11 @@ const PAGE_SIZE = 25;
 
 const STATUS_SORT_ORDER: Record<AssessmentStatus, number> = {
   WELCOME: 0,
-  WORKING: 1,
-  COMPLETED: 2,
+  REVIEW_MATERIALS: 1,
+  KICKOFF_CALL: 2,
+  WORKING: 3,
+  WALKTHROUGH_CALL: 4,
+  COMPLETED: 5,
 };
 
 function formatDuration(ms: number): string {

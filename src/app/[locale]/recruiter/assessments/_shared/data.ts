@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/server/db";
 import { VideoAssessmentStatus } from "@prisma/client";
+import { isInProgressStatus } from "@/lib/core";
 import {
   getRelativeStrength,
   type RelativeStrengthKey,
@@ -60,8 +61,8 @@ export async function getSimulationsWithStats(
     const completedCount = assessments.filter(
       (a) => a.status === "COMPLETED"
     ).length;
-    const inProgressCount = assessments.filter(
-      (a) => a.status === "WORKING"
+    const inProgressCount = assessments.filter((a) =>
+      isInProgressStatus(a.status)
     ).length;
     const pendingCount = assessments.filter(
       (a) => a.status === "WELCOME"
@@ -111,7 +112,7 @@ export async function getSimulationsWithStats(
       }
     }
     for (const a of assessments) {
-      if (a.status === "WORKING") {
+      if (isInProgressStatus(a.status)) {
         const startDate = a.startedAt;
         if (!lastActivityDate || startDate > lastActivityDate) {
           lastActivityDate = startDate;

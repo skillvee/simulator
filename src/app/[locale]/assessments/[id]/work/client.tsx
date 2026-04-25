@@ -4,24 +4,24 @@ import { useCallback, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SlackLayout, Chat, GeneralChannel } from "@/components/chat";
+import { Agenda } from "@/components/assessment";
 import { GENERAL_CHANNEL_MESSAGES } from "@/lib/ai/coworker-persona";
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 import { DECORATIVE_TEAM_MEMBERS } from "@/lib/ai";
 import { DecorativeChat } from "@/components/chat";
 import { useProactiveMessages } from "@/hooks/chat/use-proactive-messages";
 import { useAmbientMessages } from "@/hooks/chat/use-ambient-messages";
+import { usePacingNudges } from "@/hooks/chat/use-pacing-nudges";
 import { useCandidateEvents } from "@/hooks/use-candidate-events";
-import { useAssessmentDeadline } from "@/hooks/use-assessment-deadline";
 import { playMessageSound } from "@/lib/sounds";
 import { createLogger } from "@/lib/core";
 import { ASSESSMENT_DURATION_MS } from "@/lib/core/assessment-timer";
-import type { ChatMessage, ScenarioResource } from "@/types";
+import type { AssessmentPhase, PacingNudgeType } from "@/lib/core/assessment-phase";
+import type { ChatMessage, ScenarioResource, SimulationDepth } from "@/types";
 import type { ChannelMessage } from "@/lib/ai/coworker-persona";
 import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
 import { isManager } from "@/lib/utils/coworker";
-import { SubmitWorkModal } from "@/components/chat/submit-work-modal";
 import { PostDefenseModal } from "@/components/chat/post-defense-modal";
-import { uploadDeliverable } from "@/lib/external/storage";
 import { requestMicrophoneAccess } from "@/lib/media";
 
 const logger = createLogger("client:app:work-page");
@@ -37,6 +37,8 @@ interface Coworker {
 
 interface WorkPageClientProps {
   assessmentId: string;
+  /** Candidate display name from the auth session, used to personalize the wrap-up screen. */
+  candidateName: string | null;
   coworkers: Coworker[];
   selectedCoworkerId: string | null;
   /** ISO string deadline for auto-finalize */
@@ -45,25 +47,56 @@ interface WorkPageClientProps {
   resources: ScenarioResource[];
   /** Language of the assessment scenario */
   language?: string;
+  /** Current phase derived from AssessmentStatus (review/kickoff/work/walkthrough). */
+  initialPhase: AssessmentPhase;
+  /** Session timing for the agenda's elapsed-time counter. ISO strings. */
+  timing: {
+    reviewStartedAt: string | null;
+    workingStartedAt: string | null;
+  };
+  /** Simulation depth controls the "most candidates finish around X min" pacing hint. */
+  simulationDepth: SimulationDepth;
+  /** Pacing nudges already delivered server-side (so reloads don't refire). */
+  pacingNudgesDelivered: PacingNudgeType[];
 }
 
 export function WorkPageClient({
   assessmentId,
+  candidateName,
   coworkers,
   selectedCoworkerId: initialSelectedCoworkerId,
   deadlineAt,
   resources,
   language,
+  initialPhase,
+  timing: timingProp,
+  simulationDepth,
+  pacingNudgesDelivered,
 }: WorkPageClientProps) {
   const router = useRouter();
   const t = useTranslations("work");
   const { stopRecording, flushFinalChunk } = useScreenRecordingContext();
   const [isCompleting, setIsCompleting] = useState(false);
-  const [showTimeUpModal, setShowTimeUpModal] = useState(false);
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showPostDefenseModal, setShowPostDefenseModal] = useState(false);
+  const [showCapPrompt, setShowCapPrompt] = useState(false);
   const [isPostSubmission, setIsPostSubmission] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [phase, setPhase] = useState<AssessmentPhase>(initialPhase);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Memoize the timing object that drives the agenda's elapsed counter.
+  // ISO strings come in from the server; Agenda needs Date objects.
+  const agendaTiming = useMemo(
+    () => ({
+      reviewStartedAt: timingProp.reviewStartedAt
+        ? new Date(timingProp.reviewStartedAt)
+        : null,
+      workingStartedAt: timingProp.workingStartedAt
+        ? new Date(timingProp.workingStartedAt)
+        : null,
+    }),
+    [timingProp.reviewStartedAt, timingProp.workingStartedAt]
+  );
 
   // Compute assessmentStartTime from deadline for hooks that need it
   const assessmentStartTime = useMemo(
@@ -178,50 +211,116 @@ export function WorkPageClient({
 
   // Get the manager name for canned response substitution
   const managerName = manager?.name || "your manager";
+  const managerFirstName = managerName.split(" ")[0];
 
-  // Handle "Submit Work" button click — opens the confirmation modal
-  const handleSubmitWork = useCallback(() => {
-    setShowSubmitModal(true);
-  }, []);
+  // Ref to the SlackLayout's programmatic call-start function. Set via
+  // onStartCallRef on mount, used to dial the manager when the candidate
+  // clicks "Start kickoff with Sarah" from the review-materials view.
+  const startCallRef = useRef<
+    ((coworkerId: string, callType: "coworker") => void) | null
+  >(null);
 
-  // Handle submit modal confirmation — upload deliverable, switch to manager, trigger defense call
-  const handleSubmitConfirm = useCallback(async (file: File | null) => {
-    setShowSubmitModal(false);
-    setIsSubmitting(true);
-
-    // Pre-warm the mic permission inside the user's click so the defense
-    // call's getUserMedia (which fires several async ticks later from
-    // FloatingCallBar) isn't rejected by browsers that scope the permission
-    // prompt to a direct user gesture (incognito, Safari, Firefox strict).
-    // The stream is closed immediately — we only needed the grant to persist.
+  // Pre-warm the mic permission inside the user's click before the call
+  // bar's getUserMedia (several async ticks later) runs, so stricter
+  // browsers (Safari, Firefox strict, incognito) don't reject the grant.
+  const prewarmMic = useCallback(async () => {
     try {
       const stream = await requestMicrophoneAccess();
       stream.getTracks().forEach((t) => t.stop());
     } catch (err) {
-      logger.warn("Mic permission unavailable at submit", { error: String(err) });
-      // Don't block — FloatingCallBar will surface the same error itself.
+      logger.warn("Mic permission unavailable", { error: String(err) });
     }
+  }, []);
 
-    // Upload deliverable file if provided. The server parses it synchronously
-    // so the manager has context when the defense call starts — this can take
-    // several seconds, so the loading overlay stays up throughout.
-    if (file) {
-      try {
-        await uploadDeliverable(file, assessmentId);
-      } catch (err) {
-        logger.error("Error uploading deliverable", { error: String(err) });
+  const postTransition = useCallback(
+    async (
+      action:
+        | "start_kickoff"
+        | "end_kickoff"
+        | "start_walkthrough"
+        | "end_walkthrough"
+    ) => {
+      const response = await fetch("/api/assessment/transition", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assessmentId, action }),
+      });
+      if (!response.ok) {
+        logger.error("Transition failed", {
+          action,
+          body: await response.text(),
+        });
+        return false;
       }
-    }
+      return true;
+    },
+    [assessmentId]
+  );
 
-    // Switch to manager chat and flip isPostSubmission. SlackLayout's internal
-    // effect detects the flag transition and auto-starts the defense call, so
-    // the ringing/connecting UI takes over once the overlay drops.
-    if (manager) {
-      handleSelectCoworker(manager.id);
+  // Start kickoff: flip phase, then dial the manager.
+  const handleStartKickoff = useCallback(async () => {
+    if (isTransitioning || !manager) return;
+    setIsTransitioning(true);
+    await prewarmMic();
+    const ok = await postTransition("start_kickoff");
+    if (!ok) {
+      setIsTransitioning(false);
+      return;
     }
+    setPhase("kickoff_call");
+    handleSelectCoworker(manager.id);
+    startCallRef.current?.(manager.id, "coworker");
+    setIsTransitioning(false);
+  }, [isTransitioning, manager, prewarmMic, postTransition, handleSelectCoworker]);
+
+  // Start walkthrough: flip phase, then trigger the existing post-submission
+  // flow (SlackLayout auto-starts the defense call when isPostSubmission flips).
+  const handleStartWalkthrough = useCallback(async () => {
+    if (isTransitioning || !manager) return;
+    setIsTransitioning(true);
+    setIsSubmitting(true);
+    await prewarmMic();
+    const ok = await postTransition("start_walkthrough");
+    if (!ok) {
+      setIsTransitioning(false);
+      setIsSubmitting(false);
+      return;
+    }
+    setPhase("walkthrough_call");
+    handleSelectCoworker(manager.id);
     setIsPostSubmission(true);
     setIsSubmitting(false);
-  }, [assessmentId, manager, handleSelectCoworker]);
+    setIsTransitioning(false);
+  }, [isTransitioning, manager, prewarmMic, postTransition, handleSelectCoworker]);
+
+  // Any call ending flows through here. Kickoff calls move us to heads-down
+  // work; walkthrough calls are handled by onDefenseComplete below (which
+  // owns the post-defense confirmation modal).
+  const handleCallEnd = useCallback(
+    async (endedCoworkerId: string) => {
+      if (endedCoworkerId !== manager?.id) return;
+
+      if (phase === "kickoff_call") {
+        const ok = await postTransition("end_kickoff");
+        if (ok) setPhase("heads_down_work");
+        return;
+      }
+
+      // The first call with the manager IS the kickoff, even if the candidate
+      // started it via the inline sidebar call button instead of the
+      // "Give {manager} a call" CTA. Run both transitions back-to-back so the
+      // agenda catches up and lands on heads-down work. The transition route
+      // is idempotent, so a duplicate start_kickoff (e.g. after a refresh
+      // races us to KICKOFF_CALL) is harmless.
+      if (phase === "review_materials") {
+        const started = await postTransition("start_kickoff");
+        if (!started) return;
+        const ended = await postTransition("end_kickoff");
+        if (ended) setPhase("heads_down_work");
+      }
+    },
+    [phase, manager, postTransition]
+  );
 
   // Handle defense call completion — show post-defense confirmation instead of immediate finalize
   const handleDefenseComplete = useCallback(() => {
@@ -244,6 +343,13 @@ export function WorkPageClient({
       // bounced to /results with a dead recording.
       await flushFinalChunk();
 
+      // Move WALKTHROUGH_CALL → COMPLETED via the transition route so the
+      // walkthroughEndedAt timestamp is stamped. Safe to no-op on legacy
+      // WORKING rows (transition returns 400, finalize handles them directly).
+      if (phase === "walkthrough_call") {
+        await postTransition("end_walkthrough");
+      }
+
       const response = await fetch("/api/assessment/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -262,72 +368,53 @@ export function WorkPageClient({
       logger.error("Error completing defense", { error: String(err) });
       setIsCompleting(false);
     }
-  }, [assessmentId, isCompleting, router, stopRecording, flushFinalChunk]);
+  }, [assessmentId, isCompleting, router, stopRecording, flushFinalChunk, phase, postTransition]);
 
   // Handle post-defense "Continue Working" — dismiss modal and go back to work
   const handleContinueWorking = useCallback(() => {
     setShowPostDefenseModal(false);
   }, []);
 
-  // Handle assessment time expiration
-  const handleTimeExpired = useCallback(async () => {
-    if (isCompleting) return;
-    setIsCompleting(true);
-    setShowTimeUpModal(true);
+  const handleCapReached = useCallback(() => setShowCapPrompt(true), []);
 
-    try {
-      // Flush before finalize so the tail of the recording survives the
-      // COMPLETED status flip (see handleFinalize for the full reasoning).
-      await flushFinalChunk();
-
-      await fetch("/api/assessment/finalize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessmentId }),
-      });
-
-      stopRecording();
-    } catch (err) {
-      logger.error("Error finalizing on timeout", { error: String(err) });
-    }
-
-    // Navigate to results after a brief delay so candidate sees the message
-    setTimeout(() => {
-      router.push(`/assessments/${assessmentId}/results`);
-    }, 4000);
-  }, [assessmentId, isCompleting, router, stopRecording, flushFinalChunk]);
-
-  // Set up the deadline timer
-  useAssessmentDeadline({
-    deadlineAt,
-    onTimeExpired: handleTimeExpired,
+  // Pacing nudges: manager fires check-in / wrap-up / cap during heads-down
+  // work. The cap nudge replaces the legacy auto-finalize-at-cap behavior —
+  // when it fires, we surface a soft prompt nudging the candidate toward the
+  // walkthrough call instead of force-ending the session. The hard safety-net
+  // auto-finalize lives server-side in work/page.tsx (cap + 30 min).
+  usePacingNudges({
+    assessmentId,
+    managerId: manager?.id ?? null,
+    sessionStartedAt: agendaTiming.reviewStartedAt ?? agendaTiming.workingStartedAt,
+    simulationDepth,
+    phase,
+    alreadyDelivered: pacingNudgesDelivered,
+    onNudgeReceived: handleProactiveMessage,
+    onCapReached: handleCapReached,
   });
 
-  // Show "time's up" modal
-  if (showTimeUpModal) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center max-w-md px-6">
-          <div className="mx-auto mb-6 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-3 border-primary border-t-transparent" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">{t("sessionComplete.title")}</h2>
-          <p className="text-muted-foreground">
-            {t("sessionComplete.description")}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading overlay while completing
+  // Show loading overlay while completing. The wrap-up moment is the bridge
+  // between the assessment and the results — keep it warm and personal so it
+  // feels like an exhale, not a loading screen.
   if (isCompleting) {
+    const firstName = candidateName?.trim().split(/\s+/)[0] ?? null;
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <h2 className="text-lg font-semibold">{t("wrappingUp.title")}</h2>
-          <p className="text-sm text-muted-foreground">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50/60 via-white to-white">
+        <div className="relative max-w-md px-6 text-center animate-fade-in">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-[-80px] mx-auto h-[220px] w-[420px] rounded-full bg-primary/15 blur-3xl"
+          />
+          <div className="relative mx-auto mb-6 flex h-14 w-14 items-center justify-center">
+            <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+            <div className="relative h-3 w-3 rounded-full bg-primary" />
+          </div>
+          <h2 className="relative text-2xl font-semibold tracking-tight text-foreground">
+            {firstName
+              ? t("wrappingUp.titleWithName", { name: firstName })
+              : t("wrappingUp.title")}
+          </h2>
+          <p className="relative mt-3 text-sm leading-relaxed text-muted-foreground">
             {t("wrappingUp.description")}
           </p>
         </div>
@@ -359,7 +446,24 @@ export function WorkPageClient({
         onSelectCoworker={handleSelectCoworker}
         onDefenseComplete={handleDefenseComplete}
         isPostSubmission={isPostSubmission}
-        onSubmitWork={handleSubmitWork}
+        onSubmitWork={
+          phase === "review_materials"
+            ? handleStartKickoff
+            : phase === "heads_down_work"
+              ? handleStartWalkthrough
+              : undefined
+        }
+        submitWorkLabel={
+          phase === "review_materials"
+            ? t("reviewMaterials.startKickoffCta", { manager: managerFirstName })
+            : phase === "heads_down_work"
+              ? t("walkthrough.startCta", { manager: managerFirstName })
+              : undefined
+        }
+        onStartCallRef={(fn) => {
+          startCallRef.current = fn;
+        }}
+        onCallEnd={handleCallEnd}
         onIncrementUnreadRef={(fn) => {
           incrementUnreadRef.current = fn;
         }}
@@ -369,6 +473,14 @@ export function WorkPageClient({
         selectedResourceIndex={selectedResourceIndex}
         onSelectResource={setSelectedResourceIndex}
         language={language}
+        agendaSlot={
+          <Agenda
+            phase={phase}
+            managerName={managerFirstName}
+            timing={agendaTiming}
+            simulationDepth={simulationDepth}
+          />
+        }
       >
         {isGeneralChannel ? (
           <GeneralChannel
@@ -402,21 +514,45 @@ export function WorkPageClient({
         )}
       </SlackLayout>
 
-      {/* Submit Work confirmation modal */}
-      {showSubmitModal && (
-        <SubmitWorkModal
-          managerName={managerName}
-          onConfirm={handleSubmitConfirm}
-          onCancel={() => setShowSubmitModal(false)}
-        />
-      )}
-
       {/* Post-defense confirmation modal */}
       {showPostDefenseModal && (
         <PostDefenseModal
           onFinalize={handleFinalize}
           onContinueWorking={handleContinueWorking}
         />
+      )}
+
+      {/* Cap-reached prompt: fires when the pacing-cap nudge runs, asking
+          the candidate to start the walkthrough now. Soft — they can dismiss
+          and keep working until the server-side hard expiry (cap + 30 min). */}
+      {showCapPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-background shadow-xl border border-border p-6 space-y-4">
+            <h2 className="text-xl font-bold">{t("capPrompt.title")}</h2>
+            <p className="text-sm text-muted-foreground">
+              {t("capPrompt.description", { manager: managerFirstName })}
+            </p>
+            <div className="flex gap-2 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCapPrompt(false)}
+                className="px-4 py-2 text-sm rounded-lg text-muted-foreground hover:bg-accent"
+              >
+                {t("capPrompt.snooze")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCapPrompt(false);
+                  handleStartWalkthrough();
+                }}
+                className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:opacity-90"
+              >
+                {t("capPrompt.startCta", { manager: managerFirstName })}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

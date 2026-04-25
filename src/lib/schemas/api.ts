@@ -125,6 +125,32 @@ export const AssessmentFinalizeSchema = z.object({
 export type AssessmentFinalize = z.infer<typeof AssessmentFinalizeSchema>;
 
 /**
+ * POST /api/assessment/transition - Move an assessment between phases
+ * (start_kickoff, end_kickoff, start_walkthrough, end_walkthrough).
+ * Finalizing is still its own route so it can run the post-assessment pipeline.
+ */
+export const AssessmentTransitionSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  action: z.enum([
+    "start_kickoff",
+    "end_kickoff",
+    "start_walkthrough",
+    "end_walkthrough",
+  ]),
+});
+export type AssessmentTransition = z.infer<typeof AssessmentTransitionSchema>;
+
+/**
+ * POST /api/chat/pacing-nudge - Manager fires a check-in / wrap-up / cap
+ * Slack message during the heads-down work phase.
+ */
+export const PacingNudgeSchema = z.object({
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+  nudgeType: z.enum(["checkin", "wrapup", "cap"]),
+});
+export type PacingNudge = z.infer<typeof PacingNudgeSchema>;
+
+/**
  * POST /api/assessment/visibility - Candidate toggles profile visibility
  */
 export const AssessmentVisibilitySchema = z.object({

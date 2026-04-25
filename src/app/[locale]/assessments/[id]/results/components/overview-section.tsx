@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/card";
 import type { CandidateResultsData } from "@/types";
@@ -11,21 +11,33 @@ interface OverviewSectionProps {
 
 export function CandidateOverviewSection({ results }: OverviewSectionProps) {
   const t = useTranslations("results.overview");
+  const firstName = results.candidateName.trim().split(/\s+/)[0];
   return (
     <div className="space-y-6">
       <Card className="relative overflow-hidden border-primary/10 bg-white/70 py-0 shadow-sm backdrop-blur-sm">
         {/* Accent bar */}
         <div className="h-1 w-full bg-gradient-to-r from-primary via-primary/70 to-primary/30" />
 
-        <div className="flex flex-col items-center gap-3 px-8 pb-8 pt-8 text-center">
+        <div className="flex flex-col items-center gap-4 px-8 pb-8 pt-8 text-center">
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary animate-scale-in"
+            aria-hidden
+          >
+            <Check className="h-6 w-6" strokeWidth={2.5} />
+          </div>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary">
             {results.companyName}
           </span>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
-            {results.scenarioName}
-          </h1>
-          <p className="max-w-xl text-sm text-muted-foreground">
-            {t("thanks", { name: results.candidateName })}
+          <div className="space-y-1.5">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+              {t("youreDone", { name: firstName })}
+            </h1>
+            <p className="text-sm text-muted-foreground md:text-[15px]">
+              {results.scenarioName}
+            </p>
+          </div>
+          <p className="max-w-xl text-[15px] leading-relaxed text-foreground/75">
+            {t("thanks", { name: firstName })}
           </p>
         </div>
       </Card>

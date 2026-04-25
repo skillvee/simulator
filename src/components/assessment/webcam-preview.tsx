@@ -3,10 +3,12 @@
 import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 
 export function WebcamPreview() {
-  const { webcamState, isRecording } = useScreenRecordingContext();
+  const { webcamState, isRecording, isFinalizing } = useScreenRecordingContext();
 
-  // Only show when recording is active and webcam is available
-  if (!isRecording || webcamState !== "active") {
+  // Only show when recording is active and webcam is available. Once
+  // finalize starts, the MediaRecorder is stopped (streams may stay alive
+  // for retry) — the REC chip would lie about active capture, so hide it.
+  if (!isRecording || webcamState !== "active" || isFinalizing) {
     return null;
   }
 

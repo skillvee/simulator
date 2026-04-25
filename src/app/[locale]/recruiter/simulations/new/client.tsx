@@ -583,7 +583,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scenarioId: scenario.id }),
       }).catch((err) => {
-        logger.error("Avatar generation failed (non-blocking)", { err });
+        logger.warn("Avatar generation failed (non-blocking)", { err });
       });
 
       // Step 5: Kick off the resource pipeline.

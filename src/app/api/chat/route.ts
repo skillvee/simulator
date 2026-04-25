@@ -106,8 +106,12 @@ export async function POST(request: Request) {
     return error("Assessment not found", 404, "NOT_FOUND");
   }
 
-  // Only allow chat during WORKING status
-  if (assessment.status !== AssessmentStatus.WORKING) {
+  // Allow chat during any active phase of the 4-phase flow. Only block when
+  // the candidate hasn't started (WELCOME) or has already finished (COMPLETED).
+  if (
+    assessment.status === AssessmentStatus.WELCOME ||
+    assessment.status === AssessmentStatus.COMPLETED
+  ) {
     return error(
       `Cannot chat when assessment is in ${assessment.status} status`,
       400

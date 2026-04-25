@@ -16,7 +16,12 @@ import { CallTokenRequestSchema } from "@/lib/schemas";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
 import { logAICall } from "@/lib/analysis";
-import { buildAgentPrompt, buildDefensePhaseContext } from "@/prompts/build-agent-prompt";
+import {
+  buildAgentPrompt,
+  buildDefensePhaseContext,
+  buildKickoffPhaseContext,
+  type SimulationPhase,
+} from "@/prompts/build-agent-prompt";
 import { DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/language";
 
 const logger = createLogger("server:api:call:token");
@@ -135,12 +140,22 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
       avatarUrl: coworker.avatarUrl,
     };
 
-    // A defense call is a call with the manager AFTER the candidate submitted their work.
-    // The client sets isPostSubmission=true on the token request from that flow.
-    const isDefenseCall = Boolean(isPostSubmission) && isManagerCoworker;
+    // Which phase is this call in?
+    //   - status=KICKOFF_CALL with manager → kickoff phase (scope alignment)
+    //   - status=WALKTHROUGH_CALL with manager, OR isPostSubmission=true → defense phase (live demo)
+    //   - everything else → ongoing (just a regular 1:1 call)
+    const isKickoffCall =
+      isManagerCoworker && assessment.status === AssessmentStatus.KICKOFF_CALL;
+    const isDefenseCall =
+      isManagerCoworker &&
+      (assessment.status === AssessmentStatus.WALKTHROUGH_CALL ||
+        Boolean(isPostSubmission));
 
-    let defensePhaseContext: string | undefined;
+    let phaseContext: string | undefined;
+    let phase: SimulationPhase = "ongoing";
+
     if (isDefenseCall) {
+      phase = "defense";
       const conversationSummary = formatConversationsForSummary(
         allConversations.map((c) => ({
           type: c.type as "text" | "voice",
@@ -151,20 +166,20 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
         })),
         coworkerMap
       );
-      const codeReviewSummary = assessment.codeReview
-        ? JSON.stringify(assessment.codeReview).slice(0, 4000)
-        : undefined;
 
-      // Screen recording analysis lives on SegmentAnalysis (nested under recordings).
-      // Skip for now — prompt handles missing values. Can enrich later.
-      defensePhaseContext = buildDefensePhaseContext({
-        repoUrl: assessment.repoUrl || assessment.scenario.repoUrl || "",
+      // The candidate's screen is shared with the Live API at 1 fps for this
+      // call — the prompt focuses the manager on screen-anchored questions
+      // rather than reading off an upload summary. No deliverable, no PR.
+      phaseContext = buildDefensePhaseContext({
         taskDescription: assessment.scenario.taskDescription,
         techStack: assessment.scenario.techStack,
         conversationSummary,
-        submissionSummary: assessment.deliverableSummary ?? undefined,
-        submissionFilename: assessment.deliverableFilename ?? undefined,
-        codeReviewSummary,
+      });
+    } else if (isKickoffCall) {
+      phase = "kickoff_call";
+      phaseContext = buildKickoffPhaseContext({
+        taskDescription: assessment.scenario.taskDescription,
+        techStack: assessment.scenario.techStack,
       });
     }
 
@@ -184,8 +199,8 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
       candidateName: session.user.name || undefined,
       conversationHistory: memoryContext,
       crossAgentContext: crossCoworkerContext,
-      phase: isDefenseCall ? "defense" : "ongoing",
-      phaseContext: defensePhaseContext,
+      phase,
+      phaseContext,
       media: "voice",
       resourceLabels: isManagerCoworker ? resourceLabels : undefined,
       language,
@@ -197,7 +212,11 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
       endpoint: "/api/call/token",
       promptText: systemInstruction,
       modelVersion: "gemini-live",
-      promptType: isDefenseCall ? "DEFENSE_CALL" : "VOICE_CALL",
+      promptType: isDefenseCall
+        ? "DEFENSE_CALL"
+        : isKickoffCall
+          ? "KICKOFF_CALL"
+          : "VOICE_CALL",
       promptVersion: "1.0",
       modelUsed: "gemini-live",
     }).catch(() => null);
@@ -226,6 +245,9 @@ Open THIS brand-new call right now with your persona's natural greeting (the "YO
       coworkerName: coworker.name,
       coworkerRole: coworker.role,
       isDefenseCall,
+      // True when this call is the screen-shared walkthrough — the client uses
+      // it to enable 1 fps screen capture into the Live session.
+      isWalkthrough: isDefenseCall,
     });
   } catch (err) {
     logger.error("Error generating call token", { err });

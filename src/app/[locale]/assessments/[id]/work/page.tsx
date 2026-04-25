@@ -3,7 +3,11 @@ import { auth } from "@/auth";
 import { getAssessmentForChat } from "@/server/queries/assessment";
 import { WorkPageClient } from "./client";
 import { AssessmentScreenWrapper } from "@/components/assessment";
-import { isAssessmentExpired, getDeadlineAt } from "@/lib/core/assessment-timer";
+import { isAssessmentHardExpired, getDeadlineAt } from "@/lib/core/assessment-timer";
+import {
+  phaseFromStatus,
+  type PacingNudgeType,
+} from "@/lib/core/assessment-phase";
 import { isDemoUser } from "@/lib/core/env";
 import { db } from "@/server/db";
 import { AssessmentStatus } from "@prisma/client";
@@ -47,8 +51,15 @@ export default async function WorkPage({
 
   const simulationDepth = (assessment.scenario.simulationDepth || "medium") as SimulationDepth;
 
-  // If expired and still WORKING, auto-finalize server-side
-  if (isAssessmentExpired(assessment.workingStartedAt, simulationDepth)) {
+  // Safety-net auto-finalize: if the candidate is well past the cap (cap + 30
+  // min grace) and STILL not on a walkthrough call, force-finalize. The cap
+  // itself no longer auto-finalizes — the pacing-cap nudge handles that
+  // moment with a manager message instead, so candidates running over by a
+  // few minutes can still wrap up gracefully.
+  if (
+    isAssessmentHardExpired(assessment.workingStartedAt, simulationDepth) &&
+    assessment.status !== AssessmentStatus.WALKTHROUGH_CALL
+  ) {
     await db.assessment.update({
       where: { id },
       data: {
@@ -128,20 +139,46 @@ export default async function WorkPage({
     }
   }
 
-  const resources = v2Resources.length > 0 ? v2Resources : v1Resources;
+  const scenarioResources = v2Resources.length > 0 ? v2Resources : v1Resources;
   const language = assessment.scenario.language || undefined;
 
+  // Surface the project brief as the first resource document so the candidate
+  // can read it inline alongside the rest of the supporting materials. There
+  // is no dedicated "review materials" view anymore — the brief is just one
+  // more doc in the sidebar, the chat is always live.
+  const briefResource: ScenarioResource = {
+    type: "document",
+    label: language === "es" ? "El brief" : "The brief",
+    content: assessment.scenario.taskDescription,
+  };
+  const resources: ScenarioResource[] = [briefResource, ...scenarioResources];
+
   const bypassRecording = isDemoUser(session.user.id);
+
+  const initialPhase = phaseFromStatus(assessment.status);
+  const timing = {
+    reviewStartedAt: assessment.reviewStartedAt
+      ? assessment.reviewStartedAt.toISOString()
+      : null,
+    workingStartedAt: assessment.workingStartedAt
+      ? assessment.workingStartedAt.toISOString()
+      : null,
+  };
 
   return (
     <AssessmentScreenWrapper assessmentId={id} bypassRecording={bypassRecording}>
       <WorkPageClient
         assessmentId={id}
+        candidateName={session.user.name ?? null}
         coworkers={coworkers}
         selectedCoworkerId={selectedCoworkerId || defaultCoworkerId}
         deadlineAt={deadlineAt}
         resources={resources}
         language={language}
+        initialPhase={initialPhase}
+        timing={timing}
+        simulationDepth={simulationDepth}
+        pacingNudgesDelivered={assessment.pacingNudgesDelivered as PacingNudgeType[]}
       />
     </AssessmentScreenWrapper>
   );

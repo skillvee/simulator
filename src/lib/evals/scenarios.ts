@@ -198,7 +198,8 @@ export const EVAL_SCENARIOS: EvalScenario[] = [
     phase: "initial_greeting",
     media: "chat",
     userMessage: "[Generate your first message to the candidate]",
-    criteria: "Should be a warm, casual welcome (1-2 sentences). Must NOT mention the task, experiment, or any work details. Just a friendly hello asking how they're settling in.",
+    criteria:
+      "MUST do three things in 2-3 short Slack messages: (1) warmly welcome the new team member, (2) frame the problem at a HIGH LEVEL (one sentence) and mention the brief/materials are in the resources panel, (3) explicitly tell them to give you a call once they've read through the materials — the 'give me a call' instruction is required. Must NOT dump task details or enumerate materials. Must NOT mention timing/deadlines.",
   },
 
   {
@@ -217,7 +218,8 @@ Candidate: Hey Elena! All good, just getting set up. What should I be working on
     phase: "ongoing",
     media: "chat",
     userMessage: "Hey Elena! All good, just getting set up. What should I be working on?",
-    criteria: "Should share the task naturally and conversationally — the business problem, not a formal briefing. Should mention the repo. Should NOT dump everything at once. Should tell them to review and call when ready. 2-3 short Slack messages, not an essay.",
+    criteria:
+      "Should REDIRECT to the kickoff call rather than briefing in chat — something like 'the brief's in your materials panel, give me a call once you've read through it' or 'hop on a call with me after you've reviewed it.' A one-sentence high-level framing is fine, but must close by pointing at the kickoff call. Must NOT dump full task details in chat. Brief, warm, redirective.",
   },
 
   {
@@ -286,7 +288,7 @@ Candidate: Thanks! I'll take a look.`,
 
   {
     id: "manager-defense-call",
-    name: "Manager Defense Call Opening",
+    name: "Manager Defense Call Opening (screen-aware)",
     category: "manager",
     agent: MANAGER_ELENA,
     companyName: COMPANY,
@@ -295,27 +297,147 @@ Candidate: Thanks! I'll take a look.`,
     candidateName: CANDIDATE,
     conversationHistory: `## Conversation History
 [Several chat messages about the task]
-You: Great, send me the PR when you're done!
-Candidate: Here's my PR: https://github.com/skillvee/assessment-test123/pull/1
-You: Got it! Let's hop on a call to walk through it.`,
+You: Great, ping me when you're ready for the walkthrough.
+Candidate: Ready to walk you through it!`,
     crossAgentContext: "",
     phase: "defense",
-    phaseContext: `## PR Defense Review
+    phaseContext: `## Walkthrough Call
 Task: ${TASK_DESCRIPTION}
 Tech stack: ${TECH_STACK.join(", ")}
-Repo: ${REPO_URL}
-PR: https://github.com/skillvee/assessment-test123/pull/1
 
-## How to Run This Call
-Follow these 5 phases in order:
-Phase 1 — Opening (2 min): Ask them to walk you through what they did.
-Phase 2 — High-level (3-4 min): Overall approach, architecture decisions.
-Phase 3 — Technical probes (5-7 min): At least 3 specific questions about their code.
-Phase 4 — Process (2-3 min): What was hardest, AI tool usage.
-Phase 5 — Wrap up (1-2 min): Thank them.`,
+The candidate is SHARING THEIR SCREEN with you right now. You can see what they have open.
+
+Follow 5 phases: (1) Opening — reference the screen and ask them to walk through what's open; (2) High-level approach; (3) Screen-anchored technical probes — name specific files/functions/elements visible; (4) Process; (5) Wrap up.`,
     media: "voice",
     userMessage: "[call connected]",
-    criteria: "Should open with a natural greeting and ask them to walk through their PR. Should NOT say 'no problem at all' or respond as if the user said something. Should sound like picking up a phone call naturally.",
+    criteria:
+      "Should open with a natural phone greeting (1-2 words) and immediately reference the SCREEN the candidate is sharing — e.g. 'looks like you've got something open, walk me through what I'm looking at.' Should NOT ask generic 'what did you build' without referencing the visible screen. Should NOT say 'no problem at all' or act like the candidate spoke. Sounds like picking up a phone call.",
+  },
+
+  {
+    id: "manager-kickoff-call-opening",
+    name: "Manager Kickoff Call Opening",
+    category: "manager",
+    agent: MANAGER_ELENA,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Conversation History
+You: Hey, welcome to the team! We want you to dig into our Reels notification experiment — the brief and materials are in your resources panel. Once you've read through them, give me a call so we can clarify any open questions.
+Candidate: Thanks! Just reviewed everything.`,
+    crossAgentContext: "",
+    phase: "kickoff_call",
+    phaseContext: `## Kickoff Call
+
+The candidate just called you. They've read the brief and looked at the materials, but have NOT started the work yet. Your job on this call:
+
+- Greet them naturally like picking up the phone.
+- Let them drive — answer their questions about scope, success criteria, tradeoffs, stack constraints.
+- Do NOT hand them the solution. Do NOT walk through code.
+- Do NOT re-read the brief at them.
+- Keep it short. Wrap decisively when they seem aligned.
+
+## Project Framing
+Task: ${TASK_DESCRIPTION}
+Tech stack: ${TECH_STACK.join(", ")}`,
+    media: "voice",
+    userMessage: "[call connected]",
+    criteria:
+      "Should open with a natural phone greeting (1-2 words like 'Hey!' or 'Hey, what's up?') and invite the candidate's questions — something like 'what's on your mind?' or 'questions after reading through it?'. Should NOT re-read the brief. Should NOT immediately jump into solutions or code. Should NOT dump full task details. Short, conversational, hands them the mic.",
+  },
+
+  // ── Pacing Nudges (3) ──────────────────────────────────────────────────────
+
+  {
+    id: "manager-pacing-checkin",
+    name: "Manager Pacing Check-In",
+    category: "pacing",
+    agent: MANAGER_ELENA,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Conversation History
+You: Hey! Welcome to the team — the brief's in your materials. Give me a call when you've read through it.
+Candidate: Got it, reviewing now.
+You: Cool, ping me when ready.
+[Kickoff call happened — candidate aligned on scope]
+[Candidate has been heads-down for a while]`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    phaseContext: `## Pacing Check-In
+
+The candidate has been heads-down for a while. Send ONE short Slack message checking in on them.
+
+Rules:
+- ONE message only. 1-2 sentences max.
+- Casual peer check-in tone.
+- Do NOT mention time, deadlines, or a cap.
+- Do NOT pressure them.
+- Do NOT brief them or re-explain the task.`,
+    media: "chat",
+    userMessage: "[Send a pacing check-in message]",
+    criteria:
+      "Should be ONE short, casual check-in (1-2 sentences) like 'hey how's it going?' or 'where you at?'. Must NOT mention time or deadlines. Must NOT pressure. Must NOT brief or re-explain. Warm peer vibe.",
+  },
+
+  {
+    id: "manager-pacing-wrapup",
+    name: "Manager Pacing Wrap-Up",
+    category: "pacing",
+    agent: MANAGER_ELENA,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Conversation History
+[Kickoff call happened — candidate aligned on scope]
+[Candidate has been working for a while and is approaching the usual wrap-up time]`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    phaseContext: `## Pacing Wrap-Up Nudge
+
+The candidate is approaching the time when most wrap up. Send ONE short Slack message suggesting they start finding a stopping point.
+
+Rules:
+- ONE message only. 1-2 sentences max.
+- Gentle, not pushy.
+- Do NOT cite a hard deadline.
+- Do NOT brief them or re-explain the task.`,
+    media: "chat",
+    userMessage: "[Send a wrap-up nudge]",
+    criteria:
+      "Should be ONE gentle message suggesting they find a stopping point and hop on the walkthrough soon. Something like 'how close are you to a stopping point?' or 'feel free to wrap up when you're ready — would love to hop on the walkthrough.' Must NOT cite a hard deadline. Must NOT be bossy.",
+  },
+
+  {
+    id: "manager-pacing-cap",
+    name: "Manager Pacing Cap",
+    category: "pacing",
+    agent: MANAGER_ELENA,
+    companyName: COMPANY,
+    techStack: TECH_STACK,
+    taskDescription: TASK_DESCRIPTION,
+    candidateName: CANDIDATE,
+    conversationHistory: `## Conversation History
+[Kickoff call happened — candidate aligned on scope]
+[Candidate has hit the time cap]`,
+    crossAgentContext: "",
+    phase: "ongoing",
+    phaseContext: `## Pacing Cap Nudge
+
+Time is up. Send ONE short Slack message — firm but warm — telling the candidate it's time to wrap up and hop on the walkthrough call now.
+
+Rules:
+- ONE message only. 1-2 sentences max.
+- Reference the WALKTHROUGH specifically, not "submitting" or "finishing".
+- Firm but not harsh.
+- Do NOT apologize for the cap.`,
+    media: "chat",
+    userMessage: "[Send the cap nudge]",
+    criteria:
+      "Should be ONE firm-but-warm message telling the candidate to wrap up and hop on the walkthrough NOW. MUST reference the walkthrough specifically (not 'submitting' or 'finishing'). Example shape: 'okay we're at time — let's hop on the walkthrough now and you can show me where you got to.' Must NOT apologize or dwell on the cap.",
   },
 
   // ── Non-Manager Scenarios (6) ──────────────────────────────────────────────

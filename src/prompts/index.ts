@@ -12,13 +12,19 @@
 export {
   buildAgentPrompt,
   buildDefensePhaseContext,
+  buildKickoffPhaseContext,
   type AgentPromptContext,
   type SimulationPhase,
   type DefensePhaseContext,
+  type KickoffPhaseContext,
 } from "./build-agent-prompt";
 
-// Manager - Defense (used by unified builder for phase context)
-export { buildDefensePrompt, type DefenseContext } from "./manager/defense";
+// Manager - pacing nudges fired during the heads-down work phase
+export {
+  buildPacingCheckInPrompt,
+  buildPacingWrapUpPrompt,
+  buildPacingCapPrompt,
+} from "./manager/pacing";
 
 
 // Coworker Personas (base builders still used by unified builder)

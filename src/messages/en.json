@@ -152,8 +152,9 @@
       "description": "Your simulation session has ended. We're saving your work and preparing your results."
     },
     "wrappingUp": {
-      "title": "Wrapping up...",
-      "description": "Finalizing your assessment"
+      "title": "Wrapping up your session...",
+      "titleWithName": "Nice work, {name}.",
+      "description": "Saving your work and putting your results together. This only takes a moment."
     },
     "submittingWork": {
       "title": "Sharing your work...",
@@ -280,16 +281,6 @@
         }
       }
     },
-    "submitWorkModal": {
-      "title": "Ready to Submit?",
-      "description": "You'll present your work to {manager} to wrap up.",
-      "uploadLabel": "Attach deliverable (optional):",
-      "uploadDescription": "Upload a file to share with your manager",
-      "uploadButton": "Choose File",
-      "submitButton": "Submit Work",
-      "cancelButton": "Cancel",
-      "uploadError": "File must be under 10MB"
-    },
     "postDefenseModal": {
       "title": "Great Work!",
       "description": "You've successfully walked through your solution.",
@@ -297,6 +288,30 @@
       "finalizeDescription": "Complete your assessment and see results",
       "continueButton": "Continue Working",
       "continueDescription": "Make additional improvements if needed"
+    },
+    "agenda": {
+      "title": "Your day",
+      "phases": {
+        "reviewMaterials": "Review materials",
+        "kickoff": "Kickoff with {manager}",
+        "work": "Heads-down work",
+        "walkthrough": "Walkthrough with {manager}"
+      },
+      "elapsedMinutes": "{minutes} min elapsed",
+      "pacingHint": "Most candidates finish around {target} min"
+    },
+    "reviewMaterials": {
+      "startKickoffCta": "Give {manager} a call"
+    },
+    "walkthrough": {
+      "startCta": "Walk through your work with {manager}",
+      "startHint": "When you're ready, hop on a call and walk {manager} through what you built."
+    },
+    "capPrompt": {
+      "title": "Time to walk through your work",
+      "description": "{manager} is ready whenever you are. Hop on the walkthrough now and show them where you got to.",
+      "startCta": "Walk through with {manager}",
+      "snooze": "Just a few more minutes"
     }
   },
   "results": {
@@ -310,7 +325,8 @@
       }
     },
     "overview": {
-      "thanks": "Thanks for working through this with us, {name}.",
+      "youreDone": "You're done, {name}.",
+      "thanks": "Thanks for putting in the work today, {name}. Here's what we noticed.",
       "whatWeSawTitle": "What we saw",
       "momentsTitle": "Things you did"
     },
@@ -320,7 +336,8 @@
     },
     "nextSteps": {
       "title": "What happens next",
-      "companyNotified": "Your results have been shared with {company}. They'll reach out with next steps.",
+      "sentLabel": "Sent",
+      "companyNotified": "Your results are now with {company}. They'll reach out with next steps.",
       "marketplaceTitle": "Stay on our radar for future opportunities",
       "marketplaceBody": "Skillvee is small but growing a network of companies that hire based on how people actually work. If you opt in, we'll surface your profile to other companies that match this kind of work style. No guarantees on timing — we'll only reach out when it's a real fit.",
       "marketplaceDisclosure": "We'd share this summary and your work style — never the full recording.",
@@ -1188,6 +1205,91 @@
       "subtitle": "Get a personalized demo or try a sample assessment as a candidate.",
       "requestDemo": "Request Demo",
       "trySample": "Try Sample Assessment"
+    },
+    "voiceCall": {
+      "role": "Engineering Manager",
+      "callInProgress": "Call in progress · 2:34",
+      "poweredBy": "Powered by Gemini Live"
+    },
+    "ide": {
+      "recordingStatus": "Recording · 18:42",
+      "onCall": "on call"
+    },
+    "defendThread": {
+      "role": "Engineering Manager",
+      "defendingDecisions": "Defending decisions",
+      "you": "You",
+      "replyPlaceholder": "Reply to Sarah…",
+      "msg1": "Why did you pick Redis over Postgres for the session store?",
+      "msg2": "Sessions are short-lived, high read/write. Redis fits; Postgres adds latency we don't need.",
+      "msg3": "And if Redis goes down mid-checkout?",
+      "msg4": "Graceful fallback to signed cookies, session is eventually reconciled. Tradeoff is 30s of stale cart data."
+    },
+    "hiringManagers": {
+      "badge": "For hiring managers",
+      "title": "Then pick the right hire — with evidence.",
+      "subtitle": "Every candidate comes back with a ranked scorecard and proof of how they showed each skill. Compare tradeoffs. Make the call with confidence.",
+      "card1": {
+        "title": "Rank with confidence",
+        "desc": "Sort the pool by overall, by dimension, or by signal strength — see who's actually ahead."
+      },
+      "card2": {
+        "title": "See the tradeoffs",
+        "desc": "Know exactly who's strong where. Two 4.2s aren't the same candidate."
+      },
+      "card3": {
+        "title": "Cite the evidence",
+        "desc": "Every score links to a timestamped moment in the recording. No more vibes."
+      },
+      "mock": {
+        "role": "Senior Backend Eng",
+        "rankedByOverall": "Ranked by overall",
+        "completed": "12 completed",
+        "topMatch": "Top match",
+        "candidateRoleTime": "Senior Backend Engineer · 38 min",
+        "overall": "overall",
+        "observedEvidence": "Observed evidence",
+        "dimensions": {
+          "problemSolving": "Problem Solving",
+          "aiLeverage": "AI Leverage",
+          "communication": "Communication",
+          "technicalDepth": "Technical Depth",
+          "collaboration": "Collaboration",
+          "timeManagement": "Time Management"
+        },
+        "evidence1": "Asked three clarifying questions before writing a line of code.",
+        "evidence2": "Caught the race condition in the session-fallback path.",
+        "evidence3": "Defended Redis choice with a clear latency vs. durability tradeoff."
+      }
+    },
+    "workflow": {
+      "badge": "Fits your workflow",
+      "title": "Live in 5 minutes. Plugs into your ATS.",
+      "subtitle": "No implementation project. Paste a JD, review the scenario, send the link.",
+      "step1": {
+        "title": "Paste your JD",
+        "desc": "Drop in the job description. We generate the scenario, stakeholder personas, and rubric automatically.",
+        "label": "Job description"
+      },
+      "step2": {
+        "title": "Review the scenario",
+        "desc": "See the generated day-at-work task, adjust stakeholders or tasks, tweak the rubric if you want.",
+        "persona1": "Sarah · Eng Manager",
+        "persona2": "Devon · Product",
+        "persona3": "Theo · Tech Lead"
+      },
+      "step3": {
+        "title": "Send the link",
+        "desc": "Share one link with your shortlist. Candidates complete on their own time. Scorecards come back automatically.",
+        "linkLabel": "Shareable link",
+        "ready": "Ready",
+        "copyLink": "Copy link"
+      }
+    },
+    "ats": {
+      "badge": "Plugs into your ATS",
+      "description": "Sync candidate scores and transcripts directly into your ATS — no CSV export, no manual copy.",
+      "footer": "Plus Zapier & REST API for everything else."
     }
   },
   "landing": {

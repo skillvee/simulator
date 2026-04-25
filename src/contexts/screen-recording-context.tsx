@@ -69,6 +69,11 @@ interface ScreenRecordingContextValue {
   error: string | null;
   isSupported: boolean;
   isRecording: boolean;
+  /** True between `flushFinalChunk` start and the next `stopRecording`/retry.
+   *  Streams are still alive (so finalize can retry without re-prompting for
+   *  consent), but the MediaRecorder has been stopped — UI affordances like
+   *  the REC indicator should hide so the wrap-up screen reads as "done". */
+  isFinalizing: boolean;
   chunkCount: number;
   screenshotCount: number;
   webcamState: WebcamState;
@@ -83,6 +88,11 @@ interface ScreenRecordingContextValue {
    *  Voice hooks should connect their audio output here (in addition to speakers)
    *  so that AI voice responses are included in the screen recording. */
   audioMixer: AudioMixer | null;
+  /** Returns the live screen video track so other consumers (e.g. the Gemini
+   *  Live walkthrough call) can sample frames without re-prompting the user
+   *  with another `getDisplayMedia` permission dialog. Returns null until
+   *  recording is active. */
+  getScreenVideoTrack: () => MediaStreamTrack | null;
   startRecording: () => Promise<boolean>;
   stopRecording: () => void;
   retryRecording: () => Promise<boolean>;
@@ -133,6 +143,40 @@ interface ScreenRecordingProviderProps {
   bypassRecording?: boolean;
 }
 
+// Bounded retry for transient upload failures (network errors, 5xx). 4xx
+// responses are terminal — retrying a 400 ("Assessment is completed") or 401
+// would just hide the real bug, so we surface them on the first attempt.
+const UPLOAD_MAX_ATTEMPTS = 3;
+const UPLOAD_BACKOFF_MS = [1000, 2000];
+
+function buildUploadFormData(
+  assessmentId: string,
+  file: Blob,
+  type: "video" | "screenshot",
+  chunkIndex?: number,
+  timestamp?: number,
+  segmentId?: string,
+  snapshotId?: string
+): FormData {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("assessmentId", assessmentId);
+  formData.append("type", type);
+  if (chunkIndex !== undefined) {
+    formData.append("chunkIndex", chunkIndex.toString());
+  }
+  if (timestamp !== undefined) {
+    formData.append("timestamp", timestamp.toString());
+  }
+  if (segmentId) {
+    formData.append("segmentId", segmentId);
+  }
+  if (snapshotId) {
+    formData.append("snapshotId", snapshotId);
+  }
+  return formData;
+}
+
 // Helper function to upload a chunk or screenshot
 async function uploadRecordingData(
   assessmentId: string,
@@ -143,43 +187,69 @@ async function uploadRecordingData(
   segmentId?: string,
   snapshotId?: string
 ): Promise<boolean> {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("assessmentId", assessmentId);
-    formData.append("type", type);
-    if (chunkIndex !== undefined) {
-      formData.append("chunkIndex", chunkIndex.toString());
-    }
-    if (timestamp !== undefined) {
-      formData.append("timestamp", timestamp.toString());
-    }
-    if (segmentId) {
-      formData.append("segmentId", segmentId);
-    }
-    if (snapshotId) {
-      formData.append("snapshotId", snapshotId);
-    }
-
-    const response = await fetch("/api/recording", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const body = await response.json().catch(() => null);
-      logger.error("Upload failed", {
-        status: String(response.status),
-        message: body?.error ?? "Unknown error",
+  for (let attempt = 1; attempt <= UPLOAD_MAX_ATTEMPTS; attempt++) {
+    const isLastAttempt = attempt === UPLOAD_MAX_ATTEMPTS;
+    try {
+      const response = await fetch("/api/recording", {
+        method: "POST",
+        body: buildUploadFormData(
+          assessmentId,
+          file,
+          type,
+          chunkIndex,
+          timestamp,
+          segmentId,
+          snapshotId
+        ),
       });
-      return false;
+
+      if (response.ok) return true;
+
+      // 4xx is terminal — don't retry, surface the real cause.
+      if (response.status >= 400 && response.status < 500) {
+        const body = await response.json().catch(() => null);
+        const serverMessage = body?.error ?? "Unknown error";
+        logger.error(
+          `Upload failed: HTTP ${response.status} — ${serverMessage}`,
+          { status: String(response.status), message: serverMessage, type }
+        );
+        return false;
+      }
+
+      // 5xx — retry if we have budget left.
+      if (isLastAttempt) {
+        const body = await response.json().catch(() => null);
+        const serverMessage = body?.error ?? "Unknown error";
+        logger.error(
+          `Upload failed after ${attempt} attempts: HTTP ${response.status} — ${serverMessage}`,
+          { status: String(response.status), message: serverMessage, type }
+        );
+        return false;
+      }
+      logger.warn(
+        `Upload attempt ${attempt} failed (HTTP ${response.status}), retrying`,
+        { type }
+      );
+    } catch (error) {
+      // Network error (fetch threw). Retry if we have budget left.
+      if (isLastAttempt) {
+        logger.error(`Upload error after ${attempt} attempts`, {
+          error: String(error),
+          type,
+        });
+        return false;
+      }
+      logger.warn(`Upload attempt ${attempt} threw, retrying`, {
+        error: String(error),
+        type,
+      });
     }
 
-    return true;
-  } catch (error) {
-    logger.error("Upload error", { error });
-    return false;
+    await new Promise((resolve) =>
+      setTimeout(resolve, UPLOAD_BACKOFF_MS[attempt - 1] ?? 2000)
+    );
   }
+  return false;
 }
 
 // Helper to manage recording sessions.
@@ -298,6 +368,7 @@ export function ScreenRecordingProvider({
   const [webcamState, setWebcamState] = useState<WebcamState>("idle");
   const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
   const [permissionBlock, setPermissionBlock] = useState<PermissionBlock>(null);
+  const [isFinalizing, setIsFinalizing] = useState(false);
 
   const streamRef = useRef<MediaStream | null>(null);
   const webcamStreamRef = useRef<MediaStream | null>(null);
@@ -691,6 +762,7 @@ export function ScreenRecordingProvider({
   const flushFinalChunk = useCallback(async (): Promise<void> => {
     if (flushedRef.current) return;
     flushedRef.current = true;
+    setIsFinalizing(true);
 
     const recorder = videoRecorderRef.current;
     if (recorder) {
@@ -753,6 +825,7 @@ export function ScreenRecordingProvider({
     // so the guard doesn't re-prompt for recording consent while the user is
     // navigating away to /results.
     setState("ended");
+    setIsFinalizing(false);
     sessionStorage.removeItem(`screen-recording-${assessmentId}`);
   }, [cleanup, assessmentId, trackUpload]);
 
@@ -762,6 +835,7 @@ export function ScreenRecordingProvider({
     setWebcamState("idle");
     setError(null);
     setPermissionBlock(null);
+    setIsFinalizing(false);
     return startRecording();
   }, [startRecording]);
 
@@ -875,12 +949,20 @@ export function ScreenRecordingProvider({
     };
   }, [cleanup]);
 
+  const getScreenVideoTrack = useCallback((): MediaStreamTrack | null => {
+    const stream = streamRef.current;
+    if (!stream) return null;
+    const track = stream.getVideoTracks()[0];
+    return track && track.readyState === "live" ? track : null;
+  }, []);
+
   const value: ScreenRecordingContextValue = {
     state,
     permissionState,
     error,
     isSupported,
     isRecording: state === "recording",
+    isFinalizing,
     chunkCount,
     screenshotCount,
     webcamState,
@@ -888,6 +970,7 @@ export function ScreenRecordingProvider({
     sessionLoaded,
     permissionBlock,
     audioMixer: audioMixerRef.current,
+    getScreenVideoTrack,
     startRecording,
     stopRecording,
     retryRecording,

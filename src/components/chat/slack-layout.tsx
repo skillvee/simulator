@@ -97,8 +97,13 @@ interface SlackLayoutProps {
   onDefenseComplete?: () => void;
   /** When true, the next call will be flagged as post-submission (defense call) */
   isPostSubmission?: boolean;
-  /** Callback when candidate clicks "Submit Work" button */
+  /** Callback when candidate clicks the end-of-work CTA in the sidebar. */
   onSubmitWork?: () => void;
+  /**
+   * Overrides the default "Submit Work" label on the sidebar CTA — used when
+   * the button acts as a "Start walkthrough" trigger in the 4-phase flow.
+   */
+  submitWorkLabel?: string;
   /** Callback when any call ends — receives the coworkerId of the ended call */
   onCallEnd?: (coworkerId: string) => void;
   /** Callback to expose startCall function to parent (for programmatic call initiation) */
@@ -113,6 +118,8 @@ interface SlackLayoutProps {
   onSelectResource?: (index: number | null) => void;
   /** Language of the assessment scenario */
   language?: string;
+  /** Optional slot rendered in the sidebar above the resources bar — used for the day's agenda. */
+  agendaSlot?: React.ReactNode;
 }
 
 /**
@@ -191,6 +198,8 @@ function SlackLayoutInner({
   selectedResourceIndex,
   onSelectResource,
   language,
+  agendaSlot,
+  submitWorkLabel,
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -463,6 +472,10 @@ function SlackLayoutInner({
             )}
           </div>
 
+          {/* Agenda (the day's four phases) — rendered above resources so it's the
+              first thing the candidate sees in the sidebar. */}
+          {agendaSlot}
+
           {/* Resources bookmarks bar */}
           {resources && resources.length > 0 && (
             <ResourcesBookmarkBar
@@ -553,7 +566,9 @@ function SlackLayoutInner({
 
           </div>
 
-          {/* Submit Work button */}
+          {/* End-of-work CTA — either "Submit Work" (legacy) or "Walk through
+              your work with {manager}" (new 4-phase flow), depending on the
+              label the parent passes. */}
           {onSubmitWork && !activeCall && (
             <div className="shrink-0 px-4 py-3" style={{ borderTop: "1px solid hsl(var(--slack-border))" }}>
               <Button
@@ -562,7 +577,7 @@ function SlackLayoutInner({
                 size="sm"
               >
                 <Send className="h-4 w-4 mr-2" />
-                {t("submitWork")}
+                {submitWorkLabel ?? t("submitWork")}
               </Button>
             </div>
           )}
