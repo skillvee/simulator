@@ -140,7 +140,11 @@ data,row1
 === END ===
 \`\`\`
 
-   - Use \`print(df.to_csv(index=False))\` between the markers.
+   - Use \`print(df.to_csv(index=False))\` between the markers — NOT
+     \`df.to_json()\` and NOT JSON Lines (\`{"col": "val"}\` per line).
+     The first line MUST be a comma-separated header row like
+     \`order_id,customer_id,amount,created_at\`. Anything that starts with
+     \`{\` or \`[\` will be rejected as malformed.
    - Use the exact filename from the plan (e.g. \`${plan.resources[0]?.filename ?? "data.csv"}\`).
    - Print one file at a time, then move to the next.
 
