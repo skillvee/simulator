@@ -170,6 +170,131 @@ export type CommitSpec = z.infer<typeof commitSpecSchema>;
 export type RepoSpec = z.infer<typeof repoSpecSchema>;
 
 // ---------------------------------------------------------------------------
+// Patch-mode schema — used on retry to eliminate "lazy regeneration" drift.
+//
+// The model emits one of two shapes per file:
+//   { path, unchanged: true }             — "preserve verbatim"
+//   { path, content, purpose, addedInCommit } — "modified or new"
+//
+// Validated by integration tests (see repo-spec-edit.integration.test.ts).
+// `mergePatchSpec` reconstructs a full RepoSpec by copying baseline content
+// for unchanged entries.
+// ---------------------------------------------------------------------------
+
+export const patchFileSpecSchema = z.union([
+  z.object({
+    path: z.string().min(1),
+    unchanged: z.literal(true),
+  }),
+  z.object({
+    path: z.string().min(1),
+    content: z.string(),
+    purpose: z.enum(["stub", "working", "test", "doc", "config"]),
+    addedInCommit: z.number().int().min(0),
+    unchanged: z.literal(false).optional(),
+  }),
+]);
+
+export const patchSpecSchema = z.object({
+  projectName: z.string().min(1),
+  projectDescription: z.string().min(1),
+  scaffoldId: z.enum(SCAFFOLD_IDS),
+  readmeContent: z.string().min(50),
+  files: z.array(patchFileSpecSchema).min(3),
+  commitHistory: z.array(commitSpecSchema).min(3),
+  issues: z.array(issueSpecSchema).min(2),
+  authors: z.array(authorSpecSchema).min(2),
+});
+
+export type PatchFileSpec = z.infer<typeof patchFileSpecSchema>;
+export type PatchSpec = z.infer<typeof patchSpecSchema>;
+
+/**
+ * Merge a patch spec with the baseline to produce a full RepoSpec.
+ *
+ * For files marked `unchanged: true`, copies the FileSpec from baseline by
+ * path. For files with explicit content, uses the patch's content. New files
+ * (not in baseline) are added.
+ *
+ * @throws If a patch references an `unchanged: true` file that doesn't exist
+ *         in baseline — that's a sign the model misread the file list.
+ */
+export function mergePatchSpec(baseline: RepoSpec, patch: PatchSpec): RepoSpec {
+  const baselineByPath = new Map(baseline.files.map((f) => [f.path, f]));
+  const merged: FileSpec[] = [];
+
+  for (const file of patch.files) {
+    if ("unchanged" in file && file.unchanged === true) {
+      const orig = baselineByPath.get(file.path);
+      if (!orig) {
+        throw new Error(
+          `Patch references unchanged file '${file.path}' that doesn't exist in baseline.`
+        );
+      }
+      merged.push(orig);
+    } else if ("content" in file) {
+      merged.push({
+        path: file.path,
+        content: file.content,
+        purpose: file.purpose,
+        addedInCommit: file.addedInCommit,
+      });
+    }
+  }
+
+  return {
+    projectName: patch.projectName,
+    projectDescription: patch.projectDescription,
+    scaffoldId: patch.scaffoldId,
+    readmeContent: patch.readmeContent,
+    files: merged,
+    commitHistory: patch.commitHistory,
+    issues: patch.issues,
+    authors: patch.authors,
+  };
+}
+
+/**
+ * Diff baseline vs patched spec. Used by the builder to commit only changed
+ * files and surface unintended drift in metrics.
+ */
+export interface SpecDiff {
+  added: FileSpec[];
+  modified: FileSpec[];
+  removed: FileSpec[];
+  unchangedCount: number;
+}
+
+export function diffRepoSpecs(prior: RepoSpec, next: RepoSpec): SpecDiff {
+  const priorByPath = new Map(prior.files.map((f) => [f.path, f]));
+  const nextByPath = new Map(next.files.map((f) => [f.path, f]));
+
+  const added: FileSpec[] = [];
+  const modified: FileSpec[] = [];
+  const removed: FileSpec[] = [];
+  let unchangedCount = 0;
+
+  for (const file of next.files) {
+    const orig = priorByPath.get(file.path);
+    if (!orig) {
+      added.push(file);
+    } else if (orig.content !== file.content) {
+      modified.push(file);
+    } else {
+      unchangedCount += 1;
+    }
+  }
+
+  for (const file of prior.files) {
+    if (!nextByPath.has(file.path)) {
+      removed.push(file);
+    }
+  }
+
+  return { added, modified, removed, unchangedCount };
+}
+
+// ---------------------------------------------------------------------------
 // Input type for the generation pipeline
 // ---------------------------------------------------------------------------
 

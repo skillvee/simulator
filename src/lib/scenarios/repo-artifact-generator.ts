@@ -13,9 +13,17 @@
 import { db } from "@/server/db";
 import { createLogger } from "@/lib/core";
 import { env } from "@/lib/core/env";
-import { generateRepoSpec } from "./repo-spec-generator";
-import { buildRepoFromSpec } from "./repo-builder";
-import { selectScaffold, type ScenarioMetadata } from "./repo-spec";
+import {
+  generateRepoSpec,
+  generateRepoSpecPatch,
+} from "./repo-spec-generator";
+import { buildRepoFromSpec, applySpecPatch } from "./repo-builder";
+import {
+  repoSpecSchema,
+  selectScaffold,
+  type RepoSpec,
+  type ScenarioMetadata,
+} from "./repo-spec";
 import { getGitHubHeaders } from "@/lib/external/github/client";
 import type {
   ResourcePlan,
@@ -61,6 +69,7 @@ export async function generateRepoArtifact(
       techStack: true,
       targetLevel: true,
       repoUrl: true,
+      repoSpec: true,
       coworkers: {
         select: {
           name: true,
@@ -82,18 +91,6 @@ export async function generateRepoArtifact(
       repoUrl: scenario.repoUrl,
     });
     return { repoUrl: scenario.repoUrl, repoSpec: null };
-  }
-
-  // Retry path: judge rejected the previous attempt. Delete the old repo so
-  // `buildRepoFromSpec` can re-create `simulation-${scenarioId}` cleanly.
-  // GitHub's repo API returns 422 if the name already exists; without this,
-  // every retry would fail before even calling the model.
-  if (scenario.repoUrl && judgeFeedback) {
-    await deleteGitHubRepo(scenario.repoUrl);
-    await db.scenario.update({
-      where: { id: scenarioId },
-      data: { repoUrl: null, repoSpec: null as unknown as object },
-    });
   }
 
   const metadata: ScenarioMetadata = {
@@ -120,6 +117,53 @@ export async function generateRepoArtifact(
   // doesn't match a known scaffold.
   selectScaffold(metadata.techStack);
 
+  // Retry path with patch mode — if we have a prior repo + spec + judge
+  // feedback, generate a spec patch and apply it to the existing repo
+  // instead of deleting and rebuilding. Eliminates "lazy regeneration" drift
+  // and is ~13x faster than the full regeneration path.
+  const priorSpec = scenario.repoUrl && scenario.repoSpec && judgeFeedback
+    ? parsePriorRepoSpec(scenario.repoSpec)
+    : null;
+
+  if (priorSpec && scenario.repoUrl && judgeFeedback) {
+    logger.info("Retry: applying spec patch in place", {
+      scenarioId,
+      attempt,
+      priorFileCount: priorSpec.files.length,
+    });
+    const patch = await generateRepoSpecPatch({
+      metadata,
+      priorSpec,
+      judgeFeedback: formatJudgeFeedbackBlock(judgeFeedback, attempt),
+    });
+    const applied = await applySpecPatch({
+      repoUrl: scenario.repoUrl,
+      prior: priorSpec,
+      next: patch.spec,
+      githubToken,
+    });
+    await db.scenario.update({
+      where: { id: scenarioId },
+      data: { repoSpec: patch.spec as unknown as object },
+    });
+    logger.info("Spec patch applied", { ...applied });
+    return { repoUrl: scenario.repoUrl, repoSpec: patch.spec };
+  }
+
+  // Fallback: legacy delete-and-rebuild. Only reached when retry has no
+  // priorSpec available (older scenario rows from before patch mode shipped,
+  // or transient state where priorSpec failed to persist on the first run).
+  if (scenario.repoUrl && judgeFeedback) {
+    logger.warn("Retry without prior spec — falling back to delete+rebuild", {
+      scenarioId,
+    });
+    await deleteGitHubRepo(scenario.repoUrl, githubToken);
+    await db.scenario.update({
+      where: { id: scenarioId },
+      data: { repoUrl: null, repoSpec: null as unknown as object },
+    });
+  }
+
   const extraContext = buildExtraContext({ plan, docs, judgeFeedback, attempt });
 
   logger.info("Generating repo spec (v2)", { scenarioId, attempt });
@@ -142,7 +186,36 @@ export async function generateRepoArtifact(
   return { repoUrl, repoSpec: spec };
 }
 
-async function deleteGitHubRepo(repoUrl: string): Promise<void> {
+function parsePriorRepoSpec(raw: unknown): RepoSpec | null {
+  if (!raw || typeof raw !== "object") return null;
+  const result = repoSpecSchema.safeParse(raw);
+  if (!result.success) {
+    logger.warn("Stored repoSpec failed validation; falling back to full regen", {
+      issues: result.error.issues.slice(0, 3).map((i) => i.message).join("; "),
+    });
+    return null;
+  }
+  return result.data;
+}
+
+function formatJudgeFeedbackBlock(
+  judgeFeedback: JudgeVerdict,
+  attempt: number
+): string {
+  return `Attempt #${attempt - 1} was rejected by the judge. Address these issues:
+
+- Summary: ${judgeFeedback.summary}
+- Blocking issues:
+${judgeFeedback.blockingIssues.map((i) => `  - ${i}`).join("\n")}
+- Missing evidence:
+${judgeFeedback.missingEvidence.map((i) => `  - ${i}`).join("\n")}
+- Retry instructions: ${judgeFeedback.retryInstructions ?? "(none)"}`;
+}
+
+async function deleteGitHubRepo(
+  repoUrl: string,
+  _githubToken: string
+): Promise<void> {
   try {
     const url = new URL(repoUrl);
     const [, owner, repo] = url.pathname.split("/");

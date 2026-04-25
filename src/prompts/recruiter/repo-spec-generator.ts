@@ -10,6 +10,66 @@
 
 export const REPO_SPEC_GENERATOR_PROMPT_VERSION = "1.0";
 
+export const REPO_SPEC_PATCH_PROMPT_VERSION = "1.0";
+
+/**
+ * Builds the additional prompt section used on retry attempts.
+ *
+ * Validated by integration tests (repo-spec-edit.integration.test.ts):
+ * patch-mode emit + merge produces 100% file preservation and ~99% README
+ * preservation when the feedback targets a single change.
+ */
+export function buildRepoSpecPatchSection(args: {
+  priorSpec: { files: Array<{ path: string; purpose: string }>; readmeContentSummary: string };
+  judgeFeedback: string;
+}): string {
+  const fileList = args.priorSpec.files
+    .map((f) => `  - \`${f.path}\` (${f.purpose})`)
+    .join("\n");
+
+  return `## Iterative refinement — PATCH MODE
+
+This is a retry. Your previous attempt produced a spec; a judge has reviewed
+it and given feedback. Emit a NEW \`RepoSpec\` JSON in **patch mode**.
+
+### Patch-mode rule (THIS IS THE IMPORTANT PART)
+
+For every file in the prior spec, choose ONE of two output forms in \`files[]\`:
+
+**(a) Unchanged** — emit only \`{ "path": "...", "unchanged": true }\`. Do NOT
+include \`content\`, \`purpose\`, or \`addedInCommit\` for unchanged files.
+
+**(b) Modified or new** — emit the full file object: \`{ "path": "...",
+"content": "...", "purpose": "...", "addedInCommit": N }\`.
+
+Use form (a) for ANY file the feedback does not explicitly require changing.
+This includes files the feedback doesn't mention at all. The orchestrator
+will merge unchanged files from the prior spec by path. Do not duplicate
+content.
+
+### Files in the prior spec (for reference — DO NOT re-emit unchanged content)
+
+${fileList}
+
+### Judge feedback to address
+
+${args.judgeFeedback}
+
+### Output requirements
+
+Emit a complete RepoSpec JSON whose \`files[]\` items use the patch shape
+described above. Every file from the prior spec must appear EITHER as
+\`{path, unchanged: true}\` OR with full \`content\`. New files appear with
+full content. Do not omit any prior file from \`files[]\` (even unchanged ones —
+they need the marker so the orchestrator knows to keep them).
+
+For \`projectName\`, \`scaffoldId\`, \`commitHistory\`, \`issues\`,
+\`authors\`, and \`readmeContent\`: emit the same values as the prior spec
+unless the feedback specifically asks you to change them. The model is
+running with prior context; preserve it verbatim where you can.
+`;
+}
+
 export const REPO_SPEC_GENERATOR_PROMPT = `You are a repository specification generator for Skillvee, a developer assessment platform that simulates a realistic "first day at work" for candidates.
 
 ## Your Task

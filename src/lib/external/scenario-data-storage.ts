@@ -59,6 +59,26 @@ export async function uploadScenarioFile(
 }
 
 /**
+ * Download the contents of a scenario file as text.
+ * Used by the v2 retry path to attach prior CSVs back into a Gemini call.
+ */
+export async function downloadScenarioFileText(
+  storagePath: string
+): Promise<string> {
+  const { data, error } = await supabaseAdmin.storage
+    .from(SCENARIO_DATA_BUCKET)
+    .download(storagePath);
+
+  if (error || !data) {
+    throw new Error(
+      `Failed to download scenario file ${storagePath}: ${error?.message ?? "no data"}`
+    );
+  }
+
+  return await data.text();
+}
+
+/**
  * Generate a short-lived signed URL for a scenario file.
  * Default TTL: 60 minutes.
  */

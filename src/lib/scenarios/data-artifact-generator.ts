@@ -28,7 +28,11 @@ import {
   inferSchemaJson,
   type GeminiResponsePart,
 } from "./csv-parsing";
-import { uploadScenarioFile } from "@/lib/external/scenario-data-storage";
+import {
+  uploadScenarioFile,
+  removeScenarioFiles,
+  downloadScenarioFileText,
+} from "@/lib/external/scenario-data-storage";
 import type {
   JudgeVerdict,
   ResourcePlan,
@@ -44,6 +48,13 @@ export interface GenerateDataArtifactInput {
   scenarioContext: DataArtifactPromptInput["scenario"];
   judgeFeedback?: JudgeVerdict;
   attempt: number;
+  /**
+   * On retry attempts (attempt > 1), the prior CSVs from the failed attempt.
+   * Attached inline so the model edits them in pandas instead of regenerating
+   * from scratch. Filename remapping (input_file_<n>.csv) is handled by the
+   * prompt builder.
+   */
+  priorFiles?: Array<{ filename: string; csv: string }>;
 }
 
 export interface DataArtifactResult {
@@ -61,11 +72,57 @@ export interface DataArtifactResult {
 export async function generateDataArtifact(
   input: GenerateDataArtifactInput
 ): Promise<DataArtifactResult> {
-  const { scenarioId, plan, docs, scenarioContext, judgeFeedback, attempt } = input;
+  const {
+    scenarioId,
+    plan,
+    docs,
+    scenarioContext,
+    judgeFeedback,
+    attempt,
+  } = input;
 
-  // Idempotency: clear out any rows from a previous attempt so we don't
-  // accumulate orphans across retries. Storage cleanup happens after upload.
-  await db.scenarioDataFile.deleteMany({ where: { scenarioId } });
+  // Auto-load priors on retry: when the orchestrator passes judgeFeedback we
+  // know this is a retry attempt — pull the previously-generated CSVs out of
+  // storage and attach them so the model can EDIT in pandas instead of
+  // regenerating from scratch. Caller can override via input.priorFiles.
+  let priorFiles = input.priorFiles;
+  if (!priorFiles && judgeFeedback) {
+    const priorRows = await db.scenarioDataFile.findMany({
+      where: { scenarioId },
+      select: { filename: true, storagePath: true },
+    });
+    if (priorRows.length > 0) {
+      priorFiles = await Promise.all(
+        priorRows.map(async (r) => ({
+          filename: r.filename,
+          csv: await downloadScenarioFileText(r.storagePath),
+        }))
+      );
+      logger.info("Auto-loaded prior CSVs for retry", {
+        scenarioId,
+        attempt,
+        priorCount: priorFiles.length,
+      });
+    }
+  }
+
+  // On a fresh attempt (no priors), clear out any orphan rows. On a retry
+  // with attached priors, leave the rows in place — we'll atomically replace
+  // them after the new artifacts are uploaded.
+  if (!priorFiles || priorFiles.length === 0) {
+    await db.scenarioDataFile.deleteMany({ where: { scenarioId } });
+  }
+
+  // Build inline-attachment + filename mapping. Gemini renames attached files
+  // to `input_file_<n>.csv` in the sandbox; the prompt has to reference that.
+  const attachments = (priorFiles ?? []).map((f, i) => ({
+    inlineData: {
+      mimeType: "text/csv",
+      data: Buffer.from(f.csv, "utf8").toString("base64"),
+    },
+    sandboxPath: `input_file_${i}.csv`,
+    originalFilename: f.filename,
+  }));
 
   const promptText = buildDataArtifactPrompt({
     plan,
@@ -73,12 +130,25 @@ export async function generateDataArtifact(
     scenario: scenarioContext,
     judgeFeedback,
     attempt,
+    priorFiles: attachments.map((a) => ({
+      sandboxPath: a.sandboxPath,
+      originalFilename: a.originalFilename,
+    })),
   });
 
   logger.info("Calling Gemini 3.1 Pro with codeExecution (streaming)", {
     scenarioId,
     attempt,
+    attachmentCount: attachments.length,
   });
+
+  // Build user parts: prompt text first, then any inline-attached prior CSVs.
+  // Gemini renames attached files to input_file_<n>.csv in the sandbox; the
+  // prompt builder publishes that mapping back to the model.
+  const userParts: Array<Record<string, unknown>> = [{ text: promptText }];
+  for (const a of attachments) {
+    userParts.push({ inlineData: a.inlineData });
+  }
 
   // Sub-retry: codeExecution sometimes returns without producing the marker-
   // delimited stdout we expect (sandbox timeout, model explains instead of
@@ -95,11 +165,13 @@ export async function generateDataArtifact(
     // Bump temperature slightly on retry to break out of any token-loop the
     // sandbox might be in.
     const temperature = 0.6 + (inner - 1) * 0.15;
+    // Stream so the connection stays alive past Node's 5-minute undici headers
+    // timeout — code execution + Python data generation can run that long.
     const stream = await wrapAICall(
       () =>
         gemini.models.generateContentStream({
           model: PRO_MODEL,
-          contents: [{ role: "user", parts: [{ text: promptText }] }],
+          contents: [{ role: "user", parts: userParts as never }],
           config: {
             tools: [{ codeExecution: {} }],
             temperature,
@@ -136,6 +208,18 @@ export async function generateDataArtifact(
     throw new Error(
       `No CSVs extracted from Gemini response after ${MAX_INNER_ATTEMPTS} inner attempts: ${innerLastErr.join("; ")}`
     );
+  }
+
+  // Retry path: capture the prior storage paths before deleting DB rows so we
+  // can clean up any storage objects that won't be reused by the new attempt.
+  const priorStoragePaths: string[] = [];
+  if (priorFiles && priorFiles.length > 0) {
+    const existing = await db.scenarioDataFile.findMany({
+      where: { scenarioId },
+      select: { storagePath: true },
+    });
+    priorStoragePaths.push(...existing.map((r) => r.storagePath));
+    await db.scenarioDataFile.deleteMany({ where: { scenarioId } });
   }
 
   const persisted: DataArtifactResult["files"] = [];
@@ -177,10 +261,25 @@ export async function generateDataArtifact(
     });
   }
 
+  // Retry cleanup: remove storage objects from the prior attempt that are not
+  // part of the new set. Same-named files were already overwritten via upsert.
+  if (priorStoragePaths.length > 0) {
+    const newPathSet = new Set(persisted.map((p) => p.storagePath));
+    const orphans = priorStoragePaths.filter((p) => !newPathSet.has(p));
+    if (orphans.length > 0) {
+      await removeScenarioFiles(orphans);
+    }
+  }
+
   logger.info("Data artifact generation complete", {
     scenarioId,
     fileCount: persisted.length,
     parseErrorCount: extraction.errors.length,
+    priorOrphansRemoved: Math.max(
+      0,
+      priorStoragePaths.length -
+        new Set(persisted.map((p) => p.storagePath)).size
+    ),
   });
 
   return {

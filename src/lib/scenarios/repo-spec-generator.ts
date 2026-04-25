@@ -12,9 +12,13 @@ import { gemini } from "@/lib/ai/gemini";
 import {
   REPO_SPEC_GENERATOR_PROMPT,
   REPO_SPEC_GENERATOR_PROMPT_VERSION,
+  REPO_SPEC_PATCH_PROMPT_VERSION,
+  buildRepoSpecPatchSection,
 } from "@/prompts/recruiter/repo-spec-generator";
 import {
   repoSpecSchema,
+  patchSpecSchema,
+  mergePatchSpec,
   selectScaffold,
   type RepoSpec,
   type ScenarioMetadata,
@@ -123,6 +127,105 @@ export async function generateRepoSpec(
   }
 
   throw lastError ?? new Error("Failed to generate repo spec");
+}
+
+export interface GenerateRepoSpecPatchInput {
+  metadata: ScenarioMetadata;
+  priorSpec: RepoSpec;
+  judgeFeedback: string;
+}
+
+export interface GenerateRepoSpecPatchResponse {
+  spec: RepoSpec;
+  unchangedCount: number;
+  modifiedCount: number;
+  addedCount: number;
+  _meta: {
+    promptVersion: string;
+    generatedAt: string;
+  };
+}
+
+/**
+ * Generate a RepoSpec on retry using PATCH MODE.
+ *
+ * Instead of asking the model to re-emit every file from scratch (which lets
+ * "lazy regeneration" drift creep into untargeted files), the model emits
+ * `{path, unchanged: true}` markers for files it doesn't touch, and the
+ * caller merges those from the baseline. By construction, drift can only
+ * occur in files the model explicitly chose to emit.
+ *
+ * Validated by `repo-spec-edit.integration.test.ts`: 100% file preservation,
+ * ~99-100% README similarity, ~12s wall time on Flash.
+ */
+export async function generateRepoSpecPatch(
+  input: GenerateRepoSpecPatchInput
+): Promise<GenerateRepoSpecPatchResponse> {
+  const { metadata, priorSpec, judgeFeedback } = input;
+  const scaffold = selectScaffold(metadata.techStack);
+  const baseContext = buildContextPrompt(metadata, scaffold.id);
+
+  const patchSection = buildRepoSpecPatchSection({
+    priorSpec: {
+      files: priorSpec.files.map((f) => ({ path: f.path, purpose: f.purpose })),
+      readmeContentSummary: priorSpec.readmeContent.slice(0, 200),
+    },
+    judgeFeedback,
+  });
+
+  const fullPrompt = `${REPO_SPEC_GENERATOR_PROMPT}\n\n## Context for Generation\n\n${baseContext}\n\n${patchSection}`;
+
+  logger.info("Patch generation attempt", {
+    companyName: metadata.companyName,
+    priorFileCount: priorSpec.files.length,
+  });
+
+  const response = await gemini.models.generateContent({
+    model: GENERATION_MODEL,
+    contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
+  });
+
+  const responseText = response.text;
+  if (!responseText) throw new Error("Empty response from Gemini (patch mode)");
+
+  const cleaned = cleanJsonResponse(responseText);
+  const parsed = JSON.parse(cleaned);
+  const patch = patchSpecSchema.parse(parsed);
+
+  // Count patch-shape stats before merge.
+  let unchangedCount = 0;
+  let modifiedCount = 0;
+  let addedCount = 0;
+  const baselinePaths = new Set(priorSpec.files.map((f) => f.path));
+  for (const file of patch.files) {
+    if ("unchanged" in file && file.unchanged === true) {
+      unchangedCount += 1;
+    } else if (baselinePaths.has(file.path)) {
+      modifiedCount += 1;
+    } else {
+      addedCount += 1;
+    }
+  }
+
+  const merged = mergePatchSpec(priorSpec, patch);
+
+  logger.info("Patch generation succeeded", {
+    fileCount: merged.files.length,
+    unchanged: unchangedCount,
+    modified: modifiedCount,
+    added: addedCount,
+  });
+
+  return {
+    spec: merged,
+    unchangedCount,
+    modifiedCount,
+    addedCount,
+    _meta: {
+      promptVersion: REPO_SPEC_PATCH_PROMPT_VERSION,
+      generatedAt: new Date().toISOString(),
+    },
+  };
 }
 
 /**

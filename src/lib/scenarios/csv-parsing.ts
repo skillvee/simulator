@@ -63,6 +63,7 @@ export function extractCsvsFromGeminiParts(
     .join("\n");
 
   const blocks: Array<{ filename: string; csv: string }> = [];
+  const seen = new Set<string>();
 
   // Primary: marker-delimited blocks from stdout. Only accept entries whose
   // filename ends in .csv — the model occasionally bundles markdown docs
@@ -71,10 +72,23 @@ export function extractCsvsFromGeminiParts(
   for (const match of stdout.matchAll(FILE_MARKER_REGEX)) {
     const filename = match[1].trim();
     if (!filename.toLowerCase().endsWith(".csv")) continue;
+    if (seen.has(filename)) continue;
+    seen.add(filename);
     blocks.push({ filename, csv: match[2] });
   }
 
-  // Fallback: fenced ```csv blocks in text parts (when sandbox times out).
+  // Secondary: marker-delimited from text parts. The model sometimes emits
+  // the final CSV as text in its conversational reply rather than printing it
+  // via Python — same markers, different delivery channel.
+  for (const match of text.matchAll(FILE_MARKER_REGEX)) {
+    const filename = match[1].trim();
+    if (!filename.toLowerCase().endsWith(".csv")) continue;
+    if (seen.has(filename)) continue;
+    seen.add(filename);
+    blocks.push({ filename, csv: match[2] });
+  }
+
+  // Tertiary fallback: fenced ```csv blocks in text parts (when sandbox times out).
   if (blocks.length === 0) {
     let fallbackIndex = 0;
     for (const match of text.matchAll(FENCED_CSV_REGEX)) {

@@ -22,10 +22,16 @@ export interface DataArtifactPromptInput {
   };
   judgeFeedback?: JudgeVerdict;
   attempt: number;
+  /**
+   * On retry attempts, the prior CSVs attached inline. Gemini renames them
+   * to `input_file_<n>.csv` in the sandbox, so the prompt must publish the
+   * mapping between sandbox path and original filename.
+   */
+  priorFiles?: Array<{ sandboxPath: string; originalFilename: string }>;
 }
 
 export function buildDataArtifactPrompt(input: DataArtifactPromptInput): string {
-  const { plan, docs, scenario, judgeFeedback, attempt } = input;
+  const { plan, docs, scenario, judgeFeedback, attempt, priorFiles } = input;
 
   const planSection = plan.resources
     .map(
@@ -64,6 +70,36 @@ ${judgeFeedback.missingEvidence.map((i) => `  - ${i}`).join("\n")}
 - Retry guidance: ${judgeFeedback.retryInstructions ?? "n/a"}
 `
     : "";
+
+  const priorFilesSection =
+    priorFiles && priorFiles.length > 0
+      ? `
+
+## Prior attempt — ATTACHED for editing
+
+You are NOT starting from scratch. The previous attempt's CSV files are
+attached to this request. Gemini renames attached files in the sandbox, so
+the mapping is:
+
+${priorFiles
+  .map((f) => `- \`${f.sandboxPath}\` ← original name was \`${f.originalFilename}\``)
+  .join("\n")}
+
+**Your job is to EDIT these files**, not regenerate them:
+
+1. Load each prior file with pandas (e.g. \`df = pd.read_csv("input_file_0.csv")\`).
+2. Inspect what's there.
+3. Apply the judge's feedback as a **surgical change**: modify only what the
+   feedback calls out, preserve everything else (column order, column names,
+   distribution shapes, foreign-key relationships, row identities) byte-for-byte
+   when you can.
+4. Re-emit the modified file under its **original** filename (the one in the
+   plan), not the \`input_file_<n>.csv\` name.
+
+If a prior file does NOT need any change to address the feedback, you can
+re-emit it unchanged (read it, then print it between the markers).
+`
+      : "";
 
   return `You are a senior data engineer at ${scenario.companyName} preparing a realistic candidate exercise for a ${scenario.seniorityLevel} ${scenario.roleName}.
 
@@ -163,7 +199,7 @@ Before printing, validate inside Python that:
 ## Quality criteria the judge will check
 
 ${plan.qualityCriteria.map((q) => `- ${q}`).join("\n")}
-${judgeSection}
+${judgeSection}${priorFilesSection}
 
 ## Output
 
