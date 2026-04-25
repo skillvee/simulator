@@ -89,7 +89,7 @@ export async function generateRepoArtifact(
   // GitHub's repo API returns 422 if the name already exists; without this,
   // every retry would fail before even calling the model.
   if (scenario.repoUrl && judgeFeedback) {
-    await deleteGitHubRepo(scenario.repoUrl, githubToken);
+    await deleteGitHubRepo(scenario.repoUrl);
     await db.scenario.update({
       where: { id: scenarioId },
       data: { repoUrl: null, repoSpec: null as unknown as object },
@@ -142,10 +142,7 @@ export async function generateRepoArtifact(
   return { repoUrl, repoSpec: spec };
 }
 
-async function deleteGitHubRepo(
-  repoUrl: string,
-  githubToken: string
-): Promise<void> {
+async function deleteGitHubRepo(repoUrl: string): Promise<void> {
   try {
     const url = new URL(repoUrl);
     const [, owner, repo] = url.pathname.split("/");
