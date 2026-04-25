@@ -10,8 +10,12 @@
  * `Cues` so the browser can seek immediately via HTTP range requests.
  */
 
-import { Decoder, Reader, tools } from "ts-ebml";
 import { createLogger } from "@/lib/core";
+
+// `ts-ebml` is server-only: its CJS modules crash at evaluation time in the
+// browser bundle (`tools.readVint` resolves to undefined). We import it lazily
+// inside `makeWebmSeekable` so the module is never evaluated when this file is
+// pulled into a client bundle via the `@/lib/media` barrel.
 
 const logger = createLogger("lib:media:webm-seekable");
 
@@ -48,10 +52,14 @@ function looksLikeWebm(buf: Buffer): boolean {
 export async function makeWebmSeekable(
   input: Buffer
 ): Promise<Uint8Array<ArrayBuffer>> {
+  if (typeof window !== "undefined") {
+    return copyToOwnedView(input);
+  }
   if (!looksLikeWebm(input)) {
     return copyToOwnedView(input);
   }
   try {
+    const { Decoder, Encoder, Reader, tools } = await import("ts-ebml");
     const decoder = new Decoder();
     const reader = new Reader();
     reader.logging = false;
@@ -71,11 +79,41 @@ export async function makeWebmSeekable(
       return copyToOwnedView(input);
     }
 
-    const refinedMetadata = tools.makeMetadataSeekable(
-      reader.metadatas,
-      reader.duration,
-      reader.cues
-    );
+    // ts-ebml's `Encoder.encode` returns `Buffer.concat(parts).buffer`. For
+    // small results that Buffer comes from Node's shared ~8KB pool, so the
+    // returned ArrayBuffer is the whole pool — not just the encoded bytes —
+    // and using `.byteLength` writes 8192 bytes of mostly-garbage to the file,
+    // stripping the EBML header. Monkey-patch the encoder for the duration of
+    // the (synchronous) `makeMetadataSeekable` call so `encode` returns an
+    // ArrayBuffer of exactly the encoded length.
+    const EncoderProto = (Encoder as unknown as {
+      prototype: {
+        encode: (elms: unknown[]) => ArrayBuffer;
+        encodeChunk: (elm: unknown) => Buffer[];
+      };
+    }).prototype;
+    const originalEncode = EncoderProto.encode;
+    EncoderProto.encode = function (elms: unknown[]) {
+      const parts: Buffer[] = elms.reduce<Buffer[]>(
+        (lst, elm) => lst.concat(this.encodeChunk(elm)),
+        []
+      );
+      const concatenated = Buffer.concat(parts);
+      const out = new ArrayBuffer(concatenated.byteLength);
+      new Uint8Array(out).set(concatenated);
+      return out;
+    };
+
+    let refinedMetadata: ArrayBuffer;
+    try {
+      refinedMetadata = tools.makeMetadataSeekable(
+        reader.metadatas,
+        reader.duration,
+        reader.cues
+      );
+    } finally {
+      EncoderProto.encode = originalEncode;
+    }
 
     const body = input.subarray(reader.metadataSize);
     const outAb = new ArrayBuffer(refinedMetadata.byteLength + body.byteLength);

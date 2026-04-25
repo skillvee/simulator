@@ -12,7 +12,7 @@ import { gemini } from "@/lib/ai/gemini";
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
 import { createLogger } from "@/lib/core";
-import { makeWebmSeekable } from "@/lib/media";
+import { makeWebmSeekable } from "@/lib/media/webm-seekable";
 
 const logger = createLogger("lib:analysis:video-merge");
 

@@ -127,14 +127,14 @@ export class AudioStreamer {
    * Connect the audio output to an additional destination node.
    * Used by the screen recording mixer to capture AI voice responses.
    */
-  connectToDestination(destination: MediaStreamAudioDestinationNode): void {
+  connectToDestination(destination: AudioNode): void {
     this.analyserNode.connect(destination);
   }
 
   /**
    * Disconnect from an additional destination node.
    */
-  disconnectFromDestination(destination: MediaStreamAudioDestinationNode): void {
+  disconnectFromDestination(destination: AudioNode): void {
     try {
       this.analyserNode.disconnect(destination);
     } catch {
@@ -327,7 +327,7 @@ export function getOutputFrequencyData(): Uint8Array | null {
  * AI voice responses are included in the screen recording.
  */
 export async function connectAudioStreamerToCapture(
-  destination: MediaStreamAudioDestinationNode
+  destination: AudioNode
 ): Promise<void> {
   const streamer = await getAudioStreamer();
   streamer.connectToDestination(destination);
@@ -337,7 +337,7 @@ export async function connectAudioStreamerToCapture(
  * Disconnect the singleton AudioStreamer from a capture destination.
  */
 export async function disconnectAudioStreamerFromCapture(
-  destination: MediaStreamAudioDestinationNode
+  destination: AudioNode
 ): Promise<void> {
   const streamer = await getAudioStreamer();
   streamer.disconnectFromDestination(destination);

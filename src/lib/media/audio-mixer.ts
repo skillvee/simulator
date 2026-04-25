@@ -2,14 +2,19 @@
 // into a single MediaStream audio track for recording.
 
 import { createLogger } from "@/lib/core";
+import { getAudioContext } from "./audio";
 
 const logger = createLogger("client:media:audio-mixer");
 
 export interface AudioMixer {
   /** The mixed audio track to add to the recording stream */
   audioTrack: MediaStreamTrack;
-  /** The AudioContext destination node — connect system audio sources here */
-  systemAudioDestination: MediaStreamAudioDestinationNode;
+  /**
+   * Bus node for system audio (e.g. AI voice playback). Connect any
+   * AudioNode here and its output will be summed with the mic into
+   * the recorded audio track.
+   */
+  systemAudioInput: AudioNode;
   /** The AudioContext used by this mixer */
   audioContext: AudioContext;
   /** Stop and clean up all resources */
@@ -24,36 +29,32 @@ export interface AudioMixer {
  * Returns an AudioMixer with a mixed audio track that can be added
  * to the composite MediaStream before recording.
  *
- * The system audio destination node should be used as the output
- * for the AudioStreamer (instead of ctx.destination) so that AI
- * voice responses are captured in the recording.
+ * Connect AI voice (or any other AudioNode you want captured) to
+ * `systemAudioInput`. Both inputs are summed into `audioTrack` via
+ * a single MediaStreamDestination — no MediaStream loopback, which
+ * is unreliable in Chrome's Web Audio implementation.
  */
 export function createAudioMixer(micStream: MediaStream): AudioMixer {
-  const audioContext = new AudioContext();
+  // Reuse the singleton AudioContext that AudioStreamer (AI voice playback)
+  // already lives on. Web Audio forbids connecting nodes across contexts —
+  // a fresh `new AudioContext()` here would cause InvalidAccessError when
+  // the streamer's analyser node is connected into our mixer bus,
+  // silently dropping AI voice from the recording.
+  const audioContext = getAudioContext();
 
-  // Destination node that captures mixed audio as a MediaStream
+  // Single destination node — both mic and system audio sum here, and
+  // its .stream is the recorded audio track.
   const mixedDestination = audioContext.createMediaStreamDestination();
 
-  // Also route to speakers so the candidate hears the AI
-  // (mixedDestination alone would only capture, not play)
-
-  // 1. Microphone input → mixed destination
+  // Mic input → mixer bus
   const micSource = audioContext.createMediaStreamSource(micStream);
   micSource.connect(mixedDestination);
   // Don't connect mic to speakers (would cause feedback)
 
-  // 2. System audio destination — AudioStreamer should connect here
-  //    instead of directly to audioContext.destination
-  const systemAudioDestination = audioContext.createMediaStreamDestination();
-
-  // Route system audio to both the mixer and the speakers
-  const systemSource = audioContext.createMediaStreamSource(
-    systemAudioDestination.stream
-  );
-  systemSource.connect(mixedDestination); // → recording
-  systemSource.connect(audioContext.destination); // → speakers
-
   const audioTrack = mixedDestination.stream.getAudioTracks()[0];
+  if (!audioTrack) {
+    throw new Error("Audio mixer failed to produce an audio track");
+  }
 
   logger.info("Audio mixer created", {
     micTracks: String(micStream.getAudioTracks().length),
@@ -62,13 +63,16 @@ export function createAudioMixer(micStream: MediaStream): AudioMixer {
 
   return {
     audioTrack,
-    systemAudioDestination,
+    systemAudioInput: mixedDestination,
     audioContext,
     stop: () => {
-      micSource.disconnect();
-      systemSource.disconnect();
-      mixedDestination.disconnect();
-      audioContext.close().catch(() => {});
+      try {
+        micSource.disconnect();
+      } catch {
+        // already disconnected
+      }
+      // Do NOT call audioContext.close() — it's the shared singleton used by
+      // AudioStreamer for ongoing AI voice playback elsewhere in the app.
       logger.info("Audio mixer stopped");
     },
   };
