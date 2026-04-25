@@ -29,6 +29,19 @@ export interface Scaffold {
   devCommand: string;
   installCommand: string;
   testCommand: string;
+  /**
+   * Files the scaffold ships with. Used to:
+   *   1. Tell the planner what's already in the repo (so docs don't claim
+   *      missing files).
+   *   2. Tell the spec generator what NOT to re-create.
+   */
+  baselineFiles: string[];
+  /**
+   * Short, planner-readable description of how the codebase is laid out.
+   * Embedded in the plan-and-docs prompt so the model writes paths that
+   * actually exist in the repo (e.g. `src/app/` for App Router scaffolds).
+   */
+  layoutDescription: string;
 }
 
 export const SCAFFOLDS: Scaffold[] = [
@@ -45,6 +58,27 @@ export const SCAFFOLDS: Scaffold[] = [
     devCommand: "npm run dev",
     installCommand: "npm install",
     testCommand: "npm test",
+    baselineFiles: [
+      ".gitignore",
+      "README.md",
+      "eslint.config.mjs",
+      "next.config.ts",
+      "package.json",
+      "package-lock.json",
+      "postcss.config.mjs",
+      "prisma.config.ts",
+      "prisma/schema.prisma",
+      "src/app/globals.css",
+      "src/app/layout.tsx",
+      "src/app/page.tsx",
+      "tsconfig.json",
+      "vitest.config.ts",
+    ],
+    layoutDescription: `Next.js 15 with the **App Router** (\`src/app/\`, NOT \`src/pages/\`).
+- Server code lives under \`src/app/api/<route>/route.ts\` for API endpoints, and \`src/app/<page>/page.tsx\` for pages.
+- The scaffold ships with \`prisma/schema.prisma\`, \`src/app/layout.tsx\`, \`src/app/page.tsx\`, \`package.json\`, \`tsconfig.json\`, \`next.config.ts\`, \`eslint.config.mjs\`, \`vitest.config.ts\`. Don't tell the candidate to create these.
+- There is **no** \`docker-compose.yml\` and **no** \`prisma/seed.ts\` in the scaffold. If your task assumes them, the spec generator will need to add them.
+- Common idioms in this stack: tRPC routers under \`src/server/routers/\`, Prisma client at \`src/lib/prisma.ts\` or \`src/server/db.ts\`, shared utilities under \`src/lib/\`.`,
   },
   {
     id: "express-ts",
@@ -58,6 +92,20 @@ export const SCAFFOLDS: Scaffold[] = [
     devCommand: "npm run dev",
     installCommand: "npm install",
     testCommand: "npm test",
+    baselineFiles: [
+      ".gitignore",
+      "README.md",
+      "package.json",
+      "package-lock.json",
+      "prisma/schema.prisma",
+      "src/index.ts",
+      "tsconfig.json",
+      "vitest.config.ts",
+    ],
+    layoutDescription: `Plain Express + TypeScript server.
+- Entry point is \`src/index.ts\`. Add routes under \`src/routes/\` and services under \`src/services/\`.
+- The scaffold ships with \`prisma/schema.prisma\`, \`src/index.ts\`, \`package.json\`, \`tsconfig.json\`, \`vitest.config.ts\`. Don't tell the candidate to create these.
+- There is **no** \`docker-compose.yml\` and **no** \`prisma/seed.ts\` in the scaffold.`,
   },
 ];
 

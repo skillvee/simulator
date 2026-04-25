@@ -586,18 +586,45 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
         logger.error("Avatar generation failed (non-blocking)", { err });
       });
 
-      // Step 5: Trigger repo provisioning (background — errors logged)
-      fetch(`/api/recruiter/simulations/${scenario.id}/provision-repo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      }).then(async (res) => {
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          logger.error("Repo provisioning failed", { status: res.status, details: data.details || data.error || "Unknown error" });
-        }
-      }).catch((err) => {
-        logger.error("Repo provisioning network error", { err });
-      });
+      // Step 5: Kick off the resource pipeline.
+      //
+      // v2 (pipelineVersion === "v2"): backend created the scenario in
+      // "planning" state with isPublished=false. Call /start-pipeline which
+      // runs Step 1 sync and kicks Steps 2-4 via after(). The recruiter
+      // settings page polls /resource-pipeline for status.
+      //
+      // v1 (default): the legacy fire-and-forget /provision-repo flow.
+      if (scenario.pipelineVersion === "v2") {
+        fetch(`/api/recruiter/simulations/${scenario.id}/start-pipeline`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }).then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            logger.error("Resource pipeline start failed", {
+              status: res.status,
+              details: data.error || "Unknown error",
+            });
+          }
+        }).catch((err) => {
+          logger.error("Resource pipeline network error", { err });
+        });
+      } else {
+        fetch(`/api/recruiter/simulations/${scenario.id}/provision-repo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }).then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            logger.error("Repo provisioning failed", {
+              status: res.status,
+              details: data.details || data.error || "Unknown error",
+            });
+          }
+        }).catch((err) => {
+          logger.error("Repo provisioning network error", { err });
+        });
+      }
 
       // Step 6: Mark log as completed and redirect
       await updateLog({
@@ -709,9 +736,19 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
       // complete the step — the server-side fallback in POST /api/recruiter/simulations
       // will recover the output by creationLogId. But we surface it as a warning
       // so the user knows to verify or retry rather than shipping empty.
+      //
+      // v2 path: skip legacy resource generation entirely. The orchestrator
+      // (kicked off after scenario creation via /start-pipeline) owns the
+      // markdown + artifact pipeline. Running the legacy call here would burn
+      // ~25s on results that get discarded server-side.
+      //
+      // process.env.NEXT_PUBLIC_* is string-replaced at build time. We can
+      // NOT import @/lib/core/env here — it validates server-only vars and
+      // throws in the browser.
+      const v2On = process.env.NEXT_PUBLIC_RESOURCE_PIPELINE_V2 === "on";
       let resources: ScenarioResource[] = [];
       let resourceGenerationWarning = false;
-      try {
+      if (!v2On) try {
         const resourcesResponse = await fetch("/api/recruiter/simulations/generate-resources", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

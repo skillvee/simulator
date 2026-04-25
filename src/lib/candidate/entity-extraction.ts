@@ -72,6 +72,14 @@ const JOB_TITLE_ARCHETYPE_MAP: Array<{
     archetype: "DATA_ENGINEER",
   },
   {
+    keywords: ["data scientist", "ds engineer", "applied scientist", "research scientist"],
+    archetype: "DATA_SCIENTIST",
+  },
+  {
+    keywords: ["data analyst", "business analyst", "bi analyst", "analytics analyst"],
+    archetype: "DATA_ANALYST",
+  },
+  {
     keywords: [
       "frontend",
       "front-end",
