@@ -115,8 +115,10 @@ You have access to a Python code execution sandbox with **numpy**, **pandas**,
    weekly/seasonal cycles via sine, correlated columns via multivariate normal).
    **Avoid uniform random** — it looks fake.
 
-3. Caps each CSV at **5,000 rows max** (the sandbox stdout has a ~1 MB limit).
-   Pick a row count inside the planned range that respects this cap.
+3. Caps each CSV at **2,000 rows max** (the sandbox stdout has a ~1 MB limit
+   and the response token budget is tight). Match the plan's \`targetRowCount\`
+   exactly — the docs commit to that number, so generating significantly fewer
+   rows will fail the judge for "row count mismatch".
 
 4. Prints each CSV between markers, exactly:
 
