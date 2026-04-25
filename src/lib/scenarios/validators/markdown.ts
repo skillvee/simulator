@@ -24,7 +24,20 @@ export function validateMarkdownDocs(input: MarkdownValidatorInput): string[] {
     errors.push(`Expected exactly 3 docs, got ${docs.length}`);
   }
 
-  const docNames = new Set(docs.map((d) => d.name));
+  const otherRefsByDoc = new Map<string, string[]>();
+  for (const d of docs) {
+    const refs = [
+      ...docs
+        .filter((x) => x.name !== d.name)
+        .flatMap((x) => [
+          x.name,
+          x.filename,
+          x.filename.replace(/\.md$/i, ""),
+          x.id,
+        ]),
+    ].filter(Boolean);
+    otherRefsByDoc.set(d.name, refs);
+  }
 
   for (const doc of docs) {
     if (!doc.markdown || doc.markdown.trim().length < 500) {
@@ -44,34 +57,73 @@ export function validateMarkdownDocs(input: MarkdownValidatorInput): string[] {
       );
     }
 
-    // "See Also" section should reference at least one other doc by name.
-    const otherNames = [...docNames].filter((n) => n !== doc.name);
-    const referencesAnother = otherNames.some((n) =>
-      doc.markdown.toLowerCase().includes(n.toLowerCase())
-    );
-    if (!referencesAnother && otherNames.length > 0) {
+    // Cross-reference check: accept references to the other docs by any of
+    // their identifiers (display name, filename, filename-without-ext, id).
+    // The model sometimes uses filenames (\`data_dictionary.md\`) rather than
+    // display names ("Data Dictionary") — both are fine.
+    const body = doc.markdown.toLowerCase();
+    const refs = otherRefsByDoc.get(doc.name) ?? [];
+    const referencesAnother = refs.some((r) => body.includes(r.toLowerCase()));
+    if (!referencesAnother && refs.length > 0) {
       errors.push(
-        `Doc "${doc.name}" doesn't cross-reference any of the other docs (${otherNames.join(", ")})`
+        `Doc "${doc.name}" doesn't reference any of the other docs by name, filename, or id`
       );
     }
   }
 
-  // The task should appear in at least one doc. Use the first significant
-  // chunk (10-50 chars) as a fingerprint instead of the whole thing.
-  const taskFingerprint = taskDescription
-    .trim()
-    .slice(0, 80)
-    .toLowerCase();
-  if (taskFingerprint.length > 10) {
-    const found = docs.some((d) =>
-      d.markdown.toLowerCase().includes(taskFingerprint.slice(0, 30))
-    );
-    if (!found) {
+  // Task-coherence heuristic: extract the 5 most distinctive words from the
+  // task description (length ≥ 5, lowercase) and require at least half of
+  // them to appear in at least one doc. This is forgiving of rephrasing while
+  // still catching genuinely off-topic output.
+  const distinctiveWords = taskDescription
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length >= 5 && !STOP_WORDS.has(w))
+    .slice(0, 10);
+
+  if (distinctiveWords.length >= 3) {
+    const combinedDocs = docs.map((d) => d.markdown.toLowerCase()).join("\n");
+    const matched = distinctiveWords.filter((w) => combinedDocs.includes(w));
+    if (matched.length < Math.ceil(distinctiveWords.length / 2)) {
       errors.push(
-        "Task description fingerprint not found in any doc — docs may be off-topic"
+        `Task-description vocabulary barely present in docs (${matched.length}/${distinctiveWords.length} distinctive words matched)`
       );
     }
   }
 
   return errors;
 }
+
+const STOP_WORDS = new Set([
+  "about",
+  "above",
+  "across",
+  "after",
+  "again",
+  "against",
+  "among",
+  "around",
+  "because",
+  "before",
+  "being",
+  "below",
+  "between",
+  "could",
+  "during",
+  "either",
+  "every",
+  "might",
+  "other",
+  "since",
+  "their",
+  "there",
+  "these",
+  "those",
+  "through",
+  "under",
+  "until",
+  "where",
+  "which",
+  "while",
+  "would",
+]);

@@ -29,6 +29,7 @@ import {
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
 import type { ParseJDResponse, InferredSeniorityLevel, ScenarioResource, SimulationDepth } from "@/types";
 import { SIMULATION_DEPTH_CONFIG } from "@/types";
+import { env } from "@/lib/core/env";
 import type { CoworkerBuilderData } from "@/lib/scenarios/scenario-builder";
 import type { TaskOption } from "@/lib/scenarios/task-generator";
 import { CandidateExperienceSummary } from "@/components/recruiter/candidate-experience-summary"; // eslint-disable-line no-restricted-imports -- Component import allowed for UI
@@ -736,8 +737,10 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
       // (kicked off after scenario creation via /start-pipeline) owns the
       // markdown + artifact pipeline. Running the legacy call here would burn
       // ~25s on results that get discarded server-side.
-      const v2On =
-        process.env.NEXT_PUBLIC_RESOURCE_PIPELINE_V2 === "on";
+      //
+      // NEXT_PUBLIC_* is only string-replaced at build time, but Next.js
+      // exposes it as `env.*` for runtime access in client code too.
+      const v2On = env.NEXT_PUBLIC_RESOURCE_PIPELINE_V2 === true;
       let resources: ScenarioResource[] = [];
       let resourceGenerationWarning = false;
       if (!v2On) try {

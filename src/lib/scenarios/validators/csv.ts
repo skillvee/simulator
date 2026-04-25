@@ -62,17 +62,23 @@ export async function validateCsvArtifact(
       continue;
     }
 
-    // Check no all-null columns by sampling previewRows.
+    // Check no column is all-null across ALL preview rows. We used to flag
+    // every all-null column but that was too strict — real datasets have
+    // conditional fields (e.g. `error_code` only populated on failures) that
+    // can legitimately be all-null in a 20-row sample. Flag only if MOST
+    // columns are empty, which would indicate a genuinely malformed file.
     const preview = (f.previewRows as Record<string, unknown>[] | null) ?? [];
     if (preview.length > 0) {
-      for (const col of schema.columns) {
-        const allNull = preview.every((row) => {
+      const allNullCols = schema.columns.filter((col) =>
+        preview.every((row) => {
           const v = row[col.name];
           return v === undefined || v === null || v === "";
-        });
-        if (allNull) {
-          errors.push(`${f.filename}: column "${col.name}" is all-null in preview rows`);
-        }
+        })
+      );
+      if (allNullCols.length > schema.columns.length / 2) {
+        errors.push(
+          `${f.filename}: ${allNullCols.length}/${schema.columns.length} columns are all-null in preview rows (file looks empty)`
+        );
       }
     }
 
