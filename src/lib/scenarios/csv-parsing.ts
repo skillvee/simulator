@@ -64,9 +64,14 @@ export function extractCsvsFromGeminiParts(
 
   const blocks: Array<{ filename: string; csv: string }> = [];
 
-  // Primary: marker-delimited blocks from stdout.
+  // Primary: marker-delimited blocks from stdout. Only accept entries whose
+  // filename ends in .csv — the model occasionally bundles markdown docs
+  // ("=== FILE: project_brief.md ===") in the same output stream, and those
+  // would otherwise get treated as malformed 30-row CSVs.
   for (const match of stdout.matchAll(FILE_MARKER_REGEX)) {
-    blocks.push({ filename: match[1].trim(), csv: match[2] });
+    const filename = match[1].trim();
+    if (!filename.toLowerCase().endsWith(".csv")) continue;
+    blocks.push({ filename, csv: match[2] });
   }
 
   // Fallback: fenced ```csv blocks in text parts (when sandbox times out).
