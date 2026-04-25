@@ -41,6 +41,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { createLogger } from "@/lib/core";
+import { fetchWithRetry } from "@/lib/api";
 
 const logger = createLogger("client:recruiter:new-simulation");
 
@@ -222,7 +223,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
     source: "jd_paste" | "guided";
   }) => {
     try {
-      const res = await fetch("/api/recruiter/simulations/creation-log", {
+      const res = await fetchWithRetry("/api/recruiter/simulations/creation-log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -251,7 +252,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
     const logId = creationLogIdRef.current;
     if (!logId) return;
     try {
-      await fetch("/api/recruiter/simulations/creation-log", {
+      await fetchWithRetry("/api/recruiter/simulations/creation-log", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ logId, ...data }),
@@ -345,8 +346,12 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
       await generatePreviewContent(parsedData);
 
     } catch (err) {
-      logger.error("Failed to parse job description", { err });
       const errorMsg = err instanceof Error ? err.message : "Failed to analyze job description";
+      logger.error("Simulation creation failed (entry path)", {
+        err: String(err),
+        message: errorMsg,
+        stack: err instanceof Error ? err.stack : undefined,
+      });
       await updateLog({
         status: "FAILED",
         failedStep: "parse_jd",
@@ -507,7 +512,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
         : previewData.selectedTask.option?.description || "Complete a work challenge";
 
       // Step 2: Create scenario (repoUrl omitted - will be set by provisioning)
-      const scenarioResponse = await fetch("/api/recruiter/simulations", {
+      const scenarioResponse = await fetchWithRetry("/api/recruiter/simulations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -537,7 +542,7 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
 
       // Step 3: Create coworkers
       const coworkerPromises = previewData.coworkers.map(async (coworker) => {
-        const response = await fetch(`/api/recruiter/simulations/${scenario.id}/coworkers`, {
+        const response = await fetchWithRetry(`/api/recruiter/simulations/${scenario.id}/coworkers`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
