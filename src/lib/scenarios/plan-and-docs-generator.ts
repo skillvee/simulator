@@ -80,6 +80,11 @@ export interface GeneratePlanAndDocsInput {
   resourceType: "repo" | "data";
   coworkers: Array<{ name: string; role: string }>;
   language: SupportedLanguage;
+  scaffoldLayout?: {
+    name: string;
+    description: string;
+    baselineFiles: string[];
+  };
 }
 
 export async function generatePlanAndDocs(
