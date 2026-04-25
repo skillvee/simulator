@@ -18,6 +18,7 @@ import {
 import {
   archetypeToResourceType,
 } from "@/lib/scenarios/archetype-resource-mapping";
+import { selectScaffold } from "@/lib/scenarios/repo-spec";
 import {
   getArchetypeDisplayName,
   type RoleArchetype,
@@ -86,6 +87,20 @@ export async function POST(
     : DEFAULT_LANGUAGE;
   const creationLogId = scenario.simulationCreationLogs[0]?.id;
 
+  let scaffoldLayout: { name: string; description: string; baselineFiles: string[] } | undefined;
+  if (resourceType === "repo") {
+    try {
+      const scaffold = selectScaffold(scenario.techStack);
+      scaffoldLayout = {
+        name: scaffold.name,
+        description: scaffold.layoutDescription,
+        baselineFiles: scaffold.baselineFiles,
+      };
+    } catch {
+      // No matching scaffold — skip the layout block; planner gets generic guidance.
+    }
+  }
+
   try {
     const { plan, docs, pipelineMeta } = await generatePlanAndPersist({
       scenarioId: scenario.id,
@@ -104,6 +119,7 @@ export async function POST(
         resourceType,
         coworkers: scenario.coworkers,
         language,
+        scaffoldLayout,
       },
     });
 

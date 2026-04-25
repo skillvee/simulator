@@ -11,7 +11,11 @@ import { db } from "@/server/db";
 import type { ScenarioDoc } from "@/types";
 
 const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
-const MIN_ROWS = 300; // sandbox stdout + 1M-token cap force smaller datasets
+// Floor is intentionally low: legitimate files (daily summary tables, small
+// dimension tables) can have <100 rows. The judge catches "too sparse to be
+// useful" qualitatively. Hard cap on the upper end — sandbox stdout + token
+// budget force the ceiling.
+const MIN_ROWS = 30;
 const MAX_ROWS = 2000;
 const DUPLICATE_RATIO_LIMIT = 0.05;
 

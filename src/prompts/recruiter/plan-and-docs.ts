@@ -21,6 +21,15 @@ export interface PlanAndDocsInput {
   resourceType: "repo" | "data";
   coworkers: Array<{ name: string; role: string }>;
   language: SupportedLanguage;
+  /**
+   * Repo-only: layout/contents of the scaffold the artifact phase will use.
+   * Embedded in the prompt so docs reference paths that actually exist.
+   */
+  scaffoldLayout?: {
+    name: string;
+    description: string;
+    baselineFiles: string[];
+  };
 }
 
 export function buildPlanAndDocsPrompt(input: PlanAndDocsInput): string {
@@ -35,12 +44,37 @@ export function buildPlanAndDocsPrompt(input: PlanAndDocsInput): string {
     resourceType,
     coworkers,
     language,
+    scaffoldLayout,
   } = input;
 
   const langInstruction = buildLanguageInstruction(language);
   const coworkersList = coworkers.length
     ? coworkers.map((c) => `- ${c.name} (${c.role})`).join("\n")
     : "- (no coworkers defined)";
+
+  const scaffoldBlock =
+    resourceType === "repo" && scaffoldLayout
+      ? `
+## Scaffold the candidate will receive — AUTHORITATIVE
+
+The repo will be built on **${scaffoldLayout.name}**, which already ships:
+
+\`\`\`
+${scaffoldLayout.baselineFiles.map((f) => `  ${f}`).join("\n")}
+\`\`\`
+
+${scaffoldLayout.description}
+
+When you write the docs:
+- Use **the exact file paths and idioms above**. If you say "src/pages/" but the
+  scaffold uses "src/app/", the candidate will see a broken doc.
+- Don't tell the candidate to create files the scaffold already provides
+  (\`package.json\`, \`tsconfig.json\`, \`prisma/schema.prisma\`, etc.).
+- Don't reference setup steps that depend on files NOT in the scaffold
+  (\`docker-compose.yml\`, \`prisma/seed.ts\`) unless your task description
+  explicitly requires the artifact phase to add them.
+`
+      : "";
 
   const artifactSpecificRules =
     resourceType === "repo"
@@ -117,7 +151,7 @@ ${taskDescription}
 ${coworkersList}
 
 **Resource type:** ${resourceType}
-
+${scaffoldBlock}
 ## Why your docs matter for what comes next
 
 A subsequent step generates the artifacts the candidate uses (a real GitHub
