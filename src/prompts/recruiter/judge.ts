@@ -43,9 +43,14 @@ export function buildJudgePrompt(input: JudgePromptInput): string {
 
   const docsBlock = docs
     .map(
-      (d) => `### ${d.name} (\`${d.filename}\`) — objective: ${d.objective}
+      (d) =>
+        `### ${d.name} (\`${d.filename}\`) — objective: ${d.objective} (full length: ${d.markdown.length} chars)
 
-${d.markdown.slice(0, 4000)}${d.markdown.length > 4000 ? "\n…[truncated]" : ""}`
+${d.markdown.slice(0, 4000)}${
+          d.markdown.length > 4000
+            ? `\n\n[Truncated for judge context — the full doc is ${d.markdown.length} chars; the source is NOT truncated.]`
+            : ""
+        }`
     )
     .join("\n\n---\n\n");
 
