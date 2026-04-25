@@ -8,7 +8,7 @@
 import { auth } from "@/auth";
 import { db } from "@/server/db";
 import { success, error } from "@/lib/api";
-import type { ResourcePipelineMeta } from "@/types";
+import type { ResourcePipelineMeta, ScenarioDoc, ResourcePlan } from "@/types";
 
 interface SessionUser {
   id: string;
@@ -35,6 +35,7 @@ export async function GET(
       pipelineVersion: true,
       resourcePipelineMeta: true,
       isPublished: true,
+      plan: true,
       docs: true,
       repoUrl: true,
       dataFiles: {
@@ -56,12 +57,15 @@ export async function GET(
   const pipelineMeta = scenario.resourcePipelineMeta as unknown as
     | ResourcePipelineMeta
     | null;
+  const docs = (scenario.docs as unknown as ScenarioDoc[] | null) ?? [];
+  const plan = (scenario.plan as unknown as ResourcePlan | null) ?? null;
 
   return success({
     pipelineVersion: scenario.pipelineVersion,
     pipelineMeta,
     isPublished: scenario.isPublished,
-    docCount: Array.isArray(scenario.docs) ? scenario.docs.length : 0,
+    plan,
+    docs,
     dataFiles: scenario.dataFiles,
     repoUrl: scenario.repoUrl,
   });
