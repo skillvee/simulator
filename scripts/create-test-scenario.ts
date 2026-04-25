@@ -34,12 +34,12 @@ const presets: Record<
     }>;
   }
 > = {
-  "backend-go": {
+  "backend-node": {
     name: "Senior Backend Engineer @ Drift",
     companyName: "Drift",
     companyDescription:
       "Drift is a payments-orchestration startup (Series A, ~50 engineers) that routes credit-card transactions across multiple processors to optimize approval rates and fees. Customers are mid-market e-commerce businesses processing $5M-$200M/year.",
-    taskDescription: `Our checkout API has a degraded p99 latency problem. Over the past two weeks, p99 has crept from ~180ms to ~850ms, while p50 is unchanged at ~40ms. We're convinced the issue is in the routing service that picks which processor to send each charge to — that service makes parallel calls to 3-5 processor APIs, then aggregates. Engineering Manager Priya thinks one of the processor clients has a slow timeout path that's tail-blocking the request. SRE Hugo set up a Grafana dashboard last week showing the latency distribution per-processor but hasn't been able to dig in. Your job: profile the routing service, find the slow path, and propose a fix. We don't care about the absolute fix — we care that you can navigate a Go codebase you've never seen, instrument it, and reason about distributed timeouts under load.`,
+    taskDescription: `Our checkout API has a degraded p99 latency problem. Over the past two weeks, p99 has crept from ~180ms to ~850ms, while p50 is unchanged at ~40ms. We're convinced the issue is in the routing service that picks which processor to send each charge to — that service makes parallel calls to 3-5 processor APIs, then aggregates. Engineering Manager Priya thinks one of the processor clients has a slow timeout path that's tail-blocking the request. SRE Hugo set up a Grafana dashboard last week showing the latency distribution per-processor but hasn't been able to dig in. Your job: profile the routing service, find the slow path, and propose a fix. We don't care about the absolute fix — we care that you can navigate a Node.js + TypeScript codebase you've never seen, instrument it, and reason about distributed timeouts under load.`,
     techStack: ["Express", "Node", "TypeScript", "Prisma", "PostgreSQL"],
     archetypeSlug: "backend_engineer",
     targetLevel: "senior",
