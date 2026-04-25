@@ -146,9 +146,13 @@ export async function generatePlanAndDocs(
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      const result = await wrapAICall(
+      // Stream the response so the underlying connection stays active. Pro
+      // calls with structured output + 3 long markdown docs can take 60-90s,
+      // which sometimes hits Node's default undici headers timeout (5min) or
+      // upstream load-balancer timeouts when the model pauses to think.
+      const stream = await wrapAICall(
         () =>
-          gemini.models.generateContent({
+          gemini.models.generateContentStream({
             model: PRO_MODEL,
             contents: [{ role: "user", parts: [{ text: promptText }] }],
             config: {
@@ -164,7 +168,11 @@ export async function generatePlanAndDocs(
         }
       );
 
-      const responseText = result.text ?? "";
+      const chunks: string[] = [];
+      for await (const chunk of stream) {
+        if (chunk.text) chunks.push(chunk.text);
+      }
+      const responseText = chunks.join("");
       lastResponseText = responseText;
 
       const parsed = JSON.parse(responseText);
@@ -186,6 +194,10 @@ export async function generatePlanAndDocs(
         attempt,
         err: String(err),
       });
+      // Backoff before retry — gives transient network blips time to recover.
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 2000 * attempt));
+      }
     }
   }
 
