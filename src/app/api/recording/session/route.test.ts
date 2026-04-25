@@ -54,6 +54,7 @@ vi.mock("@/server/db", () => ({
 const mockIsE2ETestMode = vi.fn();
 vi.mock("@/lib/core/env", () => ({
   shouldAllowTestModeRecording: () => mockIsE2ETestMode(),
+  isDemoUser: () => false,
   env: {
     DATABASE_URL: "postgresql://localhost:5432/test",
     DIRECT_URL: "postgresql://localhost:5432/test",
