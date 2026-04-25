@@ -54,6 +54,13 @@ vi.mock("@/lib/core", () => ({
   }),
 }));
 
+// Mock the WebM seekability rewrite — these tests use minimal byte fixtures
+// that aren't valid full WebM, so we keep merge-logic assertions focused on
+// chunk concatenation rather than ts-ebml's metadata transformation.
+vi.mock("@/lib/media", () => ({
+  makeWebmSeekable: (input: Buffer) => Promise.resolve(new Uint8Array(input)),
+}));
+
 import { mergeRecordingChunks } from "./video-merge";
 
 // Helper: create a fake Blob that works in Node.js tests
@@ -168,8 +175,13 @@ describe("mergeRecordingChunks", () => {
     expect(result.totalSegments).toBe(1);
     expect(result.totalSizeBytes).toBe(chunkData.length);
 
-    // Should NOT upload to Supabase (no merge needed)
-    expect(mockUpload).not.toHaveBeenCalled();
+    // Should still persist a seekable copy to Supabase so the admin player
+    // can scrub immediately, even for single-chunk recordings.
+    expect(mockUpload).toHaveBeenCalledWith(
+      "test-assessment/merged.webm",
+      expect.any(Uint8Array),
+      expect.objectContaining({ contentType: "video/webm", upsert: true })
+    );
     // Should upload to Gemini with correct mimeType
     expect(mockGeminiUpload).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -243,7 +255,7 @@ describe("mergeRecordingChunks", () => {
     // Should upload merged file to Supabase
     expect(mockUpload).toHaveBeenCalledWith(
       "test-assessment/merged.webm",
-      expect.any(Buffer),
+      expect.any(Uint8Array),
       expect.objectContaining({ contentType: "video/webm", upsert: true })
     );
   });

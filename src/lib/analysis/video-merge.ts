@@ -12,6 +12,7 @@ import { gemini } from "@/lib/ai/gemini";
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
 import { createLogger } from "@/lib/core";
+import { makeWebmSeekable } from "@/lib/media";
 
 const logger = createLogger("lib:analysis:video-merge");
 
@@ -191,7 +192,30 @@ export async function mergeRecordingChunks(
         };
       }
 
-      const buffer = Buffer.from(await downloadData.arrayBuffer());
+      const rawBuffer = Buffer.from(await downloadData.arrayBuffer());
+      const buffer = await makeWebmSeekable(rawBuffer);
+
+      // Persist the seekable version so admin playback can scrub immediately
+      const mergedPath = `${assessmentId}/merged.webm`;
+      const { error: uploadStorageError } = await supabaseAdmin.storage
+        .from(STORAGE_BUCKETS.RECORDINGS)
+        .upload(mergedPath, buffer, {
+          contentType: "video/webm",
+          upsert: true,
+        });
+
+      if (!uploadStorageError) {
+        const { data: signedData } = await supabaseAdmin.storage
+          .from(STORAGE_BUCKETS.RECORDINGS)
+          .createSignedUrl(mergedPath, 60 * 60 * 24 * 365); // 1 year
+        if (signedData?.signedUrl) {
+          await db.recording.update({
+            where: { id: recordingId },
+            data: { storageUrl: signedData.signedUrl },
+          });
+        }
+      }
+
       const uploadResult = await uploadAndWaitForActive(
         new Blob([buffer], { type: "video/webm" }),
         `assessment-${assessmentId}-recording`
@@ -298,7 +322,8 @@ export async function mergeRecordingChunks(
       };
     }
 
-    const merged = Buffer.concat(chunkBuffers);
+    const concatenated = Buffer.concat(chunkBuffers);
+    const merged = await makeWebmSeekable(concatenated);
 
     logger.info("Chunks merged", {
       assessmentId,
