@@ -317,26 +317,54 @@ authoritative spec for everything not nailed down in the docs.
 
 ${docFullText}
 
-### Anti-spoiler rule
+### Anti-spoiler rule — NON-NEGOTIABLE
 
 Do NOT leave hints at the bug or solution anywhere in the spec.
-Specifically forbidden:
 
-- Explanatory comments pointing at the problem (\`// FIXME: race here\`,
-  \`// TODO: fix this slow path\`, \`// BUG: missing await\`).
-- Comments **attributed to the coworker personas** (\`// Marcus: careful
-  with this\`, \`// Hugo says we need to revisit\`). Real production code
-  does NOT have author-named "watch out" comments — it has the bug
-  silently in place. The candidate must discover it from behavior, not
-  from breadcrumbs you leave behind.
-- Obvious filenames (\`broken-cache.ts\`, \`slow-handler.ts\`).
+**Forbidden in source files (.ts, .tsx, .js, .py, etc.):**
+
+- ANY \`// TODO\`, \`// FIXME\`, \`// XXX\`, \`// HACK\`, \`// NOTE\` comment.
+  Even a generic \`// TODO: implement locking\` at the bug site is a
+  breadcrumb. Real production code with a bug has NO comment marking the
+  bug location — just the buggy code.
+- ANY comment containing a **coworker name** (first OR last). Real
+  production code does not say \`// Sarah: this needs idempotency\`,
+  \`// Note: Kwame mentioned the cluster is sharded\`, or
+  \`* Elena Vance: Marcus started this but...\`. The coworker's
+  knowledge belongs in the conversation, not the source. **If you are
+  about to write any coworker name into a comment, delete the comment.**
+- Comments naming the bug (\`// race here\`, \`// not idempotent\`,
+  \`// re-render storm\`, \`// expensive query\`).
+- Obvious filenames (\`broken-cache.ts\`, \`slow-handler.ts\`,
+  \`fix-me.ts\`).
 - Debug strings or log lines that name the issue.
-- Issue or PR comments that reveal the answer in the body. Issues should
-  describe SYMPTOMS the candidate must reproduce, not the root cause.
+
+**Forbidden as standalone doc/markdown files in the repo:**
+
+- Incident reports, post-mortems, RCAs (e.g.
+  \`docs/incidents/double-charging.md\`,
+  \`docs/postmortems/2024-Q1.md\`). These ALWAYS contain the diagnosis
+  — they are the candidate's job to write, not pre-existing context.
+- Architecture Decision Records (ADRs) or "concurrency / performance /
+  caching strategy" docs that compare options the candidate is meant
+  to weigh. Listing the trade-offs and naming the gap solves the
+  exercise.
+- Any \`docs/\` markdown that reads like an analysis of why the current
+  code is wrong, what changed recently, or which option to pick.
+
+**Allowed in the repo:**
+
+- README with setup + run instructions, brief project overview, and
+  links to the main task issue (kept short — it does NOT explain the
+  business problem in detail; the kickoff doc covers that).
+- GitHub Issues describing SYMPTOMS the candidate must reproduce
+  (\`"Customers are reporting duplicate charges during peak times"\`),
+  never the root cause.
+- A \`CHANGELOG\` or \`CONTRIBUTING\` is fine.
 
 The candidate must diagnose the problem from system behavior alone,
-exactly as they would on a real codebase. If the judge spots a comment
-that names the bug, the bundle fails.
+exactly as they would on a real codebase. If the judge spots a forbidden
+comment, named coworker, or post-mortem-style doc, the bundle fails.
 
 ### Quality criteria the judge will check
 

@@ -8,7 +8,7 @@
  * materializes into a GitHub repo on top of a clean scaffold.
  */
 
-export const REPO_SPEC_GENERATOR_PROMPT_VERSION = "1.0";
+export const REPO_SPEC_GENERATOR_PROMPT_VERSION = "1.1";
 
 export const REPO_SPEC_PATCH_PROMPT_VERSION = "1.0";
 
@@ -78,34 +78,59 @@ Generate a complete repository specification (RepoSpec) for a realistic codebase
 
 ## What Makes a Great Assessment Repo
 
-1. **The task is discoverable, not handed on a plate.** The candidate pieces together what to do from:
-   - A GitHub Issue framed as a business problem (not a spec)
-   - Architecture docs with "Known Gaps" pointing toward the task area
-   - TODO comments and stubs from a previous developer who didn't finish
-   - An incident doc explaining what went wrong and why it matters
+1. **The task is discoverable from system behavior, not breadcrumbs.** The
+   candidate pieces together what to do from:
+   - The main GitHub Issue framed as a business problem (symptoms, not
+     diagnosis) — this is the primary entry point.
+   - The natural shape of the existing code (function signatures, what's
+     wired up vs. what isn't, what tests cover and what they don't).
+   - Conversations with coworkers (handled outside this repo).
 
 2. **Realistic git history.** 5-8 commits from 3-4 people, telling a story:
-   - Initial project setup by one person
-   - Feature additions by team members over the past 2-4 weeks
-   - A commit from someone who started the task but got pulled away (their stubs/TODOs are breadcrumbs)
-   - Realistic commit messages ("Add webhook retry logic for Stripe events", NOT "add file")
+   - Initial project setup by one person.
+   - Feature additions by team members over the past 2-4 weeks.
+   - A commit from someone who started early work and got pulled away —
+     their commit message can hint at it ("wip: start retry handler"),
+     but the code they left behind has the bug **silently in place**.
+     No TODO markers, no comments naming the gap.
+   - Realistic commit messages ("Add webhook retry logic for Stripe events", NOT "add file").
 
-3. **Code has breadcrumbs.** Stubs, TODOs, and partial implementations that guide the candidate:
-   - A file with a TODO referencing a GitHub Issue
-   - A partial implementation with comments like "// Marcus started this but got pulled to the payments migration"
-   - Test files with \`test.skip\` or \`it.todo\` blocks showing what needs to be built
+3. **Code is production-shaped — no diagnostic breadcrumbs.**
+   This is the highest-impact rule. Real production code with a bug has:
+   - **No \`// TODO\`, \`// FIXME\`, \`// XXX\`, \`// HACK\`, or \`// NOTE\` comments
+     at the bug site or anywhere else.** The bug is just *there*, and the
+     candidate has to spot it.
+   - **No coworker name in any source-file comment** (\`// Sarah: ...\`,
+     \`// Note: Kwame mentioned ...\`, \`// Started by Marcus\`). Coworkers
+     belong in the conversation; their knowledge is delivered there, not
+     stamped into the code.
+   - **No comments naming the bug.** \`// race here\`, \`// not idempotent\`,
+     \`// re-render storm\`, \`// expensive query\` — all forbidden.
+   - **No \`docs/incidents/*.md\`, \`docs/postmortems/*.md\`, ADR files, or
+     "concurrency strategy / performance audit / known gaps" markdown.**
+     These artifacts always contain the diagnosis. They are work the
+     candidate **produces**, not pre-existing context.
+   - "Stubs" (intentionally unfinished functions): emit working signatures
+     with \`throw new Error('not implemented')\` or a no-op fallback that
+     simply doesn't do the thing. **No TODO marker, no narrative comment.**
+   - Test files: \`it.todo('test idempotency under load')\` is acceptable
+     when generic; never include test names that name the bug.
 
 4. **Domain-specific, internally consistent.** Everything references the company's actual domain:
-   - File names, variable names, function names match the business domain
-   - Import paths reference real files in the manifest
-   - Issues reference real file paths and line numbers
-   - Docs reference real architecture decisions
+   - File names, variable names, function names match the business domain.
+   - Import paths reference real files in the manifest.
+   - Issues reference real file paths and line numbers.
+   - Docs reference real architecture decisions.
 
 5. **README is a real onboarding doc.** Not a tutorial — a guide for a new team member:
-   - How to set up the dev environment
-   - Where to find things in the codebase
-   - Who to ask for help (references coworker names)
-   - Links to docs/ for architecture details
+   - How to set up the dev environment.
+   - Where to find things in the codebase.
+   - "Your team" section that **lists** coworker names + roles. Do NOT say
+     things like "Ask Sarah about X" — that directs the candidate. Just
+     introduce the team.
+   - Links to legitimate docs (API reference, contributing guide). Do NOT
+     link to incident reports / post-mortems / strategy docs (those don't
+     exist in this repo).
 
 ## Input Context
 
@@ -176,11 +201,24 @@ Return ONLY a JSON object matching this exact schema:
 - Focus on files that build the narrative: source files with breadcrumbs, docs, tests, schema
 
 ### File categories
-- **"stub"** — Partial implementations with meaningful working code AND strategic TODOs. These guide without handing solutions. Should have 40-60% implementation done (function signatures, basic structure, error handling scaffolding), leaving the core logic as TODOs. 3-5 of these for better realism.
-- **"working"** — Complete, functional code that provides context. The candidate reads these to understand patterns and conventions. Include realistic utility functions, middleware, helper modules. 5-8 of these.
-- **"test"** — Test files with passing tests for existing features AND test.skip/it.todo blocks hinting at what needs testing for the task. Include edge case tests as TODOs. 2-4 of these.
-- **"doc"** — Architecture docs, incident logs, API docs. Reference real file paths and include "Known Gaps" sections pointing toward the task. 2-4 of these.
-- **"config"** — Domain-specific configs (prisma schema, .env.example with domain vars). Include commented sections showing planned features. 1-3 of these.
+- **"stub"** — Functions/modules whose signatures exist but body is a no-op
+  or \`throw new Error('not implemented')\`. NO TODO markers. NO author
+  comments. NO "we still need to..." narrative. The candidate sees a
+  function that's wired into the call graph but doesn't do its job, and
+  has to figure out from behavior + tests what's missing. 1-3 of these.
+- **"working"** — Complete, functional code that provides context. The
+  candidate reads these to understand patterns and conventions. Include
+  realistic utility functions, middleware, helper modules. 5-8 of these.
+- **"test"** — Test files with passing tests for existing features. May
+  include 1-2 \`it.todo()\` entries for plausible-but-not-the-bug
+  edge cases. Do NOT name the bug in any test description. 2-4 of these.
+- **"doc"** — Genuine reference docs only: API contract reference, a
+  CONTRIBUTING.md, or a 1-paragraph project overview. **Forbidden:**
+  incident reports, post-mortems, ADRs, "concurrency / performance /
+  caching strategy" docs, "known gaps" lists, or anything that contains
+  the diagnosis. 0-2 of these — fewer is better.
+- **"config"** — Domain-specific configs (prisma schema, .env.example with
+  domain vars). Plain, no commented hints about future work. 1-3 of these.
 
 ### File content rules
 1. **CRITICAL: Cross-Reference Integrity**
@@ -190,8 +228,13 @@ Return ONLY a JSON object matching this exact schema:
    - If you mention src/pages/api/socket.ts in an issue, that file MUST be in files[]
    - If README says "Copy .env.example", then .env.example MUST be in files[]
 2. Code must be syntactically valid for the tech stack
-3. TODOs must reference ONLY existing GitHub Issue numbers (e.g., "// TODO: Fix this — see Issue #3" where Issue #3 is actually in issues[]). Never reference issue numbers higher than the number of issues you generate.
-4. Stubs should have comments attributing them to a specific person ("// Started by Marcus, see commit history")
+3. **NO TODO/FIXME/XXX/HACK/NOTE comments anywhere in source files.** This
+   is non-negotiable. If you would have written \`// TODO: Issue #3\`, just
+   leave the bug silently in place — that's how production code looks.
+4. **NO coworker name in any source-file comment.** Commit history and
+   GitHub Issue comments may use coworker names (those are the real-world
+   surfaces where attribution belongs). Source files must be anonymous —
+   no \`// Sarah: ...\`, \`// Marcus started this\`, \`// Note: Kwame mentioned\`.
 5. Test files should use the project's test framework (vitest for TS, pytest for Python)
 
 ### What NOT to generate (scaffold provides these)
@@ -238,32 +281,35 @@ Return ONLY a JSON object matching this exact schema:
 
 ## Seniority Calibration
 
+The diagnostic challenge is calibrated by **how clearly the main GitHub Issue
+frames the problem and how much existing test coverage points the candidate
+toward the bug area** — NOT by adding more breadcrumbs in source comments.
+The anti-spoiler rules above apply at every seniority level.
+
 ### Junior (targetLevel: "junior")
-- Well-scoped task with clear requirements
-- More breadcrumbs and hints in code
-- Stubs show what to build (function signature exists, body is TODO)
-- Docs spell out the approach ("we decided to use X because Y")
-- Manager issue comment says "I'd start by looking at X file"
+- Well-scoped task with clear requirements in the issue body.
+- The main issue includes a specific file path the candidate should look at
+  ("the bug is somewhere in \`src/services/foo.ts\` — start there").
+- Test coverage exists for adjacent behavior but the buggy path is untested.
+- Manager comment in the issue: "I'd start by looking at the X service."
 
 ### Mid (targetLevel: "mid")
-- Some architectural decisions left to the candidate
-- Fewer breadcrumbs — need to explore to find relevant code
-- Stubs show WHAT needs to happen but not HOW
-- Docs mention trade-offs without picking a winner
-- Manager comment: "Talk to [senior engineer] about the approach"
+- Some architectural decisions left to the candidate.
+- The issue narrows the **area** of the bug ("something in the webhook
+  retry flow is dropping events") but not the file.
+- Manager comment: "Talk to the senior engineer about the approach."
 
 ### Senior (targetLevel: "senior")
-- Ambiguous requirements, multiple valid approaches
-- Minimal breadcrumbs — candidate must synthesize from multiple sources
-- Stubs are minimal — just enough to show someone started
-- Docs have "Known Gaps" but no suggested solutions
+- Ambiguous requirements, multiple valid approaches.
+- The issue describes only the **symptom** ("Customers are reporting
+  duplicate charges during peak times"). The candidate must reproduce
+  it from the code.
 - Manager comment: "Here's the problem. Figure out the best approach."
 
 ### Staff (targetLevel: "staff")
-- Systemic problem, no single file to fix
-- Almost no breadcrumbs — the challenge IS figuring out what to do
-- Architecture docs show the current state, candidate designs the future state
-- Multiple issues connected, candidate must identify root cause
+- Systemic problem, no single file to fix.
+- Issue describes a customer-impact pattern, not a localized bug.
+- Multiple issues connected, candidate must identify root cause.
 - Manager: "The team has been complaining about this. Take a look."
 
 ## README Content Guidelines
@@ -273,10 +319,15 @@ The README should be a realistic onboarding document for a new team member. Incl
 1. **Project name and 1-line description** (match projectName)
 2. **Quick setup** (npm install, database setup, start dev server — use scaffold commands)
 3. **Project structure** (describe the src/ layout)
-4. **Your team** (list coworker names and roles — "Ask Sarah about deployment, talk to Bob about the API")
+4. **Your team** — list coworker names + roles only. Do NOT add "Ask
+   Sarah about X" or "talk to Bob about Y" — those are direct prompts
+   and undermine the discovery aspect of the simulation. Just introduce
+   the team, the way a real internal README would.
 5. **How we work** (check GitHub Issues, ask on Slack, open PRs for review)
 6. **Useful commands** (dev, test, lint, typecheck — from scaffold)
-7. **Where to find docs** (link to docs/ files)
+7. **Where to find docs** — link only to docs that EXIST in your files[]
+   array. Do NOT link to incident reports, post-mortems, ADRs, or
+   "concurrency strategy" docs (those should not exist in this repo).
 
 Tone: Casual and friendly, like a real team wiki. Use "we" and "our".
 
@@ -289,11 +340,11 @@ For a "Senior Backend Engineer at Stripe, fix webhook reliability" scenario:
   "projectName": "payment-gateway",
   "projectDescription": "Internal payment processing and webhook delivery service",
   "scaffoldId": "express-ts",
-  "readmeContent": "# Payment Gateway\\n\\nInternal service for processing payments and delivering webhooks to merchants...\\n\\n## Quick Setup\\n\\n\`\`\`bash\\nnpm install\\nnpm run db:push\\nnpm run dev\\n\`\`\`\\n\\n## Your Team\\n- **Sarah Kim** (Engineering Manager) — Ask about priorities and process\\n- **Bob Martinez** (Senior Engineer) — Knows the webhook system inside out\\n- **Dave Okonkwo** (Software Engineer) — Worked on the retry logic last sprint\\n\\n## How We Work\\n- Check GitHub Issues for your assignment\\n- Ask on Slack if you get stuck\\n- Open a PR when ready, tag Sarah for review",
+  "readmeContent": "# Payment Gateway\\n\\nInternal service for processing payments and delivering webhooks to merchants...\\n\\n## Quick Setup\\n\\n\`\`\`bash\\nnpm install\\nnpm run db:push\\nnpm run dev\\n\`\`\`\\n\\n## Your Team\\n- **Sarah Kim** — Engineering Manager\\n- **Bob Martinez** — Senior Engineer\\n- **Dave Okonkwo** — Software Engineer\\n\\n## How We Work\\n- Check GitHub Issues for your assignment\\n- Ask on Slack if you get stuck\\n- Open a PR when ready, tag your reviewer",
   "files": [
     {
       "path": "src/services/webhook-processor.ts",
-      "content": "// Webhook processing service\\n// TODO(Issue #3): Retry logic is not working — events are being dropped\\n// Dave started on this but got pulled to the billing migration\\n\\nimport { db } from '../lib/db';\\nimport type { WebhookEvent } from '../types';\\n\\nexport async function processWebhook(event: WebhookEvent): Promise<void> {\\n  // Current implementation just logs and saves — no retry on failure\\n  console.log('Processing webhook:', event.type);\\n  await db.webhookEvent.create({ data: { ...event, status: 'received' } });\\n  // TODO: Add retry logic with exponential backoff\\n  // TODO: Add idempotency check (we're seeing duplicates)\\n}",
+      "content": "import { db } from '../lib/db';\\nimport type { WebhookEvent } from '../types';\\n\\nexport async function processWebhook(event: WebhookEvent): Promise<void> {\\n  console.log('Processing webhook:', event.type);\\n  await db.webhookEvent.create({ data: { ...event, status: 'received' } });\\n}",
       "purpose": "stub",
       "addedInCommit": 3
     }
