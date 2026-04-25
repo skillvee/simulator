@@ -301,7 +301,7 @@ describe("calculateFitScoresForMultipleArchetypes", () => {
 
     const results = calculateFitScoresForMultipleArchetypes(scores);
 
-    expect(results).toHaveLength(8); // All archetypes
+    expect(results).toHaveLength(10); // All archetypes
   });
 
   it("should calculate fit scores for specified archetypes only", () => {
@@ -453,10 +453,10 @@ describe("getArchetypeDisplayName", () => {
 });
 
 describe("getAllArchetypes", () => {
-  it("should return all 8 archetypes", () => {
+  it("should return all 10 archetypes", () => {
     const archetypes = getAllArchetypes();
 
-    expect(archetypes).toHaveLength(8);
+    expect(archetypes).toHaveLength(10);
     expect(archetypes).toContain("SENIOR_FRONTEND_ENGINEER");
     expect(archetypes).toContain("SENIOR_BACKEND_ENGINEER");
     expect(archetypes).toContain("FULLSTACK_ENGINEER");
@@ -464,6 +464,8 @@ describe("getAllArchetypes", () => {
     expect(archetypes).toContain("TECH_LEAD");
     expect(archetypes).toContain("DEVOPS_ENGINEER");
     expect(archetypes).toContain("DATA_ENGINEER");
+    expect(archetypes).toContain("DATA_ANALYST");
+    expect(archetypes).toContain("DATA_SCIENTIST");
     expect(archetypes).toContain("GENERAL_SOFTWARE_ENGINEER");
   });
 });

@@ -168,7 +168,7 @@ describe("generateRepoSpec", () => {
     expect(result.spec.files).toHaveLength(3);
     expect(result.spec.commitHistory).toHaveLength(3);
     expect(result.spec.issues).toHaveLength(2);
-    expect(result._meta.promptVersion).toBe("1.0");
+    expect(result._meta.promptVersion).toBe("1.1");
   });
 
   it("should handle JSON wrapped in markdown code fences", async () => {
