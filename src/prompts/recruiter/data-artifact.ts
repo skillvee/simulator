@@ -86,10 +86,20 @@ ${docsSection}
 
 ## Anti-spoiler rule
 
-Do NOT leave any artifact (column names, comments embedded in CSV, file
-contents, debug strings, sentinel values) that hints at the bug, the answer,
-or what the candidate is supposed to discover. The candidate must surface the
-issue from the data alone.
+The CSV is raw data — it should look like an export from a real production
+table. Specifically forbidden:
+
+- Column names like \`is_anomaly\`, \`is_fraud_flagged\`, \`bug_indicator\`
+  that telegraph the answer.
+- Sentinel values that scream "look here" (\`error_code = 'BUG-7'\`,
+  customer_id ranges that are suspiciously gappy on exactly the rows the
+  candidate should investigate). Realistic problems are statistical, not
+  flagged.
+- Notes / comments embedded as extra rows.
+- Debug strings or human-readable annotations in cells.
+
+The candidate must surface the issue from aggregations and joins on
+realistic data, not from a column that says "look at this row".
 
 ## Files to generate
 

@@ -26,6 +26,10 @@ const logger = createLogger("lib:scenarios:plan-and-docs-generator");
 
 const MAX_ATTEMPTS = 3;
 
+// targetRowCount: the model has a bad habit of looping on long numeric
+// fields ("180000000000…0)") which breaks JSON parsing. We accept either a
+// number or a string and coerce + clamp here so a malformed number doesn't
+// blow up the whole pipeline.
 const planResourceSchema = z.object({
   id: z.string().min(1),
   type: z.enum(["repository", "csv", "document"]),
@@ -33,7 +37,15 @@ const planResourceSchema = z.object({
   filename: z.string().min(1),
   objective: z.string().min(10),
   candidateUsage: z.string().min(10),
-  targetRowCount: z.number().int().min(0).optional(),
+  targetRowCount: z
+    .union([z.number(), z.string()])
+    .optional()
+    .transform((v) => {
+      if (v === undefined || v === null || v === "") return undefined;
+      const n = typeof v === "number" ? v : Number(String(v).replace(/[^\d.-]/g, ""));
+      if (!Number.isFinite(n) || n < 0) return undefined;
+      return Math.min(Math.max(Math.round(n), 30), 2000);
+    }),
   dataShape: z.string().optional(),
 });
 
@@ -110,7 +122,10 @@ export async function generatePlanAndDocs(
                 filename: { type: Type.STRING },
                 objective: { type: Type.STRING },
                 candidateUsage: { type: Type.STRING },
-                targetRowCount: { type: Type.NUMBER },
+                // STRING (not NUMBER) deliberately — Pro sometimes loops on
+                // numeric tokens producing "180000000…0)" which kills the
+                // parse. We coerce to a number in Zod after parsing.
+                targetRowCount: { type: Type.STRING },
                 dataShape: { type: Type.STRING },
               },
               required: ["id", "type", "label", "filename", "objective", "candidateUsage"],
@@ -150,6 +165,10 @@ export async function generatePlanAndDocs(
       // calls with structured output + 3 long markdown docs can take 60-90s,
       // which sometimes hits Node's default undici headers timeout (5min) or
       // upstream load-balancer timeouts when the model pauses to think.
+      // Higher temperature on retries — sometimes the model gets stuck in a
+      // token-repetition loop (e.g. emitting `1800000000…` for a number) and
+      // a different sampling temperature unsticks it.
+      const temperature = 0.4 + (attempt - 1) * 0.15;
       const stream = await wrapAICall(
         () =>
           gemini.models.generateContentStream({
@@ -158,7 +177,7 @@ export async function generatePlanAndDocs(
             config: {
               responseMimeType: "application/json",
               responseSchema,
-              temperature: 0.4,
+              temperature,
             },
           }),
         {
@@ -175,7 +194,11 @@ export async function generatePlanAndDocs(
       const responseText = chunks.join("");
       lastResponseText = responseText;
 
-      const parsed = JSON.parse(responseText);
+      // Extract the JSON object — the model occasionally tails extra prose
+      // or repeats characters in long numeric fields. Slice to the first
+      // balanced { … } block before parsing.
+      const cleaned = extractJsonObject(responseText);
+      const parsed = JSON.parse(cleaned);
       const validated = planAndDocsSchema.parse(parsed);
 
       return {
@@ -204,4 +227,44 @@ export async function generatePlanAndDocs(
   throw new Error(
     `generatePlanAndDocs failed after ${MAX_ATTEMPTS} attempts: ${String(lastError)} (last response: ${lastResponseText.slice(0, 500)})`
   );
+}
+
+/**
+ * Pull the first balanced { … } block from a response. Handles common
+ * failures: the model returning JSON wrapped in fences, or trailing prose
+ * after the object closes.
+ */
+function extractJsonObject(text: string): string {
+  let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+
+  const firstBrace = cleaned.indexOf("{");
+  if (firstBrace === -1) return cleaned;
+  cleaned = cleaned.slice(firstBrace);
+
+  // Walk forward tracking brace depth, ignoring braces inside strings.
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < cleaned.length; i++) {
+    const c = cleaned[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (c === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (c === '"') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) return cleaned.slice(0, i + 1);
+    }
+  }
+  return cleaned;
 }
