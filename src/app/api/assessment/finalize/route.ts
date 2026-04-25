@@ -42,6 +42,7 @@ export async function POST(request: Request) {
         status: true,
         startedAt: true,
         workingStartedAt: true,
+        completedAt: true,
         codeReview: true,
         scenario: {
           select: {
@@ -66,10 +67,16 @@ export async function POST(request: Request) {
       return error("Unauthorized to modify this assessment", 403);
     }
 
-    // Check that assessment is in WORKING status (after PR submission, before defense)
-    if (assessment.status !== AssessmentStatus.WORKING) {
+    // Allow finalize from WORKING (legacy direct path) or COMPLETED (the new
+    // flow flips to COMPLETED via the end_walkthrough transition just before
+    // calling finalize for the post-assessment pipeline). Reject WELCOME and
+    // any other phases — candidate hasn't progressed far enough to finalize.
+    if (
+      assessment.status !== AssessmentStatus.WORKING &&
+      assessment.status !== AssessmentStatus.COMPLETED
+    ) {
       return error(
-        `Cannot finalize assessment in ${assessment.status} status. Must be in WORKING status.`,
+        `Cannot finalize assessment in ${assessment.status} status.`,
         400
       );
     }
@@ -77,24 +84,39 @@ export async function POST(request: Request) {
     // Calculate total duration (use workingStartedAt if available, else fall back to startedAt)
     const now = new Date();
     const timerStart = assessment.workingStartedAt ?? assessment.startedAt;
-    const totalDurationMs = now.getTime() - timerStart.getTime();
+    const alreadyCompleted = assessment.status === AssessmentStatus.COMPLETED;
+    const completedAt = alreadyCompleted
+      ? (assessment.completedAt ?? now)
+      : now;
+    const totalDurationMs = completedAt.getTime() - timerStart.getTime();
     const totalDurationSeconds = Math.floor(totalDurationMs / 1000);
 
-    // Update assessment status to COMPLETED
-    const updatedAssessment = await db.assessment.update({
-      where: { id: assessmentId },
-      data: {
-        status: AssessmentStatus.COMPLETED,
-        completedAt: now,
-      },
-      select: {
-        id: true,
-        status: true,
-        startedAt: true,
-        completedAt: true,
-        codeReview: true,
-      },
-    });
+    // Idempotent: when status is already COMPLETED (typical after the
+    // end_walkthrough transition just stamped it), skip the status flip and
+    // preserve the original completedAt. Side-effects below are upsert-based
+    // so they're safe to re-run.
+    const updatedAssessment = alreadyCompleted
+      ? {
+          id: assessment.id,
+          status: assessment.status,
+          startedAt: assessment.startedAt,
+          completedAt,
+          codeReview: assessment.codeReview,
+        }
+      : await db.assessment.update({
+          where: { id: assessmentId },
+          data: {
+            status: AssessmentStatus.COMPLETED,
+            completedAt: now,
+          },
+          select: {
+            id: true,
+            status: true,
+            startedAt: true,
+            completedAt: true,
+            codeReview: true,
+          },
+        });
 
     // Merge recording chunks and trigger video assessment (async, non-blocking)
     // The merge + Gemini upload + ACTIVE polling can take minutes for large videos,
@@ -162,7 +184,7 @@ export async function POST(request: Request) {
       assessment: updatedAssessment,
       timing: {
         startedAt: assessment.startedAt.toISOString(),
-        completedAt: now.toISOString(),
+        completedAt: completedAt.toISOString(),
         totalDurationSeconds,
       },
       videoAssessment: {

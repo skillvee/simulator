@@ -127,14 +127,14 @@ describe("POST /api/assessment/finalize", () => {
     expect(data.error).toBe("Unauthorized to modify this assessment");
   });
 
-  it("should return 400 when assessment is not in WORKING status", async () => {
+  it("should return 400 when assessment is in WELCOME status", async () => {
     mockAuth.mockResolvedValue({
       user: { id: "user-123" },
     });
     mockAssessmentFindUnique.mockResolvedValue({
       id: "test-id",
       userId: "user-123",
-      status: AssessmentStatus.WELCOME, // Wrong status
+      status: AssessmentStatus.WELCOME, // Candidate hasn't started
       startedAt: new Date(),
       scenario: { taskDescription: "Test task" },
       recordings: [],
@@ -149,7 +149,7 @@ describe("POST /api/assessment/finalize", () => {
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.error).toContain("Must be in WORKING status");
+    expect(data.error).toContain("WELCOME");
   });
 
   it("should finalize assessment and return timing info", async () => {
@@ -216,15 +216,19 @@ describe("POST /api/assessment/finalize", () => {
     expect(data.error).toBe("Failed to finalize assessment");
   });
 
-  it("should not finalize if already completed", async () => {
+  it("should be idempotent when already COMPLETED — return success without re-stamping completedAt", async () => {
+    const startedAt = new Date("2024-01-01T10:00:00Z");
+    const originalCompletedAt = new Date("2024-01-01T10:30:00Z");
+
     mockAuth.mockResolvedValue({
       user: { id: "user-123" },
     });
     mockAssessmentFindUnique.mockResolvedValue({
       id: "test-id",
       userId: "user-123",
-      status: AssessmentStatus.COMPLETED, // Already completed
-      startedAt: new Date(),
+      status: AssessmentStatus.COMPLETED, // Already flipped by end_walkthrough transition
+      startedAt,
+      completedAt: originalCompletedAt,
       scenario: { taskDescription: "Test task" },
       recordings: [],
     });
@@ -235,10 +239,14 @@ describe("POST /api/assessment/finalize", () => {
     });
 
     const response = await POST(request);
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(200);
 
     const data = await response.json();
-    expect(data.error).toContain("COMPLETED");
+    expect(data.success).toBe(true);
+    expect(data.data.assessment.status).toBe(AssessmentStatus.COMPLETED);
+    expect(data.data.timing.completedAt).toBe(originalCompletedAt.toISOString());
+    // Status flip skipped — no DB update for the assessment row
+    expect(mockAssessmentUpdate).not.toHaveBeenCalled();
   });
 
   it("should trigger video assessment when recording exists", async () => {
