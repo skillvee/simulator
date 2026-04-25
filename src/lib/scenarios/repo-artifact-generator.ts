@@ -240,11 +240,24 @@ ${docFullText}
 
 ### Anti-spoiler rule
 
-Do NOT leave hints at the bug or solution anywhere in the spec — no
-explanatory comments pointing at problem lines, no \`// FIXME: race here\`
-markers, no obvious file names like \`broken-cache.ts\`, no debug strings
-that name the issue. The candidate must diagnose the problem from system
-behavior alone, exactly as they would on a real codebase.
+Do NOT leave hints at the bug or solution anywhere in the spec.
+Specifically forbidden:
+
+- Explanatory comments pointing at the problem (\`// FIXME: race here\`,
+  \`// TODO: fix this slow path\`, \`// BUG: missing await\`).
+- Comments **attributed to the coworker personas** (\`// Marcus: careful
+  with this\`, \`// Hugo says we need to revisit\`). Real production code
+  does NOT have author-named "watch out" comments — it has the bug
+  silently in place. The candidate must discover it from behavior, not
+  from breadcrumbs you leave behind.
+- Obvious filenames (\`broken-cache.ts\`, \`slow-handler.ts\`).
+- Debug strings or log lines that name the issue.
+- Issue or PR comments that reveal the answer in the body. Issues should
+  describe SYMPTOMS the candidate must reproduce, not the root cause.
+
+The candidate must diagnose the problem from system behavior alone,
+exactly as they would on a real codebase. If the judge spots a comment
+that names the bug, the bundle fails.
 
 ### Quality criteria the judge will check
 

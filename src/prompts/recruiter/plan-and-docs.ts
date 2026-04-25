@@ -110,7 +110,7 @@ candidate analyzes**. Each entry MUST include:
   - filename (e.g. "sales_transactions.csv")
   - objective (one sentence — why this dataset exists for the candidate)
   - candidateUsage (one sentence — how the candidate uses it)
-  - targetRowCount (integer between 500 and 2000 — the sandbox stdout cap forces small datasets; do not promise more rows in docs than will be generated)
+  - targetRowCount (a numeric string between "500" and "2000" — emit as a JSON string like "1500", not a bare number — the sandbox stdout cap forces small datasets; do not promise more rows in docs than will be generated)
   - dataShape (free text describing distributions, key relationships, the *signal* in the data — e.g. "lognormal order_value, 60% repeat customers, weekly seasonality, ~3% fraud rows clustered around weekends")
 `;
 
@@ -195,7 +195,7 @@ Strict JSON only. The schema:
   "plan": {
     "resources": [
       { "id": "...", "type": "...", "label": "...", "filename": "...", "objective": "...", "candidateUsage": "..."${
-        resourceType === "data" ? `, "targetRowCount": 0, "dataShape": "..."` : ""
+        resourceType === "data" ? `, "targetRowCount": "1500", "dataShape": "..."` : ""
       } }
     ],
     "qualityCriteria": ["..."]
