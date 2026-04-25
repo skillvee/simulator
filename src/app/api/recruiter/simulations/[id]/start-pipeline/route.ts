@@ -130,27 +130,34 @@ export async function POST(
 }
 
 /**
- * Map an Archetype.slug (DB row) to a RoleArchetype string union.
- * Slugs come from the Archetype table seed (e.g., "data-analyst" → "DATA_ANALYST").
+ * Map a real `Archetype.slug` (from the seeded rubric system) to the
+ * `RoleArchetype` union used by the v2 pipeline. The seed slugs aren't 1:1
+ * with the union — many roles share weight configs, so we map semantically.
+ *
+ * Roles outside the v2 scope (PM, sales, CS) return null and the caller
+ * falls back to the legacy v1 path or rejects the start-pipeline request.
  */
+const SLUG_TO_ARCHETYPE: Record<string, RoleArchetype> = {
+  // engineering
+  frontend_engineer: "SENIOR_FRONTEND_ENGINEER",
+  backend_engineer: "SENIOR_BACKEND_ENGINEER",
+  fullstack_engineer: "FULLSTACK_ENGINEER",
+  tech_lead: "TECH_LEAD",
+  devops_sre: "DEVOPS_ENGINEER",
+  // data
+  data_analyst: "DATA_ANALYST",
+  data_scientist: "DATA_SCIENTIST",
+  analytics_engineer: "DATA_ENGINEER",
+  ml_engineer: "DATA_SCIENTIST",
+  // engineering-manager-style
+  engineering_manager: "ENGINEERING_MANAGER",
+  // generic / fallback
+  software_engineer: "GENERAL_SOFTWARE_ENGINEER",
+};
+
 function mapArchetypeSlugToRoleArchetype(
   slug: string | undefined | null
 ): RoleArchetype | null {
   if (!slug) return null;
-  const normalized = slug.toUpperCase().replace(/-/g, "_");
-  const allowed: RoleArchetype[] = [
-    "SENIOR_FRONTEND_ENGINEER",
-    "SENIOR_BACKEND_ENGINEER",
-    "FULLSTACK_ENGINEER",
-    "ENGINEERING_MANAGER",
-    "TECH_LEAD",
-    "DEVOPS_ENGINEER",
-    "DATA_ENGINEER",
-    "DATA_ANALYST",
-    "DATA_SCIENTIST",
-    "GENERAL_SOFTWARE_ENGINEER",
-  ];
-  return (allowed as string[]).includes(normalized)
-    ? (normalized as RoleArchetype)
-    : null;
+  return SLUG_TO_ARCHETYPE[slug] ?? null;
 }

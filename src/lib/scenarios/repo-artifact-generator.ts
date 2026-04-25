@@ -16,6 +16,7 @@ import { env } from "@/lib/core/env";
 import { generateRepoSpec } from "./repo-spec-generator";
 import { buildRepoFromSpec } from "./repo-builder";
 import { selectScaffold, type ScenarioMetadata } from "./repo-spec";
+import { getGitHubHeaders } from "@/lib/external/github/client";
 import type {
   ResourcePlan,
   ScenarioDoc,
@@ -83,6 +84,18 @@ export async function generateRepoArtifact(
     return { repoUrl: scenario.repoUrl, repoSpec: null };
   }
 
+  // Retry path: judge rejected the previous attempt. Delete the old repo so
+  // `buildRepoFromSpec` can re-create `simulation-${scenarioId}` cleanly.
+  // GitHub's repo API returns 422 if the name already exists; without this,
+  // every retry would fail before even calling the model.
+  if (scenario.repoUrl && judgeFeedback) {
+    await deleteGitHubRepo(scenario.repoUrl, githubToken);
+    await db.scenario.update({
+      where: { id: scenarioId },
+      data: { repoUrl: null, repoSpec: null as unknown as object },
+    });
+  }
+
   const metadata: ScenarioMetadata = {
     name: scenario.name,
     companyName: scenario.companyName,
@@ -127,6 +140,39 @@ export async function generateRepoArtifact(
   });
 
   return { repoUrl, repoSpec: spec };
+}
+
+async function deleteGitHubRepo(
+  repoUrl: string,
+  githubToken: string
+): Promise<void> {
+  try {
+    const url = new URL(repoUrl);
+    const [, owner, repo] = url.pathname.split("/");
+    if (!owner || !repo) return;
+
+    const res = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}`,
+      {
+        method: "DELETE",
+        headers: getGitHubHeaders(),
+      }
+    );
+
+    if (!res.ok && res.status !== 404) {
+      logger.warn("Failed to delete previous repo (continuing anyway)", {
+        owner,
+        repo,
+        status: res.status,
+      });
+    } else {
+      logger.info("Deleted previous repo for retry", { owner, repo });
+    }
+  } catch (err) {
+    logger.warn("Error deleting previous repo (continuing anyway)", {
+      err: String(err),
+    });
+  }
 }
 
 function buildExtraContext(args: {

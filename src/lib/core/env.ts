@@ -38,6 +38,14 @@ export const env = createEnv({
       .enum(["true", "false"])
       .optional()
       .transform((val) => val === "true"),
+    // Client-side mirror of RESOURCE_PIPELINE_V2 — set to "on" alongside the
+    // server flag to switch the recruiter create flow to v2 (skip legacy
+    // /generate-resources call, use /start-pipeline instead).
+    NEXT_PUBLIC_RESOURCE_PIPELINE_V2: z
+      .enum(["on", "off"])
+      .optional()
+      .default("off")
+      .transform((val) => val === "on"),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
@@ -57,6 +65,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_SKIP_SCREEN_RECORDING,
     DEMO_USER_IDS: process.env.DEMO_USER_IDS,
     RESOURCE_PIPELINE_V2: process.env.RESOURCE_PIPELINE_V2,
+    NEXT_PUBLIC_RESOURCE_PIPELINE_V2: process.env.NEXT_PUBLIC_RESOURCE_PIPELINE_V2,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

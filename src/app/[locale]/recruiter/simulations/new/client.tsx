@@ -736,9 +736,16 @@ export function RecruiterScenarioBuilderClient({ uiLocale }: RecruiterScenarioBu
       // complete the step — the server-side fallback in POST /api/recruiter/simulations
       // will recover the output by creationLogId. But we surface it as a warning
       // so the user knows to verify or retry rather than shipping empty.
+      //
+      // v2 path: skip legacy resource generation entirely. The orchestrator
+      // (kicked off after scenario creation via /start-pipeline) owns the
+      // markdown + artifact pipeline. Running the legacy call here would burn
+      // ~25s on results that get discarded server-side.
+      const v2On =
+        process.env.NEXT_PUBLIC_RESOURCE_PIPELINE_V2 === "on";
       let resources: ScenarioResource[] = [];
       let resourceGenerationWarning = false;
-      try {
+      if (!v2On) try {
         const resourcesResponse = await fetch("/api/recruiter/simulations/generate-resources", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
