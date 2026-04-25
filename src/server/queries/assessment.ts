@@ -34,6 +34,17 @@ export async function getAssessmentForChat(id: string, userId: string) {
       scenario: {
         include: {
           coworkers: true,
+          dataFiles: {
+            select: {
+              id: true,
+              filename: true,
+              rowCount: true,
+              byteSize: true,
+              previewRows: true,
+              schemaJson: true,
+            },
+            orderBy: { generatedAt: "asc" },
+          },
         },
       },
     },

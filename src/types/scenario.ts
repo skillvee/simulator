@@ -42,6 +42,8 @@ export const SIMULATION_DEPTH_CONFIG: Record<
 /**
  * A resource the candidate needs access to during the simulation.
  * Flexible enough to represent repos, databases, spreadsheets, APIs, dashboards, etc.
+ *
+ * NOTE: legacy v1 shape. v2 pipelines write to ScenarioDoc / ScenarioDataFile / repoUrl directly.
  */
 export interface ScenarioResource {
   /** Resource category — drives icon and display treatment */
@@ -65,4 +67,88 @@ export interface ScenarioResource {
   content?: string;
   /** Language the resource was generated in (e.g., "en", "es"). Defaults to scenario language. */
   language?: string;
+}
+
+// ============================================================================
+// v2 resource pipeline types
+// ============================================================================
+
+/** A single markdown document produced by Step 1 of the v2 pipeline. */
+export interface ScenarioDoc {
+  /** Stable id used for cross-referencing and download URLs. */
+  id: string;
+  /** Display name (e.g., "Project Brief", "Data Dictionary"). */
+  name: string;
+  /** Filename hint, e.g. "project-brief.md". */
+  filename: string;
+  /** Short reason this doc exists — drives the judge's coverage check. */
+  objective: string;
+  /** Full markdown body. */
+  markdown: string;
+}
+
+/** A scenario-level CSV/data file (DA/DS/DE archetypes). */
+export interface ScenarioDataFileShape {
+  id: string;
+  filename: string;
+  storagePath: string;
+  bucket: string;
+  rowCount: number | null;
+  byteSize: number | null;
+  sha256: string | null;
+  schemaJson: ScenarioDataFileSchema | null;
+  previewRows: Record<string, unknown>[] | null;
+}
+
+export interface ScenarioDataFileSchema {
+  columns: Array<{ name: string; type: string; sample?: unknown }>;
+}
+
+/** Step 1 plan output — what the artifact step should produce. */
+export interface ResourcePlanItem {
+  id: string;
+  type: "repository" | "csv" | "document";
+  label: string;
+  filename: string;
+  objective: string;
+  candidateUsage: string;
+  /** Data-only: target row count. */
+  targetRowCount?: number;
+  /** Data-only: distribution / signal hints (free text for the model). */
+  dataShape?: string;
+}
+
+export interface ResourcePlan {
+  resources: ResourcePlanItem[];
+  qualityCriteria: string[];
+}
+
+/** Final step status — drives the recruiter UI. */
+export type ResourcePipelineStatus =
+  | "planning"
+  | "markdown_ready"
+  | "artifacts_generating"
+  | "validating"
+  | "judging"
+  | "passed"
+  | "failed";
+
+export interface ResourcePipelineMeta {
+  version: "v2";
+  status: ResourcePipelineStatus;
+  attempts: number;
+  lastError?: string;
+  judgeSummary?: string;
+  blockingIssues?: string[];
+  startedAt: string;
+  passedAt?: string;
+}
+
+export interface JudgeVerdict {
+  passed: boolean;
+  score: number;
+  summary: string;
+  blockingIssues: string[];
+  missingEvidence: string[];
+  retryInstructions?: string;
 }

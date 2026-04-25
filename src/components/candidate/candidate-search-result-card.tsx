@@ -92,6 +92,8 @@ const archetypeDisplayNames: Record<RoleArchetype, string> = {
   TECH_LEAD: "Tech Lead",
   DEVOPS_ENGINEER: "DevOps Engineer",
   DATA_ENGINEER: "Data Engineer",
+  DATA_ANALYST: "Data Analyst",
+  DATA_SCIENTIST: "Data Scientist",
   GENERAL_SOFTWARE_ENGINEER: "Software Engineer",
 };
 

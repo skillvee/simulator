@@ -87,67 +87,92 @@ model Scenario {
   archetypeId            String?
   repoSpec               Json?
   resources              Json?
+  // v2 resource pipeline fields
+  plan                   Json? // Step 1 output: { resources: [...], qualityCriteria: [...] }
+  docs                   Json? // Step 1 output: [{ id, name, markdown }]
+  resourcePipelineMeta   Json? // { version, status, attempts, lastError, judgeSummary, blockingIssues, startedAt, passedAt }
+  pipelineVersion        String                  @default("v1")
   assessments            Assessment[]
   coworkers              Coworker[]
+  dataFiles              ScenarioDataFile[]
   archetype              Archetype?              @relation(fields: [archetypeId], references: [id])
   createdBy              User?                   @relation("CreatedScenarios", fields: [createdById], references: [id])
   simulationCreationLogs SimulationCreationLog[]
 }
 
+/// Scenario-level data files (CSVs for DA/DS/DE archetypes).
+/// Stored in Supabase Storage bucket "scenario-data"; this row is metadata only.
+model ScenarioDataFile {
+  id          String   @id @default(cuid())
+  scenarioId  String
+  filename    String
+  storagePath String // "<scenarioId>/<filename>"
+  bucket      String   @default("scenario-data")
+  rowCount    Int?
+  byteSize    Int?
+  sha256      String?
+  schemaJson  Json? // { columns: [{ name, type, sample }] }
+  previewRows Json? // first 20 parsed rows for inline preview
+  generatedAt DateTime @default(now())
+  scenario    Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+}
+
 model Coworker {
-  id            String         @id @default(cuid())
+  id            String             @id @default(cuid())
   scenarioId    String
   name          String
   role          String
   personaStyle  String
   knowledge     Json
   avatarUrl     String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
   voiceName     String?
   personality   Json?
-  language      String         @default("en")
+  language      String             @default("en")
   gender        CoworkerGender?
   ethnicity     CoworkerEthnicity?
   conversations Conversation[]
-  scenario      Scenario       @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  scenario      Scenario           @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 
   @@index([scenarioId])
 }
 
 model Assessment {
-  id                     String              @id @default(cuid())
-  userId                 String
-  scenarioId             String
-  status                 AssessmentStatus    @default(WELCOME)
-  startedAt              DateTime            @default(now())
-  workingStartedAt       DateTime?
-  completedAt            DateTime?
-  report                 Json?
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
-  codeReview             Json?
-  supersededBy           String?
-  targetLevel            String?
+  id               String           @id @default(cuid())
+  userId           String
+  scenarioId       String
+  status           AssessmentStatus @default(WELCOME)
+  startedAt        DateTime         @default(now())
+  workingStartedAt DateTime?
+  completedAt      DateTime?
+  report           Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  codeReview       Json?
+  supersededBy     String?
+  targetLevel      String?
 
-  reviewedAt             DateTime?
-  repoUrl                String?
-  repoStatus             String?             @default("pending")
-  deliverablePath        String?
-  deliverableFilename    String?
-  deliverableSummary     String?
-  scenario               Scenario            @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  apiCalls               AssessmentApiCall[]
-  logs                   AssessmentLog[]
-  conversations          Conversation[]
-  recordings             Recording[]
-  clientErrors           ClientError[]
-  voiceSessions          VoiceSession[]
-  videoAssessment        VideoAssessment?
-  apiRequestLogs         ApiRequestLog[]
-  candidateEvents        CandidateEvent[]
-  candidateFeedback      AssessmentFeedback?
+  reviewedAt          DateTime?
+  repoUrl             String?
+  repoStatus          String?             @default("pending")
+  deliverablePath     String?
+  deliverableFilename String?
+  deliverableSummary  String?
+  scenario            Scenario            @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiCalls            AssessmentApiCall[]
+  logs                AssessmentLog[]
+  conversations       Conversation[]
+  recordings          Recording[]
+  clientErrors        ClientError[]
+  voiceSessions       VoiceSession[]
+  videoAssessment     VideoAssessment?
+  apiRequestLogs      ApiRequestLog[]
+  candidateEvents     CandidateEvent[]
+  candidateFeedback   AssessmentFeedback?
 
   @@index([userId])
   @@index([scenarioId, userId])
@@ -485,23 +510,23 @@ model CandidateEmbedding {
 }
 
 model SimulationCreationLog {
-  id             String                   @id @default(cuid())
-  userId         String
-  status         SimulationCreationStatus @default(STARTED)
-  roleTitle      String?
-  companyName    String?
-  techStack      String[]
-  seniorityLevel String?
-  archetypeId    String?
-  source         String                   @default("guided")
-  scenarioId     String?
-  failedStep     String?
-  errorMessage   String?
-  errorDetails   Json?
-  createdAt      DateTime                 @default(now())
-  completedAt    DateTime?
-  scenario       Scenario?                @relation(fields: [scenarioId], references: [id])
-  user           User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String                     @id @default(cuid())
+  userId          String
+  status          SimulationCreationStatus   @default(STARTED)
+  roleTitle       String?
+  companyName     String?
+  techStack       String[]
+  seniorityLevel  String?
+  archetypeId     String?
+  source          String                     @default("guided")
+  scenarioId      String?
+  failedStep      String?
+  errorMessage    String?
+  errorDetails    Json?
+  createdAt       DateTime                   @default(now())
+  completedAt     DateTime?
+  scenario        Scenario?                  @relation(fields: [scenarioId], references: [id])
+  user            User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
   generationSteps SimulationGenerationStep[]
 
   @@index([userId])
@@ -510,23 +535,23 @@ model SimulationCreationLog {
 }
 
 model SimulationGenerationStep {
-  id              String                @id @default(cuid())
-  creationLogId   String
-  stepName        String                // e.g. "parse_jd", "generate_tasks", "generate_coworkers", "generate_resources"
-  status          String                @default("started") // started, completed, failed
-  modelUsed       String?               // e.g. "gemini-3-flash-preview"
-  promptVersion   String?               // e.g. "3.0"
-  promptText      String?               // Full prompt sent to AI
-  responseText    String?               // Full AI response
-  inputData       Json?                 // Structured input passed to the step
-  outputData      Json?                 // Parsed/validated output from the step
-  durationMs      Int?                  // How long the step took
-  attempts        Int                   @default(1) // Number of retry attempts
-  errorMessage    String?
-  errorDetails    Json?                 // Stack trace, raw error, etc.
-  createdAt       DateTime              @default(now())
-  completedAt     DateTime?
-  creationLog     SimulationCreationLog @relation(fields: [creationLogId], references: [id], onDelete: Cascade)
+  id            String                @id @default(cuid())
+  creationLogId String
+  stepName      String // e.g. "parse_jd", "generate_tasks", "generate_coworkers", "generate_resources"
+  status        String                @default("started") // started, completed, failed
+  modelUsed     String? // e.g. "gemini-3-flash-preview"
+  promptVersion String? // e.g. "3.0"
+  promptText    String? // Full prompt sent to AI
+  responseText  String? // Full AI response
+  inputData     Json? // Structured input passed to the step
+  outputData    Json? // Parsed/validated output from the step
+  durationMs    Int? // How long the step took
+  attempts      Int                   @default(1) // Number of retry attempts
+  errorMessage  String?
+  errorDetails  Json? // Stack trace, raw error, etc.
+  createdAt     DateTime              @default(now())
+  completedAt   DateTime?
+  creationLog   SimulationCreationLog @relation(fields: [creationLogId], references: [id], onDelete: Cascade)
 
   @@index([creationLogId])
   @@index([stepName])
@@ -700,33 +725,33 @@ model EvalRun {
 }
 
 model EvalResult {
-  id             String   @id @default(cuid())
-  evalRunId      String
-  scenarioId     String
-  scenarioName   String
-  category       String
+  id           String @id @default(cuid())
+  evalRunId    String
+  scenarioId   String
+  scenarioName String
+  category     String
 
   // Generation
-  prompt         String
-  userMessage    String
-  response       String
-  generationMs   Int?
+  prompt       String
+  userMessage  String
+  response     String
+  generationMs Int?
 
   // Judgments (3 judges as JSON array)
-  judgments      Json
+  judgments Json
 
   // Aggregated scores (median of 3 judges)
-  naturalness    Float?
-  roleAccuracy   Float?
-  brevity        Float?
+  naturalness      Float?
+  roleAccuracy     Float?
+  brevity          Float?
   contextAwareness Float?
-  infoDiscipline Float?
-  aiIsms         Float?
-  overallScore   Float?
-  flagged        Boolean  @default(false)
+  infoDiscipline   Float?
+  aiIsms           Float?
+  overallScore     Float?
+  flagged          Boolean @default(false)
 
-  evalRun        EvalRun  @relation(fields: [evalRunId], references: [id], onDelete: Cascade)
-  createdAt      DateTime @default(now())
+  evalRun   EvalRun  @relation(fields: [evalRunId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 
   @@index([evalRunId])
   @@index([scenarioId])

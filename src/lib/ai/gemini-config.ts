@@ -8,6 +8,10 @@ export const LIVE_MODEL = "gemini-3.1-flash-live-preview";
 // Model for text-based AI operations (CV parsing, assessments, chat, etc.)
 export const TEXT_MODEL = "gemini-3-flash-preview";
 
+// Pro model for the v2 resource pipeline (plan-and-docs, repo spec, judge).
+// Always prefer the 3.1 preview over the older 3.0 line.
+export const PRO_MODEL = "gemini-3.1-pro-preview";
+
 // Default voice for voice calls and fallback
 export const DEFAULT_VOICE = "Aoede";
 

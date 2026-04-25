@@ -39,14 +39,19 @@ export interface GenerateRepoSpecResponse {
  * Generate a complete RepoSpec from scenario metadata.
  *
  * @param metadata - Scenario context (company, task, tech stack, coworkers)
+ * @param options - Optional v2-pipeline context (plan + docs + judgeFeedback)
  * @returns Validated RepoSpec ready for the builder
  * @throws Error if generation fails after all attempts
  */
 export async function generateRepoSpec(
-  metadata: ScenarioMetadata
+  metadata: ScenarioMetadata,
+  options: { extraContext?: string } = {}
 ): Promise<GenerateRepoSpecResponse> {
   const scaffold = selectScaffold(metadata.techStack);
-  const contextPrompt = buildContextPrompt(metadata, scaffold.id);
+  const baseContext = buildContextPrompt(metadata, scaffold.id);
+  const contextPrompt = options.extraContext
+    ? `${baseContext}\n\n## Additional Context (v2 plan / judge feedback)\n\n${options.extraContext}`
+    : baseContext;
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {

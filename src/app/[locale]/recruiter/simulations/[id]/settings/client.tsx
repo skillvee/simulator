@@ -42,7 +42,8 @@ import {
   Info,
   FolderOpen,
 } from "lucide-react";
-import type { ScenarioResource } from "@/types";
+import type { ScenarioResource, ResourcePipelineMeta } from "@/types";
+import { ResourcePipelineStatus } from "@/components/recruiter/resource-pipeline-status";
 import type { Gender, Ethnicity } from "@/lib/avatar/name-ethnicity";
 import { CoworkerAvatar } from "@/components/chat/coworker-avatar"; // eslint-disable-line no-restricted-imports -- Component import for UI
 import { LEVEL_EXPECTATIONS, type TargetLevel } from "@/lib/rubric/level-expectations";
@@ -88,6 +89,10 @@ interface ScenarioData {
   createdAt: string;
   coworkers: Coworker[];
   assessmentCount: number;
+  // v2 pipeline fields
+  isPublished: boolean;
+  pipelineVersion: string;
+  resourcePipelineMeta: ResourcePipelineMeta | null;
 }
 
 interface SimulationSettingsClientProps {
@@ -279,6 +284,15 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           </div>
         </div>
       </div>
+
+      {/* v2 resource pipeline status — only renders for v2 scenarios */}
+      {scenario.pipelineVersion === "v2" && (
+        <ResourcePipelineStatus
+          scenarioId={scenario.id}
+          initialMeta={scenario.resourcePipelineMeta}
+          initialIsPublished={scenario.isPublished}
+        />
+      )}
 
       {/* Shareable Link Section */}
       <Card className="mb-8 border-blue-200 bg-blue-50/50 shadow-sm">
