@@ -14,6 +14,9 @@ export interface MarkdownValidatorInput {
 }
 
 const URL_REGEX = /https?:\/\/[^\s)]+/gi;
+// localhost / 127.0.0.1 / *.local URLs are legitimate in dev docs
+// (`http://localhost:3000`, `http://127.0.0.1:5432`); only flag external links.
+const ALLOWED_URL_HOSTS = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|[\w.-]+\.local)(:\d+)?(\/|$|\b)/i;
 const PLACEHOLDER_PATTERNS = [/\bTODO\b/i, /\bplaceholder\b/i, /\bLorem ipsum\b/i, /\bFIXME\b/i];
 
 export function validateMarkdownDocs(input: MarkdownValidatorInput): string[] {
@@ -50,7 +53,9 @@ export function validateMarkdownDocs(input: MarkdownValidatorInput): string[] {
       }
     }
 
-    const urls = doc.markdown.match(URL_REGEX) ?? [];
+    const urls = (doc.markdown.match(URL_REGEX) ?? []).filter(
+      (u) => !ALLOWED_URL_HOSTS.test(u)
+    );
     if (urls.length > 0) {
       errors.push(
         `Doc "${doc.name}" contains external URL(s) (forbidden): ${urls.slice(0, 3).join(", ")}`

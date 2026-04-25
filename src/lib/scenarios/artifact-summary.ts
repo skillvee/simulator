@@ -47,26 +47,40 @@ export async function buildRepoArtifactSummary(
 
   if (!scenario?.repoUrl) return null;
 
-  // Prefer the cached repoSpec — avoids GitHub API rate limits.
   const spec = scenario.repoSpec as
     | { files?: Array<{ path: string; content: string; purpose?: string }>; readmeContent?: string }
     | null;
 
-  if (spec?.files?.length) {
-    const fileTree = spec.files.map((f) => f.path).sort();
-    const readme = spec.readmeContent ?? "";
-    const sampleFiles = pickSampleFiles(spec.files);
-    return {
-      kind: "repo",
-      repoUrl: scenario.repoUrl,
-      fileTree,
-      readme,
-      sampleFiles,
-    };
+  // Always fetch the live file tree from GitHub. The repoSpec only contains
+  // AI-generated files, but the actual repo also has the scaffold base
+  // (package.json, tsconfig.json, etc.) — the judge needs to see both,
+  // otherwise it flags missing scaffold files as bugs.
+  const live = await fetchRepoSummaryFromGitHub(scenario.repoUrl);
+
+  if (!live) {
+    if (spec?.files?.length) {
+      return {
+        kind: "repo",
+        repoUrl: scenario.repoUrl,
+        fileTree: spec.files.map((f) => f.path).sort(),
+        readme: spec.readmeContent ?? "",
+        sampleFiles: pickSampleFiles(spec.files),
+      };
+    }
+    return null;
   }
 
-  // Fallback: live-read from GitHub.
-  return await fetchRepoSummaryFromGitHub(scenario.repoUrl);
+  // Sample files: prefer inline content from the spec when available
+  // (avoids extra GitHub blob reads), fall back to whatever the live read
+  // returned.
+  const sampleFiles = spec?.files?.length
+    ? pickSampleFiles(spec.files)
+    : live.sampleFiles;
+
+  return {
+    ...live,
+    sampleFiles,
+  };
 }
 
 export async function buildDataArtifactSummary(

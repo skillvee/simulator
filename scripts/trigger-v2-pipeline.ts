@@ -19,6 +19,7 @@ import {
   isSupportedLanguage,
   DEFAULT_LANGUAGE,
 } from "../src/lib/core/language";
+import { selectScaffold } from "../src/lib/scenarios/repo-spec";
 
 const SLUG_TO_ARCHETYPE: Record<string, RoleArchetype> = {
   frontend_engineer: "SENIOR_FRONTEND_ENGINEER",
@@ -79,6 +80,22 @@ async function main() {
       : DEFAULT_LANGUAGE;
     const creationLogId = scenario.simulationCreationLogs[0]?.id;
 
+    let scaffoldLayout:
+      | { name: string; description: string; baselineFiles: string[] }
+      | undefined;
+    if (resourceType === "repo") {
+      try {
+        const scaffold = selectScaffold(scenario.techStack);
+        scaffoldLayout = {
+          name: scaffold.name,
+          description: scaffold.layoutDescription,
+          baselineFiles: scaffold.baselineFiles,
+        };
+      } catch {
+        scaffoldLayout = undefined;
+      }
+    }
+
     console.log(`Triggering ${scenario.name} (${resourceType})`);
     const t0 = Date.now();
     const { plan, docs } = await generatePlanAndPersist({
@@ -98,6 +115,7 @@ async function main() {
         resourceType,
         coworkers: scenario.coworkers,
         language,
+        scaffoldLayout,
       },
     });
     console.log(
