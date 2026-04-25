@@ -15,7 +15,7 @@
 
 import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
 
-export const PLAN_AND_DOCS_PROMPT_VERSION = "v2.1";
+export const PLAN_AND_DOCS_PROMPT_VERSION = "v2.2";
 
 export interface PlanAndDocsInput {
   companyName: string;
@@ -116,6 +116,21 @@ sandbox. Your \`plan.resources\` entries describe each CSV. Each entry MUST incl
   - candidateUsage (one sentence — how the candidate uses it)
   - targetRowCount (a numeric string between "500" and "2000" — emit as a JSON string like "1500", not a bare number — the sandbox stdout cap forces small datasets; do not promise more rows in docs than will be generated)
   - dataShape (free text describing distributions, key relationships, the *signal* in the data, ANY anomalies or known issues. **This is internal; the candidate will not see it directly. Be exhaustive.** e.g. "lognormal order_value, 60% repeat customers, weekly seasonality, ~3% fraud rows clustered around weekends")
+
+#### Inputs vs deliverables — non-CSV artifacts the task mentions
+
+Step 2 only generates **CSVs**. It does NOT generate dbt models, SQL queries,
+notebooks, dashboards, BI views, ML models, or any other "the candidate will
+write this" artifact.
+
+If the task description references artifacts like \`dbt models\`, \`SQL queries\`,
+\`Looker dashboards\`, \`Hex notebooks\`, \`Amplitude funnels\` — those are
+**deliverables the candidate produces**, not inputs the platform provides.
+Do NOT add them to \`plan.resources\` and do NOT list them in the data dictionary.
+
+The kickoff doc CAN mention them, but only as work items ("you'll probably need
+to write a few dbt models on top of these tables"), never as files the candidate
+opens. The judge has been instructed not to penalize their absence.
 `;
 
   const docVoice = `

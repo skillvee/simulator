@@ -77,8 +77,10 @@ const STATUS_COPY: Record<
 > = {
   drafting: {
     label: "Drafting plan",
-    description: () =>
-      "Drafting the simulation plan and three candidate-facing docs. ~1–2 min.",
+    description: (resourceType) =>
+      resourceType === "repo"
+        ? "Drafting the simulation plan and a kickoff note for the candidate. ~1–2 min."
+        : "Drafting the simulation plan and 1–2 candidate-facing docs. ~1–2 min.",
   },
   generating: {
     label: "Generating",
@@ -199,13 +201,21 @@ export function ResourcePipelineStatus({
           doc: d,
         });
       }
-    } else if (recruiterStatus && recruiterStatus !== "ready") {
-      // Pre-Step-1: list the 3 expected docs as pending.
-      for (let i = 0; i < 3; i++) {
+    } else if (recruiterStatus === "drafting" || recruiterStatus === "generating") {
+      // Pre-Step-1: list expected docs as pending. Repo archetype has 1 doc
+      // (kickoff), data archetype has 1-2 (kickoff + optional dictionary).
+      // Skip on `failed` — docs always exist by then; if they're not in state
+      // yet, the next refresh will populate them. Showing placeholders on a
+      // terminal status race-renders confusingly.
+      const placeholders =
+        resourceType === "repo"
+          ? ["Kickoff note"]
+          : ["Kickoff note", "Data dictionary (optional)"];
+      for (let i = 0; i < placeholders.length; i++) {
         rows.push({
           key: `doc-pending-${i}`,
           kind: "doc",
-          filename: ["Project Brief", "Architecture / Data Dictionary", "Onboarding Memo"][i],
+          filename: placeholders[i]!,
           subtitle: "Generating…",
           state: "pending",
         });

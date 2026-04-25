@@ -12,7 +12,7 @@ import type {
 } from "@/types";
 import type { ArtifactSummary } from "@/lib/scenarios/artifact-summary";
 
-export const JUDGE_PROMPT_VERSION = "v2.0";
+export const JUDGE_PROMPT_VERSION = "v2.1";
 
 export interface JudgePromptInput {
   scenario: {
@@ -93,13 +93,35 @@ Score the bundle on three dimensions (each 0.0-1.0):
 
 1. **realism** — does the data / repo feel like real work, not a contrived exercise?
 2. **consistency** — do the docs, plan, and artifacts agree with each other? (e.g., data dictionary references every CSV; README links to the main task issue.)
-3. **coverage** — does the bundle give the candidate enough to actually solve the task?
+3. **coverage** — does the bundle give the candidate **enough INPUT to begin** the task? Coverage is about whether the candidate has the raw materials (CSVs to query, repo to edit, schemas to read), NOT whether every artifact mentioned in the task description physically exists in the bundle.
 
 Compute \`score = (realism + consistency + coverage) / 3\`.
 
+### Inputs vs deliverables — DO NOT penalize for missing deliverables
+
+The task description often references artifacts the candidate **produces** as
+output: dbt models, SQL queries, Looker dashboards, Hex notebooks, ML models,
+PRs, analyses, memos, refactored code. Those are **deliverables**, not inputs.
+
+Their absence from the bundle is correct and expected. **Do not** flag
+"missing dbt models", "no SQL queries", "no notebook", "no analysis", etc., as
+blocking issues or missing evidence — that's the candidate's job to write.
+
+You should ONLY flag a missing artifact when:
+- It is something the candidate **reads** to begin the task (data, schemas, code),
+- AND the docs/plan promise it exists,
+- AND it is not in the bundle.
+
+Concretely for the **data** branch: the inputs are CSV files. Anything else
+mentioned in the task (dbt, SQL, notebooks, dashboards) is the candidate's
+deliverable. For the **repo** branch: the input is the source repo + README +
+issues. Pull requests, refactored functions, fixes are the candidate's deliverable.
+
+### Pass / fail
+
 Set \`passed: true\` only if **all** of these hold:
   - score ≥ 0.85
-  - no blocking issues (critical hallucinations, missing required artifact, broken cross-references)
+  - no blocking issues (critical hallucinations, missing required INPUT artifact, broken cross-references)
   - missingEvidence is empty or trivial
 
 Otherwise \`passed: false\`. Populate \`blockingIssues\` (max 10) with the specific problems
