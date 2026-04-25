@@ -13,6 +13,7 @@ export default defineConfig({
     exclude: [
       "node_modules",
       ".next",
+      ".claude/worktrees/**",
       "**/*.integration.test.{ts,tsx}",
       "tests/e2e/**",
       "tests/i18n-coverage.test.ts",
