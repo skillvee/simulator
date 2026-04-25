@@ -80,37 +80,62 @@ export async function generateDataArtifact(
     attempt,
   });
 
-  // Stream so the connection stays alive past Node's 5-minute undici headers
-  // timeout — code execution + Python data generation can run that long.
-  const stream = await wrapAICall(
-    () =>
-      gemini.models.generateContentStream({
-        model: PRO_MODEL,
-        contents: [{ role: "user", parts: [{ text: promptText }] }],
-        config: {
-          tools: [{ codeExecution: {} }],
-          temperature: 0.6,
-        },
-      }),
-    {
-      model: PRO_MODEL,
-      promptType: "RESOURCE_PIPELINE_DATA_ARTIFACT",
-      promptVersion: DATA_ARTIFACT_PROMPT_VERSION,
-    }
-  );
+  // Sub-retry: codeExecution sometimes returns without producing the marker-
+  // delimited stdout we expect (sandbox timeout, model explains instead of
+  // running, etc). One extra inner attempt is much cheaper than burning an
+  // outer orchestrator attempt that also re-runs the validator + judge.
+  const MAX_INNER_ATTEMPTS = 2;
+  let extraction: ReturnType<typeof extractCsvsFromGeminiParts> = {
+    files: [],
+    errors: [],
+  };
+  let innerLastErr: string[] = [];
 
-  const parts: GeminiResponsePart[] = [];
-  for await (const chunk of stream) {
-    const chunkParts = chunk.candidates?.[0]?.content?.parts as
-      | GeminiResponsePart[]
-      | undefined;
-    if (chunkParts) parts.push(...chunkParts);
+  for (let inner = 1; inner <= MAX_INNER_ATTEMPTS; inner++) {
+    // Bump temperature slightly on retry to break out of any token-loop the
+    // sandbox might be in.
+    const temperature = 0.6 + (inner - 1) * 0.15;
+    const stream = await wrapAICall(
+      () =>
+        gemini.models.generateContentStream({
+          model: PRO_MODEL,
+          contents: [{ role: "user", parts: [{ text: promptText }] }],
+          config: {
+            tools: [{ codeExecution: {} }],
+            temperature,
+          },
+        }),
+      {
+        model: PRO_MODEL,
+        promptType: "RESOURCE_PIPELINE_DATA_ARTIFACT",
+        promptVersion: DATA_ARTIFACT_PROMPT_VERSION,
+      }
+    );
+
+    const parts: GeminiResponsePart[] = [];
+    for await (const chunk of stream) {
+      const chunkParts = chunk.candidates?.[0]?.content?.parts as
+        | GeminiResponsePart[]
+        | undefined;
+      if (chunkParts) parts.push(...chunkParts);
+    }
+    extraction = extractCsvsFromGeminiParts(parts);
+
+    if (extraction.files.length > 0) break;
+
+    innerLastErr = extraction.errors.map((e) => e.message);
+    logger.warn("data-artifact inner attempt produced no CSVs; retrying", {
+      scenarioId,
+      attempt,
+      inner,
+      errors: innerLastErr,
+    });
   }
-  const extraction = extractCsvsFromGeminiParts(parts);
 
   if (extraction.files.length === 0) {
-    const errMsg = extraction.errors.map((e) => e.message).join("; ");
-    throw new Error(`No CSVs extracted from Gemini response: ${errMsg}`);
+    throw new Error(
+      `No CSVs extracted from Gemini response after ${MAX_INNER_ATTEMPTS} inner attempts: ${innerLastErr.join("; ")}`
+    );
   }
 
   const persisted: DataArtifactResult["files"] = [];
