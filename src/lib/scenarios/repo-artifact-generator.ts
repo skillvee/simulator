@@ -89,7 +89,7 @@ export async function generateRepoArtifact(
   // GitHub's repo API returns 422 if the name already exists; without this,
   // every retry would fail before even calling the model.
   if (scenario.repoUrl && judgeFeedback) {
-    await deleteGitHubRepo(scenario.repoUrl, githubToken);
+    await deleteGitHubRepo(scenario.repoUrl);
     await db.scenario.update({
       where: { id: scenarioId },
       data: { repoUrl: null, repoSpec: null as unknown as object },
@@ -142,10 +142,7 @@ export async function generateRepoArtifact(
   return { repoUrl, repoSpec: spec };
 }
 
-async function deleteGitHubRepo(
-  repoUrl: string,
-  githubToken: string
-): Promise<void> {
+async function deleteGitHubRepo(repoUrl: string): Promise<void> {
   try {
     const url = new URL(repoUrl);
     const [, owner, repo] = url.pathname.split("/");
@@ -190,9 +187,17 @@ function buildExtraContext(args: {
     )
     .join("\n");
 
-  const docSummary = docs
-    .map((d) => `  - ${d.name} (${d.filename}): ${d.objective}`)
-    .join("\n");
+  // Inline the full doc bodies. The candidate reads them; the repo MUST match
+  // every concrete name, path, schema, signature, and conceptual claim that
+  // the docs commit to. Summary-only context lets the model invent details
+  // that contradict what the candidate will see.
+  const docFullText = docs
+    .map(
+      (d) => `#### ${d.name} (\`${d.filename}\`)
+
+${d.markdown}`
+    )
+    .join("\n\n---\n\n");
 
   const qualityCriteria = plan.qualityCriteria
     .map((q) => `  - ${q}`)
@@ -222,12 +227,24 @@ task issue reference these resources by name.
 
 ${planSummary}
 
-### Markdown documents already produced
+### Markdown documents — AUTHORITATIVE
 
-These docs ship alongside the repo. Don't contradict them; cross-reference them
-where appropriate (e.g., README links to "${docs[0]?.name ?? "Project Brief"}").
+These docs ship to the candidate verbatim. Anything they commit to —
+file paths, class/function/table names, schema fields, env-var names,
+architectural concepts — is the source of truth. Your repo spec MUST
+exactly match every concrete name and path the docs use. Cross-reference
+the docs from README/issues by name. Do not invent alternative names or
+move files to different paths than what the docs describe.
 
-${docSummary}
+${docFullText}
+
+### Anti-spoiler rule
+
+Do NOT leave hints at the bug or solution anywhere in the spec — no
+explanatory comments pointing at problem lines, no \`// FIXME: race here\`
+markers, no obvious file names like \`broken-cache.ts\`, no debug strings
+that name the issue. The candidate must diagnose the problem from system
+behavior alone, exactly as they would on a real codebase.
 
 ### Quality criteria the judge will check
 

@@ -76,7 +76,7 @@ candidate analyzes**. Each entry MUST include:
   - filename (e.g. "sales_transactions.csv")
   - objective (one sentence — why this dataset exists for the candidate)
   - candidateUsage (one sentence — how the candidate uses it)
-  - targetRowCount (integer between 1000 and 5000)
+  - targetRowCount (integer between 500 and 2000 — the sandbox stdout cap forces small datasets; do not promise more rows in docs than will be generated)
   - dataShape (free text describing distributions, key relationships, the *signal* in the data — e.g. "lognormal order_value, 60% repeat customers, weekly seasonality, ~3% fraud rows clustered around weekends")
 `;
 
@@ -117,6 +117,26 @@ ${taskDescription}
 ${coworkersList}
 
 **Resource type:** ${resourceType}
+
+## Why your docs matter for what comes next
+
+A subsequent step generates the artifacts the candidate uses (a real GitHub
+repo for engineering, real CSV files for data). That generator treats your
+docs as the authoritative spec — every concrete name (column, file path,
+class, env var, schema field), every enum value, every row count, every
+relationship you commit to becomes a hard constraint on what gets built.
+
+Two implications you must respect:
+
+1. **Be specific where it matters.** When you name a column, table, file,
+   class, or value enum in a doc, you ARE deciding the schema. Pick names
+   that fit the role/scenario and use them consistently. Don't list two
+   competing names for the same thing in different docs.
+2. **Don't over-commit.** If a number or detail won't actually be checkable
+   against the artifact, don't make a precise claim about it. Say "a few
+   thousand rows" instead of "exactly 4500" if you don't need exactly 4500;
+   say "a few backend routes" instead of naming five routes you won't use.
+   Anything you make precise becomes a constraint the judge will verify.
 ${artifactSpecificRules}
 
 ## Doc rules (apply to all 3 docs)

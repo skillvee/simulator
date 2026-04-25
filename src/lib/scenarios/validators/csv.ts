@@ -11,8 +11,8 @@ import { db } from "@/server/db";
 import type { ScenarioDoc } from "@/types";
 
 const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
-const MIN_ROWS = 1000;
-const MAX_ROWS = 5000; // sandbox stdout cap; intersected with plan range
+const MIN_ROWS = 300; // sandbox stdout + 1M-token cap force smaller datasets
+const MAX_ROWS = 2000;
 const DUPLICATE_RATIO_LIMIT = 0.05;
 
 export interface CsvValidatorInput {

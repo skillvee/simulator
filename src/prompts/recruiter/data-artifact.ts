@@ -37,7 +37,17 @@ export function buildDataArtifactPrompt(input: DataArtifactPromptInput): string 
     )
     .join("\n\n");
 
-  const docNames = docs.map((d) => `"${d.name}"`).join(", ");
+  // Inline the full markdown content. The candidate will read these docs;
+  // the CSVs we generate MUST agree with every concrete name, value, range
+  // and relationship the docs commit to. The model cannot match the docs
+  // unless it sees them verbatim.
+  const docsSection = docs
+    .map(
+      (d) => `### ${d.name} (\`${d.filename}\`)
+
+${d.markdown}`
+    )
+    .join("\n\n---\n\n");
 
   const judgeSection = judgeFeedback
     ? `
@@ -63,9 +73,23 @@ The candidate will be analyzing the following datasets to address this business 
 
 ${scenario.taskDescription}
 
-The candidate also has these markdown documents: ${docNames}. Make sure your CSV
-data is **internally consistent** with what those docs describe (the data
-dictionary in particular).
+## Reference documents — AUTHORITATIVE
+
+The candidate will read these markdown documents alongside your CSVs. Anything
+the docs commit to — column names, allowed enum values, value ranges, foreign-
+key relationships, row-count claims, time spans — is the source of truth. Your
+CSVs MUST match them exactly. If a doc says "the column \`X\` takes values
+\`A\` / \`B\` / \`C\`", you MUST use only \`A\`, \`B\`, \`C\`. If a doc claims
+N rows, generate ~N rows. Drift between docs and data is a hard failure.
+
+${docsSection}
+
+## Anti-spoiler rule
+
+Do NOT leave any artifact (column names, comments embedded in CSV, file
+contents, debug strings, sentinel values) that hints at the bug, the answer,
+or what the candidate is supposed to discover. The candidate must surface the
+issue from the data alone.
 
 ## Files to generate
 
@@ -91,8 +115,10 @@ You have access to a Python code execution sandbox with **numpy**, **pandas**,
    weekly/seasonal cycles via sine, correlated columns via multivariate normal).
    **Avoid uniform random** — it looks fake.
 
-3. Caps each CSV at **5,000 rows max** (the sandbox stdout has a ~1 MB limit).
-   Pick a row count inside the planned range that respects this cap.
+3. Caps each CSV at **2,000 rows max** (the sandbox stdout has a ~1 MB limit
+   and the response token budget is tight). Match the plan's \`targetRowCount\`
+   exactly — the docs commit to that number, so generating significantly fewer
+   rows will fail the judge for "row count mismatch".
 
 4. Prints each CSV between markers, exactly:
 
