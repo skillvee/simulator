@@ -66,6 +66,19 @@ export async function validateCsvArtifact(
       continue;
     }
 
+    // Detect JSONL/JSON-blob masquerading as CSV. A real CSV has comma-
+    // separated column names; if the "header" parses as a single column whose
+    // name starts with `{` or `[`, the model emitted JSON not CSV.
+    if (schema.columns.length === 1) {
+      const onlyCol = schema.columns[0].name.trim();
+      if (onlyCol.startsWith("{") || onlyCol.startsWith("[")) {
+        errors.push(
+          `${f.filename}: file appears to be JSONL/JSON, not a real CSV (single column starting with "${onlyCol.slice(0, 30)}…"). Use \`df.to_csv(index=False)\` not \`df.to_json\` and emit comma-separated values, not JSON objects per line.`
+        );
+        continue;
+      }
+    }
+
     // Check no column is all-null across ALL preview rows. We used to flag
     // every all-null column but that was too strict — real datasets have
     // conditional fields (e.g. `error_code` only populated on failures) that
