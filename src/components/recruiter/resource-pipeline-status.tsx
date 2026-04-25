@@ -82,10 +82,8 @@ const STATUS_COPY: Record<
   },
   generating: {
     label: "Generating",
-    description: (rt) =>
-      rt === "data"
-        ? "Generating the data files. ~3–8 min."
-        : "Building the project repository. ~3–6 min.",
+    description: () =>
+      "Generating files for the simulation. This usually takes ~5–8 min. Once it's done you'll get a link to share with the candidates.",
   },
   ready: {
     label: "Ready",
