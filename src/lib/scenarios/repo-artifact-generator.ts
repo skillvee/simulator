@@ -300,7 +300,7 @@ task issue reference these resources by name.
 
 ${planSummary}
 
-### Markdown documents — AUTHORITATIVE
+### Markdown documents — AUTHORITATIVE for what they commit to
 
 These docs ship to the candidate verbatim. Anything they commit to —
 file paths, class/function/table names, schema fields, env-var names,
@@ -308,6 +308,12 @@ architectural concepts — is the source of truth. Your repo spec MUST
 exactly match every concrete name and path the docs use. Cross-reference
 the docs from README/issues by name. Do not invent alternative names or
 move files to different paths than what the docs describe.
+
+**Note**: the docs are deliberately incomplete (the candidate is meant to
+discover specifics by talking to coworkers). For things the docs DO NOT
+specify, fall back to the **plan above** — which IS exhaustive — and to
+your own judgment based on the company/role context. The plan is the
+authoritative spec for everything not nailed down in the docs.
 
 ${docFullText}
 

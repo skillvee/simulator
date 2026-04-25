@@ -109,7 +109,7 @@ The candidate will be analyzing the following datasets to address this business 
 
 ${scenario.taskDescription}
 
-## Reference documents — AUTHORITATIVE
+## Reference documents — AUTHORITATIVE for what they commit to
 
 The candidate will read these markdown documents alongside your CSVs. Anything
 the docs commit to — column names, allowed enum values, value ranges, foreign-
@@ -117,6 +117,12 @@ key relationships, row-count claims, time spans — is the source of truth. Your
 CSVs MUST match them exactly. If a doc says "the column \`X\` takes values
 \`A\` / \`B\` / \`C\`", you MUST use only \`A\`, \`B\`, \`C\`. If a doc claims
 N rows, generate ~N rows. Drift between docs and data is a hard failure.
+
+**Note**: the docs are deliberately incomplete (the candidate is meant to
+discover specifics by talking to coworkers). For things the docs DO NOT
+specify — distribution shapes, anomalies, intentional logging bugs, exact
+value ranges — fall back to the **plan above** (which IS exhaustive). The
+plan is the authoritative spec for everything not nailed down in the docs.
 
 ${docsSection}
 

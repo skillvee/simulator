@@ -1,14 +1,21 @@
 /**
- * Step 1 prompt — plan + 3 markdown docs for the v2 resource pipeline.
+ * Step 1 prompt — plan + 1-3 markdown docs for the v2 resource pipeline.
  *
- * Produces a structured plan describing what artifacts Step 2 should build
- * (a repo for SWE archetypes, CSVs for data archetypes) plus 3 candidate-facing
- * markdown documents (project brief, data dictionary / setup guide, etc.).
+ * Two layers of context:
+ *
+ *   1. PLAN — the full internal spec (data schemas, value ranges, anomalies,
+ *      methodology). Authoritative for Step 2. Never shown to candidate.
+ *   2. DOCS — what the candidate reads. A hurried, deliberately incomplete
+ *      curation of (1). Names what exists; coworkers have the specifics.
+ *
+ * The split exists so candidates have a reason to talk to the team — if the
+ * docs already contained every formula, bug detail, and methodology hint, the
+ * coworker conversations would be redundant.
  */
 
 import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
 
-export const PLAN_AND_DOCS_PROMPT_VERSION = "v2.0";
+export const PLAN_AND_DOCS_PROMPT_VERSION = "v2.1";
 
 export interface PlanAndDocsInput {
   companyName: string;
@@ -76,33 +83,30 @@ When you write the docs:
 `
       : "";
 
-  const artifactSpecificRules =
+  const planRules =
     resourceType === "repo"
       ? `
-## Plan rules — engineering archetype (resourceType=repo)
+### Plan rules — engineering archetype (resourceType=repo)
 
-The artifact phase will generate a **GitHub repository** with realistic source files,
-git history, and issues. Your "plan.resources" entries describe the **3 most
-important artifacts the candidate will interact with** — typically:
+Step 2 will generate a real GitHub repository (source files, git history, issues).
+Your \`plan.resources\` entries describe **2-4 of the most important artifacts the
+candidate will interact with** — typically:
 
   1. The repository itself (type="repository").
-  2. A primary source file the candidate edits (type="document", or another "repository" entry naming the file path).
-  3. A supporting doc (type="document") — onboarding / handoff / spec.
+  2. A primary source file the candidate edits (type="document").
+  3. (Optional) A supporting handoff doc (type="document").
+  4. (Optional) A second touchpoint file or test the candidate must update.
 
-Each entry includes:
-  - id (stable kebab-case)
-  - type ("repository" | "document")
-  - label (human-readable)
-  - filename (e.g. "README.md", "src/server/api/widgets.ts")
-  - objective (one sentence — why this exists for the candidate)
-  - candidateUsage (one sentence — how the candidate engages with it)
-`
+Each entry includes \`id\`, \`type\` ("repository" | "document"), \`label\`,
+\`filename\`, \`objective\`, \`candidateUsage\`. No row counts.
+
+The repo's README + GitHub issues already carry most of the project narrative,
+so your candidate-facing docs (below) are deliberately minimal.`
       : `
-## Plan rules — data archetype (resourceType=data)
+### Plan rules — data archetype (resourceType=data)
 
-The artifact phase will generate **2-5 CSV files** with realistic distributions
-using a Python sandbox. Your "plan.resources" entries describe **the CSV files the
-candidate analyzes**. Each entry MUST include:
+Step 2 will generate **2-5 CSV files** with realistic distributions in a Python
+sandbox. Your \`plan.resources\` entries describe each CSV. Each entry MUST include:
 
   - id (stable kebab-case)
   - type ("csv")
@@ -111,86 +115,161 @@ candidate analyzes**. Each entry MUST include:
   - objective (one sentence — why this dataset exists for the candidate)
   - candidateUsage (one sentence — how the candidate uses it)
   - targetRowCount (a numeric string between "500" and "2000" — emit as a JSON string like "1500", not a bare number — the sandbox stdout cap forces small datasets; do not promise more rows in docs than will be generated)
-  - dataShape (free text describing distributions, key relationships, the *signal* in the data — e.g. "lognormal order_value, 60% repeat customers, weekly seasonality, ~3% fraud rows clustered around weekends")
+  - dataShape (free text describing distributions, key relationships, the *signal* in the data, ANY anomalies or known issues. **This is internal; the candidate will not see it directly. Be exhaustive.** e.g. "lognormal order_value, 60% repeat customers, weekly seasonality, ~3% fraud rows clustered around weekends")
 `;
+
+  const docVoice = `
+### Voice — you are a senior IC writing in 5 minutes between meetings
+
+You're slammed. The new hire starts today and you have a 3pm. Write the way a
+real human writes a hurried handoff — conversational, plain prose, occasional
+fragments, "we" / "you" / "I". Skip headings if they don't earn their keep.
+A short paragraph beats a labeled section.
+
+Avoid:
+- Headers like "Executive Summary", "Strategic Context", "Methodological Guidelines"
+- "BLUF" / consulting templates / phased timelines
+- "30-day plan", "Week 1 / Week 2"
+- Numbered hierarchies > 1 level deep
+- "See Also" cross-references between docs
+- Word-count-padding adverbs ("rigorously", "comprehensively", "robustly")
+- "Welcome to the team" multi-paragraph onboarding fluff`;
+
+  const antiSpoiler = `
+### Anti-spoiler rule — NON-NEGOTIABLE
+
+The whole point of the docs is that they're INCOMPLETE. The candidate has to
+talk to coworkers to get the rest. Things that MUST live with coworkers, never in docs:
+
+  - Specific numbers, weights, thresholds, formulas (e.g. "view = 0.1, comment = 5.0")
+  - Bug or anomaly specifics (when it happened, what's broken, how to handle it)
+  - Methodology hints, frameworks-with-values, "common pitfalls", "watch out for X"
+  - Step-by-step instructions or week-by-week plans
+  - Communication-style prescriptions ("follow BLUF, present bullets")
+  - Direct instructions like "ask Marcus about the LTV formula" — see "soft hints" below
+
+What you CAN say in docs:
+  - The business question (why this exists, what's at stake)
+  - Where to find data / repo (filenames, schemas if you include a dictionary)
+  - Names of people on the team and the rough area they live in (soft hints, see below)
+  - Vague framing of unknowns ("there's something off with the recent data
+    — Priya's been digging") — never the diagnosis itself
+  - Light "I think" / "we suspect" framing for hypotheses, not answers
+
+### Soft hints, not directives
+
+Mention coworkers naturally, the way you'd reference them in a real handoff:
+
+  ❌ "Ask Marcus for the LTV weighting formula before you start."
+  ✅ "Marcus has been thinking a lot about how we measure incremental engagement."
+
+  ❌ "Priya can give you the deep dive on the reshare logging bug."
+  ✅ "Priya's been deep in the engagement-infra weeds lately — worth a chat."
+
+The candidate should infer "I should reach out" without being told to.`;
 
   const docsRules =
     resourceType === "repo"
       ? `
-Each markdown document is ≥700 words, no external URLs, no placeholder/TODO text.
-Cross-reference the other docs by name in a "See Also" section at the end.
-For engineering archetypes the 3 docs are typically:
+### Doc rules — engineering (resourceType=repo)
 
-  1. **Project Brief** — what the candidate is building, why it matters, success criteria.
-  2. **Architecture / Codebase Tour** — key files, conventions, how to run locally.
-  3. **Onboarding Memo** — coworker context, expectations, how to ask for help.
-`
+Generate **exactly 1 doc**: a short kickoff note from a senior IC.
+
+  - Filename: \`kickoff.md\` (or similar — your call, stay realistic)
+  - Length: ~150-400 words. Brief.
+  - Content: business problem in one paragraph; where to start (repo URL is
+    elsewhere, just say "the repo"); a few soft pointers about the team; an
+    open ending ("ping me if anything blocks you").
+
+The repo itself has the README, issues, and code — those carry the rest. Your
+doc just orients the candidate in human terms.`
       : `
-Each markdown document is ≥700 words, no external URLs, no placeholder/TODO text.
-Cross-reference the other docs by name in a "See Also" section at the end.
-For data archetypes the 3 docs are typically:
+### Doc rules — data (resourceType=data)
 
-  1. **Project Brief** — the business question, why it matters, deliverable expectations.
-  2. **Data Dictionary** — REQUIRED: must reference EVERY CSV from plan.resources by filename, describing every column, types, units, and known caveats.
-  3. **Onboarding Memo** — coworker context, what stakeholders care about, how to communicate findings.
-`;
+Generate **1 or 2 docs** — your call based on what the scenario actually needs:
+
+  - **REQUIRED — kickoff note** (filename: \`kickoff.md\` or similar):
+    150-400 words. Hurried-IC voice. The business question, where the data is,
+    soft pointers to coworkers, open ending. NO methodology, NO numbers,
+    NO bug specifics.
+
+  - **OPTIONAL — data dictionary** (filename: \`data_dictionary.md\` or similar):
+    Include this ONLY if the schemas need a reference (e.g., 3+ files, ambiguous
+    column names, units that aren't obvious). 100-400 words. Strictly factual:
+    file -> column names + types + 1-line descriptions. NO known issues, NO
+    methodology, NO joining strategy, NO common pitfalls. Just the schema.
+
+If a single CSV with self-explanatory columns is the whole input, skip the
+dictionary entirely — the kickoff note is enough.`;
 
   return `${langInstruction}
 
-You are a senior IC at ${companyName} prepping a realistic candidate exercise for a ${seniorityLevel} ${roleName} (archetype: ${archetypeName}).
+You are a ${seniorityLevel} ${roleName} at ${companyName} preparing onboarding
+materials for a new hire (archetype: ${archetypeName}). The new hire starts
+today; you're squeezing this in between meetings.
 
 ## Inputs
 
 **Company:** ${companyName}
 **Company description:** ${companyDescription}
 **Tech stack:** ${techStack.join(", ") || "n/a"}
-**Task the candidate will work on:**
-${taskDescription}
-
-**Coworkers (the candidate can talk to):**
-${coworkersList}
-
 **Resource type:** ${resourceType}
 ${scaffoldBlock}
-## Why your docs matter for what comes next
 
-A subsequent step generates the artifacts the candidate uses (a real GitHub
-repo for engineering, real CSV files for data). That generator treats your
-docs as the authoritative spec — every concrete name (column, file path,
-class, env var, schema field), every enum value, every row count, every
-relationship you commit to becomes a hard constraint on what gets built.
+**The task the new hire will work on:**
+${taskDescription}
 
-Two implications you must respect:
+**Their team (people they can talk to):**
+${coworkersList}
 
-1. **Be specific where it matters.** When you name a column, table, file,
-   class, or value enum in a doc, you ARE deciding the schema. Pick names
-   that fit the role/scenario and use them consistently. Don't list two
-   competing names for the same thing in different docs.
-2. **Don't over-commit.** If a number or detail won't actually be checkable
-   against the artifact, don't make a precise claim about it. Say "a few
-   thousand rows" instead of "exactly 4500" if you don't need exactly 4500;
-   say "a few backend routes" instead of naming five routes you won't use.
-   Anything you make precise becomes a constraint the judge will verify.
-${artifactSpecificRules}
+## Two layers of context — read carefully
 
-## Doc rules (apply to all 3 docs)
+You're producing TWO things:
 
+**1) PLAN — the internal source of truth (Step 2 reads this)**
+
+The plan is the artifact-generation contract. Step 2 (which builds the actual
+repo / CSVs the candidate works with) reads the plan and matches it precisely.
+The candidate NEVER sees the plan directly.
+
+The plan is where ALL the specifics live: column names, value ranges,
+distribution shapes, foreign-key relationships, anomalies, intentional bugs,
+target row counts, methodology that must be reflected in the data. Be
+exhaustive — under-specified plans cause Step 2 to invent things that don't
+match the docs/coworkers.
+
+**2) DOCS — what the candidate reads (curated subset of the plan)**
+
+The docs are written by you, in-character, for the new hire. They are
+deliberately INCOMPLETE. Anything the docs do commit to (filenames, column
+names, the business question) becomes a hard constraint that Step 2 will
+match — so be careful what you commit to. Anything the docs DON'T commit to
+(methodology, exact values, bug specifics) gets filled in by the candidate
+talking to coworkers.
+${docVoice}
+${antiSpoiler}
+${planRules}
 ${docsRules}
 
 ## Quality criteria
 
-In addition to the plan and docs, output 3-6 \`qualityCriteria\` strings — what the
-generated artifacts must demonstrate for the candidate to succeed. The judge will
-score against these. Examples:
+Output 3-6 \`qualityCriteria\` strings — what Step 2's artifacts must demonstrate
+for the candidate to succeed. The judge scores against these. Examples:
 
-- "CSV row counts match plan; distributions look realistic, not uniform random."
-- "README explains run commands; main task is reachable from issues."
-- "Cross-references between docs are consistent; data dictionary covers every CSV."
+  - "CSVs match the schema in the data dictionary; row counts within targets."
+  - "The reshare-on-Reels anomaly is present in the data and matches the
+    behavior Priya describes (silent drops in recent weeks)."
+  - "Repo's main task issue is open and references real file paths from the
+    spec; README's setup steps actually work."
+
+Quality criteria CAN reference internal-only details (the bug specifics, the
+formula). The judge sees them; the candidate doesn't.
 
 ## Output
 
 Strict JSON only. The schema:
 
+\`\`\`json
 {
   "plan": {
     "resources": [
@@ -204,6 +283,13 @@ Strict JSON only. The schema:
     { "id": "...", "name": "...", "filename": "...", "objective": "...", "markdown": "..." }
   ]
 }
+\`\`\`
 
-Exactly 3 plan.resources entries and exactly 3 docs entries. No commentary, no markdown wrapper around the JSON.`;
+Doc count: ${
+    resourceType === "repo"
+      ? "exactly 1 doc."
+      : "1 or 2 docs (your call — kickoff is required, data dictionary only if schemas warrant it)."
+  }
+
+No commentary, no markdown wrapper around the JSON.`;
 }

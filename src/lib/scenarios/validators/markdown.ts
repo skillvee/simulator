@@ -23,28 +23,17 @@ export function validateMarkdownDocs(input: MarkdownValidatorInput): string[] {
   const errors: string[] = [];
   const { docs, taskDescription } = input;
 
-  if (docs.length !== 3) {
-    errors.push(`Expected exactly 3 docs, got ${docs.length}`);
-  }
-
-  const otherRefsByDoc = new Map<string, string[]>();
-  for (const d of docs) {
-    const refs = [
-      ...docs
-        .filter((x) => x.name !== d.name)
-        .flatMap((x) => [
-          x.name,
-          x.filename,
-          x.filename.replace(/\.md$/i, ""),
-          x.id,
-        ]),
-    ].filter(Boolean);
-    otherRefsByDoc.set(d.name, refs);
+  // v2.1: docs are now hurried-manager notes (1 doc for repo, 1-2 for data),
+  // not the old corporate 3-doc set. Cross-references are explicitly
+  // discouraged in the prompt — the docs are independent, deliberately
+  // incomplete handoffs.
+  if (docs.length < 1 || docs.length > 3) {
+    errors.push(`Expected 1-3 docs, got ${docs.length}`);
   }
 
   for (const doc of docs) {
-    if (!doc.markdown || doc.markdown.trim().length < 500) {
-      errors.push(`Doc "${doc.name}" is too short (<500 chars)`);
+    if (!doc.markdown || doc.markdown.trim().length < 120) {
+      errors.push(`Doc "${doc.name}" is too short (<120 chars)`);
     }
 
     for (const pattern of PLACEHOLDER_PATTERNS) {
@@ -59,19 +48,6 @@ export function validateMarkdownDocs(input: MarkdownValidatorInput): string[] {
     if (urls.length > 0) {
       errors.push(
         `Doc "${doc.name}" contains external URL(s) (forbidden): ${urls.slice(0, 3).join(", ")}`
-      );
-    }
-
-    // Cross-reference check: accept references to the other docs by any of
-    // their identifiers (display name, filename, filename-without-ext, id).
-    // The model sometimes uses filenames (\`data_dictionary.md\`) rather than
-    // display names ("Data Dictionary") — both are fine.
-    const body = doc.markdown.toLowerCase();
-    const refs = otherRefsByDoc.get(doc.name) ?? [];
-    const referencesAnother = refs.some((r) => body.includes(r.toLowerCase()));
-    if (!referencesAnother && refs.length > 0) {
-      errors.push(
-        `Doc "${doc.name}" doesn't reference any of the other docs by name, filename, or id`
       );
     }
   }

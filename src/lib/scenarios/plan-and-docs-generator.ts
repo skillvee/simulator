@@ -50,7 +50,7 @@ const planResourceSchema = z.object({
 });
 
 const planSchema = z.object({
-  resources: z.array(planResourceSchema).length(3),
+  resources: z.array(planResourceSchema).min(2).max(5),
   qualityCriteria: z.array(z.string().min(5)).min(3).max(6),
 });
 
@@ -59,12 +59,16 @@ const docSchema = z.object({
   name: z.string().min(1),
   filename: z.string().min(1),
   objective: z.string().min(10),
-  markdown: z.string().min(500), // ~100 words minimum guard; prompt asks for 700
+  // ~30 words minimum guard. The prompt now asks for 150-400 hurried words,
+  // not the old 700-word corporate templates, so the floor moves down.
+  markdown: z.string().min(120),
 });
 
+// Doc count: repo = 1, data = 1 or 2. Bound at [1, 2] so over-eager models
+// don't slip the old 3-doc template back in.
 const planAndDocsSchema = z.object({
   plan: planSchema,
-  docs: z.array(docSchema).length(3),
+  docs: z.array(docSchema).min(1).max(2),
 });
 
 export type PlanAndDocsResult = {
