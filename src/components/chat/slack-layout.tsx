@@ -430,7 +430,11 @@ function SlackLayoutInner({
     <CallContext.Provider value={callContextValue}>
       <div
         className="slack-theme relative flex h-screen overflow-hidden"
-        style={{background: "hsl(var(--slack-bg-main))"}}
+        // Use the longhand `backgroundColor` instead of the `background`
+        // shorthand: React expands the shorthand into its longhand siblings
+        // during hydration, which then mismatches the server-rendered
+        // style attribute and trips a Recoverable hydration error.
+        style={{backgroundColor: "hsl(var(--slack-bg-main))"}}
         onClick={() => markUserInteraction()}
       >
         {/* Mobile menu button */}

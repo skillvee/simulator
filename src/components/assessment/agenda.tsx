@@ -28,16 +28,23 @@ type AgendaItem = {
 };
 
 function useElapsedMinutes(timing: PhaseTimingInput): number | null {
-  // Re-render every 30s so the elapsed counter stays roughly current.
-  // (Sub-minute precision isn't meaningful here — this is a soft pacing cue.)
-  const [, setTick] = useState(0);
+  // Hold off on computing elapsed time until after mount: `getSessionElapsedMinutes`
+  // reads `Date.now()`, so server-render and client-mount produce different
+  // numbers and React flags a hydration mismatch. Re-render every 30s so the
+  // counter stays roughly current — sub-minute precision isn't meaningful, this
+  // is a soft pacing cue.
+  const [elapsed, setElapsed] = useState<number | null>(null);
   useEffect(() => {
-    const handle = setInterval(() => setTick((t) => t + 1), 30_000);
+    const tick = () => {
+      const value = getSessionElapsedMinutes(timing);
+      setElapsed(value === null ? null : Math.max(0, Math.floor(value)));
+    };
+    tick();
+    const handle = setInterval(tick, 30_000);
     return () => clearInterval(handle);
-  }, []);
+  }, [timing]);
 
-  const elapsed = getSessionElapsedMinutes(timing);
-  return elapsed === null ? null : Math.max(0, Math.floor(elapsed));
+  return elapsed;
 }
 
 export function Agenda({
