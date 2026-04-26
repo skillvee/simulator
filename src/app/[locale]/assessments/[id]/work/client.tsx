@@ -240,19 +240,34 @@ export function WorkPageClient({
         | "start_walkthrough"
         | "end_walkthrough"
     ) => {
-      const response = await fetch("/api/assessment/transition", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessmentId, action }),
-      });
-      if (!response.ok) {
-        logger.error("Transition failed", {
+      // Wrap the fetch so a network-level failure (transient connectivity
+      // drop, offline) returns false rather than throwing through to
+      // callers — `handleStartKickoff`/`handleStartWalkthrough`/
+      // `handleBeforeStartCall` all rely on the false branch to reset the
+      // CTA spinner. An unhandled rejection here would leave
+      // `isTransitioning` stuck true and the button permanently disabled
+      // until a full reload.
+      try {
+        const response = await fetch("/api/assessment/transition", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ assessmentId, action }),
+        });
+        if (!response.ok) {
+          logger.error("Transition failed", {
+            action,
+            body: await response.text().catch(() => ""),
+          });
+          return false;
+        }
+        return true;
+      } catch (err) {
+        logger.error("Transition fetch error", {
           action,
-          body: await response.text(),
+          err: err instanceof Error ? err.message : String(err),
         });
         return false;
       }
-      return true;
     },
     [assessmentId]
   );
