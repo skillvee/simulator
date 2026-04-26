@@ -360,7 +360,7 @@ export function ScreenRecordingProvider({
 
     // Stop audio mixer
     if (audioMixerRef.current) {
-      disconnectAudioStreamerFromCapture(audioMixerRef.current.systemAudioDestination).catch(() => {});
+      disconnectAudioStreamerFromCapture(audioMixerRef.current.systemAudioInput).catch(() => {});
       audioMixerRef.current.stop();
       audioMixerRef.current = null;
     }
@@ -422,7 +422,7 @@ export function ScreenRecordingProvider({
       setWebcamState("idle");
     }
     if (audioMixerRef.current) {
-      disconnectAudioStreamerFromCapture(audioMixerRef.current.systemAudioDestination).catch(() => {});
+      disconnectAudioStreamerFromCapture(audioMixerRef.current.systemAudioInput).catch(() => {});
       audioMixerRef.current.stop();
       audioMixerRef.current = null;
     }
@@ -508,10 +508,14 @@ export function ScreenRecordingProvider({
         micStreamRef.current = micStream;
         mixer = createAudioMixer(micStream);
         audioMixerRef.current = mixer;
-        // Route AI voice responses through the mixer so they're captured in recording
-        connectAudioStreamerToCapture(mixer.systemAudioDestination).catch(
-          (err) => logger.warn("Failed to connect audio streamer to mixer", { err: String(err) })
-        );
+        // Route AI voice responses through the mixer so they're captured in recording.
+        // Await so the streamer's analyser → mixer bus connection is live before
+        // MediaRecorder starts; otherwise the first AI utterance can race the graph.
+        try {
+          await connectAudioStreamerToCapture(mixer.systemAudioInput);
+        } catch (err) {
+          logger.warn("Failed to connect audio streamer to mixer", { err: String(err) });
+        }
         logger.info("Audio mixer initialized for recording");
       } catch (micErr) {
         // Microphone is mandatory — clean up screen and webcam streams and fail

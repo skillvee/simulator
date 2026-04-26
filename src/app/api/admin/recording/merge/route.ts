@@ -2,7 +2,7 @@ import { requireAdmin, createLogger } from "@/lib/core";
 import { success, error } from "@/lib/api";
 import { db } from "@/server/db";
 import { supabaseAdmin, STORAGE_BUCKETS } from "@/lib/external";
-import { makeWebmSeekable } from "@/lib/media";
+import { makeWebmSeekable } from "@/lib/media/webm-seekable";
 
 const logger = createLogger("api:admin:recording:merge");
 

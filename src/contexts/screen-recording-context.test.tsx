@@ -52,7 +52,7 @@ const mocks = vi.hoisted(() => {
     },
     audioMixer: {
       audioTrack: { kind: "mixed-audio" },
-      systemAudioDestination: { kind: "destination" },
+      systemAudioInput: { kind: "destination" },
       stop: audioMixerStop,
     },
   };
@@ -200,7 +200,7 @@ describe("ScreenRecordingProvider", () => {
     expect(mocks.stopScreenCapture).toHaveBeenCalledWith(mocks.screenStream);
     expect(mocks.stopWebcamCapture).toHaveBeenCalledWith(mocks.webcamStream);
     expect(mocks.disconnectAudioStreamerFromCapture).toHaveBeenCalledWith(
-      mocks.audioMixer.systemAudioDestination
+      mocks.audioMixer.systemAudioInput
     );
     expect(mocks.audioMixerStop).toHaveBeenCalledTimes(1);
     expect(mocks.micTrackStop).toHaveBeenCalledTimes(1);

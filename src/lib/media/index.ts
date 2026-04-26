@@ -4,4 +4,5 @@ export * from "./screen";
 export * from "./webcam";
 export * from "./video-recorder";
 export * from "./canvas-compositor";
-export * from "./webm-seekable";
+// Note: webm-seekable is server-only (depends on ts-ebml, which breaks in the
+// browser). Import it directly from "@/lib/media/webm-seekable" in server code.
