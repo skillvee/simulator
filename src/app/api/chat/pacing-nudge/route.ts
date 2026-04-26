@@ -219,13 +219,17 @@ export async function POST(request: Request) {
   // Persist to manager conversation + flip the idempotency flag atomically.
   // The conditional `updateMany` below is the dedup primitive: Postgres
   // serializes row updates, so two tabs hitting the same threshold both run
-  // their UPDATE, but only one matches the `NOT { has: nudgeType }` predicate
-  // (the second re-evaluates against the post-commit state and matches 0
-  // rows). The rest of the transaction is gated on count === 1.
+  // their UPDATE, but only one matches the predicate (the loser
+  // re-evaluates against the post-commit state and matches 0 rows). The
+  // status filter handles the other race: the WORKING gate above is checked
+  // pre-LLM, but the candidate can transition to WALKTHROUGH_CALL/COMPLETED
+  // during the LLM call — re-checking status inside the claim ensures we
+  // don't persist a nudge in the wrong phase.
   const result = await db.$transaction(async (tx) => {
     const claim = await tx.assessment.updateMany({
       where: {
         id: assessmentId,
+        status: AssessmentStatus.WORKING,
         NOT: { pacingNudgesDelivered: { has: nudgeType } },
       },
       data: {
