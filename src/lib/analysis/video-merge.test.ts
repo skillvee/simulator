@@ -57,7 +57,7 @@ vi.mock("@/lib/core", () => ({
 // Mock the WebM seekability rewrite — these tests use minimal byte fixtures
 // that aren't valid full WebM, so we keep merge-logic assertions focused on
 // chunk concatenation rather than ts-ebml's metadata transformation.
-vi.mock("@/lib/media", () => ({
+vi.mock("@/lib/media/webm-seekable", () => ({
   makeWebmSeekable: (input: Buffer) => Promise.resolve(new Uint8Array(input)),
 }));
 
