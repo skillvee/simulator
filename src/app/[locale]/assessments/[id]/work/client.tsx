@@ -272,21 +272,22 @@ export function WorkPageClient({
     [assessmentId]
   );
 
-  // Start kickoff: flip phase, then dial the manager.
+  // Start kickoff: dial the manager. The REVIEW_MATERIALS → KICKOFF_CALL
+  // transition is owned by `handleBeforeStartCall` (the pre-call hook
+  // SlackLayout awaits before mounting the call bar). Doing it here too
+  // would double-fire: `setPhase` batches in React, so the hook's `phase`
+  // closure still reads "review_materials" when it runs synchronously
+  // after a manual `setPhase("kickoff_call")`, and a duplicate transition
+  // POST that 400s would abort the call after the first one already
+  // succeeded.
   const handleStartKickoff = useCallback(async () => {
     if (isTransitioning || !manager) return;
     setIsTransitioning(true);
     await prewarmMic();
-    const ok = await postTransition("start_kickoff");
-    if (!ok) {
-      setIsTransitioning(false);
-      return;
-    }
-    setPhase("kickoff_call");
     handleSelectCoworker(manager.id);
-    startCallRef.current?.(manager.id, "coworker");
+    await startCallRef.current?.(manager.id, "coworker");
     setIsTransitioning(false);
-  }, [isTransitioning, manager, prewarmMic, postTransition, handleSelectCoworker]);
+  }, [isTransitioning, manager, prewarmMic, handleSelectCoworker]);
 
   // Start walkthrough: flip phase, then trigger the existing post-submission
   // flow (SlackLayout auto-starts the defense call when isPostSubmission flips).
