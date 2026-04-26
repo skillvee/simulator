@@ -954,7 +954,20 @@
       "badge": "See it in action",
       "title": "Watch a candidate complete",
       "titleHighlight": "a real simulation.",
-      "subtitle": "This is what your hiring team sees after a candidate finishes. Real conversations. Real work. Real signal."
+      "subtitle": "This is what your hiring team sees after a candidate finishes. Real conversations. Real work. Real signal.",
+      "rolesLabel": "Built for hiring",
+      "roles": {
+        "engineering": "Engineering",
+        "product": "Product",
+        "dataScience": "Data Science",
+        "sales": "Sales",
+        "customerSuccess": "Customer Success"
+      },
+      "chatRole": "· Engineering Manager",
+      "chatMsg1": "Hey — got a checkout bug hitting production. Can you take a look?",
+      "chatYou": "You",
+      "chatMsg2": "Want to jump on a quick call so I can get the context?",
+      "startCall": "Start voice call"
     },
     "timeline": {
       "title": "A realistic day at work—not algorithm puzzles",
@@ -1066,7 +1079,108 @@
       "q4": {
         "question": "What if a candidate has technical issues?",
         "answer": "Candidates can pause and resume. If issues persist, they can contact support. All sessions are saved automatically, so no work is lost. We also provide a pre-flight check before they start."
+      },
+      "q5": {
+        "question": "How do you keep candidates from cheating with AI?",
+        "answer": "We don't try to block AI — we encourage it and watch how it's used. The screen is recorded, voice calls happen in real time, and the manager pushes back on decisions. AI helps people who already understand the work and exposes people who don't."
+      },
+      "q6": {
+        "question": "How long does a simulation take a candidate to complete?",
+        "answer": "Around 30-45 minutes end-to-end. They join a kickoff, gather requirements, do the work, and defend it on a voice call. No multi-day take-home, no scheduling rounds — they finish in one sitting."
+      },
+      "q7": {
+        "question": "Does this replace our existing interviews?",
+        "answer": "Most teams use Skillvee to replace the technical screen and take-home. You still own the final on-site loop. The point is to get a high-signal shortlist before anyone burns calendar time."
+      },
+      "q8": {
+        "question": "How is candidate data handled?",
+        "answer": "We're SOC 2 Type II audited, GDPR-compliant, and data is encrypted in transit and at rest. Recordings and transcripts follow configurable retention policies, and candidates can request deletion at any time."
       }
+    },
+    "voiceCall": {
+      "role": "Engineering Manager · Stripe team",
+      "callInProgress": "Call in progress",
+      "poweredBy": "Real-time voice via Gemini Live"
+    },
+    "ide": {
+      "recordingStatus": "Recording session",
+      "onCall": "On call"
+    },
+    "defendThread": {
+      "you": "You",
+      "role": "Engineering Manager",
+      "defendingDecisions": "Defending decisions",
+      "msg1": "Why did you reach for Redis here instead of just hitting Postgres directly?",
+      "msg2": "Cart reads are hot — sub-10ms p99 matters at checkout. Postgres adds latency we don't need on the read path.",
+      "msg3": "Fair. What's your fallback if Redis is down?",
+      "msg4": "Fall through to Postgres with a circuit breaker. Slower, but checkout still works.",
+      "replyPlaceholder": "Reply to Sarah Chen…"
+    },
+    "hiringManagers": {
+      "badge": "FOR HIRING MANAGERS",
+      "title": "Pick the right hire from a clear ranking",
+      "subtitle": "Not a vibes call. A ranked shortlist with evidence behind every score, so the people closest to the work can decide fast.",
+      "card1": {
+        "title": "Ranked shortlist",
+        "desc": "See the top candidates in seconds, scored on the dimensions that actually predict performance."
+      },
+      "card2": {
+        "title": "Evidence, not vibes",
+        "desc": "Every rating links to the moment it happened — the question they asked, the decision they defended."
+      },
+      "card3": {
+        "title": "Calibrate as a team",
+        "desc": "Hiring managers, recruiters, and ICs all see the same signal. No more debating from memory."
+      },
+      "mock": {
+        "role": "Senior Backend Engineer",
+        "rankedByOverall": "Ranked by overall score",
+        "completed": "12 completed",
+        "topMatch": "Top match",
+        "candidateRoleTime": "Senior Backend Engineer · 32 min",
+        "overall": "OVERALL",
+        "observedEvidence": "OBSERVED EVIDENCE",
+        "evidence1": "Asked clarifying questions about cart expiration before writing any code.",
+        "evidence2": "Chose Redis with a Postgres fallback — explained the latency tradeoff cleanly.",
+        "evidence3": "Held the line on the circuit-breaker pattern when challenged. Didn't fold.",
+        "dimensions": {
+          "problemSolving": "Problem solving",
+          "aiLeverage": "AI leverage",
+          "communication": "Communication",
+          "technicalDepth": "Technical depth",
+          "collaboration": "Collaboration",
+          "timeManagement": "Time management"
+        }
+      }
+    },
+    "workflow": {
+      "badge": "FITS YOUR HIRING WORKFLOW",
+      "title": "Up and running in minutes — not weeks",
+      "subtitle": "Paste a job description, review the generated simulation, send candidates a link. That's it.",
+      "step1": {
+        "title": "Paste a job description",
+        "desc": "Skillvee reads the JD and generates a realistic scenario, AI coworkers, and the deliverable in under a minute.",
+        "label": "JOB DESCRIPTION"
+      },
+      "step2": {
+        "title": "Review the AI personas",
+        "desc": "Tweak the manager, stakeholders, and challenge if you want — or ship as-is. Most teams ship as-is.",
+        "persona1": "Sarah Chen — Engineering Manager",
+        "persona2": "Diego Ramos — Senior Designer",
+        "persona3": "Taylor Kim — Product Lead"
+      },
+      "step3": {
+        "title": "Send candidates a link",
+        "desc": "Drop the link in your ATS or send directly. Candidates start the simulation when they're ready.",
+        "linkLabel": "SIMULATION LINK",
+        "ready": "READY",
+        "copyLink": "Copy link"
+      }
+    },
+    "ats": {
+      "badge": "ATS INTEGRATIONS",
+      "description": "Skillvee plugs into the recruiting stack you already use — no rip-and-replace.",
+      "footer": "Don't see yours? Enterprise plans include custom integration support."
     },
     "cta": {
       "title": "READY TO UPGRADE",

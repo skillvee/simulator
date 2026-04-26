@@ -133,8 +133,8 @@ export default function HomePage() {
         />
 
         {/* Main Content - Grid Layout */}
-        <div className="relative z-10 max-w-[1400px] mx-auto px-6 w-full">
-          <div className="grid lg:grid-cols-[1fr,1.2fr] gap-12 lg:gap-12 items-center">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 xl:px-20 w-full">
+          <div className="grid lg:grid-cols-[1fr,1.2fr] gap-12 lg:gap-16 items-center">
             {/* Left side - Text content */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -142,11 +142,6 @@ export default function HomePage() {
               transition={{ duration: 0.8 }}
               className="text-center lg:text-left"
             >
-              <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-slate-400 text-sm">{t("hero.badge")}</span>
-              </div>
-
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-[1.05] mb-6">
                 {t("hero.title")}
                 <br />
