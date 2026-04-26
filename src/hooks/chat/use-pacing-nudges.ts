@@ -121,11 +121,15 @@ export function usePacingNudges({
 
       if (delay <= 0) {
         // Past-due. Only fire the most recent overdue nudge to avoid spamming
-        // the candidate with three messages back-to-back if they reload after
-        // a long gap. Skip overdue check-ins / wrap-ups when a later nudge is
-        // also overdue.
-        const laterAlsoOverdue = PACING_NUDGES_IN_ORDER.some((later) => {
-          if (later === nudge) return false;
+        // the candidate with three messages back-to-back after a long reload
+        // gap. Restrict the suppression check to *later* (in firing order)
+        // pending nudges — earlier overdue nudges must never suppress a later
+        // one (otherwise once `cap` is overdue, the also-overdue `checkin` /
+        // `wrapup` would suppress it and nothing fires after a reload).
+        const currentIndex = PACING_NUDGES_IN_ORDER.indexOf(nudge);
+        const laterAlsoOverdue = PACING_NUDGES_IN_ORDER.slice(
+          currentIndex + 1
+        ).some((later) => {
           if (alreadyDelivered.includes(later)) return false;
           const laterThresholdMs =
             sessionStartMs + getPacingThresholdMinutes(simulationDepth, later) * 60_000;

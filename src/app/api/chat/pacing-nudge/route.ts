@@ -216,15 +216,23 @@ export async function POST(request: Request) {
     timestamp,
   };
 
-  // Persist to manager conversation + flip the idempotency flag in a single
-  // transaction so a concurrent request can't double-fire.
+  // Persist to manager conversation + flip the idempotency flag atomically.
+  // The conditional `updateMany` below is the dedup primitive: Postgres
+  // serializes row updates, so two tabs hitting the same threshold both run
+  // their UPDATE, but only one matches the `NOT { has: nudgeType }` predicate
+  // (the second re-evaluates against the post-commit state and matches 0
+  // rows). The rest of the transaction is gated on count === 1.
   const result = await db.$transaction(async (tx) => {
-    // Re-check idempotency inside the transaction.
-    const fresh = await tx.assessment.findUnique({
-      where: { id: assessmentId },
-      select: { pacingNudgesDelivered: true },
+    const claim = await tx.assessment.updateMany({
+      where: {
+        id: assessmentId,
+        NOT: { pacingNudgesDelivered: { has: nudgeType } },
+      },
+      data: {
+        pacingNudgesDelivered: { push: nudgeType },
+      },
     });
-    if (fresh?.pacingNudgesDelivered.includes(nudgeType)) {
+    if (claim.count === 0) {
       return { alreadyDelivered: true as const };
     }
 
@@ -251,13 +259,6 @@ export async function POST(request: Request) {
         },
       });
     }
-
-    await tx.assessment.update({
-      where: { id: assessmentId },
-      data: {
-        pacingNudgesDelivered: { push: nudgeType },
-      },
-    });
 
     return { alreadyDelivered: false as const };
   });
