@@ -19,7 +19,10 @@ import {
   fetchLiveToken,
   handleLiveServerMessage,
   initializeLiveAudioCapture,
+  initializeLiveVideoCapture,
+  type LiveVideoCaptureController,
 } from "@/lib/ai/live-session";
+import { useScreenRecordingContext } from "@/contexts/screen-recording-context";
 import { playCallRingSound } from "@/lib/sounds";
 import type { TranscriptMessage } from "@/lib/ai";
 import { createLogger } from "@/lib/core";
@@ -99,6 +102,16 @@ export function FloatingCallBar({
   const audioContextRef = useRef<AudioContext | null>(null);
   const workletNodeRef = useRef<AudioWorkletNode | null>(null);
   const transcriptRef = useRef<TranscriptMessage[]>([]);
+  const videoCaptureRef = useRef<LiveVideoCaptureController | null>(null);
+  const isWalkthroughRef = useRef(false);
+  const [isScreenSharingToAi, setIsScreenSharingToAi] = useState(false);
+  // Reflects "screen-share dropped while a call is active" — we silence the
+  // mic and stop AI playback until the candidate reshares, treating the call
+  // and the screen recording as one inseparable unit.
+  const [isCallPausedForRecording, setIsCallPausedForRecording] = useState(false);
+
+  const { getScreenVideoTrack, isRecording: screenRecordingActive } =
+    useScreenRecordingContext();
 
   // Audio playback queue
   const audioQueueRef = useRef<string[]>([]);
@@ -229,6 +242,51 @@ export function FloatingCallBar({
   );
 
   // Connect to Gemini Live
+  const startScreenShareToAi = useCallback(
+    async (session: Session) => {
+      const track = getScreenVideoTrack();
+      if (!track) {
+        logger.warn(
+          "Walkthrough call: no screen track available — falling back to audio-only"
+        );
+        return;
+      }
+      try {
+        const controller = await initializeLiveVideoCapture({
+          videoTrack: track,
+          session,
+          fps: 1,
+          maxWidth: 1280,
+          jpegQuality: 0.7,
+          onError: (context, err) => {
+            logger.warn(`Video capture: ${context}`, {
+              err: err instanceof Error ? err.message : String(err),
+            });
+            // Drop screen share but keep the audio call alive — surface the
+            // soft fallback in the UI badge.
+            videoCaptureRef.current?.stop();
+            videoCaptureRef.current = null;
+            setIsScreenSharingToAi(false);
+          },
+          onEnded: () => {
+            // Track died (user stopped sharing). Clear the ref so the resume
+            // hook can attach a fresh track when sharing comes back.
+            videoCaptureRef.current = null;
+            setIsScreenSharingToAi(false);
+          },
+        });
+        videoCaptureRef.current = controller;
+        setIsScreenSharingToAi(true);
+      } catch (err) {
+        logger.warn("Video capture init failed — audio-only walkthrough", {
+          err: err instanceof Error ? err.message : String(err),
+        });
+        setIsScreenSharingToAi(false);
+      }
+    },
+    [getScreenVideoTrack]
+  );
+
   const connect = useCallback(async () => {
     // Prevent concurrent connection attempts
     if (isConnectingRef.current) {
@@ -250,6 +308,7 @@ export function FloatingCallBar({
       const tokenPromise = fetchLiveToken<{
         token: string;
         isDefenseCall?: boolean;
+        isWalkthrough?: boolean;
       }>({
         endpoint: tokenEndpoint,
         body: {
@@ -276,12 +335,17 @@ export function FloatingCallBar({
       ringSound = playCallRingSound();
 
       // Wait for token (likely already done since mic access takes user interaction)
-      const { token, isDefenseCall: defenseMode } = await tokenPromise;
+      const { token, isDefenseCall: defenseMode, isWalkthrough: walkthroughMode } = await tokenPromise;
 
       // Track if this is a defense call for completion handling
       const isDefense = defenseMode === true;
       setIsDefenseCall(isDefense);
       isDefenseCallRef.current = isDefense;
+
+      // The walkthrough is the only call that streams the candidate's screen
+      // to the Live API. Kickoff and regular coworker calls stay audio-only.
+      const enableScreenShareToAi = walkthroughMode === true;
+      isWalkthroughRef.current = enableScreenShareToAi;
 
       openingTurnControllerRef.current?.markOpeningTurnPending();
 
@@ -321,6 +385,13 @@ export function FloatingCallBar({
 
       // Initialize audio capture
       await initializeAudioCapture(stream, session);
+
+      // For the walkthrough, layer video on top once the session is up.
+      // Failures here don't block the call — audio keeps flowing.
+      if (enableScreenShareToAi) {
+        void startScreenShareToAi(session);
+      }
+
       isConnectingRef.current = false;
     } catch (err) {
       isConnectingRef.current = false;
@@ -359,10 +430,76 @@ export function FloatingCallBar({
     isPostSubmission,
     language,
     onError,
+    startScreenShareToAi,
   ]);
+
+  // If the candidate stopped sharing mid-walkthrough and then reshares, the
+  // first screen track was permanently dead — initializeLiveVideoCapture's
+  // track-ended listener stopped capture and cleared the ref. We need to
+  // hook the new track in. Watching the recording state transition back to
+  // "active" while the call is still connected is enough to detect this.
+  useEffect(() => {
+    if (
+      callState !== "connected" ||
+      !isWalkthroughRef.current ||
+      !screenRecordingActive ||
+      videoCaptureRef.current ||
+      !sessionRef.current
+    ) {
+      return;
+    }
+    void startScreenShareToAi(sessionRef.current);
+  }, [callState, screenRecordingActive, startScreenShareToAi]);
+
+  // Screen-share is the gate for the entire call — recording integrity is
+  // mandatory, so if the candidate stops sharing mid-conversation we silence
+  // the call until they reshare. Disabling the mic tracks pauses input
+  // without tearing down the Live session; clearing the audio queue +
+  // stopping playback cuts off whatever the AI was saying. Re-enabling on
+  // reshare picks the conversation right back up.
+  useEffect(() => {
+    if (callState !== "connected") return;
+
+    if (!screenRecordingActive && !isCallPausedForRecording) {
+      // Pause: silence mic, kill any AI audio in flight.
+      mediaStreamRef.current?.getAudioTracks().forEach((track) => {
+        track.enabled = false;
+      });
+      audioQueueRef.current = [];
+      stopAudioPlayback();
+      setIsSpeaking(false);
+      setIsCallPausedForRecording(true);
+      logger.info("Call paused — screen share dropped");
+      return;
+    }
+
+    if (screenRecordingActive && isCallPausedForRecording) {
+      // Resume: re-enable mic. AI playback resumes naturally on the next
+      // turn — we don't try to reconstruct what was interrupted.
+      mediaStreamRef.current?.getAudioTracks().forEach((track) => {
+        track.enabled = !isMuted;
+      });
+      setIsCallPausedForRecording(false);
+      logger.info("Call resumed — screen share restored");
+    }
+  }, [callState, screenRecordingActive, isCallPausedForRecording, isMuted]);
 
   // Disconnect from Gemini Live
   const disconnect = useCallback(() => {
+    if (videoCaptureRef.current) {
+      try {
+        videoCaptureRef.current.stop();
+      } catch (err) {
+        logger.warn("Error stopping video capture", {
+          err: err instanceof Error ? err.message : String(err),
+        });
+      }
+      videoCaptureRef.current = null;
+    }
+    isWalkthroughRef.current = false;
+    setIsScreenSharingToAi(false);
+    setIsCallPausedForRecording(false);
+
     disconnectLiveAudioResources({
       workletNode: workletNodeRef.current,
       audioContext: audioContextRef.current,
@@ -380,6 +517,32 @@ export function FloatingCallBar({
     setIsSpeaking(false);
     audioQueueRef.current = [];
   }, []);
+
+  // Walkthrough recovery: if the Gemini Live session closed during the pause
+  // (onclose fires, callState flips to "ended" or "error"), the call bar
+  // renders null and the candidate is stranded — SlackLayout's
+  // defenseCallStartedRef guard also blocks a fresh auto-start. On screen
+  // share restore, tear down leftover audio resources and bounce callState
+  // back to "idle" so the auto-connect effect re-dials with the same defense
+  // context (isPostSubmission stays true on the prop).
+  //
+  // isWalkthroughRef gates user-initiated hang-ups: endCall() runs disconnect()
+  // which clears the ref, so a legit walkthrough hang-up (followed by the
+  // post-defense modal) won't trigger a phantom reconnect.
+  useEffect(() => {
+    if (
+      (callState !== "ended" && callState !== "error") ||
+      !isPostSubmission ||
+      !screenRecordingActive ||
+      !isWalkthroughRef.current
+    ) {
+      return;
+    }
+    logger.info("Walkthrough call lost mid-pause — auto-reconnecting");
+    disconnect();
+    setError(null);
+    setCallState("idle");
+  }, [callState, isPostSubmission, screenRecordingActive, disconnect]);
 
   // End call and save transcript (transcript must be persisted BEFORE
   // signaling "ended" so downstream handlers have voice context in the DB)
@@ -546,10 +709,23 @@ export function FloatingCallBar({
                 </div>
                 <div>
                   <div className="text-sm font-bold" style={{color: "hsl(var(--slack-text))"}}>On Call</div>
-                  <div className="text-xs text-green-400 font-medium flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                    Connected
-                  </div>
+                  {isCallPausedForRecording ? (
+                    <div className="text-xs text-amber-500 font-medium flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      Paused — reshare your screen to continue
+                    </div>
+                  ) : (
+                    <div className="text-xs text-green-400 font-medium flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                      Connected
+                    </div>
+                  )}
+                  {isScreenSharingToAi && !isCallPausedForRecording && (
+                    <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                      Sharing screen with {coworker.name.split(" ")[0]}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -557,13 +733,14 @@ export function FloatingCallBar({
             <div className="flex items-center justify-between gap-2">
               <Button
                 onClick={toggleMute}
+                disabled={isCallPausedForRecording}
                 variant={isMuted ? "secondary" : "outline"}
                 size="icon"
                 className="h-10 w-10 rounded-full"
                 style={{borderColor: "hsl(var(--slack-border))"}}
                 aria-label={isMuted ? "Unmute" : "Mute"}
               >
-                {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isMuted || isCallPausedForRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </Button>
 
               {/* Waveform Visualization */}

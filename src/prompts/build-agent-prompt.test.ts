@@ -124,7 +124,7 @@ describe("buildAgentPrompt with language support", () => {
 
       // Should have both Spanish instruction and greeting hint
       expect(prompt).toContain(LANGUAGES.es.instruction);
-      expect(prompt).toContain("Send a warm, casual first Slack message");
+      expect(prompt).toContain("FIRST Slack message to a new team member");
     });
 
     it("should handle defense phase with language", () => {

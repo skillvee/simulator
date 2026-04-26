@@ -63,13 +63,18 @@ export function useManagerAutoStart({
     isMountedRef.current = true;
 
     const checkAndTriggerMessages = async () => {
-      // Skip if already triggered for this assessment (module-level) or instance
+      // Per-instance guard prevents duplicate work within a single mount; the
+      // module-level `triggeredAssessments` latch is only set once we've
+      // actually settled (greeting persisted, or confirmed already-greeted).
+      // Setting the latch before the GET resolved was racing with Chat
+      // remounts — if the candidate clicked another coworker before the
+      // slow GET returned, the POST never fired and no later remount could
+      // recover.
       if (hasTriggeredRef.current || triggeredAssessments.has(assessmentId)) {
         setIsLoading(false);
         return;
       }
       hasTriggeredRef.current = true;
-      triggeredAssessments.add(assessmentId);
 
       try {
         // Step 1: Check if conversation already exists
@@ -82,12 +87,14 @@ export function useManagerAutoStart({
         setManagerId(status.managerId);
 
         if (status.hasConversation) {
+          triggeredAssessments.add(assessmentId);
           setIsLoading(false);
           return;
         }
 
         // Step 2: Show typing while LLM generates the greeting
         if (status.managerId === currentCoworkerId && status.managerName) {
+          triggeredAssessments.add(assessmentId);
           setIsTyping(true);
           onTypingStart();
 

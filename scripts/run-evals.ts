@@ -73,7 +73,7 @@ Options:
   }
 
   const name = getFlag("name") || `eval-${new Date().toISOString().slice(0, 16).replace("T", "-")}`;
-  const category = getFlag("category") as "manager" | "non-manager" | "edge-case" | undefined;
+  const category = getFlag("category") as "manager" | "non-manager" | "edge-case" | "voice" | "pacing" | undefined;
   const language = getFlag("language") as "en" | "es" | undefined;
   const scenarioIds = getFlag("scenarios")?.split(",");
   const promptFile = getFlag("prompt-file");

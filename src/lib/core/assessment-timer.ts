@@ -37,6 +37,25 @@ export function isAssessmentExpired(
 }
 
 /**
+ * Hard safety-net: how long past the cap before the server force-finalizes.
+ * Replaces the old auto-finalize-at-cap behavior — at cap we now fire the
+ * pacing-cap nudge instead, but if the candidate stays on the page well past
+ * cap without starting the walkthrough we still need a guard.
+ */
+export const HARD_EXPIRY_GRACE_MS = 30 * 60 * 1000; // 30 minutes
+
+export function isAssessmentHardExpired(
+  workingStartedAt: Date | null,
+  simulationDepth: SimulationDepth = "medium"
+): boolean {
+  if (!workingStartedAt) return false;
+  return (
+    Date.now() >
+    workingStartedAt.getTime() + getMaxDurationMs(simulationDepth) + HARD_EXPIRY_GRACE_MS
+  );
+}
+
+/**
  * Get the deadline timestamp for an assessment.
  */
 export function getDeadlineAt(

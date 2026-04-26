@@ -33,7 +33,10 @@ function formatDuration(startedAt: Date, completedAt: Date | null): string {
 function getStatusLabel(status: AssessmentStatus): string {
   const labels: Record<AssessmentStatus, string> = {
     WELCOME: "Pending",
+    REVIEW_MATERIALS: "In Progress",
+    KICKOFF_CALL: "In Progress",
     WORKING: "In Progress",
+    WALKTHROUGH_CALL: "In Progress",
     COMPLETED: "Completed",
   };
   return labels[status];

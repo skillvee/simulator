@@ -67,7 +67,7 @@ interface CallContextValue {
   startCall: (
     coworkerId: string,
     callType: "coworker"
-  ) => void;
+  ) => Promise<void>;
   endCall: () => void;
 }
 
@@ -97,12 +97,30 @@ interface SlackLayoutProps {
   onDefenseComplete?: () => void;
   /** When true, the next call will be flagged as post-submission (defense call) */
   isPostSubmission?: boolean;
-  /** Callback when candidate clicks "Submit Work" button */
+  /** Callback when candidate clicks the end-of-work CTA in the sidebar. */
   onSubmitWork?: () => void;
+  /**
+   * Overrides the default "Submit Work" label on the sidebar CTA — used when
+   * the button acts as a "Start walkthrough" trigger in the 4-phase flow.
+   */
+  submitWorkLabel?: string;
   /** Callback when any call ends — receives the coworkerId of the ended call */
   onCallEnd?: (coworkerId: string) => void;
+  /**
+   * Optional pre-call hook. Awaited before the call bar mounts (i.e. before
+   * `/api/call/token` is hit), so the parent can run side effects whose
+   * outcome the token endpoint depends on — most importantly, advancing
+   * REVIEW_MATERIALS → KICKOFF_CALL so the manager picks up the kickoff
+   * prompt context. Returning `false` aborts the call.
+   */
+  onBeforeStartCall?: (
+    coworkerId: string,
+    callType: "coworker"
+  ) => Promise<boolean>;
   /** Callback to expose startCall function to parent (for programmatic call initiation) */
-  onStartCallRef?: (startCall: (coworkerId: string, callType: "coworker") => void) => void;
+  onStartCallRef?: (
+    startCall: (coworkerId: string, callType: "coworker") => Promise<void>
+  ) => void;
   /** Callback to expose incrementUnread function to parent */
   onIncrementUnreadRef?: (incrementUnread: (coworkerId: string) => void) => void;
   /** Callback to expose incrementGeneralUnread function to parent */
@@ -113,6 +131,8 @@ interface SlackLayoutProps {
   onSelectResource?: (index: number | null) => void;
   /** Language of the assessment scenario */
   language?: string;
+  /** Optional slot rendered in the sidebar above the resources bar — used for the day's agenda. */
+  agendaSlot?: React.ReactNode;
 }
 
 /**
@@ -123,7 +143,7 @@ interface SlackLayoutProps {
 // children (e.g. Chat) call useCallContext() before SlackLayoutInner mounts.
 const defaultCallContextValue: CallContextValue = {
   activeCall: null,
-  startCall: () => {},
+  startCall: async () => {},
   endCall: () => {},
 };
 
@@ -185,12 +205,15 @@ function SlackLayoutInner({
   isPostSubmission,
   onSubmitWork,
   onCallEnd: onCallEndCallback,
+  onBeforeStartCall,
   onStartCallRef,
   onIncrementUnreadRef,
   onIncrementGeneralUnreadRef,
   selectedResourceIndex,
   onSelectResource,
   language,
+  agendaSlot,
+  submitWorkLabel,
 }: SlackLayoutProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -261,10 +284,21 @@ function SlackLayoutInner({
     overrideSelectedId ?? searchParams.get("coworkerId") ?? null;
   const selectedView = selectedCoworkerId === "general" ? "general" : selectedCoworkerId;
 
-  const startCall = (
+  // Latest pre-call hook, read via ref so `startCall`'s identity stays stable
+  // (it's exposed via `onStartCallRef` and consumed by other refs). Without
+  // this we'd have to re-publish the ref every time the parent's hook changes.
+  const onBeforeStartCallRef = useRef(onBeforeStartCall);
+  onBeforeStartCallRef.current = onBeforeStartCall;
+
+  const startCall = async (
     coworkerId: string,
     callType: "coworker"
   ) => {
+    const beforeStart = onBeforeStartCallRef.current;
+    if (beforeStart) {
+      const proceed = await beforeStart(coworkerId, callType);
+      if (!proceed) return;
+    }
     setActiveCall({ coworkerId, callType });
   };
 
@@ -396,7 +430,11 @@ function SlackLayoutInner({
     <CallContext.Provider value={callContextValue}>
       <div
         className="slack-theme relative flex h-screen overflow-hidden"
-        style={{background: "hsl(var(--slack-bg-main))"}}
+        // Use the longhand `backgroundColor` instead of the `background`
+        // shorthand: React expands the shorthand into its longhand siblings
+        // during hydration, which then mismatches the server-rendered
+        // style attribute and trips a Recoverable hydration error.
+        style={{backgroundColor: "hsl(var(--slack-bg-main))"}}
         onClick={() => markUserInteraction()}
       >
         {/* Mobile menu button */}
@@ -462,6 +500,10 @@ function SlackLayoutInner({
               </TooltipProvider>
             )}
           </div>
+
+          {/* Agenda (the day's four phases) — rendered above resources so it's the
+              first thing the candidate sees in the sidebar. */}
+          {agendaSlot}
 
           {/* Resources bookmarks bar */}
           {resources && resources.length > 0 && (
@@ -553,7 +595,9 @@ function SlackLayoutInner({
 
           </div>
 
-          {/* Submit Work button */}
+          {/* End-of-work CTA — either "Submit Work" (legacy) or "Walk through
+              your work with {manager}" (new 4-phase flow), depending on the
+              label the parent passes. */}
           {onSubmitWork && !activeCall && (
             <div className="shrink-0 px-4 py-3" style={{ borderTop: "1px solid hsl(var(--slack-border))" }}>
               <Button
@@ -562,7 +606,7 @@ function SlackLayoutInner({
                 size="sm"
               >
                 <Send className="h-4 w-4 mr-2" />
-                {t("submitWork")}
+                {submitWorkLabel ?? t("submitWork")}
               </Button>
             </div>
           )}

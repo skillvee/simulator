@@ -107,49 +107,36 @@ function ScreenRecordingGuardInner({
     );
   }
 
-  // Recording stopped or errored — show retry modal
+  // Recording stopped or errored mid-session — block all interaction until
+  // the candidate reshares. Recording is mandatory; letting them keep
+  // chatting/calling without a screen share defeats the assessment.
   if (isStoppedOrError) {
     return (
       <>
         <Dialog open={true}>
           <DialogContent
             className="max-w-md"
+            showCloseButton={false}
             onPointerDownOutside={(e) => e.preventDefault()}
             onEscapeKeyDown={(e) => e.preventDefault()}
           >
             <DialogHeader>
-              {/* Warning icon */}
               <div className="mb-4 flex justify-center">
                 <div className="rounded-xl bg-destructive/10 p-4">
                   <AlertTriangle className="h-12 w-12 text-destructive" />
                 </div>
               </div>
-
               <DialogTitle className="text-center text-2xl">
-                Recording Stopped
+                Screen sharing paused
               </DialogTitle>
               <DialogDescription className="text-center">
-                Your screen, webcam, or microphone recording has stopped
+                {error
+                  ? error
+                  : "Your assessment is on hold — reshare your screen to continue."}
               </DialogDescription>
             </DialogHeader>
 
-            {/* Message */}
-            <div className="rounded-lg bg-muted p-6">
-              {error && (
-                <p className="mb-4 font-medium text-destructive">{error}</p>
-              )}
-              <p className="mb-4 text-muted-foreground">
-                To continue with the assessment, you need to share your{" "}
-                <strong>entire screen</strong>, enable your <strong>webcam</strong>, and allow <strong>microphone</strong> access.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Sharing a single tab or window is not allowed. Full screen,
-                webcam, and microphone recording are all required to capture your work process.
-              </p>
-            </div>
-
             <DialogFooter className="flex-col gap-3 sm:flex-col">
-              {/* Retry button */}
               <Button
                 onClick={handleRetry}
                 disabled={isRetrying}
@@ -159,24 +146,22 @@ function ScreenRecordingGuardInner({
                 {isRetrying ? (
                   <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-                    Requesting Permission...
+                    Resuming…
                   </>
                 ) : (
                   <>
                     <Monitor className="h-4 w-4" />
-                    Resume Recording
+                    Resume screen sharing
                   </>
                 )}
               </Button>
-
               <p className="text-center text-sm text-muted-foreground">
-                You cannot continue without screen, webcam, and microphone recording enabled
+                You will be prompted to share your entire screen again.
               </p>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {/* Render children behind the overlay (hidden) */}
         <div className="pointer-events-none blur-sm">{children}</div>
       </>
     );

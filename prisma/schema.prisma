@@ -141,38 +141,43 @@ model Coworker {
 }
 
 model Assessment {
-  id               String           @id @default(cuid())
-  userId           String
-  scenarioId       String
-  status           AssessmentStatus @default(WELCOME)
-  startedAt        DateTime         @default(now())
-  workingStartedAt DateTime?
-  completedAt      DateTime?
-  report           Json?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  codeReview       Json?
-  supersededBy     String?
-  targetLevel      String?
+  id                     String              @id @default(cuid())
+  userId                 String
+  scenarioId             String
+  status                 AssessmentStatus    @default(WELCOME)
+  startedAt              DateTime            @default(now())
+  workingStartedAt       DateTime?
+  reviewStartedAt        DateTime?
+  kickoffStartedAt       DateTime?
+  kickoffEndedAt         DateTime?
+  workStartedAt          DateTime?
+  walkthroughStartedAt   DateTime?
+  walkthroughEndedAt     DateTime?
+  /** Pacing nudges already delivered (checkin / wrapup / cap). Idempotency marker so reloads don't duplicate. */
+  pacingNudgesDelivered  String[]            @default([])
+  completedAt            DateTime?
+  report                 Json?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  codeReview             Json?
+  supersededBy           String?
+  targetLevel            String?
 
-  reviewedAt          DateTime?
-  repoUrl             String?
-  repoStatus          String?             @default("pending")
-  deliverablePath     String?
-  deliverableFilename String?
-  deliverableSummary  String?
-  scenario            Scenario            @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
-  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  apiCalls            AssessmentApiCall[]
-  logs                AssessmentLog[]
-  conversations       Conversation[]
-  recordings          Recording[]
-  clientErrors        ClientError[]
-  voiceSessions       VoiceSession[]
-  videoAssessment     VideoAssessment?
-  apiRequestLogs      ApiRequestLog[]
-  candidateEvents     CandidateEvent[]
-  candidateFeedback   AssessmentFeedback?
+  reviewedAt             DateTime?
+  repoUrl                String?
+  repoStatus             String?             @default("pending")
+  scenario               Scenario            @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiCalls               AssessmentApiCall[]
+  logs                   AssessmentLog[]
+  conversations          Conversation[]
+  recordings             Recording[]
+  clientErrors           ClientError[]
+  voiceSessions          VoiceSession[]
+  videoAssessment        VideoAssessment?
+  apiRequestLogs         ApiRequestLog[]
+  candidateEvents        CandidateEvent[]
+  candidateFeedback      AssessmentFeedback?
 
   @@index([userId])
   @@index([scenarioId, userId])
@@ -585,7 +590,10 @@ enum UserRole {
 
 enum AssessmentStatus {
   WELCOME
+  REVIEW_MATERIALS
+  KICKOFF_CALL
   WORKING
+  WALKTHROUGH_CALL
   COMPLETED
 }
 

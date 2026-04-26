@@ -12,7 +12,7 @@ import type { SimulationPhase } from "@/prompts/build-agent-prompt";
 export interface EvalScenario {
   id: string;
   name: string;
-  category: "manager" | "non-manager" | "edge-case" | "voice";
+  category: "manager" | "non-manager" | "edge-case" | "voice" | "pacing";
   language?: "en" | "es"; // Language for scenario, defaults to "en"
 
   // Inputs for buildAgentPrompt
@@ -110,7 +110,7 @@ export interface EvalRunResult {
 
 export interface RunEvalOptions {
   name?: string;
-  category?: "manager" | "non-manager" | "edge-case" | "voice";
+  category?: "manager" | "non-manager" | "edge-case" | "voice" | "pacing";
   language?: "en" | "es";
   scenarioIds?: string[];
   verbose?: boolean;

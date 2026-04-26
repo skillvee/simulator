@@ -14,6 +14,7 @@ import {
   FileText,
   Hourglass,
 } from "lucide-react";
+import { isInProgressStatus } from "@/lib/core";
 import type { CandidateAssessmentData } from "./page";
 
 type TranslationFn = ReturnType<typeof useTranslations>;
@@ -75,7 +76,7 @@ export function CandidateDashboardClient({
   userName,
 }: CandidateDashboardClientProps) {
   const t = useTranslations("dashboard");
-  const inProgress = assessments.filter((a) => a.status === "WORKING");
+  const inProgress = assessments.filter((a) => isInProgressStatus(a.status));
   const pending = assessments.filter((a) => a.status === "WELCOME");
   const completed = assessments.filter((a) => a.status === "COMPLETED");
 
@@ -233,7 +234,7 @@ function AssessmentCard({
 }) {
   const isCompleted = assessment.status === "COMPLETED";
   const isPending = assessment.status === "WELCOME";
-  const isWorking = assessment.status === "WORKING";
+  const isWorking = isInProgressStatus(assessment.status);
 
   const href = isCompleted && assessment.overallScore !== null
     ? `/assessments/${assessment.id}/results`

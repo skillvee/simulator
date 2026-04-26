@@ -26,6 +26,7 @@ import type { ChatMessage, CoworkerPersona, ConversationWithMeta } from "@/types
 import type { Prisma } from "@prisma/client";
 import { isManager } from "@/lib/utils/coworker";
 import { createLogger } from "@/lib/core";
+import { logAICall } from "@/lib/analysis";
 import { DEFAULT_LANGUAGE, type SupportedLanguage } from "@/lib/core/language";
 
 const logger = createLogger("api:chat:manager-start");
@@ -70,11 +71,10 @@ export async function POST(request: Request) {
     return error("Assessment not found", 404, "NOT_FOUND");
   }
 
-  // Only start messages for WELCOME or WORKING status
-  if (
-    assessment.status !== AssessmentStatus.WELCOME &&
-    assessment.status !== AssessmentStatus.WORKING
-  ) {
+  // Block only for COMPLETED. Any active phase (and WELCOME, for edge cases
+  // where the greeting races the Start Simulation click) is fine — this
+  // route is idempotent at the conversation layer.
+  if (assessment.status === AssessmentStatus.COMPLETED) {
     return error("Cannot start manager messages for completed assessments", 400, "INVALID_STATUS");
   }
 
@@ -170,23 +170,42 @@ export async function POST(request: Request) {
   });
 
   // Generate greeting via LLM
+  const contents = [
+    { role: "user", parts: [{ text: systemPrompt }] },
+    { role: "model", parts: [{ text: "I understand my role. I'll send my first message now." }] },
+    { role: "user", parts: [{ text: "Go ahead — send your first Slack message to the candidate." }] },
+  ];
+  const promptText = contents.map(c => c.parts.map(p => p.text).join("")).join("\n");
+  const tracker = await logAICall({
+    assessmentId,
+    endpoint: "/api/chat/manager-start",
+    promptText,
+    modelVersion: GREETING_MODEL,
+    promptType: "MANAGER_GREETING",
+    promptVersion: "1.0",
+    modelUsed: GREETING_MODEL,
+  }).catch(() => null);
+
   let greetingText: string;
   try {
     const response = await gemini.models.generateContent({
       model: GREETING_MODEL,
-      contents: [
-        { role: "user", parts: [{ text: systemPrompt }] },
-        { role: "model", parts: [{ text: "I understand my role. I'll send my first message now." }] },
-        { role: "user", parts: [{ text: "Go ahead — send your first Slack message to the candidate." }] },
-      ],
+      contents,
     });
 
     greetingText = response.text?.trim() || "";
     if (!greetingText) throw new Error("Empty response");
+    await tracker?.complete({
+      responseText: greetingText,
+      statusCode: 200,
+      promptTokens: response.usageMetadata?.promptTokenCount,
+      responseTokens: response.usageMetadata?.candidatesTokenCount,
+    }).catch(() => {});
   } catch (err) {
+    await tracker?.fail(err instanceof Error ? err : new Error(String(err))).catch(() => {});
     logger.warn("LLM greeting generation failed, using fallback", { error: err instanceof Error ? err.message : String(err) });
     const firstName = managerCoworker.name.split(" ")[0];
-    greetingText = `Hey! Welcome to the team! I'm ${firstName} — how's it going, got everything set up ok?`;
+    greetingText = `Hey! Welcome to the team — I'm ${firstName}. We've got a real problem we want you to dig into; the brief and supporting materials are in your resources panel. Once you've read through them, give me a call and we'll clarify any open questions.`;
   }
 
   const greetingMessage: ChatMessage = {
@@ -227,13 +246,9 @@ export async function POST(request: Request) {
     });
   }
 
-  // Transition WELCOME → WORKING
-  if (assessment.status === AssessmentStatus.WELCOME) {
-    await db.assessment.update({
-      where: { id: assessmentId },
-      data: { status: AssessmentStatus.WORKING },
-    });
-  }
+  // Phase transitions are owned by /api/assessment/start (WELCOME →
+  // REVIEW_MATERIALS) and /api/assessment/transition (everything after).
+  // This route only generates and persists the greeting.
 
   return success({
     alreadyStarted: false,
