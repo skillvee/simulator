@@ -25,6 +25,10 @@ export const env = createEnv({
       .optional()
       .default("off")
       .transform((val) => val === "on"),
+    // Shared secret for Vercel cron — `Authorization: Bearer ${CRON_SECRET}`
+    // is auto-attached to scheduled cron invocations. Required in production;
+    // optional in dev so local routes can be hit without a secret set.
+    CRON_SECRET: z.string().min(1).optional(),
   },
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -66,6 +70,7 @@ export const env = createEnv({
     DEMO_USER_IDS: process.env.DEMO_USER_IDS,
     RESOURCE_PIPELINE_V2: process.env.RESOURCE_PIPELINE_V2,
     NEXT_PUBLIC_RESOURCE_PIPELINE_V2: process.env.NEXT_PUBLIC_RESOURCE_PIPELINE_V2,
+    CRON_SECRET: process.env.CRON_SECRET,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

@@ -9,7 +9,7 @@ import {
   type PacingNudgeType,
 } from "@/lib/core/assessment-phase";
 import { isDemoUser } from "@/lib/core/env";
-import { db } from "@/server/db";
+import { finalizeAssessment } from "@/lib/analysis/finalize-assessment";
 import { AssessmentStatus } from "@prisma/client";
 import type {
   ScenarioResource,
@@ -71,13 +71,12 @@ export default async function WorkPage({
     isAssessmentHardExpired(assessment.workingStartedAt, simulationDepth) &&
     !walkthroughIsActive
   ) {
-    await db.assessment.update({
-      where: { id },
-      data: {
-        status: AssessmentStatus.COMPLETED,
-        completedAt: new Date(),
-      },
-    });
+    // Run the full finalize pipeline (status flip + recording merge + video
+    // eval + profile photo) so abandoned-then-reloaded assessments still
+    // get analysis. A bare status update here would leave the row
+    // COMPLETED with no report — the same bug the cron safety net fixes
+    // for the idle-tab case.
+    await finalizeAssessment(id);
     redirect(`/assessments/${id}/results`);
   }
 
