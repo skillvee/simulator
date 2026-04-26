@@ -15,7 +15,7 @@
 
 import { buildLanguageInstruction, type SupportedLanguage } from "@/lib/core/language";
 
-export const PLAN_AND_DOCS_PROMPT_VERSION = "v2.2";
+export const PLAN_AND_DOCS_PROMPT_VERSION = "v2.3";
 
 export interface PlanAndDocsInput {
   companyName: string;
@@ -134,21 +134,31 @@ opens. The judge has been instructed not to penalize their absence.
 `;
 
   const docVoice = `
-### Voice — you are a senior IC writing in 5 minutes between meetings
+### Voice — onboarding doc, hurried but structured
 
-You're slammed. The new hire starts today and you have a 3pm. Write the way a
-real human writes a hurried handoff — conversational, plain prose, occasional
-fragments, "we" / "you" / "I". Skip headings if they don't earn their keep.
-A short paragraph beats a labeled section.
+Think Google Doc your manager wrote between meetings on day one — not a Slack
+DM, not a corporate template. Hurried but scannable. Brief opener (1-2 lines),
+2-4 H2 sections with functional names like "What you're working on", "How
+things fit together", "Who to talk to", "Where things live" — pick what fits,
+don't force all four. Mostly complete sentences; personal voice ("we" / "you"
+/ "I") is fine. Acknowledge the haste once at most; don't apologize through
+the whole doc.
+
+Use these when they earn it:
+- Flat bullet lists for concrete lists (files, people, key links, flows)
+- Tables for columned info (files × purpose, people × expertise, steps × where)
+- Inline code spans for paths, commands, identifiers
+
+Length: ~400-600 words per doc. Long enough for structure, short enough to
+scan in under two minutes.
 
 Avoid:
-- Headers like "Executive Summary", "Strategic Context", "Methodological Guidelines"
-- "BLUF" / consulting templates / phased timelines
-- "30-day plan", "Week 1 / Week 2"
-- Numbered hierarchies > 1 level deep
-- "See Also" cross-references between docs
+- "Executive Summary" / "Strategic Context" / "Methodological Guidelines"
+- "BLUF" / consulting templates / phased timelines / "30-day plan"
+- Numbered hierarchies > 1 level deep (flat lists / tables only)
 - Word-count-padding adverbs ("rigorously", "comprehensively", "robustly")
-- "Welcome to the team" multi-paragraph onboarding fluff`;
+- "See Also" cross-references between docs
+- Multi-paragraph "Welcome to the team" intros (one friendly line is plenty)`;
 
   const antiSpoiler = `
 ### Anti-spoiler rule — NON-NEGOTIABLE
@@ -188,31 +198,35 @@ The candidate should infer "I should reach out" without being told to.`;
       ? `
 ### Doc rules — engineering (resourceType=repo)
 
-Generate **exactly 1 doc**: a short kickoff note from a senior IC.
+Generate **exactly 1 doc**: a kickoff note from a senior IC.
 
   - Filename: \`kickoff.md\` (or similar — your call, stay realistic)
-  - Length: ~150-400 words. Brief.
-  - Content: business problem in one paragraph; where to start (repo URL is
-    elsewhere, just say "the repo"); a few soft pointers about the team; an
-    open ending ("ping me if anything blocks you").
+  - Length: ~400-600 words. Scannable in under two minutes.
+  - Shape: 2-4 H2 sections (e.g. *What you're working on*, *How the system
+    fits together*, *Who to talk to*). Use tables / flat bullets where they
+    earn their keep — see Voice section.
+  - Content: business problem; where to start (repo URL is elsewhere, just
+    say "the repo"); soft pointers about the team; open ending ("ping me
+    if anything blocks you"). NO methodology, NO bug specifics.
 
 The repo itself has the README, issues, and code — those carry the rest. Your
-doc just orients the candidate in human terms.`
+doc orients the candidate in human terms.`
       : `
 ### Doc rules — data (resourceType=data)
 
 Generate **1 or 2 docs** — your call based on what the scenario actually needs:
 
   - **REQUIRED — kickoff note** (filename: \`kickoff.md\` or similar):
-    150-400 words. Hurried-IC voice. The business question, where the data is,
-    soft pointers to coworkers, open ending. NO methodology, NO numbers,
-    NO bug specifics.
+    ~400-600 words. Hurried-but-structured voice. 2-4 H2 sections covering
+    the business question, where the data lives, soft pointers to coworkers,
+    open ending. NO methodology, NO numbers, NO bug specifics.
 
   - **OPTIONAL — data dictionary** (filename: \`data_dictionary.md\` or similar):
-    Include this ONLY if the schemas need a reference (e.g., 3+ files, ambiguous
-    column names, units that aren't obvious). 100-400 words. Strictly factual:
-    file -> column names + types + 1-line descriptions. NO known issues, NO
-    methodology, NO joining strategy, NO common pitfalls. Just the schema.
+    Include this ONLY if the schemas need a reference (e.g., 3+ files,
+    ambiguous column names, units that aren't obvious). ~250-500 words.
+    Use a table per file (column × type × 1-line description). Strictly
+    factual: NO known issues, NO methodology, NO joining strategy. Just
+    the schema.
 
 If a single CSV with self-explanatory columns is the whole input, skip the
 dictionary entirely — the kickoff note is enough.`;
