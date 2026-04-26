@@ -351,13 +351,11 @@ export function WorkPageClient({
       // bounced to /results with a dead recording.
       await flushFinalChunk();
 
-      // Move WALKTHROUGH_CALL → COMPLETED via the transition route so the
-      // walkthroughEndedAt timestamp is stamped. Safe to no-op on legacy
-      // WORKING rows (transition returns 400, finalize handles them directly).
-      if (phase === "walkthrough_call") {
-        await postTransition("end_walkthrough");
-      }
-
+      // Finalize owns the WALKTHROUGH_CALL → COMPLETED flip (including the
+      // walkthroughEndedAt stamp) so a network failure between two separate
+      // requests can't leave the row marked COMPLETED with no recording-merge
+      // / video-eval / profile-photo side effects (which would also block
+      // retry — a reload bounces the candidate to /results).
       const response = await fetch("/api/assessment/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -376,7 +374,7 @@ export function WorkPageClient({
       logger.error("Error completing defense", { error: String(err) });
       setIsCompleting(false);
     }
-  }, [assessmentId, isCompleting, router, stopRecording, flushFinalChunk, phase, postTransition]);
+  }, [assessmentId, isCompleting, router, stopRecording, flushFinalChunk]);
 
   // Handle post-defense "Continue Working" — dismiss modal and go back to work
   const handleContinueWorking = useCallback(() => {

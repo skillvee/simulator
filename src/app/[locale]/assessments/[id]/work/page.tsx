@@ -52,13 +52,24 @@ export default async function WorkPage({
   const simulationDepth = (assessment.scenario.simulationDepth || "medium") as SimulationDepth;
 
   // Safety-net auto-finalize: if the candidate is well past the cap (cap + 30
-  // min grace) and STILL not on a walkthrough call, force-finalize. The cap
+  // min grace) and not actively on a walkthrough, force-finalize. The cap
   // itself no longer auto-finalizes — the pacing-cap nudge handles that
   // moment with a manager message instead, so candidates running over by a
   // few minutes can still wrap up gracefully.
+  //
+  // We exclude an *active* walkthrough so we don't yank the candidate out of
+  // a live call, but a stale WALKTHROUGH_CALL row (candidate abandoned mid-
+  // call, never finalized) must still be cleaned up — otherwise it sits in
+  // the in-progress bucket forever and never gets analysis.
+  const STALE_WALKTHROUGH_GRACE_MS = 30 * 60 * 1000;
+  const walkthroughIsActive =
+    assessment.status === AssessmentStatus.WALKTHROUGH_CALL &&
+    assessment.walkthroughStartedAt !== null &&
+    Date.now() - assessment.walkthroughStartedAt.getTime() <
+      STALE_WALKTHROUGH_GRACE_MS;
   if (
     isAssessmentHardExpired(assessment.workingStartedAt, simulationDepth) &&
-    assessment.status !== AssessmentStatus.WALKTHROUGH_CALL
+    !walkthroughIsActive
   ) {
     await db.assessment.update({
       where: { id },

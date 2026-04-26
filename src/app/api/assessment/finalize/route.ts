@@ -67,12 +67,14 @@ export async function POST(request: Request) {
       return error("Unauthorized to modify this assessment", 403);
     }
 
-    // Allow finalize from WORKING (legacy direct path) or COMPLETED (the new
-    // flow flips to COMPLETED via the end_walkthrough transition just before
-    // calling finalize for the post-assessment pipeline). Reject WELCOME and
-    // any other phases — candidate hasn't progressed far enough to finalize.
+    // Allow finalize from WORKING (legacy direct path), WALKTHROUGH_CALL (the
+    // new flow — finalize owns the COMPLETED transition so a network failure
+    // between transition + finalize can't strand the row mid-flow), or
+    // COMPLETED (idempotent re-run). Reject WELCOME and other earlier phases
+    // — candidate hasn't progressed far enough to finalize.
     if (
       assessment.status !== AssessmentStatus.WORKING &&
+      assessment.status !== AssessmentStatus.WALKTHROUGH_CALL &&
       assessment.status !== AssessmentStatus.COMPLETED
     ) {
       return error(
@@ -91,10 +93,12 @@ export async function POST(request: Request) {
     const totalDurationMs = completedAt.getTime() - timerStart.getTime();
     const totalDurationSeconds = Math.floor(totalDurationMs / 1000);
 
-    // Idempotent: when status is already COMPLETED (typical after the
-    // end_walkthrough transition just stamped it), skip the status flip and
-    // preserve the original completedAt. Side-effects below are upsert-based
-    // so they're safe to re-run.
+    // Idempotent: when status is already COMPLETED, skip the status flip and
+    // preserve the original completedAt. Otherwise flip to COMPLETED — and
+    // when coming from WALKTHROUGH_CALL also stamp `walkthroughEndedAt` so
+    // the row reflects the call ending here, not in a separate transition
+    // call that may never have happened (network failure between client
+    // requests).
     const updatedAssessment = alreadyCompleted
       ? {
           id: assessment.id,
@@ -108,6 +112,9 @@ export async function POST(request: Request) {
           data: {
             status: AssessmentStatus.COMPLETED,
             completedAt: now,
+            ...(assessment.status === AssessmentStatus.WALKTHROUGH_CALL
+              ? { walkthroughEndedAt: now }
+              : {}),
           },
           select: {
             id: true,
