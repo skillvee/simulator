@@ -19,17 +19,30 @@ import { createLogger } from "@/lib/core";
 
 const logger = createLogger("lib:media:webm-seekable");
 
-function bufferToArrayBuffer(buf: Buffer): ArrayBuffer {
-  const ab = new ArrayBuffer(buf.byteLength);
-  new Uint8Array(ab).set(buf);
-  return ab;
+function asArrayBuffer(buf: Buffer): ArrayBuffer {
+  // Avoid an N-byte copy when the Buffer fully owns its backing memory —
+  // true for `Buffer.concat` output and `Buffer.from(blob.arrayBuffer())`,
+  // which is how every caller produces the input. Pooled / sliced Buffers
+  // (which share an underlying ArrayBuffer) fall back to a copy of just
+  // the relevant window so the decoder doesn't see neighbouring bytes.
+  if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+    return buf.buffer as ArrayBuffer;
+  }
+  return buf.buffer.slice(
+    buf.byteOffset,
+    buf.byteOffset + buf.byteLength
+  ) as ArrayBuffer;
 }
 
-function copyToOwnedView(input: Buffer): Uint8Array<ArrayBuffer> {
-  const ab = new ArrayBuffer(input.byteLength);
-  const view = new Uint8Array(ab);
-  view.set(input);
-  return view;
+function asOwnedView(input: Buffer): Uint8Array<ArrayBuffer> {
+  // Return a view over the input's existing buffer instead of copying.
+  // The caller holds the returned Uint8Array, which keeps the underlying
+  // memory alive — there's no need to duplicate it.
+  return new Uint8Array(
+    input.buffer as ArrayBuffer,
+    input.byteOffset,
+    input.byteLength
+  );
 }
 
 function looksLikeWebm(buf: Buffer): boolean {
@@ -53,10 +66,10 @@ export async function makeWebmSeekable(
   input: Buffer
 ): Promise<Uint8Array<ArrayBuffer>> {
   if (typeof window !== "undefined") {
-    return copyToOwnedView(input);
+    return asOwnedView(input);
   }
   if (!looksLikeWebm(input)) {
-    return copyToOwnedView(input);
+    return asOwnedView(input);
   }
   try {
     const { Decoder, Encoder, Reader, tools } = await import("ts-ebml");
@@ -65,7 +78,7 @@ export async function makeWebmSeekable(
     reader.logging = false;
     reader.drop_default_duration = false;
 
-    const ab = bufferToArrayBuffer(input);
+    const ab = asArrayBuffer(input);
     const elms = decoder.decode(ab);
     for (const elm of elms) {
       reader.read(elm);
@@ -76,7 +89,7 @@ export async function makeWebmSeekable(
       logger.warn("WebM has no parseable metadata; skipping seekability fix", {
         inputSize: String(input.length),
       });
-      return copyToOwnedView(input);
+      return asOwnedView(input);
     }
 
     // ts-ebml's `Encoder.encode` returns `Buffer.concat(parts).buffer`. For
@@ -134,6 +147,6 @@ export async function makeWebmSeekable(
       err: err instanceof Error ? err.message : String(err),
       inputSize: String(input.length),
     });
-    return copyToOwnedView(input);
+    return asOwnedView(input);
   }
 }
