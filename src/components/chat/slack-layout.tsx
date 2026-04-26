@@ -67,7 +67,7 @@ interface CallContextValue {
   startCall: (
     coworkerId: string,
     callType: "coworker"
-  ) => void;
+  ) => Promise<void>;
   endCall: () => void;
 }
 
@@ -106,8 +106,21 @@ interface SlackLayoutProps {
   submitWorkLabel?: string;
   /** Callback when any call ends — receives the coworkerId of the ended call */
   onCallEnd?: (coworkerId: string) => void;
+  /**
+   * Optional pre-call hook. Awaited before the call bar mounts (i.e. before
+   * `/api/call/token` is hit), so the parent can run side effects whose
+   * outcome the token endpoint depends on — most importantly, advancing
+   * REVIEW_MATERIALS → KICKOFF_CALL so the manager picks up the kickoff
+   * prompt context. Returning `false` aborts the call.
+   */
+  onBeforeStartCall?: (
+    coworkerId: string,
+    callType: "coworker"
+  ) => Promise<boolean>;
   /** Callback to expose startCall function to parent (for programmatic call initiation) */
-  onStartCallRef?: (startCall: (coworkerId: string, callType: "coworker") => void) => void;
+  onStartCallRef?: (
+    startCall: (coworkerId: string, callType: "coworker") => Promise<void>
+  ) => void;
   /** Callback to expose incrementUnread function to parent */
   onIncrementUnreadRef?: (incrementUnread: (coworkerId: string) => void) => void;
   /** Callback to expose incrementGeneralUnread function to parent */
@@ -130,7 +143,7 @@ interface SlackLayoutProps {
 // children (e.g. Chat) call useCallContext() before SlackLayoutInner mounts.
 const defaultCallContextValue: CallContextValue = {
   activeCall: null,
-  startCall: () => {},
+  startCall: async () => {},
   endCall: () => {},
 };
 
@@ -192,6 +205,7 @@ function SlackLayoutInner({
   isPostSubmission,
   onSubmitWork,
   onCallEnd: onCallEndCallback,
+  onBeforeStartCall,
   onStartCallRef,
   onIncrementUnreadRef,
   onIncrementGeneralUnreadRef,
@@ -270,10 +284,21 @@ function SlackLayoutInner({
     overrideSelectedId ?? searchParams.get("coworkerId") ?? null;
   const selectedView = selectedCoworkerId === "general" ? "general" : selectedCoworkerId;
 
-  const startCall = (
+  // Latest pre-call hook, read via ref so `startCall`'s identity stays stable
+  // (it's exposed via `onStartCallRef` and consumed by other refs). Without
+  // this we'd have to re-publish the ref every time the parent's hook changes.
+  const onBeforeStartCallRef = useRef(onBeforeStartCall);
+  onBeforeStartCallRef.current = onBeforeStartCall;
+
+  const startCall = async (
     coworkerId: string,
     callType: "coworker"
   ) => {
+    const beforeStart = onBeforeStartCallRef.current;
+    if (beforeStart) {
+      const proceed = await beforeStart(coworkerId, callType);
+      if (!proceed) return;
+    }
     setActiveCall({ coworkerId, callType });
   };
 

@@ -217,7 +217,7 @@ export function WorkPageClient({
   // onStartCallRef on mount, used to dial the manager when the candidate
   // clicks "Start kickoff with Sarah" from the review-materials view.
   const startCallRef = useRef<
-    ((coworkerId: string, callType: "coworker") => void) | null
+    ((coworkerId: string, callType: "coworker") => Promise<void>) | null
   >(null);
 
   // Pre-warm the mic permission inside the user's click before the call
@@ -293,9 +293,31 @@ export function WorkPageClient({
     setIsTransitioning(false);
   }, [isTransitioning, manager, prewarmMic, postTransition, handleSelectCoworker]);
 
+  // Pre-call hook: SlackLayout awaits this before mounting the call bar (and
+  // therefore before /api/call/token runs). When the candidate starts the
+  // first manager call from the sidebar while still in REVIEW_MATERIALS, we
+  // need to flip status to KICKOFF_CALL *here* so the token endpoint serves
+  // the kickoff prompt context (it switches on `status === KICKOFF_CALL`).
+  // Returning false aborts the call, so a transition failure doesn't leave
+  // the manager dialed with the wrong prompt.
+  const handleBeforeStartCall = useCallback(
+    async (coworkerId: string) => {
+      if (coworkerId !== manager?.id) return true;
+      if (phase !== "review_materials") return true;
+      const ok = await postTransition("start_kickoff");
+      if (!ok) return false;
+      setPhase("kickoff_call");
+      return true;
+    },
+    [phase, manager, postTransition]
+  );
+
   // Any call ending flows through here. Kickoff calls move us to heads-down
   // work; walkthrough calls are handled by onDefenseComplete below (which
-  // owns the post-defense confirmation modal).
+  // owns the post-defense confirmation modal). Sidebar-initiated kickoff
+  // calls go through `handleBeforeStartCall` above, so by the time the call
+  // ends `phase` is already `kickoff_call` — there's no separate
+  // review_materials branch to handle here.
   const handleCallEnd = useCallback(
     async (endedCoworkerId: string) => {
       if (endedCoworkerId !== manager?.id) return;
@@ -303,20 +325,6 @@ export function WorkPageClient({
       if (phase === "kickoff_call") {
         const ok = await postTransition("end_kickoff");
         if (ok) setPhase("heads_down_work");
-        return;
-      }
-
-      // The first call with the manager IS the kickoff, even if the candidate
-      // started it via the inline sidebar call button instead of the
-      // "Give {manager} a call" CTA. Run both transitions back-to-back so the
-      // agenda catches up and lands on heads-down work. The transition route
-      // is idempotent, so a duplicate start_kickoff (e.g. after a refresh
-      // races us to KICKOFF_CALL) is harmless.
-      if (phase === "review_materials") {
-        const started = await postTransition("start_kickoff");
-        if (!started) return;
-        const ended = await postTransition("end_kickoff");
-        if (ended) setPhase("heads_down_work");
       }
     },
     [phase, manager, postTransition]
@@ -463,6 +471,7 @@ export function WorkPageClient({
         onStartCallRef={(fn) => {
           startCallRef.current = fn;
         }}
+        onBeforeStartCall={handleBeforeStartCall}
         onCallEnd={handleCallEnd}
         onIncrementUnreadRef={(fn) => {
           incrementUnreadRef.current = fn;
