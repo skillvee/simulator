@@ -54,6 +54,16 @@ const logger = createLogger("lib:scenarios:orchestrator");
 
 const MAX_ARTIFACT_ATTEMPTS = 3;
 
+// Thrown errors that won't change between attempts — config gaps and schema
+// mismatches, not transient network/API failures. Match → abort the retry loop
+// immediately on first occurrence (don't waste 2 more Pro calls reproducing the
+// same throw). Anything not on this list is treated as potentially retryable
+// (timeouts, 429s, 5xx) and gets the full attempt budget.
+const NON_RETRYABLE_THROW_PATTERNS: RegExp[] = [
+  /GitHub token not configured/i,
+  /GITHUB_(?:ORG_)?TOKEN.*not set/i,
+];
+
 // ---------------------------------------------------------------------------
 // Public entry points
 // ---------------------------------------------------------------------------
@@ -201,10 +211,12 @@ export async function runArtifactPipeline(
 
   let lastVerdict: JudgeVerdict | undefined;
   let lastError: string | undefined;
-  // Fingerprint of the previous attempt's failure mode. If two attempts produce
-  // the identical failure (same thrown error, same validator errors, or same
-  // judge blockingIssues), retrying won't help — the regenerator can't address
-  // feedback it's already ignored once. Bail to save Gemini cost.
+  // Fingerprint of the previous attempt's deterministic failure (validator
+  // errors, or judge blockingIssues). When two attempts produce identical
+  // deterministic feedback, the regenerator demonstrably can't address it —
+  // bail to save Gemini cost. Score-only judge failures and thrown exceptions
+  // are NOT fingerprinted: model variance can cross 0.85 on a third try, and
+  // identical-looking throws are usually transient (429/5xx/timeouts).
   let previousFingerprint: string | null = null;
 
   for (let attempt = 1; attempt <= MAX_ARTIFACT_ATTEMPTS; attempt++) {
@@ -273,16 +285,28 @@ export async function runArtifactPipeline(
           });
           return;
         }
-        currentFingerprint = "judge:" + JSON.stringify([...verdict.blockingIssues].sort());
+        // Only fingerprint when the judge cited specific blocking issues. A
+        // bare score-only failure (passed=false, blockingIssues=[]) reflects
+        // model variance and might cross 0.85 on the next try — let it retry.
+        if (verdict.blockingIssues.length > 0) {
+          currentFingerprint = "judge:" + JSON.stringify([...verdict.blockingIssues].sort());
+        }
       }
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
       logger.warn("artifact pipeline attempt failed", { scenarioId, attempt, err: lastError });
-      currentFingerprint = "throw:" + lastError;
+      // Known non-retryable throws (config gaps, schema mismatches) abort
+      // immediately — no point burning 2 more attempts on the same exception.
+      // Anything else is potentially transient; fall through and let the loop
+      // continue without fingerprinting the throw.
+      if (NON_RETRYABLE_THROW_PATTERNS.some((p) => p.test(lastError!))) {
+        logger.warn("aborting retries — non-retryable error", { scenarioId, lastError });
+        break;
+      }
     }
 
     if (currentFingerprint !== null && currentFingerprint === previousFingerprint) {
-      logger.warn("aborting retries — same failure as previous attempt", {
+      logger.warn("aborting retries — same deterministic failure as previous attempt", {
         scenarioId,
         attempt,
         fingerprint: currentFingerprint.slice(0, 200),
