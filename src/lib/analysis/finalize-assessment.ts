@@ -79,13 +79,19 @@ export async function finalizeAssessment(
     return { ok: false, code: "NOT_FOUND", message: "Assessment not found" };
   }
 
-  // Allowed source statuses: WORKING (legacy direct path), KICKOFF_CALL or
-  // WALKTHROUGH_CALL (mid-flow, finalize owns the COMPLETED flip), or
-  // COMPLETED (idempotent re-run from cron / hard-expiry). Reject earlier
-  // phases — candidate hasn't progressed enough to finalize.
+  // Allowed source statuses cover everything past WELCOME so the safety-net
+  // entrypoints (work-page hard-expiry, cron) can finalize stale rows in any
+  // mid-flow phase — including REVIEW_MATERIALS, which `/api/assessment/start`
+  // sets alongside `workingStartedAt`. A candidate who idles in review past
+  // cap+grace would otherwise hit the hard-expiry guard, get rejected here,
+  // and bounce between /work and /results because the row is never flipped
+  // to COMPLETED. COMPLETED stays in the set so retries from /api/assessment/
+  // finalize re-run side effects (idempotent — `triggerVideoAssessment`
+  // upserts and bails on PROCESSING/COMPLETED).
   const finalizable: AssessmentStatus[] = [
-    AssessmentStatus.WORKING,
+    AssessmentStatus.REVIEW_MATERIALS,
     AssessmentStatus.KICKOFF_CALL,
+    AssessmentStatus.WORKING,
     AssessmentStatus.WALKTHROUGH_CALL,
     AssessmentStatus.COMPLETED,
   ];
@@ -133,23 +139,13 @@ export async function finalizeAssessment(
         },
       });
 
-  // Skip side effects on idempotent re-runs — they were already triggered
-  // (or attempted) on the first call, and re-firing video evaluation would
-  // burn Gemini credits + risk overwriting partial results.
-  if (alreadyCompleted) {
-    return {
-      ok: true,
-      assessment: updatedAssessment,
-      timing: {
-        startedAt: assessment.startedAt,
-        completedAt,
-        totalDurationSeconds,
-      },
-      videoAssessment: { triggered: false, hasRecording: false },
-      profilePhoto: { generated: false, imageUrl: null },
-    };
-  }
-
+  // Always run the side-effect block — even on already-COMPLETED rows. This
+  // preserves the retry path for assessments where the first finalize flipped
+  // status but its side effects never finished (function timeout after the DB
+  // update, partial Gemini failure, etc.). The underlying functions handle
+  // their own idempotency: `triggerVideoAssessment` upserts the row and bails
+  // on PROCESSING/COMPLETED, so we don't double-bill Gemini credits.
+  //
   // Fire-and-forget recording merge + video evaluation. Both can take minutes
   // (Gemini upload + ACTIVE polling), so we don't block the caller.
   const recordingUrl = assessment.recordings[0]?.storageUrl;

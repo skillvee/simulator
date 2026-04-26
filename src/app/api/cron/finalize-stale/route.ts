@@ -25,11 +25,22 @@ const logger = createLogger("api:cron:finalize-stale");
  * idempotent, but listing them is wasted work.
  */
 export async function GET(request: Request) {
-  // Vercel cron auto-attaches `Authorization: Bearer ${CRON_SECRET}`. Require
-  // it in production; allow unauthenticated dev hits when no secret is set
-  // so the route can be exercised locally without env config.
+  // Vercel cron auto-attaches `Authorization: Bearer ${CRON_SECRET}`. Fail
+  // closed: outside `NODE_ENV=development` we *require* the secret to be set
+  // — otherwise this route (which middleware marks public) would be an
+  // unauthenticated trigger surface for finalize sweeps on every deploy
+  // where someone forgot the env var.
   const expected = env.CRON_SECRET;
-  if (expected) {
+  if (!expected) {
+    if (process.env.NODE_ENV !== "development") {
+      logger.error("CRON_SECRET not configured — refusing to run cron");
+      return NextResponse.json(
+        { error: "Server not configured" },
+        { status: 500 }
+      );
+    }
+    // Dev-only: skip auth so the route can be exercised locally.
+  } else {
     const authHeader = request.headers.get("authorization");
     if (authHeader !== `Bearer ${expected}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -45,8 +56,9 @@ export async function GET(request: Request) {
     where: {
       status: {
         in: [
-          AssessmentStatus.WORKING,
+          AssessmentStatus.REVIEW_MATERIALS,
           AssessmentStatus.KICKOFF_CALL,
+          AssessmentStatus.WORKING,
           AssessmentStatus.WALKTHROUGH_CALL,
         ],
       },

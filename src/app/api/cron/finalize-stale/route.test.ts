@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { AssessmentStatus } from "@prisma/client";
 
 const mockFindMany = vi.fn();
@@ -26,11 +26,23 @@ vi.mock("@/lib/core", () => ({
   }),
 }));
 
+// `env` is imported eagerly by the route, so the mock has to be set up before
+// the import. `vi.mock` is hoisted to file top — use `vi.hoisted` so the
+// shared mockEnv reference exists when the factory runs. Tests mutate it.
+const { mockEnv } = vi.hoisted(() => ({
+  mockEnv: { CRON_SECRET: "test-secret" as string | undefined },
+}));
 vi.mock("@/lib/core/env", () => ({
-  env: { CRON_SECRET: "test-secret" },
+  env: mockEnv,
 }));
 
 import { GET } from "./route";
+
+const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
+
+// `process.env.NODE_ENV` is typed as a readonly literal union by Node's
+// types — cast through this writable view so individual tests can flip it.
+const mutableProcessEnv = process.env as Record<string, string | undefined>;
 
 const NOW = new Date("2026-04-26T12:00:00Z").getTime();
 const MEDIUM_CAP_MIN = 75;
@@ -41,6 +53,8 @@ describe("GET /api/cron/finalize-stale", () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date(NOW));
+    mockEnv.CRON_SECRET = "test-secret";
+    mutableProcessEnv.NODE_ENV = "test";
     mockFinalizeAssessment.mockResolvedValue({
       ok: true,
       assessment: {} as never,
@@ -48,6 +62,10 @@ describe("GET /api/cron/finalize-stale", () => {
       videoAssessment: { triggered: true, hasRecording: true },
       profilePhoto: { generated: true, imageUrl: null },
     });
+  });
+
+  afterEach(() => {
+    mutableProcessEnv.NODE_ENV = ORIGINAL_NODE_ENV;
   });
 
   function withAuth(secret = "test-secret"): Request {
@@ -62,6 +80,48 @@ describe("GET /api/cron/finalize-stale", () => {
     const response = await GET(withAuth("wrong-secret"));
     expect(response.status).toBe(401);
     expect(mockFindMany).not.toHaveBeenCalled();
+  });
+
+  it("fails closed (500) when CRON_SECRET is unset outside development", async () => {
+    mockEnv.CRON_SECRET = undefined;
+    mutableProcessEnv.NODE_ENV = "production";
+    mockFindMany.mockResolvedValue([]);
+    const response = await GET(
+      new Request("http://localhost/api/cron/finalize-stale", { method: "GET" })
+    );
+    expect(response.status).toBe(500);
+    expect(mockFindMany).not.toHaveBeenCalled();
+  });
+
+  it("allows unauthenticated calls in development when CRON_SECRET is unset", async () => {
+    mockEnv.CRON_SECRET = undefined;
+    mutableProcessEnv.NODE_ENV = "development";
+    mockFindMany.mockResolvedValue([]);
+    const response = await GET(
+      new Request("http://localhost/api/cron/finalize-stale", { method: "GET" })
+    );
+    expect(response.status).toBe(200);
+    expect(mockFindMany).toHaveBeenCalled();
+  });
+
+  it("finalizes stale REVIEW_MATERIALS assessments (candidate idled before kickoff)", async () => {
+    const stale = new Date(
+      NOW - (MEDIUM_CAP_MIN + GRACE_MIN + 5) * 60_000
+    );
+    mockFindMany.mockResolvedValue([
+      {
+        id: "stale-review",
+        status: AssessmentStatus.REVIEW_MATERIALS,
+        workingStartedAt: stale,
+        walkthroughStartedAt: null,
+        scenario: { simulationDepth: "medium" },
+      },
+    ]);
+
+    const response = await GET(withAuth());
+    const json = await response.json();
+    expect(mockFinalizeAssessment).toHaveBeenCalledWith("stale-review");
+    expect(json.finalized).toBe(1);
   });
 
   it("finalizes assessments past cap+grace", async () => {
