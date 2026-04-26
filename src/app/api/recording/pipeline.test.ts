@@ -82,10 +82,14 @@ vi.mock("@/lib/external", () => ({
   fetchPrCiStatus: vi.fn().mockResolvedValue(null),
 }));
 
+// Mock at the deep paths so the shared `finalizeAssessment` helper (which
+// imports `./video-evaluation` and `./video-merge` directly) sees the stubs.
 const mockTriggerVideoAssessment = vi.fn();
 const mockMergeRecordingChunks = vi.fn();
-vi.mock("@/lib/analysis", () => ({
+vi.mock("@/lib/analysis/video-evaluation", () => ({
   triggerVideoAssessment: (...args: unknown[]) => mockTriggerVideoAssessment(...args),
+}));
+vi.mock("@/lib/analysis/video-merge", () => ({
   mergeRecordingChunks: (...args: unknown[]) => mockMergeRecordingChunks(...args),
 }));
 

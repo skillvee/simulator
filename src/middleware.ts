@@ -29,6 +29,8 @@ const PUBLIC_API_ROUTES = [
   "/api/search/extract",
   "/api/search/parse-feedback",
   "/api/errors",
+  // Cron routes use a CRON_SECRET bearer token check inside the route handler.
+  "/api/cron/finalize-stale",
 ];
 
 /**

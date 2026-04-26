@@ -19,12 +19,17 @@ vi.mock("@/server/db", () => ({
   },
 }));
 
-// Mock video evaluation and merge modules (now in @/lib/analysis)
+// Mock video evaluation and merge at their deep paths — the shared
+// `finalizeAssessment` helper imports from `./video-evaluation` and
+// `./video-merge` directly, so a barrel-level mock of `@/lib/analysis`
+// wouldn't intercept those calls.
 const mockTriggerVideoAssessment = vi.fn();
 const mockMergeRecordingChunks = vi.fn();
-vi.mock("@/lib/analysis", () => ({
+vi.mock("@/lib/analysis/video-evaluation", () => ({
   triggerVideoAssessment: (...args: unknown[]) =>
     mockTriggerVideoAssessment(...args),
+}));
+vi.mock("@/lib/analysis/video-merge", () => ({
   mergeRecordingChunks: (...args: unknown[]) =>
     mockMergeRecordingChunks(...args),
 }));
