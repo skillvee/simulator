@@ -74,8 +74,8 @@ describe("ScreenRecordingGuard", () => {
       </ScreenRecordingGuard>
     );
 
-    expect(screen.getByText("Recording Stopped")).toBeInTheDocument();
-    expect(screen.getByText("Resume Recording")).toBeInTheDocument();
+    expect(screen.getByText("Screen sharing paused")).toBeInTheDocument();
+    expect(screen.getByText("Resume screen sharing")).toBeInTheDocument();
   });
 
   it("shows stopped modal when state is error (auto-start permission denied)", () => {
@@ -88,8 +88,8 @@ describe("ScreenRecordingGuard", () => {
       </ScreenRecordingGuard>
     );
 
-    expect(screen.getByText("Recording Stopped")).toBeInTheDocument();
-    expect(screen.getByText("Resume Recording")).toBeInTheDocument();
+    expect(screen.getByText("Screen sharing paused")).toBeInTheDocument();
+    expect(screen.getByText("Resume screen sharing")).toBeInTheDocument();
   });
 
   it("hides all modals when state is requesting (auto-start in progress)", () => {
@@ -102,7 +102,7 @@ describe("ScreenRecordingGuard", () => {
     );
 
     expect(screen.queryByText("Recording Notice")).not.toBeInTheDocument();
-    expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+    expect(screen.queryByText("Screen sharing paused")).not.toBeInTheDocument();
     expect(screen.getByText("Assessment Content")).toBeInTheDocument();
   });
 
@@ -117,7 +117,7 @@ describe("ScreenRecordingGuard", () => {
     );
 
     expect(screen.queryByText("Recording Notice")).not.toBeInTheDocument();
-    expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+    expect(screen.queryByText("Screen sharing paused")).not.toBeInTheDocument();
     expect(screen.getByText("Assessment Content")).toBeInTheDocument();
   });
 
@@ -132,7 +132,7 @@ describe("ScreenRecordingGuard", () => {
 
     // No modal during requesting
     expect(screen.queryByText("Recording Notice")).not.toBeInTheDocument();
-    expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+    expect(screen.queryByText("Screen sharing paused")).not.toBeInTheDocument();
 
     // Simulate successful auto-start
     mockContextValue.state = "recording";
@@ -146,7 +146,7 @@ describe("ScreenRecordingGuard", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Assessment Content")).toBeInTheDocument();
-      expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+      expect(screen.queryByText("Screen sharing paused")).not.toBeInTheDocument();
     });
   });
 
@@ -170,8 +170,8 @@ describe("ScreenRecordingGuard", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("Recording Stopped")).toBeInTheDocument();
-      expect(screen.getByText("Resume Recording")).toBeInTheDocument();
+      expect(screen.getByText("Screen sharing paused")).toBeInTheDocument();
+      expect(screen.getByText("Resume screen sharing")).toBeInTheDocument();
     });
   });
 
@@ -185,7 +185,7 @@ describe("ScreenRecordingGuard", () => {
     );
 
     expect(screen.queryByText("Recording Notice")).not.toBeInTheDocument();
-    expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+    expect(screen.queryByText("Screen sharing paused")).not.toBeInTheDocument();
   });
 
   it("shows embargo-specific instructions when permissionBlock.reason is 'embargo'", () => {
@@ -204,8 +204,8 @@ describe("ScreenRecordingGuard", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Reset permissions/)).toBeInTheDocument();
     // Should NOT fall through to the generic retry modal
-    expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
-    expect(screen.queryByText("Resume Recording")).not.toBeInTheDocument();
+    expect(screen.queryByText("Screen sharing paused")).not.toBeInTheDocument();
+    expect(screen.queryByText("Resume screen sharing")).not.toBeInTheDocument();
   });
 
   it("shows site-block instructions when permissionBlock.reason is 'site-block'", () => {
@@ -225,7 +225,7 @@ describe("ScreenRecordingGuard", () => {
     expect(
       screen.getByText(/blocking microphone access for this site/i)
     ).toBeInTheDocument();
-    expect(screen.queryByText("Recording Stopped")).not.toBeInTheDocument();
+    expect(screen.queryByText("Screen sharing paused")).not.toBeInTheDocument();
   });
 
   it("shows generic instructions when permissionBlock.reason is 'unknown'", () => {
@@ -257,8 +257,8 @@ describe("ScreenRecordingGuard", () => {
       </ScreenRecordingGuard>
     );
 
-    expect(screen.getByText("Recording Stopped")).toBeInTheDocument();
-    expect(screen.getByText("Resume Recording")).toBeInTheDocument();
+    expect(screen.getByText("Screen sharing paused")).toBeInTheDocument();
+    expect(screen.getByText("Resume screen sharing")).toBeInTheDocument();
     expect(screen.queryByText("Recording Notice")).not.toBeInTheDocument();
   });
 });

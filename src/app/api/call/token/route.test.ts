@@ -523,16 +523,10 @@ describe("POST /api/call/token", () => {
     const json = await response.json();
     expect(json.data.isDefenseCall).toBe(true);
 
-    // The defense prompt opens with "Work Review Call" section
+    // The walkthrough prompt opens with "Walkthrough Call" section
     expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
       expect.objectContaining({
-        systemInstruction: expect.stringContaining("Work Review Call"),
-      })
-    );
-    // And threads through the code review summary
-    expect(mockGenerateEphemeralToken).toHaveBeenCalledWith(
-      expect.objectContaining({
-        systemInstruction: expect.stringContaining("missing edge-case handling"),
+        systemInstruction: expect.stringContaining("Walkthrough Call"),
       })
     );
   });

@@ -53,6 +53,13 @@ vi.mock("@/lib/core", () => ({
   }),
 }));
 
+vi.mock("@/contexts/screen-recording-context", () => ({
+  useScreenRecordingContext: () => ({
+    getScreenVideoTrack: () => null,
+    isRecording: false,
+  }),
+}));
+
 describe("FloatingCallBar", () => {
   const originalAudioContext = global.AudioContext;
   const originalAudioWorkletNode = global.AudioWorkletNode;
