@@ -17,7 +17,10 @@ const URL_REGEX = /https?:\/\/[^\s)]+/gi;
 // localhost / 127.0.0.1 / *.local URLs are legitimate in dev docs
 // (`http://localhost:3000`, `http://127.0.0.1:5432`); only flag external links.
 const ALLOWED_URL_HOSTS = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|[\w.-]+\.local)(:\d+)?(\/|$|\b)/i;
-const PLACEHOLDER_PATTERNS = [/\bTODO\b/i, /\bplaceholder\b/i, /\bLorem ipsum\b/i, /\bFIXME\b/i];
+// `TODO` and `FIXME` are case-sensitive: lowercase `todo` is a common Spanish
+// word ("everything"/"all"), and `fixme` shows up in non-English prose too.
+// Programmer-marker convention is uppercase, so only flag those.
+const PLACEHOLDER_PATTERNS = [/\bTODO\b/, /\bplaceholder\b/i, /\bLorem ipsum\b/i, /\bFIXME\b/];
 
 export function validateMarkdownDocs(input: MarkdownValidatorInput): string[] {
   const errors: string[] = [];

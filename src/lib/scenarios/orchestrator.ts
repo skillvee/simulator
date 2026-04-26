@@ -201,10 +201,17 @@ export async function runArtifactPipeline(
 
   let lastVerdict: JudgeVerdict | undefined;
   let lastError: string | undefined;
+  // Fingerprint of the previous attempt's failure mode. If two attempts produce
+  // the identical failure (same thrown error, same validator errors, or same
+  // judge blockingIssues), retrying won't help — the regenerator can't address
+  // feedback it's already ignored once. Bail to save Gemini cost.
+  let previousFingerprint: string | null = null;
 
   for (let attempt = 1; attempt <= MAX_ARTIFACT_ATTEMPTS; attempt++) {
     meta = { ...meta, attempts: attempt, status: "artifacts_generating" };
     await persistMeta(scenarioId, meta);
+
+    let currentFingerprint: string | null = null;
 
     try {
       // Step 2 — artifact generation (filled in by phases 3 & 4).
@@ -231,47 +238,61 @@ export async function runArtifactPipeline(
 
       if (!validatorResult.ok) {
         lastVerdict = synthesizeVerdictFromValidators(validatorResult.errors);
-        continue; // retry artifact generation
-      }
-
-      // Step 4 — judge (filled in by phase 5).
-      meta = { ...meta, status: "judging" };
-      await persistMeta(scenarioId, meta);
-      const verdict = await runStep4({
-        scenarioId,
-        plan: state.plan,
-        docs: state.docs,
-        resourceType,
-        creationLogId,
-      });
-      lastVerdict = verdict;
-
-      if (verdict.passed && verdict.score >= 0.85 && verdict.blockingIssues.length === 0) {
-        meta = {
-          ...meta,
-          status: "passed",
-          judgeSummary: verdict.summary,
-          blockingIssues: undefined,
-          passedAt: new Date().toISOString(),
-        };
-        // Auto-publish: once the judge accepts the bundle there's no further
-        // human gate, so the candidate-facing invite link starts working
-        // immediately. Recruiters wanted "ready means shareable" — no
-        // separate Publish click.
-        await db.scenario.update({
-          where: { id: scenarioId },
-          data: {
-            resourcePipelineMeta: meta as unknown as Prisma.InputJsonValue,
-            isPublished: true,
-          },
+        currentFingerprint = "validator:" + JSON.stringify([...validatorResult.errors].sort());
+      } else {
+        // Step 4 — judge (filled in by phase 5).
+        meta = { ...meta, status: "judging" };
+        await persistMeta(scenarioId, meta);
+        const verdict = await runStep4({
+          scenarioId,
+          plan: state.plan,
+          docs: state.docs,
+          resourceType,
+          creationLogId,
         });
-        return;
+        lastVerdict = verdict;
+
+        if (verdict.passed && verdict.score >= 0.85 && verdict.blockingIssues.length === 0) {
+          meta = {
+            ...meta,
+            status: "passed",
+            judgeSummary: verdict.summary,
+            blockingIssues: undefined,
+            passedAt: new Date().toISOString(),
+          };
+          // Auto-publish: once the judge accepts the bundle there's no further
+          // human gate, so the candidate-facing invite link starts working
+          // immediately. Recruiters wanted "ready means shareable" — no
+          // separate Publish click.
+          await db.scenario.update({
+            where: { id: scenarioId },
+            data: {
+              resourcePipelineMeta: meta as unknown as Prisma.InputJsonValue,
+              isPublished: true,
+            },
+          });
+          return;
+        }
+        currentFingerprint = "judge:" + JSON.stringify([...verdict.blockingIssues].sort());
       }
-      // else: loop to retry
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
       logger.warn("artifact pipeline attempt failed", { scenarioId, attempt, err: lastError });
+      currentFingerprint = "throw:" + lastError;
     }
+
+    if (currentFingerprint !== null && currentFingerprint === previousFingerprint) {
+      logger.warn("aborting retries — same failure as previous attempt", {
+        scenarioId,
+        attempt,
+        fingerprint: currentFingerprint.slice(0, 200),
+      });
+      lastError =
+        lastError ??
+        `Same failure as previous attempt; retries won't help. Fix the underlying issue and re-run.`;
+      break;
+    }
+    previousFingerprint = currentFingerprint;
   }
 
   meta = {
