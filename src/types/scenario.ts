@@ -129,8 +129,8 @@ export type ResourcePipelineStatus =
   | "markdown_ready"
   | "artifacts_generating"
   | "validating"
-  | "judging"
   | "grounding_coworkers"
+  | "judging"
   | "passed"
   | "failed";
 

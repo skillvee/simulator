@@ -261,6 +261,27 @@ export async function runArtifactPipeline(
         lastVerdict = synthesizeVerdictFromValidators(validatorResult.errors);
         currentFingerprint = "validator:" + JSON.stringify([...validatorResult.errors].sort());
       } else {
+        // Step 5 — coworker grounding runs BEFORE Step 4 (judge). The v2.3
+        // judge prompt treats concrete coworker hallucinations as blocking
+        // (a candidate who asks about a missing `docker-compose.yml` derails
+        // the simulation), so judging unground coworkers would loop forever
+        // — Step 5 IS the recovery for those mismatches. Order: validate →
+        // ground (if needed) → judge sees grounded knowledge.
+        // Skipped when Step 3's coworker validator reported zero errors.
+        // Grounder failure is non-fatal here: judge will independently
+        // re-flag any unfixed coworker issues, and fail-fast handles
+        // persistent loops.
+        meta = { ...meta, status: "grounding_coworkers" };
+        await persistMeta(scenarioId, meta);
+        const grounded = await runStep5_groundCoworkers({
+          scenarioId,
+          plan: state.plan,
+          docs: state.docs,
+          resourceType,
+          coworkerErrorCount: lastCoworkerErrorCount,
+          creationLogId,
+        });
+
         // Step 4 — judge (filled in by phase 5).
         meta = { ...meta, status: "judging" };
         await persistMeta(scenarioId, meta);
@@ -275,21 +296,6 @@ export async function runArtifactPipeline(
         lastVerdict = verdict;
 
         if (verdict.passed && verdict.score >= 0.85 && verdict.blockingIssues.length === 0) {
-          // Step 5 — coworker grounding. Refresh persona knowledge against
-          // the now-finalized bundle. Skipped when Step 3's coworker validator
-          // reported zero errors. Failures are non-fatal: we still publish
-          // with the original ungrounded knowledge.
-          meta = { ...meta, status: "grounding_coworkers" };
-          await persistMeta(scenarioId, meta);
-          const grounded = await runStep5_groundCoworkers({
-            scenarioId,
-            plan: state.plan,
-            docs: state.docs,
-            resourceType,
-            coworkerErrorCount: lastCoworkerErrorCount,
-            creationLogId,
-          });
-
           meta = {
             ...meta,
             status: "passed",
