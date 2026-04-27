@@ -129,6 +129,7 @@ export type ResourcePipelineStatus =
   | "markdown_ready"
   | "artifacts_generating"
   | "validating"
+  | "grounding_coworkers"
   | "judging"
   | "passed"
   | "failed";
@@ -142,6 +143,10 @@ export interface ResourcePipelineMeta {
   blockingIssues?: string[];
   startedAt: string;
   passedAt?: string;
+  /** True when coworker knowledge was successfully re-grounded against the
+   *  finalized bundle (Step 5). False/missing means the scenario passed but
+   *  coworkers retain their pre-pipeline knowledge — fall-back path. */
+  coworkersGrounded?: boolean;
 }
 
 export interface JudgeVerdict {

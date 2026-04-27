@@ -23,6 +23,10 @@ export interface RunValidatorsInput {
 export interface RunValidatorsResult {
   ok: boolean;
   errors: string[];
+  /** Number of `[coworkers]`-prefixed errors. Threaded out so the orchestrator
+   *  can decide whether to skip Step 5 (coworker grounding) — if zero, the
+   *  ungrounded coworkers already match the bundle and grounding is a no-op. */
+  coworkerErrorCount: number;
 }
 
 export async function runValidators(
@@ -54,7 +58,19 @@ export async function runValidators(
     ...coworkerErrors.map((e) => `[coworkers] ${e}`),
   ];
 
-  return { ok: errors.length === 0, errors };
+  // `ok` gates whether the orchestrator runs Step 4 (judge) and Step 5
+  // (coworker grounding). Coworker mismatches are EXCLUDED from this gate —
+  // they're the exact failures Step 5 exists to fix, so blocking the
+  // pipeline on them would prevent grounding from ever running. They stay
+  // in `errors` for logging + telemetry, and `coworkerErrorCount` drives
+  // Step 5's skip-when-clean optimization.
+  const blockingErrorCount = markdownErrors.length + branchErrors.length;
+
+  return {
+    ok: blockingErrorCount === 0,
+    errors,
+    coworkerErrorCount: coworkerErrors.length,
+  };
 }
 
 export { validateMarkdownDocs, validateRepoArtifact, validateCsvArtifact, validateCoworkerKnowledge };
