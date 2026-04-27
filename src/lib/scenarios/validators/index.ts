@@ -8,11 +8,13 @@
 import { validateMarkdownDocs } from "./markdown";
 import { validateRepoArtifact } from "./repo";
 import { validateCsvArtifact } from "./csv";
+import { validateCoworkerKnowledge } from "./coworkers";
 import type { ResourceType } from "../archetype-resource-mapping";
-import type { ScenarioDoc } from "@/types";
+import type { ResourcePlan, ScenarioDoc } from "@/types";
 
 export interface RunValidatorsInput {
   scenarioId: string;
+  plan: ResourcePlan;
   docs: ScenarioDoc[];
   resourceType: ResourceType;
   taskDescription: string;
@@ -39,12 +41,20 @@ export async function runValidators(
           docs: input.docs,
         });
 
+  const coworkerErrors = await validateCoworkerKnowledge({
+    scenarioId: input.scenarioId,
+    resourceType: input.resourceType,
+    plan: input.plan,
+    docs: input.docs,
+  });
+
   const errors = [
     ...markdownErrors.map((e) => `[markdown] ${e}`),
     ...branchErrors.map((e) => `[${input.resourceType}] ${e}`),
+    ...coworkerErrors.map((e) => `[coworkers] ${e}`),
   ];
 
   return { ok: errors.length === 0, errors };
 }
 
-export { validateMarkdownDocs, validateRepoArtifact, validateCsvArtifact };
+export { validateMarkdownDocs, validateRepoArtifact, validateCsvArtifact, validateCoworkerKnowledge };

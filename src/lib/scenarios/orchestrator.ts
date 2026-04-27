@@ -260,6 +260,7 @@ export async function runArtifactPipeline(
           plan: state.plan,
           docs: state.docs,
           resourceType,
+          validatorResults: { passed: true, errors: [] },
           creationLogId,
         });
         lastVerdict = verdict;
@@ -414,7 +415,7 @@ async function runStep3(args: {
   resourceType: ResourceType;
   creationLogId?: string;
 }): Promise<{ ok: boolean; errors: string[] }> {
-  const { scenarioId, docs, resourceType, creationLogId } = args;
+  const { scenarioId, plan, docs, resourceType, creationLogId } = args;
 
   const tracker = creationLogId
     ? await logGenerationStep({
@@ -428,6 +429,7 @@ async function runStep3(args: {
     const taskDescription = await loadTaskDescription(scenarioId);
     const result = await runValidators({
       scenarioId,
+      plan,
       docs,
       resourceType,
       taskDescription,
@@ -448,9 +450,10 @@ async function runStep4(args: {
   plan: ResourcePlan;
   docs: ScenarioDoc[];
   resourceType: ResourceType;
+  validatorResults: { passed: boolean; errors: string[] };
   creationLogId?: string;
 }): Promise<JudgeVerdict> {
-  const { scenarioId, plan, docs, resourceType, creationLogId } = args;
+  const { scenarioId, plan, docs, resourceType, validatorResults, creationLogId } = args;
 
   const tracker = creationLogId
     ? await logGenerationStep({
@@ -473,12 +476,15 @@ async function runStep4(args: {
     }
 
     const scenarioContext = await loadJudgeScenarioContext(scenarioId);
+    const coworkers = await loadCoworkersForJudge(scenarioId);
 
     const verdict = await judgeArtifacts({
       scenario: scenarioContext,
       plan,
       docs,
       artifactSummary: summary,
+      validatorResults,
+      coworkers,
     });
 
     await tracker?.complete({
@@ -586,6 +592,36 @@ async function loadJudgeScenarioContext(scenarioId: string): Promise<{
     seniorityLevel: scenario.targetLevel,
     archetypeName,
   };
+}
+
+async function loadCoworkersForJudge(scenarioId: string): Promise<
+  Array<{
+    name: string;
+    role: string;
+    knowledge: Array<{
+      topic: string;
+      response: string;
+      isCritical?: boolean;
+      triggerKeywords?: string[];
+    }>;
+  }>
+> {
+  const coworkers = await db.coworker.findMany({
+    where: { scenarioId },
+    select: { name: true, role: true, knowledge: true },
+  });
+  return coworkers.map((c) => ({
+    name: c.name,
+    role: c.role,
+    knowledge: Array.isArray(c.knowledge)
+      ? (c.knowledge as Array<{
+          topic: string;
+          response: string;
+          isCritical?: boolean;
+          triggerKeywords?: string[];
+        }>)
+      : [],
+  }));
 }
 
 async function loadScenarioContext(scenarioId: string): Promise<{
