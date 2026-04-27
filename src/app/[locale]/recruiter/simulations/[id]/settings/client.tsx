@@ -219,6 +219,7 @@ export function SimulationSettingsClient({ scenario }: SimulationSettingsClientP
           initialIsPublished={scenario.isPublished}
           onPublishedChange={setIsPublished}
           resourceType={scenario.resourceType}
+          coworkerCount={scenario.coworkers.length}
         />
       )}
 
