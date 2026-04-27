@@ -21,7 +21,8 @@ export type StepName =
   | "generate_plan"
   | "generate_artifacts"
   | "validate_artifacts"
-  | "judge_artifacts";
+  | "judge_artifacts"
+  | "ground_coworkers";
 
 export interface LogGenerationStepOptions {
   creationLogId: string;

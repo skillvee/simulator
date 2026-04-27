@@ -23,6 +23,10 @@ export interface RunValidatorsInput {
 export interface RunValidatorsResult {
   ok: boolean;
   errors: string[];
+  /** Number of `[coworkers]`-prefixed errors. Threaded out so the orchestrator
+   *  can decide whether to skip Step 5 (coworker grounding) — if zero, the
+   *  ungrounded coworkers already match the bundle and grounding is a no-op. */
+  coworkerErrorCount: number;
 }
 
 export async function runValidators(
@@ -54,7 +58,11 @@ export async function runValidators(
     ...coworkerErrors.map((e) => `[coworkers] ${e}`),
   ];
 
-  return { ok: errors.length === 0, errors };
+  return {
+    ok: errors.length === 0,
+    errors,
+    coworkerErrorCount: coworkerErrors.length,
+  };
 }
 
 export { validateMarkdownDocs, validateRepoArtifact, validateCsvArtifact, validateCoworkerKnowledge };

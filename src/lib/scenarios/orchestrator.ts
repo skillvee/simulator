@@ -33,6 +33,10 @@ import { generateDataArtifact } from "./data-artifact-generator";
 import { runValidators } from "./validators";
 import { judgeArtifacts } from "./judge";
 import {
+  groundCoworkerKnowledge,
+  type CoworkerKnowledgeUpdate,
+} from "./coworker-grounder";
+import {
   buildRepoArtifactSummary,
   buildDataArtifactSummary,
   type ArtifactSummary,
@@ -211,6 +215,10 @@ export async function runArtifactPipeline(
 
   let lastVerdict: JudgeVerdict | undefined;
   let lastError: string | undefined;
+  // Coworker-validator hits from the most recent attempt. Threaded into
+  // Step 5 so we skip the Pro call when the ungrounded coworkers already
+  // align with the bundle.
+  let lastCoworkerErrorCount = 0;
   // Fingerprint of the previous attempt's deterministic failure (validator
   // errors, or judge blockingIssues). When two attempts produce identical
   // deterministic feedback, the regenerator demonstrably can't address it —
@@ -247,6 +255,7 @@ export async function runArtifactPipeline(
         resourceType,
         creationLogId,
       });
+      lastCoworkerErrorCount = validatorResult.coworkerErrorCount;
 
       if (!validatorResult.ok) {
         lastVerdict = synthesizeVerdictFromValidators(validatorResult.errors);
@@ -266,12 +275,28 @@ export async function runArtifactPipeline(
         lastVerdict = verdict;
 
         if (verdict.passed && verdict.score >= 0.85 && verdict.blockingIssues.length === 0) {
+          // Step 5 — coworker grounding. Refresh persona knowledge against
+          // the now-finalized bundle. Skipped when Step 3's coworker validator
+          // reported zero errors. Failures are non-fatal: we still publish
+          // with the original ungrounded knowledge.
+          meta = { ...meta, status: "grounding_coworkers" };
+          await persistMeta(scenarioId, meta);
+          const grounded = await runStep5_groundCoworkers({
+            scenarioId,
+            plan: state.plan,
+            docs: state.docs,
+            resourceType,
+            coworkerErrorCount: lastCoworkerErrorCount,
+            creationLogId,
+          });
+
           meta = {
             ...meta,
             status: "passed",
             judgeSummary: verdict.summary,
             blockingIssues: undefined,
             passedAt: new Date().toISOString(),
+            coworkersGrounded: grounded,
           };
           // Auto-publish: once the judge accepts the bundle there's no further
           // human gate, so the candidate-facing invite link starts working
@@ -414,7 +439,7 @@ async function runStep3(args: {
   docs: ScenarioDoc[];
   resourceType: ResourceType;
   creationLogId?: string;
-}): Promise<{ ok: boolean; errors: string[] }> {
+}): Promise<{ ok: boolean; errors: string[]; coworkerErrorCount: number }> {
   const { scenarioId, plan, docs, resourceType, creationLogId } = args;
 
   const tracker = creationLogId
@@ -500,6 +525,156 @@ async function runStep4(args: {
   } catch (err) {
     await tracker?.fail(err instanceof Error ? err : new Error(String(err)));
     throw err;
+  }
+}
+
+const COWORKER_GROUNDING_MAX_ATTEMPTS = 3;
+
+/**
+ * Step 5 — coworker grounding. Refreshes existing coworkers' `knowledge`
+ * field against the finalized bundle so personas stop referencing files /
+ * schemas / DB engines that aren't there.
+ *
+ * Non-fatal: failures fall back silently to the ungrounded knowledge that
+ * was generated in the wizard (the bundle is still shippable; PR #418's
+ * validator already flagged the mismatches for visibility).
+ *
+ * Skipped when Step 3's coworker validator reported zero errors — the
+ * ungrounded knowledge already aligns with the bundle.
+ *
+ * Returns `true` when grounded knowledge was successfully persisted, `false`
+ * when skipped or fell back.
+ */
+export async function runStep5_groundCoworkers(args: {
+  scenarioId: string;
+  plan: ResourcePlan;
+  docs: ScenarioDoc[];
+  resourceType: ResourceType;
+  coworkerErrorCount: number;
+  creationLogId?: string;
+}): Promise<boolean> {
+  const { scenarioId, plan, docs, resourceType, coworkerErrorCount, creationLogId } = args;
+
+  if (coworkerErrorCount === 0) {
+    logger.info("Step 5 skipped — coworker validator reported no errors", { scenarioId });
+    return false;
+  }
+
+  const tracker = creationLogId
+    ? await logGenerationStep({
+        creationLogId,
+        stepName: "ground_coworkers",
+        modelUsed: "gemini-3.1-pro-preview",
+        promptVersion: "v1.0",
+        inputData: { resourceType, coworkerErrorCount },
+      })
+    : null;
+
+  try {
+    const coworkers = await db.coworker.findMany({
+      where: { scenarioId },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        personaStyle: true,
+        language: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (coworkers.length === 0) {
+      logger.info("Step 5 skipped — no coworkers on scenario", { scenarioId });
+      await tracker?.complete({ outputData: { skipped: "no_coworkers" } });
+      return false;
+    }
+
+    const summary = resourceType === "repo"
+      ? await buildRepoArtifactSummary(scenarioId)
+      : await buildDataArtifactSummary(scenarioId);
+    if (!summary) {
+      throw new Error("Could not build artifact summary for coworker grounding");
+    }
+
+    const scenarioContext = await loadJudgeScenarioContext(scenarioId);
+
+    let updates: CoworkerKnowledgeUpdate[] | null = null;
+    let lastFingerprint: string | null = null;
+    let lastErr: string | undefined;
+
+    for (let attempt = 1; attempt <= COWORKER_GROUNDING_MAX_ATTEMPTS; attempt++) {
+      try {
+        const result = await groundCoworkerKnowledge({
+          scenarioId,
+          scenario: scenarioContext,
+          plan,
+          docs,
+          artifactSummary: summary,
+          coworkers: coworkers.map((c) => ({
+            id: c.id,
+            name: c.name,
+            role: c.role,
+            personaStyle: c.personaStyle,
+            language: c.language,
+          })),
+        });
+        updates = result.updates;
+        break;
+      } catch (err) {
+        lastErr = err instanceof Error ? err.message : String(err);
+        logger.warn("coworker grounding attempt failed", { scenarioId, attempt, err: lastErr });
+        const fingerprint = "throw:" + lastErr;
+        if (fingerprint === lastFingerprint) {
+          logger.warn("aborting coworker grounding — same failure as previous attempt", {
+            scenarioId,
+            attempt,
+          });
+          break;
+        }
+        lastFingerprint = fingerprint;
+      }
+    }
+
+    if (!updates) {
+      logger.warn("coworker grounding fell back to ungrounded knowledge", {
+        scenarioId,
+        lastErr,
+      });
+      await tracker?.complete({
+        outputData: { fallback: true, lastErr },
+      });
+      return false;
+    }
+
+    // Persist — identity-preservation invariant: only `knowledge`.
+    await db.$transaction(
+      updates.map((u) =>
+        db.coworker.update({
+          where: { id: u.coworkerId },
+          data: { knowledge: u.knowledge as unknown as Prisma.InputJsonValue },
+        })
+      )
+    );
+
+    logger.info("coworker grounding persisted", {
+      scenarioId,
+      coworkerCount: updates.length,
+      totalKnowledgeEntries: updates.reduce((n, u) => n + u.knowledge.length, 0),
+    });
+    await tracker?.complete({
+      outputData: {
+        grounded: true,
+        coworkerCount: updates.length,
+      },
+    });
+    return true;
+  } catch (err) {
+    // Outer failure — couldn't even load coworkers / build summary. Still
+    // non-fatal: log and let the pipeline publish with original knowledge.
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.warn("coworker grounding outer failure — falling back", { scenarioId, err: msg });
+    await tracker?.fail(err instanceof Error ? err : new Error(msg));
+    return false;
   }
 }
 
