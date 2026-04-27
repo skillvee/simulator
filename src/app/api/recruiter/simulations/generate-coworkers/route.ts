@@ -10,6 +10,18 @@ import { type SupportedLanguage } from "@/lib/core/language";
 import { logGenerationStep } from "@/lib/scenarios/generation-logger";
 import { COWORKER_GENERATOR_PROMPT_VERSION } from "@/prompts/recruiter/coworker-generator";
 
+/**
+ * NOTE — wizard-internal route. Called by the recruiter simulation-creation
+ * wizard (`/[locale]/recruiter/simulations/new`) to generate ungrounded
+ * coworker preview cards from the parsed JD before the v2 resource pipeline
+ * runs. **Do not surface this as a recruiter-facing "Regenerate coworkers"
+ * control after publish** — coworker knowledge is regenerated automatically
+ * by Step 5 of the pipeline (`runStep5_groundCoworkers` in
+ * `src/lib/scenarios/orchestrator.ts`), grounded in the finalized bundle.
+ * Adding a manual ungrounded-regeneration button would re-introduce the
+ * hallucination class PR #418 + #419 fixed.
+ */
+
 const logger = createLogger("api:recruiter:generate-coworkers");
 
 interface SessionUser {

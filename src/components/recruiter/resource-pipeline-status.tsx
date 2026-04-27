@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   FileSpreadsheet,
   GitBranch,
   Loader2,
+  Users,
 } from "lucide-react";
 import type {
   ResourcePipelineMeta,
@@ -34,6 +35,11 @@ interface PipelineStatusProps {
   initialIsPublished: boolean;
   /** Branch the orchestrator runs — controls "CSVs" vs "repo" copy. */
   resourceType: "repo" | "data";
+  /** Number of AI coworkers on the scenario. Drives the "Team members" row
+   *  in the file list — pending while the pipeline runs (Step 5 may still
+   *  refine knowledge), ready once the bundle passes. Pass 0 to hide the
+   *  row entirely (legacy/v1 scenarios that don't surface coworkers here). */
+  coworkerCount: number;
   /** Lifted up so the parent can swap the share-link card in/out. */
   onPublishedChange?: (published: boolean) => void;
 }
@@ -101,7 +107,7 @@ const STATUS_COPY: Record<
 
 interface FileItem {
   key: string;
-  kind: "doc" | "csv" | "repo";
+  kind: "doc" | "csv" | "repo" | "team";
   filename: string;
   subtitle: string;
   state: "pending" | "ready";
@@ -116,10 +122,15 @@ export function ResourcePipelineStatus({
   initialMeta,
   initialIsPublished,
   resourceType,
+  coworkerCount,
   onPublishedChange,
 }: PipelineStatusProps) {
   const [meta, setMeta] = useState<ResourcePipelineMeta | null>(initialMeta);
-  const [, setIsPublished] = useState<boolean>(initialIsPublished);
+  // Ref instead of state: the value is never read here, only used to detect
+  // transitions so we can notify the parent. State updaters must be pure, so
+  // calling onPublishedChange from inside one logged a setState-in-render
+  // warning under React 19.
+  const lastPublishedRef = useRef<boolean>(initialIsPublished);
   const [plan, setPlan] = useState<ResourcePlan | null>(null);
   const [docs, setDocs] = useState<ScenarioDoc[]>([]);
   const [dataFiles, setDataFiles] = useState<PipelineStatusResponse["dataFiles"]>([]);
@@ -141,10 +152,10 @@ export function ResourcePipelineStatus({
       const data = (json.data || json) as PipelineStatusResponse;
       setMeta(data.pipelineMeta);
       const next = data.isPublished;
-      setIsPublished((prev) => {
-        if (prev !== next) onPublishedChange?.(next);
-        return next;
-      });
+      if (lastPublishedRef.current !== next) {
+        lastPublishedRef.current = next;
+        onPublishedChange?.(next);
+      }
       setPlan(data.plan ?? null);
       setDocs(data.docs ?? []);
       setDataFiles(data.dataFiles ?? []);
@@ -266,8 +277,26 @@ export function ResourcePipelineStatus({
       });
     }
 
+    // Team members — coworker personas the candidate will chat with. Step 5
+    // of the pipeline (`runStep5_groundCoworkers`) refines their knowledge
+    // against the finalized bundle before the scenario flips to "passed";
+    // we treat the row as `pending` until then so the recruiter can see
+    // the personas are part of the bundle being prepared, not just files.
+    if (coworkerCount > 0) {
+      const ready = recruiterStatus === "ready";
+      rows.push({
+        key: "team",
+        kind: "team",
+        filename: "Team members",
+        subtitle: ready
+          ? `${coworkerCount} coworker${coworkerCount === 1 ? "" : "s"} ready`
+          : `${coworkerCount} coworker${coworkerCount === 1 ? "" : "s"} — refining knowledge`,
+        state: ready ? "ready" : "pending",
+      });
+    }
+
     return rows;
-  }, [docs, plan, dataFiles, repoUrl, resourceType, recruiterStatus]);
+  }, [docs, plan, dataFiles, repoUrl, resourceType, recruiterStatus, coworkerCount]);
 
   if (!meta) return null;
 
@@ -346,7 +375,9 @@ function FileRow({
       ? FileText
       : item.kind === "csv"
         ? FileSpreadsheet
-        : GitBranch;
+        : item.kind === "repo"
+          ? GitBranch
+          : Users;
 
   return (
     <li className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-stone-200 bg-white px-3 py-2">

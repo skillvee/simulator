@@ -31,6 +31,7 @@ import {
 import { generateRepoArtifact } from "./repo-artifact-generator";
 import { generateDataArtifact } from "./data-artifact-generator";
 import { runValidators } from "./validators";
+import { validateCoworkerKnowledge } from "./validators/coworkers";
 import { judgeArtifacts } from "./judge";
 import {
   groundCoworkerKnowledge,
@@ -219,6 +220,10 @@ export async function runArtifactPipeline(
   // Step 5 so we skip the Pro call when the ungrounded coworkers already
   // align with the bundle.
   let lastCoworkerErrorCount = 0;
+  // Telemetry from the latest Step 5 invocation. Emitted ONCE at the end
+  // of the pipeline run (passed or failed paths) so the success-metric
+  // denominator is per-scenario, not per-retry-attempt — Codex P2 on #420.
+  let lastGroundingTelemetry: GroundingTelemetry | null = null;
   // Fingerprint of the previous attempt's deterministic failure (validator
   // errors, or judge blockingIssues). When two attempts produce identical
   // deterministic feedback, the regenerator demonstrably can't address it —
@@ -273,7 +278,7 @@ export async function runArtifactPipeline(
         // persistent loops.
         meta = { ...meta, status: "grounding_coworkers" };
         await persistMeta(scenarioId, meta);
-        const grounded = await runStep5_groundCoworkers({
+        lastGroundingTelemetry = await runStep5_groundCoworkers({
           scenarioId,
           plan: state.plan,
           docs: state.docs,
@@ -302,7 +307,7 @@ export async function runArtifactPipeline(
             judgeSummary: verdict.summary,
             blockingIssues: undefined,
             passedAt: new Date().toISOString(),
-            coworkersGrounded: grounded,
+            coworkersGrounded: lastGroundingTelemetry?.success ?? false,
           };
           // Auto-publish: once the judge accepts the bundle there's no further
           // human gate, so the candidate-facing invite link starts working
@@ -315,6 +320,7 @@ export async function runArtifactPipeline(
               isPublished: true,
             },
           });
+          emitCoworkerGroundingEvent(scenarioId, lastGroundingTelemetry);
           return;
         }
         // Only fingerprint when the judge cited specific blocking issues. A
@@ -359,6 +365,32 @@ export async function runArtifactPipeline(
     judgeSummary: lastVerdict?.summary,
   };
   await persistMeta(scenarioId, meta);
+  emitCoworkerGroundingEvent(scenarioId, lastGroundingTelemetry);
+}
+
+/**
+ * Emit the canonical `coworker_grounding` telemetry event for a pipeline
+ * run. Called from `runArtifactPipeline` exactly once per run (passed or
+ * failed path); silent when Step 5 was never reached so the metric
+ * denominator only counts scenarios where grounding was actually attempted.
+ */
+function emitCoworkerGroundingEvent(
+  scenarioId: string,
+  telemetry: GroundingTelemetry | null
+): void {
+  if (!telemetry) return;
+  logger.info("coworker_grounding", {
+    scenarioId,
+    skipped: telemetry.skipped,
+    ...(telemetry.skipReason ? { skipReason: telemetry.skipReason } : {}),
+    attempts: telemetry.attempts,
+    success: telemetry.success,
+    validatorErrorsBefore: telemetry.validatorErrorsBefore,
+    validatorErrorsAfter: telemetry.validatorErrorsAfter,
+    durationMs: telemetry.durationMs,
+    ...(telemetry.lastErr ? { lastErr: telemetry.lastErr } : {}),
+    ...(telemetry.outerError ? { outerError: telemetry.outerError } : {}),
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -551,6 +583,25 @@ const COWORKER_GROUNDING_MAX_ATTEMPTS = 3;
  * Returns `true` when grounded knowledge was successfully persisted, `false`
  * when skipped or fell back.
  */
+/**
+ * Telemetry payload for a single Step 5 invocation. Returned to the
+ * orchestrator instead of logged inline — the orchestrator emits ONE
+ * canonical `coworker_grounding` event per pipeline run (US-006), even when
+ * Step 5 runs multiple times due to outer retry-loop attempts. Logging
+ * inside the loop would inflate the success-metric denominator.
+ */
+export interface GroundingTelemetry {
+  skipped: boolean;
+  skipReason?: string;
+  attempts: number;
+  success: boolean;
+  validatorErrorsBefore: number;
+  validatorErrorsAfter?: number;
+  durationMs: number;
+  lastErr?: string;
+  outerError?: string;
+}
+
 export async function runStep5_groundCoworkers(args: {
   scenarioId: string;
   plan: ResourcePlan;
@@ -558,12 +609,38 @@ export async function runStep5_groundCoworkers(args: {
   resourceType: ResourceType;
   coworkerErrorCount: number;
   creationLogId?: string;
-}): Promise<boolean> {
+}): Promise<GroundingTelemetry> {
   const { scenarioId, plan, docs, resourceType, coworkerErrorCount, creationLogId } = args;
 
+  const startedAt = Date.now();
+  const validatorErrorsBefore = coworkerErrorCount;
+  let skipped = false;
+  let skipReason: string | undefined;
+  let attempts = 0;
+  let validatorErrorsAfter: number | undefined;
+  let outerError: string | undefined;
+  let lastErr: string | undefined;
+
+  // No internal `coworker_grounding` log: returning telemetry up to the
+  // orchestrator lets it emit once per pipeline run, even when Step 5 fires
+  // on multiple retry-loop attempts.
+  const finish = (success: boolean): GroundingTelemetry => ({
+    skipped,
+    skipReason,
+    attempts,
+    success,
+    validatorErrorsBefore,
+    validatorErrorsAfter,
+    durationMs: Date.now() - startedAt,
+    lastErr,
+    outerError,
+  });
+
   if (coworkerErrorCount === 0) {
+    skipped = true;
+    skipReason = "validator_clean";
     logger.info("Step 5 skipped — coworker validator reported no errors", { scenarioId });
-    return false;
+    return finish(false);
   }
 
   const tracker = creationLogId
@@ -590,9 +667,11 @@ export async function runStep5_groundCoworkers(args: {
     });
 
     if (coworkers.length === 0) {
+      skipped = true;
+      skipReason = "no_coworkers";
       logger.info("Step 5 skipped — no coworkers on scenario", { scenarioId });
       await tracker?.complete({ outputData: { skipped: "no_coworkers" } });
-      return false;
+      return finish(false);
     }
 
     const summary = resourceType === "repo"
@@ -606,9 +685,9 @@ export async function runStep5_groundCoworkers(args: {
 
     let updates: CoworkerKnowledgeUpdate[] | null = null;
     let lastFingerprint: string | null = null;
-    let lastErr: string | undefined;
 
     for (let attempt = 1; attempt <= COWORKER_GROUNDING_MAX_ATTEMPTS; attempt++) {
+      attempts = attempt;
       try {
         const result = await groundCoworkerKnowledge({
           scenarioId,
@@ -649,7 +728,7 @@ export async function runStep5_groundCoworkers(args: {
       await tracker?.complete({
         outputData: { fallback: true, lastErr },
       });
-      return false;
+      return finish(false);
     }
 
     // Persist — identity-preservation invariant: only `knowledge`.
@@ -662,25 +741,50 @@ export async function runStep5_groundCoworkers(args: {
       )
     );
 
+    // Re-run the deterministic coworker validator against the persisted
+    // grounded state to confirm the regrounding actually fixed the
+    // hallucinations the original count flagged. Best-effort — telemetry
+    // only, never blocks publishing.
+    try {
+      const afterErrors = await validateCoworkerKnowledge({
+        scenarioId,
+        resourceType,
+        plan,
+        docs,
+      });
+      validatorErrorsAfter = afterErrors.length;
+    } catch (err) {
+      logger.warn("coworker validator re-check failed (telemetry only)", {
+        scenarioId,
+        err: String(err),
+      });
+    }
+
     logger.info("coworker grounding persisted", {
       scenarioId,
       coworkerCount: updates.length,
       totalKnowledgeEntries: updates.reduce((n, u) => n + u.knowledge.length, 0),
+      validatorErrorsAfter,
     });
     await tracker?.complete({
       outputData: {
         grounded: true,
         coworkerCount: updates.length,
+        validatorErrorsBefore,
+        validatorErrorsAfter,
       },
     });
-    return true;
+    return finish(true);
   } catch (err) {
     // Outer failure — couldn't even load coworkers / build summary. Still
     // non-fatal: log and let the pipeline publish with original knowledge.
-    const msg = err instanceof Error ? err.message : String(err);
-    logger.warn("coworker grounding outer failure — falling back", { scenarioId, err: msg });
-    await tracker?.fail(err instanceof Error ? err : new Error(msg));
-    return false;
+    outerError = err instanceof Error ? err.message : String(err);
+    logger.warn("coworker grounding outer failure — falling back", {
+      scenarioId,
+      err: outerError,
+    });
+    await tracker?.fail(err instanceof Error ? err : new Error(outerError));
+    return finish(false);
   }
 }
 
