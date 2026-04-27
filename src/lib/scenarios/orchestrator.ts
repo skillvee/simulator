@@ -54,6 +54,16 @@ const logger = createLogger("lib:scenarios:orchestrator");
 
 const MAX_ARTIFACT_ATTEMPTS = 3;
 
+// Thrown errors that won't change between attempts — config gaps and schema
+// mismatches, not transient network/API failures. Match → abort the retry loop
+// immediately on first occurrence (don't waste 2 more Pro calls reproducing the
+// same throw). Anything not on this list is treated as potentially retryable
+// (timeouts, 429s, 5xx) and gets the full attempt budget.
+const NON_RETRYABLE_THROW_PATTERNS: RegExp[] = [
+  /GitHub token not configured/i,
+  /GITHUB_(?:ORG_)?TOKEN.*not set/i,
+];
+
 // ---------------------------------------------------------------------------
 // Public entry points
 // ---------------------------------------------------------------------------
@@ -201,10 +211,19 @@ export async function runArtifactPipeline(
 
   let lastVerdict: JudgeVerdict | undefined;
   let lastError: string | undefined;
+  // Fingerprint of the previous attempt's deterministic failure (validator
+  // errors, or judge blockingIssues). When two attempts produce identical
+  // deterministic feedback, the regenerator demonstrably can't address it —
+  // bail to save Gemini cost. Score-only judge failures and thrown exceptions
+  // are NOT fingerprinted: model variance can cross 0.85 on a third try, and
+  // identical-looking throws are usually transient (429/5xx/timeouts).
+  let previousFingerprint: string | null = null;
 
   for (let attempt = 1; attempt <= MAX_ARTIFACT_ATTEMPTS; attempt++) {
     meta = { ...meta, attempts: attempt, status: "artifacts_generating" };
     await persistMeta(scenarioId, meta);
+
+    let currentFingerprint: string | null = null;
 
     try {
       // Step 2 — artifact generation (filled in by phases 3 & 4).
@@ -231,47 +250,74 @@ export async function runArtifactPipeline(
 
       if (!validatorResult.ok) {
         lastVerdict = synthesizeVerdictFromValidators(validatorResult.errors);
-        continue; // retry artifact generation
-      }
-
-      // Step 4 — judge (filled in by phase 5).
-      meta = { ...meta, status: "judging" };
-      await persistMeta(scenarioId, meta);
-      const verdict = await runStep4({
-        scenarioId,
-        plan: state.plan,
-        docs: state.docs,
-        resourceType,
-        creationLogId,
-      });
-      lastVerdict = verdict;
-
-      if (verdict.passed && verdict.score >= 0.85 && verdict.blockingIssues.length === 0) {
-        meta = {
-          ...meta,
-          status: "passed",
-          judgeSummary: verdict.summary,
-          blockingIssues: undefined,
-          passedAt: new Date().toISOString(),
-        };
-        // Auto-publish: once the judge accepts the bundle there's no further
-        // human gate, so the candidate-facing invite link starts working
-        // immediately. Recruiters wanted "ready means shareable" — no
-        // separate Publish click.
-        await db.scenario.update({
-          where: { id: scenarioId },
-          data: {
-            resourcePipelineMeta: meta as unknown as Prisma.InputJsonValue,
-            isPublished: true,
-          },
+        currentFingerprint = "validator:" + JSON.stringify([...validatorResult.errors].sort());
+      } else {
+        // Step 4 — judge (filled in by phase 5).
+        meta = { ...meta, status: "judging" };
+        await persistMeta(scenarioId, meta);
+        const verdict = await runStep4({
+          scenarioId,
+          plan: state.plan,
+          docs: state.docs,
+          resourceType,
+          validatorResults: { passed: true, errors: [] },
+          creationLogId,
         });
-        return;
+        lastVerdict = verdict;
+
+        if (verdict.passed && verdict.score >= 0.85 && verdict.blockingIssues.length === 0) {
+          meta = {
+            ...meta,
+            status: "passed",
+            judgeSummary: verdict.summary,
+            blockingIssues: undefined,
+            passedAt: new Date().toISOString(),
+          };
+          // Auto-publish: once the judge accepts the bundle there's no further
+          // human gate, so the candidate-facing invite link starts working
+          // immediately. Recruiters wanted "ready means shareable" — no
+          // separate Publish click.
+          await db.scenario.update({
+            where: { id: scenarioId },
+            data: {
+              resourcePipelineMeta: meta as unknown as Prisma.InputJsonValue,
+              isPublished: true,
+            },
+          });
+          return;
+        }
+        // Only fingerprint when the judge cited specific blocking issues. A
+        // bare score-only failure (passed=false, blockingIssues=[]) reflects
+        // model variance and might cross 0.85 on the next try — let it retry.
+        if (verdict.blockingIssues.length > 0) {
+          currentFingerprint = "judge:" + JSON.stringify([...verdict.blockingIssues].sort());
+        }
       }
-      // else: loop to retry
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
       logger.warn("artifact pipeline attempt failed", { scenarioId, attempt, err: lastError });
+      // Known non-retryable throws (config gaps, schema mismatches) abort
+      // immediately — no point burning 2 more attempts on the same exception.
+      // Anything else is potentially transient; fall through and let the loop
+      // continue without fingerprinting the throw.
+      if (NON_RETRYABLE_THROW_PATTERNS.some((p) => p.test(lastError!))) {
+        logger.warn("aborting retries — non-retryable error", { scenarioId, lastError });
+        break;
+      }
     }
+
+    if (currentFingerprint !== null && currentFingerprint === previousFingerprint) {
+      logger.warn("aborting retries — same deterministic failure as previous attempt", {
+        scenarioId,
+        attempt,
+        fingerprint: currentFingerprint.slice(0, 200),
+      });
+      lastError =
+        lastError ??
+        `Same failure as previous attempt; retries won't help. Fix the underlying issue and re-run.`;
+      break;
+    }
+    previousFingerprint = currentFingerprint;
   }
 
   meta = {
@@ -369,7 +415,7 @@ async function runStep3(args: {
   resourceType: ResourceType;
   creationLogId?: string;
 }): Promise<{ ok: boolean; errors: string[] }> {
-  const { scenarioId, docs, resourceType, creationLogId } = args;
+  const { scenarioId, plan, docs, resourceType, creationLogId } = args;
 
   const tracker = creationLogId
     ? await logGenerationStep({
@@ -383,6 +429,7 @@ async function runStep3(args: {
     const taskDescription = await loadTaskDescription(scenarioId);
     const result = await runValidators({
       scenarioId,
+      plan,
       docs,
       resourceType,
       taskDescription,
@@ -403,9 +450,10 @@ async function runStep4(args: {
   plan: ResourcePlan;
   docs: ScenarioDoc[];
   resourceType: ResourceType;
+  validatorResults: { passed: boolean; errors: string[] };
   creationLogId?: string;
 }): Promise<JudgeVerdict> {
-  const { scenarioId, plan, docs, resourceType, creationLogId } = args;
+  const { scenarioId, plan, docs, resourceType, validatorResults, creationLogId } = args;
 
   const tracker = creationLogId
     ? await logGenerationStep({
@@ -428,12 +476,15 @@ async function runStep4(args: {
     }
 
     const scenarioContext = await loadJudgeScenarioContext(scenarioId);
+    const coworkers = await loadCoworkersForJudge(scenarioId);
 
     const verdict = await judgeArtifacts({
       scenario: scenarioContext,
       plan,
       docs,
       artifactSummary: summary,
+      validatorResults,
+      coworkers,
     });
 
     await tracker?.complete({
@@ -541,6 +592,36 @@ async function loadJudgeScenarioContext(scenarioId: string): Promise<{
     seniorityLevel: scenario.targetLevel,
     archetypeName,
   };
+}
+
+async function loadCoworkersForJudge(scenarioId: string): Promise<
+  Array<{
+    name: string;
+    role: string;
+    knowledge: Array<{
+      topic: string;
+      response: string;
+      isCritical?: boolean;
+      triggerKeywords?: string[];
+    }>;
+  }>
+> {
+  const coworkers = await db.coworker.findMany({
+    where: { scenarioId },
+    select: { name: true, role: true, knowledge: true },
+  });
+  return coworkers.map((c) => ({
+    name: c.name,
+    role: c.role,
+    knowledge: Array.isArray(c.knowledge)
+      ? (c.knowledge as Array<{
+          topic: string;
+          response: string;
+          isCritical?: boolean;
+          triggerKeywords?: string[];
+        }>)
+      : [],
+  }));
 }
 
 async function loadScenarioContext(scenarioId: string): Promise<{
