@@ -156,7 +156,7 @@ describe("runStep5_groundCoworkers", () => {
 
     const result = await runStep5_groundCoworkers({ ...baseArgs, coworkerErrorCount: 2 });
 
-    expect(result).toBe(true);
+    expect(result.success).toBe(true);
     expect(mockGroundCoworkerKnowledge).toHaveBeenCalledTimes(1);
     expect(mockCoworkerUpdate).toHaveBeenCalledTimes(2);
 
@@ -170,7 +170,7 @@ describe("runStep5_groundCoworkers", () => {
   it("is skipped when validator reports zero coworker errors", async () => {
     const result = await runStep5_groundCoworkers({ ...baseArgs, coworkerErrorCount: 0 });
 
-    expect(result).toBe(false);
+    expect(result.success).toBe(false);
     expect(mockGroundCoworkerKnowledge).not.toHaveBeenCalled();
     expect(mockCoworkerFindMany).not.toHaveBeenCalled();
     expect(mockCoworkerUpdate).not.toHaveBeenCalled();
@@ -186,7 +186,7 @@ describe("runStep5_groundCoworkers", () => {
 
     const result = await runStep5_groundCoworkers({ ...baseArgs, coworkerErrorCount: 2 });
 
-    expect(result).toBe(false);
+    expect(result.success).toBe(false);
     expect(mockGroundCoworkerKnowledge).toHaveBeenCalledTimes(3);
     expect(mockCoworkerUpdate).not.toHaveBeenCalled();
   });
@@ -199,7 +199,7 @@ describe("runStep5_groundCoworkers", () => {
 
     const result = await runStep5_groundCoworkers({ ...baseArgs, coworkerErrorCount: 2 });
 
-    expect(result).toBe(false);
+    expect(result.success).toBe(false);
     expect(mockGroundCoworkerKnowledge).toHaveBeenCalledTimes(2);
   });
 
@@ -225,8 +225,28 @@ describe("runStep5_groundCoworkers", () => {
 
     const result = await runStep5_groundCoworkers({ ...baseArgs, coworkerErrorCount: 1 });
 
-    expect(result).toBe(false);
+    expect(result.success).toBe(false);
     expect(mockGroundCoworkerKnowledge).not.toHaveBeenCalled();
     expect(mockCoworkerUpdate).not.toHaveBeenCalled();
+  });
+
+  it("returns telemetry shape (per-run emission contract — Codex P2 on #420)", async () => {
+    // The function used to emit `logger.info("coworker_grounding", ...)`
+    // internally, which double-counted when the outer artifact retry loop
+    // called it more than once per scenario. The canonical event is now
+    // emitted by the orchestrator's run-end exit using the LAST telemetry
+    // payload returned here. This test pins the new contract: the function
+    // returns telemetry, the orchestrator owns emission.
+    mockGroundCoworkerKnowledge.mockResolvedValueOnce({ updates: mockGroundedKnowledge });
+
+    const t = await runStep5_groundCoworkers({ ...baseArgs, coworkerErrorCount: 2 });
+
+    expect(t).toMatchObject({
+      success: true,
+      skipped: false,
+      attempts: 1,
+      validatorErrorsBefore: 2,
+    });
+    expect(typeof t.durationMs).toBe("number");
   });
 });
